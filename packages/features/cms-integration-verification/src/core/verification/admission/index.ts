@@ -25,6 +25,13 @@ import {
     parseSuite,
 } from "./fields";
 
+export {
+    identifyIntegrationVerificationSuiteContent,
+    validateIntegrationVerificationSuiteContent,
+    type IdentifiedIntegrationVerificationSuiteContentV2,
+} from "./suiteContent";
+export { validateBoundIntegrationVerificationAuthorSuites } from "./suiteBinding";
+
 export function parseAdmissionInputSnapshot(input: string | Uint8Array): AdmissionInputSnapshotV1 {
     return validateAdmissionInputSnapshot(parseVerificationControlDocument(input));
 }

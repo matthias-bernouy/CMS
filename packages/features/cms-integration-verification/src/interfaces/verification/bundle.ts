@@ -30,6 +30,13 @@ export type IntegrationVerificationSuiteContentV2 = Readonly<{
     fixtures: readonly Readonly<{ path: string; file: CanonicalFile }>[];
 }>;
 
+export type BoundIntegrationVerificationAuthorSuiteV1 = Readonly<{
+    suiteId: string;
+    source: "author-contract" | "author-conformance";
+    contentDigest: string;
+    content: IntegrationVerificationSuiteContentV2;
+}>;
+
 export type IntegrationVerificationManifestV1 = Readonly<{
     runnerRequirements: readonly VerificationRunnerRequirement[];
     contracts: readonly IntegrationVerificationContractSuiteV1[];

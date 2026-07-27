@@ -6,7 +6,8 @@
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {
-        ".": "./src/exports/index.ts"
+        ".": "./src/exports/index.ts",
+        "./sdk/v1": "./src/sdk/v1.ts"
     },
     "files": [
         "src/",

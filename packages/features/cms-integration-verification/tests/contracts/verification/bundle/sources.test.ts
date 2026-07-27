@@ -38,6 +38,10 @@ describe("verification author suite sources", () => {
             'const target = "./support/helper.ts"; void import(target);',
             'const resolver = require.resolve; void resolver("@vendor/package");',
             'void Bun.resolveSync("@vendor/package", import.meta.dir);',
+            'void fetch("https://example.invalid");',
+            "void process.env;",
+            "void globalThis.crypto;",
+            'export default ({})["constructor"];',
             '/// <reference types="bun" />\nexport default true;',
             "export default import.meta.url;",
             'import { broken from "./support/helper.ts";',
@@ -124,7 +128,7 @@ async function sourceEnvelope(contractSource?: string) {
                 encoding: "utf8" as const,
                 content:
                     contractSource ??
-                    `import { suite } from ${JSON.stringify(INTEGRATION_VERIFICATION_SDK_V1_SPECIFIER)}; export { helper } from "./support/helper.ts"; export const lazy = () => import("./lazy.ts"); export default suite;`,
+                    `import { defineSuite } from ${JSON.stringify(INTEGRATION_VERIFICATION_SDK_V1_SPECIFIER)}; export { helper } from "./support/helper.ts"; export const lazy = () => import("./lazy.ts"); export default defineSuite({ tests: [] });`,
             },
             "tests/support/helper.ts": {
                 encoding: "utf8" as const,

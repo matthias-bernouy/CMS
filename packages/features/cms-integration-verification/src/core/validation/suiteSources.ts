@@ -1,6 +1,7 @@
 import type { CanonicalFile, CanonicalFileSet } from "@bernouy/cms-integration-packages";
 import type * as TypeScript from "typescript";
 import { collectVerificationModulePaths, invalidVerificationSourceReference } from "./suiteImports";
+import { assertVerificationSourceGlobals } from "./suiteGlobals";
 
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"] as const;
 const DATA_EXTENSIONS = [".json"] as const;
@@ -27,6 +28,7 @@ export async function collectVerificationSuiteSourceClosure(
             continue;
         }
         const sourceFile = parseSourceFile(compiler, path, file.content);
+        assertVerificationSourceGlobals(compiler, sourceFile, path);
         for (const dependency of collectVerificationModulePaths(compiler, sourceFile, files, path)) {
             pending.push(dependency);
         }
