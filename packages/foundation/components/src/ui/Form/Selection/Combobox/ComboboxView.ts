@@ -58,6 +58,7 @@ export class ComboboxView {
         }
         if (this.input) {
             this.input.placeholder = host.getAttribute("placeholder") ?? "";
+            syncOptionalAttribute(this.input, "aria-label", host.getAttribute("aria-label"));
             this.input.disabled = disabled;
             this.input.required = host.hasAttribute("required");
             syncBooleanAria(this.input, "aria-required", host.hasAttribute("required"));
@@ -126,6 +127,14 @@ export class ComboboxView {
 
     get listHidden(): boolean {
         return this.listbox?.hidden ?? true;
+    }
+}
+
+function syncOptionalAttribute(element: HTMLElement, name: string, value: string | null): void {
+    if (value) {
+        element.setAttribute(name, value);
+    } else {
+        element.removeAttribute(name);
     }
 }
 

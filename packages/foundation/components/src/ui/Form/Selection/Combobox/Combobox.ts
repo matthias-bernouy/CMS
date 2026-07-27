@@ -8,10 +8,18 @@ import { ComboboxView, type ComboboxHandlers } from "./ComboboxView";
 
 export class Combobox extends Component {
     static formAssociated = true;
-    static get observedAttributes(): string[] {
-        return ["value", "label", "placeholder", "disabled", "required", "invalid", "hint", "hint-level", "creatable"];
-    }
-
+    static readonly observedAttributes = [
+        "value",
+        "label",
+        "aria-label",
+        "placeholder",
+        "disabled",
+        "required",
+        "invalid",
+        "hint",
+        "hint-level",
+        "creatable",
+    ];
     private readonly view: ComboboxView;
     private options: ComboOption[] = [];
     private items: ComboItem[] = [];
@@ -71,7 +79,10 @@ export class Combobox extends Component {
     }
 
     private readonly handlers: ComboboxHandlers = {
-        focus: () => this.renderList(this.query),
+        focus: () => {
+            this.view.input?.select();
+            this.renderList("");
+        },
         input: () => {
             this.view.syncClearButtonForInput();
             this.activeIndex = -1;
@@ -106,10 +117,7 @@ export class Combobox extends Component {
     }
 
     private renderList(query: string): void {
-        this.items = comboItemsFor(this.options, query);
-        if (this.items.length === 0 && query && this.hasAttribute("creatable")) {
-            this.items = [{ kind: "create", value: query, label: `Add "${query}"`, disabled: false }];
-        }
+        this.items = comboItemsFor(this.options, query, this.hasAttribute("creatable"));
         this.view.renderList(this.items, this.activeIndex, this.selectedValue, this.selectItem);
     }
 
@@ -134,7 +142,8 @@ export class Combobox extends Component {
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             this.moveActive(event);
         } else if (event.key === "Enter") {
-            const item = this.items[this.activeIndex];
+            const first = this.items[0];
+            const item = this.items[this.activeIndex] ?? (first?.kind === "create" ? first : undefined);
             if (item) {
                 event.preventDefault();
                 this.selectItem(item);

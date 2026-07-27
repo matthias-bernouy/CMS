@@ -9,6 +9,7 @@ if (!customElements.get(tag)) {
 afterEach(() => document.body.replaceChildren());
 
 type MountOptions = {
+    accessibleName?: string;
     value?: string;
     placeholder?: string;
     disabled?: boolean;
@@ -32,6 +33,9 @@ function mountCombobox(options: MountOptions = {}): Combobox {
     addOption(control, "beta", "Beta");
     if (options.value !== undefined) {
         control.setAttribute("value", options.value);
+    }
+    if (options.accessibleName !== undefined) {
+        control.setAttribute("aria-label", options.accessibleName);
     }
     if (options.placeholder !== undefined) {
         control.setAttribute("placeholder", options.placeholder);
@@ -80,7 +84,12 @@ describe("Combobox", () => {
     });
 
     test("syncs attributes, properties, focus, and late options", () => {
-        const control = mountCombobox({ value: "alpha", placeholder: "Pick one", disabled: true });
+        const control = mountCombobox({
+            value: "alpha",
+            accessibleName: "Token value",
+            placeholder: "Pick one",
+            disabled: true,
+        });
         const input = shadowElement<HTMLInputElement>(control, "input");
         const label = shadowElement<HTMLElement>(control, ".label");
         expect({ value: control.value, inputValue: input.value, placeholder: input.placeholder }).toEqual({
@@ -89,6 +98,9 @@ describe("Combobox", () => {
             placeholder: "Pick one",
         });
         expect(input.disabled).toBe(true);
+        expect(input.getAttribute("aria-label")).toBe("Token value");
+        control.removeAttribute("aria-label");
+        expect(input.hasAttribute("aria-label")).toBeFalse();
         control.disabled = false;
         control.setAttribute("label", "Choice");
         expect({ disabled: control.disabled, inputDisabled: input.disabled, label: label.textContent }).toEqual({
@@ -155,10 +167,10 @@ describe("Combobox", () => {
         const input = shadowElement<HTMLInputElement>(control, "input");
         const list = shadowElement<HTMLElement>(control, "[role='listbox']");
 
-        input.value = "";
         input.focus();
         const options = Array.from(list.querySelectorAll<HTMLElement>("[role='option']"));
         expect(input.getAttribute("aria-controls")).toBe(list.id);
+        expect([input.selectionStart, input.selectionEnd]).toEqual([0, "Beta".length]);
         expect(options.map((option) => option.getAttribute("aria-selected"))).toEqual(["false", "true"]);
     });
 
@@ -218,7 +230,7 @@ describe("Combobox", () => {
         expect(detail).toEqual({ value: "", label: "", created: false });
     });
 
-    test("creates a missing value from the rendered option", () => {
+    test("creates a value even when existing options partially match it", () => {
         const control = mountCombobox({ creatable: true });
         const input = shadowElement<HTMLInputElement>(control, "input");
         let detail: unknown;
@@ -226,13 +238,14 @@ describe("Combobox", () => {
             detail = (event as CustomEvent).detail;
         });
         input.focus();
-        write(input, "Gamma");
-        const createOption = shadowElement<HTMLElement>(control, ".option.create");
-        createOption.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+        write(input, "Al");
+        expect(shadowElement<HTMLElement>(control, ".option.create").textContent).toContain('Add "Al"');
+        expect(shadowElement<HTMLElement>(control, "[role='option']:not(.create)").textContent).toContain("Alpha");
+        expect(press(input, "Enter").defaultPrevented).toBe(true);
         expect({ value: control.value, inputValue: input.value, detail }).toEqual({
-            value: "Gamma",
-            inputValue: "Gamma",
-            detail: { value: "Gamma", label: "Gamma", created: true },
+            value: "Al",
+            inputValue: "Al",
+            detail: { value: "Al", label: "Al", created: true },
         });
     });
 

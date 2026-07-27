@@ -8,10 +8,16 @@ export function comboOptionsFrom(host: HTMLElement): ComboOption[] {
     }));
 }
 
-export function comboItemsFor(options: ComboOption[], query: string): ComboItem[] {
+export function comboItemsFor(options: ComboOption[], query: string, creatable = false): ComboItem[] {
     const needle = query.toLowerCase();
     const matches = needle ? options.filter((item) => item.label.toLowerCase().includes(needle)) : options;
-    return matches.slice(0, 8).map((item) => ({ ...item, kind: "option" }));
+    const items: ComboItem[] = matches.slice(0, 8).map((item) => ({ ...item, kind: "option" }));
+    const exactMatch = options.some((item) => item.value === query || item.label.toLowerCase() === needle);
+    if (creatable && query && !exactMatch) {
+        items.unshift({ kind: "create", value: query, label: `Add "${query}"`, disabled: false });
+        items.length = Math.min(items.length, 8);
+    }
+    return items;
 }
 
 export function renderComboItem(
