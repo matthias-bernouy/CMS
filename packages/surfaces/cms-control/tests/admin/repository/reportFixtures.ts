@@ -107,10 +107,11 @@ export const versionsFixture = {
                 admissible: true,
             },
             compatibility: {
-                admissionReportId: "admission-1",
+                rootReportId: "admission-1",
                 currentReportRevisionId: "revision-1",
+                currentReportDigest: "e".repeat(64),
                 outcome: "compatible",
-                admissible: true,
+                contractAdmissible: true,
                 warning: false,
             },
         },
@@ -236,22 +237,28 @@ export function releaseFixture() {
 }
 
 export function compatibilityFixture() {
-    const admission = admissionReport();
+    const root = admissionReport();
     const current = revisionReport();
-    return { admission, current, revisions: [current], totalRevisions: 1 };
+    return {
+        root,
+        current,
+        currentRevisionId: "revision-1",
+        currentReportDigest: "e".repeat(64),
+        revisions: [current],
+        totalRevisions: 1,
+    };
 }
 
 export function admissionReport(overrides: Record<string, unknown> = {}) {
-    return reportBase({ id: "admission-1", reportType: "admission", ...overrides });
+    return reportBase({ reportId: "admission-1", revisionType: "root", ...overrides });
 }
 
 export function revisionReport(overrides: Record<string, unknown> = {}) {
     return reportBase({
-        id: "revision-1",
-        reportType: "revision",
+        reportId: "revision-1",
+        revisionType: "revision",
         supersedes: "admission-1",
         provenance: {
-            actor: "repository-owner@example.test",
             reason: "Reviewed <script>unsafe()</script> evidence",
             evidenceIds: ["ci-schema-42"],
         },
@@ -268,20 +275,21 @@ function reportBase(overrides: Record<string, unknown>) {
         createdAt: "2026-07-26T12:00:00.000Z",
         baselines: [{ kind: "commerce", version: "1.0.0", packageDigest: "a".repeat(64) }],
         informationalBaselines: [],
-        evidence: [
+        findings: [
             {
+                findingId: "finding-1",
                 classification: "compatible",
                 surface: "schema",
                 code: "column-added",
-                path: "/private/schema.sql",
-                source: "http://repository.internal:3001",
                 message: "Literal <img src=x onerror=alert(1)> evidence",
             },
         ],
         outcome: "compatible",
         requiredReleaseLevel: "minor",
         releaseLevel: "minor",
-        admissible: true,
+        contractAdmissible: true,
+        origin: "admission",
+        provenance: { reason: "Initial compatibility evaluation", evidenceIds: [] },
         ...overrides,
     };
 }

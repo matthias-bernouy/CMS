@@ -1,7 +1,7 @@
 import type {
     RepositoryActionErrorDetails,
     RepositoryCompatibilityBaselineView,
-    RepositoryCompatibilityEvidenceView,
+    RepositoryCompatibilityFindingView,
     RepositoryCompatibilityPageView,
     RepositoryCompatibilityReportView,
     RepositoryPromotionResultView,
@@ -22,8 +22,10 @@ import {
 export function parseRepositoryCompatibilityPage(value: unknown): RepositoryCompatibilityPageView {
     const object = readRecord(value);
     return {
-        admission: parseRepositoryCompatibilityReport(object.admission, "admission"),
+        root: parseRepositoryCompatibilityReport(object.root, "root"),
         current: parseRepositoryCompatibilityReport(object.current),
+        currentRevisionId: readText(object.currentRevisionId),
+        currentReportDigest: readText(object.currentReportDigest),
         revisions: readArray(object.revisions, 100).map((report) =>
             parseRepositoryCompatibilityReport(report, "revision"),
         ),
@@ -34,34 +36,34 @@ export function parseRepositoryCompatibilityPage(value: unknown): RepositoryComp
 
 export function parseRepositoryCompatibilityReport(
     value: unknown,
-    expectedType?: "admission" | "revision",
+    expectedType?: "root" | "revision",
 ): RepositoryCompatibilityReportView {
     const object = readRecord(value);
-    const reportType = object.reportType;
-    if ((reportType !== "admission" && reportType !== "revision") || (expectedType && reportType !== expectedType)) {
+    const revisionType = object.revisionType;
+    if ((revisionType !== "root" && revisionType !== "revision") || (expectedType && revisionType !== expectedType)) {
         throw new RepositoryUiContractError();
     }
     const evaluator = readRecord(object.evaluator);
-    const supersedes = reportType === "revision" ? readText(object.supersedes) : undefined;
-    const provenance = reportType === "revision" ? parseProvenance(object.provenance) : undefined;
+    const supersedes = revisionType === "revision" ? readText(object.supersedes) : undefined;
     return {
-        id: readText(object.id),
-        reportType,
+        reportId: readText(object.reportId),
+        revisionType,
+        origin: readOrigin(object.origin),
         kind: readText(object.kind),
         version: readText(object.version),
         packageDigest: readText(object.packageDigest),
         outcome: readText(object.outcome),
-        admissible: readBoolean(object.admissible),
+        contractAdmissible: readBoolean(object.contractAdmissible),
         evaluator: { name: readText(evaluator.name), version: readText(evaluator.version) },
         createdAt: readText(object.createdAt),
         releaseLevel: readText(object.releaseLevel),
         requiredReleaseLevel: readText(object.requiredReleaseLevel),
         baselines: readArray(object.baselines, 16).map(parseBaseline),
         informationalBaselines: readArray(object.informationalBaselines, 16).map(parseBaseline),
-        evidence: readArray(object.evidence, 4_096).map(parseEvidence),
+        findings: readArray(object.findings, 4_096).map(parseFinding),
         ...optionalProperty("noBaselineReason", readOptionalText(object.noBaselineReason)),
         ...(supersedes ? { supersedes } : {}),
-        ...(provenance ? { provenance } : {}),
+        provenance: parseProvenance(object.provenance),
     };
 }
 
@@ -70,7 +72,7 @@ export function parseRepositoryReevaluationResult(value: unknown): RepositoryRee
     const release = object.release === undefined ? undefined : readReevaluationRelease(object.release);
     return {
         revision: parseRepositoryCompatibilityReport(object.revision, "revision"),
-        currentReportRevisionId: readText(object.currentReportRevisionId),
+        currentReport: readCurrentReport(object.currentReport),
         ...(release ? { release } : {}),
     };
 }
@@ -137,14 +139,27 @@ function parseBaseline(value: unknown): RepositoryCompatibilityBaselineView {
     };
 }
 
-function parseEvidence(value: unknown): RepositoryCompatibilityEvidenceView {
+function parseFinding(value: unknown): RepositoryCompatibilityFindingView {
     const object = readRecord(value);
     return {
+        findingId: readText(object.findingId),
         classification: readText(object.classification),
         surface: readText(object.surface),
         code: readText(object.code),
         message: readText(object.message),
     };
+}
+
+function readCurrentReport(value: unknown): RepositoryReevaluationResultView["currentReport"] {
+    const object = readRecord(value);
+    return { revisionId: readText(object.revisionId), reportDigest: readText(object.reportDigest) };
+}
+
+function readOrigin(value: unknown): RepositoryCompatibilityReportView["origin"] {
+    if (value !== "admission" && value !== "legacy-backfill") {
+        throw new RepositoryUiContractError();
+    }
+    return value;
 }
 
 function parseProvenance(value: unknown): NonNullable<RepositoryCompatibilityReportView["provenance"]> {

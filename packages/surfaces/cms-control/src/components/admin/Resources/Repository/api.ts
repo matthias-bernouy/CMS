@@ -96,7 +96,7 @@ export function requestRepositoryReevaluation(
     input: Readonly<{
         kind: string;
         version: string;
-        currentReportRevisionId: string;
+        currentReport: Readonly<{ revisionId: string; reportDigest: string }>;
         currentDecision: Readonly<{ revisionId: string; digest: string }>;
         reason: string;
         evidenceIds?: readonly string[];

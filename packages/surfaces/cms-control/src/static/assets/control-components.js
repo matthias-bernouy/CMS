@@ -30610,10 +30610,11 @@ ${controls_default3}`;
   function parseVersionCompatibility(value3) {
     const object = readRecord(value3);
     return {
-      admissionReportId: readText(object.admissionReportId),
+      rootReportId: readText(object.rootReportId),
       currentReportRevisionId: readText(object.currentReportRevisionId),
+      currentReportDigest: readText(object.currentReportDigest),
       outcome: readText(object.outcome),
-      admissible: readBoolean(object.admissible),
+      contractAdmissible: readBoolean(object.contractAdmissible),
       warning: readBoolean(object.warning)
     };
   }
@@ -31059,8 +31060,10 @@ ${controls_default3}`;
   function parseRepositoryCompatibilityPage(value3) {
     const object = readRecord(value3);
     return {
-      admission: parseRepositoryCompatibilityReport(object.admission, "admission"),
+      root: parseRepositoryCompatibilityReport(object.root, "root"),
       current: parseRepositoryCompatibilityReport(object.current),
+      currentRevisionId: readText(object.currentRevisionId),
+      currentReportDigest: readText(object.currentReportDigest),
       revisions: readArray(object.revisions, 100).map((report) => parseRepositoryCompatibilityReport(report, "revision")),
       totalRevisions: readCount(object.totalRevisions),
       ...optionalProperty("nextCursor", readOptionalText(object.nextCursor))
@@ -31068,31 +31071,31 @@ ${controls_default3}`;
   }
   function parseRepositoryCompatibilityReport(value3, expectedType) {
     const object = readRecord(value3);
-    const reportType = object.reportType;
-    if (reportType !== "admission" && reportType !== "revision" || expectedType && reportType !== expectedType) {
+    const revisionType = object.revisionType;
+    if (revisionType !== "root" && revisionType !== "revision" || expectedType && revisionType !== expectedType) {
       throw new RepositoryUiContractError;
     }
     const evaluator = readRecord(object.evaluator);
-    const supersedes = reportType === "revision" ? readText(object.supersedes) : undefined;
-    const provenance = reportType === "revision" ? parseProvenance(object.provenance) : undefined;
+    const supersedes = revisionType === "revision" ? readText(object.supersedes) : undefined;
     return {
-      id: readText(object.id),
-      reportType,
+      reportId: readText(object.reportId),
+      revisionType,
+      origin: readOrigin(object.origin),
       kind: readText(object.kind),
       version: readText(object.version),
       packageDigest: readText(object.packageDigest),
       outcome: readText(object.outcome),
-      admissible: readBoolean(object.admissible),
+      contractAdmissible: readBoolean(object.contractAdmissible),
       evaluator: { name: readText(evaluator.name), version: readText(evaluator.version) },
       createdAt: readText(object.createdAt),
       releaseLevel: readText(object.releaseLevel),
       requiredReleaseLevel: readText(object.requiredReleaseLevel),
       baselines: readArray(object.baselines, 16).map(parseBaseline),
       informationalBaselines: readArray(object.informationalBaselines, 16).map(parseBaseline),
-      evidence: readArray(object.evidence, 4096).map(parseEvidence),
+      findings: readArray(object.findings, 4096).map(parseFinding),
       ...optionalProperty("noBaselineReason", readOptionalText(object.noBaselineReason)),
       ...supersedes ? { supersedes } : {},
-      ...provenance ? { provenance } : {}
+      provenance: parseProvenance(object.provenance)
     };
   }
   function parseRepositoryReevaluationResult(value3) {
@@ -31100,7 +31103,7 @@ ${controls_default3}`;
     const release = object.release === undefined ? undefined : readReevaluationRelease(object.release);
     return {
       revision: parseRepositoryCompatibilityReport(object.revision, "revision"),
-      currentReportRevisionId: readText(object.currentReportRevisionId),
+      currentReport: readCurrentReport(object.currentReport),
       ...release ? { release } : {}
     };
   }
@@ -31161,14 +31164,25 @@ ${controls_default3}`;
       packageDigest: readText(object.packageDigest)
     };
   }
-  function parseEvidence(value3) {
+  function parseFinding(value3) {
     const object = readRecord(value3);
     return {
+      findingId: readText(object.findingId),
       classification: readText(object.classification),
       surface: readText(object.surface),
       code: readText(object.code),
       message: readText(object.message)
     };
+  }
+  function readCurrentReport(value3) {
+    const object = readRecord(value3);
+    return { revisionId: readText(object.revisionId), reportDigest: readText(object.reportDigest) };
+  }
+  function readOrigin(value3) {
+    if (value3 !== "admission" && value3 !== "legacy-backfill") {
+      throw new RepositoryUiContractError;
+    }
+    return value3;
   }
   function parseProvenance(value3) {
     const object = readRecord(value3);
@@ -31322,7 +31336,7 @@ ${controls_default3}`;
   // src/components/admin/Resources/Repository/render/compatibility.ts
   function renderRepositoryCompatibility(target2, page) {
     const fragment = document.createDocumentFragment();
-    fragment.append(reportSection("Current report", page.current), reportSection("Admission report", page.admission), element("h3", `Revision history (${page.totalRevisions})`));
+    fragment.append(reportSection("Current report", page.current), reportSection("Root report", page.root), element("h3", `Revision history (${page.totalRevisions})`));
     if (page.revisions.length === 0) {
       fragment.append(emptyMessage("No compatibility reevaluation has been recorded."));
     } else {
@@ -31334,7 +31348,7 @@ ${controls_default3}`;
     const section = element("article", undefined, "report");
     section.dataset.outcome = report.outcome;
     section.append(element("h4", `${title2}: ${report.outcome}`), metadata([
-      `ID ${report.id}`,
+      `ID ${report.reportId}`,
       `Created ${report.createdAt}`,
       `Release ${report.releaseLevel}`,
       `Required ${report.requiredReleaseLevel}`,
@@ -31348,21 +31362,19 @@ ${controls_default3}`;
     }
     appendBaselines(section, "Baselines", report.baselines);
     appendBaselines(section, "Informational baselines", report.informationalBaselines);
-    section.append(element("h5", "Evidence"));
-    if (report.evidence.length === 0) {
-      section.append(emptyMessage("No compatibility evidence."));
+    section.append(element("h5", "Findings"));
+    if (report.findings.length === 0) {
+      section.append(emptyMessage("No compatibility findings."));
     } else {
       const list = element("ul", undefined, "evidence-list");
-      for (const evidence of report.evidence) {
+      for (const finding of report.findings) {
         const item = element("li");
-        item.append(element("strong", `${evidence.classification} · ${evidence.surface} · ${evidence.code}`), document.createTextNode(` — ${evidence.message}`));
+        item.append(element("strong", `${finding.classification} · ${finding.surface} · ${finding.code}`), document.createTextNode(` — ${finding.message}`));
         list.append(item);
       }
       section.append(list);
     }
-    if (report.provenance) {
-      section.append(element("h5", "Reevaluation provenance"), element("p", report.provenance.reason), codeLine("Evidence IDs", report.provenance.evidenceIds.join(", ") || "None"));
-    }
+    section.append(element("h5", "Assessment provenance"), element("p", report.provenance.reason), codeLine("Evidence IDs", report.provenance.evidenceIds.join(", ") || "None"));
     return section;
   }
   function appendBaselines(target2, title2, baselines) {
@@ -31875,7 +31887,7 @@ ${controls_default3}`;
     return {
       kind: selection.kind,
       version: selection.version,
-      currentReportRevisionId: selection.currentReportRevisionId,
+      currentReport: selection.currentReport,
       currentDecision: {
         revisionId: selection.decision.revisionId,
         digest: selection.decision.digest
@@ -31916,7 +31928,7 @@ ${controls_default3}`;
       const result = await requestRepositoryReevaluation(readRepositoryReevaluation(form, selection), context.signal);
       context.updateSelection({
         ...selection,
-        currentReportRevisionId: result.currentReportRevisionId,
+        currentReport: result.currentReport,
         ...result.release ? {
           decision: {
             ...result.release.decision,
@@ -31925,7 +31937,7 @@ ${controls_default3}`;
           ...result.release.eligibilityChanged ? { status: "inadmissible" } : {}
         } : {}
       });
-      showFeedback(feedback, `Created compatibility revision ${result.currentReportRevisionId}: ${result.revision.outcome}.`, "success");
+      showFeedback(feedback, `Created compatibility revision ${result.currentReport.revisionId}: ${result.revision.outcome}.`, "success");
       form.reset();
       await context.reloadCompatibility();
     });
@@ -32188,7 +32200,7 @@ ${controls_default3}`;
   function renderRepositorySelection(host, selection) {
     query8(host, "[data-actions-panel]").hidden = false;
     query8(host, "[data-selection-title]").textContent = `${selection.kind}@${selection.version}`;
-    query8(host, "[data-action-selection]").textContent = `${selection.kind}@${selection.version} · compatibility ${selection.currentReportRevisionId} · decision ${selection.decision?.revisionId ?? "unavailable"}`;
+    query8(host, "[data-action-selection]").textContent = `${selection.kind}@${selection.version} · compatibility ${selection.currentReport.revisionId} · decision ${selection.decision?.revisionId ?? "unavailable"}`;
     query8(host, "[data-confirm-version]").textContent = selection.version;
     query8(host, "[data-confirm-report]").textContent = selection.decision?.revisionId ?? "unavailable";
     query8(host, "[data-block-confirm-version]").textContent = selection.version;
@@ -32314,7 +32326,10 @@ ${controls_default3}`;
         this.setSelection({
           kind,
           version,
-          currentReportRevisionId: this.compatibility.current.id,
+          currentReport: {
+            revisionId: this.compatibility.currentRevisionId,
+            reportDigest: this.compatibility.currentReportDigest
+          },
           status: this.release.status,
           ...this.release.decision ? {
             decision: {

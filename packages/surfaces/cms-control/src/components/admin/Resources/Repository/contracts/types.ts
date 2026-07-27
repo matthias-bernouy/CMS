@@ -35,10 +35,11 @@ export type RepositoryDiagnosticsView = Readonly<{
 }>;
 
 export type RepositoryVersionCompatibilityView = Readonly<{
-    admissionReportId: string;
+    rootReportId: string;
     currentReportRevisionId: string;
+    currentReportDigest: string;
     outcome: string;
-    admissible: boolean;
+    contractAdmissible: boolean;
     warning: boolean;
 }>;
 
@@ -70,7 +71,8 @@ export type RepositoryVersionsView = Readonly<{
     versions: readonly RepositoryVersionView[];
 }>;
 
-export type RepositoryCompatibilityEvidenceView = Readonly<{
+export type RepositoryCompatibilityFindingView = Readonly<{
+    findingId: string;
     classification: string;
     surface: string;
     code: string;
@@ -84,28 +86,31 @@ export type RepositoryCompatibilityBaselineView = Readonly<{
 }>;
 
 export type RepositoryCompatibilityReportView = Readonly<{
-    id: string;
-    reportType: "admission" | "revision";
+    reportId: string;
+    revisionType: "root" | "revision";
+    origin: "admission" | "legacy-backfill";
     kind: string;
     version: string;
     packageDigest: string;
     outcome: string;
-    admissible: boolean;
+    contractAdmissible: boolean;
     evaluator: Readonly<{ name: string; version: string }>;
     createdAt: string;
     releaseLevel: string;
     requiredReleaseLevel: string;
     baselines: readonly RepositoryCompatibilityBaselineView[];
     informationalBaselines: readonly RepositoryCompatibilityBaselineView[];
-    evidence: readonly RepositoryCompatibilityEvidenceView[];
+    findings: readonly RepositoryCompatibilityFindingView[];
     noBaselineReason?: string;
     supersedes?: string;
-    provenance?: Readonly<{ reason: string; evidenceIds: readonly string[] }>;
+    provenance: Readonly<{ reason: string; evidenceIds: readonly string[] }>;
 }>;
 
 export type RepositoryCompatibilityPageView = Readonly<{
-    admission: RepositoryCompatibilityReportView;
+    root: RepositoryCompatibilityReportView;
     current: RepositoryCompatibilityReportView;
+    currentRevisionId: string;
+    currentReportDigest: string;
     revisions: readonly RepositoryCompatibilityReportView[];
     totalRevisions: number;
     nextCursor?: string;
@@ -114,7 +119,7 @@ export type RepositoryCompatibilityPageView = Readonly<{
 export type RepositoryVersionSelection = Readonly<{
     kind: string;
     version: string;
-    currentReportRevisionId: string;
+    currentReport: Readonly<{ revisionId: string; reportDigest: string }>;
     status: string;
     decision?: Readonly<{ revisionId: string; digest: string; admissible: boolean }>;
     blockPreview?: RepositoryChannelRepairPreview;
@@ -122,7 +127,7 @@ export type RepositoryVersionSelection = Readonly<{
 
 export type RepositoryReevaluationResultView = Readonly<{
     revision: RepositoryCompatibilityReportView;
-    currentReportRevisionId: string;
+    currentReport: Readonly<{ revisionId: string; reportDigest: string }>;
     release?: Readonly<{
         compatibilityReportRevisionId: string;
         decision: Readonly<{ revisionId: string; digest: string }>;

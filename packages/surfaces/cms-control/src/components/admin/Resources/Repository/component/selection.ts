@@ -4,7 +4,7 @@ export function renderRepositorySelection(host: ParentNode, selection: Repositor
     query(host, "[data-actions-panel]").hidden = false;
     query(host, "[data-selection-title]").textContent = `${selection.kind}@${selection.version}`;
     query(host, "[data-action-selection]").textContent =
-        `${selection.kind}@${selection.version} · compatibility ${selection.currentReportRevisionId} · decision ${selection.decision?.revisionId ?? "unavailable"}`;
+        `${selection.kind}@${selection.version} · compatibility ${selection.currentReport.revisionId} · decision ${selection.decision?.revisionId ?? "unavailable"}`;
     query(host, "[data-confirm-version]").textContent = selection.version;
     query(host, "[data-confirm-report]").textContent = selection.decision?.revisionId ?? "unavailable";
     query(host, "[data-block-confirm-version]").textContent = selection.version;

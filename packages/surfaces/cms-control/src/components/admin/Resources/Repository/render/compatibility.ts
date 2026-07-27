@@ -9,7 +9,7 @@ export function renderRepositoryCompatibility(target: HTMLElement, page: Reposit
     const fragment = document.createDocumentFragment();
     fragment.append(
         reportSection("Current report", page.current),
-        reportSection("Admission report", page.admission),
+        reportSection("Root report", page.root),
         element("h3", `Revision history (${page.totalRevisions})`),
     );
     if (page.revisions.length === 0) {
@@ -26,7 +26,7 @@ function reportSection(title: string, report: RepositoryCompatibilityReportView)
     section.append(
         element("h4", `${title}: ${report.outcome}`),
         metadata([
-            `ID ${report.id}`,
+            `ID ${report.reportId}`,
             `Created ${report.createdAt}`,
             `Release ${report.releaseLevel}`,
             `Required ${report.requiredReleaseLevel}`,
@@ -42,28 +42,26 @@ function reportSection(title: string, report: RepositoryCompatibilityReportView)
     }
     appendBaselines(section, "Baselines", report.baselines);
     appendBaselines(section, "Informational baselines", report.informationalBaselines);
-    section.append(element("h5", "Evidence"));
-    if (report.evidence.length === 0) {
-        section.append(emptyMessage("No compatibility evidence."));
+    section.append(element("h5", "Findings"));
+    if (report.findings.length === 0) {
+        section.append(emptyMessage("No compatibility findings."));
     } else {
         const list = element("ul", undefined, "evidence-list");
-        for (const evidence of report.evidence) {
+        for (const finding of report.findings) {
             const item = element("li");
             item.append(
-                element("strong", `${evidence.classification} · ${evidence.surface} · ${evidence.code}`),
-                document.createTextNode(` — ${evidence.message}`),
+                element("strong", `${finding.classification} · ${finding.surface} · ${finding.code}`),
+                document.createTextNode(` — ${finding.message}`),
             );
             list.append(item);
         }
         section.append(list);
     }
-    if (report.provenance) {
-        section.append(
-            element("h5", "Reevaluation provenance"),
-            element("p", report.provenance.reason),
-            codeLine("Evidence IDs", report.provenance.evidenceIds.join(", ") || "None"),
-        );
-    }
+    section.append(
+        element("h5", "Assessment provenance"),
+        element("p", report.provenance.reason),
+        codeLine("Evidence IDs", report.provenance.evidenceIds.join(", ") || "None"),
+    );
     return section;
 }
 

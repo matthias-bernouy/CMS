@@ -52,7 +52,7 @@ describe("repository administration actions", () => {
         expect(body).toEqual({
             kind: "commerce",
             version: "1.1.0",
-            currentReportRevisionId: "revision-1",
+            currentReport: { revisionId: "revision-1", reportDigest: "e".repeat(64) },
             currentDecision: { revisionId: "decision-1", digest: "d".repeat(64) },
             reason: "Evaluator 2 rollout",
             evidenceIds: ["ci-1", "ci-2"],

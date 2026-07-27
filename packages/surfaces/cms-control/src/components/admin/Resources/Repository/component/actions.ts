@@ -65,7 +65,7 @@ export async function submitRepositoryReevaluation(
         const result = await requestRepositoryReevaluation(readRepositoryReevaluation(form, selection), context.signal);
         context.updateSelection({
             ...selection,
-            currentReportRevisionId: result.currentReportRevisionId,
+            currentReport: result.currentReport,
             ...(result.release
                 ? {
                       decision: {
@@ -78,7 +78,7 @@ export async function submitRepositoryReevaluation(
         });
         showFeedback(
             feedback,
-            `Created compatibility revision ${result.currentReportRevisionId}: ${result.revision.outcome}.`,
+            `Created compatibility revision ${result.currentReport.revisionId}: ${result.revision.outcome}.`,
             "success",
         );
         form.reset();

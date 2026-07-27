@@ -108,10 +108,11 @@ function parseQuarantine(value: unknown): RepositoryQuarantineView {
 function parseVersionCompatibility(value: unknown): RepositoryVersionCompatibilityView {
     const object = readRecord(value);
     return {
-        admissionReportId: readText(object.admissionReportId),
+        rootReportId: readText(object.rootReportId),
         currentReportRevisionId: readText(object.currentReportRevisionId),
+        currentReportDigest: readText(object.currentReportDigest),
         outcome: readText(object.outcome),
-        admissible: readBoolean(object.admissible),
+        contractAdmissible: readBoolean(object.contractAdmissible),
         warning: readBoolean(object.warning),
     };
 }

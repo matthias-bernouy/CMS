@@ -154,7 +154,10 @@ export class RepositoryAdmin extends HTMLElement {
             this.setSelection({
                 kind,
                 version,
-                currentReportRevisionId: this.compatibility.current.id,
+                currentReport: {
+                    revisionId: this.compatibility.currentRevisionId,
+                    reportDigest: this.compatibility.currentReportDigest,
+                },
                 status: this.release.status,
                 ...(this.release.decision
                     ? {

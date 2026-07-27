@@ -7,7 +7,7 @@ export function readRepositoryReevaluation(
 ): Readonly<{
     kind: string;
     version: string;
-    currentReportRevisionId: string;
+    currentReport: Readonly<{ revisionId: string; reportDigest: string }>;
     currentDecision: Readonly<{ revisionId: string; digest: string }>;
     reason: string;
     evidenceIds?: readonly string[];
@@ -19,7 +19,7 @@ export function readRepositoryReevaluation(
     return {
         kind: selection.kind,
         version: selection.version,
-        currentReportRevisionId: selection.currentReportRevisionId,
+        currentReport: selection.currentReport,
         currentDecision: {
             revisionId: selection.decision.revisionId,
             digest: selection.decision.digest,

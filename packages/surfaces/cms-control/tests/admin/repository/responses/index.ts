@@ -55,8 +55,8 @@ export function defaultRepositoryResponse(call: RepositoryFetchCall): Response {
     if (path === "POST /cms/api/repository/reevaluations") {
         return Response.json(
             {
-                revision: revisionReport({ id: "revision-2", supersedes: "revision-1" }),
-                currentReportRevisionId: "revision-2",
+                revision: revisionReport({ reportId: "revision-2", supersedes: "revision-1" }),
+                currentReport: { revisionId: "revision-2", reportDigest: "f".repeat(64) },
             },
             { status: 201 },
         );
