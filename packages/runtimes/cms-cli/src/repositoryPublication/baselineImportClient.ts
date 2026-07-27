@@ -1,8 +1,8 @@
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import type { OfficialRepositoryBootstrapEvidenceV1 } from "@bernouy/cms-official-integrations/publication";
+import { readBoundedJsonObjectResponse } from "cms-cli/http/readBoundedJsonObjectResponse";
 
 const IMPORT_PATH = "/api/integrations/schema-baselines";
-const MAX_RESPONSE_BYTES = 1_048_576;
 
 type OfficialBaseline = OfficialRepositoryBootstrapEvidenceV1["reviewedSchemaBaselines"][number];
 
@@ -60,7 +60,7 @@ export async function importOfficialReviewedSchemaBaseline(
     }
     let body: Readonly<Record<string, unknown>>;
     try {
-        body = await readBoundedJsonObject(response);
+        body = await readBoundedJsonObjectResponse(response, "maintenance");
     } catch {
         return { outcome: "failed", reason: "invalid-response", status: response.status };
     }
@@ -93,53 +93,6 @@ export async function importOfficialReviewedSchemaBaseline(
         ...safeCode(body.code),
         ...retryAfter(response.headers.get("retry-after")),
     };
-}
-
-async function readBoundedJsonObject(response: Response): Promise<Readonly<Record<string, unknown>>> {
-    const contentType = response.headers.get("content-type")?.toLowerCase();
-    if (!contentType || (!contentType.startsWith("application/json;") && contentType !== "application/json")) {
-        await response.body?.cancel();
-        throw new Error("Repository maintenance response must use application/json");
-    }
-    const declared = response.headers.get("content-length");
-    if (declared !== null && (!/^[0-9]+$/u.test(declared) || Number(declared) > MAX_RESPONSE_BYTES)) {
-        await response.body?.cancel();
-        throw new Error("Repository maintenance response exceeds its byte limit");
-    }
-    const bytes = await readBoundedResponseBytes(response);
-    const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)) as unknown;
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-        throw new Error("Repository maintenance response must be a JSON object");
-    }
-    return value as Readonly<Record<string, unknown>>;
-}
-
-async function readBoundedResponseBytes(response: Response): Promise<Uint8Array> {
-    if (!response.body) {
-        throw new Error("Repository maintenance response body is missing");
-    }
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    const reader = response.body.getReader();
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
-        }
-        total += value.byteLength;
-        if (total > MAX_RESPONSE_BYTES) {
-            await reader.cancel();
-            throw new Error("Repository maintenance response exceeds its byte limit");
-        }
-        chunks.push(value);
-    }
-    const bytes = new Uint8Array(total);
-    let offset = 0;
-    for (const chunk of chunks) {
-        bytes.set(chunk, offset);
-        offset += chunk.byteLength;
-    }
-    return bytes;
 }
 
 function safeCode(value: unknown): Readonly<{ code?: string }> {
