@@ -45,6 +45,7 @@ export type RlsObservation = Readonly<{
         kind: string;
         rlsEnabled: boolean;
         rlsForced: boolean;
+        exposedRoles: readonly string[];
     }>[];
     policies: readonly Readonly<{
         namespace: string;
@@ -59,7 +60,7 @@ export type RlsObservation = Readonly<{
 }>;
 
 export type GrantObservation = Readonly<{
-    objectType: "schema" | "relation" | "routine";
+    objectType: "schema" | "relation" | "column" | "sequence" | "routine";
     namespace: string;
     objectName: string;
     grantee: string;
@@ -67,10 +68,26 @@ export type GrantObservation = Readonly<{
     grantable: boolean;
 }>;
 
+export type RoleMembershipObservation = Readonly<{
+    actor: "anon" | "authenticated";
+    inheritedRole: string;
+    depth: number;
+    superuser: boolean;
+    bypassRls: boolean;
+}>;
+
+export type UnknownSurfaceObservation = Readonly<{
+    namespace: string;
+    objectName: string;
+    kind: string;
+    exposedRoles: readonly string[];
+}>;
+
 export type ViewObservation = Readonly<{
     namespace: string;
     name: string;
     kind: "view" | "materialized-view";
+    ownedBySessionRole: boolean;
     securityInvoker: boolean;
     selectGrantees: readonly string[];
 }>;
@@ -78,6 +95,7 @@ export type ViewObservation = Readonly<{
 export type RoutineObservation = Readonly<{
     namespace: string;
     identity: string;
+    ownedBySessionRole: boolean;
     securityDefiner: boolean;
     configuration: readonly string[];
     executeGrantees: readonly string[];

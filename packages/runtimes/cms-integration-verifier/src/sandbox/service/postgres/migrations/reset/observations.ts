@@ -1,12 +1,22 @@
 import { SQL } from "bun";
 import { sha256Hex } from "@bernouy/cms-integration-packages";
 import { CMS_POSTGRES_MIGRATION_ENVIRONMENT_V1 } from "@bernouy/cms-integration-verification";
+import {
+    observeActorMemberships,
+    observeAuthBootstrap,
+    type ActorMembershipObservation,
+    type AuthBootstrapObservation,
+} from "./auth";
+
+export { observeGrants } from "./grants";
 
 const CONTRACT = CMS_POSTGRES_MIGRATION_ENVIRONMENT_V1;
 
 type BootstrapObservation = Readonly<{
     contract: string;
     schemas: readonly string[];
+    actorMemberships: readonly ActorMembershipObservation[];
+    auth: AuthBootstrapObservation;
     storageBuckets: Readonly<{ columns: readonly string[]; constraints: readonly string[] }>;
     extensionGuard: Readonly<{ eventTrigger: string; function: string; sourceDigest: string }>;
     extensionsUsageGranted: boolean;
@@ -26,6 +36,8 @@ export async function observePostgres(database: SQL): Promise<{ version: string;
 }
 
 export async function observeBootstrap(database: SQL): Promise<BootstrapObservation> {
+    const actorMemberships = await observeActorMemberships(database);
+    const auth = await observeAuthBootstrap(database);
     const schemas = (await database.unsafe(`select nspname::text as name from pg_catalog.pg_namespace
       where nspname !~ '^pg_' and nspname <> 'information_schema' order by nspname collate "C"`)) as Array<{
         name: string;
@@ -84,6 +96,8 @@ export async function observeBootstrap(database: SQL): Promise<BootstrapObservat
     return {
         contract: CONTRACT.bootstrap.contract,
         schemas: schemas.map(({ name }) => name),
+        actorMemberships,
+        auth,
         storageBuckets: {
             columns: columns.map(
                 (entry) =>
@@ -104,7 +118,8 @@ export async function observeRoles(database: SQL): Promise<Array<{ name: string;
     const names = CONTRACT.roles.map(({ name }) => name);
     const rows = (await database.unsafe(
         `select rolname::text as name, rolcanlogin as login, rolbypassrls as "bypassRls",
-          rolsuper, rolcreatedb, rolcreaterole, rolreplication
+          rolsuper, rolcreatedb, rolcreaterole, rolreplication, rolinherit,
+          rolconnlimit::int as "connectionLimit"
           from pg_catalog.pg_roles where rolname = any($1::text[]) order by rolname collate "C"`,
         [database.array(names, "TEXT")],
     )) as Array<{
@@ -115,16 +130,37 @@ export async function observeRoles(database: SQL): Promise<Array<{ name: string;
         rolcreatedb: boolean;
         rolcreaterole: boolean;
         rolreplication: boolean;
+        rolinherit: boolean;
+        connectionLimit: number;
     }>;
     if (
         rows.length !== names.length ||
-        rows.some((row) => row.login || row.rolsuper || row.rolcreatedb || row.rolcreaterole || row.rolreplication)
+        rows.some(
+            (row) =>
+                row.login ||
+                row.rolsuper ||
+                row.rolcreatedb ||
+                row.rolcreaterole ||
+                row.rolreplication ||
+                !row.rolinherit ||
+                row.connectionLimit !== -1,
+        )
     ) {
         environmentMismatch();
     }
     return rows.map((row) => ({
         name: row.name,
-        attributes: [row.bypassRls ? "bypassrls" : "no-bypassrls", "no-login"],
+        attributes: [
+            ...(row.bypassRls ? ["bypassrls"] : []),
+            "connection-limit-unlimited",
+            "inherit",
+            ...(row.bypassRls ? [] : ["no-bypassrls"]),
+            "no-createdb",
+            "no-createrole",
+            "no-login",
+            "no-replication",
+            "no-superuser",
+        ],
     }));
 }
 

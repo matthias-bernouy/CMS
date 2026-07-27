@@ -8,7 +8,7 @@ import {
     markDisposablePostgresDedicated,
     startDisposablePostgres,
 } from "../postgresFixture";
-import { BEHAVIORAL_PROBE, installBehavioralRuntime, installTenantTable, makePoliciesLeaky } from "./behavioralFixture";
+import { BEHAVIORAL_PROBE, installTenantTable, makePoliciesLeaky } from "./behavioralFixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
 
@@ -41,14 +41,8 @@ postgresTest(
                 new AbortController().signal,
             );
             expect(unavailable.environment.outcome).toBe("failed");
-            expect(codes(unavailable.environment)).toEqual(
-                expect.arrayContaining([
-                    "postgres-rls-behavior-auth-helper-invalid",
-                    "postgres-rls-behavior-role-unavailable",
-                ]),
-            );
+            expect(codes(unavailable.environment)).toEqual(["postgres-rls-behavior-target-unexecutable"]);
 
-            await installBehavioralRuntime(admin, decodeURIComponent(target.username));
             await installTenantTable(database);
             const safe = await proveBehavioralRlsIsolation(database, [BEHAVIORAL_PROBE], new AbortController().signal);
             expect(safe.environment.outcome).toBe("passed");

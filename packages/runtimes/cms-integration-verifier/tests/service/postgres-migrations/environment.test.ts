@@ -1,3 +1,4 @@
+import { SQL } from "bun";
 import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -5,7 +6,7 @@ import { join } from "node:path";
 import type { MigrationVerificationEnvironmentV1 } from "@bernouy/cms-integration-verification";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../../src/runtime/providers/postgres";
 import { createPostgresMigrationVerifier } from "../../../src/sandbox/service/postgres/migrations";
-import { disposablePostgresAvailable } from "../postgresFixture";
+import { disposablePostgresAvailable, startDisposablePostgres } from "../postgresFixture";
 import { startMigrationPostgres } from "./fixture/harness";
 import { migrationExecutionFixture } from "./fixture/input";
 
@@ -34,6 +35,7 @@ postgresTest(
                         postgres: { ...environment.postgres, imageDigest: `sha256:${"a".repeat(64)}` },
                     }),
                     (environment) => ({ ...environment, bootstrapSqlDigest: "b".repeat(64) }),
+                    (environment) => ({ ...environment, grants: [] }),
                     (environment) => ({
                         ...environment,
                         roles: environment.roles.map((role) =>
@@ -65,6 +67,36 @@ postgresTest(
         }
     },
     60_000,
+);
+
+postgresTest(
+    "rejects a substituted auth helper before migration evidence is produced",
+    async () => {
+        const postgres = await startMigrationPostgres();
+        try {
+            const provider = await providerFor(postgres);
+            const lease = await provider.acquire(identity("auth-helper-substitution"), new AbortController().signal);
+            const adminTarget = new URL(lease.credential.connectionUri);
+            adminTarget.username = "postgres";
+            adminTarget.password = postgres.password;
+            adminTarget.searchParams.delete("options");
+            const admin = new SQL(adminTarget.toString(), { max: 1 });
+            const verifier = createPostgresMigrationVerifier({});
+            try {
+                await admin.unsafe(`create or replace function auth.uid() returns uuid
+                    language sql stable security invoker as $$ select null::uuid $$`);
+                const fixture = await migrationExecutionFixture(lease.credential);
+                await expect(verifier.verify(fixture.input, new AbortController().signal)).rejects.toThrow(mismatch);
+            } finally {
+                await verifier.dispose();
+                await admin.close();
+                await lease.release();
+            }
+        } finally {
+            await postgres.close();
+        }
+    },
+    30_000,
 );
 
 postgresTest(

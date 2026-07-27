@@ -69,7 +69,25 @@ postgresTest(
                     fixture.executeAs(lease.credential.connectionUri, "select pg_catalog.pg_read_file('/etc/passwd')")
                         .exitCode,
                 ).toBeGreaterThan(0);
-                expect(fixture.executeAs(lease.credential.connectionUri, "set role anon").exitCode).toBeGreaterThan(0);
+                expect(
+                    fixture.executeAs(lease.credential.connectionUri, "set role anon; select current_user").exitCode,
+                ).toBe(0);
+                expect(
+                    fixture.executeAs(lease.credential.connectionUri, "set role service_role; select current_user")
+                        .exitCode,
+                ).toBeGreaterThan(0);
+                const claims = await database.begin(async (transaction) => {
+                    await transaction.unsafe("set local role authenticated");
+                    await transaction.unsafe(
+                        `select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000000001"}', true)`,
+                    );
+                    const observed = (await transaction.unsafe(
+                        "select auth.uid()::text as uid, auth.jwt() ->> 'sub' as sub",
+                    )) as Array<{ uid: string; sub: string }>;
+                    return observed[0];
+                });
+                expect(claims?.uid).toBe("00000000-0000-4000-8000-000000000001");
+                expect(claims?.sub).toBe("00000000-0000-4000-8000-000000000001");
                 const extension = fixture.executeAs(lease.credential.connectionUri, "create extension hstore");
                 expect(extension.exitCode).toBeGreaterThan(0);
                 expect(extension.stderr).toContain("not allowlisted");

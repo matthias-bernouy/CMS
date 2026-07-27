@@ -68,7 +68,7 @@ export async function productionMigrationVerificationEnvironment(
             runner: { digest: runnerDigest, identity: runner },
             bootstrapSqlDigest,
             roles: CMS_POSTGRES_MIGRATION_ENVIRONMENT_V1.roles,
-            grants: [],
+            grants: CMS_POSTGRES_MIGRATION_ENVIRONMENT_V1.grants,
             extensions: CMS_POSTGRES_MIGRATION_ENVIRONMENT_V1.extensions,
             fixtures: [],
             sessionSettings: CMS_POSTGRES_MIGRATION_ENVIRONMENT_V1.sessionSettings,

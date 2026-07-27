@@ -7,7 +7,15 @@ import {
     assertPostgresServerFingerprint,
     readPostgresServerFingerprint,
 } from "./fingerprint";
-import { assertSharedRoles, bootstrapDatabase, ensureSharedRoles } from "./lifecycle";
+import {
+    assertDatabaseEnvironment,
+    assertDisposablePostgresSessionSettings,
+    assertSandboxActorMemberships,
+    assertSharedRoles,
+    bootstrapDatabase,
+    ensureSharedRoles,
+    grantSandboxActorMemberships,
+} from "./environment";
 import { withPostgresProviderMutationLock } from "./mutex";
 import {
     assertDisposablePostgresRoleSettings,
@@ -25,7 +33,6 @@ import {
     recoverDisposablePostgresObjects,
     releaseDisposablePostgresObjects,
 } from "./recovery";
-import { assertDisposablePostgresSessionSettings } from "./security";
 
 export const createDisposableVerificationDatabaseProvider = (): Promise<DisposableVerificationDatabaseProvider> =>
     createDisposableVerificationDatabaseProviderFromEnv(process.env);
@@ -124,6 +131,7 @@ export async function createDisposableVerificationDatabaseProviderFromEnv(
                 const heartbeat = createPostgresOwnershipHeartbeat(admin, marker, config, heartbeats);
                 try {
                     marker = await createPostgresOwnedRole(locked, marker, password, config);
+                    await grantSandboxActorMemberships(locked, role);
                     heartbeat.assertHealthy();
                     signal.throwIfAborted();
                     await locked.unsafe(`create database ${identifier(database)} template template0 encoding 'UTF8'`);
@@ -138,6 +146,8 @@ export async function createDisposableVerificationDatabaseProviderFromEnv(
                     const sandbox = new SQL(credential.connectionUri, { max: 1 });
                     try {
                         await assertDisposablePostgresSessionSettings(sandbox, config);
+                        await assertDatabaseEnvironment(sandbox);
+                        await assertSandboxActorMemberships(locked, role);
                     } finally {
                         await sandbox.close().catch(() => undefined);
                     }

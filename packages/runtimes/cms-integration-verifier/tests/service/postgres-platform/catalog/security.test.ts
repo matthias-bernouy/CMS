@@ -2,15 +2,15 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createDisposableVerificationDatabaseProviderFromEnv } from "../../../src/runtime/providers/postgres";
-import { createPostgresPlatformVerificationAdapter } from "../../../src/sandbox/service/postgres";
-import { DIGEST_A, DIGEST_B } from "../../fixtures/contracts";
+import { createDisposableVerificationDatabaseProviderFromEnv } from "../../../../src/runtime/providers/postgres";
+import { createPostgresPlatformVerificationAdapter } from "../../../../src/sandbox/service/postgres";
+import { DIGEST_A, DIGEST_B } from "../../../fixtures/contracts";
 import {
     disposablePostgresAvailable,
     markDisposablePostgresDedicated,
     startDisposablePostgres,
-} from "../postgresFixture";
-import { applicablePlatformSuites, unsafePostgresPackage } from "./fixture";
+} from "../../postgresFixture";
+import { applicablePlatformSuites, unsafePostgresPackage } from "../fixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
 
@@ -55,6 +55,7 @@ postgresTest(
                         "postgres-policy-missing-with-check",
                         "postgres-policy-user-metadata-authorization",
                         "postgres-rls-disabled",
+                        "postgres-rls-not-forced",
                     ]),
                 );
                 expect(codes(result, "platform-postgres-grants")).toEqual(

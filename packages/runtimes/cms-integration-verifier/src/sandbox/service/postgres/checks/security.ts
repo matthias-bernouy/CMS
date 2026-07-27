@@ -3,23 +3,41 @@ import type {
     PlatformVerificationCheckEvidenceV1,
 } from "@bernouy/cms-integration-verification";
 import { checkEvidence, finding } from "../evidence";
-import type { GrantObservation, RlsObservation, RoutineObservation, ViewObservation } from "../types";
+import type {
+    GrantObservation,
+    RlsObservation,
+    RoleMembershipObservation,
+    RoutineObservation,
+    UnknownSurfaceObservation,
+    ViewObservation,
+} from "../types";
 
 const UNPRIVILEGED = new Set(["PUBLIC", "anon", "authenticated"]);
 
 export async function rlsChecks(observation: RlsObservation): Promise<PlatformVerificationCheckEvidenceV1[]> {
-    const missing = observation.relations
-        .filter((relation) => !relation.rlsEnabled)
-        .map((relation) => finding("postgres-rls-disabled", `${relation.namespace}.${relation.relation}`));
-    const unsafe = observation.policies.flatMap(policyFindings);
+    const exposed = observation.relations.filter((relation) => relation.exposedRoles.length > 0);
+    const exposedPaths = new Set(exposed.map((relation) => `${relation.namespace}.${relation.relation}`));
+    const missing = exposed.flatMap((relation) => {
+        const path = `${relation.namespace}.${relation.relation}`;
+        return [
+            ...(relation.rlsEnabled ? [] : [finding("postgres-rls-disabled", path)]),
+            ...(relation.rlsForced ? [] : [finding("postgres-rls-not-forced", path)]),
+        ];
+    });
+    const exposedPolicies = observation.policies.filter((policy) =>
+        exposedPaths.has(`${policy.namespace}.${policy.relation}`),
+    );
+    const unsafe = exposedPolicies.flatMap(policyFindings);
     return await Promise.all([
-        checkEvidence("rls-enabled", observation.relations, missing),
-        checkEvidence("policy-shape", observation.policies, unsafe),
+        checkEvidence("rls-enabled", exposed, missing),
+        checkEvidence("policy-shape", exposedPolicies, unsafe),
     ]);
 }
 
 export async function grantChecks(
     observation: readonly GrantObservation[],
+    memberships: readonly RoleMembershipObservation[],
+    unknownSurfaces: readonly UnknownSurfaceObservation[],
 ): Promise<PlatformVerificationCheckEvidenceV1[]> {
     const findings = observation.flatMap((grant) => {
         if (!UNPRIVILEGED.has(grant.grantee)) {
@@ -38,9 +56,25 @@ export async function grantChecks(
         if (grant.objectType === "relation" && ["TRUNCATE", "TRIGGER", "REFERENCES"].includes(grant.privilege)) {
             return [finding("postgres-data-api-elevated-relation-privilege", path)];
         }
+        if (grant.objectType === "column" && grant.privilege === "REFERENCES") {
+            return [finding("postgres-data-api-elevated-column-privilege", path)];
+        }
         return [];
     });
-    return [await checkEvidence("data-api-grants", observation, findings)];
+    findings.push(
+        ...memberships.map((membership) =>
+            finding(
+                membership.superuser || membership.bypassRls
+                    ? "postgres-data-api-privileged-role-membership"
+                    : "postgres-data-api-unexpected-role-membership",
+                `${membership.actor}:${membership.inheritedRole}:${membership.depth}`,
+            ),
+        ),
+        ...unknownSurfaces.map((surface) =>
+            finding("postgres-unknown-data-api-surface", `${surface.namespace}.${surface.objectName}:${surface.kind}`),
+        ),
+    );
+    return [await checkEvidence("data-api-grants", { grants: observation, memberships, unknownSurfaces }, findings)];
 }
 
 export async function viewChecks(
@@ -49,6 +83,9 @@ export async function viewChecks(
     const findings = observation.flatMap((view) => {
         if (!view.selectGrantees.some((role) => UNPRIVILEGED.has(role))) {
             return [];
+        }
+        if (!view.ownedBySessionRole) {
+            return [finding("postgres-view-external-owner", `${view.namespace}.${view.name}`)];
         }
         if (view.kind === "materialized-view") {
             return [finding("postgres-materialized-view-data-api-exposure", `${view.namespace}.${view.name}`)];
@@ -70,6 +107,9 @@ export async function routineChecks(
             continue;
         }
         const path = `${routine.namespace}.${routine.identity}`;
+        if (!routine.ownedBySessionRole) {
+            hardening.push(finding("postgres-security-definer-external-owner", path));
+        }
         if (!safeSearchPath(routine.configuration)) {
             hardening.push(finding("postgres-security-definer-unsafe-search-path", path));
         }
@@ -92,7 +132,7 @@ function policyFindings(policy: RlsObservation["policies"][number]): PlatformVer
     if (["r", "w", "d", "*"].includes(policy.command) && !policy.usingExpression) {
         findings.push(finding("postgres-policy-missing-using", path));
     }
-    if (policy.command === "a" && !policy.checkExpression) {
+    if (["a", "w", "*"].includes(policy.command) && !policy.checkExpression) {
         findings.push(finding("postgres-policy-missing-with-check", path));
     }
     const expression = `${policy.usingExpression ?? ""}\n${policy.checkExpression ?? ""}`.toLowerCase();

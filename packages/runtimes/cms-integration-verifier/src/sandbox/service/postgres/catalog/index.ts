@@ -4,18 +4,22 @@ import type {
     BoundarySnapshot,
     CatalogFingerprintRow,
     GrantObservation,
+    RoleMembershipObservation,
     RlsObservation,
     RoutineObservation,
+    UnknownSurfaceObservation,
     ViewObservation,
 } from "../types";
+import { GRANTS_QUERY } from "./accessQueries";
+import { BOUNDARY_CATALOG_QUERY } from "./queries";
 import {
-    BOUNDARY_CATALOG_QUERY,
-    GRANTS_QUERY,
     RLS_POLICIES_QUERY,
     RLS_RELATIONS_QUERY,
+    ROLE_MEMBERSHIPS_QUERY,
     ROUTINES_QUERY,
+    UNKNOWN_SURFACES_QUERY,
     VIEWS_QUERY,
-} from "./queries";
+} from "./policyQueries";
 import { readTableDataRows, type TableDataProjection } from "./tableData";
 
 export type { TableDataProjection } from "./tableData";
@@ -52,6 +56,7 @@ export async function readRlsObservation(database: SQL, schemas: readonly string
             kind: entry.kind,
             rlsEnabled: entry.rlsEnabled,
             rlsForced: entry.rlsForced,
+            exposedRoles: [...entry.exposedRoles],
         })),
         policies: policyRows.map((entry) => ({
             namespace: entry.namespace,
@@ -64,6 +69,21 @@ export async function readRlsObservation(database: SQL, schemas: readonly string
             ...(entry.checkExpression === null ? {} : { checkExpression: entry.checkExpression }),
         })),
     };
+}
+
+export async function readRoleMembershipObservation(database: SQL): Promise<RoleMembershipObservation[]> {
+    const rows = (await database.unsafe(ROLE_MEMBERSHIPS_QUERY)) as RoleMembershipObservation[];
+    return rows.map((entry) => ({ ...entry }));
+}
+
+export async function readUnknownSurfaceObservation(
+    database: SQL,
+    schemas: readonly string[],
+): Promise<UnknownSurfaceObservation[]> {
+    const rows = (await database.unsafe(UNKNOWN_SURFACES_QUERY, [
+        database.array([...schemas], "TEXT"),
+    ])) as UnknownSurfaceObservation[];
+    return rows.map((entry) => ({ ...entry, exposedRoles: [...entry.exposedRoles] }));
 }
 
 export async function readGrantObservation(database: SQL, schemas: readonly string[]): Promise<GrantObservation[]> {

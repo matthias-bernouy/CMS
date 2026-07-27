@@ -5,7 +5,9 @@ import {
     readBoundarySnapshot,
     readGrantObservation,
     readRlsObservation,
+    readRoleMembershipObservation,
     readRoutineObservation,
+    readUnknownSurfaceObservation,
     readViewObservation,
 } from "./catalog";
 import { buildPlatformEvidence } from "./checks";
@@ -80,6 +82,8 @@ export function createPostgresPlatformVerificationAdapter(
                     const afterReapply = await readBoundarySnapshot(sql, ownedNamespaces);
                     const rls = await readRlsObservation(sql, dataApiSchemas);
                     const grants = await readGrantObservation(sql, dataApiSchemas);
+                    const memberships = await readRoleMembershipObservation(sql);
+                    const unknownSurfaces = await readUnknownSurfaceObservation(sql, dataApiSchemas);
                     const views = await readViewObservation(sql, dataApiSchemas);
                     const routines = await readRoutineObservation(sql, ownedNamespaces);
                     return {
@@ -97,6 +101,8 @@ export function createPostgresPlatformVerificationAdapter(
                                 reappliedSchemas,
                                 rls,
                                 grants,
+                                memberships,
+                                unknownSurfaces,
                                 views,
                                 routines,
                             },

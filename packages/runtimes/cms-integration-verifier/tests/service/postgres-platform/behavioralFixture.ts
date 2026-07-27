@@ -1,4 +1,4 @@
-import { SQL } from "bun";
+import type { SQL } from "bun";
 import type { BehavioralRlsProbe } from "../../../src/sandbox/service/postgres/checks/behavioral";
 
 export const BEHAVIORAL_PROBE: BehavioralRlsProbe = Object.freeze({
@@ -12,24 +12,6 @@ export const BEHAVIORAL_PROBE: BehavioralRlsProbe = Object.freeze({
     firstCrossInsert: fixture("0194df39-2b9e-7d9e-9803-81ca737dda03", "first-cross"),
     secondCrossInsert: fixture("0194df39-2b9e-7d9e-9803-81ca737dda04", "second-cross"),
 });
-
-export async function installBehavioralRuntime(admin: SQL, candidateRole: string): Promise<void> {
-    await admin.unsafe(`create schema auth;
-      create function auth.uid() returns uuid language sql stable as $$
-        select nullif(coalesce(current_setting('request.jwt.claim.sub', true),
-          nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'), '')::uuid
-      $$;
-      create function auth.jwt() returns jsonb language sql stable as $$
-        select coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb, '{}'::jsonb)
-      $$;
-      revoke all on function auth.uid() from public;
-      revoke all on function auth.jwt() from public;
-      grant usage on schema auth to anon, authenticated;
-      grant execute on function auth.uid(), auth.jwt() to anon, authenticated;
-      grant usage on schema auth to ${identifier(candidateRole)};
-      grant execute on function auth.uid(), auth.jwt() to ${identifier(candidateRole)};
-      grant anon, authenticated to ${identifier(candidateRole)}`);
-}
 
 export async function installTenantTable(database: SQL): Promise<void> {
     await database.unsafe(`create schema verifier_behavioral;
@@ -66,8 +48,4 @@ export async function makePoliciesLeaky(database: SQL): Promise<void> {
 
 function fixture(key: string, secret: string) {
     return Object.freeze({ key, values: Object.freeze({ secret }) });
-}
-
-function identifier(value: string): string {
-    return `"${value.replaceAll('"', '""')}"`;
 }

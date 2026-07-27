@@ -6,6 +6,7 @@ import {
     type PostgresProviderConfig,
 } from "./configuration";
 import { assertPostgresServerFingerprint, readPostgresServerFingerprint } from "./fingerprint";
+import { assertSandboxActorMemberships } from "./environment";
 import { assertPostgresProviderMutationLock } from "./mutex";
 import {
     assertDisposablePostgresRoleSettings,
@@ -58,6 +59,7 @@ export async function assertDisposablePostgresOwnershipInventory(
         }
         assertPostgresRoleSecurity(role);
         await assertDisposablePostgresRoleSettings(admin, marker, config);
+        await assertSandboxActorMemberships(admin, marker.role);
     }
 }
 

@@ -54,14 +54,18 @@ export const POSTGRES_PLATFORM_VERIFICATION_SUITES_V1 = Object.freeze([
         "platform-postgres-rls-shape",
         "data-api-schemas",
         ["rls-enabled", "policy-shape"],
-        ["Tables in declared Data API schemas enable RLS and policies have structurally safe clauses."],
+        [
+            "Effectively exposed tables in declared Data API schemas enable and force RLS, and their policies have structurally safe clauses.",
+        ],
         ["behavioral tenant isolation", "PostgREST request execution", "JWT authorization semantics"],
     ),
     suite(
         "platform-postgres-grants",
         "data-api-schemas",
         ["data-api-grants"],
-        ["Data API schemas do not expose unsafe PUBLIC or grant-option privileges."],
+        [
+            "Data API schemas have a fully classified effective anon/authenticated privilege surface without unsafe PUBLIC, inherited, elevated, or grant-option privileges.",
+        ],
         ["application-specific authorization intent"],
     ),
     suite(

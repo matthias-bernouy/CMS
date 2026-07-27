@@ -9,6 +9,7 @@ import {
     environmentMismatch as mismatch,
     observeBootstrap,
     observeExtensions,
+    observeGrants,
     observePostgres,
     observeRoles,
     observeSessionSettings,
@@ -25,17 +26,19 @@ export async function attestMigrationEnvironment(
     const bootstrap = await observeBootstrap(database);
     const roles = await observeRoles(database);
     const extensions = await observeExtensions(database);
+    const grants = await observeGrants(database);
     const sessionSettings = await observeSessionSettings(database);
     requireCanonicalMatch(postgres, CONTRACT.postgres);
     requireCanonicalMatch(bootstrap, CONTRACT.bootstrap);
     requireCanonicalMatch(roles, CONTRACT.roles);
     requireCanonicalMatch(extensions, CONTRACT.extensions);
+    requireCanonicalMatch(grants, CONTRACT.grants);
     requireCanonicalMatch(sessionSettings, CONTRACT.sessionSettings);
     requireCanonicalMatch(declared.manifest.postgres, CONTRACT.postgres);
     requireCanonicalMatch(declared.manifest.roles, CONTRACT.roles);
     requireCanonicalMatch(declared.manifest.extensions, CONTRACT.extensions);
     requireCanonicalMatch(declared.manifest.sessionSettings, CONTRACT.sessionSettings);
-    requireCanonicalMatch(declared.manifest.grants, []);
+    requireCanonicalMatch(declared.manifest.grants, CONTRACT.grants);
     requireCanonicalMatch(declared.manifest.fixtures, []);
     if (declared.manifest.bootstrapSqlDigest !== bootstrapSqlDigest) {
         mismatch();
@@ -45,7 +48,7 @@ export async function attestMigrationEnvironment(
         postgres,
         bootstrapSqlDigest,
         roles,
-        grants: [],
+        grants,
         extensions,
         fixtures: [],
         sessionSettings,

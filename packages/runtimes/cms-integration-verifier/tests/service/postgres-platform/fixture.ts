@@ -74,6 +74,7 @@ function unsafeSql(): string {
         "grant select on verifier_unsafe.items_view to authenticated;",
         "create or replace function verifier_unsafe.privileged() returns bigint language sql security definer as 'select 1::bigint';",
         "grant create on schema verifier_unsafe to anon;",
+        "grant usage on schema verifier_unsafe to anon, authenticated;",
         "grant select on verifier_unsafe.items to public;",
         "grant truncate on verifier_unsafe.items to authenticated;",
     ].join("\n");

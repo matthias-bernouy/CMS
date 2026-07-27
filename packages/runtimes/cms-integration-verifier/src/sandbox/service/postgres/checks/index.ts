@@ -9,8 +9,10 @@ import type {
     GrantObservation,
     LoadedSqlPackage,
     ObservedConnectorSchema,
+    RoleMembershipObservation,
     RlsObservation,
     RoutineObservation,
+    UnknownSurfaceObservation,
     ViewObservation,
 } from "../types";
 import { boundaryChecks, failedSqlEvidence, installChecks, schemaContractCheck } from "./execution";
@@ -28,6 +30,8 @@ export type PostgresAuditContext = Readonly<{
     reappliedSchemas: readonly ObservedConnectorSchema[];
     rls: RlsObservation;
     grants: readonly GrantObservation[];
+    memberships: readonly RoleMembershipObservation[];
+    unknownSurfaces: readonly UnknownSurfaceObservation[];
     views: readonly ViewObservation[];
     routines: readonly RoutineObservation[];
 }>;
@@ -122,7 +126,11 @@ async function applicableEvidence(
         return suiteEvidence(definition, suiteDigest, await rlsChecks(context.rls));
     }
     if (definition.suiteId === "platform-postgres-grants") {
-        return suiteEvidence(definition, suiteDigest, await grantChecks(context.grants));
+        return suiteEvidence(
+            definition,
+            suiteDigest,
+            await grantChecks(context.grants, context.memberships, context.unknownSurfaces),
+        );
     }
     if (definition.suiteId === "platform-postgres-view-security") {
         return suiteEvidence(definition, suiteDigest, await viewChecks(context.views));
