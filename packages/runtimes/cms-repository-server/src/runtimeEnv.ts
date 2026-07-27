@@ -3,6 +3,7 @@ import {
     parsePinnedVerificationRunnerIdentity,
     type PinnedVerificationRunnerIdentity,
 } from "@bernouy/cms-integration-verification";
+import { readRepositoryCandidateRuntimeConfig, type RepositoryCandidateRuntimeConfig } from "./core/candidates/config";
 
 export type RepositoryRuntimeEnvSource = Record<string, string | undefined>;
 
@@ -18,15 +19,14 @@ export type RepositoryRuntimeEnv = Readonly<{
     managementRateLimitWindowSeconds: number;
     workerRateLimit: number;
     workerRateLimitWindowSeconds: number;
-    candidateTtlMs: number;
-    workerLeaseDurationMs: number;
     verifierRunner: PinnedVerificationRunnerIdentity;
     clientAddressMode: "direct" | "disabled" | "trusted-proxy";
     trustedProxyHops: number;
     packageDownloadLimit: number;
     packageDownloadWindowSeconds: number;
     gracefulStopTimeoutMs: number;
-}>;
+}> &
+    RepositoryCandidateRuntimeConfig;
 
 export function readRepositoryRuntimeEnv(source: RepositoryRuntimeEnvSource): RepositoryRuntimeEnv {
     const publicPort = parsePort(source.CMS_REPOSITORY_PUBLIC_PORT, "CMS_REPOSITORY_PUBLIC_PORT", 3001);
@@ -78,20 +78,7 @@ export function readRepositoryRuntimeEnv(source: RepositoryRuntimeEnvSource): Re
             "CMS_REPOSITORY_WORKER_RATE_LIMIT_WINDOW_SECONDS",
             60,
         ),
-        candidateTtlMs: boundedInteger(
-            source.CMS_REPOSITORY_CANDIDATE_TTL_MS,
-            "CMS_REPOSITORY_CANDIDATE_TTL_MS",
-            86_400_000,
-            60_000,
-            30 * 86_400_000,
-        ),
-        workerLeaseDurationMs: boundedInteger(
-            source.CMS_REPOSITORY_WORKER_LEASE_DURATION_MS,
-            "CMS_REPOSITORY_WORKER_LEASE_DURATION_MS",
-            300_000,
-            10_000,
-            3_600_000,
-        ),
+        ...readRepositoryCandidateRuntimeConfig(source),
         verifierRunner: readVerifierRunner(source),
         ...clientAddress,
         packageDownloadLimit: positiveInteger(

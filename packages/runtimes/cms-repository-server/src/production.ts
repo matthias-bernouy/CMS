@@ -21,6 +21,7 @@ import {
 import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { RepositoryCatalogRuntime } from "./core/catalogRuntime";
+import { startRepositoryWithCandidateGarbageCollection } from "./core/candidates/garbageCollectionServer";
 import {
     createProductionRepositoryOperationalTelemetry,
     productionPackageDownloadProtection,
@@ -124,27 +125,33 @@ export async function startProductionRepositoryServer(
     const packageDownloadProtection = productionPackageDownloadProtection(env, (observation) =>
         telemetry.observePublicPackageRead(observation),
     );
-    return startRepositoryServer({
-        publicRunner: new BunRunner(),
-        managementRunner: new BunRunner(),
-        publicPort: env.publicPort,
-        managementPort: env.managementPort,
-        catalog,
-        loadCatalog,
-        packageDownloadProtection,
-        observePublicRead: (observation) => telemetry.observePublicRead(observation),
-        integrationCompatibility: repositoryManagement.compatibility,
-        integrationReleases: repositoryManagement.releases,
-        integrationVerificationBundles: repositoryManagement.verificationBundles,
-        managementGuard,
-        mountManagement: repositoryManagement.mount,
-        maintenance: { guard: maintenanceGuard, mount: repositoryManagement.mountMaintenance },
-        worker: {
-            guard: workerGuard,
-            mountAuthenticated: repositoryManagement.mountWorkerAuthenticated,
-            mountCapabilities: repositoryManagement.mountWorkerCapabilities,
-        },
-        gracefulStopTimeoutMs: env.gracefulStopTimeoutMs,
+    return await startRepositoryWithCandidateGarbageCollection({
+        root: env.registryRoot,
+        policy: env,
+        telemetry,
+        startServer: () =>
+            startRepositoryServer({
+                publicRunner: new BunRunner(),
+                managementRunner: new BunRunner(),
+                publicPort: env.publicPort,
+                managementPort: env.managementPort,
+                catalog,
+                loadCatalog,
+                packageDownloadProtection,
+                observePublicRead: (observation) => telemetry.observePublicRead(observation),
+                integrationCompatibility: repositoryManagement.compatibility,
+                integrationReleases: repositoryManagement.releases,
+                integrationVerificationBundles: repositoryManagement.verificationBundles,
+                managementGuard,
+                mountManagement: repositoryManagement.mount,
+                maintenance: { guard: maintenanceGuard, mount: repositoryManagement.mountMaintenance },
+                worker: {
+                    guard: workerGuard,
+                    mountAuthenticated: repositoryManagement.mountWorkerAuthenticated,
+                    mountCapabilities: repositoryManagement.mountWorkerCapabilities,
+                },
+                gracefulStopTimeoutMs: env.gracefulStopTimeoutMs,
+            }),
     });
 }
 

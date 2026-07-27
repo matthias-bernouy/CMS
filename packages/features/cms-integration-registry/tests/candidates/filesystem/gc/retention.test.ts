@@ -7,12 +7,39 @@ import {
     readPrunedCandidate,
     recoverFsIntegrationRegistryCandidates,
 } from "@bernouy/cms-integration-registry/fs";
-import { candidateStoreFixture, createCandidate } from "../fixtures";
+import { CANDIDATE_TIMES, candidateStoreFixture, createCandidate, queueCandidate } from "../fixtures";
 
 let cleanup: (() => void) | undefined;
 afterEach(() => cleanup?.());
 
 describe("filesystem terminal candidate retention", () => {
+    test("never prunes an active candidate with a current worker lease", async () => {
+        const fixture = await candidateStoreFixture("leased-candidate");
+        cleanup = fixture.cleanup;
+        const queued = await queueCandidate(fixture);
+        const running = await fixture.store.claim(fixture.candidateId, {
+            expectedRevision: queued.revision,
+            jobId: "leased-job",
+            attemptId: "leased-attempt",
+            workerId: "leased-worker",
+            now: CANDIDATE_TIMES.claimed,
+            leaseExpiresAt: CANDIDATE_TIMES.lease,
+        });
+
+        const result = await garbageCollectFsIntegrationRegistryCandidateObjects({
+            root: fixture.root,
+            now: "2026-07-26T10:04:00.000Z",
+            gracePeriodMs: 0,
+            terminalRecordGracePeriodMs: 0,
+            auditRetentionMs: 1,
+        });
+
+        expect(result.prunedCandidateIds).toEqual([]);
+        expect(result.removedObjects).toBe(0);
+        expect(result.retainedReferencedObjects).toBeGreaterThan(0);
+        expect(await fixture.store.get(fixture.candidateId)).toEqual(running);
+    });
+
     test("fails closed when the global candidate record inventory is exhausted", async () => {
         const fixture = await candidateStoreFixture();
         cleanup = fixture.cleanup;

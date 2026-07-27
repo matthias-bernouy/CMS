@@ -10,7 +10,10 @@ import type {
     RepositoryOperationLogSink,
     RepositoryOperationOutcome,
     RepositoryOperationSpan,
+    RepositoryCandidateGarbageCollectionLogEntry,
+    RepositoryOperationalLogEntry,
 } from "./contracts";
+import { RepositoryCandidateGarbageCollectionMetrics } from "../candidates/garbageCollectionMetrics";
 import { repositoryOperationLogEntry, safeLogText, safeOperationIdentity } from "./logEntry";
 
 const OPERATIONS = ["publication", "stable-promotion", "compatibility-reevaluation"] as const;
@@ -50,6 +53,7 @@ export class RepositoryOperationalTelemetry {
         totalDurationMs: 0,
         maximumDurationMs: 0,
     };
+    private readonly candidateGarbageCollection = new RepositoryCandidateGarbageCollectionMetrics();
 
     constructor(
         private readonly options: Readonly<{
@@ -140,6 +144,11 @@ export class RepositoryOperationalTelemetry {
         this.repositoryReads[outcome] = increment(this.repositoryReads[outcome]);
     }
 
+    observeCandidateGarbageCollection(observation: RepositoryCandidateGarbageCollectionLogEntry): void {
+        this.candidateGarbageCollection.observe(observation);
+        this.emit(observation);
+    }
+
     snapshot(): RepositoryOperationalSnapshot {
         return {
             operations: Object.fromEntries(
@@ -155,6 +164,7 @@ export class RepositoryOperationalTelemetry {
                 downloadRateLimitRejections: this.downloadRateLimitRejections,
             },
             repositoryReads: { ...this.repositoryReads },
+            candidateGarbageCollection: this.candidateGarbageCollection.snapshot(),
             recentOperations: this.recentOperations.map((entry) => ({ ...entry })),
         };
     }
@@ -166,6 +176,10 @@ export class RepositoryOperationalTelemetry {
                 this.recentOperations.shift();
             }
         }
+        this.emit(entry);
+    }
+
+    private emit(entry: RepositoryOperationalLogEntry): void {
         try {
             this.options.log?.(entry);
         } catch {

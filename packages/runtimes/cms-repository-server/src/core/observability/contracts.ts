@@ -21,6 +21,20 @@ export type RepositoryOperationLogEntry = Readonly<{
     errorCode?: string;
 }>;
 
+export type RepositoryCandidateGarbageCollectionLogEntry = Readonly<{
+    schema: "cms.repository.candidate-garbage-collection.v1";
+    timestamp: string;
+    trigger: "startup" | "periodic";
+    outcome: "succeeded" | "failed";
+    durationMs: number;
+    removedObjects?: number;
+    retainedReferencedObjects?: number;
+    retainedWithinGraceObjects?: number;
+    prunedCandidates?: number;
+    removedAuditRecords?: number;
+    errorCode?: string;
+}>;
+
 export type RepositoryOperationCounter = Readonly<{
     attempted: number;
     inFlight: number;
@@ -54,10 +68,28 @@ export type RepositoryOperationalSnapshot = Readonly<{
         totalDurationMs: number;
         maximumDurationMs: number;
     }>;
+    candidateGarbageCollection: Readonly<{
+        attempted: number;
+        succeeded: number;
+        failed: number;
+        removedObjects: number;
+        retainedReferencedObjects: number;
+        retainedWithinGraceObjects: number;
+        prunedCandidates: number;
+        removedAuditRecords: number;
+        totalDurationMs: number;
+        maximumDurationMs: number;
+        lastRunAt?: string;
+        lastSuccessAt?: string;
+        lastFailureAt?: string;
+        lastErrorCode?: string;
+    }>;
     recentOperations: readonly RepositoryOperationLogEntry[];
 }>;
 
-export type RepositoryOperationLogSink = (entry: RepositoryOperationLogEntry) => void;
+export type RepositoryOperationalLogEntry = RepositoryOperationLogEntry | RepositoryCandidateGarbageCollectionLogEntry;
+
+export type RepositoryOperationLogSink = (entry: RepositoryOperationalLogEntry) => void;
 
 export type RepositoryOperationIdentity = Readonly<{
     kind?: string;

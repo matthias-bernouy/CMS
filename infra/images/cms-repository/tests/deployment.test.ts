@@ -200,6 +200,10 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
         CMS_REPOSITORY_WORKER_RATE_LIMIT_WINDOW_SECONDS: "60",
         CMS_REPOSITORY_CANDIDATE_TTL_MS: "86400000",
         CMS_REPOSITORY_WORKER_LEASE_DURATION_MS: "300000",
+        CMS_REPOSITORY_CANDIDATE_GC_INTERVAL_MS: "21600000",
+        CMS_REPOSITORY_CANDIDATE_OBJECT_GRACE_MS: "86400000",
+        CMS_REPOSITORY_CANDIDATE_TERMINAL_RETENTION_MS: "604800000",
+        CMS_REPOSITORY_CANDIDATE_PRUNE_AUDIT_RETENTION_MS: "2592000000",
     });
     expect(config.services["cms-repository"]?.secrets).toEqual(
         expect.arrayContaining([

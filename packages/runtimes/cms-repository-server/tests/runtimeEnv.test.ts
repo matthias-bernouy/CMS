@@ -26,6 +26,10 @@ describe("readRepositoryRuntimeEnv", () => {
             workerRateLimitWindowSeconds: 60,
             candidateTtlMs: 86_400_000,
             workerLeaseDurationMs: 300_000,
+            candidateGarbageCollectionIntervalMs: 21_600_000,
+            candidateObjectGracePeriodMs: 86_400_000,
+            candidateTerminalRetentionMs: 604_800_000,
+            candidatePruneAuditRetentionMs: 2_592_000_000,
             verifierRunner: {
                 name: "cms-postgres",
                 version: "1.2.0",
@@ -75,16 +79,32 @@ describe("readRepositoryRuntimeEnv", () => {
         expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_GRACEFUL_STOP_TIMEOUT_MS: "60001" })).toThrow();
         expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_CANDIDATE_TTL_MS: "59999" })).toThrow();
         expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_WORKER_LEASE_DURATION_MS: "3600001" })).toThrow();
+        expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_CANDIDATE_GC_INTERVAL_MS: "59999" })).toThrow();
+        expect(() => readRepositoryRuntimeEnv({ CMS_REPOSITORY_CANDIDATE_OBJECT_GRACE_MS: "3599999" })).toThrow();
+        expect(() =>
+            readRepositoryRuntimeEnv({ CMS_REPOSITORY_CANDIDATE_TERMINAL_RETENTION_MS: "86399999" }),
+        ).toThrow();
+        expect(() =>
+            readRepositoryRuntimeEnv({ CMS_REPOSITORY_CANDIDATE_PRUNE_AUDIT_RETENTION_MS: "604799999" }),
+        ).toThrow();
         expect(
             readRepositoryRuntimeEnv({
                 CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT: "7",
                 CMS_REPOSITORY_MANAGEMENT_RATE_LIMIT_WINDOW_SECONDS: "20",
                 CMS_REPOSITORY_GRACEFUL_STOP_TIMEOUT_MS: "5000",
+                CMS_REPOSITORY_CANDIDATE_GC_INTERVAL_MS: "60000",
+                CMS_REPOSITORY_CANDIDATE_OBJECT_GRACE_MS: "3600000",
+                CMS_REPOSITORY_CANDIDATE_TERMINAL_RETENTION_MS: "86400000",
+                CMS_REPOSITORY_CANDIDATE_PRUNE_AUDIT_RETENTION_MS: "604800000",
             }),
         ).toMatchObject({
             managementRateLimit: 7,
             managementRateLimitWindowSeconds: 20,
             gracefulStopTimeoutMs: 5000,
+            candidateGarbageCollectionIntervalMs: 60_000,
+            candidateObjectGracePeriodMs: 3_600_000,
+            candidateTerminalRetentionMs: 86_400_000,
+            candidatePruneAuditRetentionMs: 604_800_000,
         });
     });
 
