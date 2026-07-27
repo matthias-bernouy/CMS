@@ -8,11 +8,14 @@ import {
     loadSupabaseRepeatableAssets,
     type SupabaseMigrationExecution,
 } from "@bernouy/cms-integrations/supabase";
-import { applyExactDependencies, applyTargetMigration, installMigrationSource } from "./execution";
+import { applyExactDependencies } from "./execution/dependencies";
+import type { ExecuteMigrationMatrixInput } from "./execution";
+import { installMigrationSource } from "./execution/install";
+import { applyTargetMigration } from "./execution/target";
 import { readMatrixState, readMigrationLedger } from "./state";
 import type { LoadedMigrationPackage, TargetMigrationConnector } from "./types";
 
-type ProbeInput = Parameters<typeof import("./execution").executeMigrationMatrix>[0] & {
+type ProbeInput = ExecuteMigrationMatrixInput & {
     source: LoadedMigrationPackage;
     target: LoadedMigrationPackage;
     connector: TargetMigrationConnector;

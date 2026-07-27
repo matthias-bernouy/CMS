@@ -1,6 +1,7 @@
 import type { SQL } from "bun";
 import type { MigrationVerificationInputV1 } from "@bernouy/cms-integration-verification";
 import { requireTargetConnector, type MigrationPackageLoader } from "../packages";
+import { runLedgerSafetyProbes } from "../probes";
 import { readMatrixState, readMigrationLedger, targetInstanceIsExact } from "../state";
 import type {
     ExactMigrationPackage,
@@ -70,7 +71,7 @@ export async function executeMigrationMatrix(input: ExecuteMigrationMatrixInput)
     });
 
     const probes = await inMigrationVerificationPhase("migration", async () =>
-        runLedgerProbes({ ...input, source, target, connector }),
+        runLedgerSafetyProbes({ ...input, source, target, connector }),
     );
     return {
         selection: input.selection,
@@ -115,15 +116,4 @@ function sameSourceLedger(
             );
         })
     );
-}
-
-async function runLedgerProbes(
-    input: ExecuteMigrationMatrixInput & {
-        source: LoadedMigrationPackage;
-        target: LoadedMigrationPackage;
-        connector: TargetMigrationConnector;
-    },
-) {
-    const module = await import("../probes");
-    return await module.runLedgerSafetyProbes(input);
 }
