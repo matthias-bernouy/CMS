@@ -7,6 +7,7 @@ const composeFile = resolve(root, "compose.yml");
 const compose = readFileSync(composeFile, "utf8");
 const dockerfile = readFileSync(resolve(root, "Verifier.Dockerfile"), "utf8");
 const envExample = readFileSync(resolve(root, ".env.example"), "utf8");
+const postgresInit = readFileSync(resolve(root, "verifier-postgres-init.sql"), "utf8");
 
 describe("integration verifier image", () => {
     test("pins every external base and installs only the verifier runtime dependency closure", () => {
@@ -84,6 +85,16 @@ describe("integration verifier trust zones", () => {
         expect(postgres).not.toContain("cms_repository");
         expect(postgres).toContain("read_only: true");
         expect(postgres).toContain("pids_limit: 128");
+        expect(postgres).toContain("source: cms_integration_verifier_postgres_init");
+        expect(postgres).toContain("/docker-entrypoint-initdb.d/010-cms-verifier-contract.sql");
+        expect(postgresInit.trim()).toBe(
+            "COMMENT ON DATABASE postgres IS 'cms-integration-verifier-dedicated-postgres-v1';",
+        );
+        expect(compose).toContain("file: ./verifier-postgres-init.sql");
+        expect(compose).toContain("CMS_INTEGRATION_VERIFIER_POSTGRES_LEASE_DURATION_MS");
+        expect(compose).toContain("CMS_INTEGRATION_VERIFIER_POSTGRES_HEARTBEAT_INTERVAL_MS");
+        expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_POSTGRES_LEASE_DURATION_MS=30000");
+        expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_POSTGRES_HEARTBEAT_INTERVAL_MS=5000");
     });
 
     test("requires file-backed worker, signing, and database credentials", () => {

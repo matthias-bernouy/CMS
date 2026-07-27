@@ -163,6 +163,8 @@ services:
             CMS_INTEGRATION_VERIFIER_POSTGRES_DATABASE: postgres
             CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_FILE: /run/secrets/cms-integration-verifier-postgres-password
             CMS_INTEGRATION_VERIFIER_POSTGRES_STATEMENT_TIMEOUT_MS: "${CMS_INTEGRATION_VERIFIER_POSTGRES_STATEMENT_TIMEOUT_MS:-120000}"
+            CMS_INTEGRATION_VERIFIER_POSTGRES_LEASE_DURATION_MS: "${CMS_INTEGRATION_VERIFIER_POSTGRES_LEASE_DURATION_MS:-30000}"
+            CMS_INTEGRATION_VERIFIER_POSTGRES_HEARTBEAT_INTERVAL_MS: "${CMS_INTEGRATION_VERIFIER_POSTGRES_HEARTBEAT_INTERVAL_MS:-5000}"
         secrets:
             - source: cms_integration_verifier_worker_token
               target: cms-integration-verifier-worker-token
@@ -281,6 +283,9 @@ services:
         secrets:
             - source: cms_integration_verifier_postgres_server_password
               target: cms-integration-verifier-postgres-password
+        configs:
+            - source: cms_integration_verifier_postgres_init
+              target: /docker-entrypoint-initdb.d/010-cms-verifier-contract.sql
         read_only: true
         tmpfs:
             - /var/lib/postgresql/data:rw,nosuid,nodev,noexec,size=1g,mode=0700,uid=70,gid=70
@@ -332,6 +337,8 @@ secrets:
 configs:
     cms_integration_verifier_sandbox_verification_key:
         file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE must reference the matching Ed25519 public key readable by UID/GID 1002}
+    cms_integration_verifier_postgres_init:
+        file: ./verifier-postgres-init.sql
 
 networks:
     cms_repository:
