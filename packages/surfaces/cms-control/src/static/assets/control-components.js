@@ -12496,7 +12496,6 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     properties,
     ...required.length ? { required } : {}
   });
-  var arrayShape = (items) => ({ type: "array", items });
   var subjectShape = objectShape({
     identifier: stringShape(),
     email: stringShape(),
@@ -12505,18 +12504,6 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
   var okShape = objectShape({ ok: booleanShape() });
   var emailBody = objectShape({ email: stringShape() }, ["email"]);
   var tokenBody = objectShape({ token: stringShape() }, ["token"]);
-  var legalRequirementShape = objectShape({
-    documentKey: stringShape(),
-    versionId: stringShape(),
-    label: stringShape(),
-    consentText: stringShape(),
-    page: objectShape({
-      id: stringShape(),
-      path: stringShape(),
-      title: stringShape()
-    }, ["id", "path", "title"]),
-    contentHash: stringShape()
-  }, ["documentKey", "versionId", "label", "consentText", "page", "contentHash"]);
   var SYSTEM_AUTH_SOURCE = {
     urn: SYSTEM_AUTH_SOURCE_URN,
     meta: {
@@ -12555,19 +12542,6 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         output: [{ status: "200", body: okShape }]
       },
       {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signupLegalRequirements"),
-        method: "GET",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup/legal-requirements`,
-        meta: { name: "Get signup legal requirements" },
-        output: [
-          {
-            status: "200",
-            body: objectShape({ documents: arrayShape(legalRequirementShape) }, ["documents"])
-          }
-        ]
-      },
-      {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
         method: "POST",
         access: { mode: "public" },
@@ -12576,11 +12550,16 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         input: {
           body: objectShape({
             email: stringShape(),
-            password: stringShape(),
-            acceptedLegalDocumentVersionIds: arrayShape(stringShape())
+            password: stringShape()
           }, ["email", "password"])
         },
-        output: [{ status: "200", body: okShape }]
+        output: [
+          {
+            status: "200",
+            body: okShape,
+            triggerBody: objectShape({ cmsUserId: { ...stringShape(), nullable: true } }, ["cmsUserId"])
+          }
+        ]
       },
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestEmailVerification"),
@@ -13582,11 +13561,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
   }
   customElements.define("cms-event-toast", CmsEventToast);
 
-  // ../../features/cms-auth/src/core/validation.ts
-  function isBuiltinProvider(kind) {
-    return kind === "local";
-  }
-  // ../../features/cms-auth/src/components/LoginMethods/LoginMethods.ts
+  // src/components/admin/Resources/Auth/LoginMethods/LoginMethods.ts
   class CmsLoginMethods extends HTMLElement {
     async connectedCallback() {
       const base = this.getAttribute("base") ?? "";
@@ -13603,535 +13578,26 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         <div class="methods"></div>`;
       const wrap = root.querySelector(".methods");
       const returnTo = new URL(location.href).searchParams.get("returnTo") ?? "";
-      const rt2 = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+      const suffix = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
       try {
-        const res = await fetch(`${base}/auth/methods`);
-        const methods = res.ok ? await res.json() : [];
-        const redirect = methods.filter((m) => m.loginUrl);
-        if (!redirect.length) {
+        const response = await fetch(`${base}/auth/methods`);
+        const methods = response.ok ? await response.json() : [];
+        const redirectMethods = methods.filter((method) => method.loginUrl);
+        if (!redirectMethods.length) {
           return;
         }
-        wrap.innerHTML = `<div class="sep">or</div>` + redirect.map((m) => `<a class="provider" href="${esc(m.loginUrl)}${rt2}">${esc(m.displayName)}</a>`).join("");
+        wrap.innerHTML = `<div class="sep">or</div>` + redirectMethods.map((method) => `<a class="provider" href="${escapeHtml(method.loginUrl)}${suffix}">${escapeHtml(method.displayName)}</a>`).join("");
       } catch {}
     }
   }
-  var esc = (s2) => s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  function escapeHtml(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
   customElements.define("cms-login-methods", CmsLoginMethods);
 
-  // ../../features/cms-auth/src/components/SignupLegalConsent/configuration.ts
-  var SIGNUP_LEGAL_CONSENT_ATTRIBUTES = [
-    "appearance",
-    "disabled",
-    "heading",
-    "load-error-label",
-    "loading-label",
-    "new-tab-label",
-    "required-message",
-    "retry-label",
-    "source-id",
-    "source-prefix"
-  ];
-  function signupLegalConsentAppearance(element) {
-    return element.getAttribute("appearance") === "compact" ? "compact" : "detailed";
-  }
-  function signupLegalConsentCopy(element) {
-    return {
-      heading: attribute(element, "heading", "Agreements"),
-      loadingLabel: attribute(element, "loading-label", "Loading agreements…"),
-      loadErrorLabel: attribute(element, "load-error-label", "Unable to load the agreements."),
-      retryLabel: attribute(element, "retry-label", "Try again"),
-      requiredMessage: attribute(element, "required-message", "Accept every agreement to continue."),
-      newTabLabel: attribute(element, "new-tab-label", "opens in a new tab")
-    };
-  }
-  function signupLegalRequirementsUrl(element) {
-    const prefix = (element.getAttribute("source-prefix")?.trim() || "/.cms/sources").replace(/\/+$/, "");
-    if (!prefix.startsWith("/") || prefix.startsWith("//")) {
-      throw new Error("Signup legal source prefix must be a same-origin path.");
-    }
-    const sourceId = element.getAttribute("source-id")?.trim() || "system-auth";
-    const url = new URL(`${prefix}/${encodeURIComponent(sourceId)}/signupLegalRequirements`, location.origin);
-    if (url.origin !== location.origin || url.search || url.hash) {
-      throw new Error("Signup legal source prefix must be a same-origin path.");
-    }
-    return url.pathname;
-  }
-  function attribute(element, name, fallback) {
-    return element.getAttribute(name)?.trim() || fallback;
-  }
-
-  // ../../features/cms-auth/src/components/SignupLegalConsent/form.ts
-  var ACCEPTED_VERSION_IDS_FIELD = "acceptedLegalDocumentVersionIds";
-  function syncSignupLegalFormValue(input) {
-    const selected = selectedVersionIds(input.checkboxes);
-    if (input.disabled) {
-      input.internals.setFormValue(null, serializeIds(selected));
-      input.internals.setValidity({});
-      return;
-    }
-    if (input.state.kind === "empty") {
-      input.internals.setFormValue(null, "[]");
-      input.internals.setValidity({});
-      return;
-    }
-    if (input.state.kind !== "ready") {
-      input.internals.setFormValue(null, "[]");
-      const message = input.state.kind === "loading" ? input.loadingMessage : input.errorMessage;
-      input.internals.setValidity({ customError: true }, message);
-      return;
-    }
-    if (selected.size === input.state.documents.length) {
-      const value = new FormData;
-      for (const document2 of input.state.documents) {
-        value.append(ACCEPTED_VERSION_IDS_FIELD, document2.versionId);
-      }
-      input.internals.setFormValue(value, serializeIds(selected));
-      input.internals.setValidity({});
-      return;
-    }
-    input.internals.setFormValue(null, serializeIds(selected));
-    const firstUnchecked = input.checkboxes.find((checkbox) => !checkbox.checked);
-    input.internals.setValidity({ valueMissing: true }, input.requiredMessage, firstUnchecked);
-  }
-  function selectedVersionIds(checkboxes) {
-    return new Set(checkboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.dataset.versionId).filter((value) => Boolean(value)));
-  }
-  function applySelectedVersionIds(checkboxes, ids) {
-    const selected = new Set(ids);
-    for (const checkbox of checkboxes) {
-      checkbox.checked = selected.has(checkbox.dataset.versionId ?? "");
-    }
-  }
-  function restoredVersionIds(state) {
-    if (typeof state !== "string") {
-      return [];
-    }
-    try {
-      const parsed = JSON.parse(state);
-      return Array.isArray(parsed) && parsed.every((value) => typeof value === "string") ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-  function serializeIds(ids) {
-    return JSON.stringify([...ids]);
-  }
-
-  // ../../features/cms-auth/src/components/SignupLegalConsent/requirements.ts
-  var MAX_DOCUMENTS = 16;
-  async function fetchSignupLegalRequirements(element, signal) {
-    const response = await fetch(signupLegalRequirementsUrl(element), {
-      credentials: "same-origin",
-      headers: { accept: "application/json" },
-      signal
-    });
-    if (!response.ok) {
-      throw new Error("Unable to load signup legal requirements.");
-    }
-    return parseSignupLegalRequirements(await response.json(), location.origin);
-  }
-  function parseSignupLegalRequirements(value, origin) {
-    if (!isRecord2(value) || !Array.isArray(value.documents) || value.documents.length > MAX_DOCUMENTS) {
-      throw new Error("Invalid signup legal requirements.");
-    }
-    const documentKeys = new Set;
-    const versionIds = new Set;
-    return value.documents.map((document2, index) => {
-      if (!isRecord2(document2) || !isRecord2(document2.page)) {
-        throw new Error(`Invalid signup legal requirement at index ${index}.`);
-      }
-      const documentKey = requiredString(document2.documentKey);
-      const versionId = requiredString(document2.versionId);
-      if (documentKeys.has(documentKey) || versionIds.has(versionId)) {
-        throw new Error("Duplicate signup legal requirement.");
-      }
-      documentKeys.add(documentKey);
-      versionIds.add(versionId);
-      requiredString(document2.contentHash);
-      requiredString(document2.page.id);
-      requiredString(document2.page.title);
-      return {
-        documentKey,
-        versionId,
-        label: requiredString(document2.label),
-        consentText: requiredString(document2.consentText),
-        href: safePageHref(requiredString(document2.page.path), origin)
-      };
-    });
-  }
-  function safePageHref(path, origin) {
-    if (!path.startsWith("/") || path.startsWith("//")) {
-      throw new Error("Signup legal page must use a same-origin path.");
-    }
-    const url = new URL(path, origin);
-    if (url.origin !== origin || !["http:", "https:"].includes(url.protocol)) {
-      throw new Error("Signup legal page must use a same-origin path.");
-    }
-    return `${url.pathname}${url.search}${url.hash}`;
-  }
-  function requiredString(value) {
-    if (typeof value !== "string" || !value.trim()) {
-      throw new Error("Invalid signup legal requirement string.");
-    }
-    return value.trim();
-  }
-  function isRecord2(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-
-  // ../../features/cms-auth/src/components/SignupLegalConsent/styles.ts
-  var SIGNUP_LEGAL_CONSENT_STYLES = `
-    :host {
-        display: block;
-        color: var(--cms-auth-legal-text, inherit);
-        font: inherit;
-    }
-
-    :host([data-state="empty"]) {
-        display: none;
-    }
-
-    fieldset {
-        min-width: 0;
-        margin: 0;
-        padding: 0;
-        border: 0;
-    }
-
-    legend {
-        margin: 0 0 .75rem;
-        padding: 0;
-        color: var(--cms-auth-legal-heading, currentColor);
-        font: inherit;
-        font-weight: 700;
-    }
-
-    .documents {
-        display: grid;
-        gap: .75rem;
-    }
-
-    .requirement {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        align-items: start;
-        gap: .65rem;
-    }
-
-    input {
-        width: 1.125rem;
-        height: 1.125rem;
-        margin: .15rem 0 0;
-        accent-color: var(--cms-auth-legal-accent, currentColor);
-    }
-
-    input:focus-visible,
-    a:focus-visible,
-    button:focus-visible {
-        outline: 2px solid var(--cms-auth-legal-accent, currentColor);
-        outline-offset: 2px;
-    }
-
-    .copy {
-        display: grid;
-        gap: .25rem;
-    }
-
-    :host([appearance="compact"]) .copy {
-        display: block;
-    }
-
-    label {
-        cursor: pointer;
-    }
-
-    a {
-        width: fit-content;
-        color: var(--cms-auth-legal-link, currentColor);
-        text-decoration: underline;
-        text-underline-offset: .16em;
-    }
-
-    .status {
-        margin: 0;
-        color: var(--cms-auth-legal-muted, currentColor);
-    }
-
-    .status[data-kind="error"] {
-        color: var(--cms-auth-legal-error, #b42318);
-    }
-
-    button {
-        width: fit-content;
-        margin-top: .65rem;
-        border: 1px solid var(--cms-auth-legal-button-border, currentColor);
-        border-radius: var(--cms-auth-legal-button-radius, .4rem);
-        background: var(--cms-auth-legal-button-background, transparent);
-        color: var(--cms-auth-legal-button-text, currentColor);
-        cursor: pointer;
-        font: inherit;
-        padding: .45rem .7rem;
-    }
-
-    input:disabled,
-    button:disabled {
-        cursor: not-allowed;
-        opacity: .6;
-    }
-
-    .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-    }
-`;
-
-  // ../../features/cms-auth/src/components/SignupLegalConsent/view.ts
-  function renderSignupLegalConsent(root, state, copy, callbacks, appearance = "detailed") {
-    const document2 = root.ownerDocument;
-    const style = document2.createElement("style");
-    style.textContent = SIGNUP_LEGAL_CONSENT_STYLES;
-    const fieldset = document2.createElement("fieldset");
-    fieldset.setAttribute("part", "fieldset");
-    const legend = document2.createElement("legend");
-    legend.setAttribute("part", "legend");
-    legend.textContent = copy.heading;
-    if (appearance === "compact") {
-      legend.className = "sr-only";
-    }
-    fieldset.append(legend);
-    const checkboxes = state.kind === "ready" ? renderDocuments(fieldset, state.documents, state.selectedIds, callbacks.change, appearance) : [];
-    if (state.kind === "loading") {
-      fieldset.append(status(document2, copy.loadingLabel, "status"));
-    } else if (state.kind === "error") {
-      fieldset.append(status(document2, copy.loadErrorLabel, "alert"));
-      const retry = document2.createElement("button");
-      retry.type = "button";
-      retry.setAttribute("part", "retry");
-      retry.textContent = copy.retryLabel;
-      retry.addEventListener("click", callbacks.retry);
-      fieldset.append(retry);
-    }
-    root.replaceChildren(style, fieldset);
-    return checkboxes;
-  }
-  function renderDocuments(fieldset, documents, selectedIds, onChange, appearance) {
-    const owner = fieldset.ownerDocument;
-    const list = owner.createElement("div");
-    list.className = "documents";
-    list.setAttribute("part", "documents");
-    const checkboxes = documents.map((requirement, index) => {
-      const row = owner.createElement("div");
-      row.className = "requirement";
-      row.setAttribute("part", "requirement");
-      const checkbox = owner.createElement("input");
-      const checkboxId = `signup-legal-document-${index}`;
-      const linkId = `${checkboxId}-link`;
-      checkbox.id = checkboxId;
-      checkbox.type = "checkbox";
-      checkbox.required = true;
-      checkbox.checked = selectedIds.has(requirement.versionId);
-      checkbox.dataset.versionId = requirement.versionId;
-      checkbox.setAttribute("part", "checkbox");
-      checkbox.addEventListener("change", onChange);
-      const copy = owner.createElement("div");
-      copy.className = "copy";
-      const label = owner.createElement("label");
-      label.htmlFor = checkboxId;
-      label.setAttribute("part", "consent");
-      const link = owner.createElement("a");
-      link.id = linkId;
-      link.href = requirement.href;
-      link.target = "_blank";
-      link.rel = "noopener";
-      link.setAttribute("part", "link");
-      link.append(owner.createTextNode(requirement.label), newTabNotice(owner));
-      if (appearance === "compact") {
-        appendLinkedConsent(label, requirement.consentText, requirement.label, link);
-        copy.append(label);
-      } else {
-        checkbox.setAttribute("aria-describedby", linkId);
-        label.textContent = requirement.consentText;
-        copy.append(label, link);
-      }
-      row.append(checkbox, copy);
-      list.append(row);
-      return checkbox;
-    });
-    fieldset.append(list);
-    return checkboxes;
-  }
-  function appendLinkedConsent(label, consentText, documentLabel, link) {
-    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
-    if (start < 0) {
-      label.append(consentText, " ", link);
-      return;
-    }
-    label.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
-  }
-  function newTabNotice(document2) {
-    const notice = document2.createElement("span");
-    notice.className = "sr-only";
-    notice.dataset.newTabNotice = "";
-    return notice;
-  }
-  function status(document2, message, role) {
-    const element = document2.createElement("p");
-    element.className = "status";
-    element.setAttribute("part", "status");
-    element.setAttribute("role", role);
-    element.setAttribute("aria-live", role === "alert" ? "assertive" : "polite");
-    element.dataset.kind = role === "alert" ? "error" : "loading";
-    element.textContent = message;
-    return element;
-  }
-  function setNewTabNotices(root, label) {
-    for (const notice of Array.from(root.querySelectorAll("[data-new-tab-notice]"))) {
-      notice.textContent = ` (${label})`;
-    }
-  }
-
-  // ../../features/cms-auth/src/components/SignupLegalConsent/SignupLegalConsent.ts
-  var CMS_SIGNUP_LEGAL_CONSENT_TAG = "cms-signup-legal-consent";
-
-  class CmsSignupLegalConsent extends HTMLElement {
-    static formAssociated = true;
-    static observedAttributes = SIGNUP_LEGAL_CONSENT_ATTRIBUTES;
-    internals;
-    root;
-    state = { kind: "loading" };
-    checkboxes = [];
-    request = null;
-    requestSequence = 0;
-    disabledByForm = false;
-    restoredIds = null;
-    constructor() {
-      super();
-      this.root = this.attachShadow({ mode: "open" });
-      this.internals = this.attachInternals();
-    }
-    connectedCallback() {
-      this.render();
-      this.load();
-    }
-    disconnectedCallback() {
-      this.request?.abort();
-      this.request = null;
-    }
-    attributeChangedCallback(name, previous, current) {
-      if (!this.isConnected || previous === current) {
-        return;
-      }
-      if (name === "source-id" || name === "source-prefix") {
-        this.load();
-        return;
-      }
-      this.render(this.selectedIds());
-    }
-    formDisabledCallback(disabled) {
-      this.disabledByForm = disabled;
-      this.syncDisabled();
-      this.syncFormValue();
-    }
-    formResetCallback() {
-      for (const checkbox of this.checkboxes) {
-        checkbox.checked = false;
-      }
-      this.syncFormValue();
-    }
-    formStateRestoreCallback(state) {
-      const ids = restoredVersionIds(state);
-      if (this.state.kind !== "ready") {
-        this.restoredIds = ids;
-        return;
-      }
-      this.applySelection(ids);
-    }
-    async load() {
-      const sequence = ++this.requestSequence;
-      this.request?.abort();
-      const request = new AbortController;
-      this.request = request;
-      this.state = { kind: "loading" };
-      this.render();
-      try {
-        const documents = await fetchSignupLegalRequirements(this, request.signal);
-        if (request.signal.aborted || sequence !== this.requestSequence) {
-          return;
-        }
-        this.state = documents.length ? { kind: "ready", documents, selectedIds: new Set } : { kind: "empty" };
-        this.render();
-        const restoredIds = this.restoredIds;
-        this.restoredIds = null;
-        if (restoredIds && this.state.kind === "ready") {
-          this.applySelection(restoredIds);
-        }
-      } catch {
-        if (request.signal.aborted || sequence !== this.requestSequence) {
-          return;
-        }
-        this.state = { kind: "error" };
-        this.render();
-      } finally {
-        if (sequence === this.requestSequence) {
-          this.request = null;
-        }
-      }
-    }
-    render(selectedIds = new Set) {
-      if (this.state.kind === "ready") {
-        this.state = { ...this.state, selectedIds };
-      }
-      this.dataset.state = this.state.kind;
-      const copy = signupLegalConsentCopy(this);
-      this.checkboxes = renderSignupLegalConsent(this.root, this.state, copy, {
-        change: () => this.syncFormValue(),
-        retry: () => void this.load()
-      }, signupLegalConsentAppearance(this));
-      setNewTabNotices(this.root, copy.newTabLabel);
-      this.syncDisabled();
-      this.syncFormValue();
-    }
-    syncFormValue() {
-      const copy = signupLegalConsentCopy(this);
-      syncSignupLegalFormValue({
-        internals: this.internals,
-        state: this.state,
-        checkboxes: this.checkboxes,
-        disabled: this.isDisabled(),
-        loadingMessage: copy.loadingLabel,
-        errorMessage: copy.loadErrorLabel,
-        requiredMessage: copy.requiredMessage
-      });
-    }
-    applySelection(ids) {
-      applySelectedVersionIds(this.checkboxes, ids);
-      this.syncFormValue();
-    }
-    selectedIds() {
-      return selectedVersionIds(this.checkboxes);
-    }
-    syncDisabled() {
-      const disabled = this.isDisabled();
-      for (const checkbox of this.checkboxes) {
-        checkbox.disabled = disabled;
-      }
-      this.root.querySelector("button")?.toggleAttribute("disabled", disabled);
-    }
-    isDisabled() {
-      return this.disabledByForm || this.hasAttribute("disabled");
-    }
-  }
-
-  // ../../features/cms-auth/src/components/SignupLegalConsent/register.ts
-  if (!customElements.get(CMS_SIGNUP_LEGAL_CONSENT_TAG)) {
-    customElements.define(CMS_SIGNUP_LEGAL_CONSENT_TAG, CmsSignupLegalConsent);
+  // ../../features/cms-auth/src/core/validation.ts
+  function isBuiltinProvider(kind) {
+    return kind === "local";
   }
   // src/components/admin/Actions/ProviderActions/ProviderActions.ts
   class CmsProviderActions extends HTMLElement {
@@ -14237,10 +13703,10 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
   customElements.define("cms-provider-actions", CmsProviderActions);
 
   // ../../foundation/http-runner/src/core/html.ts
-  function escapeHtml(str) {
+  function escapeHtml2(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-  var escapeAttr = escapeHtml;
+  var escapeAttr = escapeHtml2;
   // src/components/admin/Common/RoleSelect/RoleSelect.ts
   class CmsRoleSelect extends HTMLElement {
     static formAssociated = true;
@@ -14291,8 +13757,8 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       const current = this._value;
       const opts = this.roles.length ? this.roles : [{ id: current, label: current }];
       root.innerHTML = `
-        <p9r-select value="${escapeHtml(current)}">
-          ${opts.map((r) => `<option value="${escapeHtml(r.id)}"${r.id === current ? " selected" : ""}>${escapeHtml(r.label)}</option>`).join("")}
+        <p9r-select value="${escapeHtml2(current)}">
+          ${opts.map((r) => `<option value="${escapeHtml2(r.id)}"${r.id === current ? " selected" : ""}>${escapeHtml2(r.label)}</option>`).join("")}
         </p9r-select>`;
       const sel = root.querySelector("p9r-select");
       this.internals.setFormValue(sel.value);
@@ -14369,12 +13835,12 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
       const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
       const d = this.data;
       const checked = new Set(d.role.grants);
-      const cb = (id, label) => `<w13c-checkbox value="${escapeHtml(id)}"${checked.has(id) ? " checked" : ""}>${escapeHtml(label)}</w13c-checkbox>`;
+      const cb = (id, label) => `<w13c-checkbox value="${escapeHtml2(id)}"${checked.has(id) ? " checked" : ""}>${escapeHtml2(label)}</w13c-checkbox>`;
       const section = (label, items) => {
         const n = items.filter((i) => checked.has(i.id)).length;
         return `
               <p9r-accordion-item>
-                <span slot="header" class="grp">${escapeHtml(label)}<span class="badge"${n ? "" : " hidden"}>${n}</span></span>
+                <span slot="header" class="grp">${escapeHtml2(label)}<span class="badge"${n ? "" : " hidden"}>${n}</span></span>
                 <div class="grid">${items.map((i) => cb(i.id, i.label)).join("")}</div>
               </p9r-accordion-item>`;
       };
@@ -14396,7 +13862,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
             .bar { display:flex; align-items:center; gap:1rem; margin-top:1.75rem; }
             .cancel { text-decoration:none; color: var(--text-muted,#666); font:inherit; }
           </style>
-          <p class="intro">Editing role <strong>${escapeHtml(d.role.label)}</strong> <code>${escapeHtml(d.role.id)}</code></p>
+          <p class="intro">Editing role <strong>${escapeHtml2(d.role.label)}</strong> <code>${escapeHtml2(d.role.id)}</code></p>
 
           <section>
             <h3>CMS capabilities</h3>
@@ -14410,7 +13876,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
 
           <div class="bar">
             <p9r-button color="primary" class="save">Save</p9r-button>
-            <a class="cancel" href="${escapeHtml(this._back)}">Cancel</a>
+            <a class="cancel" href="${escapeHtml2(this._back)}">Cancel</a>
           </div>`;
       root.querySelector(".save").addEventListener("click", () => void this._save());
       root.addEventListener("change", () => this._refreshBadges());
@@ -15358,10 +14824,10 @@ button {
       const attestations = {};
       for (const row of Array.from(form.querySelectorAll("[data-manual-id]"))) {
         const id = row.dataset.manualId;
-        const status2 = row.querySelector("select").value;
+        const status = row.querySelector("select").value;
         const evidence = row.querySelector("input").value;
         if (evidence.trim()) {
-          attestations[id] = { status: status2, evidence };
+          attestations[id] = { status, evidence };
         }
       }
       const message = this.query("[data-snapshot-message]");
@@ -16237,8 +15703,8 @@ w13c-lateral-menu-item {
   function titleCase(value) {
     return value ? `${value[0].toUpperCase()}${value.slice(1)}` : value;
   }
-  function statusTone(status2) {
-    return status2.startsWith("5") ? "is-danger" : status2.startsWith("4") ? "is-warning" : "";
+  function statusTone(status) {
+    return status.startsWith("5") ? "is-danger" : status.startsWith("4") ? "is-warning" : "";
   }
   function referrerLabel(key) {
     if (key === "__none__") {
@@ -17013,9 +16479,9 @@ w13c-lateral-menu-item {
 
   class EndpointPerformanceUnavailableError extends Error {
     status;
-    constructor(status2) {
-      super(`Endpoint performance request failed with status ${status2}`);
-      this.status = status2;
+    constructor(status) {
+      super(`Endpoint performance request failed with status ${status}`);
+      this.status = status;
     }
   }
   function readEndpointPerformanceQuery(search = window.location.search) {
@@ -17175,8 +16641,8 @@ w13c-lateral-menu-item {
     ].join(" · ");
     renderBars(query(root, '[data-role="statuses"]'), detail.statuses.map((row) => ({ key: row.statusClass, count: row.count })), {
       empty: "No status distribution is available.",
-      label: (status2) => `HTTP ${status2}`,
-      tone: (status2) => status2 === "5xx" ? "is-danger" : status2 === "4xx" ? "is-warning" : ""
+      label: (status) => `HTTP ${status}`,
+      tone: (status) => status === "5xx" ? "is-danger" : status === "4xx" ? "is-warning" : ""
     });
     renderBars(query(root, '[data-role="histogram"]'), detail.latencyHistogram.map((row) => ({
       key: row.upperBoundMs === null ? "overflow" : String(row.upperBoundMs),
@@ -18758,9 +18224,9 @@ circle.endpoint-timeline__errors {
   }
   function renderActions(root, state, source2, theme, catalogEditable) {
     const active = theme.id === state.settings.activeThemeId;
-    const status2 = query4(root, "[data-theme-status]");
-    status2.textContent = active ? "Active" : "Draft";
-    status2.setAttribute("color", active ? "success" : "warning");
+    const status = query4(root, "[data-theme-status]");
+    status.textContent = active ? "Active" : "Draft";
+    status.setAttribute("color", active ? "success" : "warning");
     query4(root, "[data-activate-theme]").toggleAttribute("disabled", active);
     query4(root, "[data-category-actions]").hidden = !catalogEditable;
     query4(root, "[data-editor-context]").hidden = !catalogEditable && !source2.supportsModes;
@@ -20792,7 +20258,7 @@ w13c-lateral-menu-item {
     if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES) {
       return invalid();
     }
-    if (!isRecord3(value2)) {
+    if (!isRecord2(value2)) {
       return invalid();
     }
     const hasAll = Object.hasOwn(value2, "all");
@@ -20837,7 +20303,7 @@ w13c-lateral-menu-item {
   function isVisibilityValue(value2) {
     return value2 === null || typeof value2 === "string" || typeof value2 === "boolean" || typeof value2 === "number" && Number.isFinite(value2);
   }
-  function isRecord3(value2) {
+  function isRecord2(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
   // src/components/admin/Resources/Dashboards/runtime/expressions.ts
@@ -22701,10 +22167,10 @@ button {
     input.setAttribute("label", field2.label);
     input.setAttribute("type", "number");
     input.setAttribute("value", String(field2.value));
-    for (const attribute2 of ["min", "max", "step"]) {
-      const value2 = field2[attribute2];
+    for (const attribute of ["min", "max", "step"]) {
+      const value2 = field2[attribute];
       if (value2 !== undefined) {
-        input.setAttribute(attribute2, String(value2));
+        input.setAttribute(attribute, String(value2));
       }
     }
     applyInputMetadata(input, field2);
@@ -23023,10 +22489,10 @@ button {
       control.dataset.schemaDirty = "true";
     }
   }
-  function statusMessage(status2) {
+  function statusMessage(status) {
     const message = document.createElement("span");
-    message.className = `detail-schema-status detail-schema-status-${status2 ?? "loading"}`;
-    message.textContent = status2 === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status2 === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
+    message.className = `detail-schema-status detail-schema-status-${status ?? "loading"}`;
+    message.textContent = status === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
     return message;
   }
   function recordValue2(value2) {
@@ -23096,7 +22562,7 @@ button {
     const clone = structuredClone(value2);
     return {
       ...clone,
-      items: Array.isArray(clone.items) ? clone.items.filter(isRecord5) : [],
+      items: Array.isArray(clone.items) ? clone.items.filter(isRecord4) : [],
       fields: Array.isArray(clone.fields) ? clone.fields : []
     };
   }
@@ -23146,7 +22612,7 @@ button {
     const positionPath = value2.positionPath ?? "position";
     value2.items.forEach((item, index) => setValueAt(item, positionPath, index));
   }
-  function isRecord5(value2) {
+  function isRecord4(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
 
@@ -23568,12 +23034,12 @@ button {
     if (Array.isArray(value2)) {
       return value2.some(hasTableValue);
     }
-    if (isRecord6(value2)) {
+    if (isRecord5(value2)) {
       return Object.values(value2).some(hasTableValue);
     }
     return String(value2 ?? "").trim().length > 0;
   }
-  function isRecord6(value2) {
+  function isRecord5(value2) {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
   function tableCellDisplayValue(value2, row, column) {
@@ -26190,11 +25656,11 @@ slot {
       }
     };
   }
-  function product(id, title, status2, vendor, category, visibility2, updated) {
+  function product(id, title, status, vendor, category, visibility2, updated) {
     return {
       id,
       title,
-      status: status2,
+      status,
       vendor,
       category,
       visibility: visibility2,
@@ -28139,7 +27605,7 @@ p {
       return;
     }
     if (path.startsWith("body.")) {
-      if (!isRecord7(draft.body)) {
+      if (!isRecord6(draft.body)) {
         draft.body = {};
       }
       setPathValue(draft.body, path.slice("body.".length), value2);
@@ -28150,7 +27616,7 @@ p {
     }
   }
   function setPathValue(target2, path, value2) {
-    if (!isRecord7(target2)) {
+    if (!isRecord6(target2)) {
       return;
     }
     const parts = path.split(".").filter(Boolean);
@@ -28160,7 +27626,7 @@ p {
         current[part] = value2;
         return;
       }
-      if (!isRecord7(current[part])) {
+      if (!isRecord6(current[part])) {
         current[part] = {};
       }
       current = current[part];
@@ -28177,7 +27643,7 @@ p {
       if (Array.isArray(current) && /^\d+$/.test(part)) {
         return current[Number(part)];
       }
-      if (!isRecord7(current)) {
+      if (!isRecord6(current)) {
         return;
       }
       return current[part];
@@ -28192,7 +27658,7 @@ p {
   }
   function parseObject(value2, label2) {
     const parsed = parseJson3(value2 || "{}", label2);
-    if (!isRecord7(parsed)) {
+    if (!isRecord6(parsed)) {
       throw new Error(`${label2} must be a JSON object.`);
     }
     return parsed;
@@ -28220,7 +27686,7 @@ p {
     }
     return value2;
   }
-  function isRecord7(value2) {
+  function isRecord6(value2) {
     return typeof value2 === "object" && value2 !== null && !Array.isArray(value2);
   }
 
@@ -28609,15 +28075,15 @@ pre {
   }
   function resultSection() {
     const section = detailSection("main", "Result");
-    const status2 = div("status", "Not executed");
+    const status = div("status", "Not executed");
     const message = div("result-message empty", "Run the function to see its result.");
     const raw = document.createElement("details");
-    status2.dataset.role = "result-status";
+    status.dataset.role = "result-status";
     message.dataset.role = "result-message";
     raw.className = "raw-result";
     raw.append(summary("Raw response"), pre(""));
     raw.querySelector("pre").dataset.role = "result-body";
-    section.append(div("result-header", status2), message, raw);
+    section.append(div("result-header", status), message, raw);
     return section;
   }
   function functionSummarySection(detail) {
@@ -28757,10 +28223,10 @@ pre {
     showResult(result) {
       this.setResult(`status ${result.ok ? "ok" : "error"}`, result.status ? String(result.status) : "Invalid input", readableResult(result), stringify(result.body));
     }
-    setResult(statusClass, status2, message, body) {
+    setResult(statusClass, status, message, body) {
       if (this.resultStatus) {
         this.resultStatus.className = statusClass;
-        this.resultStatus.textContent = status2;
+        this.resultStatus.textContent = status;
       }
       if (this.resultMessage) {
         this.resultMessage.textContent = message;
@@ -30949,11 +30415,11 @@ details[open] > summary > .chevron {
     }
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
-  function statusLabel(status2) {
-    if (status2 === "success") {
+  function statusLabel(status) {
+    if (status === "success") {
       return "Active";
     }
-    if (status2 === "failed") {
+    if (status === "failed") {
       return "Failed";
     }
     return "Pending";
@@ -31188,10 +30654,10 @@ details[open] > summary > .chevron {
     row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
     text4(row, "[data-label]", installation.label);
     text4(row, "[data-kind]", installation.id);
-    const status2 = row.querySelector("[data-status]");
-    if (status2) {
-      status2.textContent = statusLabel(installation.status);
-      status2.classList.add(`status-${installation.status}`);
+    const status = row.querySelector("[data-status]");
+    if (status) {
+      status.textContent = statusLabel(installation.status);
+      status.classList.add(`status-${installation.status}`);
     }
     appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
     text4(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
@@ -31249,9 +30715,9 @@ details[open] > summary > .chevron {
     fields(host).replaceChildren(loading);
   }
   function setStatus(host, value3, error = false) {
-    const status2 = host.query("[data-reconfigure-status]");
-    status2.textContent = value3;
-    status2.classList.toggle("is-error", error);
+    const status = host.query("[data-reconfigure-status]");
+    status.textContent = value3;
+    status.classList.toggle("is-error", error);
   }
   function errorMessage2(error, fallback) {
     return error instanceof Error && error.message.trim() ? error.message : fallback;
@@ -31377,9 +30843,9 @@ details[open] > summary > .chevron {
     const shell = cloneElement("setup-shell");
     text4(shell, "[data-title]", `Install ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
-    const status2 = shell.querySelector("[data-setup-status]");
-    status2.textContent = options2.error ?? "";
-    status2.classList.toggle("is-error", Boolean(options2.error));
+    const status = shell.querySelector("[data-setup-status]");
+    status.textContent = options2.error ?? "";
+    status.classList.toggle("is-error", Boolean(options2.error));
     renderResourceRows(shell.querySelector("[data-resources]"), resourceRows(definition));
     renderLinkedPlaceholder(shell.querySelector("[data-linked]"));
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
@@ -31484,25 +30950,25 @@ details[open] > summary > .chevron {
     if (!id) {
       return;
     }
-    const status2 = host.querySelector("[data-action-status]");
+    const status = host.querySelector("[data-action-status]");
     button2.setAttribute("aria-busy", "true");
     button2.textContent = "Syncing";
-    if (status2) {
-      status2.textContent = "";
+    if (status) {
+      status.textContent = "";
     }
     try {
       await rerunIntegrationInstallation(id);
       await host.waitForBoundData(() => true);
       button2.removeAttribute("aria-busy");
       button2.textContent = "Run sync";
-      if (status2) {
-        status2.textContent = "Synced";
+      if (status) {
+        status.textContent = "Synced";
       }
     } catch (error) {
       button2.removeAttribute("aria-busy");
       button2.textContent = "Run sync";
-      if (status2) {
-        status2.textContent = error instanceof Error ? error.message : "Sync failed";
+      if (status) {
+        status.textContent = error instanceof Error ? error.message : "Sync failed";
       }
     }
   }
@@ -34467,7 +33933,7 @@ button:hover {
       button2.className = "provider";
       button2.type = "button";
       button2.ariaPressed = String(group.key === activeProvider);
-      button2.innerHTML = `<span>${escapeHtml2(group.label)}</span><span class="count">${group.count}</span>`;
+      button2.innerHTML = `<span>${escapeHtml3(group.label)}</span><span class="count">${group.count}</span>`;
       button2.addEventListener("click", () => onSelect(group.key));
       container.append(button2);
     }
@@ -34510,7 +33976,7 @@ button:hover {
     element.textContent = message;
     return element;
   }
-  function escapeHtml2(value3) {
+  function escapeHtml3(value3) {
     return value3.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
   }
 
@@ -44974,15 +44440,15 @@ label {
         scope.aliases.add(repeatAlias);
       }
     }
-    for (const attribute2 of Array.from(element.attributes)) {
-      if (attribute2.name === CMS_BINDING_ATTRIBUTES.source) {
+    for (const attribute of Array.from(element.attributes)) {
+      if (attribute.name === CMS_BINDING_ATTRIBUTES.source) {
         continue;
       }
-      if (attribute2.name === CMS_BINDING_ATTRIBUTES.repeat) {
+      if (attribute.name === CMS_BINDING_ATTRIBUTES.repeat) {
         continue;
       }
-      if (bindingTextDependsOn(attribute2.value, scope)) {
-        usages.push({ target: element, attribute: attribute2.name });
+      if (bindingTextDependsOn(attribute.value, scope)) {
+        usages.push({ target: element, attribute: attribute.name });
       }
     }
     return scope;
@@ -45752,22 +45218,22 @@ label {
         this.context.highlight().show(editor);
         return;
       }
-      const attribute2 = setting.attribute;
+      const attribute = setting.attribute;
       if (typeof value3 === "boolean") {
-        editor.target.toggleAttribute(attribute2, value3);
+        editor.target.toggleAttribute(attribute, value3);
       } else {
-        writeSettingAttribute(editor.target, attribute2, value3 || null);
+        writeSettingAttribute(editor.target, attribute, value3 || null);
       }
       if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
         this.renderSettings();
       }
     }
     applyAttributes(editor, attributes) {
-      for (const [attribute2, value3] of Object.entries(attributes)) {
+      for (const [attribute, value3] of Object.entries(attributes)) {
         if (typeof value3 === "boolean") {
-          editor.target.toggleAttribute(attribute2, value3);
+          editor.target.toggleAttribute(attribute, value3);
         } else {
-          writeSettingAttribute(editor.target, attribute2, value3 || null);
+          writeSettingAttribute(editor.target, attribute, value3 || null);
         }
       }
       this.renderSettings();
@@ -47744,46 +47210,6 @@ label {
   // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
   class BindingCoreEditor extends Editor {
   }
-  // src/core/editorSystemV2/builtInEditors/SignupLegalConsentEditor.ts
-  class SignupLegalConsentEditor extends Editor {
-    settings() {
-      return [
-        {
-          kind: "self",
-          label: "Content",
-          settings: [
-            { type: "text", label: "Heading", attribute: "heading" },
-            { type: "text", label: "Loading message", attribute: "loading-label" },
-            { type: "text", label: "Load error message", attribute: "load-error-label" },
-            { type: "text", label: "Retry button", attribute: "retry-label" },
-            { type: "text", label: "Required message", attribute: "required-message" },
-            { type: "text", label: "New tab notice", attribute: "new-tab-label" }
-          ]
-        },
-        {
-          kind: "self",
-          label: "Source",
-          settings: [
-            {
-              type: "text",
-              label: "Source prefix",
-              attribute: "source-prefix",
-              defaultValue: "/.cms/sources"
-            },
-            {
-              type: "text",
-              label: "Authentication source",
-              attribute: "source-id",
-              defaultValue: "system-auth"
-            }
-          ]
-        }
-      ];
-    }
-    structureMode() {
-      return "opaque";
-    }
-  }
   // src/core/editorSystemV2/editorCatalog.ts
   function createControlEditorCatalog() {
     return [
@@ -47795,15 +47221,6 @@ label {
         category: "Runtime",
         bloc: ql,
         editor: BindingCoreEditor
-      },
-      {
-        tag: CMS_SIGNUP_LEGAL_CONSENT_TAG,
-        label: "Signup legal consent",
-        description: "Requires explicit acceptance of the current signup legal documents.",
-        icon: "check-square",
-        category: "Authentication",
-        bloc: CmsSignupLegalConsent,
-        editor: SignupLegalConsentEditor
       }
     ];
   }
@@ -49430,9 +48847,9 @@ label {
       const isLast = i === breadcrumb.length - 1;
       html += `<span class="bc-sep">/</span>`;
       if (isLast) {
-        html += `<span class="bc-current">${escapeHtml(crumb.label)}</span>`;
+        html += `<span class="bc-current">${escapeHtml2(crumb.label)}</span>`;
       } else {
-        html += `<span class="bc-item" data-folder="${escapeAttr(crumb.id)}" data-index="${i}">${escapeHtml(crumb.label)}</span>`;
+        html += `<span class="bc-item" data-folder="${escapeAttr(crumb.id)}" data-index="${i}">${escapeHtml2(crumb.label)}</span>`;
       }
     }
     container.innerHTML = html;
@@ -49643,12 +49060,12 @@ label {
         ${isImage2 ? `
         <div class="detail-field">
             <label>Alt text</label>
-            <textarea id="detail-alt" rows="2">${escapeHtml(item.alt || "")}</textarea>
+            <textarea id="detail-alt" rows="2">${escapeHtml2(item.alt || "")}</textarea>
         </div>` : ""}
         <div class="detail-meta-row">
             <div class="detail-field">
                 <label>Type</label>
-                <span class="detail-value">${escapeHtml(item.mimetype || item.type)}</span>
+                <span class="detail-value">${escapeHtml2(item.mimetype || item.type)}</span>
             </div>
             <div class="detail-field">
                 <label>Size</label>
@@ -49658,12 +49075,12 @@ label {
         ${dims ? `
         <div class="detail-field">
             <label>Dimensions</label>
-            <span class="detail-value">${escapeHtml(dims)}</span>
+            <span class="detail-value">${escapeHtml2(dims)}</span>
         </div>` : ""}
         <div class="detail-field">
             <label>URL</label>
             <div class="url-row">
-                <span class="detail-value mono">${escapeHtml(mediaUrl2)}</span>
+                <span class="detail-value mono">${escapeHtml2(mediaUrl2)}</span>
                 <button class="btn-copy" id="btn-copy" title="Copy URL">${ICON_COPY}</button>
             </div>
         </div>

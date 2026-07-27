@@ -7,7 +7,10 @@ export type TriggerResponseProjection = {
     byteLength: number;
 };
 
+export type TriggerResponseFinalizer = () => void | Promise<void>;
+
 let triggerBodies: WeakMap<Response, TriggerResponseProjection> | undefined;
+let triggerFinalizers: WeakMap<Response, TriggerResponseFinalizer[]> | undefined;
 
 /** Associates a server-only trigger projection with the public response object. */
 export function attachTriggerResponseBody(response: Response, body: unknown): void {
@@ -15,6 +18,33 @@ export function attachTriggerResponseBody(response: Response, body: unknown): vo
         body,
         byteLength: new TextEncoder().encode(JSON.stringify(body)).byteLength,
     });
+}
+
+/**
+ * Defers a server-side mutation until every synchronous blocking response
+ * trigger has succeeded. Finalizers are tied to the original in-process
+ * response and are never serialized or inherited by clones.
+ */
+export function attachTriggerResponseFinalizer(response: Response, finalizer: TriggerResponseFinalizer): void {
+    const finalizers = (triggerFinalizers ??= new WeakMap());
+    const existing = finalizers.get(response);
+    if (existing) {
+        existing.push(finalizer);
+    } else {
+        finalizers.set(response, [finalizer]);
+    }
+}
+
+/** Runs attached finalizers once, in registration order. */
+export async function runTriggerResponseFinalizers(response: Response): Promise<void> {
+    const finalizers = triggerFinalizers?.get(response);
+    if (!finalizers) {
+        return;
+    }
+    triggerFinalizers!.delete(response);
+    for (const finalizer of finalizers) {
+        await finalizer();
+    }
 }
 
 /** Projects and attaches the complete body visible only to in-process response triggers. */

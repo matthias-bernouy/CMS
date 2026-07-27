@@ -59,7 +59,7 @@ function selectedContracts(contracts: PostgresContract[]): PostgresContract[] {
 }
 
 async function loadBundles(): Promise<Record<BundleName, string>> {
-    const [commerceNotifications, commerce, negotiation, mondialRelay, salesConfigurator, stripeConnect] =
+    const [commerceNotifications, commerce, negotiation, consent, mondialRelay, salesConfigurator, stripeConnect] =
         await Promise.all([
             loadSupabaseSchemaSql(
                 configuration.integrationRoots.commerceNotifications,
@@ -67,6 +67,7 @@ async function loadBundles(): Promise<Record<BundleName, string>> {
             ),
             loadSupabaseSchemaSql(configuration.integrationRoots.commerce),
             loadSupabaseSchemaSql(resolve(packageRoot, "integrations/extensions/commerce-negotiation/versions/1.0.0")),
+            loadSupabaseSchemaSql(configuration.integrationRoots.consent),
             loadSupabaseSchemaSql(configuration.integrationRoots.mondialRelay),
             loadSupabaseSchemaSql(configuration.integrationRoots.salesConfigurator),
             loadSupabaseSchemaSql(configuration.integrationRoots.stripeConnect),
@@ -75,6 +76,7 @@ async function loadBundles(): Promise<Record<BundleName, string>> {
         commerce,
         commerceNotifications,
         commerceNegotiatedCheckout: `${commerce}\n${negotiation}`,
+        consent,
         mondialRelay,
         salesConfigurator,
         stripeConnect,
@@ -85,6 +87,7 @@ async function writeBundles(root: string, sql: Record<BundleName, string>): Prom
         commerce: join(root, "commerce.sql"),
         commerceNotifications: join(root, "commerce-notification-module.sql"),
         commerceNegotiatedCheckout: join(root, "commerce-negotiated-checkout.sql"),
+        consent: join(root, "consent.sql"),
         mondialRelay: join(root, "mondial-relay.sql"),
         salesConfigurator: join(root, "sales-configurator.sql"),
         stripeConnect: join(root, "stripe-connect.sql"),

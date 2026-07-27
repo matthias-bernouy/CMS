@@ -25,6 +25,7 @@
         "./integrations/documentation-blocs/*": "./integrations/foundation/documentation-blocs/*",
         "./integrations/workspace-blocs/*": "./integrations/foundation/workspace-blocs/*",
         "./integrations/commerce/*": "./integrations/domains/commerce/*",
+        "./integrations/consent/*": "./integrations/domains/consent/*",
         "./integrations/commerce-mondial-relay-delivery/*": "./integrations/extensions/commerce-mondial-relay-delivery/*",
         "./integrations/commerce-mondial-relay-fulfillment/*": "./integrations/extensions/commerce-mondial-relay-fulfillment/*",
         "./integrations/commerce-negotiation/*": "./integrations/extensions/commerce-negotiation/*",

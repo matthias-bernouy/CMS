@@ -10,6 +10,8 @@ import { resolveRequestRoleDefinitions } from "@bernouy/cms-permissions/requestS
 import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
+    attachTriggerResponseBody,
+    attachTriggerResponseFinalizer,
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     measureActiveSourceTiming,
@@ -69,7 +71,9 @@ export function mountControlSourceProxy(
                     const executeSystemEndpoint = async (endpoint: SourceEndpoint, request: Request) => {
                         if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
                             if (!scope.functions || !scope.overlaySources) {
-                                return new Response("function executor not configured", { status: 501 });
+                                return new Response("function executor not configured", {
+                                    status: 501,
+                                });
                             }
                             const subject = await resolveSubject(request);
                             return executeFunctionSystemSourceEndpoint(endpoint, request, {
@@ -81,9 +85,14 @@ export function mountControlSourceProxy(
                             });
                         }
                         if (controlPublicAuth) {
-                            return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request);
+                            return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request, {
+                                attachTriggerResponseBody,
+                                ...(scope.deferSystemResponseFinalization ? { attachTriggerResponseFinalizer } : {}),
+                            });
                         }
-                        return new Response("system source executor not configured", { status: 501 });
+                        return new Response("system source executor not configured", {
+                            status: 501,
+                        });
                     };
                     return handleSourceRequest(scope.proxiedSources, req, {
                         prefix,

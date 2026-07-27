@@ -4,6 +4,7 @@ export type BundleName =
     | "commerce"
     | "commerceNotifications"
     | "commerceNegotiatedCheckout"
+    | "consent"
     | "mondialRelay"
     | "salesConfigurator"
     | "stripeConnect";
@@ -27,11 +28,19 @@ export function postgresContractConfiguration(packageRoot: string): {
             commerce,
             commerceNotifications: commerce,
             commerceNegotiatedCheckout: commerce,
+            consent: resolve(packageRoot, "integrations/domains/consent/versions/1.0.0"),
             mondialRelay: resolve(packageRoot, "integrations/providers/mondial-relay/versions/1.0.0"),
             salesConfigurator,
             stripeConnect: resolve(packageRoot, "integrations/providers/stripe-connect/versions/1.0.0"),
         },
         contracts: [
+            contract(
+                "consent-evidence",
+                "Consent versioned evidence and idempotency",
+                "consent",
+                "core-integrations/consent",
+                ["allow_consent_schema_reset=true"],
+            ),
             contract(
                 "commerce-pre-provider-cancellation",
                 "Commerce pre-provider cancellation",

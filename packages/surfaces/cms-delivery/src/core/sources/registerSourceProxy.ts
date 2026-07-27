@@ -1,6 +1,8 @@
 import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
+    attachTriggerResponseBody,
+    attachTriggerResponseFinalizer,
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     sourcesPrefix,
@@ -24,25 +26,43 @@ export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
         (proxyRunner) => {
             const prefix = sourcesPrefix(runner.basePath);
             for (const method of SOURCE_PROXY_METHODS) {
-                proxyRunner.setDefaultEndpoint(method, (request) => {
-                    const scope = createDeliverySourceRequestScope(delivery, request, schemaCache);
-                    const deps = {
-                        ...scope.deps,
-                        executeSystemEndpoint: (endpoint: SourceEndpoint, systemRequest: Request) =>
-                            executeSystemEndpoint(delivery, scope, endpoint, systemRequest),
-                        authorizeEndpoint: (endpoint: SourceEndpoint, sourceRequest: Request) =>
-                            authorizeDeliverySourceEndpoint(delivery, endpoint, sourceRequest),
-                        ...(scope.interceptEndpoint ? { interceptEndpoint: scope.interceptEndpoint } : {}),
-                    };
-                    return handleSourceRequest(scope.proxiedSources, request, {
+                proxyRunner.setDefaultEndpoint(method, (request) =>
+                    handleDeliverySourceRequest(delivery, request, {
                         prefix,
-                        deps: { ...deps, telemetry: delivery.sourceTelemetry },
-                    });
-                });
+                        schemaCache,
+                    }),
+                );
             }
         },
         delivery.sourceTelemetry ? [createSourceRequestTelemetryMiddleware(delivery.sourceTelemetry)] : [],
     );
+}
+
+export function handleDeliverySourceRequest(
+    delivery: DeliveryCms,
+    request: Request,
+    options: {
+        prefix?: string;
+        schemaCache?: ReturnType<typeof deliverySourceOverlaySchemaCache>;
+    } = {},
+): Promise<Response> {
+    const scope = createDeliverySourceRequestScope(
+        delivery,
+        request,
+        options.schemaCache ?? deliverySourceOverlaySchemaCache(delivery),
+    );
+    const deps = {
+        ...scope.deps,
+        executeSystemEndpoint: (endpoint: SourceEndpoint, systemRequest: Request) =>
+            executeSystemEndpoint(delivery, scope, endpoint, systemRequest),
+        authorizeEndpoint: (endpoint: SourceEndpoint, sourceRequest: Request) =>
+            authorizeDeliverySourceEndpoint(delivery, endpoint, sourceRequest),
+        ...(scope.interceptEndpoint ? { interceptEndpoint: scope.interceptEndpoint } : {}),
+    };
+    return handleSourceRequest(scope.proxiedSources, request, {
+        prefix: options.prefix ?? sourcesPrefix(delivery.runner.basePath),
+        deps: { ...deps, telemetry: delivery.sourceTelemetry },
+    });
 }
 
 async function executeSystemEndpoint(
@@ -64,7 +84,10 @@ async function executeSystemEndpoint(
         });
     }
     if (delivery.auth) {
-        return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request);
+        return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request, {
+            attachTriggerResponseBody,
+            ...(scope.deferSystemResponseFinalization ? { attachTriggerResponseFinalizer } : {}),
+        });
     }
     return new Response("system source executor not configured", { status: 501 });
 }

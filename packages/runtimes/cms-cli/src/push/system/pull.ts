@@ -29,7 +29,6 @@ export async function pullSystem(adminBase: URL, token: string, siteDir: string)
             {
                 site,
                 editor,
-                auth: remote.auth ?? { signupLegalDocuments: [] },
                 ...(themeSettings ? { theme: themeSettings } : {}),
             },
             null,

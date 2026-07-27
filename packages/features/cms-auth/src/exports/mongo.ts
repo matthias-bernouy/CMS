@@ -21,7 +21,3 @@ export {
     MongoAuthTokenStore,
     type MongoAuthTokenConfig,
 } from "cms-auth/default-implementation/mongo/MongoAuthTokenStore";
-export {
-    MongoSignupLegalAcceptanceStore,
-    type MongoSignupLegalAcceptanceConfig,
-} from "cms-auth/signup-legal/MongoSignupLegalAcceptanceStore";

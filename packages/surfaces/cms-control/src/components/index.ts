@@ -108,7 +108,7 @@ import "./admin/Common/CredentialSelect/CredentialSelect";
 import "./admin/Common/EmptyState/EmptyState";
 import "./admin/EndpointsInput/EndpointsInput";
 import "./admin/Common/EventToast/EventToast";
-import "@bernouy/cms-auth/components";
+import "./admin/Resources/Auth/LoginMethods/LoginMethods";
 import "./admin/Actions/ProviderActions/ProviderActions";
 import "./admin/Common/RoleSelect/RoleSelect";
 import "./admin/RoleEditor/RoleEditor";

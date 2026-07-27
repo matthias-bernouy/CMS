@@ -1,5 +1,5 @@
 import { showToast } from "@bernouy/components";
-import { isBuiltinProvider } from "@bernouy/cms-auth/components";
+import { isBuiltinProvider } from "@bernouy/cms-auth/browser";
 
 /**
  * `<cms-provider-actions provider-id kind enabled base-url emit>` — the actions

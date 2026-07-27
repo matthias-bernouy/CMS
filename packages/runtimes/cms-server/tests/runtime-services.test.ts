@@ -4,7 +4,6 @@ import {
     InMemoryIdentityProviderRepository,
     InMemoryLocalCredentialStore,
     InMemoryPatRepository,
-    InMemorySignupLegalAcceptanceStore,
     InMemoryUsersRepository,
 } from "@bernouy/cms-auth";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
@@ -36,11 +35,9 @@ function authStores(): CoreStores {
         users: new InMemoryUsersRepository<string>(),
         pats: new InMemoryPatRepository(),
         authTokens: new InMemoryAuthTokenStore(),
-        signupLegalAcceptances: new InMemorySignupLegalAcceptanceStore(),
         rateLimit: new InMemoryRateLimiter({ limit: 8, windowSeconds: 300 }),
         repo: {
             getSystem: async () => ({
-                auth: { signupLegalDocuments: [] },
                 email: {
                     enabled: false,
                     templates: {
@@ -70,7 +67,6 @@ describe("production runtime services", () => {
         expect((await stores.users.list({ role: "admin" })).total).toBe(1);
         expect(authentication.publicAuthBase.credentials).toBe(stores.credentials);
         expect(authentication.publicAuthBase.users).toBe(stores.users);
-        expect(await authentication.publicAuthBase.signupLegalAcceptance.requirements()).toEqual({ documents: [] });
         expect(await authentication.publicAuthBase.emailer.isEnabled()).toBe(false);
         expect(
             (
@@ -84,51 +80,6 @@ describe("production runtime services", () => {
                 })
             ).subject,
         ).toBe("Reset CmsCore");
-    });
-
-    test("resolves configured signup documents from published CMS pages", async () => {
-        const stores = authStores();
-        stores.repo.getSystem = async () =>
-            ({
-                auth: {
-                    signupLegalDocuments: [
-                        {
-                            key: "terms",
-                            label: "Terms",
-                            consentText: "I accept.",
-                            pageId: "page-terms",
-                            enabled: true,
-                        },
-                    ],
-                },
-                email: {
-                    enabled: false,
-                    templates: {
-                        emailVerification: { subject: "", html: "" },
-                        passwordReset: { subject: "", html: "" },
-                    },
-                },
-            }) as never;
-        stores.repo.getPageById = async () =>
-            ({
-                id: "page-terms",
-                path: "/terms",
-                title: "Terms",
-                description: "",
-                content: "<p>Published terms</p>",
-                visible: true,
-                tags: [],
-            }) as never;
-
-        const authentication = await createProductionAuth(runtimeEnv(), stores);
-        const requirements = await authentication.publicAuthBase.signupLegalAcceptance.requirements();
-
-        expect(requirements.documents).toHaveLength(1);
-        expect(requirements.documents[0]).toMatchObject({
-            documentKey: "terms",
-            page: { id: "page-terms", path: "/terms", title: "Terms" },
-            contentHash: expect.stringMatching(/^[a-f0-9]{64}$/),
-        });
     });
 
     test("reports an invalid first-admin password as runtime configuration", async () => {

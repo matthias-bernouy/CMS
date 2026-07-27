@@ -44,16 +44,6 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
         dto.editor = editor as TSystem["editor"];
     }
 
-    if ("auth.signupLegalDocuments" in body) {
-        const value = body["auth.signupLegalDocuments"];
-        if (!Array.isArray(value)) {
-            throw new InvalidParam("auth.signupLegalDocuments", "expected an array.");
-        }
-        dto.auth = {
-            signupLegalDocuments: value as NonNullable<TSystem["auth"]>["signupLegalDocuments"],
-        };
-    }
-
     if ("theme" in body) {
         const value = body.theme;
         if (!value || typeof value !== "object" || Array.isArray(value)) {

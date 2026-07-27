@@ -18,8 +18,7 @@ these endpoints are available on the site origin:
 | `GET` | `/.cms/sources/system-auth/me` | none | `{ "subject": Subject \| null }` |
 | `POST` | `/.cms/sources/system-auth/login` | `{ "email": string, "password": string, "returnTo"?: string }` | `{ "subject": Subject }` and a session cookie |
 | `POST` | `/.cms/sources/system-auth/logout` | none | `{ "ok": true }` and a cleared session cookie |
-| `GET` | `/.cms/sources/system-auth/signupLegalRequirements` | none | `{ "documents": SignupLegalRequirement[] }` |
-| `POST` | `/.cms/sources/system-auth/signup` | `{ "email": string, "password": string, "acceptedLegalDocumentVersionIds"?: string[] }` | `{ "ok": true }` |
+| `POST` | `/.cms/sources/system-auth/signup` | `{ "email": string, "password": string }` | `{ "ok": true }` |
 | `POST` | `/.cms/sources/system-auth/requestEmailVerification` | `{ "email": string }` | `{ "ok": true }` |
 | `POST` | `/.cms/sources/system-auth/confirmEmailVerification` | `{ "token": string }` | `{ "ok": true }` |
 | `POST` | `/.cms/sources/system-auth/requestPasswordReset` | `{ "email": string }` | `{ "ok": true }` |
@@ -29,56 +28,32 @@ these endpoints are available on the site origin:
 signup disabled there. `@bernouy/cms-delivery` can expose signup when its public
 auth config allows it.
 
-When `signupLegalAcceptance` is configured, clients load the current
-requirements first and submit every returned `versionId`. The server resolves
-the published CMS pages again, computes their canonical SHA-256 hashes, and
-records the immutable snapshots against the newly-created CMS user. Page
-content and hashes supplied by a client are never accepted. Omitting the policy
-preserves the legacy signup behavior and returns an empty requirements list.
+Signup has no policy or legal-document knowledge. Integrations can attach
+synchronous request and response triggers to `system-auth/signup`. Additional
+form fields remain opaque to Auth while the trigger pipeline can map them
+explicitly; integrations must never map the password into another function.
 
-The direct auth equivalent is
-`GET /.cms/auth/signup/legal-requirements`. The production runtime backs the
-policy with the `auth.signupLegalDocuments` system setting:
+The request trigger runs before credential mutation and can block signup. Once
+request gates succeed, Auth prepares a credential and exposes its `cmsUserId`
+to response triggers through the server-only `$trigger` projection. This field
+is never serialized into the public response. It is `null` for an existing
+credential whose password could not be verified, preventing the endpoint from
+disclosing another user's id. Response triggers that persist user-owned
+records must require a non-null `$response.body.cmsUserId`.
 
-```json
-{
-    "auth.signupLegalDocuments": [
-        {
-            "key": "terms-of-use",
-            "label": "Terms of use",
-            "consentText": "I accept the terms of use.",
-            "pageId": "stable-cms-page-id",
-            "enabled": true
-        }
-    ]
-}
-```
+Membership activation and verification delivery are response finalizers. They
+run only after every synchronous blocking response trigger has succeeded and
+before asynchronous response triggers are scheduled. A blocked response can
+therefore leave a pending, non-login-ready credential, but never an activated
+membership without its required integration records. Retrying signup with the
+same email and password resumes that pending credential. When no trigger
+runtime is configured, Auth finalizes directly and retains its standalone
+behavior.
 
-Every enabled entry must point to a published page. Draft or missing pages fail
-closed. Empty settings leave signup unchanged and do not create proof records.
-Changing the page, label, or consent text creates a new version id; existing
-proofs remain untouched.
-
-Legal requirements are materialized and validated before the credential lookup,
-so an existing email and an unknown email have the same public response for a
-missing, stale, or unavailable policy version.
-
-Signup activation is a forward-only, retryable saga:
-
-1. create an unverified credential, or authenticate the password of an existing
-   credential that has no CMS membership;
-2. append the immutable proof with a deterministic id derived from the CMS user
-   id and exact accepted version set;
-3. create the CMS membership as the final activation step;
-4. only then send verification, or mark the credential verified when email
-   delivery is disabled.
-
-An ambiguous proof acknowledgement therefore leaves an unverified credential
-without membership. Submitting the same email, password, and current versions
-again resumes the saga. Exact proof retries preserve the first `acceptedAt` and
-snapshot; a later version set creates another event. Evidence that contradicts
-an existing deterministic id is rejected. Email verification and password
-reset ignore credentials that do not yet have an activated membership.
+The direct `POST /.cms/auth/signup` route is kept for compatibility. When the
+source gateway is configured, Delivery dispatches it internally through the
+same `system-auth/signup` pipeline so integration triggers cannot be bypassed.
+An auth-only host without Sources keeps the neutral direct signup behavior.
 
 The optional `LocalCredentialStore.verifyPassword` capability verifies a
 password without treating an unverified credential as login-ready. Built-in
@@ -86,11 +61,10 @@ stores implement it. Existing custom stores remain source-compatible; if one
 cannot verify a pending credential, the retry fails closed and that credential
 must be reconciled administratively before signup can resume.
 
-Pending credentials are retained intentionally so an interrupted signup can be
-reconciled by retry. Automatic expiry is not implemented: an operational
-cleanup job may report credentials without a matching `local:<sub>` membership
-after a chosen retention period, but deletion must follow the site's legal and
-support retention policy rather than an implicit runtime timeout.
+Pending credentials are retained intentionally so an interrupted membership
+activation can be reconciled by retry. Automatic expiry is not implemented: an
+operational cleanup job may report credentials without a matching
+`local:<sub>` membership after a chosen retention period.
 
 ## Authoring Contract
 

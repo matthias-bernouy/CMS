@@ -1,5 +1,6 @@
 import type { FunctionRepository, FunctionUserContext } from "@bernouy/cms-functions";
 import {
+    runTriggerResponseFinalizers,
     triggerResponseProjection,
     type ExecutorDeps,
     type SourceEndpoint,
@@ -31,7 +32,7 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
     return async (endpoint, request, next) => {
         const match = endpointMatch(endpoint);
         if (!match) {
-            return next(request);
+            return finalize(await next(request));
         }
         const installed = options.triggers.findEndpointTriggers
             ? await options.triggers.findEndpointTriggers(match.source, match.endpoint)
@@ -39,7 +40,7 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
         const requestTriggers = matchingTriggers(installed, endpoint, "request");
         const responseTriggers = matchingTriggers(installed, endpoint, "response");
         if (!requestTriggers.length && !responseTriggers.length) {
-            return next(request);
+            return finalize(await next(request));
         }
 
         const userPromise = options.resolveUser ? options.resolveUser(request).catch(() => ({})) : Promise.resolve({});
@@ -69,7 +70,7 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
 
         const response = await next(request);
         if (!responseTriggers.length) {
-            return response;
+            return finalize(response);
         }
 
         const responseBodyPromise = responseBodyForTriggers(
@@ -92,6 +93,7 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
                 return result.response!;
             }
         }
+        await runTriggerResponseFinalizers(response);
         scheduleAsyncTriggers(responseTriggers, {
             ...runtimeOptions(options, endpoint, request),
             phase: "response",
@@ -103,6 +105,11 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
 
         return response;
     };
+}
+
+async function finalize(response: Response): Promise<Response> {
+    await runTriggerResponseFinalizers(response);
+    return response;
 }
 
 function responseBodyForTriggers(

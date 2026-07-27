@@ -14,6 +14,7 @@ import type {
     SourceRequestTelemetryOptions,
     SourceSecretResolver,
 } from "@bernouy/cms-sources";
+import { CompositeSourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";
 import type { TriggerRepository } from "@bernouy/cms-triggers";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
@@ -25,12 +26,16 @@ export class DeliveryCmsContext {
     private readonly config: DeliveryCmsConfig;
     private readonly resolvedRunner: Runner;
     private readonly resolvedCache: Cache;
+    private readonly resolvedSources: SourceRepository | undefined;
     private readonly pageOptimizer: PageOptimizer | null;
 
     constructor(config: DeliveryCmsConfig) {
         this.config = config;
         this.resolvedRunner = config.runner ?? new BunRunner();
         this.resolvedCache = config.cache ?? new TtlCache({ bypass: process.env.MODE === "DEV" });
+        this.resolvedSources = config.sources
+            ? new CompositeSourceRepository(config.sources, SYSTEM_SOURCES)
+            : undefined;
         this.pageOptimizer =
             config.filesMetadata && config.filesBlob && config.variantStore
                 ? new PageOptimizer({
@@ -59,7 +64,7 @@ export class DeliveryCmsContext {
     }
 
     get sources(): SourceRepository | undefined {
-        return this.config.sources;
+        return this.resolvedSources;
     }
 
     get sourceOverlays(): SourceOverlayRepository | undefined {

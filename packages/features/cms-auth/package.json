@@ -8,7 +8,7 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./mongo": "./src/exports/mongo.ts",
-        "./components": "./src/exports/components.ts"
+        "./browser": "./src/exports/browser.ts"
     },
     "dependencies": {
         "@bernouy/envelope-crypto": "workspace:*",

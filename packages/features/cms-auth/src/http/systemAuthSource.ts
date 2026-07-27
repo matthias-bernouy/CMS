@@ -4,33 +4,37 @@ import {
     confirmPasswordReset,
     requestEmailVerification,
     requestPasswordReset,
-    signupLocalUser,
+    prepareSignupLocalUser,
 } from "cms-auth/core/public-auth/flows";
 import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
-import { optionalRepeatedStrings, readJsonObject, requiredString } from "cms-auth/http/requestInput";
+import { readJsonObject, requiredString } from "cms-auth/http/requestInput";
 import { resolveRequestSubject } from "cms-auth/http/requestSubject";
-import type { SignupLegalRequirements } from "cms-auth/signup-legal/contracts";
 
 type SystemSourceEndpoint = {
     urn: string;
     targetUrl: string;
 };
 
+export type AuthSystemSourceHooks = {
+    /** Keeps integration-only response data in-process and out of the public HTTP body. */
+    attachTriggerResponseBody?: (response: Response, body: unknown) => void;
+    /** Defers activation until synchronous response policies have succeeded. */
+    attachTriggerResponseFinalizer?: (response: Response, finalizer: () => Promise<void>) => void;
+};
+
 export async function executeAuthSystemSourceEndpoint<Role extends string>(
     cfg: PublicAuthRoutesConfig<Role>,
     endpoint: SystemSourceEndpoint,
     req: Request,
+    hooks: AuthSystemSourceHooks = {},
 ): Promise<Response> {
     const target = parseSystemAuthTarget(endpoint);
     switch (target) {
-        case "/signup/legal-requirements":
-            if (cfg.allowSignup === false) {
-                return privateAuthResponse("not_found", { status: 404 });
-            }
-            return privateAuthJsonResponse(await signupLegalRequirements(cfg));
         case "/me":
-            return privateAuthJsonResponse({ subject: await resolveRequestSubject(cfg.local, req) });
+            return privateAuthJsonResponse({
+                subject: await resolveRequestSubject(cfg.local, req),
+            });
         case "/login":
             return cfg.local.loginJson(req);
         case "/logout":
@@ -40,21 +44,36 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
                 return privateAuthResponse("not_found", { status: 404 });
             }
             const body = await readJsonObject(req);
-            await signupLocalUser(cfg, {
+            const prepared = await prepareSignupLocalUser(cfg, {
                 email: requiredString(body, "email"),
                 password: requiredString(body, "password"),
-                acceptedLegalDocumentVersionIds: optionalRepeatedStrings(body, "acceptedLegalDocumentVersionIds"),
             });
-            return ok();
+            const response = ok();
+            hooks.attachTriggerResponseBody?.(response, {
+                ok: true,
+                cmsUserId: prepared.cmsUserId,
+            });
+            if (hooks.attachTriggerResponseFinalizer) {
+                hooks.attachTriggerResponseFinalizer(response, async () => {
+                    await prepared.finalize();
+                });
+            } else {
+                await prepared.finalize();
+            }
+            return response;
         }
         case "/email/verification/request": {
             const body = await readJsonObject(req);
-            await requestEmailVerification(cfg, { email: requiredString(body, "email") });
+            await requestEmailVerification(cfg, {
+                email: requiredString(body, "email"),
+            });
             return ok();
         }
         case "/email/verification/confirm": {
             const body = await readJsonObject(req);
-            await confirmEmailVerification(cfg, { token: requiredString(body, "token") });
+            await confirmEmailVerification(cfg, {
+                token: requiredString(body, "token"),
+            });
             return ok();
         }
         case "/password/reset/request": {
@@ -95,7 +114,6 @@ function isKnownTarget(
     target: string,
 ): target is
     | "/me"
-    | "/signup/legal-requirements"
     | "/login"
     | "/logout"
     | "/signup"
@@ -105,7 +123,6 @@ function isKnownTarget(
     | "/password/reset/confirm" {
     return [
         "/me",
-        "/signup/legal-requirements",
         "/login",
         "/logout",
         "/signup",
@@ -114,12 +131,6 @@ function isKnownTarget(
         "/password/reset/request",
         "/password/reset/confirm",
     ].includes(target);
-}
-
-async function signupLegalRequirements<Role extends string>(
-    cfg: PublicAuthRoutesConfig<Role>,
-): Promise<SignupLegalRequirements> {
-    return cfg.signupLegalAcceptance?.requirements() ?? { documents: [] };
 }
 
 const ok = (): Response => privateAuthJsonResponse({ ok: true });

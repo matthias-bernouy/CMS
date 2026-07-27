@@ -1,0 +1,40 @@
+{
+    "type": "function",
+    "function": {
+        "id": "stageConsentAcceptance",
+        "method": "POST",
+        "access": { "mode": "system" },
+        "meta": {
+            "name": "Stage consent acceptance",
+            "description": "Forward only the bounded consent claim needed by the request-phase gate."
+        },
+        "input": {
+            "body": { "type": "object" }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": { "type": "object" }
+            }
+        ],
+        "steps": [
+            {
+                "id": "stage",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "stageAcceptance",
+                    "body": {
+                        "contextKey": "$input.body.contextKey",
+                        "subjectClaim": "$input.body.subjectClaim",
+                        "attemptId": "$input.body.attemptId",
+                        "acceptedVersionIds": "$input.body.acceptedVersionIds"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": "$steps.stage"
+        }
+    }
+}
