@@ -195,8 +195,6 @@
       "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
-      },
-      "peerDependencies": {
         "typescript": "^5.9.3",
       },
     },

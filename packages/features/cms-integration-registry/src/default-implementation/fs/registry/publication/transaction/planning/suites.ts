@@ -1,5 +1,6 @@
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import {
+    computeIntegrationVerificationSuiteContentDigest,
     runnerSatisfiesRequirement,
     type AdmissionActiveContractReferenceV1,
     type AdmissionSuitePlanEntryV1,
@@ -45,7 +46,11 @@ export async function selectCandidateSuites(input: {
         ...inherited.map((entry) => entry.suite),
     ];
     for (const contract of input.verification.manifest.contracts) {
-        const digest = await authorSuiteDigest(input.verification, "contract", contract);
+        const digest = await computeIntegrationVerificationSuiteContentDigest(
+            input.verification,
+            "contract",
+            contract.contractId,
+        );
         activeContracts.push({
             contractId: contract.contractId,
             lineageId: await contractLineageId(input.kind, contract.contractId),
@@ -58,7 +63,11 @@ export async function selectCandidateSuites(input: {
         suites.push({
             suiteId: conformance.suiteId,
             source: "author-conformance",
-            contentDigest: await authorSuiteDigest(input.verification, "conformance", conformance),
+            contentDigest: await computeIntegrationVerificationSuiteContentDigest(
+                input.verification,
+                "conformance",
+                conformance.suiteId,
+            ),
         });
     }
     assertUnique(
@@ -116,22 +125,6 @@ function selectRunner(
         );
     }
     return runner;
-}
-
-async function authorSuiteDigest(
-    verification: IntegrationVerificationEnvelopeV1,
-    type: "contract" | "conformance",
-    suite: Readonly<{ entrypoint: string }>,
-): Promise<string> {
-    return await sha256Hex(
-        canonicalJsonBytes({
-            schema: "cms.integration.verification-suite-content.v1",
-            type,
-            suite,
-            entrypoint: verification.files[suite.entrypoint],
-            fixtures: verification.manifest.fixtures.map((path) => ({ path, file: verification.files[path] })),
-        }),
-    );
 }
 
 async function contractLineageId(kind: string, contractId: string): Promise<string> {

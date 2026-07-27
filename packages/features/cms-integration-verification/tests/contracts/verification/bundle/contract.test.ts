@@ -5,8 +5,8 @@ import {
     computeIntegrationVerificationDigest,
     parseIntegrationVerificationEnvelope,
     validateIntegrationVerificationEnvelope,
-} from "../../../src/exports/index";
-import { verificationEnvelope } from "../fixtures";
+} from "../../../../src/exports/index";
+import { verificationEnvelope } from "../../fixtures";
 
 describe("integration verification envelope", () => {
     test("strictly validates and canonically identifies an independent file bundle", async () => {

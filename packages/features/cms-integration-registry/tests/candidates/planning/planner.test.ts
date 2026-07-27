@@ -3,6 +3,7 @@ import {
     FsIntegrationRegistryCandidateAdmissionPlanner,
     FsIntegrationRegistryCandidateStore,
 } from "@bernouy/cms-integration-registry/fs";
+import { computeIntegrationVerificationSuiteContentDigest } from "@bernouy/cms-integration-verification";
 import { reviewedBaseline } from "../../baselines/fixtures";
 import {
     cleanupRegistryFixtures,
@@ -58,6 +59,13 @@ describe("filesystem candidate admission planning", () => {
             { selection: "stable", kind: "dependency", version: "1.0.0", packageDigest: dependency.digest },
         ]);
         expect(plan.admission.activeContracts[0]?.contractId).toBe("public-api");
+        expect(plan.admission.activeContracts[0]?.contractDigest).toBe(
+            await computeIntegrationVerificationSuiteContentDigest(
+                candidate.envelope.verification,
+                "contract",
+                "public-api",
+            ),
+        );
         expect(plan.admission.suites.map((suite) => suite.suiteId)).toEqual([
             "implementation",
             "platform-install",

@@ -1,6 +1,8 @@
 export {
     ADMISSION_INPUT_SNAPSHOT_SCHEMA,
     INTEGRATION_VERIFICATION_SCHEMA,
+    INTEGRATION_VERIFICATION_SDK_V1_SPECIFIER,
+    INTEGRATION_VERIFICATION_SUITE_CONTENT_SCHEMA,
     RELEASE_ADMISSION_POLICY_SNAPSHOT_SCHEMA,
     PLATFORM_VERIFICATION_EVIDENCE_SCHEMA,
     PLATFORM_VERIFICATION_SUITE_DEFINITION_SCHEMA,
@@ -18,7 +20,11 @@ export {
     type IdentifiedReleaseAdmissionPolicySnapshotV1,
     type IdentifiedVerificationJobResultV1,
     type IntegrationVerificationEnvelopeV1,
+    type IntegrationVerificationAuthorSuiteType,
+    type IntegrationVerificationConformanceSuiteV1,
+    type IntegrationVerificationContractSuiteV1,
     type IntegrationVerificationManifestV1,
+    type IntegrationVerificationSuiteContentV2,
     type IntegrationVerificationValidationOptions,
     type CandidateAdmissionJobResultV1,
     type IdentifiedCandidateAdmissionJobResultV1,
@@ -117,7 +123,9 @@ export {
 export { STATEFUL_CHANGE_SELECTION_SCHEMA } from "../interfaces/reports";
 export {
     assertVerificationJobResultReplay,
+    buildIntegrationVerificationSuiteContent,
     computeIntegrationVerificationDigest,
+    computeIntegrationVerificationSuiteContentDigest,
     identifyCandidateAdmissionJobResult,
     identifyAdmissionInputSnapshot,
     identifyMigrationJobResult,
@@ -136,6 +144,7 @@ export {
     validateAdmissionInputSnapshot,
     validateAdmissionInputSnapshotForPolicy,
     validateIntegrationVerificationEnvelope,
+    validateIntegrationVerificationSuiteSources,
     validateCandidateAdmissionJobResult,
     validateCandidateAdmissionJobResultForPlan,
     validateMigrationJobResult,

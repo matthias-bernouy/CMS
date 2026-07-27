@@ -6,16 +6,20 @@ import {
     type CanonicalFileSet,
 } from "@bernouy/cms-integration-packages";
 import type {
+    IntegrationVerificationAuthorSuiteType,
     IntegrationVerificationEnvelopeV1,
     IntegrationVerificationManifestV1,
+    IntegrationVerificationSuiteContentV2,
     IntegrationVerificationValidationOptions,
 } from "../../interfaces/verification";
 import { INTEGRATION_VERIFICATION_SCHEMA } from "../../interfaces/verification";
 import { parseVerificationRunnerRequirement } from "../runner";
 import { IntegrationVerificationContractError, wrapPackageValidation } from "../validation/errors";
 import { parseVerificationJsonDocument } from "../validation/document";
+import { buildVerificationSuiteContent, validateVerificationSuiteSources } from "../validation/suiteIdentity";
 import { assertContractIJson, assertUnique, boundedArray, strictRecord } from "../validation/structure";
 import {
+    assertCumulativeMajorVersionRange,
     assertVersionInRange,
     exactVersion,
     oneOf,
@@ -69,7 +73,33 @@ export function validateIntegrationVerificationEnvelope(
 }
 
 export async function computeIntegrationVerificationDigest(value: unknown): Promise<string> {
-    return sha256Hex(canonicalJsonBytes(validateIntegrationVerificationEnvelope(value)));
+    const envelope = await validateIntegrationVerificationSuiteSources(value);
+    return sha256Hex(canonicalJsonBytes(envelope));
+}
+
+export async function validateIntegrationVerificationSuiteSources(
+    value: unknown,
+): Promise<IntegrationVerificationEnvelopeV1> {
+    const envelope = validateIntegrationVerificationEnvelope(value);
+    await validateVerificationSuiteSources(envelope);
+    return envelope;
+}
+
+export async function computeIntegrationVerificationSuiteContentDigest(
+    value: unknown,
+    type: IntegrationVerificationAuthorSuiteType,
+    suiteId: string,
+): Promise<string> {
+    return await sha256Hex(canonicalJsonBytes(await buildIntegrationVerificationSuiteContent(value, type, suiteId)));
+}
+
+export async function buildIntegrationVerificationSuiteContent(
+    value: unknown,
+    type: IntegrationVerificationAuthorSuiteType,
+    suiteId: string,
+): Promise<IntegrationVerificationSuiteContentV2> {
+    const envelope = validateIntegrationVerificationEnvelope(value);
+    return await buildVerificationSuiteContent(envelope, type, suiteId);
 }
 
 function parseTarget(value: unknown): IntegrationVerificationEnvelopeV1["target"] {
@@ -136,6 +166,7 @@ function parseContract(
     const input = strictRecord(value, field, ["contractId", "entrypoint", "activeMajorRange"]);
     const activeMajorRange = supportedVersionRange(input.activeMajorRange, `${field}.activeMajorRange`);
     assertVersionInRange(targetVersion, activeMajorRange, `${field}.activeMajorRange`);
+    assertCumulativeMajorVersionRange(targetVersion, activeMajorRange, `${field}.activeMajorRange`);
     return {
         contractId: stableIdentifier(input.contractId, `${field}.contractId`),
         entrypoint: referencedFile(input.entrypoint, `${field}.entrypoint`, files, true),

@@ -55,6 +55,17 @@ export function assertVersionInRange(version: string, range: string, field: stri
     }
 }
 
+export function assertCumulativeMajorVersionRange(version: string, range: string, field: string): void {
+    const major = majorOf(version);
+    const nextMajor = (BigInt(major) + 1n).toString();
+    const bounded = /^>=(\S+)\s+<(\S+)$/.exec(range);
+    const boundedThroughMajor = bounded !== null && majorOf(bounded[1]!) === major && bounded[2] === `${nextMajor}.0.0`;
+    const caretThroughMajor = major !== "0" && range.startsWith("^") && majorOf(range.slice(1)) === major;
+    if (!boundedThroughMajor && !caretThroughMajor) {
+        throw invalid(field, `must remain active through the end of the ${major}.x major`);
+    }
+}
+
 export function sha256Digest(value: unknown, field: string): string {
     const parsed = requiredText(value, field, 64);
     if (!SHA256.test(parsed)) {
@@ -127,4 +138,8 @@ export function versionedIdentity(value: unknown, field: string): Readonly<{ nam
         name: stableIdentifier(record.name, `${field}.name`),
         version: exactVersion(record.version, `${field}.version`),
     };
+}
+
+function majorOf(version: string): string {
+    return version.slice(0, version.indexOf("."));
 }
