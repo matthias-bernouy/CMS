@@ -24,14 +24,6 @@ export function managementProtectionUnavailable(): Response {
     return errorResponse(503, "Repository management protection is unavailable", "management_protection_unavailable");
 }
 
-export function managementPackageUploadInvalid(): Response {
-    return errorResponse(400, "Integration package upload is invalid", "management_package_upload_invalid");
-}
-
-export function managementPackageUploadTooLarge(): Response {
-    return errorResponse(413, "Integration package upload is too large", "management_package_upload_too_large");
-}
-
 function errorResponse(
     status: number,
     error: string,

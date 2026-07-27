@@ -3,18 +3,10 @@ import type {
     RepositoryReevaluationInput,
     RepositoryStablePromotionInput,
 } from "@bernouy/cms-control";
-import { canonicalJsonBytes, parseIntegrationPackageEnvelope, sha256Hex } from "@bernouy/cms-integration-packages";
 import { REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES } from "./transport";
 import { assertEqual, canonicalText, digest, packageKind, packageVersion, uniqueTextArray } from "./validation/helpers";
 
 const utf8 = new TextEncoder();
-
-export type PreparedPublication = Readonly<{
-    bytes: Uint8Array;
-    kind: string;
-    version: string;
-    digest: string;
-}>;
 
 export type PreparedReevaluation = Readonly<{
     bytes: Uint8Array;
@@ -26,21 +18,6 @@ export type PreparedPromotion = Readonly<{
     bytes: Uint8Array;
     input: RepositoryStablePromotionInput;
 }>;
-
-export async function preparePublication(document: Uint8Array): Promise<PreparedPublication> {
-    const bytes = document.slice();
-    const envelope = parseIntegrationPackageEnvelope(bytes, { requireReleaseNotes: true });
-    const canonicalBytes = canonicalJsonBytes(envelope);
-    if (!equalBytes(bytes, canonicalBytes)) {
-        throw new TypeError("Repository publication must be canonical");
-    }
-    return {
-        bytes,
-        kind: envelope.kind,
-        version: envelope.version,
-        digest: await sha256Hex(bytes),
-    };
-}
 
 export function prepareReevaluation(input: RepositoryReevaluationInput, actor: string): PreparedReevaluation {
     const kind = packageKind(input.kind);
@@ -140,8 +117,4 @@ function jsonBytes(value: unknown): Uint8Array {
         throw new TypeError("Repository management JSON request is too large");
     }
     return bytes;
-}
-
-function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
-    return left.byteLength === right.byteLength && left.every((value, index) => value === right[index]);
 }

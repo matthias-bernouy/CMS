@@ -22,23 +22,6 @@ export function managementGuard() {
     });
 }
 
-export function publicationDocument(version: string): string {
-    return JSON.stringify({
-        schema: "cms.integration.package.v1",
-        kind: "remote-demo",
-        version,
-        definition: "definition.json",
-        releaseNotes: "README.md",
-        files: {
-            "README.md": { encoding: "utf8", content: "# Remote demo\n" },
-            "definition.json": {
-                encoding: "utf8",
-                content: JSON.stringify({ kind: "remote-demo", label: "Remote demo", version, inputs: [] }),
-            },
-        },
-    });
-}
-
 export function origin(runner: BunRunner): string {
     if (!runner.port) {
         throw new Error("Test runner did not start");

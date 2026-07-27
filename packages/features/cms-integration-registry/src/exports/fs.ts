@@ -36,7 +36,6 @@ export {
     type WriteIntegrationRegistryVersionManifestOptions,
     type WrittenIntegrationRegistryVersionManifest,
 } from "../default-implementation/fs/manifest/writer";
-export { FsIntegrationRegistryPublisher } from "../default-implementation/fs/registry/publication/publisher";
 export {
     FsOfficialIntegrationRegistryBootstrapPublisher,
     type FsOfficialIntegrationRegistryBootstrapPublisherConfig,
@@ -47,7 +46,6 @@ export {
     FsIntegrationRegistrySimulatedCrashError,
     type FsIntegrationRegistryPublicationBoundary,
     type FsIntegrationRegistryPublicationConfig,
-    type FsIntegrationRegistryPublisherConfig,
 } from "../default-implementation/fs/registry/publication/types";
 export {
     FS_INTEGRATION_REGISTRY_PUBLICATION_PHASES,

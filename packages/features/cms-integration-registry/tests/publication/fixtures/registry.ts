@@ -1,14 +1,18 @@
 import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
 import {
     createIntegrationRegistryCatalogSnapshot,
     InMemoryIntegrationRegistryMutationCoordinator,
     IntegrationCompatibilityEvaluator,
     IntegrationRegistryCatalogSnapshotReference,
-    type IntegrationRegistryPublisher,
+    type TrustedSchemaDeclarationEvidence,
 } from "@bernouy/cms-integration-registry";
-import { FsIntegrationRegistryPublisher, FsReviewedSchemaBaselineStore } from "@bernouy/cms-integration-registry/fs";
+import {
+    FsReviewedSchemaBaselineStore,
+    type FsIntegrationRegistryPublicationConfig,
+} from "@bernouy/cms-integration-registry/fs";
 import { prepareFsIntegrationRegistryCandidate } from "../../../src/default-implementation/fs/registry/publication/candidate";
 import { publishPreparedFsIntegrationRegistryCandidate } from "../../../src/default-implementation/fs/registry/publication/publisher";
 
@@ -21,9 +25,7 @@ export function cleanupRegistryFixtures(): void {
     }
 }
 
-export function registryFixture(
-    overrides: Partial<ConstructorParameters<typeof FsIntegrationRegistryPublisher>[0]> = {},
-) {
+export function registryFixture(overrides: Partial<FsIntegrationRegistryPublicationConfig> = {}) {
     const root = mkdtempSync(join(tmpdir(), "cms-integration-registry-publisher-"));
     roots.push(root);
     mkdirSync(root, { recursive: true });
@@ -47,21 +49,29 @@ export function registryFixture(
         now: () => "2026-07-26T10:00:00.000Z",
         ...overrides,
     };
-    const rawPublisher = new FsIntegrationRegistryPublisher({
-        ...publicationConfig,
-        rawPublicationPolicy: overrides.rawPublicationPolicy ?? "reject-unverified",
-    });
-    const publisher: IntegrationRegistryPublisher = {
-        async publish(request) {
-            const candidate = await prepareFsIntegrationRegistryCandidate(
-                request.package,
-                publicationConfig.packageLimits,
-            );
-            return await publishPreparedFsIntegrationRegistryCandidate(
-                publicationConfig,
-                candidate,
-                request.schemaDeclarationEvidence,
-            );
+    async function publish(
+        integrationPackage: ResolvedIntegrationPackage,
+        schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
+        versionStatus?: "unverified",
+    ) {
+        const candidate = await prepareFsIntegrationRegistryCandidate(
+            integrationPackage,
+            publicationConfig.packageLimits,
+        );
+        return await publishPreparedFsIntegrationRegistryCandidate(
+            publicationConfig,
+            candidate,
+            schemaDeclarationEvidence,
+            undefined,
+            versionStatus,
+        );
+    }
+    const publisher = {
+        async publish(request: {
+            package: ResolvedIntegrationPackage;
+            schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[];
+        }) {
+            return await publish(request.package, request.schemaDeclarationEvidence);
         },
     };
     return {
@@ -71,7 +81,8 @@ export function registryFixture(
         mutations,
         publicationConfig,
         publisher,
-        rawPublisher,
+        publishUnverified: (integrationPackage: ResolvedIntegrationPackage) =>
+            publish(integrationPackage, undefined, "unverified"),
         reviewedSchemaBaselines,
     };
 }

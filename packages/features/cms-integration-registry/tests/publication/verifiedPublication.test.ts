@@ -10,7 +10,7 @@ import {
     readCompatibilityAdmissionReport,
     SnapshotIntegrationPackageSource,
 } from "@bernouy/cms-integration-registry/fs";
-import { reviewedBaseline } from "../../baselines/fixtures";
+import { reviewedBaseline } from "../baselines/fixtures";
 import {
     cleanupRegistryFixtures,
     publicationPackage,
@@ -19,7 +19,7 @@ import {
     reviewedSchemaContract,
     seedLegacySqlBaseline,
     sqlPublicationPackage,
-} from "../fixtures";
+} from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
 

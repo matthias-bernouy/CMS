@@ -37,18 +37,18 @@ describe("production package download protection", () => {
     test("writes completed repository operations as structured JSON", () => {
         const lines: string[] = [];
         const telemetry = createProductionRepositoryOperationalTelemetry((line) => lines.push(line));
-        const span = telemetry.start("publication", {
+        const span = telemetry.start("stable-promotion", {
             kind: "demo",
             version: "1.0.0",
             digest: "a".repeat(64),
         });
 
-        telemetry.finish(span, "succeeded", { operationId: "publication-operation" });
+        telemetry.finish(span, "succeeded", { operationId: "promotion-operation" });
 
         expect(JSON.parse(lines[0]!)).toMatchObject({
             schema: "cms.repository.operation.v1",
-            operation: "publication",
-            operationId: "publication-operation",
+            operation: "stable-promotion",
+            operationId: "promotion-operation",
             kind: "demo",
             version: "1.0.0",
             digest: "a".repeat(64),

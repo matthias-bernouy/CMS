@@ -30417,7 +30417,6 @@ ${controls_default3}`;
     const snapshot = readRecord(metrics.snapshot);
     return {
       operations: {
-        publication: operationCounter(operations.publication),
         stablePromotion: operationCounter(operations.stablePromotion),
         compatibilityReevaluation: operationCounter(operations.compatibilityReevaluation)
       },
@@ -32130,7 +32129,7 @@ ${controls_default3}`;
     ];
     if (status.metrics) {
       const operations = status.metrics.operations;
-      values.push(labelledValue("Publications", operationSummary(operations.publication)), labelledValue("Stable promotions", operationSummary(operations.stablePromotion)), labelledValue("Compatibility reevaluations", operationSummary(operations.compatibilityReevaluation)), labelledValue("Compatibility warnings", String(status.metrics.compatibility.warnings)), labelledValue("Package traffic", `${status.metrics.publicPackages.packagesServed} downloads / ${formatBytes(String(status.metrics.publicPackages.packageBytes))}`), labelledValue("Rate-limit rejections", String(status.metrics.publicPackages.rateLimitRejections)), labelledValue("Repository reads", `${status.metrics.repositoryReads.succeeded}/${status.metrics.repositoryReads.total} succeeded, ${status.metrics.repositoryReads.notFound} not found, ${status.metrics.repositoryReads.rejected} rejected, ${status.metrics.repositoryReads.failed} failed, max ${status.metrics.repositoryReads.maximumDurationMs} ms`), labelledValue("Registry capacity", filesystemSummary(status.metrics.filesystem)));
+      values.push(labelledValue("Stable promotions", operationSummary(operations.stablePromotion)), labelledValue("Compatibility reevaluations", operationSummary(operations.compatibilityReevaluation)), labelledValue("Compatibility warnings", String(status.metrics.compatibility.warnings)), labelledValue("Package traffic", `${status.metrics.publicPackages.packagesServed} downloads / ${formatBytes(String(status.metrics.publicPackages.packageBytes))}`), labelledValue("Rate-limit rejections", String(status.metrics.publicPackages.rateLimitRejections)), labelledValue("Repository reads", `${status.metrics.repositoryReads.succeeded}/${status.metrics.repositoryReads.total} succeeded, ${status.metrics.repositoryReads.notFound} not found, ${status.metrics.repositoryReads.rejected} rejected, ${status.metrics.repositoryReads.failed} failed, max ${status.metrics.repositoryReads.maximumDurationMs} ms`), labelledValue("Registry capacity", filesystemSummary(status.metrics.filesystem)));
     }
     target2.replaceChildren(...values);
   }

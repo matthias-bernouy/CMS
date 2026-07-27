@@ -14,7 +14,6 @@ export function renderRepositoryStatus(target: HTMLElement, status: RepositorySt
     if (status.metrics) {
         const operations = status.metrics.operations;
         values.push(
-            labelledValue("Publications", operationSummary(operations.publication)),
             labelledValue("Stable promotions", operationSummary(operations.stablePromotion)),
             labelledValue("Compatibility reevaluations", operationSummary(operations.compatibilityReevaluation)),
             labelledValue("Compatibility warnings", String(status.metrics.compatibility.warnings)),

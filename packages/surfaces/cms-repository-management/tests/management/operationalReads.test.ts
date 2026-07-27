@@ -12,7 +12,6 @@ describe("private repository operational reads", () => {
         const runner = mounted({
             snapshot: () => ({
                 operations: {
-                    publication: counter(2, 1, 1),
                     "stable-promotion": counter(1, 1, 0),
                     "compatibility-reevaluation": counter(1, 1, 0),
                 },
@@ -40,7 +39,7 @@ describe("private repository operational reads", () => {
                     {
                         schema: "cms.repository.operation.v1",
                         timestamp: "2026-07-26T12:00:00.000Z",
-                        operation: "publication",
+                        operation: "stable-promotion",
                         operationId: "operation-1",
                         outcome: "succeeded",
                         durationMs: 7,
@@ -73,7 +72,6 @@ describe("private repository operational reads", () => {
         expect(await status.json()).toMatchObject({
             metrics: {
                 operations: {
-                    publication: { attempted: 2, succeeded: 1, rejected: 1 },
                     stablePromotion: { attempted: 1, succeeded: 1 },
                     compatibilityReevaluation: { attempted: 1, succeeded: 1 },
                 },
@@ -93,7 +91,7 @@ describe("private repository operational reads", () => {
         expect(JSON.parse(serialized)).toMatchObject({
             recentOperations: [
                 {
-                    operation: "publication",
+                    operation: "stable-promotion",
                     operationId: "operation-1",
                     digest: "a".repeat(64),
                     outcome: "succeeded",

@@ -24,17 +24,3 @@ export class IntegrationRegistryVersionOrderError extends Error {
         this.name = "IntegrationRegistryVersionOrderError";
     }
 }
-
-export class IntegrationRegistryVerificationRequiredError extends Error {
-    readonly status = 422;
-    readonly code = "verification_required";
-
-    constructor(
-        readonly kind: string,
-        readonly version: string,
-        readonly packageDigest: string,
-    ) {
-        super(`Integration publication requires an exact admissible verification decision: ${kind}@${version}`);
-        this.name = "IntegrationRegistryVerificationRequiredError";
-    }
-}

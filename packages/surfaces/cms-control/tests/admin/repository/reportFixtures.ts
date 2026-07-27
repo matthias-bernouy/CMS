@@ -10,7 +10,6 @@ const operationCounter = {
 
 const metricsFixture = {
     operations: {
-        publication: operationCounter,
         stablePromotion: operationCounter,
         compatibilityReevaluation: operationCounter,
     },
@@ -71,8 +70,8 @@ export const diagnosticsFixture = {
     recentOperations: [
         {
             timestamp: "2026-07-26T12:00:00.000Z",
-            operation: "publication",
-            operationId: "publication-operation",
+            operation: "stable-promotion",
+            operationId: "promotion-operation",
             outcome: "succeeded",
             durationMs: 8,
             kind: "commerce",

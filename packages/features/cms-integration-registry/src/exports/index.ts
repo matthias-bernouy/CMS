@@ -49,9 +49,7 @@ export type {
     PersistedIntegrationRegistryCandidateRecord,
     QueueIntegrationRegistryCandidateInput,
     RejectIntegrationRegistryCandidateValidationInput,
-    IntegrationRegistryPublicationRequest,
     IntegrationRegistryPublicationResult,
-    IntegrationRegistryPublisher,
     IdentifiedIntegrationVerificationBackfillRequest,
     IntegrationVerificationBackfiller,
     IntegrationVerificationBackfillRequest,
@@ -201,7 +199,6 @@ export {
 export { changedIntegrationPackagePaths } from "../core/publication/changedPaths";
 export { identifyOfficialRepositoryBootstrapPlan } from "../core/publication/bootstrapPlan";
 export {
-    IntegrationRegistryVerificationRequiredError,
     IntegrationRegistryVersionConflictError,
     IntegrationRegistryVersionOrderError,
 } from "../core/publication/errors";

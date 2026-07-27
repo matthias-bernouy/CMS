@@ -1,13 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    gateway,
-    jsonResponse,
-    packageFixture,
-    TEST_ACTOR,
-    validOperationalMetrics,
-    validStatus,
-    validVersions,
-} from "./fixtures";
+import { gateway, jsonResponse, TEST_ACTOR, validOperationalMetrics, validStatus, validVersions } from "./fixtures";
 import {
     admissionReport,
     candidateProjection,
@@ -23,7 +15,6 @@ import {
 
 describe("HTTP repository management gateway DTO validation", () => {
     test("rejects extra fields, identity drift, invalid digests, report chains, actors, and confirmations", async () => {
-        const publication = await packageFixture();
         const cases: Array<() => Promise<Response>> = [
             () => gateway(oneResponse({ ...validStatus(), internal: "secret" })).status(),
             () =>
@@ -75,19 +66,6 @@ describe("HTTP repository management gateway DTO validation", () => {
                 gateway(
                     oneResponse(
                         {
-                            operationId: "publication-operation",
-                            kind: TEST_KIND,
-                            version: TEST_VERSION,
-                            digest: "b".repeat(64),
-                            report: admissionReport({ packageDigest: "b".repeat(64) }),
-                        },
-                        201,
-                    ),
-                ).publish(publication.bytes),
-            () =>
-                gateway(
-                    oneResponse(
-                        {
                             revision: revisionReport({
                                 provenance: { actor: "browser-actor", reason: "Manual evidence review" },
                             }),
@@ -133,26 +111,12 @@ describe("HTTP repository management gateway DTO validation", () => {
     });
 
     test("accepts complete success DTOs for reads and mutations", async () => {
-        const publication = await packageFixture();
         const compatibility = compatibilityPage();
         const successCases: Array<() => Promise<Response>> = [
             () => gateway(oneResponse(validStatus())).status(),
             () => gateway(oneResponse({ ...validStatus(), metrics: validOperationalMetrics() })).status(),
             () => gateway(oneResponse(validVersions())).versions(TEST_KIND),
             () => gateway(oneResponse(compatibility)).compatibility({ kind: TEST_KIND, version: TEST_VERSION }),
-            () =>
-                gateway(
-                    oneResponse(
-                        {
-                            operationId: "publication-operation",
-                            kind: TEST_KIND,
-                            version: TEST_VERSION,
-                            digest: publication.digest,
-                            report: admissionReport({ packageDigest: publication.digest }),
-                        },
-                        201,
-                    ),
-                ).publish(publication.bytes),
             () =>
                 gateway(
                     oneResponse({ revision: revisionReport(), currentReportRevisionId: "report-revision" }, 201),
@@ -174,7 +138,7 @@ describe("HTTP repository management gateway DTO validation", () => {
             () => gateway(oneResponse(plannedCandidateReport())).candidateReport("candidate-1"),
         ];
         expect(await Promise.all(successCases.map(async (execute) => (await execute()).status))).toEqual([
-            200, 200, 200, 200, 201, 201, 201, 200, 200,
+            200, 200, 200, 200, 201, 201, 200, 200,
         ]);
     });
 

@@ -10,7 +10,7 @@ import {
     packageVersion,
 } from "./helpers";
 
-const OPERATIONS = ["publication", "stable-promotion", "compatibility-reevaluation"] as const;
+const OPERATIONS = ["stable-promotion", "compatibility-reevaluation"] as const;
 const OPERATION_OUTCOMES = ["succeeded", "rejected", "failed"] as const;
 const COMPATIBILITY_OUTCOMES = ["compatible", "breaking", "unknown", "invalid", "not-applicable"] as const;
 
@@ -23,8 +23,7 @@ export function validateOperationalMetrics(value: unknown): void {
         "snapshot",
         "filesystem",
     ]);
-    const operations = exactObject(metrics.operations, ["publication", "stablePromotion", "compatibilityReevaluation"]);
-    validateOperationCounter(operations.publication);
+    const operations = exactObject(metrics.operations, ["stablePromotion", "compatibilityReevaluation"]);
     validateOperationCounter(operations.stablePromotion);
     validateOperationCounter(operations.compatibilityReevaluation);
     validateCounts(metrics.compatibility, ["reevaluations", "warnings"]);

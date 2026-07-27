@@ -34,7 +34,6 @@ describe("filesystem integration registry corruption recovery", () => {
 
     test("quarantines a journal whose explicit disposition contradicts its next index", async () => {
         const fixture = registryFixture({
-            rawPublicationPolicy: "publish-unverified",
             createOperationId: () => "contradictory-disposition",
             afterBoundary: ({ phase }) => {
                 if (phase === "staged") {
@@ -42,9 +41,9 @@ describe("filesystem integration registry corruption recovery", () => {
                 }
             },
         });
-        await expect(
-            fixture.rawPublisher.publish({ package: await publicationPackage("raw-demo", "1.0.0") }),
-        ).rejects.toThrow(/simulated/i);
+        await expect(fixture.publishUnverified(await publicationPackage("raw-demo", "1.0.0"))).rejects.toThrow(
+            /simulated/i,
+        );
         const journal = join(fixture.root, ".journals", "contradictory-disposition.json");
         const document = readJournal(journal);
         document.publication = { disposition: "installable" };

@@ -1,11 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES } from "../../../src/repositoryManagement/gateway";
-import { gateway, jsonResponse, packageFixture, responseBody, validStatus } from "./fixtures";
-import { admissionReport, TEST_KIND, TEST_VERSION } from "./reports";
+import { gateway, jsonResponse, responseBody, validStatus } from "./fixtures";
+import { TEST_KIND, TEST_VERSION } from "./reports";
 
 describe("HTTP repository management gateway error mapping", () => {
     test("preserves only expected not-found and conflict statuses with sanitized bodies", async () => {
-        const publication = await packageFixture();
         const versions = gateway(oneResponse({ code: "integration_not_found", error: "raw upstream text" }, 404));
         expect(await responseBody(await versions.versions(TEST_KIND))).toEqual({
             code: "integration_not_found",
@@ -19,28 +18,6 @@ describe("HTTP repository management gateway error mapping", () => {
             oneResponse({ code: "integration_registry_stable_promotion_not_found", error: "raw upstream text" }, 404),
         );
         expect((await promotionNotFound.promoteStable(promotionInput())).status).toBe(404);
-
-        const publicationConflict = gateway(
-            oneResponse(
-                {
-                    code: "integration_version_exists",
-                    error: "raw path /private/registry",
-                    kind: TEST_KIND,
-                    version: TEST_VERSION,
-                    existingDigest: publication.digest,
-                },
-                409,
-            ),
-        );
-        const conflict = await publicationConflict.publish(publication.bytes);
-        expect(conflict.status).toBe(409);
-        expect(await responseBody(conflict)).toEqual({
-            code: "integration_version_exists",
-            error: "Integration version already exists",
-            kind: TEST_KIND,
-            version: TEST_VERSION,
-            existingDigest: publication.digest,
-        });
 
         const reevaluation = gateway(
             oneResponse(
@@ -68,18 +45,6 @@ describe("HTTP repository management gateway error mapping", () => {
     });
 
     test("preserves bounded rejection, upload, and rate-limit responses", async () => {
-        const publication = await packageFixture();
-        const rejected = gateway(
-            oneResponse(
-                {
-                    code: "integration_compatibility_rejected",
-                    error: "raw upstream text",
-                    report: admissionReport({ packageDigest: publication.digest }),
-                },
-                422,
-            ),
-        );
-        expect((await rejected.publish(publication.bytes)).status).toBe(422);
         const ineligible = gateway(
             oneResponse(
                 {
@@ -116,7 +81,7 @@ describe("HTTP repository management gateway error mapping", () => {
             calls += 1;
             return jsonResponse(validStatus());
         }) as typeof fetch);
-        const oversized = await client.publish(new Uint8Array(REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES + 1));
+        const oversized = await client.submitCandidate(new Uint8Array(REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES + 1));
         expect(oversized.status).toBe(413);
         expect(calls).toBe(0);
 

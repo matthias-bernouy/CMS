@@ -12,7 +12,6 @@ export type RepositoryOperationCounterView = Readonly<{
 
 export type RepositoryMetricsView = Readonly<{
     operations: Readonly<{
-        publication: RepositoryOperationCounterView;
         stablePromotion: RepositoryOperationCounterView;
         compatibilityReevaluation: RepositoryOperationCounterView;
     }>;
@@ -80,7 +79,6 @@ export function parseRepositoryMetrics(value: unknown): RepositoryMetricsView {
     const snapshot = readRecord(metrics.snapshot);
     return {
         operations: {
-            publication: operationCounter(operations.publication),
             stablePromotion: operationCounter(operations.stablePromotion),
             compatibilityReevaluation: operationCounter(operations.compatibilityReevaluation),
         },

@@ -5,7 +5,7 @@ import { RepositoryCatalogRuntime } from "../../src/core/catalogRuntime";
 import { startRepositoryServer, type RepositoryServer } from "../../src/core/repositoryServer";
 import { createProductionRepositoryManagement } from "../../src/management";
 import { TemporaryRoots } from "../storage/fixtures";
-import { authenticatedFetch, managementGuard, origin, publicationDocument } from "./support";
+import { authenticatedFetch, managementGuard, origin } from "./support";
 
 const roots = new TemporaryRoots();
 const servers: RepositoryServer[] = [];
@@ -16,7 +16,7 @@ afterEach(async () => {
 });
 
 describe("production repository management", () => {
-    test("keeps the raw wire-compatible publication route private and fail-closed", async () => {
+    test("exposes candidate publication without retaining the obsolete raw route", async () => {
         const root = await roots.create();
         const catalog = new RepositoryCatalogRuntime();
         const loadCatalog = () => buildFsIntegrationRegistryCatalogSnapshot({ root });
@@ -40,18 +40,15 @@ describe("production repository management", () => {
 
         const managementOrigin = origin(managementRunner);
         const publicOrigin = origin(publicRunner);
-        const unauthorized = await fetch(
-            `${managementOrigin}/.cms/repository-management/api/integrations/publications`,
-            {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: publicationDocument("1.0.0"),
-            },
-        );
+        const unauthorized = await fetch(`${managementOrigin}/.cms/repository-management/api/integrations/candidates`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: "{}",
+        });
         expect(unauthorized.status).toBe(401);
 
         for (const path of [
-            "/api/integrations/publications",
+            "/api/integrations/candidates",
             "/api/integrations/stable-promotions",
             "/api/integrations/compatibility/reevaluations",
         ]) {
@@ -66,18 +63,12 @@ describe("production repository management", () => {
             expect(rejectedMaintenanceCredential.status).toBe(401);
         }
 
-        const published = await fetch(`${managementOrigin}/.cms/repository-management/api/integrations/publications`, {
+        const removed = await fetch(`${managementOrigin}/.cms/repository-management/api/integrations/publications`, {
             method: "POST",
             headers: { authorization: "Bearer management-secret", "content-type": "application/json" },
-            body: publicationDocument("1.0.0"),
+            body: "{}",
         });
-        expect(published.status).toBe(422);
-        expect(await published.json()).toMatchObject({
-            code: "verification_required",
-            kind: "remote-demo",
-            version: "1.0.0",
-            packageDigest: expect.stringMatching(/^[a-f0-9]{64}$/u),
-        });
+        expect(removed.status).toBe(404);
 
         const status = await authenticatedFetch(`${managementOrigin}/.cms/repository-management/api/status`);
         expect(status.status).toBe(200);

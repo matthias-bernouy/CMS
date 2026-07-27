@@ -26,7 +26,7 @@ describe("repository management access", () => {
 
         expect(await status(guards, "/cms/admin/repository")).toBe(200);
         expect(await status(guards, "/cms/admin/repository/versions/1.0.0")).toBe(200);
-        expect(await status(guards, "/cms/api/repository/publications")).toBe(200);
+        expect(await status(guards, "/cms/api/repository/candidates")).toBe(200);
     });
 
     test("rejects another administrator even when the email is identical", async () => {
@@ -38,7 +38,7 @@ describe("repository management access", () => {
         const guards = repositoryGuards(auth, ACCESS);
 
         expect(await status(guards, "/cms/admin/repository")).toBe(403);
-        expect(await status(guards, "/cms/api/repository/publications")).toBe(403);
+        expect(await status(guards, "/cms/api/repository/candidates")).toBe(403);
     });
 
     test("hides repository management when the capability is not configured", async () => {

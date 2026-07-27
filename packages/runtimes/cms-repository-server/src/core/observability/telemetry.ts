@@ -16,7 +16,7 @@ import type {
 import { RepositoryCandidateGarbageCollectionMetrics } from "../candidates/garbageCollectionMetrics";
 import { repositoryOperationLogEntry, safeLogText, safeOperationIdentity } from "./logEntry";
 
-const OPERATIONS = ["publication", "stable-promotion", "compatibility-reevaluation"] as const;
+const OPERATIONS = ["stable-promotion", "compatibility-reevaluation"] as const;
 const DEFAULT_RECENT_OPERATION_LIMIT = 32;
 const MAX_RECENT_OPERATION_LIMIT = 100;
 

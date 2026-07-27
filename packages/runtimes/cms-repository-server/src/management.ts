@@ -25,7 +25,6 @@ import {
     FsIntegrationRegistryCandidateFinalizationError,
     FsIntegrationRegistryCandidateFinalizer,
     FsIntegrationRegistryCandidateStore,
-    FsIntegrationRegistryPublisher,
     FsIntegrationRegistryRecoverer,
     FsIntegrationRegistryStablePromoter,
     FsIntegrationRegistryVersionEligibilityManager,
@@ -49,7 +48,7 @@ import {
 import {
     mountRepositorySchemaBaselineImportRoutes,
     mountRepositoryVerificationBackfillRoutes,
-    RepositoryManagementCms,
+    mountRepositoryManagementRoutes,
 } from "@bernouy/cms-repository-management";
 import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
 import type { Runner } from "@bernouy/http-runner";
@@ -61,12 +60,10 @@ import {
 import { createRepositoryCandidateAuthorSuiteResolver } from "./core/candidates/authorSuites";
 import { readRepositoryFilesystemCapacity } from "./core/filesystemCapacity";
 import { ObservedIntegrationRegistryStablePromoter } from "./core/observability/promoter";
-import { ObservedIntegrationRegistryPublisher } from "./core/observability/publisher";
 import { ObservedIntegrationCompatibilityReevaluator } from "./core/observability/reevaluator";
 import { RepositoryOperationalTelemetry } from "./core/observability/telemetry";
 import type { RepositoryManagementSurfaceMount } from "./core/repositoryServer";
 
-const MAX_PUBLICATION_UPLOAD_BYTES = 32 * 1_024 * 1_024;
 const MAX_MANAGEMENT_JSON_BYTES = 64 * 1_024;
 
 export type ProductionRepositoryManagement = Readonly<{
@@ -291,17 +288,6 @@ export async function createProductionRepositoryManagement(input: {
             ...verificationBackfillDiagnostics,
         ]),
     });
-    const publisher = new ObservedIntegrationRegistryPublisher(
-        new FsIntegrationRegistryPublisher({
-            root: input.root,
-            snapshots,
-            compatibility,
-            mutations,
-            reviewedSchemaBaselines,
-            rawPublicationPolicy: "reject-unverified",
-        }),
-        telemetry,
-    );
     const promoter = new ObservedIntegrationRegistryStablePromoter(
         new FsIntegrationRegistryStablePromoter({
             root: input.root,
@@ -350,10 +336,8 @@ export async function createProductionRepositoryManagement(input: {
             candidateProtocol.mountWorkerCapabilities(runner);
         },
         mount(runner: Runner) {
-            new RepositoryManagementCms({
+            mountRepositoryManagementRoutes({
                 runner,
-                publisher,
-                upload: { maxBodyBytes: MAX_PUBLICATION_UPLOAD_BYTES },
                 reads: {
                     catalog: snapshots,
                     reports,
@@ -367,9 +351,6 @@ export async function createProductionRepositoryManagement(input: {
                 stablePromotions: { promoter, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
                 versionEligibility: { manager: versionEligibility, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
                 compatibilityReevaluations: { reevaluator, maxBodyBytes: MAX_MANAGEMENT_JSON_BYTES },
-                existingVersionDigest(kind, version) {
-                    return input.catalog.current().locateExactVersion(kind, version)?.package.digest ?? null;
-                },
             });
             candidateProtocol.mountManagement(runner);
         },

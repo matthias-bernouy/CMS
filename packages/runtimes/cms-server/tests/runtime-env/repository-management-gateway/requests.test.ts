@@ -11,13 +11,12 @@ import { candidateReport, revisionReport, TEST_KIND, TEST_VERSION } from "./repo
 
 describe("HTTP repository management gateway requests", () => {
     test("calls only allowlisted endpoints with exact application headers", async () => {
-        const publication = await packageFixture();
         const captured: Array<{ url: URL; init: RequestInit }> = [];
         const after = "report/revision?cursor=yes&next=1";
         const fetchImpl = (async (input, init = {}) => {
             const url = new URL(String(input));
             captured.push({ url, init });
-            return managementResponseFor(url, publication.digest, after);
+            return managementResponseFor(url, after);
         }) as typeof fetch;
         const client = gateway(fetchImpl);
 
@@ -26,7 +25,6 @@ describe("HTTP repository management gateway requests", () => {
             await client.diagnostics(),
             await client.versions(TEST_KIND),
             await client.compatibility({ kind: TEST_KIND, version: TEST_VERSION, after, limit: 17 }),
-            await client.publish(publication.bytes),
             await client.reevaluate(
                 maliciousReevaluation({
                     kind: TEST_KIND,
@@ -47,13 +45,12 @@ describe("HTTP repository management gateway requests", () => {
             ),
         ];
 
-        expect(responses.map(({ status }) => status)).toEqual([200, 200, 200, 200, 201, 201, 201]);
+        expect(responses.map(({ status }) => status)).toEqual([200, 200, 200, 200, 201, 201]);
         expect(captured.map(({ url }) => url.pathname)).toEqual([
             "/.cms/repository-management/api/status",
             "/.cms/repository-management/api/diagnostics",
             "/.cms/repository-management/api/integrations/versions",
             "/.cms/repository-management/api/integrations/compatibility",
-            "/.cms/repository-management/api/integrations/publications",
             "/.cms/repository-management/api/integrations/compatibility/reevaluations",
             "/.cms/repository-management/api/integrations/stable-promotions",
         ]);
@@ -71,8 +68,7 @@ describe("HTTP repository management gateway requests", () => {
                 ...(post ? { "content-type": "application/json" } : {}),
             });
         }
-        expect(new Uint8Array(captured[4]!.init.body as ArrayBuffer)).toEqual(publication.bytes);
-        expect(await requestJson(captured[5]!.init)).toEqual({
+        expect(await requestJson(captured[4]!.init)).toEqual({
             kind: TEST_KIND,
             version: TEST_VERSION,
             currentReportRevisionId: "report-admission",
@@ -81,7 +77,7 @@ describe("HTTP repository management gateway requests", () => {
             evidenceIds: ["evidence-a", "evidence-z"],
             actor: TEST_ACTOR,
         });
-        expect(await requestJson(captured[6]!.init)).toEqual({
+        expect(await requestJson(captured[5]!.init)).toEqual({
             kind: TEST_KIND,
             version: TEST_VERSION,
             currentReportRevisionId: "report-admission",

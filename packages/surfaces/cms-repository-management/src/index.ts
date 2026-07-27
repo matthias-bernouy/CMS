@@ -9,20 +9,9 @@ export {
     type RepositoryManagementGuardConfig,
 } from "cms-repository-management/managementGuard";
 export {
-    type IntegrationPackageUpload,
-    type IntegrationPackageUploadOptions,
-    readIntegrationPackageUpload,
-} from "cms-repository-management/packageUpload";
-export {
-    IntegrationPackageUploadError,
-    type IntegrationPackageUploadErrorCode,
-    integrationPackageUploadErrorResponse,
-} from "cms-repository-management/packageUploadError";
-export {
-    RepositoryManagementCms,
-    type RepositoryManagementCmsConfig,
-    REPOSITORY_PUBLICATION_PATH,
-} from "cms-repository-management/RepositoryManagementCms";
+    mountRepositoryManagementRoutes,
+    type RepositoryManagementRoutesConfig,
+} from "cms-repository-management/managementRoutes";
 export {
     mountRepositoryManagementReadRoutes,
     REPOSITORY_COMPATIBILITY_PATH,

@@ -84,7 +84,6 @@ export function validOperationalMetrics(): Readonly<Record<string, unknown>> {
     };
     return {
         operations: {
-            publication: counter,
             stablePromotion: counter,
             compatibilityReevaluation: counter,
         },
@@ -128,17 +127,7 @@ export function validVersions(): Readonly<Record<string, unknown>> {
     };
 }
 
-export function validPublication(digest: string): Readonly<Record<string, unknown>> {
-    return {
-        operationId: "publication-operation",
-        kind: TEST_KIND,
-        version: TEST_VERSION,
-        digest,
-        report: admissionReport({ packageDigest: digest }),
-    };
-}
-
-export function managementResponseFor(url: URL, packageDigest: string, after: string): Response {
+export function managementResponseFor(url: URL, after: string): Response {
     if (url.pathname.endsWith("/api/status")) {
         return jsonResponse(validStatus());
     }
@@ -151,9 +140,6 @@ export function managementResponseFor(url: URL, packageDigest: string, after: st
     if (url.pathname.endsWith("/api/integrations/compatibility")) {
         const revision = revisionReport({ supersedes: after });
         return jsonResponse(compatibilityPage({ current: revision, revisions: [revision], totalRevisions: 2 }));
-    }
-    if (url.pathname.endsWith("/api/integrations/publications")) {
-        return jsonResponse(validPublication(packageDigest), 201);
     }
     if (url.pathname.endsWith("/api/integrations/compatibility/reevaluations")) {
         return jsonResponse(

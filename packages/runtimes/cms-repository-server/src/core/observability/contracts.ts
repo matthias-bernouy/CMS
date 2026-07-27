@@ -1,6 +1,6 @@
 import type { IntegrationCompatibilityOutcome } from "@bernouy/cms-integration-registry";
 
-export type RepositoryOperation = "publication" | "stable-promotion" | "compatibility-reevaluation";
+export type RepositoryOperation = "stable-promotion" | "compatibility-reevaluation";
 export type RepositoryOperationOutcome = "succeeded" | "rejected" | "failed";
 
 export type RepositoryOperationLogEntry = Readonly<{

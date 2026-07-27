@@ -1,5 +1,5 @@
 import type { RepositoryManagementOperationalReadSource, RepositoryManagementSnapshotMetric } from "./contracts";
-const OPERATIONS = ["publication", "stable-promotion", "compatibility-reevaluation"] as const;
+const OPERATIONS = ["stable-promotion", "compatibility-reevaluation"] as const;
 const OPERATION_OUTCOMES = ["succeeded", "rejected", "failed"] as const;
 const COMPATIBILITY_OUTCOMES = ["compatible", "breaking", "unknown", "invalid", "not-applicable"] as const;
 const MAX_RECENT_OPERATIONS = 100;
@@ -50,7 +50,6 @@ async function projectFilesystem(source: RepositoryManagementOperationalReadSour
 function operationMetrics(value: unknown) {
     const metrics = record(value);
     return {
-        publication: operationCounter(metrics.publication),
         stablePromotion: operationCounter(metrics["stable-promotion"]),
         compatibilityReevaluation: operationCounter(metrics["compatibility-reevaluation"]),
     };

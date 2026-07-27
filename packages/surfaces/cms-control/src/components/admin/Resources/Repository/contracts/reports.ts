@@ -5,7 +5,6 @@ import type {
     RepositoryCompatibilityPageView,
     RepositoryCompatibilityReportView,
     RepositoryPromotionResultView,
-    RepositoryPublicationResultView,
     RepositoryReevaluationResultView,
     RepositoryVersionBlockResultView,
 } from "./types";
@@ -63,17 +62,6 @@ export function parseRepositoryCompatibilityReport(
         ...optionalProperty("noBaselineReason", readOptionalText(object.noBaselineReason)),
         ...(supersedes ? { supersedes } : {}),
         ...(provenance ? { provenance } : {}),
-    };
-}
-
-export function parseRepositoryPublicationResult(value: unknown): RepositoryPublicationResultView {
-    const object = readRecord(value);
-    return {
-        operationId: readText(object.operationId),
-        kind: readText(object.kind),
-        version: readText(object.version),
-        digest: readText(object.digest),
-        report: parseRepositoryCompatibilityReport(object.report, "admission"),
     };
 }
 

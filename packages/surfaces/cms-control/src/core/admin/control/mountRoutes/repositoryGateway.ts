@@ -51,7 +51,6 @@ export interface RepositoryManagementGateway {
     versions(kind: string): Promise<Response>;
     release(kind: string, version: string): Promise<Response>;
     compatibility(query: RepositoryCompatibilityQuery): Promise<Response>;
-    publish(packageDocument: Uint8Array): Promise<Response>;
     submitCandidate(candidateDocument: Uint8Array): Promise<Response>;
     candidateStatus(candidateId: string): Promise<Response>;
     candidateReport(candidateId: string): Promise<Response>;

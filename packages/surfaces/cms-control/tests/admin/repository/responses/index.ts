@@ -1,6 +1,5 @@
 import type { RepositoryFetchCall } from "../fixtures";
 import {
-    admissionReport,
     compatibilityFixture,
     diagnosticsFixture,
     revisionReport,
@@ -51,18 +50,6 @@ export function defaultRepositoryResponse(call: RepositoryFetchCall): Response {
                 },
             },
             { status: path.startsWith("POST") ? 202 : 200 },
-        );
-    }
-    if (path === "POST /cms/api/repository/publications") {
-        return Response.json(
-            {
-                operationId: "publication-1",
-                kind: "commerce",
-                version: "1.2.0",
-                digest: "c".repeat(64),
-                report: admissionReport({ id: "admission-2", version: "1.2.0", packageDigest: "c".repeat(64) }),
-            },
-            { status: 201 },
         );
     }
     if (path === "POST /cms/api/repository/reevaluations") {

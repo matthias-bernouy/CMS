@@ -1,15 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { writeImmutableIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
-import type { IntegrationCompatibilityAdmissionReport } from "../../../../interfaces/compatibility";
-import type { IntegrationRegistryCatalogSnapshot } from "../../../../interfaces/catalog";
-import {
-    IntegrationRegistryVerificationRequiredError,
-    IntegrationRegistryVersionConflictError,
-} from "../../../../core/publication/errors";
 import type {
-    IntegrationRegistryPublicationRequest,
-    IntegrationRegistryPublisher,
-} from "../../../../interfaces/publication";
+    IntegrationCompatibilityAdmissionReport,
+    TrustedSchemaDeclarationEvidence,
+} from "../../../../interfaces/compatibility";
+import type { IntegrationRegistryCatalogSnapshot } from "../../../../interfaces/catalog";
 import { ensureFsIntegrationRegistryLayout, ensurePublicationPaths } from "../persistence/layout";
 import { removeImmutableTreeIfExists } from "../persistence/tree";
 import { prepareFsIntegrationRegistryCandidate } from "./candidate";
@@ -18,39 +13,12 @@ import {
     FsIntegrationRegistryRecoveryRequiredError,
     FsIntegrationRegistrySimulatedCrashError,
     type FsIntegrationRegistryPublicationConfig,
-    type FsIntegrationRegistryPublisherConfig,
 } from "./types";
-
-export class FsIntegrationRegistryPublisher implements IntegrationRegistryPublisher {
-    constructor(private readonly config: FsIntegrationRegistryPublisherConfig) {}
-
-    async publish(request: IntegrationRegistryPublicationRequest) {
-        const { kind, version } = request.package.envelope;
-        if (this.config.snapshots.current().locateExactVersion(kind, version)) {
-            throw new IntegrationRegistryVersionConflictError(kind, version);
-        }
-        const policy = this.config.rawPublicationPolicy;
-        if (policy !== "publish-unverified" && policy !== "reject-unverified") {
-            throw new TypeError("Raw integration publication policy must be configured explicitly");
-        }
-        if (policy === "reject-unverified") {
-            throw new IntegrationRegistryVerificationRequiredError(kind, version, request.package.digest);
-        }
-        const candidate = await prepareFsIntegrationRegistryCandidate(request.package, this.config.packageLimits);
-        return publishPreparedFsIntegrationRegistryCandidate(
-            this.config,
-            candidate,
-            request.schemaDeclarationEvidence,
-            undefined,
-            "unverified",
-        );
-    }
-}
 
 export async function publishPreparedFsIntegrationRegistryCandidate(
     config: FsIntegrationRegistryPublicationConfig,
     candidate: Awaited<ReturnType<typeof prepareFsIntegrationRegistryCandidate>>,
-    schemaDeclarationEvidence?: IntegrationRegistryPublicationRequest["schemaDeclarationEvidence"],
+    schemaDeclarationEvidence?: readonly TrustedSchemaDeclarationEvidence[],
     admissionReport?: IntegrationCompatibilityAdmissionReport,
     versionStatus?: "unverified",
     verificationDigest?: string,

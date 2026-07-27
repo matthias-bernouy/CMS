@@ -55,11 +55,11 @@ describe("filesystem integration registry publication recovery", () => {
     }
 
     for (const phase of FS_INTEGRATION_REGISTRY_PUBLICATION_PHASES) {
-        test(`replays an unverified raw publication after ${phase} without advancing channels`, async () => {
-            const fixture = crashFixture(phase, "publish-unverified");
+        test(`replays an unverified publication after ${phase} without advancing channels`, async () => {
+            const fixture = crashFixture(phase);
             const input = await publicationPackage("raw-recovery-demo", "1.0.0");
 
-            await expect(fixture.rawPublisher.publish({ package: input })).rejects.toBeInstanceOf(
+            await expect(fixture.publishUnverified(input)).rejects.toBeInstanceOf(
                 FsIntegrationRegistrySimulatedCrashError,
             );
             expect(readCrashJournal(fixture.root, phase)).toMatchObject({
@@ -117,12 +117,8 @@ function readCrashJournal(root: string, phase: FsIntegrationRegistryPublicationP
     return JSON.parse(readFileSync(join(root, ".journals", `crash-${phase}.json`), "utf8")) as Record<string, unknown>;
 }
 
-function crashFixture(
-    phase: FsIntegrationRegistryPublicationPhase,
-    rawPublicationPolicy: "publish-unverified" | "reject-unverified" = "reject-unverified",
-) {
+function crashFixture(phase: FsIntegrationRegistryPublicationPhase) {
     return registryFixture({
-        rawPublicationPolicy,
         createOperationId: () => `crash-${phase}`,
         afterBoundary: (boundary) => {
             if (boundary.phase === phase) {

@@ -25,11 +25,6 @@ export type FsIntegrationRegistryPublicationConfig = Readonly<{
     afterBoundary?: (boundary: FsIntegrationRegistryPublicationBoundary) => void | Promise<void>;
 }>;
 
-export type FsIntegrationRegistryPublisherConfig = FsIntegrationRegistryPublicationConfig &
-    Readonly<{
-        rawPublicationPolicy: "publish-unverified" | "reject-unverified";
-    }>;
-
 export class FsIntegrationRegistrySimulatedCrashError extends Error {
     constructor(
         readonly boundary: FsIntegrationRegistryPublicationBoundary,

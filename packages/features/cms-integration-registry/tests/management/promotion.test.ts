@@ -166,8 +166,8 @@ describe("filesystem stable promotion", () => {
     });
 
     test("rejects promotion of a non-installable version even when its compatibility report is admissible", async () => {
-        const fixture = registryFixture({ rawPublicationPolicy: "publish-unverified" });
-        const published = await fixture.rawPublisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const fixture = registryFixture();
+        const published = await fixture.publishUnverified(await publicationPackage("demo", "1.0.0"));
         const reports = reportStore(fixture);
         const promoter = stablePromoter(fixture, reports);
 

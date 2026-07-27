@@ -34,11 +34,6 @@ export function mountRepositoryManagementRoutes(runner: Runner, access: Reposito
     runner.get("/repository/compatibility", (request) =>
         callGateway(access, (gateway) => gateway.compatibility(repositoryCompatibilityQuery(request))),
     );
-    runner.post("/repository/publications", async (request) =>
-        callGateway(access, async (gateway) =>
-            gateway.publish(await readRepositoryControlBody(request, MAX_PACKAGE_BYTES)),
-        ),
-    );
     runner.post("/repository/candidates", async (request) =>
         callGateway(access, async (gateway) =>
             gateway.submitCandidate(await readRepositoryControlBody(request, MAX_PACKAGE_BYTES)),

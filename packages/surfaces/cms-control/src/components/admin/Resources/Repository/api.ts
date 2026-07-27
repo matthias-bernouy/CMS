@@ -9,7 +9,6 @@ import {
     parseRepositoryActionErrorDetails,
     parseRepositoryCompatibilityPage,
     parseRepositoryPromotionResult,
-    parseRepositoryPublicationResult,
     parseRepositoryReevaluationResult,
     parseRepositoryVersionBlockResult,
 } from "./contracts/reports";
@@ -18,7 +17,6 @@ import type {
     RepositoryCompatibilityPageView,
     RepositoryDiagnosticsView,
     RepositoryPromotionResultView,
-    RepositoryPublicationResultView,
     RepositoryReevaluationResultView,
     RepositoryStatusView,
     RepositoryVersionsView,
@@ -69,15 +67,6 @@ export function fetchRepositoryCompatibility(
         { kind, version, limit: "100", ...(after ? { after } : {}) },
         signal,
     );
-}
-
-export function publishRepositoryPackage(file: Blob, signal?: AbortSignal): Promise<RepositoryPublicationResultView> {
-    return request("/publications", parseRepositoryPublicationResult, {
-        method: "POST",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: file,
-        signal,
-    });
 }
 
 export function submitRepositoryCandidate(file: Blob, signal?: AbortSignal): Promise<RepositoryCandidateView> {

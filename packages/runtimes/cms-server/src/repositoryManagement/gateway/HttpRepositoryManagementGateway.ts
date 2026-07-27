@@ -11,7 +11,6 @@ import {
     normalizeManagementTimeout,
     normalizeManagementToken,
     preparePromotion,
-    preparePublication,
     prepareReevaluation,
 } from "./inputs";
 import { prepareRepositoryCandidate, repositoryCandidateId } from "./requests/candidate";
@@ -34,7 +33,6 @@ import {
     validateCandidateStatusResponse,
     validateCandidateSubmissionResponse,
 } from "./validation/mutations/candidates";
-import { validatePublicationResponse } from "./validation/mutations/publication";
 import { validateReevaluationResponse } from "./validation/mutations/reevaluation";
 import {
     validateCompatibilityResponse,
@@ -50,7 +48,6 @@ const PATHS = {
     diagnostics: "/api/diagnostics",
     versions: "/api/integrations/versions",
     compatibility: "/api/integrations/compatibility",
-    publications: "/api/integrations/publications",
     candidates: "/api/integrations/candidates",
     candidateReport: "/api/integrations/candidates/report",
     candidateStatus: "/api/integrations/candidates/status",
@@ -130,22 +127,6 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
                 url.searchParams.set("limit", String(normalized.limit));
             }
             return this.sanitized(validateCompatibilityResponse(await this.request(url, "GET"), normalized));
-        } catch {
-            return repositoryManagementUnavailableResponse();
-        }
-    }
-
-    async publish(packageDocument: Uint8Array): Promise<Response> {
-        if (!(packageDocument instanceof Uint8Array)) {
-            return repositoryManagementUnavailableResponse();
-        }
-        if (packageDocument.byteLength > REPOSITORY_MANAGEMENT_UPLOAD_LIMIT_BYTES) {
-            return repositoryManagementUploadTooLargeResponse();
-        }
-        try {
-            const publication = await preparePublication(packageDocument);
-            const response = await this.request(this.endpoint(PATHS.publications), "POST", publication.bytes);
-            return this.sanitized(validatePublicationResponse(response, publication));
         } catch {
             return repositoryManagementUnavailableResponse();
         }

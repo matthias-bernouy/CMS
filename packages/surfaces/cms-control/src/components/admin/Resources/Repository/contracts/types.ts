@@ -120,14 +120,6 @@ export type RepositoryVersionSelection = Readonly<{
     blockPreview?: RepositoryChannelRepairPreview;
 }>;
 
-export type RepositoryPublicationResultView = Readonly<{
-    operationId: string;
-    kind: string;
-    version: string;
-    digest: string;
-    report: RepositoryCompatibilityReportView;
-}>;
-
 export type RepositoryReevaluationResultView = Readonly<{
     revision: RepositoryCompatibilityReportView;
     currentReportRevisionId: string;

@@ -18,12 +18,10 @@ export async function populatedBackfillFixture(
     overrides: Partial<FsIntegrationVerificationBackfillerConfig> = {},
     options: Readonly<{ unverifiedPublication?: boolean }> = {},
 ) {
-    const fixture = registryFixture(
-        options.unverifiedPublication ? { rawPublicationPolicy: "publish-unverified" } : {},
-    );
+    const fixture = registryFixture();
     const integrationPackage = await publicationPackage("demo", "1.0.0");
     if (options.unverifiedPublication) {
-        await fixture.rawPublisher.publish({ package: integrationPackage });
+        await fixture.publishUnverified(integrationPackage);
     } else {
         await fixture.publisher.publish({ package: integrationPackage });
     }

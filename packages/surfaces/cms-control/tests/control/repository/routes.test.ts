@@ -22,7 +22,6 @@ describe("Control repository management routes", () => {
             "GET /repository/status",
             "GET /repository/versions",
             "POST /repository/candidates",
-            "POST /repository/publications",
             "POST /repository/reevaluations",
             "POST /repository/stable-promotions",
             "POST /repository/version-blocks",
@@ -47,7 +46,6 @@ describe("Control repository management routes", () => {
     test("forwards bounded package bytes and mutation inputs without accepting an actor", async () => {
         const gateway = new RecordingGateway();
         const runner = configuredRunner(gateway);
-        await runner.request("POST", "/repository/publications", '{"schema":"v1"}');
         await runner.request("POST", "/repository/candidates", '{"schema":"candidate-v1"}');
         await runner.request("POST", "/repository/reevaluations", {
             kind: "commerce",
@@ -77,7 +75,6 @@ describe("Control repository management routes", () => {
             },
         });
 
-        expect(new TextDecoder().decode(gateway.published)).toBe('{"schema":"v1"}');
         expect(new TextDecoder().decode(gateway.candidate)).toBe('{"schema":"candidate-v1"}');
         expect(gateway.reevaluation).toEqual({
             kind: "commerce",
@@ -137,11 +134,11 @@ describe("Control repository management routes", () => {
         expect(
             (await runner.request("GET", "/repository/compatibility?kind=commerce&version=1.0.0&limit=101")).status,
         ).toBe(400);
-        const oversized = await runner.request("POST", "/repository/publications", "{}", {
+        const oversized = await runner.request("POST", "/repository/candidates", "{}", {
             "content-length": String(33 * 1_024 * 1_024),
         });
         expect(oversized.status).toBe(413);
-        expect(gateway.published).toBeUndefined();
+        expect(gateway.candidate).toBeUndefined();
     });
 });
 
@@ -176,7 +173,6 @@ class RecordingGateway implements RepositoryManagementGateway {
     readonly calls: unknown[][] = [];
     response = Response.json({ ok: true });
     failure?: Error;
-    published?: Uint8Array;
     candidate?: Uint8Array;
     reevaluation?: RepositoryReevaluationInput;
     promotion?: RepositoryStablePromotionInput;
@@ -196,10 +192,6 @@ class RecordingGateway implements RepositoryManagementGateway {
     }
     compatibility(query: RepositoryCompatibilityQuery) {
         return this.respond("compatibility", query);
-    }
-    publish(document: Uint8Array) {
-        this.published = document;
-        return this.respond("publish");
     }
     submitCandidate(document: Uint8Array) {
         this.candidate = document;
