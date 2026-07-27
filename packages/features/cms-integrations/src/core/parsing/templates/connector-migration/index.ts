@@ -7,6 +7,7 @@ import {
     parseMigrationRepeatable,
     parseMigrationSources,
 } from "./descriptors";
+import { parseMigrationEquivalence } from "./equivalence";
 import { assertMigrationKeys, invalidMigrationValue, migrationArray, migrationRecord } from "./values";
 
 export function parseConnectorMigrationPlan(
@@ -22,6 +23,7 @@ export function parseConnectorMigrationPlan(
             "migrations",
             "repeatables",
             "supportedSources",
+            "equivalence",
             "cmsMediated",
             "providerDirect",
             "pointOfNoReturn",
@@ -50,6 +52,9 @@ export function parseConnectorMigrationPlan(
         migrations,
         ...(repeatables.length ? { repeatables } : {}),
         supportedSources,
+        ...(input.equivalence === undefined
+            ? {}
+            : { equivalence: parseMigrationEquivalence(input.equivalence, `${name}.equivalence`) }),
         ...(input.cmsMediated === undefined
             ? {}
             : { cmsMediated: parseCmsMediatedCutover(input.cmsMediated, `${name}.cmsMediated`) }),

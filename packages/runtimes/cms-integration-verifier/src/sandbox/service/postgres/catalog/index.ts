@@ -16,22 +16,18 @@ import {
     ROUTINES_QUERY,
     VIEWS_QUERY,
 } from "./queries";
+import { readTableDataRows, type TableDataProjection } from "./tableData";
+
+export type { TableDataProjection } from "./tableData";
 
 export async function readBoundarySnapshot(
     database: SQL,
     ownedNamespaces: readonly string[],
+    dataProjections: readonly TableDataProjection[] = [],
 ): Promise<BoundarySnapshot> {
     const parameters = [database.array([...ownedNamespaces], "TEXT")];
     const rows = (await database.unsafe(BOUNDARY_CATALOG_QUERY, parameters)) as CatalogFingerprintRow[];
-    const tables = rows.filter((row) => row.objectType === "relation" && row.definition.startsWith("r\u001f"));
-    const data = await Promise.all(
-        tables.map(async (table) => ({
-            objectType: "table-data",
-            namespace: table.namespace,
-            identity: table.identity,
-            definition: await tableDigest(database, table.namespace, table.identity),
-        })),
-    );
+    const data = await readTableDataRows(database, rows, dataProjections);
     const normalized = [...rows, ...data].toSorted(compareCatalogRows);
     return Object.freeze({ digest: await sha256Hex(canonicalJsonBytes(normalized)), rows: normalized });
 }
@@ -95,17 +91,4 @@ function compareCatalogRows(left: CatalogFingerprintRow, right: CatalogFingerpri
     return `${left.objectType}\0${left.namespace}\0${left.identity}`.localeCompare(
         `${right.objectType}\0${right.namespace}\0${right.identity}`,
     );
-}
-
-async function tableDigest(database: SQL, namespace: string, table: string): Promise<string> {
-    const identifier = `${quoteIdentifier(namespace)}.${quoteIdentifier(table)}`;
-    const [row] = (await database.unsafe(
-        `select count(*)::text as count, md5(coalesce(string_agg(value, E'\\n' order by value), '')) as digest
-         from (select to_jsonb(entry)::text as value from ${identifier} as entry) as rows`,
-    )) as Array<{ count: string; digest: string }>;
-    return `${row?.count ?? "0"}\0${row?.digest ?? ""}`;
-}
-
-function quoteIdentifier(value: string): string {
-    return `"${value.replaceAll('"', '""')}"`;
 }

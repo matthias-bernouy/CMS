@@ -12,7 +12,12 @@ import {
     sha256Digest,
     supportedVersionRange,
 } from "../../../validation/values";
-import { assertCanonicalUniqueOrder, canonicalIdentifiers, MAX_MIGRATION_DESCRIPTORS } from "../shared";
+import {
+    assertCanonicalUniqueOrder,
+    canonicalIdentifiers,
+    MAX_MIGRATION_DESCRIPTORS,
+    migrationChecksum,
+} from "../shared";
 import { parseMigrationReference } from "./descriptors";
 
 export function parseMigrationSources(value: unknown, field: string): DeclarativeConnectorMigrationSource[] {
@@ -70,6 +75,7 @@ function parseLegacyAdoption(value: unknown, field: string) {
     const input = strictRecord(value, field, [
         "definitionVersion",
         "packageDigest",
+        "installDigest",
         "observedSchema",
         "coveredMigrations",
     ]);
@@ -91,6 +97,7 @@ function parseLegacyAdoption(value: unknown, field: string) {
     return {
         definitionVersion: exactVersion(input.definitionVersion, `${field}.definitionVersion`),
         packageDigest: sha256Digest(input.packageDigest, `${field}.packageDigest`),
+        installDigest: migrationChecksum(input.installDigest, `${field}.installDigest`),
         observedSchema: parseObservedSchemaContractV1(input.observedSchema, `${field}.observedSchema`),
         coveredMigrations,
     };

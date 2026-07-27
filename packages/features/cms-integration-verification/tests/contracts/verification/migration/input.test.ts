@@ -21,6 +21,14 @@ describe("migration verification input", () => {
             "dependency-b",
             "dependency-a",
         ]);
+        expect(parsed.migrationPlan.plan.equivalence?.dataProjections).toEqual([
+            {
+                kind: "database-clock-default",
+                namespace: "example",
+                relation: "settings",
+                columns: ["created_at", "updated_at"],
+            },
+        ]);
     });
 
     test("preserves topological dependency order in the input identity", async () => {
@@ -112,6 +120,49 @@ describe("migration verification input", () => {
         );
     });
 
+    test("rejects noncanonical, duplicate, excessive, and unknown data projections", async () => {
+        const fixture = await migrationControlFixture();
+        const projection = fixture.input.migrationPlan.plan.equivalence!.dataProjections[0]!;
+        await expectPlanRejection(
+            fixture,
+            {
+                dataProjections: [{ ...projection, columns: projection.columns.toReversed() }],
+            },
+            /canonical lexical order/,
+        );
+        await expectPlanRejection(
+            fixture,
+            {
+                dataProjections: [{ ...projection, relation: "z-settings" }, projection],
+            },
+            /canonical lexical order/,
+        );
+        await expectPlanRejection(
+            fixture,
+            {
+                dataProjections: [{ ...projection, columns: ["created_at", "created_at"] }],
+            },
+            /duplicate/,
+        );
+        await expectPlanRejection(
+            fixture,
+            {
+                dataProjections: Array.from({ length: 129 }, (_, index) => ({
+                    ...projection,
+                    relation: `settings_${index.toString().padStart(3, "0")}`,
+                })),
+            },
+            /between 1 and 128/,
+        );
+        await expectPlanRejection(
+            fixture,
+            {
+                dataProjections: [{ ...projection, ignored: true }],
+            },
+            /ignored.*not an allowed field/,
+        );
+    });
+
     test("binds legacy adoption to the exact canonical source ledger prefix", async () => {
         const fixture = await migrationControlFixture();
         const reference = fixture.input.migrationPlan.plan.install.coveredMigrations[0]!;
@@ -123,6 +174,7 @@ describe("migration verification input", () => {
                     legacyAdoption: {
                         definitionVersion: fixture.input.source.version,
                         packageDigest: fixture.input.source.packageDigest,
+                        installDigest: `sha256:${"a".repeat(64)}`,
                         observedSchema: {
                             schema: "cms.integration.observed-schema.v1" as const,
                             owner: { connectorKey: "primary", lineageId: "example-supabase-v1" },
@@ -166,3 +218,19 @@ describe("migration verification input", () => {
         ).rejects.toThrow(/exactly match the source ledger prefix/);
     });
 });
+
+async function expectPlanRejection(
+    fixture: Awaited<ReturnType<typeof migrationControlFixture>>,
+    equivalence: unknown,
+    expected: RegExp,
+): Promise<void> {
+    await expect(
+        validateMigrationVerificationInput({
+            ...fixture.input,
+            migrationPlan: {
+                ...fixture.input.migrationPlan,
+                plan: { ...fixture.input.migrationPlan.plan, equivalence },
+            },
+        }),
+    ).rejects.toThrow(expected);
+}

@@ -106,7 +106,7 @@ function parseLegacyAdoption(value: unknown, name: string) {
     const input = migrationRecord(value, name);
     assertRequiredMigrationKeys(
         input,
-        ["definitionVersion", "packageDigest", "observedSchema", "coveredMigrations"],
+        ["definitionVersion", "packageDigest", "installDigest", "observedSchema", "coveredMigrations"],
         name,
     );
     const coveredMigrations = migrationArray(input.coveredMigrations, `${name}.coveredMigrations`).map((entry, index) =>
@@ -116,6 +116,7 @@ function parseLegacyAdoption(value: unknown, name: string) {
     return {
         definitionVersion: parseMigrationVersion(input.definitionVersion, `${name}.definitionVersion`),
         packageDigest: parseMigrationPackageDigest(input.packageDigest, `${name}.packageDigest`),
+        installDigest: parseMigrationChecksum(input.installDigest, `${name}.installDigest`),
         observedSchema: parseObservedSchemaContractV1(input.observedSchema, `${name}.observedSchema`),
         coveredMigrations,
     };

@@ -163,6 +163,7 @@ describe("official Photo Albums additive release", () => {
 
     test("binds executable install, migration, repeatable, and constraint assets", async () => {
         const packages = await buildOfficialIntegrationPackages();
+        const source = packageVersion(packages, "1.0.0");
         const target = packageVersion(packages, "1.1.0");
         const connector = target.definition.connectors?.[0];
         const location = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).locateExactVersion(
@@ -175,6 +176,19 @@ describe("official Photo Albums additive release", () => {
         const connectorRoot = `${location.root}/${connector.root}`;
         const schemas = await loadSupabaseSqlSchemas(connectorRoot, connector.schemas ?? []);
         expect(await computeSupabaseInstallDigest(schemas)).toBe(connector.migration.install.digest);
+        const legacy = connector.migration.supportedSources[0]?.legacyAdoption;
+        const sourceLocation = await new FsIntegrationDefinitionRepository(
+            OFFICIAL_INTEGRATIONS_ROOT,
+        ).locateExactVersion("photo-albums", "1.0.0");
+        const sourceConnector = source.definition.connectors?.[0];
+        if (!legacy || !sourceLocation || !sourceConnector) {
+            throw new Error("Photo Albums legacy source mapping is missing");
+        }
+        const sourceSchemas = await loadSupabaseSqlSchemas(
+            `${sourceLocation.root}/${sourceConnector.root}`,
+            sourceConnector.schemas ?? [],
+        );
+        expect(await computeSupabaseInstallDigest(sourceSchemas)).toBe(legacy.installDigest);
         expect(await loadSupabaseMigrationAssets(connectorRoot, connector.migration.migrations)).toHaveLength(1);
         expect(await loadSupabaseRepeatableAssets(connectorRoot, connector.migration.repeatables ?? [])).toHaveLength(
             2,

@@ -120,12 +120,18 @@ export async function sqlPublicationPackage(kind: string, version: string, schem
     );
 }
 
-export async function statefulSqlPublicationPackage(kind: string, version: string, schema: unknown) {
+export async function statefulSqlPublicationPackage(
+    kind: string,
+    version: string,
+    schema: unknown,
+    dependencies: readonly Readonly<{ name: string; kind: string; versionRange: string }>[] = [],
+) {
     const checksum = `sha256:${"1".repeat(64)}`;
     return await publicationPackage(
         kind,
         version,
         {
+            ...(dependencies.length ? { dependencies } : {}),
             connectors: [
                 {
                     provider: "supabase",

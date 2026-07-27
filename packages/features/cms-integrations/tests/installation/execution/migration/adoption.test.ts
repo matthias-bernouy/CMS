@@ -191,6 +191,7 @@ function targetDefinition(declaredSourceDigest: string): IntegrationDefinition {
                             legacyAdoption: {
                                 definitionVersion: "1.0.0",
                                 packageDigest: declaredSourceDigest,
+                                installDigest: `sha256:${"a".repeat(64)}`,
                                 observedSchema: BASELINE,
                                 coveredMigrations: [],
                             },

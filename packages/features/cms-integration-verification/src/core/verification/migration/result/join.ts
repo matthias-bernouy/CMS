@@ -63,7 +63,8 @@ function assertObservationDependencies(result: MigrationJobResultV1, input: Migr
             observations.replay.firstStateDigest !== observations.migratedTarget.stateDigest ||
             observations.replay.ledgerRowsBefore !== sourceLedgerRows ||
             observations.replay.ledgerRowsAfterFirstRun !== observations.ledger.rows.length ||
-            observations.replay.ledgerRowsAfterReplay !== observations.ledger.rows.length)
+            (observations.replay.status === "passed" &&
+                observations.replay.ledgerRowsAfterReplay !== observations.ledger.rows.length))
     ) {
         invalid(
             "migrationJobResult.observations.replay",

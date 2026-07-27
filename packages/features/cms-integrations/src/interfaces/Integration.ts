@@ -33,9 +33,11 @@ export type {
     DeclarativeConnectorTemplate,
 } from "./IntegrationConnectorDeployer";
 export type {
+    DeclarativeConnectorDatabaseClockDefaultProjection,
     DeclarativeConnectorLegacyAdoptionBaseline,
     DeclarativeConnectorInstallBaseline,
     DeclarativeConnectorMigrationDescriptor,
+    DeclarativeConnectorMigrationEquivalence,
     DeclarativeConnectorMigrationPlan,
     DeclarativeConnectorMigrationReference,
     DeclarativeConnectorMigrationSource,

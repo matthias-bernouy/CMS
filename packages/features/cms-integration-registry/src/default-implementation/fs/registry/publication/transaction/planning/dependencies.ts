@@ -15,7 +15,7 @@ export function resolveCandidateDependencies(
     const resolved = new Map<string, AdmissionDependencyReferenceV1>();
     const visiting = new Set<string>();
     visitDependencies(snapshot, definition, resolved, visiting);
-    return Object.freeze([...resolved.values()].toSorted(compareReference));
+    return Object.freeze([...resolved.values()]);
 }
 
 function visitDependencies(
@@ -127,13 +127,6 @@ function selectDependency(
                 isIntegrationDefinitionVersionInstallable(entry) &&
                 (!range || integrationVersionSatisfies(entry.version, range)),
         )?.version ?? null
-    );
-}
-
-function compareReference(left: AdmissionDependencyReferenceV1, right: AdmissionDependencyReferenceV1): number {
-    return compareText(
-        `${left.selection ?? "legacy"}\0${left.kind}\0${left.version}`,
-        `${right.selection ?? "legacy"}\0${right.kind}\0${right.version}`,
     );
 }
 

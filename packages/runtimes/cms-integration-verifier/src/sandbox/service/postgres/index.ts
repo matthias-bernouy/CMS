@@ -9,6 +9,7 @@ import {
     readViewObservation,
 } from "./catalog";
 import { buildPlatformEvidence } from "./checks";
+import { createPostgresMigrationVerifier } from "./migrations";
 
 const POSTGRES_IMAGE = "postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777";
 
@@ -21,6 +22,7 @@ export function createPostgresPlatformVerificationAdapter(
     config: PostgresPlatformVerificationAdapterConfig = {},
 ): PostgresPlatformVerificationAdapter {
     const packages = createSqlPackageLoader(config);
+    const migrations = createPostgresMigrationVerifier(config);
     return Object.freeze({
         async environmentVersions(signal: AbortSignal) {
             signal.throwIfAborted();
@@ -90,8 +92,23 @@ export function createPostgresPlatformVerificationAdapter(
                 await sql.close();
             }
         },
+        async verifyMigrations(
+            input: Parameters<NonNullable<PostgresPlatformVerificationAdapter["verifyMigrations"]>>[0],
+            signal: AbortSignal,
+        ) {
+            return await migrations.verify(
+                {
+                    targetPackage: input.package,
+                    migrationPackages: input.migrationPackages,
+                    migrationInputs: input.migrationInputs,
+                    attempt: input.attempt,
+                    database: input.database,
+                },
+                signal,
+            );
+        },
         async dispose() {
-            await packages.dispose();
+            await Promise.all([packages.dispose(), migrations.dispose()]);
         },
     });
 }

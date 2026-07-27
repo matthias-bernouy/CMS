@@ -32,6 +32,7 @@ export interface PostgresPlatformVerificationAdapter {
     verifyMigrations?(
         input: Readonly<{
             package: VerificationSandboxInput["workload"]["package"];
+            migrationPackages: VerificationSandboxInput["workload"]["migrationPackages"];
             migrationInputs: VerificationSandboxInput["workload"]["migrationInputs"];
             attempt: VerificationSandboxInput["workload"]["attempt"];
             database: VerificationSandboxInput["database"];
@@ -121,6 +122,7 @@ export async function runPostgresPlatformVerification(
         migrations = await adapter.verifyMigrations(
             {
                 package: input.workload.package,
+                migrationPackages: input.workload.migrationPackages,
                 migrationInputs,
                 attempt: input.workload.attempt,
                 database: input.database,

@@ -125,6 +125,12 @@ describe("filesystem candidate admission planning", () => {
 
     test("selects exact reviewed connector migrations for a stateful release", async () => {
         const fixture = registryFixture();
+        const dependencyZ = await publicationPackage("z-dependency", "1.0.0");
+        const dependencyA = await publicationPackage("a-dependency", "1.0.0", {
+            dependencies: [{ name: "Z", kind: "z-dependency", versionRange: "^1.0.0" }],
+        });
+        await fixture.publisher.publish({ package: dependencyZ });
+        await fixture.publisher.publish({ package: dependencyA });
         const baselinePackage = await seedLegacySqlBaseline(fixture);
         await fixture.reviewedSchemaBaselines.append({
             baseline: await reviewedBaseline("baseline-root", {
@@ -134,20 +140,25 @@ describe("filesystem candidate admission planning", () => {
             expectedCurrentRevisionId: null,
         });
         const candidate = await verificationCandidate(
-            await statefulSqlPublicationPackage("demo", "1.1.0", {
-                namespaces: [
-                    {
-                        name: "public",
-                        relations: [
-                            {
-                                name: "items",
-                                columns: [{ name: "id", type: "bigint", nullable: false }],
-                                constraints: [],
-                            },
-                        ],
-                    },
-                ],
-            }),
+            await statefulSqlPublicationPackage(
+                "demo",
+                "1.1.0",
+                {
+                    namespaces: [
+                        {
+                            name: "public",
+                            relations: [
+                                {
+                                    name: "items",
+                                    columns: [{ name: "id", type: "bigint", nullable: false }],
+                                    constraints: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                [{ name: "A", kind: "a-dependency", versionRange: "^1.0.0" }],
+            ),
         );
         const store = await validatingCandidate(fixture.root, "candidate-stateful", candidate);
         const basePolicy = await planningPolicy();
@@ -186,5 +197,21 @@ describe("filesystem candidate admission planning", () => {
             connectorKey: "primary",
             lineageId: "demo-supabase-v1",
         });
+        expect(plan.migrationInputs[0]?.dependencyMatrices).toEqual([
+            {
+                selection: "minimum",
+                dependencies: [
+                    { kind: "z-dependency", version: "1.0.0", packageDigest: dependencyZ.digest },
+                    { kind: "a-dependency", version: "1.0.0", packageDigest: dependencyA.digest },
+                ],
+            },
+            {
+                selection: "stable",
+                dependencies: [
+                    { kind: "z-dependency", version: "1.0.0", packageDigest: dependencyZ.digest },
+                    { kind: "a-dependency", version: "1.0.0", packageDigest: dependencyA.digest },
+                ],
+            },
+        ]);
     });
 });

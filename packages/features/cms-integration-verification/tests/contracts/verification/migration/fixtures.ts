@@ -152,6 +152,16 @@ export function migrationPlan(): DeclarativeConnectorMigrationPlan {
         ],
         repeatables: [{ id: "views", checksum: `sha256:${DIGEST_A}`, path: "repeatables/views.sql" }],
         supportedSources: [{ range: "1.1.0", migrationRevision: 1 }],
+        equivalence: {
+            dataProjections: [
+                {
+                    kind: "database-clock-default",
+                    namespace: "example",
+                    relation: "settings",
+                    columns: ["created_at", "updated_at"],
+                },
+            ],
+        },
         cmsMediated: { strategy: "binding-switch", drainSeconds: 30 },
         providerDirect: { strategy: "expand-in-code", callbackIds: ["stripe-webhook"] },
         pointOfNoReturn: "before-contract",

@@ -1,4 +1,7 @@
-import type { DeclarativeConnectorMigrationPlan } from "../../../../interfaces/IntegrationConnectorDeployer";
+import type {
+    DeclarativeConnectorCompatibility,
+    DeclarativeConnectorMigrationPlan,
+} from "../../../../interfaces/IntegrationConnectorDeployer";
 import { integrationVersionSatisfies } from "../../../definitions/versioning";
 import { assertMigrationLayoutPath, assertStableMigrationId, invalidMigrationValue } from "./values";
 
@@ -8,6 +11,7 @@ export function validateMigrationAwareConnectorLayout(
         lineageId?: string;
         migrationRevision?: number;
         migration?: DeclarativeConnectorMigrationPlan;
+        compatibility?: DeclarativeConnectorCompatibility;
         schemas?: Array<{ path: string } | { manifest: string }>;
         functions?: Array<{ directory: string }>;
     },
@@ -41,6 +45,7 @@ export function validateMigrationAwareConnectorLayout(
     if (connector.migration.install.revision !== connector.migrationRevision) {
         invalidMigrationValue(`${name}.migration.install.revision`, "must equal migrationRevision");
     }
+    validateDataProjections(connector.migration, connector.compatibility, name);
     for (const source of connector.migration.supportedSources) {
         const adoption = source.legacyAdoption;
         if (!adoption) {
@@ -79,6 +84,51 @@ export function validateMigrationAwareConnectorLayout(
     }
     for (const fn of connector.functions ?? []) {
         assertMigrationLayoutPath(fn.directory, "functions/", `${name}.functions`);
+    }
+}
+
+function validateDataProjections(
+    migration: DeclarativeConnectorMigrationPlan,
+    compatibility: DeclarativeConnectorCompatibility | undefined,
+    name: string,
+): void {
+    for (const projection of migration.equivalence?.dataProjections ?? []) {
+        const field = `${name}.migration.equivalence.dataProjections`;
+        const namespace = compatibility?.schema?.namespaces.find((entry) => entry.name === projection.namespace);
+        const relation = namespace?.relations.find((entry) => entry.name === projection.relation);
+        if (!relation) {
+            invalidMigrationValue(field, "must reference a relation declared by compatibility.schema");
+        }
+        const relationKind = relation.kind ?? "table";
+        if (relationKind !== "table" && relationKind !== "partitioned-table") {
+            invalidMigrationValue(field, "must reference a table or partitioned-table");
+        }
+        const primaryKeys = relation.constraints.filter((constraint) => constraint.kind === "primary-key");
+        if (primaryKeys.length !== 1 || primaryKeys[0]!.columns.length === 0) {
+            invalidMigrationValue(field, "must reference a relation with exactly one non-empty primary key");
+        }
+        const primaryKeyColumns = new Set(primaryKeys[0]!.columns);
+        for (const columnName of projection.columns) {
+            const column = relation.columns.find((entry) => entry.name === columnName);
+            if (!column) {
+                invalidMigrationValue(field, `references unknown column "${columnName}"`);
+            }
+            if (primaryKeyColumns.has(columnName)) {
+                invalidMigrationValue(field, `must not project primary-key column "${columnName}"`);
+            }
+            if (column.type !== "timestamp" && column.type !== "timestamptz") {
+                invalidMigrationValue(field, `column "${columnName}" must use timestamp or timestamptz`);
+            }
+            if (column.nullable) {
+                invalidMigrationValue(field, `column "${columnName}" must be NOT NULL`);
+            }
+            if (column.default !== "now()" && column.default !== "CURRENT_TIMESTAMP") {
+                invalidMigrationValue(
+                    field,
+                    `column "${columnName}" must use canonical now() or CURRENT_TIMESTAMP default`,
+                );
+            }
+        }
     }
 }
 

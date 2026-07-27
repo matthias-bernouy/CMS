@@ -9,6 +9,7 @@ import { oneOf } from "../../../validation/values";
 import { identifyCanonicalVerificationContract } from "../../shared";
 import { invalid } from "../shared";
 import { parseMigrationInstall, parseMigrations, parseRepeatables } from "./descriptors";
+import { parseMigrationEquivalence } from "./equivalence";
 import { parseCmsMediatedCutover, parseMigrationSources, parseProviderDirectCutover } from "./sources";
 
 export async function identifyMigrationVerificationPlan(
@@ -21,6 +22,7 @@ export async function identifyMigrationVerificationPlan(
         "migrations",
         "repeatables",
         "supportedSources",
+        "equivalence",
         "cmsMediated",
         "providerDirect",
         "pointOfNoReturn",
@@ -35,6 +37,10 @@ export async function identifyMigrationVerificationPlan(
         input.supportedSources,
         "migrationVerificationInput.migrationPlan.plan.supportedSources",
     );
+    const equivalence = parseMigrationEquivalence(
+        input.equivalence,
+        "migrationVerificationInput.migrationPlan.plan.equivalence",
+    );
     const cmsMediated = parseCmsMediatedCutover(
         input.cmsMediated,
         "migrationVerificationInput.migrationPlan.plan.cmsMediated",
@@ -48,6 +54,7 @@ export async function identifyMigrationVerificationPlan(
         migrations,
         ...(repeatables.length ? { repeatables } : {}),
         supportedSources,
+        ...(equivalence ? { equivalence } : {}),
         ...(cmsMediated ? { cmsMediated } : {}),
         ...(providerDirect ? { providerDirect } : {}),
         pointOfNoReturn: oneOf(input.pointOfNoReturn, "migrationVerificationInput.migrationPlan.plan.pointOfNoReturn", [

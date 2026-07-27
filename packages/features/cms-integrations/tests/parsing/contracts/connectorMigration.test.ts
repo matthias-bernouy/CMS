@@ -14,6 +14,16 @@ describe("connector migration definitions", () => {
             migrationRevision: 2,
             migration: {
                 supportedSources: [{ range: "^1.0.0", migrationRevision: 1 }],
+                equivalence: {
+                    dataProjections: [
+                        {
+                            kind: "database-clock-default",
+                            namespace: "commerce",
+                            relation: "orders",
+                            columns: ["created_at", "updated_at"],
+                        },
+                    ],
+                },
                 pointOfNoReturn: "before-contract",
             },
         });
@@ -94,6 +104,13 @@ describe("connector migration definitions", () => {
         };
         expect(() => parseIntegrationDefinition(malformedDigest)).toThrow(/lowercase SHA-256 package digest/);
 
+        const malformedInstallDigest = migrationDefinition();
+        malformedInstallDigest.connectors[0].migration.supportedSources[0].legacyAdoption = {
+            ...legacyAdoption(),
+            installDigest: "SHA256:not-canonical",
+        };
+        expect(() => parseIntegrationDefinition(malformedInstallDigest)).toThrow(/lowercase sha256 checksum/);
+
         const wrongVersion = migrationDefinition();
         wrongVersion.connectors[0].migration.supportedSources[0].legacyAdoption = {
             ...legacyAdoption(),
@@ -145,12 +162,74 @@ describe("connector migration definitions", () => {
 
         expect(() => parseIntegrationDefinition(definition)).toThrow(/must not be newer than target release 1.1.0/);
     });
+
+    test("validates database-clock projections against the declared schema contract", () => {
+        const invalidType = migrationDefinition();
+        schemaColumn(invalidType, "created_at").type = "text";
+        expect(() => parseIntegrationDefinition(invalidType)).toThrow(/must use timestamp or timestamptz/);
+
+        const invalidDefault = migrationDefinition();
+        schemaColumn(invalidDefault, "created_at").default = "clock_timestamp()";
+        expect(() => parseIntegrationDefinition(invalidDefault)).toThrow(/canonical now\(\) or CURRENT_TIMESTAMP/);
+
+        const nullable = migrationDefinition();
+        schemaColumn(nullable, "created_at").nullable = true;
+        expect(() => parseIntegrationDefinition(nullable)).toThrow(/must be NOT NULL/);
+
+        const primaryKeyColumn = migrationDefinition();
+        primaryKeyColumn.connectors[0].migration.equivalence.dataProjections[0].columns = ["id"];
+        expect(() => parseIntegrationDefinition(primaryKeyColumn)).toThrow(/must not project primary-key column/);
+
+        const noPrimaryKey = migrationDefinition();
+        noPrimaryKey.connectors[0].compatibility.schema.namespaces[0].relations[0].constraints = [];
+        expect(() => parseIntegrationDefinition(noPrimaryKey)).toThrow(/exactly one non-empty primary key/);
+    });
+
+    test("rejects noncanonical, duplicate, excessive, and unknown data projections", () => {
+        const nonCanonicalColumns = migrationDefinition();
+        nonCanonicalColumns.connectors[0].migration.equivalence.dataProjections[0].columns = [
+            "updated_at",
+            "created_at",
+        ];
+        expect(() => parseIntegrationDefinition(nonCanonicalColumns)).toThrow(/canonical lexical order/);
+
+        const duplicateColumns = migrationDefinition();
+        duplicateColumns.connectors[0].migration.equivalence.dataProjections[0].columns = ["created_at", "created_at"];
+        expect(() => parseIntegrationDefinition(duplicateColumns)).toThrow(/unique entries/);
+
+        const duplicateProjections = migrationDefinition();
+        const projection = duplicateProjections.connectors[0].migration.equivalence.dataProjections[0];
+        duplicateProjections.connectors[0].migration.equivalence.dataProjections = [projection, { ...projection }];
+        expect(() => parseIntegrationDefinition(duplicateProjections)).toThrow(/unique entries/);
+
+        const empty = migrationDefinition();
+        empty.connectors[0].migration.equivalence.dataProjections = [];
+        expect(() => parseIntegrationDefinition(empty)).toThrow(/between 1 and 128/);
+
+        const excessiveColumns = migrationDefinition();
+        excessiveColumns.connectors[0].migration.equivalence.dataProjections[0].columns = Array.from(
+            { length: 129 },
+            (_, index) => `column_${index}`,
+        );
+        expect(() => parseIntegrationDefinition(excessiveColumns)).toThrow(/between 1 and 128/);
+
+        const unknown = migrationDefinition();
+        Object.assign(unknown.connectors[0].migration.equivalence.dataProjections[0], { ignore: true });
+        expect(() => parseIntegrationDefinition(unknown)).toThrow(/ignore.*not supported/);
+    });
 });
+
+function schemaColumn(definition: ReturnType<typeof migrationDefinition>, name: string) {
+    return definition.connectors[0].compatibility.schema.namespaces[0].relations[0].columns.find(
+        (column) => column.name === name,
+    )! as { type: string; nullable: boolean; default?: string };
+}
 
 function legacyAdoption() {
     return {
         definitionVersion: "1.0.0",
         packageDigest: "c".repeat(64),
+        installDigest: DIGEST_A,
         observedSchema: {
             schema: "cms.integration.observed-schema.v1",
             owner: { connectorKey: "primary", lineageId: "commerce-supabase-v1" },
@@ -175,6 +254,37 @@ function migrationDefinition() {
                 root: "connectors/supabase",
                 schemas: [{ manifest: "install/schema.json" }],
                 functions: [{ name: "cms-commerce-v2", directory: "functions/cms-commerce-v2" }],
+                compatibility: {
+                    schema: {
+                        namespaces: [
+                            {
+                                name: "commerce",
+                                relations: [
+                                    {
+                                        name: "orders",
+                                        kind: "table",
+                                        columns: [
+                                            { name: "id", type: "bigint", nullable: false },
+                                            {
+                                                name: "created_at",
+                                                type: "timestamptz",
+                                                nullable: false,
+                                                default: "now()",
+                                            },
+                                            {
+                                                name: "updated_at",
+                                                type: "timestamp",
+                                                nullable: false,
+                                                default: "CURRENT_TIMESTAMP",
+                                            },
+                                        ],
+                                        constraints: [{ kind: "primary-key", name: "orders_pkey", columns: ["id"] }],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
                 migration: {
                     install: {
                         revision: 2,
@@ -197,6 +307,16 @@ function migrationDefinition() {
                     ],
                     repeatables: [{ id: "grants", checksum: DIGEST_B, path: "repeatables/grants.sql" }],
                     supportedSources: [{ range: "^1.0.0", migrationRevision: 1 }],
+                    equivalence: {
+                        dataProjections: [
+                            {
+                                kind: "database-clock-default",
+                                namespace: "commerce",
+                                relation: "orders",
+                                columns: ["created_at", "updated_at"],
+                            },
+                        ],
+                    },
                     cmsMediated: { strategy: "binding-switch", drainSeconds: 30 },
                     providerDirect: { strategy: "expand-in-code", callbackIds: ["stripe-webhook"], drainSeconds: 60 },
                     pointOfNoReturn: "before-contract",

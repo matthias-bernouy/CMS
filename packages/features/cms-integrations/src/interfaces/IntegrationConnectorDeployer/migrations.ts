@@ -38,9 +38,21 @@ export type IntegrationProviderDirectCutover =
     | { strategy: "expand-in-code"; callbackIds: string[]; drainSeconds?: number }
     | { strategy: "journalled-provider-switch"; callbackIds: string[]; drainSeconds?: number };
 
+export type DeclarativeConnectorDatabaseClockDefaultProjection = {
+    kind: "database-clock-default";
+    namespace: string;
+    relation: string;
+    columns: string[];
+};
+
+export type DeclarativeConnectorMigrationEquivalence = {
+    dataProjections: DeclarativeConnectorDatabaseClockDefaultProjection[];
+};
+
 export type DeclarativeConnectorLegacyAdoptionBaseline = {
     definitionVersion: string;
     packageDigest: string;
+    installDigest: IntegrationMigrationChecksum;
     observedSchema: ObservedSchemaContractV1;
     coveredMigrations: DeclarativeConnectorMigrationReference[];
 };
@@ -56,6 +68,7 @@ export type DeclarativeConnectorMigrationPlan = {
     migrations: DeclarativeConnectorMigrationDescriptor[];
     repeatables?: DeclarativeConnectorRepeatableDescriptor[];
     supportedSources: DeclarativeConnectorMigrationSource[];
+    equivalence?: DeclarativeConnectorMigrationEquivalence;
     cmsMediated?: IntegrationCmsMediatedCutover;
     providerDirect?: IntegrationProviderDirectCutover;
     pointOfNoReturn: "before-contract";

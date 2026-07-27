@@ -1,4 +1,5 @@
 export {
+    CMS_POSTGRES_MIGRATION_ENVIRONMENT_V1,
     MIGRATION_VERIFICATION_ENVIRONMENT_SCHEMA,
     type IdentifiedMigrationVerificationEnvironmentV1,
     type MigrationVerificationEnvironmentV1,
