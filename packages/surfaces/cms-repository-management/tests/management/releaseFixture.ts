@@ -41,7 +41,7 @@ export function richReleaseEvidence(): IntegrationRegistryReleaseEvidence {
         provenance: { actor: "repository-bootstrap", reason: "Legacy backfill" },
     };
     const migration = {
-        schema: "cms.integration.migration-report.v3" as const,
+        schema: "cms.integration.migration-report.v4" as const,
         reportId: "migration-1",
         revisionType: "root" as const,
         origin: "admission" as const,
@@ -88,6 +88,11 @@ export function richReleaseEvidence(): IntegrationRegistryReleaseEvidence {
                 evidenceDigest: REPORT_DIGEST,
             },
             cleanup: { delaySeconds: 60, observed: true, evidenceDigest: REPORT_DIGEST },
+        },
+        cutoverEvidence: {
+            cmsMediated: { outcome: "not-supported" as const },
+            providerDirect: { outcome: "passed" as const, evidenceDigest: REPORT_DIGEST },
+            activation: { outcome: "not-applicable" as const },
         },
         provenance: { actor: "repository-worker", reason: "Migration admission" },
     };

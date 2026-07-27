@@ -13,6 +13,11 @@ export async function passedMigrationResult(
     const stateDigest = "3".repeat(64);
     const schemaDigest = "4".repeat(64);
     const evidence = { status: "passed" as const, evidenceDigests: ["5".repeat(64)], diagnosticCodes: [] };
+    const unsupported = {
+        status: "not-supported" as const,
+        evidenceDigests: [],
+        diagnosticCodes: ["sql-runner-does-not-exercise-cutover"],
+    };
     const covered = input.migrationPlan.plan.install.coveredMigrations;
     const sourceRows = covered.filter((entry) => entry.revision <= input.sourceMigrationRevision).length;
     return {
@@ -66,25 +71,28 @@ export async function passedMigrationResult(
             failureInjections: migrationFailureObservations(observationStatus),
             resumptions: [],
             cutover: {
-                cmsMediated: {
-                    status: "not-applicable",
-                    evidenceDigests: [],
-                    diagnosticCodes: [],
-                    strategy: "not-applicable",
-                },
-                providerDirect: {
-                    status: "not-applicable",
-                    evidenceDigests: [],
-                    diagnosticCodes: [],
-                    strategy: "not-applicable",
-                    callbackIds: [],
-                },
-                activation: {
-                    ...evidence,
-                    activePackageDigest: input.target.packageDigest,
-                    pointOfNoReturnCrossed: true,
-                    cleanupObserved: true,
-                },
+                cmsMediated: input.migrationPlan.plan.cmsMediated
+                    ? { ...unsupported, strategy: "binding-switch" }
+                    : {
+                          status: "not-applicable",
+                          evidenceDigests: [],
+                          diagnosticCodes: [],
+                          strategy: "not-applicable",
+                      },
+                providerDirect: input.migrationPlan.plan.providerDirect
+                    ? {
+                          ...unsupported,
+                          strategy: input.migrationPlan.plan.providerDirect.strategy,
+                          callbackIds: input.migrationPlan.plan.providerDirect.callbackIds,
+                      }
+                    : {
+                          status: "not-applicable",
+                          evidenceDigests: [],
+                          diagnosticCodes: [],
+                          strategy: "not-applicable",
+                          callbackIds: [],
+                      },
+                activation: unsupported,
             },
         },
     };

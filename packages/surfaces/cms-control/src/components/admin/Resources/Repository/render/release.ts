@@ -138,8 +138,17 @@ function appendMigrations(target: DocumentFragment, release: RepositoryReleaseVi
                 `Outcome ${migration.outcome}`,
                 `Origin ${migration.origin}`,
                 `Runner ${migration.runner.name} ${migration.runner.version}`,
-                `CMS cutover ${migration.cutover.cmsMediated}`,
-                `Provider-direct ${migration.cutover.providerDirect}`,
+                cutoverExecution(
+                    "CMS cutover",
+                    migration.cutover.cmsMediated,
+                    migration.cutoverEvidence?.cmsMediated.outcome,
+                ),
+                cutoverExecution(
+                    "Provider-direct",
+                    migration.cutover.providerDirect,
+                    migration.cutoverEvidence?.providerDirect.outcome,
+                ),
+                executionStatus("Activation", migration.cutoverEvidence?.activation.outcome),
                 `Rollback ${migration.rollback}`,
                 `PONR ${migration.pointOfNoReturn}`,
                 `Delayed cleanup ${migration.delayedCleanupVerified ? "verified" : "not verified"}`,
@@ -160,6 +169,23 @@ function appendMigrations(target: DocumentFragment, release: RepositoryReleaseVi
         );
         target.append(report);
     }
+}
+
+function cutoverExecution(label: string, strategy: string, outcome: string | undefined): string {
+    return `${label} ${strategy} · ${executionStatus("execution", outcome)}`;
+}
+
+function executionStatus(label: string, outcome: string | undefined): string {
+    if (outcome === undefined) {
+        return `${label} status not recorded by this legacy report`;
+    }
+    if (outcome === "not-supported") {
+        return `${label} not-supported: declared, but not executed by the current runner`;
+    }
+    if (outcome === "passed") {
+        return `${label} passed: executed by the runner`;
+    }
+    return `${label} ${outcome}`;
 }
 
 function operationalMetadata(migration: RepositoryReleaseView["migrations"][number]): string[] {

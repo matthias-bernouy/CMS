@@ -112,6 +112,9 @@ describe("explicit integration upgrade UI", () => {
                             pointOfNoReturn: "cleanup",
                             cmsMediatedCutover: "binding-revision",
                             providerDirectCutover: "expand-in-code",
+                            cmsMediatedCutoverOutcome: "not-supported",
+                            providerDirectCutoverOutcome: "not-supported",
+                            activationOutcome: "not-supported",
                             cmsDrainSeconds: 30,
                         },
                         {
@@ -122,6 +125,9 @@ describe("explicit integration upgrade UI", () => {
                             pointOfNoReturn: "contract",
                             cmsMediatedCutover: "binding-revision",
                             providerDirectCutover: "provider-journal",
+                            cmsMediatedCutoverOutcome: "passed",
+                            providerDirectCutoverOutcome: "passed",
+                            activationOutcome: "not-applicable",
                             providerDrainSeconds: 60,
                             downtimeStatus: "zero-downtime",
                             observedDowntimeSeconds: 0,
@@ -158,6 +164,9 @@ describe("explicit integration upgrade UI", () => {
         expect(panel.textContent).toContain("CMS-mediated binding-revision");
         expect(panel.textContent).toContain("provider-direct expand-in-code");
         expect(panel.textContent).toContain("provider-direct provider-journal");
+        expect(panel.textContent).toContain("not-supported: declared, not executed by current runner");
+        expect(panel.textContent).toContain("CMS-mediated binding-revision (passed: executed by runner)");
+        expect(panel.textContent).toContain("activation not-applicable");
         expect(panel.textContent).toContain("PONR cleanup");
         expect(panel.textContent).toContain("PONR contract (not-crossed)");
         expect(panel.textContent).toContain("PONR cleanup (not recorded)");

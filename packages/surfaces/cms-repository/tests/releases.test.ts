@@ -39,6 +39,11 @@ describe("@bernouy/cms-repository public release evidence", () => {
                     runner: { name: "cms-postgres-migration", imageDigest: "sha256:migration" },
                     environmentDigest: REPORT_DIGEST,
                     checks: { freshInstall: { outcome: "passed", evidenceDigest: REPORT_DIGEST } },
+                    cutoverEvidence: {
+                        cmsMediated: { outcome: "not-supported" },
+                        providerDirect: { outcome: "not-supported" },
+                        activation: { outcome: "not-supported" },
+                    },
                     operationalEvidence: {
                         downtime: { status: "not-measured" },
                         drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
@@ -187,7 +192,7 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
         provenance: { actor: "private-actor", reason: "Legacy backfill" },
     };
     const migration = {
-        schema: "cms.integration.migration-report.v3" as const,
+        schema: "cms.integration.migration-report.v4" as const,
         reportId: "migration-1",
         revisionType: "root" as const,
         origin: "admission" as const,
@@ -234,6 +239,11 @@ function releaseEvidence(): IntegrationRegistryReleaseEvidence {
                 evidenceDigest: REPORT_DIGEST,
             },
             cleanup: { delaySeconds: 60, observed: true, evidenceDigest: REPORT_DIGEST },
+        },
+        cutoverEvidence: {
+            cmsMediated: { outcome: "not-supported" as const },
+            providerDirect: { outcome: "not-supported" as const },
+            activation: { outcome: "not-supported" as const },
         },
         provenance: { actor: "private-actor", reason: "Migration admission" },
     };

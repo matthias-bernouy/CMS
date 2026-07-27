@@ -115,10 +115,12 @@ function projectMigration(
         environmentDigest: report.environmentDigest,
         checks: report.checks,
         cutover: report.cutover,
+        ...(report.schema === "cms.integration.migration-report.v4" ? { cutoverEvidence: report.cutoverEvidence } : {}),
         rollback: report.rollback,
         pointOfNoReturn: report.pointOfNoReturn,
         delayedCleanupVerified: report.delayedCleanupVerified,
-        ...(report.schema === "cms.integration.migration-report.v3"
+        ...(report.schema === "cms.integration.migration-report.v3" ||
+        report.schema === "cms.integration.migration-report.v4"
             ? { operationalEvidence: report.operationalEvidence }
             : {}),
     };

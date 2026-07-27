@@ -196,6 +196,11 @@ export function releaseFixture() {
                     equivalence: { outcome: "passed", evidenceDigest: "9".repeat(64) },
                 },
                 cutover: { cmsMediated: "binding-revision", providerDirect: "expand-in-code" },
+                cutoverEvidence: {
+                    cmsMediated: { outcome: "not-supported" },
+                    providerDirect: { outcome: "passed", evidenceDigest: "5".repeat(64) },
+                    activation: { outcome: "not-applicable" },
+                },
                 rollback: "available",
                 pointOfNoReturn: "cleanup",
                 delayedCleanupVerified: true,

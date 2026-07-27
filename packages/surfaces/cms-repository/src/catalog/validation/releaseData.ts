@@ -5,6 +5,13 @@ import { boundedArray, boundedText, REPOSITORY_CATALOG_LIMITS, RepositoryCatalog
 
 const DIGEST = /^[a-f0-9]{64}$/u;
 const RELEASE_STATUSES = new Set(["installable", "blocked", "inadmissible", "unverified"]);
+const MIGRATION_CHECK_OUTCOMES = new Set([
+    "passed",
+    "failed",
+    "not-supported",
+    "not-applicable",
+    "infrastructure-failure",
+]);
 
 export function assertReleaseSummary(summary: RepositoryCatalogVersionSummary["release"]): void {
     if (!summary) {
@@ -85,8 +92,34 @@ export function assertReleaseEvidence(release: PublicRepositoryRelease, kind: st
         boundedText(migration.connectorKey, "connector key", REPOSITORY_CATALOG_LIMITS.identifierBytes);
         boundedText(migration.lineageId, "lineage ID", REPOSITORY_CATALOG_LIMITS.identifierBytes);
         safeCount(migration.migrationRevision, "migration revision");
+        boundedText(migration.outcome, "migration outcome", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
         validateRunner(migration.runner);
         digest(migration.environmentDigest);
+        for (const [name, result] of boundedArray(Object.entries(migration.checks), "migration checks", 64)) {
+            boundedText(name, "migration check name", REPOSITORY_CATALOG_LIMITS.identifierBytes);
+            validateMigrationCheck(result);
+        }
+        boundedText(
+            migration.cutover.cmsMediated,
+            "CMS-mediated cutover strategy",
+            REPOSITORY_CATALOG_LIMITS.shortTextBytes,
+        );
+        boundedText(
+            migration.cutover.providerDirect,
+            "provider-direct cutover strategy",
+            REPOSITORY_CATALOG_LIMITS.shortTextBytes,
+        );
+        if (migration.cutoverEvidence) {
+            validateMigrationCheck(migration.cutoverEvidence.cmsMediated);
+            validateMigrationCheck(migration.cutoverEvidence.providerDirect);
+            validateMigrationCheck(migration.cutoverEvidence.activation);
+            validateCutoverApplicability(migration.cutover.cmsMediated, migration.cutoverEvidence.cmsMediated.outcome);
+            validateCutoverApplicability(
+                migration.cutover.providerDirect,
+                migration.cutoverEvidence.providerDirect.outcome,
+            );
+        }
+        boundedText(migration.rollback, "migration rollback", REPOSITORY_CATALOG_LIMITS.shortTextBytes);
         boundedText(migration.pointOfNoReturn, "point of no return", REPOSITORY_CATALOG_LIMITS.descriptionBytes);
     }
     if (release.decision) {
@@ -96,6 +129,22 @@ export function assertReleaseEvidence(release: PublicRepositoryRelease, kind: st
         boundedArray(release.decision.reasons, "decision reasons", 256).forEach((reason) =>
             boundedText(reason, "decision reason", REPOSITORY_CATALOG_LIMITS.descriptionBytes),
         );
+    }
+}
+
+function validateCutoverApplicability(strategy: string, outcome: string): void {
+    if ((strategy === "not-applicable") !== (outcome === "not-applicable")) {
+        throw invalid("Migration cutover evidence applicability is inconsistent with its declared strategy");
+    }
+}
+
+function validateMigrationCheck(check: Readonly<{ outcome: string; evidenceDigest?: string }>): void {
+    if (!MIGRATION_CHECK_OUTCOMES.has(check.outcome)) {
+        throw invalid("Migration check outcome is invalid");
+    }
+    digest(check.evidenceDigest, check.outcome === "passed" || check.outcome === "failed");
+    if (check.outcome === "not-supported" && check.evidenceDigest !== undefined) {
+        throw invalid(`Migration check evidence is not valid for ${check.outcome}`);
     }
 }
 

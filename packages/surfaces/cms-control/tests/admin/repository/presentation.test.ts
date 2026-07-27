@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import staticPage from "../../../src/static/admin/_operations/repository.html" with { type: "text" };
+import { renderRepositoryRelease } from "cms-control/components/admin/Resources/Repository/render/release";
 import {
     installRepositoryFetch,
     loadCommerce,
@@ -8,6 +9,7 @@ import {
     resetRepositoryDom,
     selectCurrentVersion,
 } from "./fixtures";
+import { releaseFixture } from "./reportFixtures";
 
 afterEach(resetRepositoryDom);
 
@@ -50,6 +52,13 @@ describe("repository administration presentation", () => {
         expect(console.textContent).toContain("freshInstall · passed");
         expect(console.textContent).toContain("equivalence · passed");
         expect(console.textContent).toContain("Provider-direct expand-in-code");
+        expect(console.textContent).toContain(
+            "CMS cutover binding-revision · execution not-supported: declared, but not executed by the current runner",
+        );
+        expect(console.textContent).toContain(
+            "Provider-direct expand-in-code · execution passed: executed by the runner",
+        );
+        expect(console.textContent).toContain("Activation not-applicable");
         expect(console.textContent).toContain("Downtime not measured by the current verifier");
         expect(console.textContent).toContain("CMS drain 30s");
         expect(console.textContent).toContain("Rollback proof verified");
@@ -69,6 +78,20 @@ describe("repository administration presentation", () => {
         expect(calls.some((call) => /token|authorization|repository\.internal/iu.test(JSON.stringify(call.init)))).toBe(
             false,
         );
+    });
+
+    test("labels legacy migration strategies as declarations without execution evidence", () => {
+        const release = releaseFixture();
+        const migration = release.migrations[0]!;
+        const legacyMigration = { ...migration, cutoverEvidence: undefined };
+        const target = document.createElement("div");
+
+        renderRepositoryRelease(target, { ...release, migrations: [legacyMigration] });
+
+        expect(target.textContent).toContain(
+            "CMS cutover binding-revision · execution status not recorded by this legacy report",
+        );
+        expect(target.textContent).toContain("Activation status not recorded by this legacy report");
     });
 
     test("ships a distinct static repository page", () => {

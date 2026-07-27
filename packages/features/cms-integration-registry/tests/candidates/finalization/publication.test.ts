@@ -56,7 +56,7 @@ describe("filesystem candidate release publication", () => {
         ).resolves.toMatchObject({ status: "published" });
     });
 
-    test("persists exact optional migration evidence before activating a stateful release", async () => {
+    test("admits exact SQL evidence without claiming unexecuted cutover evidence", async () => {
         const fixture = registryFixture();
         const baselinePackage = await seedLegacySqlBaseline(fixture);
         await fixture.reviewedSchemaBaselines.append({
@@ -67,20 +67,33 @@ describe("filesystem candidate release publication", () => {
             expectedCurrentRevisionId: null,
         });
         const candidate = await verificationCandidate(
-            await statefulSqlPublicationPackage("demo", "1.1.0", {
-                namespaces: [
-                    {
-                        name: "public",
-                        relations: [
-                            {
-                                name: "items",
-                                columns: [{ name: "id", type: "bigint", nullable: false }],
-                                constraints: [],
-                            },
-                        ],
+            await statefulSqlPublicationPackage(
+                "demo",
+                "1.1.0",
+                {
+                    namespaces: [
+                        {
+                            name: "public",
+                            relations: [
+                                {
+                                    name: "items",
+                                    columns: [{ name: "id", type: "bigint", nullable: false }],
+                                    constraints: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                [],
+                {
+                    cmsMediated: { strategy: "binding-switch", drainSeconds: 30 },
+                    providerDirect: {
+                        strategy: "expand-in-code",
+                        callbackIds: ["stripe-webhook"],
+                        drainSeconds: 60,
                     },
-                ],
-            }),
+                },
+            ),
         );
         const basePolicy = await planningPolicy();
         const policy: ReleaseAdmissionPolicySnapshotV1 = {
@@ -125,6 +138,25 @@ describe("filesystem candidate release publication", () => {
             lastFailure: { kind: "suite" },
         });
         const setup = await completePassedCandidate(fixture, "candidate-stateful-finalization", candidate, policy);
+        const rawMigration = (await setup.store.objects("candidate-stateful-finalization")).admissionJobResult
+            ?.migrations[0];
+        expect(rawMigration?.observations.cutover).toMatchObject({
+            cmsMediated: {
+                status: "not-supported",
+                strategy: "binding-switch",
+                diagnosticCodes: ["sql-runner-does-not-exercise-cutover"],
+            },
+            providerDirect: {
+                status: "not-supported",
+                strategy: "expand-in-code",
+                callbackIds: ["stripe-webhook"],
+                diagnosticCodes: ["sql-runner-does-not-exercise-cutover"],
+            },
+            activation: {
+                status: "not-supported",
+                diagnosticCodes: ["sql-runner-does-not-exercise-cutover"],
+            },
+        });
         const stores = releaseStores(fixture);
         const finalizer = new FsIntegrationRegistryCandidateFinalizer(
             finalizerConfig(fixture, setup.store, setup.policy, stores),
@@ -148,12 +180,31 @@ describe("filesystem candidate release publication", () => {
             migrationRevision: migrationInput.targetMigrationRevision,
         });
         expect(migrationHistory?.current).toMatchObject({
-            schema: "cms.integration.migration-report.v3",
+            schema: "cms.integration.migration-report.v4",
+            outcome: "passed",
+            cutover: {
+                cmsMediated: "binding-revision",
+                providerDirect: "expand-in-code",
+            },
+            policyEvaluation: {
+                applicable: true,
+                satisfied: true,
+                checks: expect.not.arrayContaining([
+                    expect.objectContaining({ check: "cms-mediated-cutover" }),
+                    expect.objectContaining({ check: "provider-direct-cutover" }),
+                ]),
+            },
             operationalEvidence: {
                 downtime: { status: "not-measured" },
+                drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
                 rollback: { capability: "unavailable", verified: false },
-                pointOfNoReturn: { phase: "before-contract", observation: "crossed" },
-                cleanup: { observed: true },
+                pointOfNoReturn: { phase: "before-contract", observation: "not-observed" },
+                cleanup: { delaySeconds: 60, observed: false },
+            },
+            cutoverEvidence: {
+                cmsMediated: { outcome: "not-supported" },
+                providerDirect: { outcome: "not-supported" },
+                activation: { outcome: "not-supported" },
             },
         });
     });

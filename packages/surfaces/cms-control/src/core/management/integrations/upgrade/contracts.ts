@@ -10,6 +10,11 @@ export type IntegrationUpgradeMigrationEvidence = Readonly<{
     runner: Readonly<{ name: string; version: string; imageDigest: string }>;
     environmentDigest: string;
     cutover: Readonly<{ cmsMediated: string; providerDirect: string }>;
+    cutoverEvidence?: Readonly<{
+        cmsMediated: Readonly<{ outcome: string; evidenceDigest?: string }>;
+        providerDirect: Readonly<{ outcome: string; evidenceDigest?: string }>;
+        activation: Readonly<{ outcome: string; evidenceDigest?: string }>;
+    }>;
     rollback: string;
     pointOfNoReturn: string;
     delayedCleanupVerified: boolean;
@@ -56,6 +61,9 @@ export type IntegrationUpgradeTarget = Readonly<{
         environmentDigest: string;
         cmsMediatedCutover: string;
         providerDirectCutover: string;
+        cmsMediatedCutoverOutcome?: string;
+        providerDirectCutoverOutcome?: string;
+        activationOutcome?: string;
         rollback: string;
         pointOfNoReturn: string;
         cmsDrainSeconds?: number;

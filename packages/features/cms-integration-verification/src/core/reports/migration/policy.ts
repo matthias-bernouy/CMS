@@ -4,8 +4,10 @@ import type {
     MigrationCheckResult,
     MigrationPolicyEvaluationCheck,
     MigrationReport,
+    MigrationReportV4,
     MigrationReportPolicyEvaluation,
 } from "../../../interfaces/reports/migration";
+import { MIGRATION_REPORT_V4_SCHEMA } from "../../../interfaces/reports/migration";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { migrationExecutionOutcome } from "./results";
 
@@ -34,10 +36,22 @@ export function evaluateMigrationReportAgainstPolicy(
         }
     }
     if (policy.requireCmsMediatedCutoverEvidence) {
-        checks.push(strategyCheck("cms-mediated-cutover", report.cutover.cmsMediated));
+        checks.push(
+            strategyCheck(
+                "cms-mediated-cutover",
+                report.cutover.cmsMediated,
+                report.schema === MIGRATION_REPORT_V4_SCHEMA ? report.cutoverEvidence.cmsMediated : undefined,
+            ),
+        );
     }
     if (policy.requireProviderDirectCutoverEvidence) {
-        checks.push(strategyCheck("provider-direct-cutover", report.cutover.providerDirect));
+        checks.push(
+            strategyCheck(
+                "provider-direct-cutover",
+                report.cutover.providerDirect,
+                report.schema === MIGRATION_REPORT_V4_SCHEMA ? report.cutoverEvidence.providerDirect : undefined,
+            ),
+        );
     }
     if (policy.requireRollbackEvidence) {
         checks.push(rollbackCheck(report.rollback));
@@ -117,8 +131,26 @@ function requiredMigrationCheck(
 function strategyCheck(
     check: "cms-mediated-cutover" | "provider-direct-cutover",
     observed: MigrationReport["cutover"]["cmsMediated"] | MigrationReport["cutover"]["providerDirect"],
+    evidence: MigrationReportV4["cutoverEvidence"]["cmsMediated"] | undefined,
 ): MigrationPolicyEvaluationCheck {
-    return { check, applicable: observed !== "not-applicable", satisfied: true, observed };
+    const applicable = observed !== "not-applicable";
+    if (!evidence) {
+        return {
+            check,
+            applicable,
+            satisfied: !applicable,
+            observed,
+            ...(applicable ? { reason: `required-check-evidence-not-recorded:${check}` } : {}),
+        };
+    }
+    const satisfied = !applicable || evidence.outcome === "passed";
+    return {
+        check,
+        applicable,
+        satisfied,
+        observed: evidence.outcome,
+        ...(satisfied ? {} : { reason: `required-check-${evidence.outcome}:${check}` }),
+    };
 }
 
 function rollbackCheck(observed: MigrationReport["rollback"]): MigrationPolicyEvaluationCheck {

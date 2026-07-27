@@ -86,6 +86,11 @@ export type PublicRepositoryMigrationEvidence = Readonly<{
     environmentDigest: string;
     checks: Readonly<Record<string, Readonly<{ outcome: string; evidenceDigest?: string }>>>;
     cutover: Readonly<{ cmsMediated: string; providerDirect: string }>;
+    cutoverEvidence?: Readonly<{
+        cmsMediated: Readonly<{ outcome: string; evidenceDigest?: string }>;
+        providerDirect: Readonly<{ outcome: string; evidenceDigest?: string }>;
+        activation: Readonly<{ outcome: string; evidenceDigest?: string }>;
+    }>;
     rollback: string;
     pointOfNoReturn: string;
     delayedCleanupVerified: boolean;

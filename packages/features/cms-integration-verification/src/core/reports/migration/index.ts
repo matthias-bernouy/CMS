@@ -3,6 +3,7 @@ import {
     MIGRATION_REPORT_SCHEMA,
     MIGRATION_REPORT_V2_SCHEMA,
     MIGRATION_REPORT_V3_SCHEMA,
+    MIGRATION_REPORT_V4_SCHEMA,
 } from "../../../interfaces/reports/migration";
 import { pinnedRunner, parseVerificationPolicyIdentity } from "../../runner";
 import { IntegrationVerificationContractError } from "../../validation/errors";
@@ -21,6 +22,7 @@ import { parseReportHistoryFields, parseReportProvenance, parseVersionDigestRefe
 import { assertMigrationPolicyEvaluationMatchesReport, parseMigrationPolicyEvaluation } from "./policyEvaluation";
 import { assertMigrationOutcome, parseMigrationChecks, parseMigrationCutover } from "./results";
 import { assertMigrationOperationalEvidenceMatchesReport, parseMigrationOperationalEvidence } from "./operational";
+import { assertMigrationCutoverEvidenceMatchesReport, parseMigrationCutoverEvidence } from "./cutoverEvidence";
 
 const COMMON_FIELDS = [
     "reportId",
@@ -52,6 +54,7 @@ const COMMON_FIELDS = [
 const V1_FIELDS = ["schema", ...COMMON_FIELDS] as const;
 const V2_FIELDS = ["schema", ...COMMON_FIELDS, "policyEvaluation"] as const;
 const V3_FIELDS = ["schema", ...COMMON_FIELDS, "policyEvaluation", "operationalEvidence"] as const;
+const V4_FIELDS = ["schema", ...COMMON_FIELDS, "policyEvaluation", "operationalEvidence", "cutoverEvidence"] as const;
 
 export function parseMigrationReport(value: unknown): MigrationReport {
     assertContractIJson(value);
@@ -59,19 +62,16 @@ export function parseMigrationReport(value: unknown): MigrationReport {
     if (
         schema !== MIGRATION_REPORT_SCHEMA &&
         schema !== MIGRATION_REPORT_V2_SCHEMA &&
-        schema !== MIGRATION_REPORT_V3_SCHEMA
+        schema !== MIGRATION_REPORT_V3_SCHEMA &&
+        schema !== MIGRATION_REPORT_V4_SCHEMA
     ) {
         throw new IntegrationVerificationContractError(
             "invalid_schema",
-            `migrationReport.schema must be ${MIGRATION_REPORT_SCHEMA}, ${MIGRATION_REPORT_V2_SCHEMA}, or ${MIGRATION_REPORT_V3_SCHEMA}`,
+            `migrationReport.schema must be ${MIGRATION_REPORT_SCHEMA}, ${MIGRATION_REPORT_V2_SCHEMA}, ${MIGRATION_REPORT_V3_SCHEMA}, or ${MIGRATION_REPORT_V4_SCHEMA}`,
             "migrationReport.schema",
         );
     }
-    const input = strictRecord(
-        value,
-        "migrationReport",
-        schema === MIGRATION_REPORT_SCHEMA ? V1_FIELDS : schema === MIGRATION_REPORT_V2_SCHEMA ? V2_FIELDS : V3_FIELDS,
-    );
+    const input = strictRecord(value, "migrationReport", fieldsForSchema(schema));
     const fields = parseMigrationReportFields(input);
     const report: MigrationReport =
         schema === MIGRATION_REPORT_SCHEMA
@@ -82,20 +82,47 @@ export function parseMigrationReport(value: unknown): MigrationReport {
                     ...fields,
                     policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
                 }
-              : {
-                    schema: MIGRATION_REPORT_V3_SCHEMA,
-                    ...fields,
-                    policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
-                    operationalEvidence: parseMigrationOperationalEvidence(input.operationalEvidence),
-                };
+              : schema === MIGRATION_REPORT_V3_SCHEMA
+                ? {
+                      schema: MIGRATION_REPORT_V3_SCHEMA,
+                      ...fields,
+                      policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
+                      operationalEvidence: parseMigrationOperationalEvidence(input.operationalEvidence),
+                  }
+                : {
+                      schema: MIGRATION_REPORT_V4_SCHEMA,
+                      ...fields,
+                      policyEvaluation: parseMigrationPolicyEvaluation(input.policyEvaluation),
+                      operationalEvidence: parseMigrationOperationalEvidence(input.operationalEvidence),
+                      cutoverEvidence: parseMigrationCutoverEvidence(input.cutoverEvidence),
+                  };
     assertMigrationOutcome(report);
     if (report.schema !== MIGRATION_REPORT_SCHEMA) {
         assertMigrationPolicyEvaluationMatchesReport(report);
     }
-    if (report.schema === MIGRATION_REPORT_V3_SCHEMA) {
+    if (report.schema === MIGRATION_REPORT_V3_SCHEMA || report.schema === MIGRATION_REPORT_V4_SCHEMA) {
         assertMigrationOperationalEvidenceMatchesReport(report);
     }
+    if (report.schema === MIGRATION_REPORT_V4_SCHEMA) {
+        assertMigrationCutoverEvidenceMatchesReport(report);
+    }
     return report;
+}
+
+function fieldsForSchema(
+    schema:
+        | typeof MIGRATION_REPORT_SCHEMA
+        | typeof MIGRATION_REPORT_V2_SCHEMA
+        | typeof MIGRATION_REPORT_V3_SCHEMA
+        | typeof MIGRATION_REPORT_V4_SCHEMA,
+): readonly string[] {
+    if (schema === MIGRATION_REPORT_SCHEMA) {
+        return V1_FIELDS;
+    }
+    if (schema === MIGRATION_REPORT_V2_SCHEMA) {
+        return V2_FIELDS;
+    }
+    return schema === MIGRATION_REPORT_V3_SCHEMA ? V3_FIELDS : V4_FIELDS;
 }
 
 function parseMigrationReportFields(input: Record<string, unknown>): Omit<LegacyMigrationReportV1, "schema"> {

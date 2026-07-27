@@ -3,6 +3,7 @@ import type {
     MigrationReportPolicyEvaluation,
     MigrationReportV2,
     MigrationReportV3,
+    MigrationReportV4,
 } from "../../../interfaces/reports/migration";
 import { assertUnique, boundedArray, invalid, strictRecord } from "../../validation/structure";
 import { oneOf, requiredBoolean, requiredText } from "../../validation/values";
@@ -70,7 +71,9 @@ export function parseMigrationPolicyEvaluation(value: unknown): MigrationReportP
     });
 }
 
-export function assertMigrationPolicyEvaluationMatchesReport(report: MigrationReportV2 | MigrationReportV3): void {
+export function assertMigrationPolicyEvaluationMatchesReport(
+    report: MigrationReportV2 | MigrationReportV3 | MigrationReportV4,
+): void {
     if (!report.policyEvaluation.applicable) {
         return;
     }
@@ -84,6 +87,30 @@ export function assertMigrationPolicyEvaluationMatchesReport(report: MigrationRe
         environment.observed !== report.environmentDigest
     ) {
         throw invalid("migrationReport.policyEvaluation", "does not bind the report execution outcome and environment");
+    }
+    if (report.schema === "cms.integration.migration-report.v4") {
+        assertCutoverPolicyCheckMatchesReport(report, "cms-mediated-cutover", "cmsMediated");
+        assertCutoverPolicyCheckMatchesReport(report, "provider-direct-cutover", "providerDirect");
+    }
+}
+
+function assertCutoverPolicyCheckMatchesReport(
+    report: MigrationReportV4,
+    checkName: "cms-mediated-cutover" | "provider-direct-cutover",
+    regime: "cmsMediated" | "providerDirect",
+): void {
+    const check = report.policyEvaluation.checks.find(({ check }) => check === checkName);
+    if (!check) {
+        return;
+    }
+    const applicable = report.cutover[regime] !== "not-applicable";
+    const outcome = report.cutoverEvidence[regime].outcome;
+    if (
+        check.applicable !== applicable ||
+        check.observed !== outcome ||
+        check.satisfied !== (!applicable || outcome === "passed")
+    ) {
+        throw invalid("migrationReport.policyEvaluation", `does not bind ${checkName} execution evidence`);
     }
 }
 

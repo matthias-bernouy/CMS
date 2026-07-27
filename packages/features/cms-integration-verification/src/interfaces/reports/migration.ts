@@ -4,10 +4,17 @@ import type { ReportHistoryFields, ReportProvenance, VersionDigestReference } fr
 export const MIGRATION_REPORT_SCHEMA = "cms.integration.migration-report.v1" as const;
 export const MIGRATION_REPORT_V2_SCHEMA = "cms.integration.migration-report.v2" as const;
 export const MIGRATION_REPORT_V3_SCHEMA = "cms.integration.migration-report.v3" as const;
+export const MIGRATION_REPORT_V4_SCHEMA = "cms.integration.migration-report.v4" as const;
 
 export type MigrationCheckResult = Readonly<{
     outcome: "passed" | "failed" | "not-supported" | "not-applicable" | "infrastructure-failure";
     evidenceDigest?: string;
+}>;
+
+export type MigrationCutoverEvidence = Readonly<{
+    cmsMediated: MigrationCheckResult;
+    providerDirect: MigrationCheckResult;
+    activation: MigrationCheckResult;
 }>;
 
 export type MigrationPolicyEvaluationCheck = Readonly<{
@@ -117,4 +124,12 @@ export type MigrationReportV3 = MigrationReportFields &
         operationalEvidence: MigrationOperationalEvidence;
     }>;
 
-export type MigrationReport = LegacyMigrationReportV1 | MigrationReportV2 | MigrationReportV3;
+export type MigrationReportV4 = MigrationReportFields &
+    Readonly<{
+        schema: typeof MIGRATION_REPORT_V4_SCHEMA;
+        policyEvaluation: MigrationReportPolicyEvaluation;
+        operationalEvidence: MigrationOperationalEvidence;
+        cutoverEvidence: MigrationCutoverEvidence;
+    }>;
+
+export type MigrationReport = LegacyMigrationReportV1 | MigrationReportV2 | MigrationReportV3 | MigrationReportV4;

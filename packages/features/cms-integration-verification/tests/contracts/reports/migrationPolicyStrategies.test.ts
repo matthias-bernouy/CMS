@@ -22,13 +22,17 @@ describe("migration report policy strategies", () => {
                     "minor",
                 );
 
-                expect(evaluation.satisfied).toBeTrue();
+                expect(evaluation.satisfied).toBe(
+                    cmsMediated === "not-applicable" && providerDirect === "not-applicable",
+                );
                 expect(evaluation.checks.find(({ check }) => check === "cms-mediated-cutover")).toMatchObject({
                     applicable: cmsMediated !== "not-applicable",
+                    satisfied: cmsMediated === "not-applicable",
                     observed: cmsMediated,
                 });
                 expect(evaluation.checks.find(({ check }) => check === "provider-direct-cutover")).toMatchObject({
                     applicable: providerDirect !== "not-applicable",
+                    satisfied: providerDirect === "not-applicable",
                     observed: providerDirect,
                 });
             }
@@ -62,6 +66,50 @@ describe("migration report policy strategies", () => {
             });
             expect(evaluation.satisfied).toBe(satisfied);
         }
+    });
+
+    test("fails closed when v4 records declared cutovers as unsupported", () => {
+        const legacy = parseMigrationReport(migrationReport());
+        const permissivePolicy = policy({});
+        const report = parseMigrationReport({
+            ...legacy,
+            schema: "cms.integration.migration-report.v4",
+            policyEvaluation: evaluateMigrationReportAgainstPolicy(legacy, permissivePolicy, "minor"),
+            operationalEvidence: {
+                downtime: { status: "not-measured" },
+                drain: {},
+                rollback: { capability: legacy.rollback, verified: false },
+                pointOfNoReturn: { phase: legacy.pointOfNoReturn, observation: "not-observed" },
+                cleanup: { observed: legacy.delayedCleanupVerified, evidenceDigest: DIGEST_B },
+            },
+            cutoverEvidence: {
+                cmsMediated: { outcome: "not-supported" },
+                providerDirect: { outcome: "not-supported" },
+                activation: { outcome: "not-supported" },
+            },
+        });
+        const strict = evaluateMigrationReportAgainstPolicy(
+            report,
+            policy({ cmsCutover: true, providerCutover: true }),
+            "minor",
+        );
+
+        expect(strict).toMatchObject({
+            applicable: true,
+            satisfied: false,
+            reasons: [
+                "required-check-not-supported:cms-mediated-cutover",
+                "required-check-not-supported:provider-direct-cutover",
+            ],
+        });
+        expect(strict.checks.find(({ check }) => check === "cms-mediated-cutover")).toMatchObject({
+            applicable: true,
+            satisfied: false,
+            observed: "not-supported",
+        });
+        expect(evaluateMigrationReportAgainstPolicy(report, permissivePolicy, "minor").checks).not.toContainEqual(
+            expect.objectContaining({ check: "cms-mediated-cutover" }),
+        );
     });
 
     test("accepts both legacy and current cleanup outcomes, then applies the selected policy", () => {

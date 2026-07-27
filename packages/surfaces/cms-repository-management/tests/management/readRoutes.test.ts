@@ -174,6 +174,11 @@ describe("repository management read routes", () => {
             },
             migrations: [
                 {
+                    cutoverEvidence: {
+                        cmsMediated: { outcome: "not-supported" },
+                        providerDirect: { outcome: "passed", evidenceDigest: "c".repeat(64) },
+                        activation: { outcome: "not-applicable" },
+                    },
                     operationalEvidence: {
                         downtime: { status: "zero-downtime", observedSeconds: 0 },
                         drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },

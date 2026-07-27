@@ -125,6 +125,14 @@ export async function statefulSqlPublicationPackage(
     version: string,
     schema: unknown,
     dependencies: readonly Readonly<{ name: string; kind: string; versionRange: string }>[] = [],
+    cutovers: Readonly<{
+        cmsMediated?: Readonly<{ strategy: "binding-switch"; drainSeconds?: number }>;
+        providerDirect?: Readonly<{
+            strategy: "expand-in-code" | "journalled-provider-switch";
+            callbackIds: readonly string[];
+            drainSeconds?: number;
+        }>;
+    }> = {},
 ) {
     const checksum = `sha256:${"1".repeat(64)}`;
     return await publicationPackage(
@@ -160,6 +168,7 @@ export async function statefulSqlPublicationPackage(
                             },
                         ],
                         supportedSources: [{ range: "^1.0.0", migrationRevision: 0 }],
+                        ...cutovers,
                         pointOfNoReturn: "before-contract",
                     },
                 },

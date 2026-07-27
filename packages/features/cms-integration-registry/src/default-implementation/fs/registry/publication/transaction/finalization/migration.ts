@@ -8,6 +8,7 @@ import {
     type CandidateAdmissionJobResultV1,
     type CompatibilityReportV2,
     type MigrationCheckResult,
+    type MigrationCutoverEvidence,
     type MigrationJobResultV1,
     type MigrationOperationalEvidence,
     type MigrationRawObservationEvidenceV1,
@@ -59,6 +60,11 @@ async function buildMigrationReport(
     };
     const activationEvidenceDigest = await observationDigest(result.result.observations.cutover.activation);
     const operationalEvidence = migrationOperationalEvidence(input.input, result.result, activationEvidenceDigest);
+    const cutoverEvidence: MigrationCutoverEvidence = {
+        cmsMediated: await observationCheck(result.result.observations.cutover.cmsMediated),
+        providerDirect: await observationCheck(result.result.observations.cutover.providerDirect),
+        activation: await observationCheck(result.result.observations.cutover.activation),
+    };
     const legacy = await identifyMigrationReport({
         schema: "cms.integration.migration-report.v1",
         reportId: `migration-${input.digest.slice(0, 40)}`,
@@ -93,17 +99,27 @@ async function buildMigrationReport(
             evidenceIds: [context.candidateId, result.result.jobId, result.result.attemptId],
         },
     });
-    const policyEvaluation = evaluateMigrationReportAgainstPolicy(
+    const legacyPolicyEvaluation = evaluateMigrationReportAgainstPolicy(
         legacy.report,
+        context.policy.migrationEvidence,
+        context.compatibility.releaseLevel,
+    );
+    const current = {
+        ...legacy.report,
+        schema: "cms.integration.migration-report.v4" as const,
+        policyEvaluation: legacyPolicyEvaluation,
+        operationalEvidence,
+        cutoverEvidence,
+    };
+    const policyEvaluation = evaluateMigrationReportAgainstPolicy(
+        current,
         context.policy.migrationEvidence,
         context.compatibility.releaseLevel,
     );
     return (
         await identifyMigrationReport({
-            ...legacy.report,
-            schema: "cms.integration.migration-report.v3",
+            ...current,
             policyEvaluation,
-            operationalEvidence,
         })
     ).report;
 }

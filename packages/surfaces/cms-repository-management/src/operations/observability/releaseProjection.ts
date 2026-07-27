@@ -16,10 +16,14 @@ export function projectRepositoryManagementRelease(source: IntegrationRegistryRe
         environmentDigest: current.environmentDigest,
         checks: current.checks,
         cutover: current.cutover,
+        ...(current.schema === "cms.integration.migration-report.v4"
+            ? { cutoverEvidence: current.cutoverEvidence }
+            : {}),
         rollback: current.rollback,
         pointOfNoReturn: current.pointOfNoReturn,
         delayedCleanupVerified: current.delayedCleanupVerified,
-        ...(current.schema === "cms.integration.migration-report.v3"
+        ...(current.schema === "cms.integration.migration-report.v3" ||
+        current.schema === "cms.integration.migration-report.v4"
             ? { operationalEvidence: current.operationalEvidence }
             : {}),
     }));

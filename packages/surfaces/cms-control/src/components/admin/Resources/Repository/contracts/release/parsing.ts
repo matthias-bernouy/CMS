@@ -117,12 +117,22 @@ function migration(value: unknown): RepositoryReleaseMigrationView {
             cmsMediated: readText(cutover.cmsMediated),
             providerDirect: readText(cutover.providerDirect),
         },
+        ...(source.cutoverEvidence === undefined ? {} : { cutoverEvidence: cutoverEvidence(source.cutoverEvidence) }),
         rollback: readText(source.rollback),
         pointOfNoReturn: readText(source.pointOfNoReturn),
         delayedCleanupVerified: readBoolean(source.delayedCleanupVerified),
         ...(source.operationalEvidence === undefined
             ? {}
             : { operationalEvidence: operationalEvidence(source.operationalEvidence) }),
+    };
+}
+
+function cutoverEvidence(value: unknown): NonNullable<RepositoryReleaseMigrationView["cutoverEvidence"]> {
+    const source = readRecord(value);
+    return {
+        cmsMediated: migrationCheck(source.cmsMediated),
+        providerDirect: migrationCheck(source.providerDirect),
+        activation: migrationCheck(source.activation),
     };
 }
 
@@ -175,18 +185,17 @@ function checkRecord(value: unknown): RepositoryReleaseMigrationView["checks"] {
     return Object.fromEntries(
         Object.entries(source)
             .slice(0, 64)
-            .map(([key, value]) => {
-                const check = readRecord(value);
-                const evidenceDigest = readOptionalText(check.evidenceDigest);
-                return [
-                    key,
-                    {
-                        outcome: readText(check.outcome),
-                        ...(evidenceDigest ? { evidenceDigest } : {}),
-                    },
-                ];
-            }),
+            .map(([key, value]) => [key, migrationCheck(value)]),
     );
+}
+
+function migrationCheck(value: unknown): Readonly<{ outcome: string; evidenceDigest?: string }> {
+    const check = readRecord(value);
+    const evidenceDigest = readOptionalText(check.evidenceDigest);
+    return {
+        outcome: readText(check.outcome),
+        ...(evidenceDigest ? { evidenceDigest } : {}),
+    };
 }
 
 function decision(value: unknown): NonNullable<RepositoryReleaseView["decision"]> {

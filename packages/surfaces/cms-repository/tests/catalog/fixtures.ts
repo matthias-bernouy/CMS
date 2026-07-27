@@ -198,6 +198,11 @@ function releaseEvidence(version: string): NonNullable<RepositoryCatalogVersionC
                     equivalence: { outcome: "passed", evidenceDigest: "a".repeat(64) },
                 },
                 cutover: { cmsMediated: "binding-revision", providerDirect: "expand-in-code" },
+                cutoverEvidence: {
+                    cmsMediated: { outcome: "not-supported" },
+                    providerDirect: { outcome: "not-supported" },
+                    activation: { outcome: "not-applicable" },
+                },
                 rollback: "available",
                 pointOfNoReturn: "cleanup",
                 delayedCleanupVerified: true,

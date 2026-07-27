@@ -82,7 +82,7 @@ function renderMigrations(release: PublicRepositoryRelease): string {
             (
                 migration,
             ) => `<li><article><h4>${escapeHtml(migration.connectorKey)} from ${escapeHtml(migration.supportedSourceRange)}</h4><dl>
-<div><dt>Outcome</dt><dd>${escapeHtml(humanLabel(migration.outcome))}</dd></div>
+<div><dt>SQL migration / equivalence outcome</dt><dd>${escapeHtml(humanLabel(migration.outcome))}</dd></div>
 <div><dt>Report</dt><dd><code>${escapeHtml(migration.reportId)}</code> · <code>${escapeHtml(migration.reportDigest)}</code></dd></div>
 <div><dt>Source</dt><dd><code>${escapeHtml(migration.source.kind)}@${escapeHtml(migration.source.version)} · ${escapeHtml(migration.source.packageDigest)}</code></dd></div>
 <div><dt>Lineage / revision</dt><dd><code>${escapeHtml(migration.lineageId)}</code> / ${migration.migrationRevision}</dd></div>
@@ -90,13 +90,36 @@ function renderMigrations(release: PublicRepositoryRelease): string {
 <div><dt>Environment</dt><dd><code>${escapeHtml(migration.environmentDigest)}</code></dd></div>
 <div><dt>Rollback</dt><dd>${escapeHtml(humanLabel(migration.rollback))}</dd></div>
 <div><dt>Point of no return</dt><dd>${escapeHtml(migration.pointOfNoReturn)}</dd></div>
-<div><dt>CMS-mediated cutover</dt><dd>${escapeHtml(humanLabel(migration.cutover.cmsMediated))}</dd></div>
-<div><dt>Provider-direct cutover</dt><dd>${escapeHtml(humanLabel(migration.cutover.providerDirect))}</dd></div>
+${renderCutoverExecution("CMS-mediated cutover", migration.cutover.cmsMediated, migration.cutoverEvidence?.cmsMediated)}
+${renderCutoverExecution("Provider-direct cutover", migration.cutover.providerDirect, migration.cutoverEvidence?.providerDirect)}
+${renderCutoverExecution("Activation / cleanup execution", undefined, migration.cutoverEvidence?.activation)}
 <div><dt>Delayed cleanup verified</dt><dd>${migration.delayedCleanupVerified ? "Yes" : "No"}</dd></div>
 ${renderOperationalEvidence(migration)}
 </dl>${renderMigrationChecks(migration.checks)}</article></li>`,
         )
         .join("")}</ol>`;
+}
+
+function renderCutoverExecution(
+    label: string,
+    strategy: string | undefined,
+    evidence: Readonly<{ outcome: string; evidenceDigest?: string }> | undefined,
+): string {
+    const prefix = strategy === undefined ? "" : `${humanLabel(strategy)} — `;
+    let status: string;
+    if (!evidence) {
+        status = "Execution status not recorded by this legacy report";
+    } else if (evidence.outcome === "not-supported") {
+        status = "Not supported: declared, but not executed by the current runner";
+    } else if (evidence.outcome === "passed") {
+        status = "Passed: executed by the runner";
+    } else if (evidence.outcome === "not-applicable") {
+        status = "Not applicable";
+    } else {
+        status = humanLabel(evidence.outcome);
+    }
+    const digest = evidence?.evidenceDigest ? ` · ${evidence.evidenceDigest}` : "";
+    return `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(`${prefix}${status}${digest}`)}</dd></div>`;
 }
 
 function renderOperationalEvidence(migration: PublicRepositoryRelease["migrations"][number]): string {

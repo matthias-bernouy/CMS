@@ -152,6 +152,13 @@ function verifiedMigrations(
                 environmentDigest: report.environmentDigest,
                 cmsMediatedCutover: report.cutover.cmsMediated,
                 providerDirectCutover: report.cutover.providerDirect,
+                ...(report.cutoverEvidence
+                    ? {
+                          cmsMediatedCutoverOutcome: report.cutoverEvidence.cmsMediated.outcome,
+                          providerDirectCutoverOutcome: report.cutoverEvidence.providerDirect.outcome,
+                          activationOutcome: report.cutoverEvidence.activation.outcome,
+                      }
+                    : {}),
                 rollback: report.rollback,
                 pointOfNoReturn: report.pointOfNoReturn,
                 ...(cmsDrainSeconds === undefined ? {} : { cmsDrainSeconds }),

@@ -54,6 +54,9 @@ describe("repository catalog integration and version pages", () => {
         expect(html).toContain("Fresh Install");
         expect(html).toContain("Equivalence");
         expect(html).toContain("Provider-direct cutover");
+        expect(html).toContain("Not supported: declared, but not executed by the current runner");
+        expect(html).toContain("Activation / cleanup execution</dt><dd>Not applicable");
+        expect(html).toContain("SQL migration / equivalence outcome");
         expect(html).toContain("Not measured by the current verifier");
         expect(html).toContain("CMS-mediated 30s");
         expect(html).toContain("Rollback proof");

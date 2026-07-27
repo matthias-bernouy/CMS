@@ -41,6 +41,9 @@ export type IntegrationUpgradeTarget = {
         pointOfNoReturn: string;
         cmsMediatedCutover: string;
         providerDirectCutover: string;
+        cmsMediatedCutoverOutcome?: string;
+        providerDirectCutoverOutcome?: string;
+        activationOutcome?: string;
         cmsDrainSeconds?: number;
         providerDrainSeconds?: number;
         downtimeStatus?: string;

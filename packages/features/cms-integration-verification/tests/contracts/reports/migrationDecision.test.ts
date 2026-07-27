@@ -58,8 +58,8 @@ describe("migration report contract", () => {
                 requireExactSourcePackageDigest: true,
                 requireExactTargetPackageDigest: true,
                 approvedEnvironmentDigests: [DIGEST_B],
-                requireCmsMediatedCutoverEvidence: true,
-                requireProviderDirectCutoverEvidence: true,
+                requireCmsMediatedCutoverEvidence: false,
+                requireProviderDirectCutoverEvidence: false,
                 requireRollbackEvidence: false,
                 requireDelayedCleanupEvidence: false,
             },
@@ -182,6 +182,91 @@ describe("migration report contract", () => {
                 },
             }),
         ).toThrow(/verified rollback requires available capability/);
+    });
+
+    test("binds v4 cutover execution statuses without fabricating unsupported evidence", () => {
+        const legacy = parseMigrationReport(migrationReport());
+        const policyEvaluation = evaluateMigrationReportAgainstPolicy(
+            legacy,
+            {
+                requiredForReleaseLevels: ["minor"],
+                requiredChecks: ["fresh-install", "migrated-state", "equivalence"],
+                requireExactSourcePackageDigest: true,
+                requireExactTargetPackageDigest: true,
+                approvedEnvironmentDigests: [DIGEST_B],
+                requireCmsMediatedCutoverEvidence: false,
+                requireProviderDirectCutoverEvidence: false,
+                requireRollbackEvidence: false,
+                requireDelayedCleanupEvidence: false,
+            },
+            "minor",
+        );
+        const value = {
+            ...legacy,
+            schema: "cms.integration.migration-report.v4" as const,
+            policyEvaluation,
+            operationalEvidence: {
+                downtime: { status: "not-measured" as const },
+                drain: { cmsMediatedSeconds: 30, providerDirectSeconds: 60 },
+                rollback: { capability: legacy.rollback, verified: false },
+                pointOfNoReturn: {
+                    phase: legacy.pointOfNoReturn,
+                    observation: "not-observed" as const,
+                },
+                cleanup: { delaySeconds: 60, observed: legacy.delayedCleanupVerified, evidenceDigest: DIGEST_B },
+            },
+            cutoverEvidence: {
+                cmsMediated: { outcome: "not-supported" as const },
+                providerDirect: { outcome: "not-supported" as const },
+                activation: { outcome: "not-supported" as const },
+            },
+        };
+        const current = parseMigrationReport(value);
+
+        expect(current).toMatchObject({
+            schema: "cms.integration.migration-report.v4",
+            cutoverEvidence: {
+                cmsMediated: { outcome: "not-supported" },
+                providerDirect: { outcome: "not-supported" },
+                activation: { outcome: "not-supported" },
+            },
+        });
+        expect(() =>
+            parseMigrationReport({
+                ...value,
+                cutoverEvidence: {
+                    ...value.cutoverEvidence,
+                    cmsMediated: { outcome: "not-supported", evidenceDigest: DIGEST_B },
+                },
+            }),
+        ).toThrow(/must be omitted for not-supported/);
+        expect(() =>
+            parseMigrationReport({
+                ...value,
+                cutoverEvidence: {
+                    ...value.cutoverEvidence,
+                    cmsMediated: { outcome: "not-applicable" },
+                },
+            }),
+        ).toThrow(/exactly when its declared strategy is not-applicable/);
+        expect(() =>
+            parseMigrationReport({
+                ...value,
+                cutoverEvidence: {
+                    ...value.cutoverEvidence,
+                    cmsMediated: { outcome: "failed", evidenceDigest: DIGEST_B },
+                },
+            }),
+        ).toThrow(/outcome must be failed/);
+        expect(() =>
+            parseMigrationReport({
+                ...value,
+                cutoverEvidence: {
+                    ...value.cutoverEvidence,
+                    providerDirect: { outcome: "infrastructure-failure" },
+                },
+            }),
+        ).toThrow(/outcome must be infrastructure-failure/);
     });
 });
 

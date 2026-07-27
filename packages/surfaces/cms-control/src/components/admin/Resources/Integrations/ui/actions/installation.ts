@@ -158,7 +158,39 @@ function migrationSummary(
                 ? `; downtime ${migration.downtimeStatus}`
                 : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
     const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
-    return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; CMS-mediated ${migration.cmsMediatedCutover}; provider-direct ${migration.providerDirectCutover}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
+    const cmsCutover = cutoverExecutionSummary(
+        "CMS-mediated",
+        migration.cmsMediatedCutover,
+        migration.cmsMediatedCutoverOutcome,
+    );
+    const providerCutover = cutoverExecutionSummary(
+        "provider-direct",
+        migration.providerDirectCutover,
+        migration.providerDirectCutoverOutcome,
+    );
+    const activation = executionStatusSummary("activation", migration.activationOutcome);
+    return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; ${cmsCutover}; ${providerCutover}; ${activation}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
+}
+
+function cutoverExecutionSummary(label: string, strategy: string, outcome: string | undefined): string {
+    return `${label} ${strategy} (${executionStatus(outcome)})`;
+}
+
+function executionStatusSummary(label: string, outcome: string | undefined): string {
+    return `${label} ${executionStatus(outcome)}`;
+}
+
+function executionStatus(outcome: string | undefined): string {
+    if (outcome === undefined) {
+        return "execution status not recorded by legacy report";
+    }
+    if (outcome === "not-supported") {
+        return "not-supported: declared, not executed by current runner";
+    }
+    if (outcome === "passed") {
+        return "passed: executed by runner";
+    }
+    return outcome;
 }
 
 function unavailableUpgradeSummary(choices: IntegrationUpgradeVersions): string {

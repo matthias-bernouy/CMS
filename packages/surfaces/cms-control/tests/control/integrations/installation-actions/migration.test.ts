@@ -169,6 +169,11 @@ async function migrationControlFixture(withBinding: boolean) {
                         runner: { name: "cms-postgres", version: "1.0.0", imageDigest: "sha256:pinned" },
                         environmentDigest: "2".repeat(64),
                         cutover: { cmsMediated: "binding-revision", providerDirect: "expand-in-code" },
+                        cutoverEvidence: {
+                            cmsMediated: { outcome: "not-supported" },
+                            providerDirect: { outcome: "not-supported" },
+                            activation: { outcome: "not-supported" },
+                        },
                         rollback: "available",
                         pointOfNoReturn: "cleanup",
                         delayedCleanupVerified: true,

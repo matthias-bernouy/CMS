@@ -12,11 +12,11 @@ export function parseMigrationChecks(value: unknown): MigrationReport["checks"] 
         "resumption",
     ]);
     return {
-        freshInstall: parseCheck(input.freshInstall, "migrationReport.checks.freshInstall"),
-        migratedState: parseCheck(input.migratedState, "migrationReport.checks.migratedState"),
-        equivalence: parseCheck(input.equivalence, "migrationReport.checks.equivalence"),
-        failureInjection: parseCheck(input.failureInjection, "migrationReport.checks.failureInjection"),
-        resumption: parseCheck(input.resumption, "migrationReport.checks.resumption"),
+        freshInstall: parseMigrationCheck(input.freshInstall, "migrationReport.checks.freshInstall"),
+        migratedState: parseMigrationCheck(input.migratedState, "migrationReport.checks.migratedState"),
+        equivalence: parseMigrationCheck(input.equivalence, "migrationReport.checks.equivalence"),
+        failureInjection: parseMigrationCheck(input.failureInjection, "migrationReport.checks.failureInjection"),
+        resumption: parseMigrationCheck(input.resumption, "migrationReport.checks.resumption"),
     };
 }
 
@@ -45,7 +45,10 @@ export function assertMigrationOutcome(report: MigrationReport): void {
 }
 
 export function migrationExecutionOutcome(report: MigrationReport): MigrationReport["outcome"] {
-    const checks = Object.values(report.checks);
+    const checks = [
+        ...Object.values(report.checks),
+        ...(report.schema === "cms.integration.migration-report.v4" ? Object.values(report.cutoverEvidence) : []),
+    ];
     return checks.some((check) => check.outcome === "infrastructure-failure")
         ? "infrastructure-failure"
         : report.checks.freshInstall.outcome !== "passed" ||
@@ -56,7 +59,7 @@ export function migrationExecutionOutcome(report: MigrationReport): MigrationRep
           : "passed";
 }
 
-function parseCheck(value: unknown, field: string): MigrationCheckResult {
+export function parseMigrationCheck(value: unknown, field: string): MigrationCheckResult {
     const input = strictRecord(value, field, ["outcome", "evidenceDigest"]);
     const outcome = oneOf(input.outcome, `${field}.outcome`, [
         "passed",
@@ -69,6 +72,9 @@ function parseCheck(value: unknown, field: string): MigrationCheckResult {
         input.evidenceDigest === undefined ? undefined : sha256Digest(input.evidenceDigest, `${field}.evidenceDigest`);
     if ((outcome === "passed" || outcome === "failed") && evidenceDigest === undefined) {
         throw invalid(`${field}.evidenceDigest`, `is required for ${outcome}`);
+    }
+    if (outcome === "not-supported" && evidenceDigest !== undefined) {
+        throw invalid(`${field}.evidenceDigest`, `must be omitted for ${outcome}`);
     }
     return { outcome, ...(evidenceDigest ? { evidenceDigest } : {}) };
 }

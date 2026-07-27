@@ -29069,7 +29069,28 @@ details[open] > summary > .chevron {
     const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
     const downtime = migration.downtimeStatus === undefined ? "; downtime evidence not recorded" : migration.downtimeStatus === "not-measured" ? "; downtime not measured" : migration.observedDowntimeSeconds === undefined ? `; downtime ${migration.downtimeStatus}` : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
     const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
-    return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; CMS-mediated ${migration.cmsMediatedCutover}; provider-direct ${migration.providerDirectCutover}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
+    const cmsCutover = cutoverExecutionSummary("CMS-mediated", migration.cmsMediatedCutover, migration.cmsMediatedCutoverOutcome);
+    const providerCutover = cutoverExecutionSummary("provider-direct", migration.providerDirectCutover, migration.providerDirectCutoverOutcome);
+    const activation = executionStatusSummary("activation", migration.activationOutcome);
+    return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; ${cmsCutover}; ${providerCutover}; ${activation}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
+  }
+  function cutoverExecutionSummary(label3, strategy, outcome) {
+    return `${label3} ${strategy} (${executionStatus(outcome)})`;
+  }
+  function executionStatusSummary(label3, outcome) {
+    return `${label3} ${executionStatus(outcome)}`;
+  }
+  function executionStatus(outcome) {
+    if (outcome === undefined) {
+      return "execution status not recorded by legacy report";
+    }
+    if (outcome === "not-supported") {
+      return "not-supported: declared, not executed by current runner";
+    }
+    if (outcome === "passed") {
+      return "passed: executed by runner";
+    }
+    return outcome;
   }
   function unavailableUpgradeSummary(choices) {
     const reasons = choices.targets?.flatMap((target2) => target2.reasons.map((reason) => `${target2.version}: ${reason}`));
@@ -30718,10 +30739,19 @@ ${controls_default3}`;
         cmsMediated: readText(cutover.cmsMediated),
         providerDirect: readText(cutover.providerDirect)
       },
+      ...source2.cutoverEvidence === undefined ? {} : { cutoverEvidence: cutoverEvidence(source2.cutoverEvidence) },
       rollback: readText(source2.rollback),
       pointOfNoReturn: readText(source2.pointOfNoReturn),
       delayedCleanupVerified: readBoolean(source2.delayedCleanupVerified),
       ...source2.operationalEvidence === undefined ? {} : { operationalEvidence: operationalEvidence(source2.operationalEvidence) }
+    };
+  }
+  function cutoverEvidence(value3) {
+    const source2 = readRecord(value3);
+    return {
+      cmsMediated: migrationCheck(source2.cmsMediated),
+      providerDirect: migrationCheck(source2.providerDirect),
+      activation: migrationCheck(source2.activation)
     };
   }
   function operationalEvidence(value3) {
@@ -30768,17 +30798,15 @@ ${controls_default3}`;
   }
   function checkRecord(value3) {
     const source2 = readRecord(value3);
-    return Object.fromEntries(Object.entries(source2).slice(0, 64).map(([key, value4]) => {
-      const check = readRecord(value4);
-      const evidenceDigest = readOptionalText(check.evidenceDigest);
-      return [
-        key,
-        {
-          outcome: readText(check.outcome),
-          ...evidenceDigest ? { evidenceDigest } : {}
-        }
-      ];
-    }));
+    return Object.fromEntries(Object.entries(source2).slice(0, 64).map(([key, value4]) => [key, migrationCheck(value4)]));
+  }
+  function migrationCheck(value3) {
+    const check = readRecord(value3);
+    const evidenceDigest = readOptionalText(check.evidenceDigest);
+    return {
+      outcome: readText(check.outcome),
+      ...evidenceDigest ? { evidenceDigest } : {}
+    };
   }
   function decision(value3) {
     const source2 = readRecord(value3);
@@ -31330,8 +31358,9 @@ ${controls_default3}`;
         `Outcome ${migration2.outcome}`,
         `Origin ${migration2.origin}`,
         `Runner ${migration2.runner.name} ${migration2.runner.version}`,
-        `CMS cutover ${migration2.cutover.cmsMediated}`,
-        `Provider-direct ${migration2.cutover.providerDirect}`,
+        cutoverExecution("CMS cutover", migration2.cutover.cmsMediated, migration2.cutoverEvidence?.cmsMediated.outcome),
+        cutoverExecution("Provider-direct", migration2.cutover.providerDirect, migration2.cutoverEvidence?.providerDirect.outcome),
+        executionStatus2("Activation", migration2.cutoverEvidence?.activation.outcome),
         `Rollback ${migration2.rollback}`,
         `PONR ${migration2.pointOfNoReturn}`,
         `Delayed cleanup ${migration2.delayedCleanupVerified ? "verified" : "not verified"}`,
@@ -31340,6 +31369,21 @@ ${controls_default3}`;
       report.append(codeLine2("Report digest", migration2.reportDigest), codeLine2("Runner image", migration2.runner.imageDigest), codeLine2("Environment digest", migration2.environmentDigest), list("Checks", Object.entries(migration2.checks).map(([name, result]) => `${name} · ${result.outcome}${result.evidenceDigest ? ` · ${result.evidenceDigest}` : ""}`)));
       target2.append(report);
     }
+  }
+  function cutoverExecution(label3, strategy, outcome) {
+    return `${label3} ${strategy} · ${executionStatus2("execution", outcome)}`;
+  }
+  function executionStatus2(label3, outcome) {
+    if (outcome === undefined) {
+      return `${label3} status not recorded by this legacy report`;
+    }
+    if (outcome === "not-supported") {
+      return `${label3} not-supported: declared, but not executed by the current runner`;
+    }
+    if (outcome === "passed") {
+      return `${label3} passed: executed by the runner`;
+    }
+    return `${label3} ${outcome}`;
   }
   function operationalMetadata(migration2) {
     const evidence = migration2.operationalEvidence;
