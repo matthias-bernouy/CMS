@@ -90,19 +90,13 @@ postgresTest(
 );
 
 async function runAdapter(input: VerificationSandboxInput, cwd: string) {
-    const child = Bun.spawn(
-        [
-            process.execPath,
-            join(import.meta.dir, "../../src/sandbox/postgresMain.ts"),
-        ],
-        {
-            cwd,
-            env: { PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin", LANG: "C.UTF-8", TZ: "UTC" },
-            stdin: "pipe",
-            stdout: "pipe",
-            stderr: "pipe",
-        },
-    );
+    const child = Bun.spawn([process.execPath, join(import.meta.dir, "../../src/sandbox/postgresMain.ts")], {
+        cwd,
+        env: { PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin", LANG: "C.UTF-8", TZ: "UTC" },
+        stdin: "pipe",
+        stdout: "pipe",
+        stderr: "pipe",
+    });
     child.stdin.write(canonicalJsonBytes(input));
     child.stdin.end();
     const [status, stdout, stderr] = await Promise.all([

@@ -1,7 +1,4 @@
-import {
-    readIntegrationVerifierKey,
-    readIntegrationVerifierRemoteSandboxEnv,
-} from "../config";
+import { readIntegrationVerifierKey, readIntegrationVerifierRemoteSandboxEnv } from "../config";
 import { createHttpVerificationSandbox, createSandboxCapabilitySigner } from "../sandbox";
 import type { VerificationSandbox } from "../supervisor";
 import { startVerifierHealthServer, VerificationRuntimeHealth } from "./health";
