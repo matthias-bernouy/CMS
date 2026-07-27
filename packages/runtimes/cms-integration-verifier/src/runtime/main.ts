@@ -9,7 +9,7 @@ import {
     createSandboxCapabilitySigner,
 } from "../sandbox";
 import type { VerificationSandbox } from "../supervisor";
-import { startVerifierHealthServer } from "./health";
+import { startVerifierHealthServer, VerificationRuntimeHealth } from "./health";
 import { loadDisposableVerificationDatabaseProvider } from "./provider";
 import { createProductionIntegrationVerifier } from "./production";
 import { runVerificationPullLoop } from "./pullLoop";
@@ -28,7 +28,8 @@ export async function runIntegrationVerifierExecutable(
     const databases = await loadDisposableVerificationDatabaseProvider(env.databaseProviderModule);
     const sandbox = remoteEnv ? await remoteSandbox(remoteEnv) : localSandbox(localEnv!);
     const supervisor = await createProductionIntegrationVerifier({ env: source, sandbox, databases });
-    const health = remoteEnv ? startVerifierHealthServer(remoteEnv.healthPort) : undefined;
+    const healthState = new VerificationRuntimeHealth();
+    const health = remoteEnv ? startVerifierHealthServer(remoteEnv.healthPort, healthState) : undefined;
     const controller = new AbortController();
     const stop = () => controller.abort();
     process.once("SIGTERM", stop);
@@ -39,7 +40,9 @@ export async function runIntegrationVerifierExecutable(
             signal: controller.signal,
             pollIntervalMs: env.pollIntervalMs,
             errorBackoffMs: env.errorBackoffMs,
+            onSuccess: () => healthState.success(),
             onDiagnostic(diagnostic) {
+                healthState.failure(diagnostic);
                 console.error(JSON.stringify({ event: "integration-verifier-operation-failed", ...diagnostic }));
             },
         });

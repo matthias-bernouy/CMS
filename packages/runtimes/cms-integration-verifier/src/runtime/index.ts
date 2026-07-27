@@ -12,4 +12,8 @@ export {
     type DisposableVerificationDatabaseProviderFactory,
 } from "./provider";
 export { runIntegrationVerifierExecutable } from "./main";
-export { startVerifierHealthServer } from "./health";
+export {
+    startVerifierHealthServer,
+    VerificationRuntimeHealth,
+    type VerificationRuntimeHealthSnapshot,
+} from "./health";

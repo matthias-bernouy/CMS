@@ -11,6 +11,7 @@ export type VerificationPullLoopConfig = Readonly<{
     signal: AbortSignal;
     pollIntervalMs: number;
     errorBackoffMs: number;
+    onSuccess?(): void;
     onDiagnostic?(diagnostic: VerificationPullLoopDiagnostic): void;
     sleep?(durationMs: number, signal: AbortSignal): Promise<void>;
 }>;
@@ -21,6 +22,7 @@ export async function runVerificationPullLoop(config: VerificationPullLoopConfig
     while (!config.signal.aborted) {
         try {
             const result = await config.supervisor.runNext(config.signal);
+            config.onSuccess?.();
             if (result.outcome === "idle") {
                 await sleep(config.pollIntervalMs, config.signal);
             }

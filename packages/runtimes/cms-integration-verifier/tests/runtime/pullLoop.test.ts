@@ -10,6 +10,7 @@ describe("verification pull loop", () => {
     test("polls again after idle work and stops cleanly", async () => {
         const controller = new AbortController();
         const sleeps: number[] = [];
+        let successes = 0;
         let polls = 0;
         await runVerificationPullLoop({
             supervisor: supervisor(async () => {
@@ -19,6 +20,7 @@ describe("verification pull loop", () => {
             signal: controller.signal,
             pollIntervalMs: 25,
             errorBackoffMs: 50,
+            onSuccess: () => successes++,
             async sleep(duration) {
                 sleeps.push(duration);
                 if (sleeps.length === 2) {
@@ -28,12 +30,14 @@ describe("verification pull loop", () => {
         });
 
         expect(polls).toBe(2);
+        expect(successes).toBe(2);
         expect(sleeps).toEqual([25, 25]);
     });
 
     test("backs off with a bounded diagnostic that cannot echo an unknown secret", async () => {
         const controller = new AbortController();
         const diagnostics: VerificationPullLoopDiagnostic[] = [];
+        let successes = 0;
         const secret = "worker-token-never-log";
         await runVerificationPullLoop({
             supervisor: supervisor(async () => {
@@ -42,6 +46,7 @@ describe("verification pull loop", () => {
             signal: controller.signal,
             pollIntervalMs: 25,
             errorBackoffMs: 75,
+            onSuccess: () => successes++,
             onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
             async sleep(duration) {
                 expect(duration).toBe(75);
@@ -50,6 +55,7 @@ describe("verification pull loop", () => {
         });
 
         expect(diagnostics).toEqual([{ code: "worker-operation-failed", retryable: false }]);
+        expect(successes).toBe(0);
         expect(JSON.stringify(diagnostics)).not.toContain(secret);
     });
 
