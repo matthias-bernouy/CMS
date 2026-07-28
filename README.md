@@ -40,7 +40,8 @@ CmsCore/
 |   |   |-- cms-bloc-compile/  @bernouy/cms-bloc-compile
 |   |   `-- cms-editor-system-v2/ @bernouy/cms-editor-system-v2
 |   |-- resources/
-|   |   `-- official-integrations/ @bernouy/cms-official-integrations
+|   |   |-- official-integrations/ @bernouy/cms-official-integrations
+|   |   `-- sites/                 @bernouy/cms-official-sites
 |   |-- surfaces/
 |   |   |-- cms-control/       @bernouy/cms-control
 |   |   |-- cms-repository/    @bernouy/cms-repository

@@ -1,0 +1,365 @@
+---
+title: Integration catalog
+description: Browse immutable CmsCore integrations, versions, packages, and release evidence.
+visible: true
+tags: [repository, integrations, catalog]
+---
+<main class="repository-catalog">
+    <basic-container width="wide" gutter="md">
+        <basic-stack gap="lg">
+            <header class="catalog-header">
+                <a class="catalog-brand" href="/">CmsCore Integration Repository</a>
+                <h1>Integration catalog</h1>
+                <p>Browse immutable packages and the evidence attached to every published release.</p>
+            </header>
+
+            <section
+                class="catalog-source"
+                cms-source="/.cms/repository/api/integrations/catalog?q=#{q}&amp;category=#{category}&amp;provider=#{provider}&amp;compatibility=#{compatibility}&amp;kind=#{kind}&amp;version=#{version} as catalog"
+            >
+                <basic-stack class="catalog-loading" gap="md" cms-condition="$source.loading" aria-live="polite">
+                    <basic-skeleton width="45%" height="2rem" animation="wave" label="Loading catalog"></basic-skeleton>
+                    <basic-skeleton width="100%" height="8rem" animation="wave" label="Loading integrations"></basic-skeleton>
+                    <basic-skeleton width="100%" height="8rem" animation="wave" label="Loading integrations"></basic-skeleton>
+                </basic-stack>
+
+                <basic-alert type="error" role="alert" cms-condition="$source.error">
+                    <h2 slot="title">The integration repository is unavailable</h2>
+                    <p>Try again shortly. Published sites remain available while the catalog recovers.</p>
+                </basic-alert>
+
+                <basic-alert
+                    type="error"
+                    role="alert"
+                    cms-condition="$source.loaded && catalog.schema != 'cms.repository.catalog.v1'"
+                >
+                    <h2 slot="title">Unsupported catalog response</h2>
+                    <p>This site and the repository API do not use the same public contract.</p>
+                </basic-alert>
+
+                <section
+                    class="catalog-list"
+                    cms-condition="$source.loaded && catalog.schema == 'cms.repository.catalog.v1' && catalog.view == 'list'"
+                >
+                    <form class="catalog-filters" action="/integrations" method="get">
+                        <basic-input
+                            name="q"
+                            label="Search"
+                            type="search"
+                            maxlength="128"
+                            placeholder="Name, kind, or description"
+                            cms-param-sync="q"
+                        ></basic-input>
+                        <basic-select name="category" label="Category" cms-param-sync="category">
+                            <basic-option value="">All categories</basic-option>
+                            <basic-option cms-repeat="catalog.categories as option" value="{{ option.value }}">
+                                {{ option.label }}
+                            </basic-option>
+                        </basic-select>
+                        <basic-select name="provider" label="Provider" cms-param-sync="provider">
+                            <basic-option value="">All providers</basic-option>
+                            <basic-option cms-repeat="catalog.providers as option" value="{{ option.value }}">
+                                {{ option.label }}
+                            </basic-option>
+                        </basic-select>
+                        <basic-select name="compatibility" label="Compatibility" cms-param-sync="compatibility">
+                            <basic-option value="">All outcomes</basic-option>
+                            <basic-option
+                                cms-repeat="catalog.compatibilityOutcomes as option"
+                                value="{{ option.value }}"
+                            >
+                                {{ option.label }}
+                            </basic-option>
+                        </basic-select>
+                        <basic-button action="link" href="/integrations" appearance="ghost">Clear filters</basic-button>
+                    </form>
+
+                    <p class="catalog-count" role="status">
+                        Showing <strong>{{ catalog.count }}</strong> of {{ catalog.total }} integrations
+                    </p>
+
+                    <basic-alert type="info" role="status" cms-condition="catalog.count == 0">
+                        <h2 slot="title">No matching integrations</h2>
+                        <p>Change or clear the filters to browse the complete catalog.</p>
+                    </basic-alert>
+
+                    <basic-grid
+                        class="integration-grid"
+                        min="md"
+                        max="lg"
+                        gap="lg"
+                        cms-condition="catalog.count > 0"
+                    >
+                        <basic-card
+                            class="integration-card"
+                            appearance="outlined"
+                            density="regular"
+                            stretch
+                            cms-repeat="catalog.integrations as integration"
+                        >
+                            <h2 slot="title">
+                                <a href="{{ integration.detailsUrl }}">{{ integration.label }}</a>
+                            </h2>
+                            <p slot="description">{{ integration.description }}</p>
+                            <div class="badge-row">
+                                <basic-badge color="neutral" variant="soft">{{ integration.category }}</basic-badge>
+                                <basic-badge color="neutral" variant="outline">
+                                    {{ integration.compatibilityLabel }}
+                                </basic-badge>
+                                <basic-badge color="warning" variant="soft" cms-condition="integration.compatibilityWarning">
+                                    Review advised
+                                </basic-badge>
+                            </div>
+                            <dl class="catalog-metadata">
+                                <div><dt>Stable</dt><dd>{{ integration.stable }}</dd></div>
+                                <div><dt>Latest</dt><dd>{{ integration.latest }}</dd></div>
+                            </dl>
+                            <ul class="inline-list" aria-label="Technical providers">
+                                <li cms-repeat="integration.technicalProviders as provider">{{ provider.label }}</li>
+                            </ul>
+                            <ul class="artifact-list" aria-label="Included artifact types">
+                                <li cms-repeat="integration.artifacts as artifact">
+                                    {{ artifact.label }} <strong>{{ artifact.count }}</strong>
+                                </li>
+                            </ul>
+                            <basic-button slot="actions" action="link" href="{{ integration.detailsUrl }}" appearance="outlined">
+                                View integration
+                            </basic-button>
+                        </basic-card>
+                    </basic-grid>
+                </section>
+
+                <article
+                    class="catalog-detail"
+                    cms-condition="$source.loaded && catalog.schema == 'cms.repository.catalog.v1' && catalog.view == 'integration'"
+                >
+                    <doc-breadcrumb>
+                        <a href="/">Home</a><span aria-hidden="true">/</span>
+                        <a href="/integrations">Integrations</a><span aria-hidden="true">/</span>
+                        <span>{{ catalog.label }}</span>
+                    </doc-breadcrumb>
+                    <header class="detail-header">
+                        <p class="detail-eyebrow">{{ catalog.kind }}</p>
+                        <h1>{{ catalog.label }}</h1>
+                        <p>{{ catalog.description }}</p>
+                        <div class="badge-row">
+                            <basic-badge color="neutral" variant="soft">{{ catalog.category }}</basic-badge>
+                            <basic-badge color="neutral" variant="outline">{{ catalog.compatibilityLabel }}</basic-badge>
+                            <basic-badge color="warning" variant="soft" cms-condition="catalog.compatibilityWarning">
+                                Compatibility warning
+                            </basic-badge>
+                        </div>
+                    </header>
+
+                    <basic-grid min="sm" max="md" gap="md" class="summary-grid">
+                        <basic-card appearance="outlined" density="compact">
+                            <h2 slot="title">Stable channel</h2><code>{{ catalog.stable }}</code>
+                        </basic-card>
+                        <basic-card appearance="outlined" density="compact">
+                            <h2 slot="title">Latest release</h2><code>{{ catalog.latest }}</code>
+                        </basic-card>
+                    </basic-grid>
+
+                    <section class="detail-section">
+                        <h2>Version history</h2>
+                        <basic-stack gap="md">
+                            <basic-card
+                                class="version-card"
+                                appearance="outlined"
+                                density="compact"
+                                cms-repeat="catalog.versions as item"
+                            >
+                                <h3 slot="title"><a href="{{ item.detailsUrl }}">{{ item.version }}</a></h3>
+                                <div class="badge-row">
+                                    <basic-badge color="success" variant="soft" cms-condition="item.isStable">Stable</basic-badge>
+                                    <basic-badge color="primary" variant="soft" cms-condition="item.isLatest">Latest</basic-badge>
+                                    <basic-badge color="neutral" variant="outline">{{ item.compatibilityLabel }}</basic-badge>
+                                    <basic-badge color="warning" variant="soft" cms-condition="item.compatibilityWarning">
+                                        Review advised
+                                    </basic-badge>
+                                </div>
+                                <dl class="catalog-metadata">
+                                    <div><dt>Package</dt><dd>{{ item.packageSize }}</dd></div>
+                                    <div><dt>Release</dt><dd>{{ item.releaseStatus }}</dd></div>
+                                    <div><dt>Verification</dt><dd>{{ item.verificationOutcome }}</dd></div>
+                                </dl>
+                                <div slot="actions" class="card-actions">
+                                    <basic-button action="link" href="{{ item.detailsUrl }}" appearance="outlined">
+                                        Inspect release
+                                    </basic-button>
+                                    <basic-button action="link" href="{{ item.downloadUrl }}">Download package</basic-button>
+                                </div>
+                            </basic-card>
+                        </basic-stack>
+                    </section>
+
+                    <section class="detail-section" cms-condition="catalog.featuredVersion">
+                        <h2>Featured release</h2>
+                        <basic-card appearance="elevated" density="regular">
+                            <h3 slot="title">{{ catalog.featuredVersion.version }}</h3>
+                            <p>Package size: {{ catalog.featuredVersion.packageSize }}</p>
+                            <p>Compatibility: {{ catalog.featuredVersion.compatibilityLabel }}</p>
+                            <div slot="actions" class="card-actions">
+                                <basic-button
+                                    action="link"
+                                    href="{{ catalog.featuredVersion.detailsUrl }}"
+                                    appearance="outlined"
+                                >Inspect release</basic-button>
+                                <basic-button action="link" href="{{ catalog.featuredVersion.downloadUrl }}">
+                                    Download package
+                                </basic-button>
+                            </div>
+                        </basic-card>
+                    </section>
+                </article>
+
+                <article
+                    class="catalog-detail"
+                    cms-condition="$source.loaded && catalog.schema == 'cms.repository.catalog.v1' && catalog.view == 'version'"
+                >
+                    <doc-breadcrumb>
+                        <a href="/">Home</a><span aria-hidden="true">/</span>
+                        <a href="/integrations">Integrations</a><span aria-hidden="true">/</span>
+                        <a href="{{ catalog.integrationUrl }}">{{ catalog.label }}</a><span aria-hidden="true">/</span>
+                        <span>{{ catalog.version }}</span>
+                    </doc-breadcrumb>
+                    <header class="detail-header">
+                        <p class="detail-eyebrow">{{ catalog.kind }}</p>
+                        <h1>{{ catalog.label }} {{ catalog.version }}</h1>
+                        <div class="badge-row">
+                            <basic-badge color="success" variant="soft" cms-condition="catalog.isStable">Stable</basic-badge>
+                            <basic-badge color="primary" variant="soft" cms-condition="catalog.isLatest">Latest</basic-badge>
+                            <basic-badge color="neutral" variant="outline" cms-condition="catalog.release">
+                                {{ catalog.release.status }}
+                            </basic-badge>
+                        </div>
+                    </header>
+
+                    <basic-grid min="sm" max="md" gap="md" class="summary-grid">
+                        <basic-card appearance="outlined" density="compact">
+                            <h2 slot="title">Package</h2>
+                            <p>{{ catalog.packageSize }}</p>
+                            <code class="digest">{{ catalog.packageDigest }}</code>
+                            <basic-button slot="actions" action="link" href="{{ catalog.downloadUrl }}">
+                                Download package
+                            </basic-button>
+                        </basic-card>
+                        <basic-card appearance="outlined" density="compact" cms-condition="catalog.release">
+                            <h2 slot="title">Admission</h2>
+                            <p>Status: <strong>{{ catalog.release.status }}</strong></p>
+                            <p cms-condition="catalog.release.installable">Available for new installations.</p>
+                            <p cms-condition="!catalog.release.installable">Not available for new installations.</p>
+                            <p cms-condition="catalog.release.freshInstallOnly">Fresh installations only.</p>
+                        </basic-card>
+                    </basic-grid>
+
+                    <section class="detail-section">
+                        <h2>Technical providers</h2>
+                        <ul class="inline-list">
+                            <li cms-repeat="catalog.providers as provider">{{ provider.label }}</li>
+                        </ul>
+                    </section>
+
+                    <section class="detail-section">
+                        <h2>Artifacts</h2>
+                        <ul class="artifact-list">
+                            <li cms-repeat="catalog.artifacts as artifact">
+                                {{ artifact.label }} <strong>{{ artifact.count }}</strong>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="detail-section">
+                        <h2>Dependencies</h2>
+                        <p cms-condition="catalog.dependencies.length == 0">This version has no integration dependencies.</p>
+                        <ul class="dependency-list" cms-condition="catalog.dependencies.length > 0">
+                            <li cms-repeat="catalog.dependencies as dependency">
+                                <a href="{{ dependency.integrationUrl }}">{{ dependency.name }}</a>
+                                <code>{{ dependency.versionRange }}</code>
+                                <span cms-condition="dependency.optional">Optional</span>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="detail-section" cms-condition="catalog.compatibility">
+                        <h2>Compatibility</h2>
+                        <basic-card appearance="outlined" density="compact">
+                            <h3 slot="title">{{ catalog.compatibilityLabel }}</h3>
+                            <p>Current report: <code>{{ catalog.compatibility.currentReportId }}</code></p>
+                            <p>Required release level: {{ catalog.compatibility.current.requiredReleaseLevel }}</p>
+                            <basic-alert type="warning" role="status" cms-condition="catalog.compatibility.warning">
+                                A newer compatibility revision changes the original report.
+                            </basic-alert>
+                            <ul class="finding-list">
+                                <li cms-repeat="catalog.compatibility.current.findings as finding">
+                                    <strong>{{ finding.code }}</strong> — {{ finding.message }}
+                                </li>
+                            </ul>
+                        </basic-card>
+                    </section>
+
+                    <section class="detail-section" cms-condition="catalog.release.verification">
+                        <h2>Verification</h2>
+                        <basic-card appearance="outlined" density="compact">
+                            <h3 slot="title">{{ catalog.release.verification.outcome }}</h3>
+                            <p>
+                                {{ catalog.release.verification.origin }} · {{ catalog.release.verification.runner.name }}
+                                {{ catalog.release.verification.runner.version }}
+                            </p>
+                            <ul class="verification-list">
+                                <li cms-repeat="catalog.release.verification.results as result">
+                                    <strong>{{ result.suiteId }}</strong> — {{ result.outcome }} ({{ result.durationMs }} ms)
+                                </li>
+                            </ul>
+                        </basic-card>
+                    </section>
+
+                    <section class="detail-section" cms-condition="catalog.release.migrations.length > 0">
+                        <h2>Migration evidence</h2>
+                        <basic-stack gap="md">
+                            <basic-card
+                                appearance="outlined"
+                                density="compact"
+                                cms-repeat="catalog.release.migrations as migration"
+                            >
+                                <h3 slot="title">From {{ migration.source.version }}</h3>
+                                <p>Outcome: <strong>{{ migration.outcome }}</strong></p>
+                                <p>Supported source range: <code>{{ migration.supportedSourceRange }}</code></p>
+                                <ul class="verification-list">
+                                    <li cms-repeat="migration.checks as check">
+                                        {{ check.name }} — <strong>{{ check.outcome }}</strong>
+                                    </li>
+                                </ul>
+                            </basic-card>
+                        </basic-stack>
+                    </section>
+
+                    <section class="detail-section" cms-condition="catalog.instructions.length > 0">
+                        <h2>Instructions</h2>
+                        <basic-card appearance="outlined" density="regular" cms-repeat="catalog.instructions as instruction">
+                            <h3 slot="title">{{ instruction.title }}</h3>
+                            <div class="markdown">{{ instruction.html | innerHTML }}</div>
+                        </basic-card>
+                    </section>
+
+                    <section class="detail-section">
+                        <h2>Release notes</h2>
+                        <div class="markdown" cms-condition="catalog.releaseNotesHtml">
+                            {{ catalog.releaseNotesHtml | innerHTML }}
+                        </div>
+                        <p cms-condition="!catalog.releaseNotesHtml">No release notes are available for this version.</p>
+                        <basic-button
+                            action="link"
+                            href="{{ catalog.releaseNotesDownloadUrl }}"
+                            appearance="ghost"
+                            size="sm"
+                            cms-condition="catalog.releaseNotesDownloadUrl"
+                        >
+                            Download raw release notes
+                        </basic-button>
+                    </section>
+                </article>
+            </section>
+        </basic-stack>
+    </basic-container>
+</main>

@@ -40,6 +40,9 @@ Resource packages:
   versioned CMS integration resources. It stores manifests, source contracts,
   connector assets, and deployment blueprints without executing installs. It may
   depend on feature contracts to express typed integration definitions.
+- `@bernouy/cms-official-sites`: pushable CMS-authored sites built from pages,
+  themes, bindings, and existing integration Blocs. It includes the public
+  repository hub without mounting routes or selecting runtime adapters.
 
 Feature packages:
 

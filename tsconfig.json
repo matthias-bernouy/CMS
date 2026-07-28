@@ -5,6 +5,7 @@
         { "path": "packages/foundation/envelope-crypto" },
         { "path": "packages/foundation/rate-limiter" },
         { "path": "packages/resources/official-integrations" },
+        { "path": "packages/resources/sites" },
         { "path": "packages/features/cms-auth" },
         { "path": "packages/features/cms-secrets" },
         { "path": "packages/features/cms-files" },
