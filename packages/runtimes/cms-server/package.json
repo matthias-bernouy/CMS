@@ -31,6 +31,7 @@
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-analytics":   "workspace:*",
         "@bernouy/cms-repository":  "workspace:*",
+        "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/cms-control":     "workspace:*",
         "@bernouy/cms-delivery":    "workspace:*",
         "mongodb": "^7.2.0"

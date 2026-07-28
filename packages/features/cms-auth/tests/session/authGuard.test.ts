@@ -59,6 +59,26 @@ describe("createAuthGuard role access", () => {
         }
     });
 
+    test("lets API surfaces replace the browser login redirect", async () => {
+        const guard = createAuthGuard<Role>({
+            basePath: "/.cms/management",
+            auth: new TestAuthentication<Role>(async () => null),
+            requiredRole: "admin",
+            onUnauthenticated: (_request, context) =>
+                Response.json({ code: "unauthorized", loginUrl: context.loginUrl }, { status: 401 }),
+        });
+
+        const response = await guard(new Request("http://localhost/.cms/management/status"), async () => {
+            throw new Error("unexpected downstream call");
+        });
+
+        expect(response.status).toBe(401);
+        expect(await response.json()).toEqual({
+            code: "unauthorized",
+            loginUrl: "/login?returnTo=%2F.cms%2Fmanagement%2Fstatus",
+        });
+    });
+
     test("still lets downstream failures escape the guard", async () => {
         const authentication = new TestAuthentication<Role>(async () => ({
             identifier: "admin-1",

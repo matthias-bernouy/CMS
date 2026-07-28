@@ -1,4 +1,8 @@
 import type { RuntimeEnv } from "../runtimeEnv";
+import {
+    mountCmsRepositoryManagementGateway,
+    type RepositoryManagementGatewayTransport,
+} from "@bernouy/cms-repository-management/gateway";
 import type { ScheduledTriggerRunner } from "@bernouy/cms-triggers";
 import {
     CmsSourceBindingMigrationHandler,
@@ -9,7 +13,7 @@ import type { ProductionAuthentication } from "./auth";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
 import type { FeatureStores } from "./stores/features";
-import { productionRepositoryReadConfig } from "./repositoryReads";
+import { productionRepositoryReadConfig } from "./repository";
 import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
@@ -25,6 +29,7 @@ type MountOptions = {
     features: FeatureStores;
     integrations: ProductionIntegrationServices;
     authentication: ProductionAuthentication;
+    repositoryManagementGateway?: RepositoryManagementGatewayTransport;
 };
 
 export async function mountProductionSurfaces(
@@ -87,6 +92,14 @@ export async function mountProductionSurfaces(
             report: runtime.log,
         });
     const controlRunner = new runtime.Runner();
+    if (options.repositoryManagementGateway) {
+        mountCmsRepositoryManagementGateway({
+            runner: controlRunner,
+            authentication: authentication.auth,
+            requiredRole: "admin",
+            transport: options.repositoryManagementGateway,
+        });
+    }
     const controlCms = new runtime.Control(
         controlRunner,
         core.repo,

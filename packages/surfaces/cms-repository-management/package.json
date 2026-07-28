@@ -6,7 +6,8 @@
     "type": "module",
     "main": "./src/index.ts",
     "exports": {
-        ".": "./src/index.ts"
+        ".": "./src/index.ts",
+        "./gateway": "./src/gateway/index.ts"
     },
     "files": [
         "src/",
@@ -15,6 +16,7 @@
         "README.md"
     ],
     "dependencies": {
+        "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",

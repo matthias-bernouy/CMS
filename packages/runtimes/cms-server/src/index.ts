@@ -6,8 +6,10 @@ import { createCoreStores } from "./runtime/stores/core";
 import { createFeatureStores } from "./runtime/stores/features";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { readRuntimeEnv } from "./runtimeEnv";
+import { createProductionRepositoryManagementGateway } from "./runtime/repository";
 
 const env = readRuntimeEnv(process.env);
+const repositoryManagementGateway = await createProductionRepositoryManagementGateway(env.repositoryManagementGateway);
 await validateCmsStorageRoots(env.CMS_FILES_DIR, env.CMS_INTEGRATION_PACKAGE_CACHE_DIR);
 
 const core = await createCoreStores(env);
@@ -32,6 +34,7 @@ const scheduledTriggers = await mountProductionSurfaces({
     features,
     integrations,
     authentication,
+    ...(repositoryManagementGateway ? { repositoryManagementGateway } : {}),
 });
 
 let stopping = false;

@@ -7,9 +7,9 @@ import type {
     RepositoryProjectedReleaseReader,
     RepositoryVerificationBundleReader,
 } from "@bernouy/cms-repository";
-import type { RuntimeEnv } from "../runtimeEnv";
-import type { ProductionIntegrationServices } from "./integrations";
-import type { CoreStores } from "./stores/core";
+import type { RuntimeEnv } from "../../runtimeEnv";
+import type { ProductionIntegrationServices } from "../integrations";
+import type { CoreStores } from "../stores/core";
 
 type RepositoryReadEnv = Pick<RuntimeEnv, "CMS_HTTP_CLIENT_ADDRESS_MODE" | "CMS_HTTP_TRUSTED_PROXY_HOPS">;
 

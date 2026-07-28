@@ -13,6 +13,7 @@ export interface AuthGuardContext<Role extends string> {
     basePath: string;
     auth: Authentication<Role>;
     requiredRole: Role;
+    onUnauthenticated?: (req: Request, ctx: { loginUrl: string }) => Response | Promise<Response>;
     onForbidden?: (req: Request, ctx: { basePath: string; logoutUrl: string }) => Response | Promise<Response>;
 }
 
@@ -63,6 +64,9 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
 
         if (!subject) {
             const loginUrl = ctx.auth.buildLoginUrl(url.pathname);
+            if (ctx.onUnauthenticated) {
+                return ctx.onUnauthenticated(req, { loginUrl });
+            }
             return new Response(null, {
                 status: 302,
                 headers: { "Location": loginUrl },

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { productionRepositoryReadConfig } from "../../src/runtime/repositoryReads";
+import { productionRepositoryReadConfig } from "../../src/runtime/repository";
 
 describe("production repository read composition", () => {
     test("injects the dedicated limiter with the configured trusted ingress suffix", () => {

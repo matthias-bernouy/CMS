@@ -9,6 +9,10 @@ import {
     requiredEnv,
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
+import {
+    parseRepositoryManagementGatewayConfig,
+    type RepositoryManagementGatewayRuntimeConfig,
+} from "./runtime/repository";
 
 export { parsePort } from "./runtimeEnvParsing";
 
@@ -44,6 +48,7 @@ export type RuntimeEnv = {
     CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: number;
     CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: number;
     CMS_REPOSITORY_HUB_FACADE_ENABLED: boolean;
+    repositoryManagementGateway?: RepositoryManagementGatewayRuntimeConfig;
     integrationRepository: Readonly<{ url: string }>;
 };
 
@@ -57,6 +62,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const CONTROL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
     const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
     const clientAddress = parseClientAddressConfig(source);
+    const repositoryManagementGateway = parseRepositoryManagementGatewayConfig(source);
 
     return {
         CONTROL_PORT,
@@ -153,6 +159,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             "CMS_REPOSITORY_HUB_FACADE_ENABLED",
             false,
         ),
+        ...(repositoryManagementGateway ? { repositoryManagementGateway } : {}),
         integrationRepository: parseIntegrationRepository(source),
     };
 }
