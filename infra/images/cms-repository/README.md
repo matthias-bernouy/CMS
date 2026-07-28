@@ -186,12 +186,18 @@ p9r repository publish /path/to/integration
 
 The external path remains `/.cms/repository-management`, but it is mounted by
 the CMS Control listener. The gateway uses an exact method-and-path allow-list,
-bounds request bodies, removes the operator's `Authorization` header, and
-authenticates its private upstream request with the file mounted by
-`repository-hub.override.yml`. Maintenance baseline/backfill endpoints,
-verifier worker endpoints, health probes, and public catalog reads are not
-exposed by this gateway. Demoting the user or revoking the PAT takes effect
-without rotating the internal repository credential.
+bounds request bodies, limits candidate buffering to one concurrent upload,
+and cancels a stalled body read after two minutes. It removes the operator's
+`Authorization` header and authenticates its private upstream request with the
+file mounted by `repository-hub.override.yml`. Maintenance baseline/backfill
+endpoints, verifier worker endpoints, health probes, and public catalog reads
+are not exposed by this gateway. Demoting the user or revoking the PAT takes
+effect without rotating the internal repository credential.
+
+The authenticated identifier is retained on the candidate and its bounded
+pruned-candidate audit record. It is not yet a permanent publisher signature;
+durable third-party publisher identity and signing remain a separate trust-model
+upgrade.
 
 ## Empty-volume bootstrap policy
 
@@ -251,12 +257,22 @@ to make the document structurally valid: `--dry-run` then reports the exact
 any later runtime-package change intentionally makes that binding stale again.
 
 An absent version enters the normal candidate verification and publication
-workflow. An existing coordinate with the same package digest is reported as
-`UNCHANGED` and skipped, even if its later release state is blocked or no longer
-admissible. The same coordinate with different bytes is an immutable-version
-conflict and returns `409`; any hard failure stops the remaining versions.
-Stable promotion and emergency blocking remain explicit management operations,
-separate from publication.
+workflow. An existing coordinate is reported as `UNCHANGED` only when both its
+package and verification digests match the rebuilt candidate, even if its later
+release state is blocked or no longer admissible. Any digest mismatch is an
+immutable-version conflict and returns `409`; any hard failure stops the
+remaining versions. Stable promotion, emergency blocking, and compatibility
+reevaluation remain explicit management operations, separate from publication:
+
+```bash
+p9r repository promote-stable commerce 1.1.0 --reason="Approved release"
+p9r repository block commerce 1.1.0 --reason="Confirmed security regression"
+p9r repository reevaluate commerce 1.1.0 --reason="Compatibility policy update"
+```
+
+These commands read the current immutable report and decision references before
+submitting their compare-and-swap mutation. They use the same manager CMS URL
+and administrator PAT as publication.
 
 ### Publishing the official catalog
 
@@ -283,10 +299,10 @@ Prefer the normal credentials store over an inline `P9R_TOKEN` on an operator
 machine. The environment form is useful for a secret-scoped CI step.
 
 Packages are published sequentially by kind and ascending SemVer. Re-running
-the command is idempotent only when the registry's immutable existing digest
-exactly matches the rebuilt package. A digest conflict, compatibility rejection,
-rate limit, invalid response, timeout, or transport failure returns a non-zero
-exit status.
+the command is idempotent only when the registry's immutable package and
+verification digests exactly match the rebuilt candidate. A digest conflict,
+compatibility rejection, rate limit, invalid response, timeout, or transport
+failure returns a non-zero exit status.
 
 `.github/workflows/publish-official-integrations.yml` exposes the same operation
 through both `workflow_dispatch` and `workflow_call`. Every run first executes a
@@ -299,6 +315,13 @@ scoped only to the validation and publication steps. Image builds and pulls
 never invoke this workflow automatically. The first empty-volume seed is
 performed locally by the repository runtime; every later official update
 remains an explicit, reviewable publication operation.
+
+The fixed, protected `integration-repository` GitHub environment owns both
+destinations as environment variables: `REPOSITORY_CMS_URL` for the public CMS
+Control origin and `REPOSITORY_MAINTENANCE_URL` for the private listener. They
+are deliberately not workflow inputs, so an invoker cannot redirect either
+credential to an arbitrary host. The same environment owns the `P9R_TOKEN` and
+`REPOSITORY_MAINTENANCE_TOKEN` secrets.
 
 ## Probes and shutdown
 

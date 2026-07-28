@@ -54,6 +54,12 @@ Usage:
                                    Deterministically build and publish every
                                    official integration package through the
                                    authenticated repository CMS gateway.
+  p9r repository promote-stable <kind> <version> [--reason=<text>]
+                                   Promote an admitted version to stable.
+  p9r repository block <kind> <version> --reason=<text>
+                                   Block installs and repair release channels.
+  p9r repository reevaluate <kind> <version> --reason=<text>
+                                   Reevaluate immutable compatibility evidence.
   p9r repository import-official-schema-baselines [--dry-run]
                                    Import reviewed legacy SQL baselines through
                                    the separate maintenance capability.
@@ -96,18 +102,23 @@ try {
         case "files":
             await CLI_filesReindex(rest);
             break;
-        case "repository":
-            process.exitCode =
-                rest[0] === "import-official-schema-baselines"
+        case "repository": {
+            const repositoryCommand = rest[0] ?? "";
+            process.exitCode = ["promote-stable", "block", "reevaluate"].includes(repositoryCommand)
+                ? await (
+                      await import("./repositoryPublication/candidate/operator/command")
+                  ).runRepositoryOperatorCommand(rest)
+                : repositoryCommand === "import-official-schema-baselines"
+                  ? await (
+                        await import("./repositoryPublication/baselineImportCommand")
+                    ).runRepositoryBaselineImportCommand(rest)
+                  : repositoryCommand === "backfill-official-verification"
                     ? await (
-                          await import("./repositoryPublication/baselineImportCommand")
-                      ).runRepositoryBaselineImportCommand(rest)
-                    : rest[0] === "backfill-official-verification"
-                      ? await (
-                            await import("./repositoryPublication/maintenance/backfillCommand")
-                        ).runRepositoryVerificationBackfillCommand(rest)
-                      : await (await import("./repositoryPublication/command")).runRepositoryPublicationCommand(rest);
+                          await import("./repositoryPublication/maintenance/backfillCommand")
+                      ).runRepositoryVerificationBackfillCommand(rest)
+                    : await (await import("./repositoryPublication/command")).runRepositoryPublicationCommand(rest);
             break;
+        }
         case undefined:
         case "help":
         case "--help":
