@@ -355,7 +355,7 @@ mirror `/.cms/repository` on its own Delivery domain. It therefore never exposes
 its integration cache, installation records, answers, secrets, or repository
 packages through those routes.
 
-The designated repository-management CMS is the sole exception: it mounts a
+The designated repository hub CMS is the sole exception: it mounts a
 same-origin `/.cms/repository` facade for the CMS-authored public hub. Exact
 packages include the complete integration sources, so that facade applies a
 fixed-window download limit before fetching a package from the canonical
@@ -372,10 +372,12 @@ an incorrect count can group unrelated clients or reject valid downloads.
 `CMS_HTTP_CLIENT_ADDRESS_MODE` is intentionally independent of
 `ANALYTICS_TRUST_PROXY`. Do not enable trusted-proxy mode for a directly exposed
 listener, and do not rely on client-supplied forwarding headers. The base
-Compose file carries these settings because it is also used by the management
-CMS; they are inert for ordinary CMS instances that do not mount the facade.
+Compose file carries these settings because it is also used by the repository
+hub CMS; they are inert for ordinary CMS instances that do not mount the
+facade.
 The configuration-safe runtime default is `disabled`, but this Compose file
-explicitly enables the management facade limiter even when no CDN is installed.
+configures client-address resolution for the repository hub facade even when no
+CDN is installed. Ordinary CMS instances do not mount that facade.
 
 `CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT` defaults to 60 accepted package GETs
 per client within the 60-second
@@ -389,10 +391,7 @@ not required for the origin limiter to be active.
 
 | Variable | Purpose |
 | --- | --- |
-| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL` | Internal management API base URL for the one designated repository-management CMS. Configure it only through the management override. |
-| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE` | Absolute in-container path to the shared management-token secret. Token bytes are read server-side and never sent to the browser. |
-| `P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER` | Exact opaque authentication subject allowed to open the repository console and gateway routes. Roles alone do not grant this capability. |
-| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS` | Bounded private upstream timeout; defaults to 60 seconds in the management override. |
+| `CMS_REPOSITORY_HUB_FACADE_ENABLED` | Defaults to `false`. Set only through `repository-hub.override.yml` on the CMS-authored public repository hub. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Optional SMTP connection settings forwarded when deploying Supabase connector functions. |
 | `SMTP_USER`, `SMTP_PASSWORD` | Optional SMTP credentials forwarded to those functions. |
 | `SMTP_FROM`, `SMTP_REPLY_TO` | Optional sender settings forwarded to those functions. |
@@ -412,24 +411,20 @@ a materialized digest, or recovery from a missing/corrupt cache object fails
 closed until the exact package is available again. The runtime never substitutes
 an image-embedded package for the recorded version.
 
-The designated management CMS additionally mounts the same-origin public
-repository facade and exposes `/admin/repository` through authenticated
-Control. Deploy `packages/resources/sites/cms-repository-hub` to that instance
-to publish the searchable `/integrations` page; the runtime has no generated UI
-fallback when this CMS resource has not been pushed. The console can inspect
-health, versions and
-compatibility history, upload an immutable package, append a compatibility
-reassessment, and explicitly promote a report-backed version to `stable`.
-Only the exact configured subject can reach the page or its `/api/repository/*`
-management gateway. Browser requests remain same-origin and never contain the
-internal management URL, Bearer token, report actors, filesystem paths, or raw
-upstream responses.
+The designated hub CMS additionally mounts the same-origin public repository
+facade. Deploy `packages/resources/sites/cms-repository-hub` to that instance to
+publish the searchable `/integrations` page; the runtime has no generated UI
+fallback when this CMS resource has not been pushed. The hub exposes only
+public catalog data and never receives repository management, maintenance, or
+verifier credentials.
 
-Use `infra/images/cms-repository/management-cms.override.yml` only for that CMS
-instance. Every ordinary CMS must configure the anonymous
-`P9R_INTEGRATION_REPOSITORY_URL`, but must leave every management variable unset;
-that keeps the private capability, same-origin facade, and navigation entry
-absent.
+Use `infra/images/cms-repository/repository-hub.override.yml` only for that CMS
+instance. Every ordinary CMS configures the anonymous
+`P9R_INTEGRATION_REPOSITORY_URL` but leaves
+`CMS_REPOSITORY_HUB_FACADE_ENABLED=false`, so its Delivery listener never
+mirrors repository routes. Remote publication is a `p9r repository` CLI concern;
+the optional dedicated TLS ingress and token-file procedure live in
+`infra/images/cms-repository/README.md`.
 
 Configure Supabase connector deployments after the CMS is running: open
 **Settings → Connector providers → Supabase**, then enter the project reference

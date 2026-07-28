@@ -44,6 +44,7 @@ composeTest("enables package download protection for the standard proxy topology
         CMS_HTTP_TRUSTED_PROXY_HOPS: "1",
         CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: "60",
         CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: "60",
+        CMS_REPOSITORY_HUB_FACADE_ENABLED: "false",
         ANALYTICS_TRUST_PROXY: "false",
     });
 });
@@ -69,6 +70,7 @@ test("documents the protected one-hop default without a repository read token", 
     expect(instanceEnvExampleSource).toContain("CMS_HTTP_TRUSTED_PROXY_HOPS=1");
     expect(instanceEnvExampleSource).toContain("CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT=60");
     expect(instanceEnvExampleSource).toContain("CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS=60");
+    expect(instanceEnvExampleSource).toContain("CMS_REPOSITORY_HUB_FACADE_ENABLED=false");
     expect(instanceComposeSource).not.toContain("P9R_INTEGRATION_REPOSITORY_TOKEN");
     expect(instanceEnvExampleSource).not.toContain("P9R_INTEGRATION_REPOSITORY_TOKEN");
 });

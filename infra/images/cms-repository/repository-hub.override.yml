@@ -1,0 +1,14 @@
+# Attach only the CMS-authored public repository hub to the repository network.
+# Apply this file together with that CMS instance's regular compose.yml.
+services:
+    cms:
+        environment:
+            CMS_REPOSITORY_HUB_FACADE_ENABLED: "true"
+            P9R_INTEGRATION_REPOSITORY_URL: http://cms-repository:3001/.cms/repository
+        networks:
+            cms_repository: {}
+
+networks:
+    cms_repository:
+        external: true
+        name: ${CMS_REPOSITORY_NETWORK_NAME:-cms_repository}

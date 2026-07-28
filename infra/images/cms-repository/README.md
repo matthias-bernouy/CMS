@@ -4,14 +4,15 @@ This image runs `@bernouy/cms-repository-server` without MongoDB or S3. It has
 two listeners on one dedicated internal Docker network:
 
 - port 3001 serves anonymous repository reads under `/.cms/repository`;
-- port 3000 accepts authenticated management routes under
-  `/.cms/repository-management`.
+- port 3000 is the internal operations listener. Its separately authenticated
+  management, maintenance, and verifier protocols share the
+  `/.cms/repository-management` prefix.
 
-Neither listener is published to the host or attached to public ingress. The
-designated management CMS joins `cms_repository`: its Delivery side provides
-the canonical public origin and its Control side is the only holder of the
-management credential. Public reads have no token, including complete package
-downloads.
+Neither listener is published to the host or attached to public ingress in the
+base stack. The designated repository hub CMS joins `cms_repository` only to
+provide the canonical anonymous Delivery origin. Public reads have no token,
+including complete package downloads. Integration publication is a CLI
+operation; the hub CMS does not hold a management credential.
 
 ## Build and prepare
 
@@ -107,48 +108,31 @@ only durable writable location; `/tmp` is owned by UID/GID 1000, bounded,
 non-executable, and erased on restart. Back up the registry volume independently
 from CMS media and package caches.
 
-## Management CMS connection
+## Public repository hub CMS connection
 
-Run the designated CMS instance with its normal Compose file plus
-`management-cms.override.yml`. The override joins the internal network and
-mounts the same Docker secret server-side. It also points the CMS runtime at
-`http://cms-repository:3001/.cms/repository`, so definition and package
-consumption use the global catalog immediately. Delivery provides the canonical
-anonymous origin, while authenticated Control operations use the private
-`http://cms-repository:3000/.cms/repository-management` listener. The
-credential never enters Delivery responses or browser code.
-
-The separate maintenance credential is reserved for official operations
-automation such as reviewed schema-baseline import. It is deliberately absent
-from `management-cms.override.yml`, so neither the CMS nor its administrators
-can use maintenance-only routes. The runtime refuses to start if management and
-maintenance secret files contain the same token.
-
-Before applying the override, identify the one administrator by its stable
-opaque user `sub` (visible in the Control Users response and detail URL), not by
-email, and add these values to that CMS instance's private `.env`. The read URL
-is repeated because Compose expands required variables in the base file before
-merging the management override; the rendered service still receives the same
-internal URL from the override:
+Run the CMS-authored hub with its normal Compose file plus
+`repository-hub.override.yml`. The override joins the internal repository
+network, enables the anonymous same-origin catalog facade, and points it at
+`http://cms-repository:3001/.cms/repository`. It mounts no secret and does not
+enable repository administration in Control. The read URL is repeated because
+Compose expands required values in the base file before merging the override:
 
 ```dotenv
 P9R_INTEGRATION_REPOSITORY_URL=http://cms-repository:3001/.cms/repository
-P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER=<opaque-user-sub>
-CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE=/opt/cms-repository/secrets/repository-management-token
 CMS_REPOSITORY_NETWORK_NAME=cms_repository
 ```
 
-Then render and start the designated CMS with both files. No ordinary CMS uses
-this override or receives the management secret:
+Then render and start the designated hub CMS with both files. No ordinary CMS
+uses this override:
 
 ```bash
 docker compose \
   -f /path/to/cms/compose.yml \
-  -f /path/to/cms-repository/management-cms.override.yml \
+  -f /path/to/cms-repository/repository-hub.override.yml \
   config --quiet
 docker compose \
   -f /path/to/cms/compose.yml \
-  -f /path/to/cms-repository/management-cms.override.yml \
+  -f /path/to/cms-repository/repository-hub.override.yml \
   up -d --wait
 ```
 
@@ -171,6 +155,80 @@ reject every normal CMS fetch as an invalid forwarding chain. If an operator
 later places a real forwarding proxy directly in front of this listener,
 `trusted-proxy` becomes valid and the hop count includes that proxy plus every
 preceding CDN. `direct` is suitable only when callers connect without a proxy.
+
+## Optional HTTPS management ingress for remote CLI use
+
+The normal management workflow uses `p9r` directly against
+`/.cms/repository-management`; no CMS Control page or browser gateway is
+required. The base stack deliberately keeps port 3000 internal. To publish from
+an operator workstation, apply `management-ingress.override.yml` after the
+shared `nginx-proxy` and ACME infrastructure from `infra/images/cms/infra` is
+running.
+
+Create a dedicated DNS name such as `management.repository.example.com`, point
+it at the server, and add the following private deployment values:
+
+```dotenv
+CMS_REPOSITORY_MANAGEMENT_DOMAIN=management.repository.example.com
+CMS_PROXY_NETWORK_NAME=cms_proxy
+```
+
+Render and start the repository with the optional override:
+
+```bash
+docker compose \
+  -f compose.yml \
+  -f management-ingress.override.yml \
+  config --quiet
+docker compose \
+  -f compose.yml \
+  -f management-ingress.override.yml \
+  up -d --wait
+```
+
+The override adds a digest-pinned, non-root nginx gateway with a read-only root
+filesystem. It has no secret and no `ports` mapping. `nginx-proxy` terminates
+TLS on the dedicated domain, while the gateway reaches the repository through
+`cms_repository`. Its method-and-path allow-list contains only ordinary
+management operations: status and release reads, candidate submission and
+polling, compatibility reevaluation, stable promotion, and version blocking.
+Maintenance baseline/backfill endpoints, verifier worker endpoints, health
+probes, and the public catalog listener are not forwarded. A route omitted from
+the allow-list fails closed with 404 until the ingress configuration is reviewed
+and updated. The ingress performs no authentication itself: it forwards the
+`Authorization` header unchanged, and the repository management guard remains
+the sole authority that validates the Bearer token before reading a body.
+
+Copy only the management token to each authorized workstation through the
+organization's secret manager. Keep the maintenance and verifier credentials on
+their existing private automation hosts. The CLI requires an absolute regular
+token file and refuses redirects:
+
+```bash
+umask 077
+install -d -m 0700 "$HOME/.config/p9r"
+install -m 0600 /secure/export/repository-management-token \
+  "$HOME/.config/p9r/repository-management-token"
+
+P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL=https://management.repository.example.com/.cms/repository-management \
+P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE="$HOME/.config/p9r/repository-management-token" \
+p9r repository publish /path/to/integration
+```
+
+Use only the `https://` URL from outside the Docker network. The Bearer token is
+the current single administrative principal: operators share its backend rate
+limit and it does not provide per-person cryptographic attribution. Rotate it
+and recreate the repository service after a workstation loss or suspected
+exposure. The backend authenticates before rate-limit accounting or body reads;
+the ingress additionally streams requests and caps candidate bodies at 64 MiB.
+Bulk CLI operations must honor `429 Retry-After` instead of disabling the
+management rate limit. A VPN or source-address firewall around the dedicated
+domain remains preferable when the operator network supports one.
+
+Remove the optional override from the Compose invocation and recreate the stack
+to close remote management ingress. Never add a raw `3000:3000` host mapping and
+never attach the repository service itself to `cms_proxy`: the internal port
+also carries separately authenticated maintenance and verifier protocols.
 
 ## Empty-volume bootstrap policy
 
@@ -201,6 +259,27 @@ untouched by bootstrap. After initialization:
 
 This rule deliberately makes the registry volume, not later image contents, the
 source of truth. Pulling a newer image does not merge newly bundled resources.
+
+### Publishing one integration
+
+`p9r repository publish` reads the integration index at the supplied root; no
+version flag is accepted because the versions are already declared there. It
+builds the complete immutable package for every declared version, including
+SQL, functions, text assets, and binary assets, then processes them in ascending
+SemVer order:
+
+```bash
+p9r repository publish /path/to/integration --dry-run
+p9r repository publish /path/to/integration
+```
+
+An absent version enters the normal candidate verification and publication
+workflow. An existing coordinate with the same package digest is reported as
+`UNCHANGED` and skipped, even if its later release state is blocked or no longer
+admissible. The same coordinate with different bytes is an immutable-version
+conflict and returns `409`; any hard failure stops the remaining versions.
+Stable promotion and emergency blocking remain explicit management operations,
+separate from publication.
 
 ### Publishing the official catalog
 
@@ -257,19 +336,20 @@ seconds before forcing termination.
 
 The `./registry` bind mount is the authoritative publication record. Back it up
 independently from CMS media and from every CMS `integration-packages` cache.
-To obtain a consistent online-read snapshot, first stop or disconnect the
-designated management CMS so no publication, promotion, or reevaluation can
-start, wait for in-flight management requests to finish, then archive the whole
-registry tree while preserving ownership, modes, and timestamps. Encrypt the
-archive and copy it off the application host.
+To obtain a consistent online-read snapshot, first stop the optional management
+ingress and pause private publication automation so no publication, promotion,
+or reevaluation can start. Wait for in-flight management requests to finish,
+then archive the whole registry tree while preserving ownership, modes, and
+timestamps. Encrypt the archive and copy it off the application host.
 
 Restore only into an empty prepared registry directory owned by UID/GID 1000
 with mode `0750`. Restore the complete tree rather than selected indexes or
 version directories, then start the repository and inspect `/ready` plus the
 authenticated management status and diagnostics before reconnecting the
-management CMS. A bootstrap-in-progress marker is recovery evidence, not a file
-to delete blindly; an interrupted initial seed should be investigated or the
-still-new volume replaced from a known-good backup.
+management ingress or publication automation. A bootstrap-in-progress marker is
+recovery evidence, not a file to delete blindly; an interrupted initial seed
+should be investigated or the still-new volume replaced from a known-good
+backup.
 
 The registry status reports exact decimal byte capacity from the mounted
 filesystem. Monitor available space outside the container and retain room for
