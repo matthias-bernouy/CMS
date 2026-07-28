@@ -1,20 +1,21 @@
 import { buildOfficialIntegrationCandidates } from "@bernouy/cms-official-integrations/publication";
+import { getAccessToken } from "../credentials";
 import { buildIntegrationCandidates } from "./candidate/build";
 import { publishIntegrationCandidate } from "./candidate/client";
 import type { BuiltIntegrationCandidate, ManagementCandidateResult } from "./candidate/contracts";
 import { IntegrationCandidateBuildError } from "./candidate/errors";
+import { repositoryManagementUrlForCms } from "./candidate/managementUrl";
 import {
     parseRepositoryPublicationConfig,
     REPOSITORY_PUBLICATION_HELP,
     type RepositoryPublicationConfig,
     type RepositoryPublicationEnvironment,
 } from "./config";
-import { readRepositoryPublicationToken } from "./tokenFile";
 
 export type RepositoryPublicationCommandDependencies = Readonly<{
     environment?: RepositoryPublicationEnvironment;
     buildCandidates?: (source: RepositoryPublicationConfig["source"]) => Promise<readonly BuiltIntegrationCandidate[]>;
-    readToken?: (path: string) => Promise<string>;
+    getAccessToken?: (cmsUrl: string) => Promise<string | null>;
     publish?: typeof publishIntegrationCandidate;
     write?: (line: string) => void;
     writeError?: (line: string) => void;
@@ -56,20 +57,26 @@ export async function runRepositoryPublicationCommand(
         return 0;
     }
 
-    const managementUrl = config.managementUrl;
-    const tokenFile = config.tokenFile;
-    if (!managementUrl || !tokenFile) {
+    const cmsUrl = config.cmsUrl;
+    if (!cmsUrl) {
         writeError("Repository publication configuration is incomplete");
         return 1;
     }
-    let token: string;
+    let token: string | null;
     try {
-        token = await (dependencies.readToken ?? readRepositoryPublicationToken)(tokenFile);
+        token = await (dependencies.getAccessToken ?? getAccessToken)(cmsUrl);
     } catch {
-        writeError("Repository management token file is invalid");
+        writeError("CMS Personal Access Token store could not be read");
+        return 1;
+    }
+    if (!token) {
+        writeError(
+            "No CMS Personal Access Token found; create one in admin Profile and configure P9R_TOKEN or credentials.json",
+        );
         return 1;
     }
 
+    const managementUrl = repositoryManagementUrlForCms(cmsUrl);
     const counts = { published: 0, unchanged: 0, failed: 0, skipped: 0 };
     const publish = dependencies.publish ?? publishIntegrationCandidate;
     for (let index = 0; index < candidates.length; index += 1) {

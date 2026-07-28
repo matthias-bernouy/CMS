@@ -1,5 +1,5 @@
-import { isAbsolute, resolve } from "node:path";
-import { normalizeRepositoryManagementUrl } from "./candidate/managementUrl";
+import { resolve } from "node:path";
+import { normalizeRepositoryCmsUrl } from "./candidate/managementUrl";
 
 const DEFAULT_TIMEOUT_MS = 900_000;
 const MAX_TIMEOUT_MS = 1_800_000;
@@ -7,29 +7,26 @@ const MAX_TIMEOUT_MS = 1_800_000;
 export type RepositoryPublicationEnvironment = Readonly<Record<string, string | undefined>>;
 
 export type RepositoryPublicationConfig = Readonly<{
+    cmsUrl?: string;
     dryRun: boolean;
-    managementUrl?: string;
     source: Readonly<{ type: "integration"; root: string }> | Readonly<{ type: "official" }>;
-    tokenFile?: string;
     timeoutMs: number;
 }>;
 
 export const REPOSITORY_PUBLICATION_HELP = `Usage:
   p9r repository publish <integration-root> [--dry-run]
-      [--url=https://management.example/.cms/repository-management]
-      [--token-file=/absolute/path/to/token]
+      [--url=https://admin.example/cms]
       [--allow-insecure-http]
       [--timeout-ms=900000]
 
   p9r repository publish-official [--dry-run]
-      [--url=https://management.example/.cms/repository-management]
-      [--token-file=/absolute/path/to/token]
+      [--url=https://admin.example/cms]
       [--allow-insecure-http]
       [--timeout-ms=900000]
 
 Environment fallbacks:
-  P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL
-  P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE
+  P9R_URL
+  P9R_TOKEN or ~/.config/p9r/credentials.json (CMS Personal Access Token)
   P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP
   P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS
 
@@ -55,8 +52,7 @@ export function parseRepositoryPublicationConfig(
     if (flags.help) {
         return "help";
     }
-    const rawUrl = flags.url ?? environment.P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL;
-    const rawTokenFile = flags.tokenFile ?? environment.P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE;
+    const rawUrl = flags.url ?? environment.P9R_URL;
     const rawTimeout = flags.timeoutMs ?? environment.P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS;
     const allowInsecureHttp =
         flags.allowInsecureHttp ||
@@ -64,15 +60,14 @@ export function parseRepositoryPublicationConfig(
             environment.P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP,
             "P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP",
         );
-    if (!flags.dryRun && (!rawUrl?.trim() || !rawTokenFile?.trim())) {
-        throw new Error("Publishing requires a management URL and token file");
+    if (!flags.dryRun && !rawUrl?.trim()) {
+        throw new Error("Publishing requires a CMS URL (--url or P9R_URL)");
     }
 
     return Object.freeze({
+        ...(rawUrl?.trim() ? { cmsUrl: normalizeRepositoryCmsUrl(rawUrl, allowInsecureHttp) } : {}),
         dryRun: flags.dryRun,
         source,
-        ...(rawUrl?.trim() ? { managementUrl: normalizeRepositoryManagementUrl(rawUrl, allowInsecureHttp) } : {}),
-        ...(rawTokenFile?.trim() ? { tokenFile: normalizeTokenFile(rawTokenFile) } : {}),
         timeoutMs: parseTimeout(rawTimeout),
     });
 }
@@ -96,7 +91,6 @@ type ParsedFlags = {
     dryRun: boolean;
     help: boolean;
     url?: string;
-    tokenFile?: string;
     timeoutMs?: string;
 };
 
@@ -117,8 +111,6 @@ function parseFlags(args: readonly string[]): ParsedFlags {
             parsed.help = true;
         } else if (name === "--url" && value !== undefined) {
             parsed.url = value;
-        } else if (name === "--token-file" && value !== undefined) {
-            parsed.tokenFile = value;
         } else if (name === "--timeout-ms" && value !== undefined) {
             parsed.timeoutMs = value;
         } else {
@@ -131,14 +123,6 @@ function parseFlags(args: readonly string[]): ParsedFlags {
 function splitFlag(argument: string): readonly [string, string | undefined] {
     const separator = argument.indexOf("=");
     return separator < 0 ? [argument, undefined] : [argument.slice(0, separator), argument.slice(separator + 1)];
-}
-
-function normalizeTokenFile(raw: string): string {
-    const path = raw.trim();
-    if (!isAbsolute(path)) {
-        throw new Error("Repository management token file must be an absolute path");
-    }
-    return resolve(path);
 }
 
 function parseTimeout(raw: string | undefined): number {

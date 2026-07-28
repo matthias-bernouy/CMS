@@ -1,25 +1,33 @@
 import { isIP } from "node:net";
 
-export function normalizeRepositoryManagementUrl(raw: string, allowInsecureHttp: boolean): string {
+const REPOSITORY_MANAGEMENT_PATH = "/.cms/repository-management";
+
+export function normalizeRepositoryCmsUrl(raw: string, allowInsecureHttp: boolean): string {
     let url: URL;
     try {
         url = new URL(raw.trim());
     } catch {
-        throw new Error("Repository management URL must be an absolute HTTP(S) URL");
+        throw new Error("Repository CMS URL must be an absolute HTTP(S) URL");
     }
     if (url.protocol !== "http:" && url.protocol !== "https:") {
-        throw new Error("Repository management URL must be an absolute HTTP(S) URL");
+        throw new Error("Repository CMS URL must be an absolute HTTP(S) URL");
     }
     if (url.username || url.password || url.search || url.hash || raw.includes("?") || raw.includes("#")) {
-        throw new Error("Repository management URL must not contain credentials, query, or fragment");
+        throw new Error("Repository CMS URL must not contain credentials, query, or fragment");
     }
     if (url.protocol === "http:" && !isLoopbackHostname(url.hostname) && !allowInsecureHttp) {
         throw new Error(
-            "Remote repository management URLs must use HTTPS; use --allow-insecure-http only on a trusted internal network",
+            "Remote repository CMS URLs must use HTTPS; use --allow-insecure-http only on a trusted internal network",
         );
     }
     url.pathname = url.pathname.replace(/\/+$/u, "") || "/";
     return url.href.replace(/\/$/u, "");
+}
+
+export function repositoryManagementUrlForCms(cmsUrl: string): string {
+    const url = new URL(cmsUrl);
+    url.pathname = `${url.pathname.replace(/\/+$/u, "")}${REPOSITORY_MANAGEMENT_PATH}`;
+    return url.href;
 }
 
 function isLoopbackHostname(value: string): boolean {

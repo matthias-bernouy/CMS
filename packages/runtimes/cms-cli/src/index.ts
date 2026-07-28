@@ -48,13 +48,12 @@ Usage:
                                    Build every version declared by one local
                                    integration and publish missing immutable
                                    versions through the management API.
-                                   Publishing requires --url and --token-file
-                                   (or their management env equivalents).
+                                   Uses --url or P9R_URL and the CMS PAT already
+                                   configured for that CMS.
   p9r repository publish-official [--dry-run]
                                    Deterministically build and publish every
-                                   official integration package. Publishing
-                                   requires --url and --token-file (or their
-                                   management env equivalents).
+                                   official integration package through the
+                                   authenticated repository CMS gateway.
   p9r repository import-official-schema-baselines [--dry-run]
                                    Import reviewed legacy SQL baselines through
                                    the separate maintenance capability.
