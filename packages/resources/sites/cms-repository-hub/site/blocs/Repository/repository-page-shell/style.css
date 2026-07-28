@@ -1,0 +1,8 @@
+:host {
+    display: block;
+    box-sizing: border-box;
+    min-block-size: 100dvh;
+    padding-block: clamp(var(--space-lg, 1.5rem), 6vw, var(--space-3xl, 5rem));
+    background: var(--bg-base, Canvas);
+    color: var(--text-main, CanvasText);
+}

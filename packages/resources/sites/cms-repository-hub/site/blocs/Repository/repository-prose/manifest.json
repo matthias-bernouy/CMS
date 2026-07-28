@@ -1,0 +1,10 @@
+{
+    "default-tag": "repository-prose",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Repository prose",
+        "description": "Readable repository notes, instructions, and long identifiers."
+    }
+}

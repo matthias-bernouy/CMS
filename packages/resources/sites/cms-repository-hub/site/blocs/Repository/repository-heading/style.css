@@ -1,0 +1,25 @@
+:host {
+    display: grid;
+    max-inline-size: 54rem;
+    gap: var(--space-md, 1rem);
+}
+
+::slotted(h1) {
+    max-inline-size: 18ch;
+    margin: 0;
+    font-size: clamp(2.35rem, 7vw, 5.5rem);
+    letter-spacing: -0.045em;
+    line-height: 0.98;
+}
+
+::slotted(p) {
+    max-inline-size: 68ch;
+    margin: 0;
+    color: var(--text-muted, color-mix(in srgb, CanvasText 65%, transparent));
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    line-height: 1.65;
+}
+
+:host([compact]) ::slotted(h1) {
+    font-size: clamp(2rem, 5vw, 4rem);
+}

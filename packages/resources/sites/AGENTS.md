@@ -13,6 +13,9 @@ Versioned, declarative site resources maintained by CmsCore.
 - Prefer CMS bindings (`cms-source`, `cms-repeat`, `cms-condition`, and
   `cms-param-sync`) over authored JavaScript. Do not issue ad-hoc `fetch()`
   calls from site content.
+- Do not place site- or component-specific CSS in the legacy `theme.css`
+  resource. Keep it in a local Bloc's scoped `style.css`; use structured CMS
+  theme tokens for global design values.
 - Imported integrations must already exist in the integration repository. Do
   not inline or duplicate official integration definitions here.
 

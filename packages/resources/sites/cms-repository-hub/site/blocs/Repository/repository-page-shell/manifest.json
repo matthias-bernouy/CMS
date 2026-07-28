@@ -1,0 +1,10 @@
+{
+    "default-tag": "repository-page-shell",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Repository page shell",
+        "description": "Full-height page shell with repository-specific spacing."
+    }
+}

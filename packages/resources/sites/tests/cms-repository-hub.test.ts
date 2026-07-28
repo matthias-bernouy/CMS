@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { hardenStoredHtml } from "@bernouy/cms-content";
 import { CMS_REPOSITORY_HUB_ROOT, CMS_REPOSITORY_HUB_SITE_ROOT } from "../index";
@@ -7,6 +7,7 @@ import { CMS_REPOSITORY_HUB_ROOT, CMS_REPOSITORY_HUB_SITE_ROOT } from "../index"
 const readSiteFile = (path: string): string => readFileSync(join(CMS_REPOSITORY_HUB_SITE_ROOT, path), "utf8");
 const homePage = readSiteFile("pages/index.html");
 const integrationsPage = readSiteFile("pages/integrations.html");
+const localBlocRoot = join(CMS_REPOSITORY_HUB_SITE_ROOT, "blocs", "Repository");
 
 describe("cms-repository-hub resource", () => {
     test("is a regular p9r site without deployment-specific configuration", () => {
@@ -35,6 +36,22 @@ describe("cms-repository-hub resource", () => {
         for (const integration of imports) {
             expect(integration.definition).toBeUndefined();
         }
+    });
+
+    test("owns repository presentation in local Blocs instead of theme.css", () => {
+        expect(existsSync(join(CMS_REPOSITORY_HUB_SITE_ROOT, "theme.css"))).toBeFalse();
+        const tags = readdirSync(localBlocRoot).sort();
+        expect(tags).toEqual(["repository-heading", "repository-page-shell", "repository-prose"]);
+
+        for (const tag of tags) {
+            const root = join(localBlocRoot, tag);
+            const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
+            expect(manifest["default-tag"]).toBe(tag);
+            expect(manifest).toMatchObject({ bloc: "./Bloc.ts", editor: "./BlocEditor.ts" });
+            expect(readFileSync(join(root, "Bloc.ts"), "utf8")).not.toContain("customElements.define");
+            expect(readFileSync(join(root, "style.css"), "utf8")).not.toMatch(/(^|[\s,])(:root|html|body)\b/m);
+        }
+        expect(`${homePage}\n${integrationsPage}`).not.toContain('class="');
     });
 
     test("keeps the catalog in one same-origin declarative source", () => {
@@ -83,7 +100,7 @@ describe("cms-repository-hub resource", () => {
         expect(integrationsPage).toContain("{{ catalog.releaseNotesDownloadUrl }}");
     });
 
-    test("uses only imported official custom elements", () => {
+    test("uses only imported official and repository-local custom elements", () => {
         const customTags = new Set(
             [...`${homePage}\n${integrationsPage}`.matchAll(/<([a-z][a-z0-9]*-[a-z0-9-]+)/g)].map((match) => match[1]),
         );
@@ -100,6 +117,9 @@ describe("cms-repository-hub resource", () => {
             "basic-skeleton",
             "basic-stack",
             "doc-breadcrumb",
+            "repository-heading",
+            "repository-page-shell",
+            "repository-prose",
         ]);
     });
 

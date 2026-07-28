@@ -11,11 +11,21 @@ and theme resources that CmsCore exposes to its users.
 
 ## Authoring And Deployment
 
-Each site directory is a regular `p9r` project. From that directory, use
-`p9r push --dry-run` and then `p9r push --yes` to deploy the complete `site/`
-tree. The full push installs the pinned integrations before publishing pages.
-Deployment credentials and the target CMS Control URL are supplied to the CLI;
-they are never stored here.
+Each site directory is a regular `p9r` project. From that directory, update its
+code-managed Blocs first, then deploy the complete `site/` tree:
+
+```bash
+p9r push --type=blocs --force --dry-run
+p9r push --type=blocs --force --yes
+p9r push --dry-run
+p9r push --yes
+```
+
+The targeted force is required because a normal push deliberately skips an
+existing code-managed Bloc; it does not bypass remote ownership. The full push
+then installs pinned integrations before publishing pages without forcing their
+rerun. Deployment credentials and the target CMS Control URL are supplied to
+the CLI; they are never stored here.
 
 The production target must be the repository-management CMS, because that
 runtime exposes the enriched catalogue projection consumed by the page. The
@@ -26,3 +36,7 @@ deployed CMS preview until that development composition is added.
 The repository hub pins the existing `basic-blocs@1.0.0` and
 `documentation-blocs@1.0.0` integrations. Its catalogue endpoint is provided
 by the repository surface, not by a site-specific integration.
+
+Repository-specific presentation lives in the small code-managed Blocs under
+`site/blocs/Repository/`. The site deliberately has no legacy `theme.css`;
+global colors, type, and spacing come from the CMS structured theme.

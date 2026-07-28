@@ -4,77 +4,84 @@ description: Browse immutable CmsCore integrations, versions, packages, and rele
 visible: true
 tags: [repository, integrations, catalog]
 ---
-<main class="repository-catalog">
-    <basic-container width="wide" gutter="md">
-        <basic-stack gap="lg">
-            <header class="catalog-header">
-                <a class="catalog-brand" href="/">CmsCore Integration Repository</a>
-                <h1>Integration catalog</h1>
-                <p>Browse immutable packages and the evidence attached to every published release.</p>
-            </header>
+<main>
+    <repository-page-shell>
+        <basic-container width="wide" gutter="md">
+            <basic-stack gap="lg">
+                <repository-heading compact>
+                    <a href="/">CmsCore Integration Repository</a>
+                    <h1>Integration catalog</h1>
+                    <p>Browse immutable packages and the evidence attached to every published release.</p>
+                </repository-heading>
 
-            <section
-                class="catalog-source"
-                cms-source="/.cms/repository/api/integrations/catalog?q=#{q}&amp;category=#{category}&amp;provider=#{provider}&amp;compatibility=#{compatibility}&amp;kind=#{kind}&amp;version=#{version} as catalog"
-            >
-                <basic-stack class="catalog-loading" gap="md" cms-condition="$source.loading" aria-live="polite">
+                <basic-stack
+                    gap="xl"
+                    cms-source="/.cms/repository/api/integrations/catalog?q=#{q}&amp;category=#{category}&amp;provider=#{provider}&amp;compatibility=#{compatibility}&amp;kind=#{kind}&amp;version=#{version} as catalog"
+                >
+                    <basic-stack gap="md" cms-condition="$source.loading" aria-live="polite">
                     <basic-skeleton width="45%" height="2rem" animation="wave" label="Loading catalog"></basic-skeleton>
                     <basic-skeleton width="100%" height="8rem" animation="wave" label="Loading integrations"></basic-skeleton>
                     <basic-skeleton width="100%" height="8rem" animation="wave" label="Loading integrations"></basic-skeleton>
-                </basic-stack>
+                    </basic-stack>
 
-                <basic-alert type="error" role="alert" cms-condition="$source.error">
-                    <h2 slot="title">The integration repository is unavailable</h2>
-                    <p>Try again shortly. Published sites remain available while the catalog recovers.</p>
-                </basic-alert>
+                    <basic-alert type="error" role="alert" cms-condition="$source.error">
+                        <h2 slot="title">The integration repository is unavailable</h2>
+                        <p>Try again shortly. Published sites remain available while the catalog recovers.</p>
+                    </basic-alert>
 
-                <basic-alert
-                    type="error"
-                    role="alert"
-                    cms-condition="$source.loaded && catalog.schema != 'cms.repository.catalog.v1'"
-                >
-                    <h2 slot="title">Unsupported catalog response</h2>
-                    <p>This site and the repository API do not use the same public contract.</p>
-                </basic-alert>
+                    <basic-alert
+                        type="error"
+                        role="alert"
+                        cms-condition="$source.loaded && catalog.schema != 'cms.repository.catalog.v1'"
+                    >
+                        <h2 slot="title">Unsupported catalog response</h2>
+                        <p>This site and the repository API do not use the same public contract.</p>
+                    </basic-alert>
 
-                <section
-                    class="catalog-list"
+                <basic-stack
+                    gap="xl"
                     cms-condition="$source.loaded && catalog.schema == 'cms.repository.catalog.v1' && catalog.view == 'list'"
                 >
-                    <form class="catalog-filters" action="/integrations" method="get">
-                        <basic-input
-                            name="q"
-                            label="Search"
-                            type="search"
-                            maxlength="128"
-                            placeholder="Name, kind, or description"
-                            cms-param-sync="q"
-                        ></basic-input>
-                        <basic-select name="category" label="Category" cms-param-sync="category">
-                            <basic-option value="">All categories</basic-option>
-                            <basic-option cms-repeat="catalog.categories as option" value="{{ option.value }}">
-                                {{ option.label }}
-                            </basic-option>
-                        </basic-select>
-                        <basic-select name="provider" label="Provider" cms-param-sync="provider">
-                            <basic-option value="">All providers</basic-option>
-                            <basic-option cms-repeat="catalog.providers as option" value="{{ option.value }}">
-                                {{ option.label }}
-                            </basic-option>
-                        </basic-select>
-                        <basic-select name="compatibility" label="Compatibility" cms-param-sync="compatibility">
-                            <basic-option value="">All outcomes</basic-option>
-                            <basic-option
-                                cms-repeat="catalog.compatibilityOutcomes as option"
-                                value="{{ option.value }}"
-                            >
-                                {{ option.label }}
-                            </basic-option>
-                        </basic-select>
-                        <basic-button action="link" href="/integrations" appearance="ghost">Clear filters</basic-button>
+                    <form action="/integrations" method="get">
+                        <basic-card appearance="outlined" density="regular">
+                            <basic-grid min="sm" max="lg" gap="md">
+                                <basic-input
+                                    name="q"
+                                    label="Search"
+                                    type="search"
+                                    maxlength="128"
+                                    placeholder="Name, kind, or description"
+                                    cms-param-sync="q"
+                                ></basic-input>
+                                <basic-select name="category" label="Category" cms-param-sync="category">
+                                    <basic-option value="">All categories</basic-option>
+                                    <basic-option cms-repeat="catalog.categories as option" value="{{ option.value }}">
+                                        {{ option.label }}
+                                    </basic-option>
+                                </basic-select>
+                                <basic-select name="provider" label="Provider" cms-param-sync="provider">
+                                    <basic-option value="">All providers</basic-option>
+                                    <basic-option cms-repeat="catalog.providers as option" value="{{ option.value }}">
+                                        {{ option.label }}
+                                    </basic-option>
+                                </basic-select>
+                                <basic-select name="compatibility" label="Compatibility" cms-param-sync="compatibility">
+                                    <basic-option value="">All outcomes</basic-option>
+                                    <basic-option
+                                        cms-repeat="catalog.compatibilityOutcomes as option"
+                                        value="{{ option.value }}"
+                                    >
+                                        {{ option.label }}
+                                    </basic-option>
+                                </basic-select>
+                                <basic-button action="link" href="/integrations" appearance="ghost">
+                                    Clear filters
+                                </basic-button>
+                            </basic-grid>
+                        </basic-card>
                     </form>
 
-                    <p class="catalog-count" role="status">
+                    <p role="status">
                         Showing <strong>{{ catalog.count }}</strong> of {{ catalog.total }} integrations
                     </p>
 
@@ -84,14 +91,12 @@ tags: [repository, integrations, catalog]
                     </basic-alert>
 
                     <basic-grid
-                        class="integration-grid"
                         min="md"
                         max="lg"
                         gap="lg"
                         cms-condition="catalog.count > 0"
                     >
                         <basic-card
-                            class="integration-card"
                             appearance="outlined"
                             density="regular"
                             stretch
@@ -101,7 +106,7 @@ tags: [repository, integrations, catalog]
                                 <a href="{{ integration.detailsUrl }}">{{ integration.label }}</a>
                             </h2>
                             <p slot="description">{{ integration.description }}</p>
-                            <div class="badge-row">
+                            <basic-stack direction="row" gap="sm" wrap="true" align-items="center">
                                 <basic-badge color="neutral" variant="soft">{{ integration.category }}</basic-badge>
                                 <basic-badge color="neutral" variant="outline">
                                     {{ integration.compatibilityLabel }}
@@ -109,15 +114,15 @@ tags: [repository, integrations, catalog]
                                 <basic-badge color="warning" variant="soft" cms-condition="integration.compatibilityWarning">
                                     Review advised
                                 </basic-badge>
-                            </div>
-                            <dl class="catalog-metadata">
-                                <div><dt>Stable</dt><dd>{{ integration.stable }}</dd></div>
-                                <div><dt>Latest</dt><dd>{{ integration.latest }}</dd></div>
-                            </dl>
-                            <ul class="inline-list" aria-label="Technical providers">
+                            </basic-stack>
+                            <basic-grid min="sm" max="md" gap="sm">
+                                <div><strong>Stable</strong><p>{{ integration.stable }}</p></div>
+                                <div><strong>Latest</strong><p>{{ integration.latest }}</p></div>
+                            </basic-grid>
+                            <ul aria-label="Technical providers">
                                 <li cms-repeat="integration.technicalProviders as provider">{{ provider.label }}</li>
                             </ul>
-                            <ul class="artifact-list" aria-label="Included artifact types">
+                            <ul aria-label="Included artifact types">
                                 <li cms-repeat="integration.artifacts as artifact">
                                     {{ artifact.label }} <strong>{{ artifact.count }}</strong>
                                 </li>
@@ -127,31 +132,31 @@ tags: [repository, integrations, catalog]
                             </basic-button>
                         </basic-card>
                     </basic-grid>
-                </section>
+                </basic-stack>
 
                 <article
-                    class="catalog-detail"
                     cms-condition="$source.loaded && catalog.schema == 'cms.repository.catalog.v1' && catalog.view == 'integration'"
                 >
+                    <basic-stack gap="xl">
                     <doc-breadcrumb>
                         <a href="/">Home</a><span aria-hidden="true">/</span>
                         <a href="/integrations">Integrations</a><span aria-hidden="true">/</span>
                         <span>{{ catalog.label }}</span>
                     </doc-breadcrumb>
-                    <header class="detail-header">
-                        <p class="detail-eyebrow">{{ catalog.kind }}</p>
+                    <repository-heading compact>
+                        <p>{{ catalog.kind }}</p>
                         <h1>{{ catalog.label }}</h1>
                         <p>{{ catalog.description }}</p>
-                        <div class="badge-row">
+                        <basic-stack direction="row" gap="sm" wrap="true" align-items="center">
                             <basic-badge color="neutral" variant="soft">{{ catalog.category }}</basic-badge>
                             <basic-badge color="neutral" variant="outline">{{ catalog.compatibilityLabel }}</basic-badge>
                             <basic-badge color="warning" variant="soft" cms-condition="catalog.compatibilityWarning">
                                 Compatibility warning
                             </basic-badge>
-                        </div>
-                    </header>
+                        </basic-stack>
+                    </repository-heading>
 
-                    <basic-grid min="sm" max="md" gap="md" class="summary-grid">
+                    <basic-grid min="sm" max="md" gap="md">
                         <basic-card appearance="outlined" density="compact">
                             <h2 slot="title">Stable channel</h2><code>{{ catalog.stable }}</code>
                         </basic-card>
@@ -160,46 +165,45 @@ tags: [repository, integrations, catalog]
                         </basic-card>
                     </basic-grid>
 
-                    <section class="detail-section">
+                    <section>
                         <h2>Version history</h2>
                         <basic-stack gap="md">
                             <basic-card
-                                class="version-card"
                                 appearance="outlined"
                                 density="compact"
                                 cms-repeat="catalog.versions as item"
                             >
                                 <h3 slot="title"><a href="{{ item.detailsUrl }}">{{ item.version }}</a></h3>
-                                <div class="badge-row">
+                                <basic-stack direction="row" gap="sm" wrap="true" align-items="center">
                                     <basic-badge color="success" variant="soft" cms-condition="item.isStable">Stable</basic-badge>
                                     <basic-badge color="primary" variant="soft" cms-condition="item.isLatest">Latest</basic-badge>
                                     <basic-badge color="neutral" variant="outline">{{ item.compatibilityLabel }}</basic-badge>
                                     <basic-badge color="warning" variant="soft" cms-condition="item.compatibilityWarning">
                                         Review advised
                                     </basic-badge>
-                                </div>
-                                <dl class="catalog-metadata">
-                                    <div><dt>Package</dt><dd>{{ item.packageSize }}</dd></div>
-                                    <div><dt>Release</dt><dd>{{ item.releaseStatus }}</dd></div>
-                                    <div><dt>Verification</dt><dd>{{ item.verificationOutcome }}</dd></div>
-                                </dl>
-                                <div slot="actions" class="card-actions">
+                                </basic-stack>
+                                <basic-grid min="sm" max="md" gap="sm">
+                                    <div><strong>Package</strong><p>{{ item.packageSize }}</p></div>
+                                    <div><strong>Release</strong><p>{{ item.releaseStatus }}</p></div>
+                                    <div><strong>Verification</strong><p>{{ item.verificationOutcome }}</p></div>
+                                </basic-grid>
+                                <basic-stack slot="actions" direction="row" gap="sm" wrap="true">
                                     <basic-button action="link" href="{{ item.detailsUrl }}" appearance="outlined">
                                         Inspect release
                                     </basic-button>
                                     <basic-button action="link" href="{{ item.downloadUrl }}">Download package</basic-button>
-                                </div>
+                                </basic-stack>
                             </basic-card>
                         </basic-stack>
                     </section>
 
-                    <section class="detail-section" cms-condition="catalog.featuredVersion">
+                    <section cms-condition="catalog.featuredVersion">
                         <h2>Featured release</h2>
                         <basic-card appearance="elevated" density="regular">
                             <h3 slot="title">{{ catalog.featuredVersion.version }}</h3>
                             <p>Package size: {{ catalog.featuredVersion.packageSize }}</p>
                             <p>Compatibility: {{ catalog.featuredVersion.compatibilityLabel }}</p>
-                            <div slot="actions" class="card-actions">
+                            <basic-stack slot="actions" direction="row" gap="sm" wrap="true">
                                 <basic-button
                                     action="link"
                                     href="{{ catalog.featuredVersion.detailsUrl }}"
@@ -208,38 +212,39 @@ tags: [repository, integrations, catalog]
                                 <basic-button action="link" href="{{ catalog.featuredVersion.downloadUrl }}">
                                     Download package
                                 </basic-button>
-                            </div>
+                            </basic-stack>
                         </basic-card>
                     </section>
+                    </basic-stack>
                 </article>
 
                 <article
-                    class="catalog-detail"
                     cms-condition="$source.loaded && catalog.schema == 'cms.repository.catalog.v1' && catalog.view == 'version'"
                 >
+                    <basic-stack gap="xl">
                     <doc-breadcrumb>
                         <a href="/">Home</a><span aria-hidden="true">/</span>
                         <a href="/integrations">Integrations</a><span aria-hidden="true">/</span>
                         <a href="{{ catalog.integrationUrl }}">{{ catalog.label }}</a><span aria-hidden="true">/</span>
                         <span>{{ catalog.version }}</span>
                     </doc-breadcrumb>
-                    <header class="detail-header">
-                        <p class="detail-eyebrow">{{ catalog.kind }}</p>
+                    <repository-heading compact>
+                        <p>{{ catalog.kind }}</p>
                         <h1>{{ catalog.label }} {{ catalog.version }}</h1>
-                        <div class="badge-row">
+                        <basic-stack direction="row" gap="sm" wrap="true" align-items="center">
                             <basic-badge color="success" variant="soft" cms-condition="catalog.isStable">Stable</basic-badge>
                             <basic-badge color="primary" variant="soft" cms-condition="catalog.isLatest">Latest</basic-badge>
                             <basic-badge color="neutral" variant="outline" cms-condition="catalog.release">
                                 {{ catalog.release.status }}
                             </basic-badge>
-                        </div>
-                    </header>
+                        </basic-stack>
+                    </repository-heading>
 
-                    <basic-grid min="sm" max="md" gap="md" class="summary-grid">
+                    <basic-grid min="sm" max="md" gap="md">
                         <basic-card appearance="outlined" density="compact">
                             <h2 slot="title">Package</h2>
                             <p>{{ catalog.packageSize }}</p>
-                            <code class="digest">{{ catalog.packageDigest }}</code>
+                            <repository-prose><code>{{ catalog.packageDigest }}</code></repository-prose>
                             <basic-button slot="actions" action="link" href="{{ catalog.downloadUrl }}">
                                 Download package
                             </basic-button>
@@ -253,26 +258,26 @@ tags: [repository, integrations, catalog]
                         </basic-card>
                     </basic-grid>
 
-                    <section class="detail-section">
+                    <section>
                         <h2>Technical providers</h2>
-                        <ul class="inline-list">
+                        <ul>
                             <li cms-repeat="catalog.providers as provider">{{ provider.label }}</li>
                         </ul>
                     </section>
 
-                    <section class="detail-section">
+                    <section>
                         <h2>Artifacts</h2>
-                        <ul class="artifact-list">
+                        <ul>
                             <li cms-repeat="catalog.artifacts as artifact">
                                 {{ artifact.label }} <strong>{{ artifact.count }}</strong>
                             </li>
                         </ul>
                     </section>
 
-                    <section class="detail-section">
+                    <section>
                         <h2>Dependencies</h2>
                         <p cms-condition="catalog.dependencies.length == 0">This version has no integration dependencies.</p>
-                        <ul class="dependency-list" cms-condition="catalog.dependencies.length > 0">
+                        <ul cms-condition="catalog.dependencies.length > 0">
                             <li cms-repeat="catalog.dependencies as dependency">
                                 <a href="{{ dependency.integrationUrl }}">{{ dependency.name }}</a>
                                 <code>{{ dependency.versionRange }}</code>
@@ -281,7 +286,7 @@ tags: [repository, integrations, catalog]
                         </ul>
                     </section>
 
-                    <section class="detail-section" cms-condition="catalog.compatibility">
+                    <section cms-condition="catalog.compatibility">
                         <h2>Compatibility</h2>
                         <basic-card appearance="outlined" density="compact">
                             <h3 slot="title">{{ catalog.compatibilityLabel }}</h3>
@@ -290,7 +295,7 @@ tags: [repository, integrations, catalog]
                             <basic-alert type="warning" role="status" cms-condition="catalog.compatibility.warning">
                                 A newer compatibility revision changes the original report.
                             </basic-alert>
-                            <ul class="finding-list">
+                            <ul>
                                 <li cms-repeat="catalog.compatibility.current.findings as finding">
                                     <strong>{{ finding.code }}</strong> — {{ finding.message }}
                                 </li>
@@ -298,7 +303,7 @@ tags: [repository, integrations, catalog]
                         </basic-card>
                     </section>
 
-                    <section class="detail-section" cms-condition="catalog.release.verification">
+                    <section cms-condition="catalog.release.verification">
                         <h2>Verification</h2>
                         <basic-card appearance="outlined" density="compact">
                             <h3 slot="title">{{ catalog.release.verification.outcome }}</h3>
@@ -306,7 +311,7 @@ tags: [repository, integrations, catalog]
                                 {{ catalog.release.verification.origin }} · {{ catalog.release.verification.runner.name }}
                                 {{ catalog.release.verification.runner.version }}
                             </p>
-                            <ul class="verification-list">
+                            <ul>
                                 <li cms-repeat="catalog.release.verification.results as result">
                                     <strong>{{ result.suiteId }}</strong> — {{ result.outcome }} ({{ result.durationMs }} ms)
                                 </li>
@@ -314,7 +319,7 @@ tags: [repository, integrations, catalog]
                         </basic-card>
                     </section>
 
-                    <section class="detail-section" cms-condition="catalog.release.migrations.length > 0">
+                    <section cms-condition="catalog.release.migrations.length > 0">
                         <h2>Migration evidence</h2>
                         <basic-stack gap="md">
                             <basic-card
@@ -325,7 +330,7 @@ tags: [repository, integrations, catalog]
                                 <h3 slot="title">From {{ migration.source.version }}</h3>
                                 <p>Outcome: <strong>{{ migration.outcome }}</strong></p>
                                 <p>Supported source range: <code>{{ migration.supportedSourceRange }}</code></p>
-                                <ul class="verification-list">
+                                <ul>
                                     <li cms-repeat="migration.checks as check">
                                         {{ check.name }} — <strong>{{ check.outcome }}</strong>
                                     </li>
@@ -334,19 +339,19 @@ tags: [repository, integrations, catalog]
                         </basic-stack>
                     </section>
 
-                    <section class="detail-section" cms-condition="catalog.instructions.length > 0">
+                    <section cms-condition="catalog.instructions.length > 0">
                         <h2>Instructions</h2>
                         <basic-card appearance="outlined" density="regular" cms-repeat="catalog.instructions as instruction">
                             <h3 slot="title">{{ instruction.title }}</h3>
-                            <div class="markdown">{{ instruction.html | innerHTML }}</div>
+                            <repository-prose>{{ instruction.html | innerHTML }}</repository-prose>
                         </basic-card>
                     </section>
 
-                    <section class="detail-section">
+                    <section>
                         <h2>Release notes</h2>
-                        <div class="markdown" cms-condition="catalog.releaseNotesHtml">
+                        <repository-prose cms-condition="catalog.releaseNotesHtml">
                             {{ catalog.releaseNotesHtml | innerHTML }}
-                        </div>
+                        </repository-prose>
                         <p cms-condition="!catalog.releaseNotesHtml">No release notes are available for this version.</p>
                         <basic-button
                             action="link"
@@ -358,8 +363,10 @@ tags: [repository, integrations, catalog]
                             Download raw release notes
                         </basic-button>
                     </section>
+                    </basic-stack>
                 </article>
-            </section>
-        </basic-stack>
-    </basic-container>
+                </basic-stack>
+            </basic-stack>
+        </basic-container>
+    </repository-page-shell>
 </main>

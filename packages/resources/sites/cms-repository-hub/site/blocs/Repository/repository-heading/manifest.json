@@ -1,0 +1,10 @@
+{
+    "default-tag": "repository-heading",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Repository heading",
+        "description": "Introductory heading for repository pages and release details."
+    }
+}

@@ -1,0 +1,18 @@
+:host {
+    display: block;
+    max-inline-size: 76ch;
+    overflow-wrap: anywhere;
+    line-height: 1.7;
+}
+
+::slotted(code) {
+    font-family: var(--font-monospace, ui-monospace, SFMono-Regular, Consolas, monospace);
+}
+
+::slotted(pre) {
+    max-inline-size: 100%;
+    padding: var(--space-md, 1rem);
+    overflow: auto;
+    border-radius: var(--radius-md, 0.75rem);
+    background: var(--bg-subtle, color-mix(in srgb, CanvasText 5%, Canvas));
+}
