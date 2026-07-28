@@ -1,5 +1,5 @@
 import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
-import type { RepositoryCatalogPageRequestContext } from "../contracts";
+import type { RepositoryCatalogQueryContext } from "../contracts";
 
 const ALLOWED_PARAMS = new Set(["q", "category", "provider", "compatibility", "kind", "version"]);
 const FILTER_PARAMS = ["q", "category", "provider", "compatibility"] as const;
@@ -8,7 +8,7 @@ const MAX_FILTER_CHARACTERS = 128;
 export type RepositoryCatalogApiQuery = Readonly<{
     kind?: string;
     version?: string;
-    context: RepositoryCatalogPageRequestContext;
+    context: RepositoryCatalogQueryContext;
 }>;
 
 export function parseRepositoryCatalogApiQuery(request: Request): RepositoryCatalogApiQuery {
@@ -36,7 +36,7 @@ export function parseRepositoryCatalogApiQuery(request: Request): RepositoryCata
     return {
         kind,
         version,
-        context: { searchParams: values, hasSearchParams: Object.keys(values).length > 0 },
+        context: { searchParams: values },
     };
 }
 

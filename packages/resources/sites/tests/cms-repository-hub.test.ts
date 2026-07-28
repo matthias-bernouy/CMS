@@ -2,6 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { hardenStoredHtml } from "@bernouy/cms-content";
+import {
+    buildOfficialIntegrationPackages,
+    loadOfficialIntegrationVerificationBackfill,
+    selectOfficialVerificationBackfillPackages,
+} from "@bernouy/cms-official-integrations/publication";
 import { CMS_REPOSITORY_HUB_ROOT, CMS_REPOSITORY_HUB_SITE_ROOT } from "../index";
 
 const readSiteFile = (path: string): string => readFileSync(join(CMS_REPOSITORY_HUB_SITE_ROOT, path), "utf8");
@@ -36,6 +41,26 @@ describe("cms-repository-hub resource", () => {
         for (const integration of imports) {
             expect(integration.definition).toBeUndefined();
         }
+    });
+
+    test("identifies every pinned release that must be published after the historical bootstrap", async () => {
+        const imports = readdirSync(join(CMS_REPOSITORY_HUB_SITE_ROOT, "integrations"))
+            .sort()
+            .map((file) => JSON.parse(readSiteFile(`integrations/${file}`)) as { kind: string; version: string });
+        const packages = await buildOfficialIntegrationPackages();
+        const packageIdentities = new Set(packages.map(({ kind, version }) => `${kind}@${version}`));
+        const backfill = await loadOfficialIntegrationVerificationBackfill();
+        const historicalIdentities = new Set(
+            selectOfficialVerificationBackfillPackages(packages, backfill.index).map(
+                ({ kind, version }) => `${kind}@${version}`,
+            ),
+        );
+        const pinnedIdentities = imports.map(({ kind, version }) => `${kind}@${version}`);
+
+        expect(pinnedIdentities.every((identity) => packageIdentities.has(identity))).toBeTrue();
+        expect(pinnedIdentities.filter((identity) => !historicalIdentities.has(identity))).toEqual([
+            "documentation-blocs@1.0.0",
+        ]);
     });
 
     test("owns repository presentation in local Blocs instead of theme.css", () => {

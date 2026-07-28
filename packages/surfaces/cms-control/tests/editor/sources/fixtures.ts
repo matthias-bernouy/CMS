@@ -1,4 +1,5 @@
 import type { DataField } from "@bernouy/cms-content/editor";
+import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { Source } from "@bernouy/cms-sources";
 
 export type EditorSourceTestDto = {
@@ -15,6 +16,15 @@ export type EditorSourceTestDto = {
         fields: Array<{ path: string; type: string; required?: boolean }>;
     };
     fields: DataField[];
+};
+
+export const DIRECT_CATALOG_SOURCE: EditorDataSource = {
+    label: "Integration repository catalog",
+    url: "/.cms/repository/api/integrations/catalog",
+    method: "GET",
+    provider: "repository",
+    params: [{ name: "q", in: "query", type: "string" }],
+    fields: [{ path: "integrations", type: "array", children: [{ path: "kind", type: "string" }] }],
 };
 
 export const MIXED_PROVIDER: Source = {

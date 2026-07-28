@@ -1,4 +1,4 @@
-import type { RepositoryCatalogPageRequestContext } from "../contracts";
+import type { RepositoryCatalogQueryContext } from "../contracts";
 import type { RepositoryCatalogIntegrationSummary } from "../contracts";
 import { compatibilityOutcome, type RepositoryCatalogFilters, type RepositoryCatalogListView } from "./models";
 
@@ -6,7 +6,7 @@ const MAX_FILTER_CHARACTERS = 128;
 
 export function buildRepositoryCatalogListView(
     integrations: readonly RepositoryCatalogIntegrationSummary[],
-    context: RepositoryCatalogPageRequestContext,
+    context: RepositoryCatalogQueryContext,
 ): RepositoryCatalogListView {
     const filters = filtersFromContext(context);
     const sorted = [...integrations].sort(
@@ -22,7 +22,7 @@ export function buildRepositoryCatalogListView(
     };
 }
 
-function filtersFromContext(context: RepositoryCatalogPageRequestContext): RepositoryCatalogFilters {
+function filtersFromContext(context: RepositoryCatalogQueryContext): RepositoryCatalogFilters {
     return {
         query: firstQueryValue(context, "q"),
         category: firstQueryValue(context, "category"),
@@ -31,7 +31,7 @@ function filtersFromContext(context: RepositoryCatalogPageRequestContext): Repos
     };
 }
 
-function firstQueryValue(context: RepositoryCatalogPageRequestContext, name: string): string {
+function firstQueryValue(context: RepositoryCatalogQueryContext, name: string): string {
     return (context.searchParams[name]?.[0] ?? "").trim().slice(0, MAX_FILTER_CHARACTERS);
 }
 

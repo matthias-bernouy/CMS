@@ -87,6 +87,9 @@ export class ControlCms {
     get roles() {
         return controlCmsAccessors.roles(this.state);
     }
+    get editorDataSources() {
+        return controlCmsAccessors.editorDataSources(this.state);
+    }
     get integrationCatalog() {
         return controlCmsAccessors.integrationCatalog(this.state);
     }

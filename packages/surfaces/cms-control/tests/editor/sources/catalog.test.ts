@@ -3,7 +3,7 @@ import { InMemorySourceRepository, seedSources } from "@bernouy/cms-sources";
 import getEditorSources from "cms-control/api/editor/sources.get";
 import type { ControlCms } from "cms-control/ControlCms";
 import type { DataField } from "@bernouy/cms-content/editor";
-import { ADDRESS_PROVIDER, MIXED_PROVIDER, type EditorSourceTestDto } from "./fixtures";
+import { ADDRESS_PROVIDER, DIRECT_CATALOG_SOURCE, MIXED_PROVIDER, type EditorSourceTestDto } from "./fixtures";
 
 describe("GET /api/editor/sources contracts", () => {
     test("lists source contracts for editor data bindings", async () => {
@@ -51,5 +51,24 @@ describe("GET /api/editor/sources contracts", () => {
             "POST /cms/.cms/sources/mixed/create",
         ]);
         expect(body[0]!.params?.map((param) => `${param.in}:${param.name}`)).toEqual(["path:id", "query:q"]);
+    });
+
+    test("merges injected direct routes with Source endpoints", async () => {
+        const sources = new InMemorySourceRepository();
+        await seedSources(sources, [ADDRESS_PROVIDER]);
+
+        const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
+            basePath: "/cms",
+            sources,
+            editorDataSources: [DIRECT_CATALOG_SOURCE],
+        } as unknown as ControlCms);
+        const body = (await response.json()) as EditorSourceTestDto[];
+
+        expect(body.map(({ url }) => url)).toEqual([
+            "/cms/.cms/sources/address/search",
+            "/cms/.cms/sources/address/reverse",
+            "/.cms/repository/api/integrations/catalog",
+        ]);
+        expect(body[2]).toMatchObject(DIRECT_CATALOG_SOURCE);
     });
 });

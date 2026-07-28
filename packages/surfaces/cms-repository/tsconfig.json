@@ -13,6 +13,7 @@
         { "path": "../../foundation/http-runner" },
         { "path": "../../foundation/rate-limiter" },
         { "path": "../../features/cms-content" },
+        { "path": "../../features/cms-editor-system-v2" },
         { "path": "../../features/cms-integration-packages" },
         { "path": "../../features/cms-integrations" }
     ]

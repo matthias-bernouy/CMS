@@ -1,12 +1,9 @@
-export { RepositoryCatalogPageProvider } from "./provider";
+export { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "./api/editorDataSource";
 export {
     REPOSITORY_CATALOG_ROOT,
-    parseRepositoryCatalogRoute,
-    repositoryIntegrationPath,
     repositoryPackageDownloadPath,
-    repositoryVersionPath,
-    type RepositoryCatalogRoute,
 } from "./routes";
+export { repositoryCatalogIntegrationUrl, repositoryCatalogVersionUrl } from "./api/urls";
 export type {
     RepositoryCatalogArtifactSummary,
     RepositoryCatalogCompatibilityBaseline,
@@ -19,8 +16,7 @@ export type {
     RepositoryCatalogIntegrationPage,
     RepositoryCatalogIntegrationSummary,
     RepositoryCatalogPackageSummary,
-    RepositoryCatalogPageRequestContext,
-    RepositoryCatalogPageResolution,
+    RepositoryCatalogQueryContext,
     RepositoryCatalogReader,
     RepositoryCatalogVersionContent,
     RepositoryCatalogVersionPage,

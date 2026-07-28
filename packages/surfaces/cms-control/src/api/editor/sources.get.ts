@@ -1,4 +1,5 @@
 import { parseUrn, sourceEndpointAccessMode, type SourceEndpoint } from "@bernouy/cms-sources";
+import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { ControlCms } from "cms-control/ControlCms";
 import { editorSourceFromEndpoint } from "cms-control/core/content/editorSources/sourceDto";
 
@@ -10,9 +11,10 @@ export type {
 } from "cms-control/core/content/editorSources/types";
 
 export default async function getEditorSources(_req: Request, cms: ControlCms): Promise<Response> {
+    const configured = cms.editorDataSources ?? [];
     try {
         const providers = await cms.sources.getAllSources();
-        const sources = providers.flatMap((provider) => {
+        const discovered = providers.flatMap((provider) => {
             const parsed = parseUrn(provider.urn);
             const descriptor = {
                 provider: parsed?.source ?? provider.urn,
@@ -24,13 +26,28 @@ export default async function getEditorSources(_req: Request, cms: ControlCms): 
                 .map((endpoint) => editorSourceFromEndpoint(cms, endpoint, descriptor));
         });
 
-        return Response.json(sources);
+        return Response.json(mergeEditorDataSources(discovered, configured));
     } catch (error) {
         if (error instanceof Error && error.message === "sources repository not configured") {
-            return Response.json([]);
+            return Response.json(mergeEditorDataSources([], configured));
         }
         throw error;
     }
+}
+
+function mergeEditorDataSources(
+    discovered: readonly EditorDataSource[],
+    configured: readonly EditorDataSource[],
+): EditorDataSource[] {
+    const seen = new Set<string>();
+    return [...discovered, ...configured].filter((source) => {
+        const key = `${source.method ?? "GET"} ${source.url}`;
+        if (seen.has(key)) {
+            return false;
+        }
+        seen.add(key);
+        return true;
+    });
 }
 
 function isEditorEndpoint(endpoint: SourceEndpoint): boolean {

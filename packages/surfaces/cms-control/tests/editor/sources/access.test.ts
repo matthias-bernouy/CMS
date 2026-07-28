@@ -11,7 +11,7 @@ import {
 } from "@bernouy/cms-sources";
 import getEditorSources from "cms-control/api/editor/sources.get";
 import type { ControlCms } from "cms-control/ControlCms";
-import type { EditorSourceTestDto } from "./fixtures";
+import { DIRECT_CATALOG_SOURCE, type EditorSourceTestDto } from "./fixtures";
 
 describe("GET /api/editor/sources access", () => {
     test("returns only public and authenticated endpoints", async () => {
@@ -66,15 +66,16 @@ describe("GET /api/editor/sources access", () => {
         ]);
     });
 
-    test("returns an empty list when sources are not configured", async () => {
+    test("keeps injected direct routes when sources are not configured", async () => {
         const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
             get sources(): never {
                 throw new Error("sources repository not configured");
             },
+            editorDataSources: [DIRECT_CATALOG_SOURCE, DIRECT_CATALOG_SOURCE],
         } as unknown as ControlCms);
 
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual([]);
+        expect(await response.json()).toEqual([DIRECT_CATALOG_SOURCE]);
     });
 });
 

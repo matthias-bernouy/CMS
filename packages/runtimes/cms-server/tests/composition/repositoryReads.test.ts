@@ -12,8 +12,8 @@ describe("production repository read composition", () => {
         );
 
         expect(config).toEqual({
-            integrationCatalog: fixture.integrations.publicRepositoryCatalog,
-            integrationPackages: fixture.integrations.publicRepositoryPackages,
+            integrationCatalog: fixture.integrations.integrationCatalog,
+            integrationPackages: fixture.integrations.integrationPackageSource,
             integrationProjectedCompatibility: fixture.integrations.publicRepositoryCompatibility,
             integrationProjectedReleases: fixture.integrations.publicRepositoryReleases,
             integrationVerificationBundles: fixture.integrations.publicRepositoryVerificationBundles,
@@ -39,13 +39,26 @@ describe("production repository read composition", () => {
             { level: "warn", event: "repository.package_download_limiter_disabled" },
         ]);
     });
+
+    test("fails closed when active protection was composed without its limiter", () => {
+        const fixture = dependencies();
+
+        expect(() =>
+            productionRepositoryReadConfig(
+                { CMS_HTTP_CLIENT_ADDRESS_MODE: "direct", CMS_HTTP_TRUSTED_PROXY_HOPS: 0 },
+                fixture.integrations,
+                { repositoryPackageDownloadRateLimit: undefined },
+                fixture.logs.push.bind(fixture.logs),
+            ),
+        ).toThrow("requires an initialized rate limiter");
+    });
 });
 
 function dependencies() {
     return {
         integrations: {
-            publicRepositoryCatalog: { list: async () => [] },
-            publicRepositoryPackages: { getPackage: async () => null },
+            integrationCatalog: { list: async () => [] },
+            integrationPackageSource: { getPackage: async () => null },
             publicRepositoryCompatibility: { list: async () => null },
             publicRepositoryReleases: { get: async () => null },
             publicRepositoryVerificationBundles: { get: async () => null },

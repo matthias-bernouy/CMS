@@ -17,6 +17,7 @@
     ],
     "dependencies": {
         "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-editor-system-v2": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",

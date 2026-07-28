@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RepositoryCatalogPageProvider } from "@bernouy/cms-repository/catalog";
+import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
 import { HttpRepositoryCatalogReader } from "../../src/repositoryCatalog";
 import type { SourceEndpoint, SourceEndpointInterceptor } from "@bernouy/cms-sources";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
@@ -62,7 +62,7 @@ function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime 
 }
 
 describe("production image rollout composition", () => {
-    test("enables private management and the public catalog only for the configured management CMS", async () => {
+    test("enables private management and the public catalog API only for the configured management CMS", async () => {
         const root = await mkdtemp(join(tmpdir(), "cms-management-surface-"));
         try {
             const tokenFile = join(root, "token");
@@ -74,7 +74,6 @@ describe("production image rollout composition", () => {
                 administratorSubjectIdentifier: "opaque-admin-subject",
                 timeoutMs: 5_000,
             };
-            options.integrations.repositoryReadMode = "global";
             options.integrations.repositoryUrl = "http://cms-repository:3001/.cms/repository";
             const captured: CapturedSurfaces = {};
 
@@ -84,8 +83,9 @@ describe("production image rollout composition", () => {
                 administratorSubjectIdentifier: "opaque-admin-subject",
                 gateway: expect.any(Object),
             });
+            expect(captured.control?.editorDataSources).toEqual([REPOSITORY_CATALOG_EDITOR_DATA_SOURCE]);
             expect(captured.repository?.repositoryCatalog).toBeInstanceOf(HttpRepositoryCatalogReader);
-            expect(captured.delivery?.publicPageProviders).toEqual([expect.any(RepositoryCatalogPageProvider)]);
+            expect(captured.delivery?.publicPageProviders).toBeUndefined();
             await mounted.stop();
         } finally {
             await rm(root, { recursive: true, force: true });

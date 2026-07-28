@@ -14,7 +14,7 @@ import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } fro
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { createProductionRepositoryManagementAccess } from "../repositoryManagement/composition";
-import { RepositoryCatalogPageProvider } from "@bernouy/cms-repository/catalog";
+import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
 import { createProductionRepositoryCatalogReader } from "../repositoryCatalog";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
@@ -35,9 +35,6 @@ export async function mountProductionSurfaces(
     const { env, core, features, integrations, authentication } = options;
     const repositoryManagement = await createProductionRepositoryManagementAccess(env.repositoryManagement);
     const repositoryCatalog = repositoryManagement ? createProductionRepositoryCatalogReader(integrations) : undefined;
-    const repositoryCatalogProvider = repositoryCatalog
-        ? new RepositoryCatalogPageProvider(repositoryCatalog)
-        : undefined;
     const scheduledTriggers = runtime.startWorkers({
         functions: features.functions,
         sources: features.deliverySources,
@@ -115,6 +112,7 @@ export async function mountProductionSurfaces(
             integrationConnectorBaselineAdopters: integrations.integrationConnectorBaselineAdopters,
             integrationProvisioners: integrations.integrationProvisioners,
             ...(repositoryManagement ? { repositoryManagement } : {}),
+            ...(repositoryManagement ? { editorDataSources: [REPOSITORY_CATALOG_EDITOR_DATA_SOURCE] } : {}),
             dashboards: features.dashboards,
             relations: features.relations,
             functions: features.functions,
@@ -151,14 +149,16 @@ export async function mountProductionSurfaces(
     await controlCms.ready;
 
     const deliveryRunner = new runtime.Runner();
-    const repositoryReads = productionRepositoryReadConfig(env, integrations, core, runtime.log);
-    deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
-        new runtime.Repository({
-            runner: repositoryRunner,
-            ...repositoryReads,
-            ...(repositoryCatalog ? { repositoryCatalog } : {}),
+    if (repositoryCatalog) {
+        const repositoryReads = productionRepositoryReadConfig(env, integrations, core, runtime.log);
+        deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
+            new runtime.Repository({
+                runner: repositoryRunner,
+                ...repositoryReads,
+                repositoryCatalog,
+            });
         });
-    });
+    }
     new runtime.Delivery({
         runner: deliveryRunner,
         repository: core.repo,
@@ -185,7 +185,6 @@ export async function mountProductionSurfaces(
         filesMetadata: core.filesMetadata,
         filesBlob: core.filesBlob,
         variantStore: core.variantStore,
-        ...(repositoryCatalogProvider ? { publicPageProviders: [repositoryCatalogProvider] } : {}),
         auth: {
             ...authentication.publicAuthBase,
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,

@@ -355,6 +355,7 @@
       "version": "0.1.0",
       "devDependencies": {
         "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-official-integrations": "workspace:*",
       },
     },
     "packages/runtimes/cms-cli": {
@@ -530,6 +531,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-editor-system-v2": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",

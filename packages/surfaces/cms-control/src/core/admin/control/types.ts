@@ -11,6 +11,7 @@ import type {
 import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceReports } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
+import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { IdentityService } from "@bernouy/cms-identities";
@@ -47,6 +48,7 @@ type Configuration = {
 };
 
 export type ControlCmsOptions = Configuration & {
+    editorDataSources?: readonly EditorDataSource[];
     repositoryManagement?: RepositoryManagementAccess;
     integrationCatalog?: IntegrationDefinitionRepository;
     integrationPackageResolver?: IntegrationPackageResolver;

@@ -15,7 +15,4 @@ export {
     DEFAULT_REPOSITORY_CATALOG_READER_LIMITS,
     type RepositoryCatalogReaderLimits,
 } from "./limits";
-export {
-    createProductionRepositoryCatalogProvider,
-    createProductionRepositoryCatalogReader,
-} from "./composition";
+export { createProductionRepositoryCatalogReader } from "./composition";

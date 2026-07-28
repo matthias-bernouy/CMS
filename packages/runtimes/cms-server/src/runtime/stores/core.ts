@@ -57,7 +57,10 @@ export async function createCoreStores(env: RuntimeEnv) {
 
     const rateLimit = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 });
     await rateLimit.init();
-    const repositoryPackageDownloadRateLimit = await createRepositoryPackageDownloadRateLimiter(db, env);
+    const repositoryPackageDownloadRateLimit =
+        env.repositoryManagement && env.CMS_HTTP_CLIENT_ADDRESS_MODE !== "disabled"
+            ? await createRepositoryPackageDownloadRateLimiter(db, env)
+            : undefined;
     const mongoRoles = new MongoRolesRepository(db.collection("cms_roles"));
     await mongoRoles.init();
     const migration = await migrateLegacyOperatorRoles(users, mongoRoles);

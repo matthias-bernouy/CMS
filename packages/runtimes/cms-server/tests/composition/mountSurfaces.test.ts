@@ -130,9 +130,8 @@ describe("production surface mounting", () => {
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
         expect(controlConfig.repositoryManagement).toBeUndefined();
-        expect(repositoryConfig?.runner).toEqual({ basePath: "/.cms/repository", owner: "delivery" });
-        expect(repositoryConfig?.integrationCatalog).toBe(options.integrations.publicRepositoryCatalog);
-        expect(repositoryConfig?.integrationPackages).toBe(options.integrations.publicRepositoryPackages);
+        expect(controlConfig.editorDataSources).toBeUndefined();
+        expect(repositoryConfig).toBeUndefined();
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
@@ -169,7 +168,7 @@ describe("production surface mounting", () => {
             ["control", 3100],
             ["delivery", 3101],
         ]);
-        expect(events.filter((event) => event.includes("group:"))).toEqual(["group:delivery:/.cms/repository"]);
+        expect(events.filter((event) => event.includes("group:"))).toEqual([]);
         expect(logs).toEqual([
             "🚀 CMS listening",
             "   admin:        https://admin.example.test/admin/",

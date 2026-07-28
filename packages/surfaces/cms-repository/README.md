@@ -2,10 +2,10 @@
 
 Read-only HTTP surface for publishing CmsCore repository resources.
 
-The first exposed resource is the integration catalogue. The surface receives an
-`IntegrationDefinitionRepository` from the runtime, so the same API can publish
-definitions backed by local official resources today and an external repository
-later.
+The surface receives repository readers from its runtime and publishes their
+catalogue, immutable packages, and release evidence. Production CMS runtimes
+always point those readers at the configured global repository; ordinary CMS
+instances do not mount this surface on Delivery.
 
 ## Integration Routes
 
@@ -27,8 +27,8 @@ When a `RepositoryCatalogReader` is injected as `repositoryCatalog`, the
 surface also mounts `GET /api/integrations/catalog`. The response schema is
 `cms.repository.catalog.v1`; its `view` discriminator is `list`, `integration`,
 or `version` according to the optional `kind` and `version` query parameters.
-List responses accept the same bounded `q`, `category`, `provider`, and
-`compatibility` filters as the server-rendered catalogue. DTO collections use
+List responses accept bounded `q`, `category`, `provider`, and `compatibility`
+filters for the CMS-authored catalogue. DTO collections use
 arrays rather than record-shaped maps, exact versions include public download
 URLs, and release-note and instruction HTML is rendered through the shared
 Markdown sanitizer.
@@ -52,28 +52,15 @@ projection drops internal source or filesystem locations and unknown upstream
 fields. Responses use the short public cache policy and a representation ETag
 that changes when history is appended.
 
-## Transitional Public Catalog Provider
+## Public Catalog UI
 
-`@bernouy/cms-repository/catalog` exports `RepositoryCatalogPageProvider`. A
-runtime injects a bounded `RepositoryCatalogReader`, then registers the provider
-with Delivery. The provider has no network adapter, registry dependency, or
-Delivery dependency of its own.
+This surface does not render public pages. The `/integrations` UI belongs to the
+regular CMS site in `@bernouy/cms-official-sites`, where pages and Blocs bind to
+the anonymous same-origin catalog API. Dynamic selection remains query-based in
+the UI; `kind` and `version` select the richer API projections. Deploying the
+site resource is therefore required: there is no programmatic Delivery fallback.
 
-The CMS-authored `/integrations` page from `@bernouy/cms-official-sites` is the
-authoritative public UI once it has been published. Delivery consults stored CMS
-pages first; this provider remains a rollout fallback for repository-management
-instances that have not received the site resource yet. It can be removed in a
-later release after deployments have converged.
-
-It renders canonical, server-side pages for:
-
-- `/integrations`;
-- `/integrations/:kind`;
-- `/integrations/:kind/versions/:version`.
-
-The list page supports no-JavaScript search and category, technical-provider,
-and compatibility filters. Exact pages show channels, dependencies, artifact
-summaries, package identity, safe Markdown release notes and instructions, and
-public compatibility history. Package links always target the anonymous
-same-origin `/.cms/repository` API. Reader unavailability produces an explicit
-uncached error page without affecting unrelated Delivery paths.
+`@bernouy/cms-repository/catalog` exports a typed editor data-source descriptor
+for the catalog route. The repository-management runtime injects that descriptor
+into Control, so CMS authors can select catalog fields without representing the
+repository API as an installable integration.

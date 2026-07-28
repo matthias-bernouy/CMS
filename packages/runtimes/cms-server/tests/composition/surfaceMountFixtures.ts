@@ -22,6 +22,7 @@ export function surfaceMountFixtures() {
             CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: true,
             CMS_HTTP_CLIENT_ADDRESS_MODE: "trusted-proxy",
             CMS_HTTP_TRUSTED_PROXY_HOPS: 1,
+            integrationRepository: { url: "https://repository.example.test/.cms/repository" },
             repositoryManagement: undefined as
                 | undefined
                 | {
@@ -68,12 +69,7 @@ export function surfaceMountFixtures() {
             resolveSecret: token("resolve-secret"),
         },
         integrations: {
-            repositoryReadMode: "embedded" as "embedded" | "global",
-            repositoryUrl: "http://127.0.0.1:3101/.cms/repository",
-            integrationRepositoryCatalog: token("repository-catalog"),
-            integrationRepositoryPackages: token("repository-packages"),
-            publicRepositoryCatalog: token("public-repository-catalog"),
-            publicRepositoryPackages: token("public-repository-packages"),
+            repositoryUrl: "https://repository.example.test/.cms/repository",
             integrationCatalog: token("integration-catalog"),
             integrationPackageResolver: token("package-resolver"),
             integrationConnectorDeployers: [token("deployer")],

@@ -13,6 +13,7 @@ export const controlCmsAccessors = {
     cache: (state: ControlCmsState) => state.cache,
     secrets: (state: ControlCmsState) => state.secrets,
     roles: (state: ControlCmsState) => state.roles,
+    editorDataSources: (state: ControlCmsState) => state.configuration.editorDataSources ?? [],
     integrationCatalog: (state: ControlCmsState) => state.integrationCatalog,
     integrationPackageResolver: (state: ControlCmsState) => state.integrationPackageResolver,
     integrationUpgradeReleases: (state: ControlCmsState) => state.configuration.integrationUpgradeReleases,

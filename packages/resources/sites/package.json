@@ -22,6 +22,7 @@
         }
     },
     "devDependencies": {
-        "@bernouy/cms-content": "workspace:*"
+        "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-official-integrations": "workspace:*"
     }
 }

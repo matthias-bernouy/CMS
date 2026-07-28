@@ -12,7 +12,11 @@ and theme resources that CmsCore exposes to its users.
 ## Authoring And Deployment
 
 Each site directory is a regular `p9r` project. From that directory, update its
-code-managed Blocs first, then deploy the complete `site/` tree:
+code-managed Blocs first, then deploy the complete `site/` tree. Before either
+command, publish every pinned integration version that is not part of the
+historical repository bootstrap. For `cms-repository-hub`, this currently means
+publishing the checked-in official releases so that
+`documentation-blocs@1.0.0` exists in the registry.
 
 ```bash
 p9r push --type=blocs --force --dry-run
@@ -29,6 +33,8 @@ the CLI; they are never stored here.
 
 The production target must be the repository-management CMS, because that
 runtime exposes the enriched catalogue projection consumed by the page. The
+runtime does not generate a fallback catalogue page, so this site must be
+deployed before `/integrations` is announced publicly. The
 current clean-clone `p9r dev` and `p9r preview` composition does not provide that
 projection or materialize imported integration Blocs automatically; use a
 deployed CMS preview until that development composition is added.

@@ -4,24 +4,12 @@ import type {
     RepositoryCatalogCompatibilityReport,
     RepositoryCatalogIntegrationPage,
     RepositoryCatalogIntegrationSummary,
-    RepositoryCatalogPageRequestContext,
     RepositoryCatalogReader,
     RepositoryCatalogVersionContent,
     RepositoryCatalogVersionPage,
 } from "@bernouy/cms-repository/catalog";
 
 export const DIGEST = "a".repeat(64);
-
-export const EMPTY_CONTEXT: RepositoryCatalogPageRequestContext = {
-    searchParams: {},
-    hasSearchParams: false,
-};
-
-export function queryContext(
-    searchParams: Readonly<Record<string, readonly string[]>>,
-): RepositoryCatalogPageRequestContext {
-    return { searchParams, hasSearchParams: Object.keys(searchParams).length > 0 };
-}
 
 export function commerceSummary(): RepositoryCatalogIntegrationSummary {
     return {

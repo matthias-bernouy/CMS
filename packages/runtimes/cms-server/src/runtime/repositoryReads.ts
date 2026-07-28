@@ -17,8 +17,8 @@ export function productionRepositoryReadConfig(
     env: RepositoryReadEnv,
     integrations: Pick<
         ProductionIntegrationServices,
-        | "publicRepositoryCatalog"
-        | "publicRepositoryPackages"
+        | "integrationCatalog"
+        | "integrationPackageSource"
         | "publicRepositoryCompatibility"
         | "publicRepositoryReleases"
         | "publicRepositoryVerificationBundles"
@@ -34,35 +34,25 @@ export function productionRepositoryReadConfig(
     packageDownloadProtection: PublicPackageDownloadProtection;
 } {
     const clientAddressPolicy = policyFromEnv(env);
+    const repository = {
+        integrationCatalog: integrations.integrationCatalog,
+        integrationPackages: integrations.integrationPackageSource,
+        integrationProjectedCompatibility: integrations.publicRepositoryCompatibility,
+        integrationProjectedReleases: integrations.publicRepositoryReleases,
+        integrationVerificationBundles: integrations.publicRepositoryVerificationBundles,
+    };
     if (clientAddressPolicy.mode === "disabled") {
         report(JSON.stringify({ level: "warn", event: "repository.package_download_limiter_disabled" }));
         return {
-            integrationCatalog: integrations.publicRepositoryCatalog,
-            integrationPackages: integrations.publicRepositoryPackages,
-            ...(integrations.publicRepositoryCompatibility
-                ? { integrationProjectedCompatibility: integrations.publicRepositoryCompatibility }
-                : {}),
-            ...(integrations.publicRepositoryReleases
-                ? { integrationProjectedReleases: integrations.publicRepositoryReleases }
-                : {}),
-            ...(integrations.publicRepositoryVerificationBundles
-                ? { integrationVerificationBundles: integrations.publicRepositoryVerificationBundles }
-                : {}),
+            ...repository,
             packageDownloadProtection: { clientAddressPolicy },
         };
     }
+    if (!core.repositoryPackageDownloadRateLimit) {
+        throw new Error("Repository package download protection requires an initialized rate limiter");
+    }
     return {
-        integrationCatalog: integrations.publicRepositoryCatalog,
-        integrationPackages: integrations.publicRepositoryPackages,
-        ...(integrations.publicRepositoryCompatibility
-            ? { integrationProjectedCompatibility: integrations.publicRepositoryCompatibility }
-            : {}),
-        ...(integrations.publicRepositoryReleases
-            ? { integrationProjectedReleases: integrations.publicRepositoryReleases }
-            : {}),
-        ...(integrations.publicRepositoryVerificationBundles
-            ? { integrationVerificationBundles: integrations.publicRepositoryVerificationBundles }
-            : {}),
+        ...repository,
         packageDownloadProtection: { clientAddressPolicy, rateLimiter: core.repositoryPackageDownloadRateLimit },
     };
 }

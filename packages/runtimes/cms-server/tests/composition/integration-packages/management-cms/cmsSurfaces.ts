@@ -6,7 +6,6 @@ import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/
 import { DEFAULT_INTEGRATION_PACKAGE_LIMITS } from "@bernouy/cms-integration-packages";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { RepositoryCms } from "@bernouy/cms-repository";
-import { RepositoryCatalogPageProvider } from "@bernouy/cms-repository/catalog";
 import { BunRunner } from "@bernouy/http-runner";
 import {
     DEFAULT_REPOSITORY_CATALOG_READER_LIMITS,
@@ -104,11 +103,7 @@ export async function startManagementCmsSurfaces(origins: SurfaceOrigins): Promi
             packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
         });
     });
-    new DeliveryCms({
-        runner: deliveryRunner,
-        repository,
-        publicPageProviders: [new RepositoryCatalogPageProvider(repositoryCatalog)],
-    });
+    new DeliveryCms({ runner: deliveryRunner, repository });
     deliveryRunner.start(0);
 
     return {

@@ -1,4 +1,3 @@
-import type { TPage } from "@bernouy/cms-content";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import type { PublicRepositoryRelease } from "../compatibility/releaseContracts";
 
@@ -113,7 +112,7 @@ export type RepositoryCatalogVersionPage = Readonly<{
 
 export type RepositoryCatalogDocument<T> = Readonly<{
     value: T;
-    /** Changes whenever any rendered field or compatibility revision changes. */
+    /** Changes whenever any projected field or compatibility revision changes. */
     revision: string;
 }>;
 
@@ -123,13 +122,6 @@ export interface RepositoryCatalogReader {
     getVersion(kind: string, version: string): Promise<RepositoryCatalogDocument<RepositoryCatalogVersionPage> | null>;
 }
 
-export type RepositoryCatalogPageRequestContext = Readonly<{
+export type RepositoryCatalogQueryContext = Readonly<{
     searchParams: Readonly<Record<string, readonly string[]>>;
-    hasSearchParams: boolean;
-}>;
-
-export type RepositoryCatalogPageResolution = Readonly<{
-    page: TPage;
-    status?: number;
-    cacheIdentity?: string;
 }>;
