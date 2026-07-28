@@ -44,10 +44,10 @@ describe("Control analytics routes", () => {
             "settings",
             "compliance",
         ]) {
-            expect(runner.endpoints.get(`GET /api/analytics/${path}`)).toBe(2);
+            expect(runner.endpoints.get(`GET /api/analytics/${path}`)).toBe(1);
         }
-        expect(runner.endpoints.get("POST /api/analytics/settings")).toBe(2);
-        expect(runner.endpoints.get("POST /api/analytics/compliance/snapshots")).toBe(2);
+        expect(runner.endpoints.get("POST /api/analytics/settings")).toBe(1);
+        expect(runner.endpoints.get("POST /api/analytics/compliance/snapshots")).toBe(1);
 
         const health = runner.handlers.get("GET /api/analytics/health");
         const response = await health!(new Request("http://control/api/analytics/health?range=24h"));
@@ -84,7 +84,7 @@ describe("Control analytics routes", () => {
         );
         await cms.ready;
 
-        expect(runner.endpoints.get("GET /api/analytics/endpoints")).toBe(2);
+        expect(runner.endpoints.get("GET /api/analytics/endpoints")).toBe(1);
         const handler = runner.handlers.get("GET /api/analytics/endpoints");
         const response = await handler!(new Request("http://control/api/analytics/endpoints?range=1h&limit=25"));
         expect(response.status).toBe(200);

@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import type { ManagementCmsSurfaces } from "./cmsSurfaces";
+import type { RepositoryHubSurfaces } from "./cmsSurfaces";
 import type { RepositoryProcess } from "./repositoryProcess";
 
 export function controlRequest(
@@ -15,17 +15,16 @@ export function controlRequest(
 }
 
 export function assertBrowserBoundary(
-    surfaces: ManagementCmsSurfaces,
+    surfaces: RepositoryHubSurfaces,
     process: RepositoryProcess,
-    privateBaseUrl: string,
     browserResponses: readonly string[],
 ): void {
     const browserTraffic = JSON.stringify(surfaces.browserRequests);
     expect(browserTraffic).not.toContain(process.token);
-    expect(browserTraffic).not.toContain(privateBaseUrl);
+    expect(browserTraffic).not.toContain(process.managementOrigin);
     expect(surfaces.browserRequests.every((request) => request.authorization === null)).toBeTrue();
     for (const response of browserResponses) {
         expect(response).not.toContain(process.token);
-        expect(response).not.toContain(privateBaseUrl);
+        expect(response).not.toContain(process.managementOrigin);
     }
 }

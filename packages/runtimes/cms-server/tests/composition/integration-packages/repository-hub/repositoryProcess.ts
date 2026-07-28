@@ -14,7 +14,7 @@ export type RepositoryProcess = Readonly<{
 }>;
 
 export async function startRepositoryProcess(): Promise<RepositoryProcess> {
-    const root = await mkdtemp(join(tmpdir(), "cms-management-acceptance-"));
+    const root = await mkdtemp(join(tmpdir(), "cms-repository-hub-acceptance-"));
     const registryRoot = join(root, "registry");
     const tokenFile = join(root, "management-token");
     const maintenanceTokenFile = join(root, "maintenance-token");

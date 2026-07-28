@@ -29,8 +29,9 @@ describe("production CMS composition", () => {
         expect(surfaces).toMatch(/sourceResolveSecret\s*:\s*features\.resolveSecret\s*,/);
     });
 
-    test("mounts repository reads only for the management CMS and never uses a loopback repository", async () => {
+    test("mounts repository reads only for the configured hub CMS and never uses a loopback repository", async () => {
         const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
+        const stores = await Bun.file(new URL("../src/runtime/stores/core.ts", import.meta.url)).text();
         const entrypoint = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
         const controlSection = surfaces.slice(
             surfaces.indexOf("const controlRunner"),
@@ -43,6 +44,11 @@ describe("production CMS composition", () => {
         expect(deliverySection).toMatch(
             /if\s*\(repositoryCatalog\)\s*\{[\s\S]*deliveryRunner\.group\("\/\.cms\/repository"/,
         );
+        expect(surfaces).toContain("env.CMS_REPOSITORY_HUB_FACADE_ENABLED");
+        expect(stores).toMatch(
+            /env\.CMS_REPOSITORY_HUB_FACADE_ENABLED\s*&&\s*env\.CMS_HTTP_CLIENT_ADDRESS_MODE\s*!==\s*"disabled"/,
+        );
+        expect(`${surfaces}\n${stores}`).not.toContain("env.repositoryManagement");
         expect(entrypoint).not.toContain("127.0.0.1");
         expect(entrypoint).toContain("repository: env.integrationRepository");
     });

@@ -22,15 +22,8 @@ export function surfaceMountFixtures() {
             CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: true,
             CMS_HTTP_CLIENT_ADDRESS_MODE: "trusted-proxy",
             CMS_HTTP_TRUSTED_PROXY_HOPS: 1,
+            CMS_REPOSITORY_HUB_FACADE_ENABLED: false,
             integrationRepository: { url: "https://repository.example.test/.cms/repository" },
-            repositoryManagement: undefined as
-                | undefined
-                | {
-                      url: string;
-                      tokenFile: string;
-                      administratorSubjectIdentifier: string;
-                      timeoutMs: number;
-                  },
         },
         analyticsVisitorSecret: "analytics-secret",
         core: {

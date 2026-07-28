@@ -1,13 +1,12 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import type { ManagementCmsSurfaces } from "./cmsSurfaces";
-import { startManagementCmsSurfaces } from "./cmsSurfaces";
-import { candidateDocument } from "./publication";
+import type { RepositoryHubSurfaces } from "./cmsSurfaces";
+import { startRepositoryHubSurfaces } from "./cmsSurfaces";
 import type { RepositoryProcess } from "./repositoryProcess";
 import { startRepositoryProcess } from "./repositoryProcess";
 import { assertBrowserBoundary, controlRequest } from "./httpBoundary";
 
 let repository: RepositoryProcess | undefined;
-let cms: ManagementCmsSurfaces | undefined;
+let cms: RepositoryHubSurfaces | undefined;
 
 afterEach(async () => {
     await cms?.stop();
@@ -16,15 +15,12 @@ afterEach(async () => {
     repository = undefined;
 });
 
-describe("management CMS process acceptance", () => {
-    test("keeps public delivery anonymous while the exact CMS owner submits a private candidate", async () => {
+describe("repository hub CMS process acceptance", () => {
+    test("keeps the CMS-authored facade public without mounting management in Control", async () => {
         repository = await startRepositoryProcess();
-        const privateBaseUrl = `${repository.managementOrigin}/.cms/repository-management`;
         const publicBaseUrl = `${repository.publicOrigin}/.cms/repository`;
-        cms = await startManagementCmsSurfaces({
+        cms = await startRepositoryHubSurfaces({
             publicRepositoryBaseUrl: publicBaseUrl,
-            privateManagementBaseUrl: privateBaseUrl,
-            token: repository.token,
         });
 
         const anonymousCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations`);
@@ -68,66 +64,12 @@ describe("management CMS process acceptance", () => {
         expect((await fetch(`${repository.publicOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
         expect((await fetch(`${repository.managementOrigin}/.cms/repository/api/integrations`)).status).toBe(404);
 
-        const denied = await controlRequest(cms.controlOrigin, "/api/repository/status", "other-admin");
-        expect(denied.status).toBe(403);
-        expect(cms.upstreamRequests).toHaveLength(0);
-        const anonymousControl = await fetch(`${cms.controlOrigin}/api/repository/status`, { redirect: "manual" });
-        expect(anonymousControl.status).toBe(302);
-
-        const candidate = await candidateDocument();
-        const submitted = await controlRequest(cms.controlOrigin, "/api/repository/candidates", "owner", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: candidate,
-        });
-        expect(submitted.status).toBe(202);
-        const submittedText = await submitted.text();
-        const submittedCandidate = JSON.parse(submittedText).candidate as { candidateId: string; status: string };
-        expect(submittedCandidate).toMatchObject({ status: "queued" });
-        expect(cms.upstreamRequests).toHaveLength(1);
-        expect(cms.upstreamRequests[0]).toMatchObject({
-            method: "POST",
-            authorization: `Bearer ${repository.token}`,
-        });
-        expect(cms.upstreamRequests[0]?.url).toBe(`${privateBaseUrl}/api/integrations/candidates`);
-
-        const candidateStatus = await controlRequest(
-            cms.controlOrigin,
-            `/api/repository/candidates/status?candidateId=${encodeURIComponent(submittedCandidate.candidateId)}`,
-            "owner",
-        );
-        expect(candidateStatus.status).toBe(200);
-        const candidateStatusText = await candidateStatus.text();
-        expect(JSON.parse(candidateStatusText)).toMatchObject({ candidate: { status: "queued" } });
-
-        const status = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
-        expect(status.status).toBe(200);
-        const statusText = await status.text();
-        expect(JSON.parse(statusText)).toMatchObject({
-            ready: true,
-            health: "healthy",
-            integrations: 14,
-            versions: 14,
-        });
-        const managementRelease = await controlRequest(
-            cms.controlOrigin,
-            "/api/repository/release?kind=commerce&version=1.0.0",
-            "owner",
-        );
-        expect(managementRelease.status).toBe(200);
-        const managementReleaseText = await managementRelease.text();
-        expect(JSON.parse(managementReleaseText)).toMatchObject({
-            verification: {
-                origin: "legacy-backfill",
-                createdAt: expect.any(String),
-                activeContracts: expect.any(Array),
-                results: expect.arrayContaining([expect.objectContaining({ durationMs: expect.any(Number) })]),
-            },
-        });
+        const removedApi = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
+        expect(removedApi.status).toBe(404);
         const adminPage = await controlRequest(cms.controlOrigin, "/admin/repository", "owner");
-        expect(adminPage.status).toBe(200);
+        expect(adminPage.status).toBe(404);
         const adminHtml = await adminPage.text();
-        expect(adminHtml).toContain("Integration repository");
+        expect(adminHtml).not.toContain("Integration repository");
 
         const relayedCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations`);
         expect(relayedCatalog.status).toBe(200);
@@ -144,29 +86,9 @@ describe("management CMS process acceptance", () => {
         const catalogHtml = await catalogPage.text();
         expect(catalogHtml).toContain("CMS_REPOSITORY_HUB");
         expect(catalogHtml).not.toContain("Remote demo");
-        assertBrowserBoundary(cms, repository, privateBaseUrl, [
-            submittedText,
-            candidateStatusText,
-            statusText,
-            managementReleaseText,
-            adminHtml,
-            releaseText,
-            verificationText,
-            packageText,
-            catalogHtml,
-        ]);
+        assertBrowserBoundary(cms, repository, [adminHtml, releaseText, verificationText, packageText, catalogHtml]);
 
         await repository.stop();
-        const unavailable = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
-        expect(unavailable.status).toBe(503);
-        const unavailableText = await unavailable.text();
-        expect(JSON.parse(unavailableText)).toEqual({
-            code: "repository_management_unavailable",
-            error: "Integration repository management is unavailable",
-        });
-        expect(unavailableText).not.toContain(repository.token);
-        expect(unavailableText).not.toContain(privateBaseUrl);
-        expect(unavailableText).not.toMatch(/ECONNREFUSED|fetch failed/iu);
         const unavailableCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations/catalog`);
         expect(unavailableCatalog.status).toBe(503);
         const availableHub = await fetch(`${cms.deliveryOrigin}/integrations`);

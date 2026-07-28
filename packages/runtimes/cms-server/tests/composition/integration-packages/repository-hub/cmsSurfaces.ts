@@ -6,6 +6,7 @@ import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/
 import { DEFAULT_INTEGRATION_PACKAGE_LIMITS } from "@bernouy/cms-integration-packages";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { RepositoryCms } from "@bernouy/cms-repository";
+import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
 import { BunRunner } from "@bernouy/http-runner";
 import {
     DEFAULT_REPOSITORY_CATALOG_READER_LIMITS,
@@ -14,7 +15,6 @@ import {
     HttpRepositoryReleaseReader,
     HttpRepositoryVerificationBundleReader,
 } from "../../../../src/repositoryCatalog";
-import { HttpRepositoryManagementGateway } from "../../../../src/repositoryManagement/gateway";
 import { seedRepositoryHubPage } from "./hubPage";
 
 export type CapturedRequest = Readonly<{
@@ -24,47 +24,28 @@ export type CapturedRequest = Readonly<{
     body: string;
 }>;
 
-export type ManagementCmsSurfaces = Readonly<{
+export type RepositoryHubSurfaces = Readonly<{
     controlOrigin: string;
     deliveryOrigin: string;
     browserRequests: CapturedRequest[];
-    upstreamRequests: CapturedRequest[];
     stop(): Promise<void>;
 }>;
 
 type SurfaceOrigins = Readonly<{
     publicRepositoryBaseUrl: string;
-    privateManagementBaseUrl: string;
-    token: string;
 }>;
 
-export async function startManagementCmsSurfaces(origins: SurfaceOrigins): Promise<ManagementCmsSurfaces> {
+export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promise<RepositoryHubSurfaces> {
     const browserRequests: CapturedRequest[] = [];
-    const upstreamRequests: CapturedRequest[] = [];
     const controlRunner = new BunRunner();
     controlRunner.use(async (request, next) => {
         browserRequests.push(await captureRequest(request));
         return await next();
     });
-    const gatewayFetch: typeof fetch = async (input, init) => {
-        const request = new Request(input, init);
-        upstreamRequests.push(await captureRequest(request));
-        return await fetch(request);
-    };
-    const gateway = new HttpRepositoryManagementGateway({
-        baseUrl: origins.privateManagementBaseUrl,
-        token: origins.token,
-        administratorSubjectIdentifier: "repository-owner",
-        timeoutMs: 60_000,
-        fetch: gatewayFetch,
-    });
     const repository = new InMemoryCmsRepository();
     await seedRepositoryHubPage(repository);
     const control = new ControlCms(controlRunner, repository, new CookieAuthentication(), {
-        repositoryManagement: {
-            administratorSubjectIdentifier: "repository-owner",
-            gateway,
-        },
+        editorDataSources: [REPOSITORY_CATALOG_EDITOR_DATA_SOURCE],
     });
     await control.ready;
     controlRunner.start(0);
@@ -110,7 +91,6 @@ export async function startManagementCmsSurfaces(origins: SurfaceOrigins): Promi
         controlOrigin: runnerOrigin(controlRunner),
         deliveryOrigin: runnerOrigin(deliveryRunner),
         browserRequests,
-        upstreamRequests,
         async stop() {
             await Promise.all([controlRunner.stopGracefully(1_000), deliveryRunner.stopGracefully(1_000)]);
         },

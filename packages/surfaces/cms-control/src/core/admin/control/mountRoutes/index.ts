@@ -14,8 +14,6 @@ import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy
 import { renderLoginPage } from "cms-control/core/admin/auth/authPages";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import { createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
-import { createRepositoryManagementAccessGuard } from "cms-control/core/admin/control/mountRoutes/repositoryAccess";
-import { mountRepositoryManagementRoutes } from "cms-control/core/admin/control/mountRoutes/repositoryManagement";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
 import { mountAnalyticsRoutes } from "cms-control/core/admin/control/mountRoutes/analytics";
 import serveStaticFolder from "cms-control/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder";
@@ -31,12 +29,6 @@ export function mountControlCmsRoutes(
 ): Promise<void> {
     const runner = state.runner;
     const authGuard = createControlAccessGuard(cms.basePath, state.auth);
-    const repositoryGuard = createRepositoryManagementAccessGuard(
-        cms.basePath,
-        state.auth,
-        state.configuration.repositoryManagement,
-    );
-    const guardedControl = [authGuard, repositoryGuard];
     runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, cms.basePath));
 
     const controlPublicAuth = state.configuration.publicAuth
@@ -111,7 +103,7 @@ export function mountControlCmsRoutes(
                 cspExtras: () => cms.getCspExtras(),
             });
         },
-        guardedControl,
+        [authGuard],
     );
     let apiRoutesReady = Promise.resolve();
     runner.group(
@@ -119,9 +111,8 @@ export function mountControlCmsRoutes(
         (apiRunner) => {
             apiRoutesReady = serveApi(apiRunner, apiDir, cms);
             mountAnalyticsRoutes(apiRunner, state);
-            mountRepositoryManagementRoutes(apiRunner, state.configuration.repositoryManagement);
         },
-        guardedControl,
+        [authGuard],
     );
     return Promise.all([staticRoutesReady, apiRoutesReady]).then(() => undefined);
 }

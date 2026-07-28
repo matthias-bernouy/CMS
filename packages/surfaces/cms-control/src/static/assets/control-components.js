@@ -11377,16 +11377,6 @@ p {
             Integrations
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="repository" data-repository-route hidden>
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <ellipse cx="12" cy="5" rx="8" ry="3" />
-                <path d="M4 5v7c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
-                <path d="M4 12v7c0 1.66 3.58 3 8 3s8-1.34 8-3v-7" />
-            </svg>
-            Repository
-        </w13c-lateral-menu-item>
-
         <w13c-lateral-menu-item data-route="users">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -11444,32 +11434,10 @@ p {
 </w13c-left-menu-layout>
 `;
 
-  // src/components/admin/Layout/AdminLayout/repositoryNavigation.ts
-  function discoverRepositoryNavigation(root, basePath) {
-    const request = new AbortController;
-    const item = root.querySelector("[data-repository-route]");
-    if (!item) {
-      return request;
-    }
-    item.hidden = true;
-    fetch(`${basePath}/api/repository/status`, {
-      headers: { Accept: "application/json" },
-      signal: request.signal
-    }).then((response) => {
-      if (!request.signal.aborted) {
-        item.hidden = response.status !== 200 && response.status !== 503;
-      }
-    }).catch(() => {
-      item.hidden = true;
-    });
-    return request;
-  }
-
   // src/components/admin/Layout/AdminLayout/AdminLayout.ts
   var DEFAULT_BRAND_NAME = "CmsCore";
 
   class FixedAdminLayout extends U2 {
-    _repositoryRequest = null;
     _titleSlot = null;
     _actionSlot = null;
     _pageHeader = null;
@@ -11490,8 +11458,6 @@ p {
       this._actionSlot = root.querySelector('slot[name="action"]');
       this._pageHeader = root.querySelector(".admin-page-header");
       this._syncRoutes(root, basePath);
-      this._repositoryRequest?.abort();
-      this._repositoryRequest = discoverRepositoryNavigation(root, basePath);
       this._setBrandName(root, DEFAULT_BRAND_NAME);
       this._syncPageHeader();
       this._syncSiteName(root);
@@ -11500,8 +11466,6 @@ p {
       this._actionSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
     }
     disconnectedCallback() {
-      this._repositoryRequest?.abort();
-      this._repositoryRequest = null;
       document.removeEventListener("settings:saved", this._onSettingsSaved);
       this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
       this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
@@ -32242,2443 +32206,8 @@ button[slot="back"]:disabled {
     customElements.define("cms-integrations-admin", IntegrationBrowser);
   }
 
-  // src/components/admin/Resources/Repository/template.html
-  var template_default16 = `<div class="repository-console">
-    <section class="panel" aria-labelledby="repository-overview-title">
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">Repository health</p>
-                <h2 id="repository-overview-title">Operational overview</h2>
-            </div>
-            <button type="button" class="secondary" data-refresh>Refresh</button>
-        </div>
-        <div class="feedback" data-overview-feedback role="status" aria-live="polite"></div>
-        <div class="status-grid" data-status aria-live="polite"></div>
-        <div data-diagnostics></div>
-    </section>
-
-    <section class="panel" aria-labelledby="repository-versions-title">
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">Version catalogue</p>
-                <h2 id="repository-versions-title">Inspect an integration</h2>
-            </div>
-        </div>
-        <form class="lookup" data-versions-form>
-            <label>
-                <span>Integration kind</span>
-                <input name="kind" autocomplete="off" required placeholder="commerce">
-            </label>
-            <button type="submit">Load versions</button>
-        </form>
-        <div class="feedback" data-versions-feedback role="status" aria-live="polite"></div>
-        <div data-versions></div>
-    </section>
-
-    <section class="panel" aria-labelledby="repository-compatibility-title" data-compatibility-panel hidden>
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">Release evidence</p>
-                <h2 id="repository-compatibility-title" data-selection-title>Selected version</h2>
-            </div>
-        </div>
-        <div class="feedback" data-compatibility-feedback role="status" aria-live="polite"></div>
-        <div data-release></div>
-        <h3>Legacy compatibility history</h3>
-        <div data-compatibility></div>
-        <button type="button" class="secondary" data-load-more hidden>Load older revisions</button>
-    </section>
-
-    <section class="panel" aria-labelledby="repository-publish-title">
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">Verified publication</p>
-                <h2 id="repository-publish-title">Submit a release candidate</h2>
-            </div>
-        </div>
-        <p>Upload a canonical candidate containing the immutable runtime package and its separate verification bundle.</p>
-        <form data-candidate-form>
-            <label>
-                <span>Candidate JSON</span>
-                <input type="file" name="candidate" accept="application/json,.json" required>
-            </label>
-            <button type="submit">Submit for verification</button>
-        </form>
-        <div class="feedback" data-candidate-feedback role="status" aria-live="polite"></div>
-        <div class="feedback" data-candidate-progress role="status" aria-live="polite"></div>
-        <div data-candidate-report aria-live="polite"></div>
-    </section>
-
-    <section class="panel" aria-labelledby="repository-actions-title" data-actions-panel hidden>
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">Controlled changes</p>
-                <h2 id="repository-actions-title">Manage the selected version</h2>
-            </div>
-        </div>
-        <p class="selection-summary" data-action-selection></p>
-        <div class="action-grid">
-            <form data-reevaluation-form>
-                <fieldset>
-                    <legend>Reevaluate compatibility</legend>
-                    <label>
-                        <span>Reason</span>
-                        <textarea name="reason" rows="3" required></textarea>
-                    </label>
-                    <label>
-                        <span>Evidence IDs <small>(comma or line separated)</small></span>
-                        <textarea name="evidenceIds" rows="3"></textarea>
-                    </label>
-                    <button type="submit">Create report revision</button>
-                </fieldset>
-                <div class="feedback" data-reevaluation-feedback role="status" aria-live="polite"></div>
-            </form>
-
-            <form data-promotion-form>
-                <fieldset>
-                    <legend>Promote to stable</legend>
-                    <p>This action uses the current admissible composite release decision, never compatibility alone.</p>
-                    <label>
-                        <span>Type version <code data-confirm-version></code></span>
-                        <input name="confirmationVersion" autocomplete="off" required>
-                    </label>
-                    <label>
-                        <span>Type release decision ID <code data-confirm-report></code></span>
-                        <input name="confirmationReportRevisionId" autocomplete="off" required>
-                    </label>
-                    <label>
-                        <span>Reason <small>(optional)</small></span>
-                        <textarea name="reason" rows="2"></textarea>
-                    </label>
-                    <button type="submit" class="danger">Promote exact version</button>
-                </fieldset>
-                <div class="feedback" data-promotion-feedback role="status" aria-live="polite"></div>
-            </form>
-
-            <form data-block-form>
-                <fieldset>
-                    <legend>Block this version</legend>
-                    <p data-block-preview>Channel repair preview unavailable.</p>
-                    <label>
-                        <span>Type version <code data-block-confirm-version></code></span>
-                        <input name="blockVersion" autocomplete="off" required>
-                    </label>
-                    <label>
-                        <span>Type decision digest <code data-block-confirm-digest></code></span>
-                        <input name="blockDecisionDigest" autocomplete="off" required>
-                    </label>
-                    <label>
-                        <span>Blocking reason</span>
-                        <textarea name="reason" rows="3" required></textarea>
-                    </label>
-                    <button type="submit" class="danger">Block and repair channels</button>
-                </fieldset>
-                <div class="feedback" data-block-feedback role="status" aria-live="polite"></div>
-            </form>
-        </div>
-    </section>
-</div>
-`;
-
-  // src/components/admin/Resources/Repository/styles/controls.css
-  var controls_default3 = `cms-repository-admin form label,
-cms-repository-admin fieldset {
-    display: grid;
-    gap: 0.35rem;
-}
-
-cms-repository-admin form label {
-    font-weight: 600;
-}
-
-cms-repository-admin input,
-cms-repository-admin textarea,
-cms-repository-admin button {
-    font: inherit;
-}
-
-cms-repository-admin input,
-cms-repository-admin textarea {
-    border: 1px solid #b8c1cf;
-    border-radius: 0.4rem;
-    box-sizing: border-box;
-    padding: 0.6rem;
-    width: 100%;
-}
-
-cms-repository-admin button {
-    align-self: end;
-    background: #2257d6;
-    border: 0;
-    border-radius: 0.4rem;
-    color: #fff;
-    cursor: pointer;
-    padding: 0.65rem 0.9rem;
-}
-
-cms-repository-admin button.secondary {
-    background: #e8edf5;
-    color: #162035;
-}
-
-cms-repository-admin button.danger {
-    background: #a5192e;
-}
-
-cms-repository-admin button:disabled {
-    cursor: wait;
-    opacity: 0.65;
-}
-
-cms-repository-admin .feedback:not(:empty) {
-    border-radius: 0.4rem;
-    margin: 0.8rem 0;
-    padding: 0.65rem 0.8rem;
-}
-
-cms-repository-admin .feedback[data-tone="error"] {
-    background: #fff0f1;
-    color: #821326;
-}
-
-cms-repository-admin .feedback[data-tone="success"] {
-    background: #eaf8ef;
-    color: #176332;
-}
-
-cms-repository-admin .feedback[data-tone="info"] {
-    background: #eef4ff;
-    color: #173c91;
-}
-
-cms-repository-admin .version-table {
-    border-collapse: collapse;
-    margin-top: 1rem;
-    width: 100%;
-}
-
-cms-repository-admin .version-table th,
-cms-repository-admin .version-table td {
-    border-bottom: 1px solid #e2e8f0;
-    padding: 0.65rem;
-    text-align: left;
-    vertical-align: top;
-}
-
-cms-repository-admin code {
-    overflow-wrap: anywhere;
-}
-
-cms-repository-admin fieldset {
-    border: 1px solid #dfe4ec;
-    border-radius: 0.5rem;
-    padding: 1rem;
-}
-
-cms-repository-admin fieldset > * + * {
-    margin-top: 0.8rem;
-}
-
-@media (max-width: 42rem) {
-    cms-repository-admin .version-table {
-        display: block;
-        overflow-x: auto;
-    }
-}
-`;
-
-  // src/components/admin/Resources/Repository/styles/layout.css
-  var layout_default3 = `cms-repository-admin .repository-console {
-    color: #162035;
-    display: grid;
-    gap: 1.25rem;
-}
-
-cms-repository-admin .panel {
-    background: #fff;
-    border: 1px solid #dfe4ec;
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-}
-
-cms-repository-admin .section-heading,
-cms-repository-admin .lookup,
-cms-repository-admin .status-grid,
-cms-repository-admin .action-grid {
-    display: flex;
-    gap: 1rem;
-}
-
-cms-repository-admin .section-heading {
-    align-items: start;
-    justify-content: space-between;
-}
-
-cms-repository-admin .section-heading h2,
-cms-repository-admin fieldset,
-cms-repository-admin .panel p {
-    margin-top: 0;
-}
-
-cms-repository-admin .eyebrow {
-    color: #64748b;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
-}
-
-cms-repository-admin .status-grid,
-cms-repository-admin .action-grid {
-    flex-wrap: wrap;
-}
-
-cms-repository-admin .metric {
-    background: #f7f9fc;
-    border-radius: 0.5rem;
-    flex: 1 1 8rem;
-    padding: 0.85rem;
-}
-
-cms-repository-admin .metric strong,
-cms-repository-admin .metric span {
-    display: block;
-}
-
-cms-repository-admin .metric strong {
-    font-size: 1.25rem;
-}
-
-cms-repository-admin .lookup {
-    align-items: end;
-    flex-wrap: wrap;
-}
-
-cms-repository-admin .lookup label {
-    flex: 1 1 16rem;
-}
-
-cms-repository-admin .diagnostic,
-cms-repository-admin .candidate-report,
-cms-repository-admin .report,
-cms-repository-admin .quarantine {
-    border-left: 3px solid #cbd5e1;
-    margin: 0.65rem 0;
-    padding: 0.45rem 0.75rem;
-}
-
-cms-repository-admin .candidate-report {
-    border-color: #2257d6;
-    margin-top: 1rem;
-}
-
-cms-repository-admin .candidate-observation,
-cms-repository-admin .migration-report {
-    border-top: 1px solid #e2e8f0;
-    padding-top: 0.65rem;
-}
-
-cms-repository-admin .report[data-outcome="breaking"],
-cms-repository-admin .quarantine {
-    border-color: #a5192e;
-}
-
-cms-repository-admin .metadata,
-cms-repository-admin .evidence-list {
-    color: #475569;
-    font-size: 0.875rem;
-}
-
-cms-repository-admin .action-grid > form {
-    flex: 1 1 22rem;
-}
-`;
-
-  // src/components/admin/Resources/Repository/styles/index.ts
-  var styles_default5 = `${layout_default3}
-${controls_default3}`;
-
-  // src/components/admin/Resources/Repository/contracts/parsing.ts
-  var MAX_ITEMS = 4096;
-  var MAX_TEXT = 16384;
-
-  class RepositoryUiContractError extends Error {
-    constructor() {
-      super("Repository response is invalid");
-      this.name = "RepositoryUiContractError";
-    }
-  }
-  function readRecord(value3) {
-    if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
-      throw new RepositoryUiContractError;
-    }
-    return value3;
-  }
-  function readArray(value3, maximum = MAX_ITEMS) {
-    if (!Array.isArray(value3) || value3.length > maximum) {
-      throw new RepositoryUiContractError;
-    }
-    return value3;
-  }
-  function readText(value3) {
-    if (typeof value3 !== "string" || value3.length === 0 || value3.length > MAX_TEXT) {
-      throw new RepositoryUiContractError;
-    }
-    return value3;
-  }
-  function readOptionalText(value3) {
-    return value3 === undefined || value3 === null ? undefined : readText(value3);
-  }
-  function readBoolean(value3) {
-    if (typeof value3 !== "boolean") {
-      throw new RepositoryUiContractError;
-    }
-    return value3;
-  }
-  function readCount(value3) {
-    if (!Number.isSafeInteger(value3) || value3 < 0) {
-      throw new RepositoryUiContractError;
-    }
-    return value3;
-  }
-  function optionalProperty(key, value3) {
-    return value3 === undefined ? {} : { [key]: value3 };
-  }
-
-  // src/components/admin/Resources/Repository/contracts/observability.ts
-  function parseRepositoryMetrics(value3) {
-    const metrics = readRecord(value3);
-    const operations = readRecord(metrics.operations);
-    const compatibility = readRecord(metrics.compatibility);
-    const publicPackages = readRecord(metrics.publicPackages);
-    const repositoryReads = readRecord(metrics.repositoryReads);
-    const snapshot = readRecord(metrics.snapshot);
-    return {
-      operations: {
-        stablePromotion: operationCounter(operations.stablePromotion),
-        compatibilityReevaluation: operationCounter(operations.compatibilityReevaluation)
-      },
-      compatibility: {
-        reevaluations: readCount(compatibility.reevaluations),
-        warnings: readCount(compatibility.warnings)
-      },
-      publicPackages: {
-        packagesServed: readCount(publicPackages.packagesServed),
-        packageBytes: readCount(publicPackages.packageBytes),
-        releaseNotesServed: readCount(publicPackages.releaseNotesServed),
-        releaseNotesBytes: readCount(publicPackages.releaseNotesBytes),
-        rateLimitRejections: readCount(publicPackages.rateLimitRejections),
-        downloadRateLimitRejections: readCount(publicPackages.downloadRateLimitRejections)
-      },
-      repositoryReads: {
-        total: readCount(repositoryReads.total),
-        succeeded: readCount(repositoryReads.succeeded),
-        notFound: readCount(repositoryReads.notFound),
-        rejected: readCount(repositoryReads.rejected),
-        failed: readCount(repositoryReads.failed),
-        totalDurationMs: readCount(repositoryReads.totalDurationMs),
-        maximumDurationMs: readCount(repositoryReads.maximumDurationMs)
-      },
-      snapshot: {
-        integrations: readCount(snapshot.integrations),
-        versions: readCount(snapshot.versions),
-        diagnostics: readCount(snapshot.diagnostics),
-        quarantined: readCount(snapshot.quarantined),
-        recoveryDiagnostics: readCount(snapshot.recoveryDiagnostics)
-      },
-      filesystem: filesystem(metrics.filesystem)
-    };
-  }
-  function parseRepositoryRecentOperations(value3) {
-    return readArray(value3, 100).map((item) => {
-      const operation = readRecord(item);
-      return {
-        timestamp: readText(operation.timestamp),
-        operation: readText(operation.operation),
-        operationId: readText(operation.operationId),
-        outcome: readText(operation.outcome),
-        durationMs: readCount(operation.durationMs),
-        ...optionalTextFields(operation, [
-          "kind",
-          "version",
-          "digest",
-          "reportId",
-          "reportRevisionId",
-          "evaluatorName",
-          "evaluatorVersion",
-          "compatibilityOutcome",
-          "errorCode"
-        ])
-      };
-    });
-  }
-  function operationCounter(value3) {
-    const counter = readRecord(value3);
-    return {
-      attempted: readCount(counter.attempted),
-      inFlight: readCount(counter.inFlight),
-      succeeded: readCount(counter.succeeded),
-      rejected: readCount(counter.rejected),
-      failed: readCount(counter.failed),
-      totalDurationMs: readCount(counter.totalDurationMs),
-      maximumDurationMs: readCount(counter.maximumDurationMs)
-    };
-  }
-  function filesystem(value3) {
-    const capacity = readRecord(value3);
-    const checkedAt = readOptionalText(capacity.checkedAt);
-    if (capacity.status === "unavailable") {
-      return { status: "unavailable", ...checkedAt ? { checkedAt } : {} };
-    }
-    if (capacity.status !== "available") {
-      throw new TypeError("Repository filesystem status is invalid");
-    }
-    return {
-      status: "available",
-      ...checkedAt ? { checkedAt } : {},
-      totalBytes: decimalBytes(capacity.totalBytes),
-      freeBytes: decimalBytes(capacity.freeBytes),
-      availableBytes: decimalBytes(capacity.availableBytes),
-      usedBytes: decimalBytes(capacity.usedBytes),
-      usedBasisPoints: readCount(capacity.usedBasisPoints)
-    };
-  }
-  function decimalBytes(value3) {
-    const text5 = readText(value3);
-    if (!/^(0|[1-9][0-9]{0,30})$/u.test(text5)) {
-      throw new TypeError("Repository capacity is invalid");
-    }
-    return text5;
-  }
-  function optionalTextFields(source2, keys) {
-    const result = {};
-    for (const key of keys) {
-      const value3 = readOptionalText(source2[key]);
-      if (value3) {
-        result[key] = value3;
-      }
-    }
-    return result;
-  }
-
-  // src/components/admin/Resources/Repository/contracts/read.ts
-  function parseRepositoryStatus(value3) {
-    const object = readRecord(value3);
-    return {
-      ready: readBoolean(object.ready),
-      health: readText(object.health),
-      integrations: readCount(object.integrations),
-      versions: readCount(object.versions),
-      diagnostics: readCount(object.diagnostics),
-      quarantined: readCount(object.quarantined),
-      recoveryDiagnostics: readCount(object.recoveryDiagnostics),
-      ...object.metrics === undefined ? {} : { metrics: parseRepositoryMetrics(object.metrics) }
-    };
-  }
-  function parseRepositoryDiagnostics(value3) {
-    const object = readRecord(value3);
-    return {
-      health: readText(object.health),
-      diagnostics: readArray(object.diagnostics).map(parseDiagnostic),
-      quarantined: readArray(object.quarantined).map(parseQuarantine),
-      recovery: readArray(object.recovery).map(parseDiagnostic),
-      ...object.metrics === undefined ? {} : { metrics: parseRepositoryMetrics(object.metrics) },
-      recentOperations: object.recentOperations === undefined ? [] : parseRepositoryRecentOperations(object.recentOperations)
-    };
-  }
-  function parseRepositoryVersions(value3) {
-    const object = readRecord(value3);
-    return {
-      kind: readText(object.kind),
-      ...optionalProperty("stable", readOptionalText(object.stable)),
-      ...optionalProperty("latest", readOptionalText(object.latest)),
-      versions: readArray(object.versions).map((entry) => {
-        const version = readRecord(entry);
-        return {
-          version: readText(version.version),
-          ...optionalProperty("digest", readOptionalText(version.digest)),
-          ...optionalProperty("status", readOptionalText(version.status)),
-          ...version.blockPreview === undefined ? {} : { blockPreview: parseChannelPreview(version.blockPreview) },
-          ...version.release === undefined ? {} : { release: parseVersionRelease(version.release) },
-          ...version.compatibility === null || version.compatibility === undefined ? {} : { compatibility: parseVersionCompatibility(version.compatibility) }
-        };
-      })
-    };
-  }
-  function parseChannelPreview(value3) {
-    const source2 = readRecord(value3);
-    return { current: parseChannels(source2.current), next: parseChannels(source2.next) };
-  }
-  function parseChannels(value3) {
-    const source2 = readRecord(value3);
-    return {
-      ...optionalProperty("stable", readOptionalText(source2.stable)),
-      ...optionalProperty("latest", readOptionalText(source2.latest))
-    };
-  }
-  function parseVersionRelease(value3) {
-    const source2 = readRecord(value3);
-    return {
-      ...optionalProperty("verificationDigest", readOptionalText(source2.verificationDigest)),
-      ...optionalProperty("verificationOrigin", readOptionalText(source2.verificationOrigin)),
-      ...optionalProperty("verificationOutcome", readOptionalText(source2.verificationOutcome)),
-      ...optionalProperty("decisionRevisionId", readOptionalText(source2.decisionRevisionId)),
-      ...optionalProperty("decisionDigest", readOptionalText(source2.decisionDigest)),
-      admissible: readBoolean(source2.admissible)
-    };
-  }
-  function parseDiagnostic(value3) {
-    const object = readRecord(value3);
-    return {
-      code: readText(object.code),
-      message: readText(object.message),
-      ...optionalProperty("stage", readOptionalText(object.stage)),
-      ...optionalProperty("kind", readOptionalText(object.kind)),
-      ...optionalProperty("version", readOptionalText(object.version)),
-      ...optionalProperty("operationId", readOptionalText(object.operationId))
-    };
-  }
-  function parseQuarantine(value3) {
-    const object = readRecord(value3);
-    return {
-      ...optionalProperty("kind", readOptionalText(object.kind)),
-      diagnosticCodes: readArray(object.diagnosticCodes, 256).map(readText)
-    };
-  }
-  function parseVersionCompatibility(value3) {
-    const object = readRecord(value3);
-    return {
-      rootReportId: readText(object.rootReportId),
-      currentReportRevisionId: readText(object.currentReportRevisionId),
-      currentReportDigest: readText(object.currentReportDigest),
-      outcome: readText(object.outcome),
-      contractAdmissible: readBoolean(object.contractAdmissible),
-      warning: readBoolean(object.warning)
-    };
-  }
-
-  // src/components/admin/Resources/Repository/contracts/candidates.ts
-  function parseRepositoryCandidateResponse(value3) {
-    return parseRepositoryCandidate(readRecord(value3).candidate);
-  }
-  function parseRepositoryCandidate(value3) {
-    const source2 = readRecord(value3);
-    const failure = source2.lastFailure === undefined ? undefined : readRecord(source2.lastFailure);
-    return {
-      candidateId: readText(source2.candidateId),
-      revision: readCount(source2.revision),
-      status: readText(source2.status),
-      kind: readText(source2.kind),
-      version: readText(source2.version),
-      candidateDigest: readText(source2.candidateDigest),
-      packageDigest: readText(source2.packageDigest),
-      verificationDigest: readText(source2.verificationDigest),
-      createdAt: readText(source2.createdAt),
-      updatedAt: readText(source2.updatedAt),
-      expiresAt: readText(source2.expiresAt),
-      attemptCount: readCount(source2.attemptCount),
-      ...readOptionalText(failure?.code) ? { failureCode: readText(failure?.code) } : {}
-    };
-  }
-
-  // src/components/admin/Resources/Repository/contracts/candidateReport/shared.ts
-  function parseVersionReference(value3) {
-    const source2 = readRecord(value3);
-    return {
-      kind: readText(source2.kind),
-      version: readText(source2.version),
-      packageDigest: readText(source2.packageDigest)
-    };
-  }
-  function parseObservation(value3) {
-    const source2 = readRecord(value3);
-    return {
-      status: readText(source2.status),
-      evidenceDigests: readArray(source2.evidenceDigests).map(readText),
-      diagnosticCodes: readArray(source2.diagnosticCodes).map(readText)
-    };
-  }
-  function optionalBoolean(value3) {
-    return value3 === undefined ? undefined : readBoolean(value3);
-  }
-  function optionalCount(value3) {
-    return value3 === undefined ? undefined : readCount(value3);
-  }
-  function optionalText(key, value3) {
-    return optionalProperty(key, readOptionalText(value3));
-  }
-
-  // src/components/admin/Resources/Repository/contracts/candidateReport/migrations.ts
-  function parseMigrations(value3) {
-    return readArray(value3, 256).map((entry) => {
-      const source2 = readRecord(entry);
-      return {
-        migrationInputDigest: readText(source2.migrationInputDigest),
-        source: parseVersionReference(source2.source),
-        target: parseVersionReference(source2.target),
-        connectorKey: readText(source2.connectorKey),
-        lineageId: readText(source2.lineageId),
-        sourceMigrationRevision: requiredCount(source2.sourceMigrationRevision),
-        targetMigrationRevision: requiredCount(source2.targetMigrationRevision),
-        supportedSourceRange: readText(source2.supportedSourceRange),
-        ...optionalProperty("result", source2.result === undefined ? undefined : parseMigrationResult(source2.result))
-      };
-    });
-  }
-  function parseMigrationResult(value3) {
-    const source2 = readRecord(value3);
-    return {
-      runnerDigest: readText(source2.runnerDigest),
-      environmentDigest: readText(source2.environmentDigest),
-      freshTarget: parseTargetObservation(source2.freshTarget),
-      migratedTarget: parseTargetObservation(source2.migratedTarget),
-      equivalence: parseEquivalence(source2.equivalence),
-      ledger: parseLedger(source2.ledger),
-      replay: parseReplay(source2.replay),
-      cutover: parseCutover(source2.cutover)
-    };
-  }
-  function parseTargetObservation(value3) {
-    const source2 = readRecord(value3);
-    return {
-      ...parseObservation(source2),
-      ...optionalText("stateDigest", source2.stateDigest),
-      ...optionalText("schemaDigest", source2.schemaDigest),
-      ...optionalText("dataDigest", source2.dataDigest),
-      ...optionalText("bindingDigest", source2.bindingDigest),
-      functionDigests: readArray(source2.functionDigests).map((entry) => {
-        const functionDigest = readRecord(entry);
-        return { functionId: readText(functionDigest.functionId), digest: readText(functionDigest.digest) };
-      })
-    };
-  }
-  function parseEquivalence(value3) {
-    const source2 = readRecord(value3);
-    return {
-      ...parseObservation(source2),
-      ...optionalProperty("equivalent", optionalBoolean(source2.equivalent)),
-      differenceCount: readArray(source2.differences).length
-    };
-  }
-  function parseLedger(value3) {
-    const source2 = readRecord(value3);
-    return {
-      ...parseObservation(source2),
-      ...optionalProperty("sourceRevision", optionalCount(source2.sourceRevision)),
-      ...optionalProperty("targetRevision", optionalCount(source2.targetRevision)),
-      ...optionalProperty("freshBaselineRecorded", optionalBoolean(source2.freshBaselineRecorded)),
-      ...optionalProperty("migrationAndLedgerAtomic", optionalBoolean(source2.migrationAndLedgerAtomic)),
-      ...optionalProperty("checksumMismatchRejected", optionalBoolean(source2.checksumMismatchRejected)),
-      ...optionalProperty("emptyLedgerRejected", optionalBoolean(source2.emptyLedgerRejected)),
-      migrationIds: readArray(source2.rows).map((entry) => readText(readRecord(entry).migrationId))
-    };
-  }
-  function parseReplay(value3) {
-    const source2 = readRecord(value3);
-    return {
-      ...parseObservation(source2),
-      ...optionalProperty("unchanged", optionalBoolean(source2.unchanged)),
-      ...optionalProperty("ledgerRowsBefore", optionalCount(source2.ledgerRowsBefore)),
-      ...optionalProperty("ledgerRowsAfterFirstRun", optionalCount(source2.ledgerRowsAfterFirstRun)),
-      ...optionalProperty("ledgerRowsAfterReplay", optionalCount(source2.ledgerRowsAfterReplay))
-    };
-  }
-  function parseCutover(value3) {
-    const source2 = readRecord(value3);
-    return {
-      cmsMediated: cutoverObservation(source2.cmsMediated, ["bindingRevisionBefore", "bindingRevisionAfter"]),
-      providerDirect: providerCutover(source2.providerDirect),
-      activation: activationCutover(source2.activation)
-    };
-  }
-  function cutoverObservation(value3, fields2) {
-    const source2 = readRecord(value3);
-    return {
-      ...parseObservation(source2),
-      strategy: readText(source2.strategy),
-      ...optionalText(fields2[0], source2[fields2[0]]),
-      ...optionalText(fields2[1], source2[fields2[1]])
-    };
-  }
-  function providerCutover(value3) {
-    const source2 = readRecord(value3);
-    return {
-      ...parseObservation(source2),
-      strategy: readText(source2.strategy),
-      callbackIds: readArray(source2.callbackIds).map(readText),
-      ...optionalProperty("signingSecretContinuityObserved", optionalBoolean(source2.signingSecretContinuityObserved))
-    };
-  }
-  function activationCutover(value3) {
-    const source2 = readRecord(value3);
-    return {
-      ...parseObservation(source2),
-      ...optionalProperty("pointOfNoReturnCrossed", optionalBoolean(source2.pointOfNoReturnCrossed)),
-      ...optionalProperty("cleanupObserved", optionalBoolean(source2.cleanupObserved))
-    };
-  }
-  function requiredCount(value3) {
-    const result = optionalCount(value3);
-    if (result === undefined) {
-      throw new TypeError("Repository candidate migration revision is missing");
-    }
-    return result;
-  }
-
-  // src/components/admin/Resources/Repository/contracts/candidateReport/parsing.ts
-  function parseRepositoryCandidateReport(value3) {
-    const report = readRecord(readRecord(value3).report);
-    if (readText(report.schema) !== "cms.repository.management.candidate-report.v1") {
-      throw new TypeError("Repository candidate report schema is unsupported");
-    }
-    return {
-      candidate: parseRepositoryCandidate(report.candidate),
-      ...optionalProperty("compatibility", report.compatibility === undefined ? undefined : parseCompatibility(report.compatibility)),
-      ...optionalProperty("verification", report.verification === undefined ? undefined : parseVerification(report.verification)),
-      migrations: parseMigrations(report.migrations)
-    };
-  }
-  function parseCompatibility(value3) {
-    const source2 = readRecord(value3);
-    return {
-      outcome: readText(source2.outcome),
-      contractAdmissible: readBoolean(source2.contractAdmissible),
-      releaseLevel: readText(source2.releaseLevel),
-      requiredReleaseLevel: readText(source2.requiredReleaseLevel),
-      baselines: readArray(source2.baselines).map(parseVersionReference),
-      informationalBaselines: readArray(source2.informationalBaselines).map(parseVersionReference),
-      findings: readArray(source2.findings).map((entry) => {
-        const finding = readRecord(entry);
-        return {
-          findingId: readText(finding.findingId),
-          classification: readText(finding.classification),
-          surface: readText(finding.surface),
-          path: readText(finding.path),
-          code: readText(finding.code),
-          message: readText(finding.message)
-        };
-      })
-    };
-  }
-  function parseVerification(value3) {
-    const source2 = readRecord(value3);
-    const runner = readRecord(source2.runner);
-    return {
-      state: readText(source2.state),
-      runner: {
-        name: readText(runner.name),
-        version: readText(runner.version),
-        imageDigest: readText(runner.imageDigest)
-      },
-      ...optionalProperty("environment", source2.environment === undefined ? undefined : parseEnvironment(source2.environment)),
-      ...optionalProperty("outcome", source2.outcome === undefined ? undefined : readText(source2.outcome)),
-      suites: readArray(source2.suites).map(parseSuite)
-    };
-  }
-  function parseEnvironment(value3) {
-    const source2 = readRecord(value3);
-    return {
-      digest: readText(source2.digest),
-      versions: readArray(source2.versions).map((entry) => {
-        const version = readRecord(entry);
-        return { name: readText(version.name), version: readText(version.version) };
-      })
-    };
-  }
-  function parseSuite(value3) {
-    const source2 = readRecord(value3);
-    return {
-      suiteId: readText(source2.suiteId),
-      source: readText(source2.source),
-      ...optionalProperty("applicable", source2.applicable === undefined ? undefined : readBoolean(source2.applicable)),
-      ...optionalProperty("outcome", source2.outcome === undefined ? undefined : readText(source2.outcome)),
-      ...optionalProperty("durationMs", source2.durationMs === undefined ? undefined : readCount(source2.durationMs)),
-      ...optionalProperty("attempts", source2.attempts === undefined ? undefined : readCount(source2.attempts)),
-      ...optionalProperty("cacheHit", source2.cacheHit === undefined ? undefined : readBoolean(source2.cacheHit)),
-      diagnosticCodes: source2.diagnostics === undefined ? [] : readArray(source2.diagnostics).map((entry) => readText(readRecord(entry).code))
-    };
-  }
-  // src/components/admin/Resources/Repository/contracts/release/parsing.ts
-  function parseRepositoryRelease(value3) {
-    const source2 = readRecord(value3);
-    return {
-      kind: readText(source2.kind),
-      version: readText(source2.version),
-      packageDigest: readText(source2.packageDigest),
-      ...readOptionalText(source2.verificationDigest) ? { verificationDigest: readText(source2.verificationDigest) } : {},
-      status: readText(source2.status),
-      installable: readBoolean(source2.installable),
-      freshInstallOnly: readBoolean(source2.freshInstallOnly),
-      ...source2.compatibility === undefined ? {} : { compatibility: compatibility(source2.compatibility) },
-      ...source2.verification === undefined ? {} : { verification: verification(source2.verification) },
-      migrations: readArray(source2.migrations, 256).map(migration),
-      ...source2.decision === undefined ? {} : { decision: decision(source2.decision) }
-    };
-  }
-  function compatibility(value3) {
-    const source2 = readRecord(value3);
-    return {
-      reportId: readText(source2.reportId),
-      reportDigest: readText(source2.reportDigest),
-      origin: readText(source2.origin),
-      outcome: readText(source2.outcome),
-      contractAdmissible: readBoolean(source2.contractAdmissible),
-      releaseLevel: readText(source2.releaseLevel),
-      requiredReleaseLevel: readText(source2.requiredReleaseLevel),
-      findings: readArray(source2.findings).map((value4) => {
-        const finding = readRecord(value4);
-        return {
-          findingId: readText(finding.findingId),
-          classification: readText(finding.classification),
-          surface: readText(finding.surface),
-          path: readText(finding.path),
-          code: readText(finding.code),
-          message: readText(finding.message)
-        };
-      })
-    };
-  }
-  function verification(value3) {
-    const source2 = readRecord(value3);
-    const runner = readRecord(source2.runner);
-    const environment = readRecord(source2.environment);
-    return {
-      reportId: readText(source2.reportId),
-      reportDigest: readText(source2.reportDigest),
-      origin: readText(source2.origin),
-      createdAt: readText(source2.createdAt),
-      outcome: readText(source2.outcome),
-      runner: {
-        name: readText(runner.name),
-        version: readText(runner.version),
-        imageDigest: readText(runner.imageDigest)
-      },
-      environment: { digest: readText(environment.digest), versions: textRecord(environment.versions) },
-      activeContracts: readArray(source2.activeContracts).map((value4) => {
-        const contract = readRecord(value4);
-        return {
-          contractId: readText(contract.contractId),
-          ownerVersion: readText(contract.ownerVersion),
-          digest: readText(contract.digest)
-        };
-      }),
-      results: readArray(source2.results).map((value4) => {
-        const result = readRecord(value4);
-        return {
-          suiteId: readText(result.suiteId),
-          source: readText(result.source),
-          required: readBoolean(result.required),
-          outcome: readText(result.outcome),
-          durationMs: readCount(result.durationMs),
-          attempts: readCount(result.attempts),
-          cacheHit: readBoolean(result.cacheHit),
-          diagnostics: readArray(result.diagnostics).map((value5) => {
-            const diagnostic = readRecord(value5);
-            return { code: readText(diagnostic.code), message: readText(diagnostic.message) };
-          })
-        };
-      })
-    };
-  }
-  function migration(value3) {
-    const source2 = readRecord(value3);
-    const identity = readRecord(source2.source);
-    const runner = readRecord(source2.runner);
-    const cutover = readRecord(source2.cutover);
-    return {
-      reportId: readText(source2.reportId),
-      reportDigest: readText(source2.reportDigest),
-      origin: readText(source2.origin),
-      source: {
-        kind: readText(identity.kind),
-        version: readText(identity.version),
-        packageDigest: readText(identity.packageDigest)
-      },
-      supportedSourceRange: readText(source2.supportedSourceRange),
-      connectorKey: readText(source2.connectorKey),
-      lineageId: readText(source2.lineageId),
-      migrationRevision: readCount(source2.migrationRevision),
-      outcome: readText(source2.outcome),
-      runner: {
-        name: readText(runner.name),
-        version: readText(runner.version),
-        imageDigest: readText(runner.imageDigest)
-      },
-      environmentDigest: readText(source2.environmentDigest),
-      checks: checkRecord(source2.checks),
-      cutover: {
-        cmsMediated: readText(cutover.cmsMediated),
-        providerDirect: readText(cutover.providerDirect)
-      },
-      ...source2.cutoverEvidence === undefined ? {} : { cutoverEvidence: cutoverEvidence(source2.cutoverEvidence) },
-      rollback: readText(source2.rollback),
-      pointOfNoReturn: readText(source2.pointOfNoReturn),
-      delayedCleanupVerified: readBoolean(source2.delayedCleanupVerified),
-      ...source2.operationalEvidence === undefined ? {} : { operationalEvidence: operationalEvidence(source2.operationalEvidence) }
-    };
-  }
-  function cutoverEvidence(value3) {
-    const source2 = readRecord(value3);
-    return {
-      cmsMediated: migrationCheck(source2.cmsMediated),
-      providerDirect: migrationCheck(source2.providerDirect),
-      activation: migrationCheck(source2.activation)
-    };
-  }
-  function operationalEvidence(value3) {
-    const source2 = readRecord(value3);
-    const downtime = readRecord(source2.downtime);
-    const drain = readRecord(source2.drain);
-    const rollback = readRecord(source2.rollback);
-    const pointOfNoReturn = readRecord(source2.pointOfNoReturn);
-    const cleanup = readRecord(source2.cleanup);
-    const observedSeconds = downtime.observedSeconds === undefined ? undefined : readCount(downtime.observedSeconds);
-    const downtimeDigest = readOptionalText(downtime.evidenceDigest);
-    const cmsDrain = drain.cmsMediatedSeconds === undefined ? undefined : readCount(drain.cmsMediatedSeconds);
-    const providerDrain = drain.providerDirectSeconds === undefined ? undefined : readCount(drain.providerDirectSeconds);
-    const rollbackDigest = readOptionalText(rollback.evidenceDigest);
-    const pointOfNoReturnDigest = readOptionalText(pointOfNoReturn.evidenceDigest);
-    const cleanupDelay = cleanup.delaySeconds === undefined ? undefined : readCount(cleanup.delaySeconds);
-    const cleanupDigest = readOptionalText(cleanup.evidenceDigest);
-    return {
-      downtime: {
-        status: readText(downtime.status),
-        ...observedSeconds === undefined ? {} : { observedSeconds },
-        ...downtimeDigest ? { evidenceDigest: downtimeDigest } : {}
-      },
-      drain: {
-        ...cmsDrain === undefined ? {} : { cmsMediatedSeconds: cmsDrain },
-        ...providerDrain === undefined ? {} : { providerDirectSeconds: providerDrain }
-      },
-      rollback: {
-        capability: readText(rollback.capability),
-        verified: readBoolean(rollback.verified),
-        ...rollbackDigest ? { evidenceDigest: rollbackDigest } : {}
-      },
-      pointOfNoReturn: {
-        phase: readText(pointOfNoReturn.phase),
-        observation: readText(pointOfNoReturn.observation),
-        ...pointOfNoReturnDigest ? { evidenceDigest: pointOfNoReturnDigest } : {}
-      },
-      cleanup: {
-        ...cleanupDelay === undefined ? {} : { delaySeconds: cleanupDelay },
-        observed: readBoolean(cleanup.observed),
-        ...cleanupDigest ? { evidenceDigest: cleanupDigest } : {}
-      }
-    };
-  }
-  function checkRecord(value3) {
-    const source2 = readRecord(value3);
-    return Object.fromEntries(Object.entries(source2).slice(0, 64).map(([key, value4]) => [key, migrationCheck(value4)]));
-  }
-  function migrationCheck(value3) {
-    const check = readRecord(value3);
-    const evidenceDigest = readOptionalText(check.evidenceDigest);
-    return {
-      outcome: readText(check.outcome),
-      ...evidenceDigest ? { evidenceDigest } : {}
-    };
-  }
-  function decision(value3) {
-    const source2 = readRecord(value3);
-    return {
-      decisionId: readText(source2.decisionId),
-      decisionDigest: readText(source2.decisionDigest),
-      admissible: readBoolean(source2.admissible),
-      reasons: readArray(source2.reasons, 256).map(readText),
-      createdAt: readText(source2.createdAt)
-    };
-  }
-  function textRecord(value3) {
-    const source2 = readRecord(value3);
-    return Object.fromEntries(Object.entries(source2).slice(0, 64).map(([key, entry]) => [key, readText(entry)]));
-  }
-
-  // src/components/admin/Resources/Repository/contracts/reports.ts
-  function parseRepositoryCompatibilityPage(value3) {
-    const object = readRecord(value3);
-    return {
-      root: parseRepositoryCompatibilityReport(object.root, "root"),
-      current: parseRepositoryCompatibilityReport(object.current),
-      currentRevisionId: readText(object.currentRevisionId),
-      currentReportDigest: readText(object.currentReportDigest),
-      revisions: readArray(object.revisions, 100).map((report) => parseRepositoryCompatibilityReport(report, "revision")),
-      totalRevisions: readCount(object.totalRevisions),
-      ...optionalProperty("nextCursor", readOptionalText(object.nextCursor))
-    };
-  }
-  function parseRepositoryCompatibilityReport(value3, expectedType) {
-    const object = readRecord(value3);
-    const revisionType = object.revisionType;
-    if (revisionType !== "root" && revisionType !== "revision" || expectedType && revisionType !== expectedType) {
-      throw new RepositoryUiContractError;
-    }
-    const evaluator = readRecord(object.evaluator);
-    const supersedes = revisionType === "revision" ? readText(object.supersedes) : undefined;
-    return {
-      reportId: readText(object.reportId),
-      revisionType,
-      origin: readOrigin(object.origin),
-      kind: readText(object.kind),
-      version: readText(object.version),
-      packageDigest: readText(object.packageDigest),
-      outcome: readText(object.outcome),
-      contractAdmissible: readBoolean(object.contractAdmissible),
-      evaluator: { name: readText(evaluator.name), version: readText(evaluator.version) },
-      createdAt: readText(object.createdAt),
-      releaseLevel: readText(object.releaseLevel),
-      requiredReleaseLevel: readText(object.requiredReleaseLevel),
-      baselines: readArray(object.baselines, 16).map(parseBaseline),
-      informationalBaselines: readArray(object.informationalBaselines, 16).map(parseBaseline),
-      findings: readArray(object.findings, 4096).map(parseFinding),
-      ...optionalProperty("noBaselineReason", readOptionalText(object.noBaselineReason)),
-      ...supersedes ? { supersedes } : {},
-      provenance: parseProvenance(object.provenance)
-    };
-  }
-  function parseRepositoryReevaluationResult(value3) {
-    const object = readRecord(value3);
-    const release = object.release === undefined ? undefined : readReevaluationRelease(object.release);
-    return {
-      revision: parseRepositoryCompatibilityReport(object.revision, "revision"),
-      currentReport: readCurrentReport(object.currentReport),
-      ...release ? { release } : {}
-    };
-  }
-  function readReevaluationRelease(value3) {
-    const object = readRecord(value3);
-    const decision2 = readRecord(object.decision);
-    return {
-      compatibilityReportRevisionId: readText(object.compatibilityReportRevisionId),
-      decision: {
-        revisionId: readText(decision2.revisionId),
-        digest: readText(decision2.digest)
-      },
-      admissible: readBoolean(object.admissible),
-      eligibilityChanged: readBoolean(object.eligibilityChanged)
-    };
-  }
-  function parseRepositoryPromotionResult(value3) {
-    const object = readRecord(value3);
-    const record4 = readRecord(object.record);
-    return {
-      operationId: readText(object.operationId),
-      kind: readText(record4.kind),
-      version: readText(record4.version),
-      reportRevisionId: readText(record4.reportRevisionId),
-      ...optionalProperty("previousStable", readOptionalText(record4.previousStable))
-    };
-  }
-  function parseRepositoryVersionBlockResult(value3) {
-    const object = readRecord(value3);
-    const record4 = readRecord(object.record);
-    const channels = readRecord(record4.nextChannels);
-    return {
-      operationId: readText(object.operationId),
-      kind: readText(record4.kind),
-      version: readText(record4.version),
-      nextChannels: {
-        ...optionalProperty("stable", readOptionalText(channels.stable)),
-        ...optionalProperty("latest", readOptionalText(channels.latest))
-      }
-    };
-  }
-  function parseRepositoryActionErrorDetails(value3) {
-    const object = readRecord(value3);
-    const report = object.report === undefined ? undefined : parseRepositoryCompatibilityReport(object.report);
-    return {
-      ...optionalProperty("currentReportRevisionId", readOptionalText(object.currentReportRevisionId)),
-      ...optionalProperty("existingDigest", readOptionalText(object.existingDigest)),
-      ...optionalProperty("latest", readOptionalText(object.latest)),
-      ...optionalProperty("reportRevisionId", readOptionalText(object.reportRevisionId)),
-      ...report ? { report } : {}
-    };
-  }
-  function parseBaseline(value3) {
-    const object = readRecord(value3);
-    return {
-      kind: readText(object.kind),
-      version: readText(object.version),
-      packageDigest: readText(object.packageDigest)
-    };
-  }
-  function parseFinding(value3) {
-    const object = readRecord(value3);
-    return {
-      findingId: readText(object.findingId),
-      classification: readText(object.classification),
-      surface: readText(object.surface),
-      code: readText(object.code),
-      message: readText(object.message)
-    };
-  }
-  function readCurrentReport(value3) {
-    const object = readRecord(value3);
-    return { revisionId: readText(object.revisionId), reportDigest: readText(object.reportDigest) };
-  }
-  function readOrigin(value3) {
-    if (value3 !== "admission" && value3 !== "legacy-backfill") {
-      throw new RepositoryUiContractError;
-    }
-    return value3;
-  }
-  function parseProvenance(value3) {
-    const object = readRecord(value3);
-    return {
-      reason: readText(object.reason),
-      evidenceIds: readArray(object.evidenceIds ?? [], 256).map(readText)
-    };
-  }
-
-  // src/components/admin/Resources/Repository/api.ts
-  class RepositoryApiError extends Error {
-    status;
-    code;
-    retryAfter;
-    details;
-    constructor(status, code, retryAfter, details) {
-      super(`Repository request failed with status ${status}`);
-      this.status = status;
-      this.code = code;
-      this.retryAfter = retryAfter;
-      this.details = details;
-      this.name = "RepositoryApiError";
-    }
-  }
-  function fetchRepositoryStatus(signal) {
-    return get("/status", parseRepositoryStatus, undefined, signal);
-  }
-  function fetchRepositoryDiagnostics(signal) {
-    return get("/diagnostics", parseRepositoryDiagnostics, undefined, signal);
-  }
-  function fetchRepositoryVersions(kind, signal) {
-    return get("/versions", parseRepositoryVersions, { kind }, signal);
-  }
-  function fetchRepositoryRelease(kind, version, signal) {
-    return get("/release", parseRepositoryRelease, { kind, version }, signal);
-  }
-  function fetchRepositoryCompatibility(kind, version, after, signal) {
-    return get("/compatibility", parseRepositoryCompatibilityPage, { kind, version, limit: "100", ...after ? { after } : {} }, signal);
-  }
-  function submitRepositoryCandidate(file, signal) {
-    return request("/candidates", parseRepositoryCandidateResponse, {
-      method: "POST",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: file,
-      signal
-    });
-  }
-  function fetchRepositoryCandidateStatus(candidateId, signal) {
-    return get("/candidates/status", parseRepositoryCandidateResponse, { candidateId }, signal);
-  }
-  function fetchRepositoryCandidateReport(candidateId, signal) {
-    return get("/candidates/report", parseRepositoryCandidateReport, { candidateId }, signal);
-  }
-  function requestRepositoryReevaluation(input2, signal) {
-    return postJson2("/reevaluations", input2, parseRepositoryReevaluationResult, signal);
-  }
-  function requestRepositoryStablePromotion(input2, signal) {
-    return postJson2("/stable-promotions", input2, parseRepositoryPromotionResult, signal);
-  }
-  function requestRepositoryVersionBlock(input2, signal) {
-    return postJson2("/version-blocks", input2, parseRepositoryVersionBlockResult, signal);
-  }
-  function get(path, parse, query8, signal) {
-    const search = new URLSearchParams(query8).toString();
-    return request(`${path}${search ? `?${search}` : ""}`, parse, {
-      headers: { Accept: "application/json" },
-      signal
-    });
-  }
-  function postJson2(path, body, parse, signal) {
-    return request(path, parse, {
-      method: "POST",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal
-    });
-  }
-  async function request(path, parse, init) {
-    const response = await fetch(`${getMetaBasePath()}/api/repository${path}`, init);
-    const body = await response.json().catch(() => {
-      return;
-    });
-    if (!response.ok) {
-      throw repositoryApiError(response, body);
-    }
-    return parse(body);
-  }
-  function repositoryApiError(response, body) {
-    let code;
-    let details = {};
-    try {
-      const object = readRecord(body);
-      code = readOptionalText(object.code);
-      details = parseRepositoryActionErrorDetails(object);
-    } catch {}
-    const retryAfter = response.status === 429 ? normalizedRetryAfter(response.headers.get("retry-after")) : undefined;
-    return new RepositoryApiError(response.status, code, retryAfter, details);
-  }
-  function normalizedRetryAfter(value3) {
-    return value3 && /^[1-9][0-9]*$/u.test(value3) ? value3 : undefined;
-  }
-
-  // src/components/admin/Resources/Repository/forms/fields.ts
-  class RepositoryFormError extends Error {
-    constructor(message) {
-      super(message);
-      this.name = "RepositoryFormError";
-    }
-  }
-  function requiredField(form, name, label3) {
-    const value3 = field3(form, name).value.trim();
-    if (!value3) {
-      throw new RepositoryFormError(`${label3} is required.`);
-    }
-    return value3;
-  }
-  function optionalField(form, name) {
-    return field3(form, name).value.trim() || undefined;
-  }
-  function field3(form, name) {
-    const element = form.querySelector(`[name="${name}"]`);
-    if (!element) {
-      throw new RepositoryFormError(`Missing form field ${name}.`);
-    }
-    return element;
-  }
-
-  // src/components/admin/Resources/Repository/render/dom.ts
-  function element(tag, text5, className) {
-    const node = document.createElement(tag);
-    if (text5 !== undefined) {
-      node.textContent = text5;
-    }
-    if (className) {
-      node.className = className;
-    }
-    return node;
-  }
-  function labelledValue(label3, value3) {
-    const node = element("div", undefined, "metric");
-    node.append(element("span", label3), element("strong", value3));
-    return node;
-  }
-  function metadata(parts) {
-    return element("p", parts.filter(Boolean).join(" · "), "metadata");
-  }
-  function emptyMessage(message) {
-    return element("p", message, "metadata");
-  }
-
-  // src/components/admin/Resources/Repository/render/compatibility.ts
-  function renderRepositoryCompatibility(target2, page) {
-    const fragment = document.createDocumentFragment();
-    fragment.append(reportSection("Current report", page.current), reportSection("Root report", page.root), element("h3", `Revision history (${page.totalRevisions})`));
-    if (page.revisions.length === 0) {
-      fragment.append(emptyMessage("No compatibility reevaluation has been recorded."));
-    } else {
-      fragment.append(...page.revisions.map((report) => reportSection("Revision", report)));
-    }
-    target2.replaceChildren(fragment);
-  }
-  function reportSection(title2, report) {
-    const section = element("article", undefined, "report");
-    section.dataset.outcome = report.outcome;
-    section.append(element("h4", `${title2}: ${report.outcome}`), metadata([
-      `ID ${report.reportId}`,
-      `Created ${report.createdAt}`,
-      `Release ${report.releaseLevel}`,
-      `Required ${report.requiredReleaseLevel}`,
-      `Evaluator ${report.evaluator.name} ${report.evaluator.version}`
-    ]), codeLine("Package digest", report.packageDigest));
-    if (report.supersedes) {
-      section.append(codeLine("Supersedes", report.supersedes));
-    }
-    if (report.noBaselineReason) {
-      section.append(element("p", `No baseline: ${report.noBaselineReason}`));
-    }
-    appendBaselines(section, "Baselines", report.baselines);
-    appendBaselines(section, "Informational baselines", report.informationalBaselines);
-    section.append(element("h5", "Findings"));
-    if (report.findings.length === 0) {
-      section.append(emptyMessage("No compatibility findings."));
-    } else {
-      const list = element("ul", undefined, "evidence-list");
-      for (const finding of report.findings) {
-        const item = element("li");
-        item.append(element("strong", `${finding.classification} · ${finding.surface} · ${finding.code}`), document.createTextNode(` — ${finding.message}`));
-        list.append(item);
-      }
-      section.append(list);
-    }
-    section.append(element("h5", "Assessment provenance"), element("p", report.provenance.reason), codeLine("Evidence IDs", report.provenance.evidenceIds.join(", ") || "None"));
-    return section;
-  }
-  function appendBaselines(target2, title2, baselines) {
-    if (baselines.length === 0) {
-      return;
-    }
-    target2.append(element("h5", title2));
-    const list = element("ul", undefined, "metadata");
-    for (const baseline of baselines) {
-      list.append(element("li", `${baseline.kind}@${baseline.version} · ${baseline.packageDigest}`));
-    }
-    target2.append(list);
-  }
-  function codeLine(label3, value3) {
-    const line3 = element("p", undefined, "metadata");
-    line3.append(document.createTextNode(`${label3}: `), element("code", value3));
-    return line3;
-  }
-
-  // src/components/admin/Resources/Repository/render/candidateReport/migrations.ts
-  function renderCandidateMigrations(migrations) {
-    const section = element("article", undefined, "report");
-    section.append(element("h4", `Migration verification (${migrations.length})`));
-    if (migrations.length === 0) {
-      section.append(emptyMessage("No migration input was planned for this candidate."));
-      return section;
-    }
-    for (const migration2 of migrations) {
-      section.append(renderMigration(migration2));
-    }
-    return section;
-  }
-  function renderMigration(migration2) {
-    const section = element("section", undefined, "migration-report");
-    section.append(element("h5", `${migration2.source.version} → ${migration2.target.version}`), metadata([
-      `Connector ${migration2.connectorKey}`,
-      `Lineage ${migration2.lineageId}`,
-      `Revisions ${migration2.sourceMigrationRevision} → ${migration2.targetMigrationRevision}`,
-      `Source range ${migration2.supportedSourceRange}`
-    ]), codeLine2("Migration input", migration2.migrationInputDigest), codeLine2("Source package", migration2.source.packageDigest), codeLine2("Target package", migration2.target.packageDigest));
-    if (!migration2.result) {
-      section.append(emptyMessage("Migration verification is pending."));
-      return section;
-    }
-    const result = migration2.result;
-    section.append(metadata([`Runner ${result.runnerDigest}`, `Environment ${result.environmentDigest}`]), targetState("Fresh target", result.freshTarget), targetState("Migrated target", result.migratedTarget), observation("Equivalence", result.equivalence, `equivalent ${displayBoolean(result.equivalence.equivalent)} · ${result.equivalence.differenceCount} difference(s)`), observation("Ledger", result.ledger, [
-      `revision ${result.ledger.sourceRevision ?? "?"} → ${result.ledger.targetRevision ?? "?"}`,
-      `atomic ${displayBoolean(result.ledger.migrationAndLedgerAtomic)}`,
-      `checksum rejection ${displayBoolean(result.ledger.checksumMismatchRejected)}`,
-      `empty-ledger rejection ${displayBoolean(result.ledger.emptyLedgerRejected)}`,
-      `rows ${result.ledger.migrationIds.join(", ") || "none"}`
-    ].join(" · ")), observation("Replay", result.replay, `unchanged ${displayBoolean(result.replay.unchanged)} · rows ${result.replay.ledgerRowsBefore ?? "?"}/${result.replay.ledgerRowsAfterFirstRun ?? "?"}/${result.replay.ledgerRowsAfterReplay ?? "?"}`), observation("CMS-mediated cutover", result.cutover.cmsMediated, `${result.cutover.cmsMediated.strategy} · ${result.cutover.cmsMediated.bindingRevisionBefore ?? "?"} → ${result.cutover.cmsMediated.bindingRevisionAfter ?? "?"}`), observation("Provider-direct cutover", result.cutover.providerDirect, `${result.cutover.providerDirect.strategy} · callbacks ${result.cutover.providerDirect.callbackIds.join(", ") || "none"} · signing continuity ${displayBoolean(result.cutover.providerDirect.signingSecretContinuityObserved)}`), observation("Activation", result.cutover.activation, `point of no return ${displayBoolean(result.cutover.activation.pointOfNoReturnCrossed)} · cleanup ${displayBoolean(result.cutover.activation.cleanupObserved)}`));
-    return section;
-  }
-  function targetState(title2, target2) {
-    return observation(title2, target2, `state ${target2.stateDigest ?? "not recorded"} · schema ${target2.schemaDigest ?? "not recorded"} · data ${target2.dataDigest ?? "not recorded"} · functions ${target2.functionDigests.length}`);
-  }
-  function observation(title2, value3, detail) {
-    const node = element("div", undefined, "candidate-observation");
-    node.append(element("strong", `${title2}: ${value3.status}`), metadata([
-      detail,
-      value3.diagnosticCodes.length > 0 ? `Diagnostics ${value3.diagnosticCodes.join(", ")}` : undefined,
-      value3.evidenceDigests.length > 0 ? `${value3.evidenceDigests.length} evidence object(s)` : undefined
-    ]));
-    return node;
-  }
-  function displayBoolean(value3) {
-    return value3 === undefined ? "not recorded" : value3 ? "yes" : "no";
-  }
-  function codeLine2(label3, value3) {
-    const line3 = element("p", undefined, "metadata");
-    line3.append(document.createTextNode(`${label3}: `), element("code", value3));
-    return line3;
-  }
-
-  // src/components/admin/Resources/Repository/render/candidateReport/verification.ts
-  function renderCandidateVerification(verification2) {
-    const section = element("article", undefined, "report");
-    section.dataset.outcome = verification2.outcome ?? verification2.state;
-    section.append(element("h4", `Verification: ${verification2.outcome ?? verification2.state}`), metadata([
-      `Runner ${verification2.runner.name} ${verification2.runner.version}`,
-      verification2.environment ? `Environment ${verification2.environment.versions.map(({ name, version }) => `${name} ${version}`).join(", ")}` : "Environment pending"
-    ]));
-    if (verification2.suites.length === 0) {
-      section.append(emptyMessage("No verification suite was planned."));
-      return section;
-    }
-    const list = element("ul", undefined, "suite-list");
-    for (const suite of verification2.suites) {
-      const item = element("li");
-      item.append(element("strong", `${suite.suiteId}: ${suite.outcome ?? "planned"}`), metadata([
-        `Source ${suite.source}`,
-        suite.durationMs === undefined ? undefined : `${suite.durationMs} ms`,
-        suite.attempts === undefined ? undefined : `${suite.attempts} attempt(s)`,
-        suite.cacheHit === undefined ? undefined : suite.cacheHit ? "cache hit" : "cache miss",
-        suite.applicable === undefined ? undefined : suite.applicable ? "applicable" : "not applicable"
-      ]));
-      if (suite.diagnosticCodes.length > 0) {
-        item.append(element("p", `Diagnostics: ${suite.diagnosticCodes.join(", ")}`, "metadata"));
-      }
-      list.append(item);
-    }
-    section.append(list);
-    return section;
-  }
-
-  // src/components/admin/Resources/Repository/render/candidateReport/index.ts
-  function renderRepositoryCandidateReport(target2, report) {
-    const section = element("section", undefined, "candidate-report");
-    section.append(element("h3", `Admission report for ${report.candidate.kind}@${report.candidate.version}`), metadata([
-      `Candidate ${report.candidate.candidateId}`,
-      `Status ${report.candidate.status}`,
-      `Attempt ${report.candidate.attemptCount}`
-    ]), codeLine3("Package digest", report.candidate.packageDigest), codeLine3("Verification digest", report.candidate.verificationDigest));
-    section.append(report.compatibility ? renderCompatibility(report.compatibility) : pending("Compatibility was not evaluated."), report.verification ? renderCandidateVerification(report.verification) : pending("Verification was not planned."), renderCandidateMigrations(report.migrations));
-    target2.replaceChildren(section);
-  }
-  function renderCompatibility(compatibility2) {
-    const section = element("article", undefined, "report");
-    section.dataset.outcome = compatibility2.outcome;
-    section.append(element("h4", `Compatibility: ${compatibility2.outcome}`), metadata([
-      `Contract ${compatibility2.contractAdmissible ? "admissible" : "not admissible"}`,
-      `Release ${compatibility2.releaseLevel}`,
-      `Required ${compatibility2.requiredReleaseLevel}`,
-      `${compatibility2.baselines.length} blocking baseline(s)`,
-      `${compatibility2.informationalBaselines.length} informational baseline(s)`
-    ]));
-    if (compatibility2.findings.length === 0) {
-      section.append(emptyMessage("No compatibility findings."));
-    } else {
-      const list = element("ul", undefined, "evidence-list");
-      for (const finding of compatibility2.findings) {
-        const item = element("li");
-        item.append(element("strong", `${finding.classification} · ${finding.surface} · ${finding.code}`), document.createTextNode(` — ${finding.path}: ${finding.message}`));
-        list.append(item);
-      }
-      section.append(list);
-    }
-    return section;
-  }
-  function pending(message) {
-    const section = element("article", undefined, "report");
-    section.append(emptyMessage(message));
-    return section;
-  }
-  function codeLine3(label3, value3) {
-    const line3 = element("p", undefined, "metadata");
-    line3.append(document.createTextNode(`${label3}: `), element("code", value3));
-    return line3;
-  }
-
-  // src/components/admin/Resources/Repository/render/feedback.ts
-  function clearFeedback(target2) {
-    target2.replaceChildren();
-    target2.removeAttribute("data-tone");
-    target2.setAttribute("role", "status");
-  }
-  function showFeedback(target2, message, tone = "info") {
-    target2.dataset.tone = tone;
-    target2.setAttribute("role", "status");
-    target2.replaceChildren(element("span", message));
-  }
-  function showRepositoryError(target2, error) {
-    target2.dataset.tone = "error";
-    target2.setAttribute("role", "alert");
-    target2.replaceChildren(element("strong", errorMessage3(error)));
-  }
-  function errorMessage3(error) {
-    if (error instanceof RepositoryFormError) {
-      return error.message;
-    }
-    if (!(error instanceof RepositoryApiError)) {
-      return "The repository returned an invalid response. Reload before retrying.";
-    }
-    if (isStale(error)) {
-      const current = error.details.currentReportRevisionId;
-      return `The selected release decision or report is stale. Reload the current evidence${current ? ` (${current})` : ""} and confirm it again.`;
-    }
-    if (error.status === 409) {
-      return conflictMessage(error);
-    }
-    if (error.status === 413) {
-      return "The candidate is larger than the allowed upload size.";
-    }
-    if (error.status === 422) {
-      const outcome = error.details.report?.outcome;
-      return `Release admission rejected this candidate${outcome ? ` (${outcome})` : ""}. Review compatibility, verification, and migration evidence.`;
-    }
-    if (error.status === 429) {
-      return `Too many repository requests.${error.retryAfter ? ` Retry after ${error.retryAfter} seconds.` : " Retry later."}`;
-    }
-    if (error.status === 503) {
-      return "Repository management is temporarily unavailable. Cached public delivery remains unaffected.";
-    }
-    if (error.status === 404) {
-      return "Repository management is not configured for this CMS or the requested item does not exist.";
-    }
-    if (error.status === 400) {
-      return "The repository rejected the request as invalid. Check the entered values.";
-    }
-    return "The repository request failed. Reload before retrying.";
-  }
-  function isStale(error) {
-    return Boolean(error.details.currentReportRevisionId || error.code?.includes("stale"));
-  }
-  function conflictMessage(error) {
-    const values = [
-      error.details.existingDigest ? `Existing digest: ${error.details.existingDigest}.` : "",
-      error.details.latest ? ` Latest version: ${error.details.latest}.` : ""
-    ].join("");
-    return `The version already exists or repository state changed. Reload before retrying.${values}`;
-  }
-
-  // src/components/admin/Resources/Repository/render/versions.ts
-  function renderRepositoryVersions(target2, view, select4) {
-    const summary2 = element("p");
-    summary2.append(document.createTextNode(`${view.kind} — stable `), element("strong", view.stable ?? "not set"), document.createTextNode(" · latest "), element("strong", view.latest ?? "not set"));
-    if (view.versions.length === 0) {
-      target2.replaceChildren(summary2, emptyMessage("No published version."));
-      return;
-    }
-    const table = element("table", undefined, "version-table");
-    const head = element("tr");
-    for (const label3 of ["Version", "Channel", "Eligibility", "Verification", "Digest", "Compatibility", "Action"]) {
-      head.append(element("th", label3));
-    }
-    const body = element("tbody");
-    for (const item of view.versions) {
-      const row = element("tr");
-      const button2 = element("button", "Inspect", "secondary");
-      button2.type = "button";
-      button2.dataset.version = item.version;
-      button2.addEventListener("click", () => select4(item.version));
-      row.append(tableCell(item.version), tableCell(channels(view, item.version)), tableCell(eligibility(item)), tableCell(verification2(item)), tableCell(item.digest ?? "Unavailable", true), tableCell(compatibility2(item)), tableNode(button2));
-      body.append(row);
-    }
-    const tableHead = element("thead");
-    tableHead.append(head);
-    table.append(tableHead, body);
-    target2.replaceChildren(summary2, table);
-  }
-  function eligibility(item) {
-    if (item.status) {
-      return item.status;
-    }
-    return item.release?.admissible ? "installable" : "unverified";
-  }
-  function verification2(item) {
-    if (!item.release?.verificationOutcome) {
-      return "No report";
-    }
-    return `${item.release.verificationOutcome} · ${item.release.verificationOrigin ?? "unknown origin"}`;
-  }
-  function tableCell(value3, code = false) {
-    const cell = element("td");
-    cell.append(code ? element("code", value3) : document.createTextNode(value3));
-    return cell;
-  }
-  function tableNode(node) {
-    const cell = element("td");
-    cell.append(node);
-    return cell;
-  }
-  function channels(view, version) {
-    return [view.stable === version ? "stable" : undefined, view.latest === version ? "latest" : undefined].filter(Boolean).join(", ") || "—";
-  }
-  function compatibility2(item) {
-    if (!item.compatibility) {
-      return "No report";
-    }
-    return `${item.compatibility.outcome}${item.compatibility.warning ? " · warning" : ""}`;
-  }
-
-  // src/components/admin/Resources/Repository/render/release.ts
-  function renderRepositoryRelease(target2, release) {
-    const fragment = document.createDocumentFragment();
-    fragment.append(section("Release admission", [
-      `Status ${release.status}`,
-      `Installable ${release.installable ? "yes" : "no"}`,
-      `Fresh-install-only ${release.freshInstallOnly ? "yes" : "no"}`
-    ]), codeLine4("Package digest", release.packageDigest));
-    if (release.verificationDigest) {
-      fragment.append(codeLine4("Verification bundle digest", release.verificationDigest));
-    }
-    appendDecision(fragment, release);
-    appendVerification(fragment, release);
-    appendCompatibility(fragment, release);
-    appendMigrations(fragment, release);
-    target2.replaceChildren(fragment);
-  }
-  function appendDecision(target2, release) {
-    if (!release.decision) {
-      target2.append(emptyMessage("No composite release decision is available."));
-      return;
-    }
-    const decision2 = element("article", undefined, "report");
-    decision2.dataset.outcome = release.decision.admissible ? "compatible" : "breaking";
-    decision2.append(element("h4", `Composite decision: ${release.decision.admissible ? "admissible" : "rejected"}`), metadata([`ID ${release.decision.decisionId}`, `Created ${release.decision.createdAt}`]), codeLine4("Decision digest", release.decision.decisionDigest));
-    if (release.decision.reasons.length > 0) {
-      decision2.append(list("Decision reasons", release.decision.reasons));
-    }
-    target2.append(decision2);
-  }
-  function appendVerification(target2, release) {
-    const report = release.verification;
-    if (!report) {
-      target2.append(emptyMessage("No executable verification report is available."));
-      return;
-    }
-    const section = element("article", undefined, "report");
-    section.dataset.outcome = report.outcome;
-    const environmentVersions = Object.entries(report.environment.versions).map(([name, version]) => `${name} ${version}`);
-    section.append(element("h4", `Executable verification: ${report.outcome}`), metadata([
-      `Origin ${report.origin}`,
-      `Created ${report.createdAt}`,
-      `Runner ${report.runner.name} ${report.runner.version}`,
-      `Environment ${report.environment.digest}`,
-      ...environmentVersions
-    ]), codeLine4("Report digest", report.reportDigest), codeLine4("Runner image", report.runner.imageDigest));
-    if (report.activeContracts.length > 0) {
-      section.append(list("Active contracts", report.activeContracts.map(({ contractId, ownerVersion, digest }) => `${contractId}@${ownerVersion} · ${digest}`)));
-    }
-    const suites = element("ul", undefined, "evidence-list");
-    for (const result of report.results) {
-      const suite = element("li", `${result.suiteId} · ${result.source} · ${result.required ? "required" : "optional"} · ${result.outcome} · ${result.durationMs} ms · ${result.attempts} attempt(s)${result.cacheHit ? " · cache" : ""}`);
-      if (result.diagnostics.length > 0) {
-        suite.append(list("Diagnostics", result.diagnostics.map(({ code, message }) => `${code} — ${message}`)));
-      }
-      suites.append(suite);
-    }
-    section.append(element("h5", "Suites"), suites);
-    target2.append(section);
-  }
-  function appendCompatibility(target2, release) {
-    const report = release.compatibility;
-    if (!report) {
-      target2.append(emptyMessage("No static compatibility report is available."));
-      return;
-    }
-    const section = element("article", undefined, "report");
-    section.dataset.outcome = report.outcome;
-    section.append(element("h4", `Static compatibility: ${report.outcome}`), metadata([
-      `Origin ${report.origin}`,
-      `Release ${report.releaseLevel}`,
-      `Required ${report.requiredReleaseLevel}`
-    ]), codeLine4("Report digest", report.reportDigest));
-    if (report.findings.length > 0) {
-      section.append(list("Findings", report.findings.map((finding) => `${finding.classification} · ${finding.surface}:${finding.path} · ${finding.code} — ${finding.message}`)));
-    }
-    target2.append(section);
-  }
-  function appendMigrations(target2, release) {
-    target2.append(element("h4", "Migration support"));
-    if (release.migrations.length === 0) {
-      target2.append(emptyMessage("No tested in-place source range; treat this release as fresh-install-only when required."));
-      return;
-    }
-    for (const migration2 of release.migrations) {
-      const report = section(`${migration2.source.kind}@${migration2.source.version} (${migration2.supportedSourceRange}) → ${release.version}`, [
-        `Outcome ${migration2.outcome}`,
-        `Origin ${migration2.origin}`,
-        `Runner ${migration2.runner.name} ${migration2.runner.version}`,
-        cutoverExecution("CMS cutover", migration2.cutover.cmsMediated, migration2.cutoverEvidence?.cmsMediated.outcome),
-        cutoverExecution("Provider-direct", migration2.cutover.providerDirect, migration2.cutoverEvidence?.providerDirect.outcome),
-        executionStatus2("Activation", migration2.cutoverEvidence?.activation.outcome),
-        `Rollback ${migration2.rollback}`,
-        `PONR ${migration2.pointOfNoReturn}`,
-        `Delayed cleanup ${migration2.delayedCleanupVerified ? "verified" : "not verified"}`,
-        ...operationalMetadata(migration2)
-      ]);
-      report.append(codeLine4("Report digest", migration2.reportDigest), codeLine4("Runner image", migration2.runner.imageDigest), codeLine4("Environment digest", migration2.environmentDigest), list("Checks", Object.entries(migration2.checks).map(([name, result]) => `${name} · ${result.outcome}${result.evidenceDigest ? ` · ${result.evidenceDigest}` : ""}`)));
-      target2.append(report);
-    }
-  }
-  function cutoverExecution(label3, strategy, outcome) {
-    return `${label3} ${strategy} · ${executionStatus2("execution", outcome)}`;
-  }
-  function executionStatus2(label3, outcome) {
-    if (outcome === undefined) {
-      return `${label3} status not recorded by this legacy report`;
-    }
-    if (outcome === "not-supported") {
-      return `${label3} not-supported: declared, but not executed by the current runner`;
-    }
-    if (outcome === "passed") {
-      return `${label3} passed: executed by the runner`;
-    }
-    return `${label3} ${outcome}`;
-  }
-  function operationalMetadata(migration2) {
-    const evidence = migration2.operationalEvidence;
-    if (!evidence) {
-      return ["Operational evidence not recorded by this legacy report"];
-    }
-    const drains = [
-      evidence.drain.cmsMediatedSeconds === undefined ? "" : `CMS drain ${evidence.drain.cmsMediatedSeconds}s`,
-      evidence.drain.providerDirectSeconds === undefined ? "" : `provider drain ${evidence.drain.providerDirectSeconds}s`
-    ].filter(Boolean);
-    return [
-      evidence.downtime.status === "not-measured" ? "Downtime not measured by the current verifier" : `Downtime ${evidence.downtime.status} ${evidence.downtime.observedSeconds}s`,
-      drains.length > 0 ? drains.join(" · ") : "Drain not declared",
-      `Rollback proof ${evidence.rollback.verified ? "verified" : "not verified"}`,
-      `PONR observation ${evidence.pointOfNoReturn.observation}`,
-      `Cleanup ${evidence.cleanup.observed ? "observed" : "not observed"}${evidence.cleanup.delaySeconds === undefined ? "" : ` after ${evidence.cleanup.delaySeconds}s`}`
-    ];
-  }
-  function section(title2, parts) {
-    const node = element("article", undefined, "report");
-    node.append(element("h4", title2), metadata(parts));
-    return node;
-  }
-  function codeLine4(label3, value3) {
-    const line3 = element("p", undefined, "metadata");
-    line3.append(document.createTextNode(`${label3}: `), element("code", value3));
-    return line3;
-  }
-  function list(title2, entries) {
-    const container = element("div");
-    const values = element("ul", undefined, "evidence-list");
-    values.append(...entries.map((value3) => element("li", value3)));
-    container.append(element("h5", title2), values);
-    return container;
-  }
-
-  // src/components/admin/Resources/Repository/forms/block.ts
-  function readRepositoryVersionBlock(form, selection) {
-    if (!selection.decision) {
-      throw new RepositoryFormError("This version has no composite release decision to block.");
-    }
-    const version = requiredField(form, "blockVersion", "Version confirmation");
-    const decisionDigest = requiredField(form, "blockDecisionDigest", "Decision digest confirmation");
-    if (version !== selection.version || decisionDigest !== selection.decision.digest) {
-      throw new RepositoryFormError("Type the exact version and release decision digest to confirm blocking.");
-    }
-    return {
-      kind: selection.kind,
-      version: selection.version,
-      currentDecision: {
-        revisionId: selection.decision.revisionId,
-        digest: selection.decision.digest
-      },
-      reason: requiredField(form, "reason", "Blocking reason"),
-      confirmation: {
-        action: "block",
-        kind: selection.kind,
-        version: selection.version,
-        decisionRevisionId: selection.decision.revisionId,
-        decisionDigest: selection.decision.digest
-      }
-    };
-  }
-
-  // src/components/admin/Resources/Repository/forms/candidate.ts
-  var MAX_CANDIDATE_BYTES = 32 * 1024 * 1024;
-  async function readRepositoryCandidateFile(form) {
-    const input2 = field3(form, "candidate");
-    if (!(input2 instanceof HTMLInputElement) || input2.type !== "file") {
-      throw new RepositoryFormError("The candidate upload field is unavailable.");
-    }
-    const file = input2.files?.[0];
-    if (!file) {
-      throw new RepositoryFormError("Select a candidate JSON file.");
-    }
-    if (file.size < 1 || file.size > MAX_CANDIDATE_BYTES) {
-      throw new RepositoryFormError("The candidate JSON file must be between 1 byte and 32 MiB.");
-    }
-    try {
-      const value3 = JSON.parse(await file.text());
-      if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
-        throw new TypeError("Candidate document must be an object");
-      }
-    } catch {
-      throw new RepositoryFormError("Select a valid candidate JSON document.");
-    }
-    return file;
-  }
-
-  // src/components/admin/Resources/Repository/forms/promotion.ts
-  function readRepositoryPromotion(form, selection) {
-    if (!selection.decision) {
-      throw new RepositoryFormError("This version has no composite release decision to promote.");
-    }
-    const version = requiredField(form, "confirmationVersion", "Version confirmation");
-    const reportRevisionId = requiredField(form, "confirmationReportRevisionId", "Report confirmation");
-    if (version !== selection.version) {
-      throw new RepositoryFormError(`Type the exact version ${selection.version} to confirm promotion.`);
-    }
-    if (reportRevisionId !== selection.decision.revisionId) {
-      throw new RepositoryFormError(`Type the exact current release decision ID ${selection.decision.revisionId} to confirm promotion.`);
-    }
-    return {
-      kind: selection.kind,
-      version: selection.version,
-      currentReportRevisionId: selection.decision.revisionId,
-      confirmation: { version, reportRevisionId },
-      ...optionalReason(form)
-    };
-  }
-  function optionalReason(form) {
-    const reason = optionalField(form, "reason");
-    return reason ? { reason } : {};
-  }
-
-  // src/components/admin/Resources/Repository/forms/reevaluation.ts
-  function readRepositoryReevaluation(form, selection) {
-    if (!selection.decision) {
-      throw new Error("A current release admission decision is required for reevaluation");
-    }
-    const evidenceIds = splitEvidenceIds(optionalField(form, "evidenceIds"));
-    return {
-      kind: selection.kind,
-      version: selection.version,
-      currentReport: selection.currentReport,
-      currentDecision: {
-        revisionId: selection.decision.revisionId,
-        digest: selection.decision.digest
-      },
-      reason: requiredField(form, "reason", "Reevaluation reason"),
-      ...evidenceIds.length > 0 ? { evidenceIds } : {}
-    };
-  }
-  function splitEvidenceIds(value3) {
-    if (!value3) {
-      return [];
-    }
-    return [
-      ...new Set(value3.split(/[\n,]/u).map((entry) => entry.trim()).filter(Boolean))
-    ].slice(0, 256);
-  }
-
-  // src/components/admin/Resources/Repository/component/actions.ts
-  async function submitRepositoryCandidate2(form, feedback, context) {
-    await withBusy(form, feedback, async () => {
-      const candidate = await submitRepositoryCandidate(await readRepositoryCandidateFile(form), context.signal);
-      showFeedback(feedback, `Candidate ${candidate.candidateId} accepted for ${candidate.kind}@${candidate.version}; verification is ${candidate.status}.`, "success");
-      form.reset();
-      context.monitorCandidate(candidate);
-    });
-  }
-  async function submitRepositoryVersionBlock(form, feedback, context) {
-    await withSelection(form, feedback, context, async (selection) => {
-      const result = await requestRepositoryVersionBlock(readRepositoryVersionBlock(form, selection), context.signal);
-      showFeedback(feedback, `Blocked ${result.kind}@${result.version}. Channels repaired to stable ${result.nextChannels.stable ?? "unset"}, latest ${result.nextChannels.latest ?? "unset"}.`, "success");
-      form.reset();
-      await context.reloadKind(result.kind);
-      await context.reloadCompatibility();
-    });
-  }
-  async function submitRepositoryReevaluation(form, feedback, context) {
-    await withSelection(form, feedback, context, async (selection) => {
-      const result = await requestRepositoryReevaluation(readRepositoryReevaluation(form, selection), context.signal);
-      context.updateSelection({
-        ...selection,
-        currentReport: result.currentReport,
-        ...result.release ? {
-          decision: {
-            ...result.release.decision,
-            admissible: result.release.admissible
-          },
-          ...result.release.eligibilityChanged ? { status: "inadmissible" } : {}
-        } : {}
-      });
-      showFeedback(feedback, `Created compatibility revision ${result.currentReport.revisionId}: ${result.revision.outcome}.`, "success");
-      form.reset();
-      await context.reloadCompatibility();
-    });
-  }
-  async function submitRepositoryPromotion(form, feedback, context) {
-    await withSelection(form, feedback, context, async (selection) => {
-      const result = await requestRepositoryStablePromotion(readRepositoryPromotion(form, selection), context.signal);
-      showFeedback(feedback, `Promoted ${result.kind}@${result.version} to stable using report ${result.reportRevisionId}.`, "success");
-      form.reset();
-      await context.reloadKind(result.kind);
-    });
-  }
-  async function withSelection(form, feedback, context, operation) {
-    await withBusy(form, feedback, async () => {
-      const selection = context.selection();
-      if (!selection) {
-        throw new Error("Repository version selection is unavailable");
-      }
-      await operation(selection);
-    });
-  }
-  async function withBusy(form, feedback, operation) {
-    clearFeedback(feedback);
-    const controls = Array.from(form.querySelectorAll("button"));
-    controls.forEach((control) => {
-      control.disabled = true;
-    });
-    form.setAttribute("aria-busy", "true");
-    try {
-      await operation();
-    } catch (error) {
-      if (!isAbortError3(error)) {
-        showRepositoryError(feedback, error);
-      }
-    } finally {
-      form.removeAttribute("aria-busy");
-      controls.forEach((control) => {
-        control.disabled = false;
-      });
-    }
-  }
-  function isAbortError3(error) {
-    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
-  }
-
-  // src/components/admin/Resources/Repository/component/candidateMonitor.ts
-  var STORAGE_KEY = "cms.repository.candidate-monitor.v1";
-  var CANDIDATE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
-  var DEFAULT_POLL_DELAY_MS = 1000;
-  var MAX_RETRY_DELAY_MS = 30000;
-  async function monitorRepositoryCandidate(initial, config) {
-    let candidate = initial;
-    let retryCount = 0;
-    let waitDelayMs = DEFAULT_POLL_DELAY_MS;
-    rememberRepositoryCandidate(candidate.candidateId);
-    config.onCandidate(candidate);
-    while (!terminalRepositoryCandidateStatus(candidate.status)) {
-      await (config.wait ?? waitForCandidatePoll)(waitDelayMs, config.signal);
-      try {
-        candidate = await config.fetchStatus(candidate.candidateId, config.signal);
-        retryCount = 0;
-        waitDelayMs = DEFAULT_POLL_DELAY_MS;
-        config.onCandidate(candidate);
-      } catch (error) {
-        if (!retryableCandidatePoll(error)) {
-          forgetRepositoryCandidate(candidate.candidateId);
-          throw error;
-        }
-        retryCount += 1;
-        waitDelayMs = retryAfterDelay(error) ?? retryDelay(retryCount);
-        config.onRetry(candidate, waitDelayMs);
-      }
-    }
-    forgetRepositoryCandidate(candidate.candidateId);
-    if (candidate.status === "rejected" || candidate.status === "expired") {
-      config.onReport(await config.fetchReport(candidate.candidateId, config.signal));
-    }
-    return candidate;
-  }
-  function rememberedRepositoryCandidate() {
-    try {
-      const candidateId = localStorage.getItem(STORAGE_KEY);
-      return candidateId && CANDIDATE_ID.test(candidateId) ? candidateId : null;
-    } catch {
-      return null;
-    }
-  }
-  function forgetRepositoryCandidate(candidateId) {
-    try {
-      if (!candidateId || localStorage.getItem(STORAGE_KEY) === candidateId) {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    } catch {}
-  }
-  function terminalRepositoryCandidateStatus(status) {
-    return status === "published" || status === "rejected" || status === "expired";
-  }
-  function rememberRepositoryCandidate(candidateId) {
-    if (!CANDIDATE_ID.test(candidateId)) {
-      throw new TypeError("Repository candidate identifier is invalid");
-    }
-    try {
-      localStorage.setItem(STORAGE_KEY, candidateId);
-    } catch {}
-  }
-  function retryableCandidatePoll(error) {
-    return error instanceof RepositoryApiError && (error.status === 429 || error.status === 503);
-  }
-  function retryAfterDelay(error) {
-    if (!error.retryAfter || !/^\d+$/u.test(error.retryAfter)) {
-      return;
-    }
-    return Math.min(Number(error.retryAfter) * 1000, MAX_RETRY_DELAY_MS);
-  }
-  function retryDelay(attempt) {
-    return Math.min(DEFAULT_POLL_DELAY_MS * 2 ** Math.min(attempt, 5), MAX_RETRY_DELAY_MS);
-  }
-  async function waitForCandidatePoll(delayMs, signal) {
-    await new Promise((resolve, reject) => {
-      const abort = () => {
-        clearTimeout(timeout);
-        reject(new DOMException("Candidate monitoring aborted", "AbortError"));
-      };
-      const timeout = setTimeout(() => {
-        signal.removeEventListener("abort", abort);
-        resolve();
-      }, delayMs);
-      signal.addEventListener("abort", abort, { once: true });
-    });
-  }
-
-  // src/components/admin/Resources/Repository/component/failure.ts
-  function renderRepositoryFailure(feedback, error) {
-    if (!isAbortError4(error)) {
-      showRepositoryError(feedback, error);
-    }
-  }
-  function isAbortError4(error) {
-    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
-  }
-
-  // src/components/admin/Resources/Repository/render/diagnostics.ts
-  function renderRepositoryDiagnostics(target2, view) {
-    const fragment = document.createDocumentFragment();
-    fragment.append(element("h3", "Diagnostics"));
-    if (view.diagnostics.length === 0) {
-      fragment.append(emptyMessage("No active diagnostics."));
-    } else {
-      fragment.append(...view.diagnostics.map(diagnostic));
-    }
-    fragment.append(element("h3", "Quarantine"));
-    if (view.quarantined.length === 0) {
-      fragment.append(emptyMessage("No quarantined integration."));
-    } else {
-      for (const entry of view.quarantined) {
-        const node = element("div", undefined, "quarantine");
-        node.append(element("strong", entry.kind ?? "Unknown integration"), metadata([entry.diagnosticCodes.join(", ")]));
-        fragment.append(node);
-      }
-    }
-    fragment.append(element("h3", "Recovery"));
-    if (view.recovery.length === 0) {
-      fragment.append(emptyMessage("No recovery event."));
-    } else {
-      fragment.append(...view.recovery.map(diagnostic));
-    }
-    fragment.append(element("h3", "Recent operations"));
-    if (view.recentOperations.length === 0) {
-      fragment.append(emptyMessage("No observed repository operation."));
-    } else {
-      for (const operation of view.recentOperations) {
-        const node = element("div", undefined, "diagnostic");
-        node.append(element("strong", `${operation.operation}: ${operation.outcome}`), metadata([
-          operation.kind && operation.version ? `${operation.kind}@${operation.version}` : operation.kind,
-          `${operation.durationMs} ms`,
-          operation.operationId,
-          operation.reportRevisionId ?? operation.reportId,
-          operation.errorCode
-        ]));
-        fragment.append(node);
-      }
-    }
-    target2.replaceChildren(fragment);
-  }
-  function diagnostic(value3) {
-    const node = element("div", undefined, "diagnostic");
-    node.append(element("strong", value3.code), element("p", value3.message), metadata([value3.stage, value3.kind, value3.version, value3.operationId]));
-    return node;
-  }
-
-  // src/components/admin/Resources/Repository/render/status.ts
-  function renderRepositoryStatus(target2, status) {
-    const values = [
-      labelledValue("Health", status.health),
-      labelledValue("Ready", status.ready ? "Yes" : "No"),
-      labelledValue("Integrations", String(status.integrations)),
-      labelledValue("Versions", String(status.versions)),
-      labelledValue("Diagnostics", String(status.diagnostics)),
-      labelledValue("Quarantined", String(status.quarantined)),
-      labelledValue("Recovery events", String(status.recoveryDiagnostics))
-    ];
-    if (status.metrics) {
-      const operations = status.metrics.operations;
-      values.push(labelledValue("Stable promotions", operationSummary(operations.stablePromotion)), labelledValue("Compatibility reevaluations", operationSummary(operations.compatibilityReevaluation)), labelledValue("Compatibility warnings", String(status.metrics.compatibility.warnings)), labelledValue("Package traffic", `${status.metrics.publicPackages.packagesServed} downloads / ${formatBytes(String(status.metrics.publicPackages.packageBytes))}`), labelledValue("Rate-limit rejections", String(status.metrics.publicPackages.rateLimitRejections)), labelledValue("Repository reads", `${status.metrics.repositoryReads.succeeded}/${status.metrics.repositoryReads.total} succeeded, ${status.metrics.repositoryReads.notFound} not found, ${status.metrics.repositoryReads.rejected} rejected, ${status.metrics.repositoryReads.failed} failed, max ${status.metrics.repositoryReads.maximumDurationMs} ms`), labelledValue("Registry capacity", filesystemSummary(status.metrics.filesystem)));
-    }
-    target2.replaceChildren(...values);
-  }
-  function operationSummary(value3) {
-    return `${value3.succeeded}/${value3.attempted} succeeded, ${value3.rejected} rejected, ${value3.failed} failed, max ${value3.maximumDurationMs} ms`;
-  }
-  function filesystemSummary(filesystem2) {
-    return filesystem2.status === "unavailable" ? "Unavailable" : `${formatBytes(filesystem2.availableBytes)} available / ${formatBytes(filesystem2.totalBytes)} (${(filesystem2.usedBasisPoints / 100).toFixed(2)}% used)`;
-  }
-  function formatBytes(decimal) {
-    const bytes = BigInt(decimal);
-    const units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"];
-    let unit = 0;
-    let divisor = 1n;
-    while (unit < units.length - 1 && bytes >= divisor * 1024n) {
-      divisor *= 1024n;
-      unit += 1;
-    }
-    if (unit === 0) {
-      return `${bytes} B`;
-    }
-    const tenths = bytes * 10n / divisor;
-    return `${tenths / 10n}.${tenths % 10n} ${units[unit]}`;
-  }
-
-  // src/components/admin/Resources/Repository/component/overview.ts
-  async function reloadRepositoryOverview(host, signal) {
-    const feedback = query8(host, "[data-overview-feedback]");
-    clearFeedback(feedback);
-    try {
-      const [status, diagnostics] = await Promise.all([
-        fetchRepositoryStatus(signal),
-        fetchRepositoryDiagnostics(signal)
-      ]);
-      renderRepositoryStatus(query8(host, "[data-status]"), status);
-      renderRepositoryDiagnostics(query8(host, "[data-diagnostics]"), diagnostics);
-      showFeedback(feedback, `Repository health: ${status.health}.`, status.ready ? "success" : "info");
-    } catch (error) {
-      if (!isAbortError5(error)) {
-        showRepositoryError(feedback, error);
-      }
-    }
-  }
-  function query8(root, selector) {
-    const node = root.querySelector(selector);
-    if (!node) {
-      throw new Error(`Missing repository overview element ${selector}`);
-    }
-    return node;
-  }
-  function isAbortError5(error) {
-    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
-  }
-
-  // src/components/admin/Resources/Repository/component/selection.ts
-  function renderRepositorySelection(host, selection) {
-    query9(host, "[data-actions-panel]").hidden = false;
-    query9(host, "[data-selection-title]").textContent = `${selection.kind}@${selection.version}`;
-    query9(host, "[data-action-selection]").textContent = `${selection.kind}@${selection.version} · compatibility ${selection.currentReport.revisionId} · decision ${selection.decision?.revisionId ?? "unavailable"}`;
-    query9(host, "[data-confirm-version]").textContent = selection.version;
-    query9(host, "[data-confirm-report]").textContent = selection.decision?.revisionId ?? "unavailable";
-    query9(host, "[data-block-confirm-version]").textContent = selection.version;
-    query9(host, "[data-block-confirm-digest]").textContent = selection.decision?.digest ?? "unavailable";
-    query9(host, "[data-block-preview]").textContent = blockPreview(selection);
-    query9(host, "[data-promotion-form] fieldset").disabled = !selection.decision?.admissible || selection.status !== "installable";
-    query9(host, "[data-block-form] fieldset").disabled = !selection.decision || selection.status === "blocked";
-    query9(host, "[data-promotion-form]").reset();
-    query9(host, "[data-block-form]").reset();
-  }
-  function blockPreview(selection) {
-    if (!selection.blockPreview) {
-      return "Channel repair preview unavailable.";
-    }
-    const current = selection.blockPreview.current;
-    const next = selection.blockPreview.next;
-    return `Blocking repairs stable ${current.stable ?? "unset"} → ${next.stable ?? "unset"} and latest ${current.latest ?? "unset"} → ${next.latest ?? "unset"}. Exact downloads and pinned reruns remain available.`;
-  }
-  function query9(root, selector) {
-    const node = root.querySelector(selector);
-    if (!node) {
-      throw new Error(`Missing repository selection element ${selector}`);
-    }
-    return node;
-  }
-
-  // src/components/admin/Resources/Repository/component/RepositoryAdmin.ts
-  class RepositoryAdmin extends HTMLElement {
-    initialized = false;
-    request;
-    selected;
-    compatibility;
-    release;
-    versions;
-    connectedCallback() {
-      if (!this.initialized) {
-        this.mount();
-        this.bind();
-        this.initialized = true;
-      }
-      this.request?.abort();
-      this.request = new AbortController;
-      reloadRepositoryOverview(this, this.signal());
-      this.resumeCandidateMonitoring();
-    }
-    disconnectedCallback() {
-      this.request?.abort();
-      this.request = undefined;
-    }
-    mount() {
-      const style = document.createElement("style");
-      style.textContent = styles_default5;
-      const body = document.createElement("template");
-      body.innerHTML = template_default16;
-      this.replaceChildren(style, body.content.cloneNode(true));
-    }
-    bind() {
-      this.query("[data-refresh]").addEventListener("click", () => {
-        reloadRepositoryOverview(this, this.signal());
-      });
-      this.query("[data-versions-form]").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-        this.loadKind(field3(form, "kind").value.trim());
-      });
-      this.bindAction("[data-candidate-form]", "[data-candidate-feedback]", submitRepositoryCandidate2);
-      this.bindAction("[data-reevaluation-form]", "[data-reevaluation-feedback]", submitRepositoryReevaluation);
-      this.bindAction("[data-promotion-form]", "[data-promotion-feedback]", submitRepositoryPromotion);
-      this.bindAction("[data-block-form]", "[data-block-feedback]", submitRepositoryVersionBlock);
-      this.query("[data-load-more]").addEventListener("click", () => void this.loadMore());
-    }
-    bindAction(formSelector, feedbackSelector, action) {
-      this.query(formSelector).addEventListener("submit", (event) => {
-        event.preventDefault();
-        if (!this.request) {
-          return;
-        }
-        action(event.currentTarget, this.query(feedbackSelector), this.actionContext());
-      });
-    }
-    actionContext() {
-      return {
-        signal: this.signal(),
-        selection: () => this.selected,
-        updateSelection: (selection) => this.setSelection(selection),
-        reloadKind: (kind) => this.loadKind(kind),
-        reloadCompatibility: () => this.reloadCompatibility(),
-        monitorCandidate: (candidate) => {
-          this.monitorCandidate(candidate).catch((error) => {
-            if (!isAbortError6(error)) {
-              renderRepositoryFailure(this.query("[data-candidate-progress]"), error);
-            }
-          });
-        }
-      };
-    }
-    async loadKind(kind) {
-      const feedback = this.query("[data-versions-feedback]");
-      clearFeedback(feedback);
-      if (!kind) {
-        showFeedback(feedback, "Enter an integration kind.");
-        return;
-      }
-      try {
-        const versions = await fetchRepositoryVersions(kind, this.signal());
-        this.versions = versions;
-        renderRepositoryVersions(this.query("[data-versions]"), versions, (version) => void this.selectVersion(versions.kind, version));
-        showFeedback(feedback, `Loaded ${versions.versions.length} version(s) for ${versions.kind}.`, "success");
-      } catch (error) {
-        renderRepositoryFailure(feedback, error);
-      }
-    }
-    async selectVersion(kind, version) {
-      const feedback = this.query("[data-compatibility-feedback]");
-      clearFeedback(feedback);
-      this.query("[data-compatibility-panel]").hidden = false;
-      try {
-        [this.compatibility, this.release] = await Promise.all([
-          fetchRepositoryCompatibility(kind, version, undefined, this.signal()),
-          fetchRepositoryRelease(kind, version, this.signal())
-        ]);
-        const summary2 = this.versions?.kind === kind ? this.versions.versions.find((entry) => entry.version === version) : undefined;
-        this.setSelection({
-          kind,
-          version,
-          currentReport: {
-            revisionId: this.compatibility.currentRevisionId,
-            reportDigest: this.compatibility.currentReportDigest
-          },
-          status: this.release.status,
-          ...this.release.decision ? {
-            decision: {
-              revisionId: this.release.decision.decisionId,
-              digest: this.release.decision.decisionDigest,
-              admissible: this.release.decision.admissible
-            }
-          } : {},
-          ...summary2?.blockPreview ? { blockPreview: summary2.blockPreview } : {}
-        });
-        this.renderCompatibility();
-      } catch (error) {
-        renderRepositoryFailure(feedback, error);
-      }
-    }
-    async reloadCompatibility() {
-      if (this.selected) {
-        await this.selectVersion(this.selected.kind, this.selected.version);
-      }
-    }
-    async loadMore() {
-      if (!this.selected || !this.compatibility?.nextCursor) {
-        return;
-      }
-      const feedback = this.query("[data-compatibility-feedback]");
-      clearFeedback(feedback);
-      try {
-        const page = await fetchRepositoryCompatibility(this.selected.kind, this.selected.version, this.compatibility.nextCursor, this.signal());
-        this.compatibility = { ...page, revisions: [...this.compatibility.revisions, ...page.revisions] };
-        this.renderCompatibility();
-      } catch (error) {
-        renderRepositoryFailure(feedback, error);
-      }
-    }
-    renderCompatibility() {
-      if (!this.compatibility) {
-        return;
-      }
-      renderRepositoryCompatibility(this.query("[data-compatibility]"), this.compatibility);
-      if (this.release) {
-        renderRepositoryRelease(this.query("[data-release]"), this.release);
-      }
-      this.query("[data-load-more]").hidden = !this.compatibility.nextCursor;
-    }
-    setSelection(selection) {
-      this.selected = selection;
-      renderRepositorySelection(this, selection);
-    }
-    async monitorCandidate(initial) {
-      const feedback = this.query("[data-candidate-progress]");
-      const reportTarget = this.query("[data-candidate-report]");
-      reportTarget.replaceChildren();
-      const candidate = await monitorRepositoryCandidate(initial, {
-        signal: this.signal(),
-        fetchStatus: fetchRepositoryCandidateStatus,
-        fetchReport: fetchRepositoryCandidateReport,
-        onCandidate: (current) => {
-          showFeedback(feedback, `${current.kind}@${current.version}: ${current.status}, attempt ${current.attemptCount}.`);
-        },
-        onReport: (report) => renderRepositoryCandidateReport(reportTarget, report),
-        onRetry: (current, retryInMs) => {
-          showFeedback(feedback, `${current.kind}@${current.version}: repository temporarily unavailable; retrying in ${Math.ceil(retryInMs / 1000)}s.`);
-        }
-      });
-      const successful = candidate.status === "published";
-      showFeedback(feedback, successful ? `${candidate.kind}@${candidate.version} is published and eligible according to its composite decision.` : `${candidate.kind}@${candidate.version} stopped at ${candidate.status}${candidate.failureCode ? ` (${candidate.failureCode})` : ""}.`, successful ? "success" : "error");
-      if (successful) {
-        await this.loadKind(candidate.kind);
-      }
-    }
-    async resumeCandidateMonitoring() {
-      const candidateId = rememberedRepositoryCandidate();
-      if (!candidateId) {
-        return;
-      }
-      try {
-        await this.monitorCandidate(await fetchRepositoryCandidateStatus(candidateId, this.signal()));
-      } catch (error) {
-        if (isAbortError6(error)) {
-          return;
-        }
-        if (error instanceof RepositoryApiError && (error.status === 404 || error.status === 410)) {
-          forgetRepositoryCandidate(candidateId);
-        }
-        renderRepositoryFailure(this.query("[data-candidate-progress]"), error);
-      }
-    }
-    signal() {
-      if (!this.request) {
-        throw new DOMException("Repository console is disconnected", "AbortError");
-      }
-      return this.request.signal;
-    }
-    query(selector) {
-      const node = this.querySelector(selector);
-      if (!node) {
-        throw new Error(`Missing repository console element ${selector}`);
-      }
-      return node;
-    }
-  }
-  function isAbortError6(error) {
-    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
-  }
-  if (!customElements.get("cms-repository-admin")) {
-    customElements.define("cms-repository-admin", RepositoryAdmin);
-  }
-
   // src/components/admin/Resources/Triggers/template.html
-  var template_default17 = `<section class="triggers-surface">
+  var template_default16 = `<section class="triggers-surface">
     <div data-state="loading" class="state">Loading triggers...</div>
     <div data-state="error" class="state" hidden>Failed to load triggers.</div>
     <div data-state="empty" class="state" hidden>No triggers installed.</div>
@@ -34937,7 +32466,7 @@ button.run:disabled {
       const style = document.createElement("style");
       style.textContent = style_default12;
       const body = document.createElement("template");
-      body.innerHTML = template_default17;
+      body.innerHTML = template_default16;
       this.replaceChildren(style, body.content.cloneNode(true));
       this.rows = this.querySelector("[data-role='rows']");
     }
@@ -35018,10 +32547,10 @@ button.run:disabled {
     return input2(root, name);
   }
   function option5(value3, label3) {
-    const element2 = document.createElement("option");
-    element2.value = value3;
-    element2.textContent = label3;
-    return element2;
+    const element = document.createElement("option");
+    element.value = value3;
+    element.textContent = label3;
+    return element;
   }
   function parseOptionalObject(raw, label3) {
     if (!raw.trim()) {
@@ -35172,7 +32701,7 @@ button.run:disabled {
   }
 
   // src/components/admin/Resources/Triggers/create/styles/controls.css
-  var controls_default4 = `.narrow-field {
+  var controls_default3 = `.narrow-field {
     max-width: 320px;
 }
 
@@ -35303,7 +32832,7 @@ textarea {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/layout.css
-  var layout_default4 = `:host {
+  var layout_default3 = `:host {
     display: block;
 }
 
@@ -35499,7 +33028,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/index.ts
-  var styles_default6 = [layout_default4, mapping_default2, controls_default4, feedback_default].join(`
+  var styles_default5 = [layout_default3, mapping_default2, controls_default3, feedback_default].join(`
 `);
 
   // src/components/admin/Resources/Triggers/create/templates/aside.html
@@ -35740,7 +33269,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Triggers/create/view.ts
   function renderState(host, text5) {
     const style = document.createElement("style");
-    style.textContent = styles_default6;
+    style.textContent = styles_default5;
     const state2 = document.createElement("div");
     state2.className = "state";
     state2.textContent = text5;
@@ -35748,7 +33277,7 @@ details[open] > summary > .chevron {
   }
   function renderShell(host) {
     const style = document.createElement("style");
-    style.textContent = styles_default6;
+    style.textContent = styles_default5;
     const shell = document.createElement("cms-shell-detail");
     shell.className = "create-shell";
     appendCreateTemplate2(shell);
@@ -35944,7 +33473,7 @@ details[open] > summary > .chevron {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default18 = `<header class="topbar">
+  var template_default17 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -36255,7 +33784,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts
-  var styles_default7 = [String(part_1_default), String(part_2_default)].join(`
+  var styles_default6 = [String(part_1_default), String(part_2_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts
@@ -36316,7 +33845,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default18)}`;
+  template4.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default17)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -36442,7 +33971,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default19 = `<aside class="panel">
+  var template_default18 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -36558,7 +34087,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default13)}</style>${String(template_default19)}`;
+  template5.innerHTML = `<style>${String(style_default13)}</style>${String(template_default18)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -36598,12 +34127,12 @@ button:hover {
     if (binding.params) {
       return binding.params;
     }
-    const query10 = bindingQuery(source2.url, binding.url);
-    if (!query10) {
+    const query8 = bindingQuery(source2.url, binding.url);
+    if (!query8) {
       return {};
     }
     const params = {};
-    for (const [name, value3] of new URLSearchParams(query10).entries()) {
+    for (const [name, value3] of new URLSearchParams(query8).entries()) {
       params[name] = paramValue(value3);
     }
     return params;
@@ -36787,10 +34316,10 @@ button:hover {
     }
   }
   function empty2(message) {
-    const element2 = document.createElement("div");
-    element2.className = "empty";
-    element2.textContent = message;
-    return element2;
+    const element = document.createElement("div");
+    element.className = "empty";
+    element.textContent = message;
+    return element;
   }
   function escapeHtml3(value3) {
     return value3.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -36813,9 +34342,9 @@ button:hover {
   }
   function bodyBindingFields(fields2) {
     const rows = [];
-    for (const field4 of fields2) {
-      if (field4.path !== "." && field4.type !== "object" && field4.type !== "array") {
-        rows.push({ name: field4.path, type: field4.type, required: field4.required });
+    for (const field3 of fields2) {
+      if (field3.path !== "." && field3.type !== "object" && field3.type !== "array") {
+        rows.push({ name: field3.path, type: field3.type, required: field3.required });
       }
     }
     return rows;
@@ -36855,15 +34384,15 @@ button:hover {
     return controls;
   }
   function option6(value3, label3) {
-    const element2 = document.createElement("option");
-    element2.value = value3;
-    element2.textContent = label3;
-    return element2;
+    const element = document.createElement("option");
+    element.value = value3;
+    element.textContent = label3;
+    return element;
   }
   function textSpan(value3) {
-    const element2 = document.createElement("span");
-    element2.textContent = value3;
-    return element2;
+    const element = document.createElement("span");
+    element.textContent = value3;
+    return element;
   }
   function selectOption(select5, value3) {
     const index = Array.from(select5.options).findIndex((option7) => option7.value === value3);
@@ -36873,8 +34402,8 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourceGroups.ts
-  function filteredSources(sources, query10) {
-    const normalized = query10.trim().toLowerCase();
+  function filteredSources(sources, query8) {
+    const normalized = query8.trim().toLowerCase();
     if (!normalized) {
       return sources;
     }
@@ -36905,16 +34434,16 @@ button:hover {
     }));
   }
   function cloneBodyFields(fields2) {
-    return fields2.map((field4) => ({
-      ...field4,
-      children: field4.children ? cloneBodyFields(field4.children) : undefined
+    return fields2.map((field3) => ({
+      ...field3,
+      children: field3.children ? cloneBodyFields(field3.children) : undefined
     }));
   }
-  function firstProviderKey(sources, query10) {
-    return providerGroups(filteredSources(sources, query10))[0]?.key ?? "";
+  function firstProviderKey(sources, query8) {
+    return providerGroups(filteredSources(sources, query8))[0]?.key ?? "";
   }
-  function visibleSources(sources, query10, activeProvider) {
-    return filteredSources(sources, query10).filter((source2) => (source2.provider ?? "default") === activeProvider);
+  function visibleSources(sources, query8, activeProvider) {
+    return filteredSources(sources, query8).filter((source2) => (source2.provider ?? "default") === activeProvider);
   }
   function initialAlias(binding) {
     return binding?.alias ?? "data";
@@ -36922,12 +34451,12 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRenderer.ts
   function renderBindingConfig(source2, initialBinding) {
-    const section2 = document.createElement("section");
-    section2.className = "binding-config";
-    section2.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
-    renderRequestParams(section2, source2, initialBinding);
-    renderRequestBody(section2, source2, initialBinding);
-    return section2;
+    const section = document.createElement("section");
+    section.className = "binding-config";
+    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
+    renderRequestParams(section, source2, initialBinding);
+    renderRequestBody(section, source2, initialBinding);
+    return section;
   }
   function renderAliasInput(value3) {
     const aliasLabel = document.createElement("label");
@@ -36952,15 +34481,15 @@ button:hover {
   function defaultTrigger(source2) {
     return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
   }
-  function renderRequestParams(section2, source2, initialBinding) {
+  function renderRequestParams(section, source2, initialBinding) {
     const params = source2.params ?? [];
     if (params.length === 0) {
       return;
     }
-    section2.append(renderBindingHeading("Request params"));
+    section.append(renderBindingHeading("Request params"));
     const initialParams = paramsForBinding(source2, initialBinding);
     for (const param of params) {
-      section2.append(renderBindingRow({
+      section.append(renderBindingRow({
         kind: "param",
         name: param.name,
         location: param.in,
@@ -36970,27 +34499,27 @@ button:hover {
       }, initialParams[param.name]));
     }
   }
-  function renderRequestBody(section2, source2, initialBinding) {
+  function renderRequestBody(section, source2, initialBinding) {
     const fields2 = bodyBindingFields(source2.body?.fields ?? []);
     if (fields2.length === 0) {
       return;
     }
-    section2.append(renderBindingHeading("Request body"));
-    for (const field4 of fields2) {
-      section2.append(renderBindingRow({
+    section.append(renderBindingHeading("Request body"));
+    for (const field3 of fields2) {
+      section.append(renderBindingRow({
         kind: "body",
-        name: field4.name,
+        name: field3.name,
         location: "body",
-        type: field4.type,
-        required: field4.required
-      }, initialBinding?.body?.[field4.name]));
+        type: field3.type,
+        required: field3.required
+      }, initialBinding?.body?.[field3.name]));
     }
   }
   function option7(value3, label3) {
-    const element2 = document.createElement("option");
-    element2.value = value3;
-    element2.textContent = label3;
-    return element2;
+    const element = document.createElement("option");
+    element.value = value3;
+    element.textContent = label3;
+    return element;
   }
   function selectOption2(select5, value3) {
     const index = Array.from(select5.options).findIndex((option8) => option8.value === value3);
@@ -37006,41 +34535,41 @@ button:hover {
   function renderDataSourceBodyFields(fields2) {
     return renderFieldList(fields2, "No request body declared.");
   }
-  function renderFieldList(fields2, emptyMessage2) {
-    const list2 = document.createElement("ul");
-    list2.className = "fields";
-    for (const field4 of fields2) {
-      list2.append(renderField(field4, 0));
+  function renderFieldList(fields2, emptyMessage) {
+    const list = document.createElement("ul");
+    list.className = "fields";
+    for (const field3 of fields2) {
+      list.append(renderField(field3, 0));
     }
-    if (list2.children.length === 0) {
+    if (list.children.length === 0) {
       const empty3 = document.createElement("p");
       empty3.className = "details-empty";
-      empty3.textContent = emptyMessage2;
+      empty3.textContent = emptyMessage;
       return empty3;
     }
-    return list2;
+    return list;
   }
-  function renderField(field4, depth) {
+  function renderField(field3, depth) {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
     const path = document.createElement("span");
     path.className = "field-path";
-    path.textContent = field4.path;
+    path.textContent = field3.path;
     const type = document.createElement("span");
     type.className = "field-type";
-    type.textContent = field4.type ?? "unknown";
+    type.textContent = field3.type ?? "unknown";
     item.append(path, type);
-    if (field4.required) {
+    if (field3.required) {
       const required = document.createElement("span");
       required.className = "field-required";
       required.textContent = "required";
       item.append(required);
     }
-    if (field4.children?.length) {
+    if (field3.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field4.children) {
+      for (const child of field3.children) {
         children.append(renderField(child, depth + 1));
       }
       item.append(children);
@@ -37137,11 +34666,11 @@ button:hover {
   function methodSources(sources, activeMethod) {
     return sources.filter((source2) => activeMethod === "all" || dataSourceMethod(source2) === activeMethod);
   }
-  function pickerProviderGroups(sources, activeMethod, query10) {
-    return providerGroups(filteredSources(methodSources(sources, activeMethod), query10));
+  function pickerProviderGroups(sources, activeMethod, query8) {
+    return providerGroups(filteredSources(methodSources(sources, activeMethod), query8));
   }
-  function pickerVisibleSources(sources, activeMethod, query10, activeProvider) {
-    return visibleSources(methodSources(sources, activeMethod), query10, activeProvider);
+  function pickerVisibleSources(sources, activeMethod, query8, activeProvider) {
+    return visibleSources(methodSources(sources, activeMethod), query8, activeProvider);
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
@@ -37169,22 +34698,22 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerElements.ts
   function queryDataSourcePickerElements(root) {
-    const query10 = (selector) => root.querySelector(selector);
+    const query8 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query10(".backdrop"),
-      binding: query10(".binding"),
-      closeButton: query10(".close"),
-      details: query10(".details"),
-      methodFilter: query10(".method-filter"),
-      providers: query10(".providers"),
-      search: query10(".search"),
-      sourcesList: query10(".sources"),
-      subtitle: query10(".subtitle")
+      backdrop: query8(".backdrop"),
+      binding: query8(".binding"),
+      closeButton: query8(".close"),
+      details: query8(".details"),
+      methodFilter: query8(".method-filter"),
+      providers: query8(".providers"),
+      search: query8(".search"),
+      sourcesList: query8(".sources"),
+      subtitle: query8(".subtitle")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default20 = `<div class="backdrop" hidden>
+  var template_default19 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -37722,12 +35251,12 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts
-  var styles_default8 = [String(part_1_default2), String(part_2_default2), String(part_3_default), String(part_4_default)].join(`
+  var styles_default7 = [String(part_1_default2), String(part_2_default2), String(part_3_default), String(part_4_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default20)}`;
+  template6.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default19)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -37851,7 +35380,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default21 = `<div class="backdrop" hidden>
+  var template_default20 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -38080,13 +35609,13 @@ textarea { min-height: 92px; resize: vertical; }
   function fieldSelect(fields2, draft, onChange) {
     const select5 = document.createElement("select");
     select5.className = "field-path";
-    for (const field4 of fields2) {
+    for (const field3 of fields2) {
       const option8 = document.createElement("option");
-      option8.value = field4.path;
-      option8.textContent = `${field4.scopeLabel}: ${field4.path}`;
+      option8.value = field3.path;
+      option8.textContent = `${field3.scopeLabel}: ${field3.path}`;
       select5.append(option8);
     }
-    select5.selectedIndex = Math.max(0, fields2.findIndex((field4) => field4.path === draft.path));
+    select5.selectedIndex = Math.max(0, fields2.findIndex((field3) => field3.path === draft.path));
     select5.addEventListener("change", () => {
       draft.path = select5.options.item(select5.selectedIndex)?.value ?? "";
       onChange(false);
@@ -38148,10 +35677,10 @@ textarea { min-height: 92px; resize: vertical; }
     return trimmed;
   }
   function empty3(text5) {
-    const element2 = document.createElement("div");
-    element2.className = "empty";
-    element2.textContent = text5;
-    return element2;
+    const element = document.createElement("div");
+    element.className = "empty";
+    element.textContent = text5;
+    return element;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/sourceStateMode.ts
@@ -38186,19 +35715,19 @@ textarea { min-height: 92px; resize: vertical; }
     return conditions2;
   }
   function renderSource(source2, options2) {
-    const section2 = document.createElement("section");
-    section2.className = "source";
-    section2.append(textBlock2("source-title", source2.label));
+    const section = document.createElement("section");
+    section.className = "source";
+    section.append(textBlock2("source-title", source2.label));
     if (source2.sourceName) {
-      section2.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
+      section.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
     }
     const states3 = document.createElement("div");
     states3.className = "states";
     for (const state2 of STATES) {
       states3.append(renderState2(source2, state2, options2));
     }
-    section2.append(states3);
-    return section2;
+    section.append(states3);
+    return section;
   }
   function renderState2(source2, state2, options2) {
     const key = sourceStateKey(options2.sources, source2.editor, state2);
@@ -38216,22 +35745,22 @@ textarea { min-height: 92px; resize: vertical; }
     return label3;
   }
   function textBlock2(className, text5) {
-    const element2 = document.createElement("div");
-    element2.className = className;
-    element2.textContent = text5;
-    return element2;
+    const element = document.createElement("div");
+    element.className = className;
+    element.textContent = text5;
+    return element;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerView.ts
   function queryConditionPickerElements(root) {
-    const query10 = (selector) => root.querySelector(selector);
+    const query8 = (selector) => root.querySelector(selector);
     return {
-      applyButton: query10(".apply"),
-      backdrop: query10(".backdrop"),
-      body: query10(".body"),
-      closeButton: query10(".close"),
-      removeButton: query10(".remove"),
-      subtitle: query10(".subtitle")
+      applyButton: query8(".apply"),
+      backdrop: query8(".backdrop"),
+      body: query8(".body"),
+      closeButton: query8(".close"),
+      removeButton: query8(".remove"),
+      subtitle: query8(".subtitle")
     };
   }
   function conditionExpression(input3) {
@@ -38274,7 +35803,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default14)}</style>${String(template_default21)}`;
+  template7.innerHTML = `<style>${String(style_default14)}</style>${String(template_default20)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -38467,7 +35996,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default22 = `<div class="backdrop" hidden>
+  var template_default21 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -38895,7 +36424,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts
-  var styles_default9 = [String(part_1_default3), String(part_2_default3), String(part_3_default2)].join(`
+  var styles_default8 = [String(part_1_default3), String(part_2_default3), String(part_3_default2)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
@@ -38975,8 +36504,8 @@ dd {
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option8, query10) {
-    if (!query10) {
+  function blockPickerOptionMatches(option8, query8) {
+    if (!query8) {
       return true;
     }
     const item = blockPickerOptionItem(option8);
@@ -38987,11 +36516,11 @@ dd {
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
       option8.slotLabel
-    ].some((value3) => value3?.toLowerCase().includes(query10));
+    ].some((value3) => value3?.toLowerCase().includes(query8));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
-  function blockPickerVisibleOptions(group, source2, category, query10) {
+  function blockPickerVisibleOptions(group, source2, category, query8) {
     return group?.options.filter((option8) => {
       const item = blockPickerOptionItem(option8);
       if (item.kind !== source2) {
@@ -39000,7 +36529,7 @@ dd {
       if (category && blockPickerCategoryLabel(option8) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option8, query10);
+      return blockPickerOptionMatches(option8, query8);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
@@ -39182,23 +36711,23 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts
   function queryBlockPickerElements(root) {
-    const query10 = (selector) => root.querySelector(selector);
+    const query8 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query10(".backdrop"),
-      categories: query10(".categories"),
-      closeButton: query10(".close"),
-      details: query10(".details"),
-      results: query10(".results"),
-      search: query10(".search"),
-      sources: query10(".sources"),
-      subtitle: query10(".subtitle"),
-      tabs: query10(".slot-tabs")
+      backdrop: query8(".backdrop"),
+      categories: query8(".categories"),
+      closeButton: query8(".close"),
+      details: query8(".details"),
+      results: query8(".results"),
+      search: query8(".search"),
+      sources: query8(".sources"),
+      subtitle: query8(".subtitle"),
+      tabs: query8(".slot-tabs")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default22)}`;
+  template8.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default21)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -40082,9 +37611,9 @@ dd {
     return true;
   }
   function filterSettingSections(policy, sections2) {
-    return sections2.flatMap((section2) => {
-      const settings = section2.settings.flatMap((setting) => filterSetting(policy, setting));
-      return settings.length > 0 ? [{ ...section2, settings }] : [];
+    return sections2.flatMap((section) => {
+      const settings = section.settings.flatMap((setting) => filterSetting(policy, setting));
+      return settings.length > 0 ? [{ ...section, settings }] : [];
     });
   }
   function filterSetting(policy, setting) {
@@ -40118,8 +37647,8 @@ dd {
     }
     return accept.kind === "any-component";
   }
-  function acceptsElement(slot, element2, catalog) {
-    const tag = element2.localName.toLowerCase();
+  function acceptsElement(slot, element, catalog) {
+    const tag = element.localName.toLowerCase();
     const entry = catalog.find((candidate) => candidate.tag.toLowerCase() === tag);
     return slot.accepts.some((accept) => {
       if (accept.kind === "component") {
@@ -40316,16 +37845,16 @@ dd {
   }
   function fieldOptions(fields2, scopeName, scopeLabel, prefix = "") {
     const options2 = [];
-    for (const field4 of fields2) {
-      const relative = relativePath(field4.path, prefix);
+    for (const field3 of fields2) {
+      const relative = relativePath(field3.path, prefix);
       const path = relative ? `${scopeName}.${relative}` : scopeName;
       options2.push({
         path,
-        label: field4.label ?? field4.path,
+        label: field3.label ?? field3.path,
         scopeLabel,
-        type: field4.type
+        type: field3.type
       });
-      options2.push(...fieldOptions(field4.children ?? [], scopeName, scopeLabel, relative));
+      options2.push(...fieldOptions(field3.children ?? [], scopeName, scopeLabel, relative));
     }
     return options2;
   }
@@ -40661,7 +38190,7 @@ dd {
     constructor(tree) {
       this.tree = tree;
     }
-    render(request2 = {}) {
+    render(request = {}) {
       this.tree.state.scrollRequestId += 1;
       const treeEl = this.tree.refs.tree;
       const scrollContainer = this.tree.refs.scrollContainer;
@@ -40681,8 +38210,8 @@ dd {
       for (const node of this.tree.nodes.visibleNodes()) {
         treeEl.append(this.renderNode(node.item, node.depth));
       }
-      if (request2.anchor) {
-        this.restoreScrollAnchor(request2.anchor);
+      if (request.anchor) {
+        this.restoreScrollAnchor(request.anchor);
       } else if (this.tree.state.scrollSelectedIntoViewOnRender) {
         this.scrollSelectedIntoView();
       } else {
@@ -41029,7 +38558,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default23 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default22 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
@@ -41196,7 +38725,7 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template9 = document.createElement("template");
   template9.innerHTML = `<style>${[style_default15, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default23)}`;
+`)}</style>${String(template_default22)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -41241,7 +38770,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default24 = `<main class="canvas">
+  var template_default23 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -41361,7 +38890,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(style_default16)}</style>${String(template_default24)}`;
+  template10.innerHTML = `<style>${String(style_default16)}</style>${String(template_default23)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -41502,7 +39031,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default25 = `<section class="section">
+  var template_default24 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -41603,7 +39132,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template11 = createFieldTemplate(template_default25, style_default17);
+  var template11 = createFieldTemplate(template_default24, style_default17);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -41627,7 +39156,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default26 = `<div class="field">
+  var template_default25 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -41881,17 +39410,17 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
-  function matchingDynamicDataOptions(options2, query10) {
-    const normalized = query10.trim().toLowerCase();
+  function matchingDynamicDataOptions(options2, query8) {
+    const normalized = query8.trim().toLowerCase();
     return normalized ? options2.filter((option8) => `${option8.label} ${option8.path}`.toLowerCase().includes(normalized)) : options2;
   }
-  function renderDynamicDataOptions(list2, options2, totalOptions, onSelect) {
-    list2.replaceChildren();
+  function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
+    list.replaceChildren();
     if (options2.length === 0) {
       const empty4 = document.createElement("p");
       empty4.className = "data-empty";
       empty4.textContent = totalOptions === 0 ? "No data available here." : "No matching data.";
-      list2.append(empty4);
+      list.append(empty4);
       return;
     }
     for (const option8 of options2) {
@@ -41906,7 +39435,7 @@ input:disabled {
       path.textContent = option8.path;
       button2.append(label3, path);
       button2.addEventListener("click", () => onSelect(option8.path));
-      list2.append(button2);
+      list.append(button2);
     }
   }
 
@@ -41924,17 +39453,17 @@ input:disabled {
     return [...byPath.values()];
   }
   function fieldOptions2(fields2, scopeName, scopeLabel, prefix = "") {
-    return fields2.flatMap((field4) => {
-      const relativePath2 = prefix && field4.path !== "." ? `${prefix}.${field4.path}` : field4.path === "." ? prefix : field4.path;
+    return fields2.flatMap((field3) => {
+      const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
       const path = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field4.type === "array") {
+      if (field3.type === "array") {
         return [];
       }
-      const children = fieldOptions2(field4.children ?? [], scopeName, scopeLabel, relativePath2);
-      if (field4.type === "object" || field4.children?.length) {
+      const children = fieldOptions2(field3.children ?? [], scopeName, scopeLabel, relativePath2);
+      if (field3.type === "object" || field3.children?.length) {
         return children;
       }
-      const label3 = field4.label ? `${scopeLabel} / ${field4.label}` : `${scopeLabel} / ${relativePath2}`;
+      const label3 = field3.label ? `${scopeLabel} / ${field3.label}` : `${scopeLabel} / ${relativePath2}`;
       return [{ label: label3, path }, ...children];
     });
   }
@@ -42085,7 +39614,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template12 = createFieldTemplate(template_default26, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default25, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -42145,7 +39674,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default27 = `<div class="field">
+  var template_default26 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -42238,7 +39767,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template13 = createFieldTemplate(template_default27, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
+  var template13 = createFieldTemplate(template_default26, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -42430,14 +39959,14 @@ textarea:disabled {
     const end = closestWrapper(editor, range.endContainer, tagName, predicate);
     return start === end ? start : null;
   }
-  function unwrapElement(editor, element2) {
+  function unwrapElement(editor, element) {
     const fragment = document.createDocumentFragment();
-    const firstChild = element2.firstChild;
-    const lastChild = element2.lastChild;
-    while (element2.firstChild) {
-      fragment.append(element2.firstChild);
+    const firstChild = element.firstChild;
+    const lastChild = element.lastChild;
+    while (element.firstChild) {
+      fragment.append(element.firstChild);
     }
-    element2.replaceWith(fragment);
+    element.replaceWith(fragment);
     const nextRange = document.createRange();
     if (firstChild && lastChild) {
       nextRange.setStartBefore(firstChild);
@@ -42547,7 +40076,7 @@ textarea:disabled {
       if (!range) {
         return false;
       }
-      const wrapper = findRangeWrapper(this._editor(), range, "span", (element2) => element2.style.fontSize !== "");
+      const wrapper = findRangeWrapper(this._editor(), range, "span", (element) => element.style.fontSize !== "");
       const currentIndex = wrapper ? TEXT_SIZE_STEPS.indexOf(wrapper.style.fontSize) : 1;
       const fallbackIndex = currentIndex >= 0 ? currentIndex : 1;
       const nextIndex = direction === "increase" ? Math.min(TEXT_SIZE_STEPS.length - 1, fallbackIndex + 1) : Math.max(0, fallbackIndex - 1);
@@ -42667,7 +40196,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default28 = `<div class="field">
+  var template_default27 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -42918,12 +40447,12 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts
-  var styles_default10 = [String(part_1_default4), String(part_2_default4)].join(`
+  var styles_default9 = [String(part_1_default4), String(part_2_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template14 = document.createElement("template");
-  template14.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default28)}`;
+  template14.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default27)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -43056,7 +40585,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default29 = `<label class="field">
+  var template_default28 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -43168,7 +40697,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template15 = createFieldTemplate(template_default29, style_default20);
+  var template15 = createFieldTemplate(template_default28, style_default20);
 
   class Select extends HTMLElement {
     constructor() {
@@ -43180,11 +40709,11 @@ select:disabled {
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
       this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option8) => {
-        const element2 = document.createElement("option");
-        element2.textContent = option8.label;
-        element2.value = option8.value;
-        element2.selected = option8.value === current;
-        return element2;
+        const element = document.createElement("option");
+        element.textContent = option8.label;
+        element.value = option8.value;
+        element.selected = option8.value === current;
+        return element;
       }));
     }
     _parseOptions() {
@@ -43205,7 +40734,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default30 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default29 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -43328,7 +40857,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template16 = createFieldTemplate(template_default30, style_default21);
+  var template16 = createFieldTemplate(template_default29, style_default21);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -43345,7 +40874,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default31 = `<div class="segmented">
+  var template_default30 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
@@ -43397,7 +40926,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template17 = createFieldTemplate(template_default31, style_default22);
+  var template17 = createFieldTemplate(template_default30, style_default22);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -43410,7 +40939,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default32 = `<div class="page-link">
+  var template_default31 = `<div class="page-link">
     <div class="head">
         <span class="label"></span>
         <span class="hint"></span>
@@ -43752,7 +41281,7 @@ code {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
-  var styles_default11 = [String(part_1_default5), String(part_2_default5), String(part_3_default3)].join("");
+  var styles_default10 = [String(part_1_default5), String(part_2_default5), String(part_3_default3)].join("");
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
   function allowedLinkModes(options2) {
@@ -43873,8 +41402,8 @@ code {
   function renderPageLinkPages(input3) {
     input3.elements.pageList.replaceChildren();
     input3.elements.picker.hidden = !input3.pickerOpen || input3.elements.pagePanel.hidden;
-    const query10 = input3.query.trim().toLowerCase();
-    const pages = input3.pages.filter((page) => !query10 || page.title.toLowerCase().includes(query10) || page.path.toLowerCase().includes(query10));
+    const query8 = input3.query.trim().toLowerCase();
+    const pages = input3.pages.filter((page) => !query8 || page.title.toLowerCase().includes(query8) || page.path.toLowerCase().includes(query8));
     input3.elements.empty.hidden = !input3.pickerOpen || pages.length > 0;
     for (const page of pages) {
       const button2 = document.createElement("button");
@@ -43920,32 +41449,32 @@ code {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
   function queryPageLinkElements(root) {
-    const query10 = (selector) => root.querySelector(selector);
+    const query8 = (selector) => root.querySelector(selector);
     return {
-      empty: query10(".empty"),
-      externalInput: query10(".external-input"),
-      externalPanel: query10(".external-panel"),
-      fileAction: query10(".file-action"),
-      fileButton: query10(".file-button"),
-      filePreview: query10(".file-preview"),
-      fileTitle: query10(".file-title"),
-      fileValue: query10(".file-value"),
-      hint: query10(".hint"),
-      label: query10(".label"),
-      mediaPanel: query10(".media-panel"),
-      pageList: query10(".page-list"),
-      pagePanel: query10(".page-panel"),
-      picker: query10(".picker"),
-      searchInput: query10(".search"),
-      summaryTitle: query10(".target strong"),
-      summaryValue: query10(".target code"),
-      tabs: query10(".tabs"),
-      target: query10(".target")
+      empty: query8(".empty"),
+      externalInput: query8(".external-input"),
+      externalPanel: query8(".external-panel"),
+      fileAction: query8(".file-action"),
+      fileButton: query8(".file-button"),
+      filePreview: query8(".file-preview"),
+      fileTitle: query8(".file-title"),
+      fileValue: query8(".file-value"),
+      hint: query8(".hint"),
+      label: query8(".label"),
+      mediaPanel: query8(".media-panel"),
+      pageList: query8(".page-list"),
+      pagePanel: query8(".page-panel"),
+      picker: query8(".picker"),
+      searchInput: query8(".search"),
+      summaryTitle: query8(".target strong"),
+      summaryValue: query8(".target code"),
+      tabs: query8(".tabs"),
+      target: query8(".target")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default33 = `<div class="backdrop" hidden>
+  var template_default32 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
         <header class="top">
             <div>
@@ -44277,7 +41806,7 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
-  var styles_default12 = [String(part_1_default6), String(part_2_default6), String(part_3_default4)].join(`
+  var styles_default11 = [String(part_1_default6), String(part_2_default6), String(part_3_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
@@ -44359,18 +41888,18 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
   function queryFilesCenterElements(root) {
-    const query10 = (selector) => root.querySelector(selector);
+    const query8 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query10(".backdrop"),
-      breadcrumb: query10(".breadcrumb"),
-      cancelButton: query10(".cancel"),
-      closeButton: query10(".close"),
-      empty: query10(".empty"),
-      grid: query10(".grid"),
-      searchInput: query10(".search"),
-      selectButton: query10(".select"),
-      selectionTitle: query10(".selection strong"),
-      selectionValue: query10(".selection code")
+      backdrop: query8(".backdrop"),
+      breadcrumb: query8(".breadcrumb"),
+      cancelButton: query8(".cancel"),
+      closeButton: query8(".close"),
+      empty: query8(".empty"),
+      grid: query8(".grid"),
+      searchInput: query8(".search"),
+      selectButton: query8(".select"),
+      selectionTitle: query8(".selection strong"),
+      selectionValue: query8(".selection code")
     };
   }
   function wireFilesCenterElements(elements, callbacks) {
@@ -44399,12 +41928,12 @@ input {
   }
   function renderFilesList(input3) {
     input3.grid.replaceChildren();
-    const query10 = input3.query.trim().toLowerCase();
+    const query8 = input3.query.trim().toLowerCase();
     const items = input3.items.filter((item) => {
       if (item.type === "file" && !matchesFileAccept(item, input3.fileAccept)) {
         return false;
       }
-      return !query10 || item.name.toLowerCase().includes(query10);
+      return !query8 || item.name.toLowerCase().includes(query8);
     });
     input3.empty.hidden = items.length > 0;
     for (const item of items) {
@@ -44517,7 +42046,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default33)}`;
+  template18.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default32)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -44887,7 +42416,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
   var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default32)}`;
+  template19.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default31)}`;
 
   class PageLink extends PageLinkController {
     constructor() {
@@ -45334,9 +42863,9 @@ input {
       controls.className = "setting-row-controls";
       controls.style.setProperty("--setting-row-count", String(Math.max(1, setting.settings.length)));
       for (const child of setting.settings) {
-        const element2 = this.renderControl(child);
-        element2.classList.add("setting-row-control");
-        controls.append(element2);
+        const element = this.renderControl(child);
+        element.classList.add("setting-row-control");
+        controls.append(element);
       }
       wrapper.append(controls);
       return wrapper;
@@ -45439,10 +42968,10 @@ input {
     if (display === "hidden") {
       return null;
     }
-    const element2 = document.createElement("div");
-    element2.className = display === "sr-only" ? "field-label sr-only" : "field-label";
-    element2.textContent = label3;
-    return element2;
+    const element = document.createElement("div");
+    element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
+    element.textContent = label3;
+    return element;
   }
   function renderOptionContent(settingDisplay, optionDisplay, iconName, label3) {
     const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
@@ -45520,8 +43049,8 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
   function renderSettingsStates(states3, onToggle) {
-    const section2 = document.createElement("cms-editor-v2-section");
-    section2.setAttribute("label", "States");
+    const section = document.createElement("cms-editor-v2-section");
+    section.setAttribute("label", "States");
     for (const state2 of states3) {
       const button2 = document.createElement("button");
       button2.className = "state-button";
@@ -45535,31 +43064,31 @@ input {
       description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
       button2.append(label3, description);
       button2.addEventListener("click", () => onToggle(state2));
-      section2.append(button2);
+      section.append(button2);
     }
-    return section2;
+    return section;
   }
-  function renderSettingSection(section2, controls) {
-    const element2 = document.createElement("cms-editor-v2-section");
-    element2.setAttribute("label", section2.kind === "surcharge" ? `${section2.label} override` : section2.label);
-    const settings = visibleSettings(section2.settings);
+  function renderSettingSection(section, controls) {
+    const element = document.createElement("cms-editor-v2-section");
+    element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
+    const settings = visibleSettings(section.settings);
     if (settings.length === 0) {
       const empty4 = document.createElement("div");
       empty4.className = "section-empty";
       empty4.textContent = "No settings";
-      element2.append(empty4);
-      return element2;
+      element.append(empty4);
+      return element;
     }
     for (const setting of settings) {
-      element2.append(controls.render(setting));
+      element.append(controls.render(setting));
     }
-    return element2;
+    return element;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts
   function renderTextCapability(capability, value3, dataScopes2, emitContentChange) {
-    const section2 = document.createElement("cms-editor-v2-section");
-    section2.setAttribute("label", "Content");
+    const section = document.createElement("cms-editor-v2-section");
+    section.setAttribute("label", "Content");
     const setting = {
       type: "text",
       label: capability.format === "richtext" ? "Rich text" : "Text",
@@ -45578,8 +43107,8 @@ input {
       }
       wireContentControl(control2, "input", (content) => emitContentChange(content, "text"));
     }
-    section2.append(control2);
-    return section2;
+    section.append(control2);
+    return section;
   }
   function formatTextCapability(capability) {
     const options2 = [
@@ -45593,7 +43122,7 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default34 = `<div class="settings-view">
+  var template_default33 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
@@ -45870,12 +43399,12 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/index.ts
-  var styles_default13 = [String(part_1_default7), String(part_2_default7)].join(`
+  var styles_default12 = [String(part_1_default7), String(part_2_default7)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default34)}`;
+  template20.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default33)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -45900,7 +43429,7 @@ cms-editor-v2-segmented-control button svg:only-child {
       this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
-      const visibleSections = sections2.filter((section2) => mode === "settings" ? section2.kind === "self" : section2.kind === "surcharge");
+      const visibleSections = sections2.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
       const shouldRenderStates = mode === "settings" && states3.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
@@ -45916,8 +43445,8 @@ cms-editor-v2-segmented-control button svg:only-child {
       if (shouldRenderStates) {
         view.append(renderSettingsStates(states3, (state2) => this._emitStateToggle(state2)));
       }
-      for (const section2 of visibleSections) {
-        view.append(renderSettingSection(section2, this._settingControls));
+      for (const section of visibleSections) {
+        view.append(renderSettingSection(section, this._settingControls));
       }
     }
     _emitStateToggle(state2) {
@@ -45948,7 +43477,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
-  var template_default35 = `<div class="backdrop" hidden>
+  var template_default34 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -46275,7 +43804,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/index.ts
-  var styles_default14 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
+  var styles_default13 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
@@ -46289,24 +43818,24 @@ label {
     return [...byPath.values()];
   }
   function repeatArrayFields(fields2, scopeName, scopeLabel, prefix = "") {
-    return fields2.flatMap((field4) => {
-      const relativePath2 = prefix && field4.path !== "." ? `${prefix}.${field4.path}` : field4.path === "." ? prefix : field4.path;
+    return fields2.flatMap((field3) => {
+      const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
       const fullPath = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field4.type !== "array") {
-        return repeatArrayFields(field4.children ?? [], scopeName, scopeLabel, relativePath2);
+      if (field3.type !== "array") {
+        return repeatArrayFields(field3.children ?? [], scopeName, scopeLabel, relativePath2);
       }
       return [
         {
           path: fullPath,
-          label: field4.path,
+          label: field3.path,
           scopeLabel,
-          fields: field4.children ?? []
+          fields: field3.children ?? []
         }
       ];
     });
   }
-  function visibleRepeatOptions(options2, query10) {
-    const normalizedQuery = query10.trim().toLowerCase();
+  function visibleRepeatOptions(options2, query8) {
+    const normalizedQuery = query8.trim().toLowerCase();
     if (!normalizedQuery) {
       return options2;
     }
@@ -46375,34 +43904,34 @@ label {
     container.append(scroll, footer);
   }
   function renderFields2(fields2) {
-    const list2 = document.createElement("ul");
-    list2.className = "fields";
-    for (const field4 of fields2) {
-      list2.append(renderField2(field4, 0));
+    const list = document.createElement("ul");
+    list.className = "fields";
+    for (const field3 of fields2) {
+      list.append(renderField2(field3, 0));
     }
-    if (list2.children.length === 0) {
+    if (list.children.length === 0) {
       const empty4 = document.createElement("p");
       empty4.className = "details-empty";
       empty4.textContent = "No item fields declared.";
       return empty4;
     }
-    return list2;
+    return list;
   }
-  function renderField2(field4, depth) {
+  function renderField2(field3, depth) {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
     const path = document.createElement("span");
     path.className = "field-path";
-    path.textContent = field4.path;
+    path.textContent = field3.path;
     const type = document.createElement("span");
     type.className = "field-type";
-    type.textContent = field4.type ?? "unknown";
+    type.textContent = field3.type ?? "unknown";
     item.append(path, type);
-    if (field4.children?.length) {
+    if (field3.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field4.children) {
+      for (const child of field3.children) {
         children.append(renderField2(child, depth + 1));
       }
       item.append(children);
@@ -46412,7 +43941,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default14)}</style>${String(template_default35)}`;
+  template21.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default34)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -46582,11 +44111,11 @@ label {
     pageField(name) {
       return this.host.shadowRoot.querySelector(`[data-page-field="${name}"]`);
     }
-    upgrade(element2) {
-      if (element2) {
-        customElements.upgrade(element2);
+    upgrade(element) {
+      if (element) {
+        customElements.upgrade(element);
       }
-      return element2;
+      return element;
     }
     defineElement(tagName, constructor) {
       if (customElements.get(tagName)) {
@@ -46667,8 +44196,8 @@ label {
       if (!t(target2)) {
         return [target2];
       }
-      const output = Array.from(target2.children).find((element2) => element2.hasAttribute(_2));
-      const children = output ? Array.from(output.children).flatMap((element2) => visibleBoxes(element2)) : [];
+      const output = Array.from(target2.children).find((element) => element.hasAttribute(_2));
+      const children = output ? Array.from(output.children).flatMap((element) => visibleBoxes(element)) : [];
       return children.length > 0 ? children : [target2];
     }
     _ensureStyle(doc) {
@@ -46691,15 +44220,15 @@ label {
       doc.head.append(style);
     }
   }
-  function visibleBoxes(element2) {
-    const rect = element2.getBoundingClientRect();
+  function visibleBoxes(element) {
+    const rect = element.getBoundingClientRect();
     if (rect.width > 0 || rect.height > 0) {
-      return [element2];
+      return [element];
     }
-    return Array.from(element2.children).flatMap((child) => visibleBoxes(child));
+    return Array.from(element.children).flatMap((child) => visibleBoxes(child));
   }
   function unionRect(elements) {
-    const rects = elements.map((element2) => element2.getBoundingClientRect());
+    const rects = elements.map((element) => element.getBoundingClientRect());
     const left = Math.min(...rects.map((rect) => rect.left));
     const top = Math.min(...rects.map((rect) => rect.top));
     const right = Math.max(...rects.map((rect) => rect.right));
@@ -46726,11 +44255,11 @@ label {
     if (node.nodeType !== Node.ELEMENT_NODE) {
       return false;
     }
-    const element2 = node;
-    if (element2.tagName.toLowerCase() !== "p" || element2.attributes.length > 0) {
+    const element = node;
+    if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0) {
       return false;
     }
-    return Array.from(element2.childNodes).every((child) => {
+    return Array.from(element.childNodes).every((child) => {
       if (child.nodeType === Node.TEXT_NODE) {
         return (child.textContent ?? "").trim() === "";
       }
@@ -46975,16 +44504,16 @@ label {
       slotElements
     };
   }
-  function applySlot(element2, slotName) {
+  function applySlot(element, slotName) {
     if (slotName) {
-      element2.setAttribute("slot", slotName);
+      element.setAttribute("slot", slotName);
     } else {
-      element2.removeAttribute("slot");
+      element.removeAttribute("slot");
     }
   }
-  function applyCondition(element2, sourceStatusConditions2) {
+  function applyCondition(element, sourceStatusConditions2) {
     if (sourceStatusConditions2?.length) {
-      applySourceStatusConditions(element2, sourceStatusConditions2);
+      applySourceStatusConditions(element, sourceStatusConditions2);
     }
   }
   function createBlockFragment(document2, entry) {
@@ -47105,15 +44634,15 @@ label {
     center.addEventListener("close", cleanup, { once: true });
     center.addEventListener("select-file", (event) => {
       const detail = event.detail;
-      const element2 = createMediaElement(frameDocument, detail);
-      if (!element2) {
+      const element = createMediaElement(frameDocument, detail);
+      if (!element) {
         return;
       }
-      onSelect([element2]);
+      onSelect([element]);
     }, { once: true });
     center.addEventListener("select-files", (event) => {
       const detail = event.detail;
-      const elements = detail.files.map((file) => createMediaElement(frameDocument, file)).filter((element2) => Boolean(element2));
+      const elements = detail.files.map((file) => createMediaElement(frameDocument, file)).filter((element) => Boolean(element));
       onSelect(elements);
     }, { once: true });
     document.body.append(center);
@@ -47264,10 +44793,10 @@ label {
       if (elements.length === 0 || !canInsertNodeCount(parent, slot, elements)) {
         return;
       }
-      for (const element2 of elements) {
-        applySlot(element2, slotName);
+      for (const element of elements) {
+        applySlot(element, slotName);
         if (sourceStatusConditions2?.length) {
-          applySourceStatusConditions(element2, sourceStatusConditions2);
+          applySourceStatusConditions(element, sourceStatusConditions2);
         }
       }
       parent.target.append(...elements);
@@ -47278,16 +44807,16 @@ label {
         return;
       }
       openMediaPicker(this.context.frameDocument(), item.accept, { multiple: false }, (elements) => {
-        const element2 = elements[0];
-        if (!element2) {
+        const element = elements[0];
+        if (!element) {
           return;
         }
-        applySlot(element2, slotName);
+        applySlot(element, slotName);
         if (sourceStatusConditions2?.length) {
-          applySourceStatusConditions(element2, sourceStatusConditions2);
+          applySourceStatusConditions(element, sourceStatusConditions2);
         }
-        editor.target.replaceWith(element2);
-        reloadFrameDocument(this.context, element2);
+        editor.target.replaceWith(element);
+        reloadFrameDocument(this.context, element);
       });
     }
   }
@@ -47329,9 +44858,9 @@ label {
         reloadFrameDocument(this.context, clone);
         return;
       }
-      if (!canInsertSibling(this.context.runtime(), editor, clone, this.context.catalog(), (element2, state2) => {
+      if (!canInsertSibling(this.context.runtime(), editor, clone, this.context.catalog(), (element, state2) => {
         if (state2.length) {
-          applySourceStatusConditions(element2, state2);
+          applySourceStatusConditions(element, state2);
         }
       }, (reference) => sourceStatusConditionsFromElement(reference.target))) {
         return;
@@ -47453,33 +44982,33 @@ label {
       if (child.nodeType !== Node.ELEMENT_NODE) {
         continue;
       }
-      const element2 = child;
-      const scope = collectElementDependencies(element2, inheritedScope, usages);
-      if (isBindingBoundary(element2)) {
+      const element = child;
+      const scope = collectElementDependencies(element, inheritedScope, usages);
+      if (isBindingBoundary(element)) {
         continue;
       }
-      collectBindingDependencies(element2, scope, usages);
+      collectBindingDependencies(element, scope, usages);
     }
   }
-  function collectElementDependencies(element2, inheritedScope, usages, options2 = {}) {
+  function collectElementDependencies(element, inheritedScope, usages, options2 = {}) {
     const scope = {
       aliases: new Set(inheritedScope.aliases),
       sourceId: inheritedScope.sourceId,
       sourceLocal: inheritedScope.sourceLocal
     };
-    if (!options2.isRoot && isBindingBoundary(element2)) {
+    if (!options2.isRoot && isBindingBoundary(element)) {
       return scope;
     }
-    const repeat = element2.getAttribute(CMS_BINDING_ATTRIBUTES.repeat);
+    const repeat = element.getAttribute(CMS_BINDING_ATTRIBUTES.repeat);
     if (repeat && (inheritedScope.sourceLocal || bindingTextDependsOn(repeat, inheritedScope))) {
-      usages.push({ target: element2, attribute: CMS_BINDING_ATTRIBUTES.repeat });
+      usages.push({ target: element, attribute: CMS_BINDING_ATTRIBUTES.repeat });
       const parsed = parseRepeat(repeat);
       const repeatAlias = parsed?.alias?.trim();
       if (repeatAlias) {
         scope.aliases.add(repeatAlias);
       }
     }
-    for (const attribute of Array.from(element2.attributes)) {
+    for (const attribute of Array.from(element.attributes)) {
       if (attribute.name === CMS_BINDING_ATTRIBUTES.source) {
         continue;
       }
@@ -47487,7 +45016,7 @@ label {
         continue;
       }
       if (bindingTextDependsOn(attribute.value, scope)) {
-        usages.push({ target: element2, attribute: attribute.name });
+        usages.push({ target: element, attribute: attribute.name });
       }
     }
     return scope;
@@ -47502,8 +45031,8 @@ label {
       collectEditorBindingDependencies(child, scope, usages);
     }
   }
-  function isBindingBoundary(element2) {
-    return element2.hasAttribute(CMS_BINDING_ATTRIBUTES.source) || element2.localName === CMS_BINDING_CORE_TAG;
+  function isBindingBoundary(element) {
+    return element.hasAttribute(CMS_BINDING_ATTRIBUTES.source) || element.localName === CMS_BINDING_CORE_TAG;
   }
   function dedupeDependencyUsages(usages) {
     const seen = new Set;
@@ -47620,8 +45149,8 @@ label {
   }
   function sourceIdExists(source2, id) {
     const root = source2.getRootNode();
-    for (const element2 of Array.from(root.querySelectorAll?.(`[${CMS_BINDING_ATTRIBUTES.sourceId}]`) ?? [])) {
-      if (element2 !== source2 && element2.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id) {
+    for (const element of Array.from(root.querySelectorAll?.(`[${CMS_BINDING_ATTRIBUTES.sourceId}]`) ?? [])) {
+      if (element !== source2 && element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id) {
         return true;
       }
     }
@@ -47972,8 +45501,8 @@ label {
     return true;
   }
   function settingsWithParamSync(editor, sections2) {
-    const section2 = paramSyncSettings(editor);
-    return section2 ? [...sections2, section2] : sections2;
+    const section = paramSyncSettings(editor);
+    return section ? [...sections2, section] : sections2;
   }
   function paramSyncSettings(editor) {
     const target2 = editor.target;
@@ -48062,8 +45591,8 @@ label {
     return true;
   }
   function settingsWithPageState(editor, sections2) {
-    const section2 = pageStateSettings(editor);
-    return section2 ? [...sections2, section2] : sections2;
+    const section = pageStateSettings(editor);
+    return section ? [...sections2, section] : sections2;
   }
   function pageStateSettings(editor) {
     const target2 = editor.target;
@@ -48112,9 +45641,9 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingsValues.ts
   function resolveSettingsValues(editor, sections2) {
-    return sections2.map((section2) => ({
-      ...section2,
-      settings: section2.settings.map((setting) => resolveSetting(editor, setting))
+    return sections2.map((section) => ({
+      ...section,
+      settings: section.settings.map((setting) => resolveSetting(editor, setting))
     }));
   }
   function getTextValue(editor, format) {
@@ -48175,8 +45704,8 @@ label {
     }
     return resolved;
   }
-  function readSettingAttribute(element2, name) {
-    return isNetworkBindingAttribute(name) ? $2(element2, name) : element2.getAttribute(name);
+  function readSettingAttribute(element, name) {
+    return isNetworkBindingAttribute(name) ? $2(element, name) : element.getAttribute(name);
   }
   function isNetworkBindingAttribute(name) {
     return Y2.includes(name);
@@ -48250,15 +45779,15 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingAttributes.ts
-  function writeSettingAttribute(element2, name, value3) {
+  function writeSettingAttribute(element, name, value3) {
     if (isNetworkBindingAttribute2(name)) {
-      p(element2, name, value3);
+      p(element, name, value3);
       return;
     }
     if (value3 === null) {
-      element2.removeAttribute(name);
+      element.removeAttribute(name);
     } else {
-      element2.setAttribute(name, value3);
+      element.setAttribute(name, value3);
     }
   }
   function isNetworkBindingAttribute2(name) {
@@ -48550,7 +46079,7 @@ label {
     return scopes.some((scope) => fieldsContainArray(scope.fields));
   }
   function fieldsContainArray(fields2) {
-    return fields2.some((field4) => field4.type === "array" || fieldsContainArray(field4.children ?? []));
+    return fields2.some((field3) => field3.type === "array" || fieldsContainArray(field3.children ?? []));
   }
   function flattenStructure2(nodes) {
     return nodes.flatMap((node) => [node, ...flattenStructure2(node.children)]);
@@ -49026,17 +46555,17 @@ label {
     if (!repeat?.alias) {
       return;
     }
-    const field4 = findDataField(registry2.collectDataScopes(editor.target), repeat.path);
+    const field3 = findDataField(registry2.collectDataScopes(editor.target), repeat.path);
     editor.declareDataScope({
       name: repeat.alias,
       label: repeat.alias,
-      fields: field4?.children ?? []
+      fields: field3?.children ?? []
     });
   }
   function findDataField(scopes, path) {
     for (const scope of scopes) {
-      const field4 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
-      const match = field4 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
+      const field3 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
+      const match = field3 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
       if (match) {
         return match;
       }
@@ -49044,11 +46573,11 @@ label {
     return;
   }
   function findDataFieldInList(fields2, path) {
-    for (const field4 of fields2) {
-      if (field4.path === path) {
-        return field4;
+    for (const field3 of fields2) {
+      if (field3.path === path) {
+        return field3;
       }
-      const child = field4.children ? findDataFieldInList(field4.children, path) : undefined;
+      const child = field3.children ? findDataFieldInList(field3.children, path) : undefined;
       if (child) {
         return child;
       }
@@ -49062,7 +46591,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/structure.ts
   function runtimeElements(root) {
-    return [root, ...Array.from(root.querySelectorAll("*"))].filter((element2) => !hasCompositionAncestor(element2));
+    return [root, ...Array.from(root.querySelectorAll("*"))].filter((element) => !hasCompositionAncestor(element));
   }
   function findClosestRuntimeEditor(context, target2) {
     const { document: document2, registry: registry2 } = context;
@@ -49162,8 +46691,8 @@ label {
     }
     return stopAt;
   }
-  function hasCompositionAncestor(element2) {
-    for (let parent = element2.parentElement;parent; parent = parent.parentElement) {
+  function hasCompositionAncestor(element) {
+    for (let parent = element.parentElement;parent; parent = parent.parentElement) {
       if (t(parent)) {
         return true;
       }
@@ -49190,12 +46719,12 @@ label {
       this.dispose();
       this._assertDocument(document2);
       this._document = document2;
-      for (const element2 of runtimeElements(document2.root)) {
-        const entry = this._catalogByTag.get(element2.localName);
+      for (const element of runtimeElements(document2.root)) {
+        const entry = this._catalogByTag.get(element.localName);
         if (!entry) {
           continue;
         }
-        const editor = createRuntimeEditor(entry, element2, this.registry);
+        const editor = createRuntimeEditor(entry, element, this.registry);
         this._editors.push(editor);
         this._entriesByEditor.set(editor, entry);
       }
@@ -49893,7 +47422,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default36 = `<div class="shell">
+  var template_default35 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -50084,7 +47613,7 @@ label {
   function createShellTemplate() {
     const template22 = document.createElement("template");
     template22.innerHTML = `<style>${[style_default23, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default36)}`;
+`)}</style>${String(template_default35)}`;
     return template22;
   }
 
@@ -50537,17 +48066,17 @@ label {
   async function loadBlocCatalogue() {
     return requestJson2(`${getMetaBasePath()}/api/bloc/catalogue`);
   }
-  async function saveSiteBloc(definition, mode, metadata2, content) {
+  async function saveSiteBloc(definition, mode, metadata, content) {
     const body = mode === "structure" ? {
       expectedDraftRevision: definition.draftRevision,
-      ...metadata2,
+      ...metadata,
       defaultContent: definition.draft.defaultContent,
       structureHtml: content
     } : {
       expectedDraftRevision: definition.draftRevision,
       snapshot: {
         ...definition.draft,
-        ...metadata2,
+        ...metadata,
         defaultContent: content
       }
     };
@@ -50572,8 +48101,8 @@ label {
     });
   }
   function siteBlocFrameUrl(tag, mode, revision, nonce) {
-    const query10 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
-    return `${getMetaBasePath()}/api/site-bloc/frame?${query10}`;
+    const query8 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
+    return `${getMetaBasePath()}/api/site-bloc/frame?${query8}`;
   }
   function siteBlocUrl(path, tag) {
     return `${getMetaBasePath()}/api/${path}?id=${encodeURIComponent(tag)}`;
@@ -50672,13 +48201,13 @@ label {
     showAccessibilityReport(issues) {
       const total = issues.reduce((sum, issue) => sum + issue.count, 0);
       this.require("[data-a11y-summary]").textContent = total === 0 ? "No issues found in the loaded preview." : `${total} potential issue${total === 1 ? "" : "s"}.`;
-      const list2 = this.require("[data-a11y-list]");
-      list2.replaceChildren(...issues.map((issue) => {
+      const list = this.require("[data-a11y-list]");
+      list.replaceChildren(...issues.map((issue) => {
         const item = document.createElement("li");
         item.textContent = `${issue.count} ${issue.message}`;
         return item;
       }));
-      list2.hidden = issues.length === 0;
+      list.hidden = issues.length === 0;
     }
     openDetails() {
       this.require("[data-details-dialog]").hidden = false;
@@ -50714,11 +48243,11 @@ label {
       return this.require(`[data-field="${name}"]`);
     }
     require(selector) {
-      const element2 = this.root.querySelector(selector);
-      if (!element2) {
+      const element = this.root.querySelector(selector);
+      if (!element) {
         throw new Error(`Site bloc builder is missing ${selector}`);
       }
-      return element2;
+      return element;
     }
   }
 
@@ -50860,8 +48389,8 @@ label {
     const issues = [];
     const roots = accessibilityRoots(document2);
     addIssue(issues, "image-alt", sum(roots, (root) => root.querySelectorAll("img:not([alt])").length), "images are missing an alt attribute");
-    addIssue(issues, "interactive-name", sum(roots, (root) => Array.from(root.querySelectorAll("button, a[href]")).filter((element2) => !accessibleName(root, element2)).length), "buttons or links have no accessible name");
-    addIssue(issues, "control-label", sum(roots, (root) => Array.from(root.querySelectorAll("input, select, textarea")).filter((element2) => needsControlLabel(element2) && !hasControlLabel(root, element2)).length), "form controls have no label");
+    addIssue(issues, "interactive-name", sum(roots, (root) => Array.from(root.querySelectorAll("button, a[href]")).filter((element) => !accessibleName(root, element)).length), "buttons or links have no accessible name");
+    addIssue(issues, "control-label", sum(roots, (root) => Array.from(root.querySelectorAll("input, select, textarea")).filter((element) => needsControlLabel(element) && !hasControlLabel(root, element)).length), "form controls have no label");
     addIssue(issues, "duplicate-id", roots.reduce((total, root) => total + duplicateIdCount(root), 0), "elements use a duplicated id");
     return issues;
   }
@@ -50869,9 +48398,9 @@ label {
     const roots = [document2];
     for (let index = 0;index < roots.length; index += 1) {
       const root = roots[index];
-      for (const element2 of Array.from(root.querySelectorAll("*"))) {
-        if (element2.shadowRoot?.mode === "open") {
-          roots.push(element2.shadowRoot);
+      for (const element of Array.from(root.querySelectorAll("*"))) {
+        if (element.shadowRoot?.mode === "open") {
+          roots.push(element.shadowRoot);
         }
       }
     }
@@ -50885,37 +48414,37 @@ label {
       issues.push({ kind, count, message });
     }
   }
-  function accessibleName(root, element2) {
-    const direct = element2.getAttribute("aria-label")?.trim() || element2.getAttribute("title")?.trim();
+  function accessibleName(root, element) {
+    const direct = element.getAttribute("aria-label")?.trim() || element.getAttribute("title")?.trim();
     if (direct) {
       return direct;
     }
-    const labelledBy = element2.getAttribute("aria-labelledby")?.trim().split(/\s+/).filter(Boolean) ?? [];
+    const labelledBy = element.getAttribute("aria-labelledby")?.trim().split(/\s+/).filter(Boolean) ?? [];
     const referenced = labelledBy.map((id) => root.getElementById(id)?.textContent?.trim() ?? "").filter(Boolean).join(" ");
     if (referenced) {
       return referenced;
     }
-    const imageAlt = Array.from(element2.querySelectorAll("img[alt]")).map((image2) => image2.getAttribute("alt")?.trim() ?? "").filter(Boolean).join(" ");
-    return element2.textContent?.trim() || imageAlt;
+    const imageAlt = Array.from(element.querySelectorAll("img[alt]")).map((image2) => image2.getAttribute("alt")?.trim() ?? "").filter(Boolean).join(" ");
+    return element.textContent?.trim() || imageAlt;
   }
-  function hasControlLabel(root, element2) {
-    if (accessibleName(root, element2) || element2.closest("label")) {
+  function hasControlLabel(root, element) {
+    if (accessibleName(root, element) || element.closest("label")) {
       return true;
     }
-    const id = element2.id;
+    const id = element.id;
     return Boolean(id && Array.from(root.querySelectorAll("label[for]")).some((label3) => label3.getAttribute("for") === id));
   }
-  function needsControlLabel(element2) {
-    if (element2.localName !== "input") {
+  function needsControlLabel(element) {
+    if (element.localName !== "input") {
       return true;
     }
-    return !new Set(["hidden", "button", "submit", "reset", "image"]).has((element2.getAttribute("type") ?? "text").toLowerCase());
+    return !new Set(["hidden", "button", "submit", "reset", "image"]).has((element.getAttribute("type") ?? "text").toLowerCase());
   }
   function duplicateIdCount(root) {
     const counts = new Map;
-    for (const element2 of Array.from(root.querySelectorAll("[id]"))) {
-      if (element2.id) {
-        counts.set(element2.id, (counts.get(element2.id) ?? 0) + 1);
+    for (const element of Array.from(root.querySelectorAll("[id]"))) {
+      if (element.id) {
+        counts.set(element.id, (counts.get(element.id) ?? 0) + 1);
       }
     }
     return [...counts.values()].reduce((total, count) => total + Math.max(0, count - 1), 0);
@@ -51159,8 +48688,8 @@ label {
     }
     dirty() {
       const draft = this.definition?.draft;
-      const metadata2 = this.view.metadata();
-      return Boolean(this.frames.dirty || !draft || metadata2.name !== draft.name || metadata2.group !== draft.group || metadata2.description !== draft.description);
+      const metadata = this.view.metadata();
+      return Boolean(this.frames.dirty || !draft || metadata.name !== draft.name || metadata.group !== draft.group || metadata.description !== draft.description);
     }
     renderControls() {
       this.view.setControls({
@@ -51180,7 +48709,7 @@ label {
   }
 
   // src/components/editorSystemV2/siteBloc/template.html
-  var template_default37 = `<div class="builder" aria-busy="true">
+  var template_default36 = `<div class="builder" aria-busy="true">
     <header class="lifecycle-bar">
         <div class="identity">
             <a class="back" data-back href="#" aria-label="Back to blocs">‹</a>
@@ -51440,7 +48969,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template22 = document.createElement("template");
-  template22.innerHTML = `<style>${String(style_default24)}</style>${String(template_default37)}`;
+  template22.innerHTML = `<style>${String(style_default24)}</style>${String(template_default36)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -51660,7 +49189,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default38 = `<div class="card">
+  var template_default37 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -51808,7 +49337,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     constructor() {
       super({
         css: style_default25,
-        template: template_default38
+        template: template_default37
       });
     }
   }
@@ -51817,7 +49346,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default39 = `<div class="backdrop" id="backdrop">
+  var template_default38 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -51856,7 +49385,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CropSystem/styles/controls.css
-  var controls_default5 = `.ratio-buttons {
+  var controls_default4 = `.ratio-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -51930,7 +49459,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CropSystem/styles/layout.css
-  var layout_default5 = `:host {
+  var layout_default4 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -52060,9 +49589,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CropSystem extends U2 {
     constructor() {
       super({
-        css: [layout_default5, controls_default5].join(`
+        css: [layout_default4, controls_default4].join(`
 `),
-        template: template_default39
+        template: template_default38
       });
     }
     connectedCallback() {
@@ -52100,7 +49629,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default40 = `<div class="backdrop" id="backdrop">
+  var template_default39 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -52142,7 +49671,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/DetailMedia/styles/layout.css
-  var layout_default6 = `:host {
+  var layout_default5 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -52357,9 +49886,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class DetailMedia extends U2 {
     constructor() {
       super({
-        css: [layout_default6, tools_default].join(`
+        css: [layout_default5, tools_default].join(`
 `),
-        template: template_default40
+        template: template_default39
       });
     }
     connectedCallback() {
@@ -52393,7 +49922,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default41 = `<div class="toolbar">
+  var template_default40 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -53509,7 +51038,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [navigation_default, interactions_default, detail_default3].join(`
 `),
-        template: template_default41
+        template: template_default40
       });
     }
     get detail() {
@@ -53661,7 +51190,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default42 = `<dialog>
+  var template_default41 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -54247,7 +51776,7 @@ dialog::backdrop {
       super({
         css: [chrome_default, content_default2, folder_default].join(`
 `),
-        template: template_default42
+        template: template_default41
       });
     }
     connectedCallback() {

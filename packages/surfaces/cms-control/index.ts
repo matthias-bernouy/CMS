@@ -15,13 +15,6 @@
 export { ControlCms, ControlCms as Cms } from "./src/ControlCms";
 export type { ControlCmsOptions } from "./src/ControlCms";
 export type {
-    RepositoryCompatibilityQuery,
-    RepositoryManagementGateway,
-    RepositoryReevaluationInput,
-    RepositoryStablePromotionInput,
-    RepositoryVersionBlockInput,
-} from "./src/core/admin/control/mountRoutes/repositoryGateway";
-export type {
     IntegrationDefinition,
     IntegrationDefinitionRepository,
 } from "@bernouy/cms-integrations";

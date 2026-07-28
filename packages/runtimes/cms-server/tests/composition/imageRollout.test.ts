@@ -1,7 +1,4 @@
 import { describe, expect, mock, test } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
 import { HttpRepositoryCatalogReader } from "../../src/repositoryCatalog";
 import type { SourceEndpoint, SourceEndpointInterceptor } from "@bernouy/cms-sources";
@@ -62,34 +59,18 @@ function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime 
 }
 
 describe("production image rollout composition", () => {
-    test("enables private management and the public catalog API only for the configured management CMS", async () => {
-        const root = await mkdtemp(join(tmpdir(), "cms-management-surface-"));
-        try {
-            const tokenFile = join(root, "token");
-            await writeFile(tokenFile, "private-service-token", { mode: 0o600 });
-            const options = surfaceMountFixtures();
-            options.env.repositoryManagement = {
-                url: "http://cms-repository:3000/.cms/repository-management",
-                tokenFile,
-                administratorSubjectIdentifier: "opaque-admin-subject",
-                timeoutMs: 5_000,
-            };
-            options.integrations.repositoryUrl = "http://cms-repository:3001/.cms/repository";
-            const captured: CapturedSurfaces = {};
+    test("enables the public catalog facade only for the configured repository hub CMS", async () => {
+        const options = surfaceMountFixtures();
+        options.env.CMS_REPOSITORY_HUB_FACADE_ENABLED = true;
+        options.integrations.repositoryUrl = "http://cms-repository:3001/.cms/repository";
+        const captured: CapturedSurfaces = {};
 
-            const mounted = await mountProductionSurfaces(options as never, capturingRuntime(captured));
+        const mounted = await mountProductionSurfaces(options as never, capturingRuntime(captured));
 
-            expect(captured.control?.repositoryManagement).toMatchObject({
-                administratorSubjectIdentifier: "opaque-admin-subject",
-                gateway: expect.any(Object),
-            });
-            expect(captured.control?.editorDataSources).toEqual([REPOSITORY_CATALOG_EDITOR_DATA_SOURCE]);
-            expect(captured.repository?.repositoryCatalog).toBeInstanceOf(HttpRepositoryCatalogReader);
-            expect(captured.delivery?.publicPageProviders).toBeUndefined();
-            await mounted.stop();
-        } finally {
-            await rm(root, { recursive: true, force: true });
-        }
+        expect(captured.control?.editorDataSources).toEqual([REPOSITORY_CATALOG_EDITOR_DATA_SOURCE]);
+        expect(captured.repository?.repositoryCatalog).toBeInstanceOf(HttpRepositoryCatalogReader);
+        expect(captured.delivery?.publicPageProviders).toBeUndefined();
+        await mounted.stop();
     });
 
     test.each([

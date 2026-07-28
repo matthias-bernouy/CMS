@@ -31,6 +31,7 @@ describe("runtime env validation", () => {
         expect(env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED).toBe(true);
         expect(env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED).toBe(true);
         expect(env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED).toBe(true);
+        expect(env.CMS_REPOSITORY_HUB_FACADE_ENABLED).toBe(false);
         expect(
             readRuntimeEnv({
                 ...validEnv(),
@@ -148,5 +149,20 @@ describe("runtime env validation", () => {
                 CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "1",
             }),
         ).toThrow(/CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED must be true or false/);
+    });
+
+    test("keeps the repository hub facade opt-in with strict boolean parsing", () => {
+        expect(
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_REPOSITORY_HUB_FACADE_ENABLED: "true",
+            }).CMS_REPOSITORY_HUB_FACADE_ENABLED,
+        ).toBe(true);
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_REPOSITORY_HUB_FACADE_ENABLED: "1",
+            }),
+        ).toThrow(/CMS_REPOSITORY_HUB_FACADE_ENABLED must be true or false/);
     });
 });

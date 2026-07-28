@@ -129,7 +129,6 @@ describe("production surface mounting", () => {
             sourceTrustedConnectorTarget: expect.any(Function),
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
-        expect(controlConfig.repositoryManagement).toBeUndefined();
         expect(controlConfig.editorDataSources).toBeUndefined();
         expect(repositoryConfig).toBeUndefined();
 

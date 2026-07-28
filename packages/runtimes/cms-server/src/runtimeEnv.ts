@@ -9,10 +9,6 @@ import {
     requiredEnv,
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
-import {
-    parseRepositoryManagementGatewayConfig,
-    type RepositoryManagementGatewayConfig,
-} from "./repositoryManagement/config";
 
 export { parsePort } from "./runtimeEnvParsing";
 
@@ -47,8 +43,8 @@ export type RuntimeEnv = {
     CMS_HTTP_TRUSTED_PROXY_HOPS: number;
     CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: number;
     CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: number;
+    CMS_REPOSITORY_HUB_FACADE_ENABLED: boolean;
     integrationRepository: Readonly<{ url: string }>;
-    repositoryManagement: RepositoryManagementGatewayConfig | undefined;
 };
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
@@ -152,8 +148,12 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             "CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS",
             60,
         ),
+        CMS_REPOSITORY_HUB_FACADE_ENABLED: parseBoolean(
+            source.CMS_REPOSITORY_HUB_FACADE_ENABLED,
+            "CMS_REPOSITORY_HUB_FACADE_ENABLED",
+            false,
+        ),
         integrationRepository: parseIntegrationRepository(source),
-        repositoryManagement: parseRepositoryManagementGatewayConfig(source),
     };
 }
 

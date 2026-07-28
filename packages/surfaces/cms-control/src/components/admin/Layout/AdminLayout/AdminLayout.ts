@@ -2,7 +2,6 @@ import { Component } from "@bernouy/components/base";
 import { adminSystemSettingsStore } from "../../Common/SystemSettings/store";
 
 import template from "./template.html" with { type: "text" };
-import { discoverRepositoryNavigation } from "./repositoryNavigation";
 
 const DEFAULT_BRAND_NAME = "CmsCore";
 
@@ -20,7 +19,6 @@ const DEFAULT_BRAND_NAME = "CmsCore";
  * longer carries misleading "./" hrefs.
  */
 export class FixedAdminLayout extends Component {
-    private _repositoryRequest: AbortController | null = null;
     private _titleSlot: HTMLSlotElement | null = null;
     private _actionSlot: HTMLSlotElement | null = null;
     private _pageHeader: HTMLElement | null = null;
@@ -45,8 +43,6 @@ export class FixedAdminLayout extends Component {
         this._pageHeader = root.querySelector(".admin-page-header");
 
         this._syncRoutes(root, basePath);
-        this._repositoryRequest?.abort();
-        this._repositoryRequest = discoverRepositoryNavigation(root, basePath);
         this._setBrandName(root, DEFAULT_BRAND_NAME);
         this._syncPageHeader();
         void this._syncSiteName(root);
@@ -57,8 +53,6 @@ export class FixedAdminLayout extends Component {
     }
 
     disconnectedCallback() {
-        this._repositoryRequest?.abort();
-        this._repositoryRequest = null;
         document.removeEventListener("settings:saved", this._onSettingsSaved);
         this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
         this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);

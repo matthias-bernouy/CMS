@@ -13,7 +13,6 @@ import { productionRepositoryReadConfig } from "./repositoryReads";
 import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
-import { createProductionRepositoryManagementAccess } from "../repositoryManagement/composition";
 import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
 import { createProductionRepositoryCatalogReader } from "../repositoryCatalog";
 
@@ -33,8 +32,9 @@ export async function mountProductionSurfaces(
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
 ): Promise<ScheduledTriggerRunner> {
     const { env, core, features, integrations, authentication } = options;
-    const repositoryManagement = await createProductionRepositoryManagementAccess(env.repositoryManagement);
-    const repositoryCatalog = repositoryManagement ? createProductionRepositoryCatalogReader(integrations) : undefined;
+    const repositoryCatalog = env.CMS_REPOSITORY_HUB_FACADE_ENABLED
+        ? createProductionRepositoryCatalogReader(integrations)
+        : undefined;
     const scheduledTriggers = runtime.startWorkers({
         functions: features.functions,
         sources: features.deliverySources,
@@ -111,8 +111,7 @@ export async function mountProductionSurfaces(
             integrationMigrationRuntime,
             integrationConnectorBaselineAdopters: integrations.integrationConnectorBaselineAdopters,
             integrationProvisioners: integrations.integrationProvisioners,
-            ...(repositoryManagement ? { repositoryManagement } : {}),
-            ...(repositoryManagement ? { editorDataSources: [REPOSITORY_CATALOG_EDITOR_DATA_SOURCE] } : {}),
+            ...(repositoryCatalog ? { editorDataSources: [REPOSITORY_CATALOG_EDITOR_DATA_SOURCE] } : {}),
             dashboards: features.dashboards,
             relations: features.relations,
             functions: features.functions,
