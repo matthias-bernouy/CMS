@@ -2,10 +2,12 @@ import type {
     IntegrationRegistryCandidateObjects,
     IntegrationRegistryCandidateRecord,
 } from "@bernouy/cms-integration-registry";
-import { projectCandidateStatus } from "../../contracts";
 import { projectCandidateCompatibility } from "./compatibility";
 import { projectCandidateMigrations } from "./migrations";
+import { projectManagementCandidateStatus } from "./status";
 import { projectCandidateVerification } from "./verification";
+
+export { projectManagementCandidateStatus } from "./status";
 
 export const REPOSITORY_CANDIDATE_REPORT_SCHEMA = "cms.repository.management.candidate-report.v1" as const;
 
@@ -18,7 +20,7 @@ export async function projectCandidateReport(
     const migrationResults = objects.admissionJobResult?.migrations ?? [];
     return {
         schema: REPOSITORY_CANDIDATE_REPORT_SCHEMA,
-        candidate: projectCandidateStatus(record),
+        candidate: projectManagementCandidateStatus(record),
         ...(objects.compatibilityReport
             ? { compatibility: projectCandidateCompatibility(objects.compatibilityReport) }
             : {}),

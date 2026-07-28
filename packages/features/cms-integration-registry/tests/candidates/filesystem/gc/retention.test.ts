@@ -7,7 +7,14 @@ import {
     readPrunedCandidate,
     recoverFsIntegrationRegistryCandidates,
 } from "@bernouy/cms-integration-registry/fs";
-import { CANDIDATE_TIMES, candidateStoreFixture, createCandidate, queueCandidate } from "../fixtures";
+import {
+    backdateCandidateObjects,
+    CANDIDATE_TIMES,
+    candidateStoreFixture,
+    createCandidate,
+    expiredCandidate,
+    queueCandidate,
+} from "../fixtures";
 
 let cleanup: (() => void) | undefined;
 afterEach(() => cleanup?.());
@@ -57,6 +64,7 @@ describe("filesystem terminal candidate retention", () => {
     test("prunes old terminal records, frees objects, and expires the bounded audit", async () => {
         const fixture = await expiredCandidate("expired-candidate");
         cleanup = fixture.cleanup;
+        backdateCandidateObjects(fixture.root);
         const pruned = await garbageCollectFsIntegrationRegistryCandidateObjects({
             root: fixture.root,
             now: "2026-07-28T12:00:00.000Z",
@@ -72,6 +80,7 @@ describe("filesystem terminal candidate retention", () => {
         await expect(createCandidate(fixture)).rejects.toMatchObject({ code: "candidate_exists" });
         expect(await readPrunedCandidate(auditPath)).toMatchObject({
             candidateId: fixture.candidateId,
+            submittedBy: "admin@example.com",
             finalStatus: "expired",
             finalRevision: 1,
         });
@@ -120,6 +129,7 @@ describe("filesystem terminal candidate retention", () => {
             canonicalJsonBytes({
                 schema: "cms.integration.registry.pruned-candidate.v1",
                 candidateId: record!.candidateId,
+                submittedBy: record!.submittedBy,
                 kind: record!.kind,
                 version: record!.version,
                 candidateDigest: record!.candidateDigest,
@@ -145,13 +155,6 @@ describe("filesystem terminal candidate retention", () => {
         expect(await fixture.store.get(fixture.candidateId)).toBeNull();
     });
 });
-
-async function expiredCandidate(candidateId: string) {
-    const fixture = await candidateStoreFixture(candidateId, "2026-07-26T10:02:00.000Z");
-    const uploaded = await createCandidate(fixture);
-    await fixture.store.expire(fixture.candidateId, uploaded.revision, "2026-07-26T10:02:00.000Z");
-    return fixture;
-}
 
 function writeAudit(root: string, candidateId: string): void {
     writeFileSync(

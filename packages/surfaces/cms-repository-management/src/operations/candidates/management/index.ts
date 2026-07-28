@@ -1,14 +1,13 @@
 import type { Runner } from "@bernouy/http-runner";
-import { readCanonicalCandidate } from "../body";
+import { readCanonicalCandidate, RepositoryCandidateRequestError } from "../body";
 import {
-    projectCandidateStatus,
     REPOSITORY_CANDIDATES_PATH,
     REPOSITORY_CANDIDATE_REPORT_PATH,
     REPOSITORY_CANDIDATE_STATUS_PATH,
     type RepositoryCandidateManagementRoutesConfig,
 } from "../contracts";
 import { candidateJsonResponse, candidateProtocolErrorResponse } from "../responses";
-import { projectCandidateReport } from "./projection";
+import { projectCandidateReport, projectManagementCandidateStatus } from "./projection";
 import { candidateIdentifier, readCandidateId } from "./query";
 
 export function mountRepositoryCandidateManagementRoutes(
@@ -18,12 +17,19 @@ export function mountRepositoryCandidateManagementRoutes(
     assertConfig(config);
     runner.post(REPOSITORY_CANDIDATES_PATH, async (request) => {
         try {
+            const submittedBy = readAuthenticatedCandidateActor(request);
             const candidate = await readCanonicalCandidate(request, config.maxBodyBytes);
             const createdAt = canonicalTimestamp(config.now());
             const candidateId = candidateIdentifier(config.createCandidateId());
             const expiresAt = addMilliseconds(createdAt, config.candidateTtlMs);
-            const record = await config.admission.submit({ candidateId, candidate, createdAt, expiresAt });
-            return candidateJsonResponse(202, { candidate: projectCandidateStatus(record) });
+            const record = await config.admission.submit({
+                candidateId,
+                ...(submittedBy ? { submittedBy } : {}),
+                candidate,
+                createdAt,
+                expiresAt,
+            });
+            return candidateJsonResponse(202, { candidate: projectManagementCandidateStatus(record) });
         } catch (error) {
             return candidateProtocolErrorResponse(error);
         }
@@ -32,7 +38,7 @@ export function mountRepositoryCandidateManagementRoutes(
         try {
             const record = await config.store.get(readCandidateId(request));
             return record
-                ? candidateJsonResponse(200, { candidate: projectCandidateStatus(record) })
+                ? candidateJsonResponse(200, { candidate: projectManagementCandidateStatus(record) })
                 : candidateNotFound();
         } catch (error) {
             return candidateProtocolErrorResponse(error);
@@ -51,6 +57,31 @@ export function mountRepositoryCandidateManagementRoutes(
             return candidateProtocolErrorResponse(error);
         }
     });
+}
+
+function readAuthenticatedCandidateActor(request: Request): string | undefined {
+    const encoded = request.headers.get("x-p9r-authenticated-actor");
+    if (encoded === null) {
+        return undefined;
+    }
+    if (!encoded || encoded.length > 4_608) {
+        throw new RepositoryCandidateRequestError("Authenticated candidate actor is invalid");
+    }
+    let actor: string;
+    try {
+        actor = decodeURIComponent(encoded);
+    } catch {
+        throw new RepositoryCandidateRequestError("Authenticated candidate actor is invalid");
+    }
+    if (
+        encodeURIComponent(actor) !== encoded ||
+        !actor.trim() ||
+        actor.length > 512 ||
+        /[\u0000-\u001f\u007f]/u.test(actor)
+    ) {
+        throw new RepositoryCandidateRequestError("Authenticated candidate actor is invalid");
+    }
+    return actor;
 }
 
 function candidateNotFound(): Response {

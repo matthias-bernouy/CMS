@@ -10,6 +10,7 @@ import { assertCandidateAdmissionState } from "./state";
 const FIELDS = [
     "schema",
     "candidateId",
+    "submittedBy",
     "revision",
     "status",
     "kind",

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { identifyCandidateAdmissionJobResult } from "@bernouy/cms-integration-verification";
 import {
     candidateJobResult,
@@ -26,6 +27,19 @@ describe("private repository candidate protocol", () => {
             (await requestJson(fixture.server, "POST", candidatePath, fixture.candidate.envelope, "worker-secret"))
                 .status,
         ).toBe(401);
+        const canonical = canonicalJsonBytes(fixture.candidate.envelope);
+        const invalidActor = await fixture.server.request("POST", `/.cms/repository-management${candidatePath}`, {
+            headers: {
+                authorization: "Bearer management-secret",
+                "x-p9r-authenticated-actor": "admin@example.com",
+                "content-type": "application/json",
+                "content-length": String(canonical.byteLength),
+            },
+            body: canonical,
+        });
+        expect(invalidActor.status).toBe(400);
+        expect((await invalidActor.json()).code).toBe("candidate_request_invalid");
+        expect(await fixture.store.get("candidate-1")).toBeNull();
         const nonCanonical = JSON.stringify(fixture.candidate.envelope, null, 2);
         expect(
             (
@@ -40,7 +54,13 @@ describe("private repository candidate protocol", () => {
             ).status,
         ).toBe(400);
 
-        const queued = await submitAndQueue(fixture);
+        const queued = await submitAndQueue(fixture, "admin@example.com");
+        const managementStatus = await fixture.server.request(
+            "GET",
+            "/.cms/repository-management/api/integrations/candidates/status?candidateId=candidate-1",
+            { headers: { authorization: "Bearer management-secret" } },
+        );
+        expect((await managementStatus.json()).candidate.submittedBy).toBe("admin@example.com");
         const jobsPath = "/api/integrations/verification-jobs";
         expect((await fixture.server.request("GET", `/.cms/repository-management${jobsPath}`)).status).toBe(401);
         expect(
@@ -54,7 +74,9 @@ describe("private repository candidate protocol", () => {
             headers: { authorization: "Bearer worker-secret" },
         });
         expect(jobs.status).toBe(200);
-        expect((await jobs.json()).candidates).toHaveLength(1);
+        const jobsBody = await jobs.json();
+        expect(jobsBody.candidates).toHaveLength(1);
+        expect(jobsBody.candidates[0]).not.toHaveProperty("submittedBy");
 
         fixture.clock.value = TIMES.claimed;
         const claim = await requestJson(
@@ -67,6 +89,7 @@ describe("private repository candidate protocol", () => {
         expect(claim.status).toBe(201);
         const claimed = await claim.json();
         expect(claimed).not.toHaveProperty("capability");
+        expect(claimed.candidate).not.toHaveProperty("submittedBy");
         expect(claimed.workload).toHaveProperty("admission");
         expect(claimed.workload.authorSuites).toEqual([]);
 
@@ -166,6 +189,7 @@ describe("private repository candidate protocol", () => {
         expect(submitted.status).toBe(202);
         const candidate = (await submitted.json()).candidate;
         expect(candidate.status).toBe("rejected");
+        expect(candidate).not.toHaveProperty("submittedBy");
         expect(candidate.lastFailure).toEqual({
             kind: "validation",
             code: "admission_policy_unavailable",

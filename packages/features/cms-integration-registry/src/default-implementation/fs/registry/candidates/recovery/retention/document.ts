@@ -7,6 +7,7 @@ export const PRUNED_INTEGRATION_REGISTRY_CANDIDATE_DOCUMENT_LIMIT = 8 * 1_024;
 export type PrunedIntegrationRegistryCandidateRecord = Readonly<{
     schema: typeof PRUNED_INTEGRATION_REGISTRY_CANDIDATE_SCHEMA;
     candidateId: string;
+    submittedBy?: string;
     kind: string;
     version: string;
     candidateDigest: string;
@@ -28,6 +29,7 @@ export async function writeOrVerifyPrunedCandidate(
     const value: PrunedIntegrationRegistryCandidateRecord = {
         schema: PRUNED_INTEGRATION_REGISTRY_CANDIDATE_SCHEMA,
         candidateId: record.candidateId,
+        ...(record.submittedBy ? { submittedBy: record.submittedBy } : {}),
         kind: record.kind,
         version: record.version,
         candidateDigest: record.candidateDigest,
@@ -51,6 +53,7 @@ export async function writeOrVerifyPrunedCandidate(
         if (
             !existing ||
             existing.candidateId !== value.candidateId ||
+            existing.submittedBy !== value.submittedBy ||
             existing.kind !== value.kind ||
             existing.version !== value.version ||
             existing.candidateDigest !== value.candidateDigest ||
@@ -80,6 +83,7 @@ export async function readPrunedCandidate(path: string): Promise<PrunedIntegrati
     const fields = [
         "schema",
         "candidateId",
+        "submittedBy",
         "kind",
         "version",
         "candidateDigest",
@@ -98,6 +102,7 @@ export async function readPrunedCandidate(path: string): Promise<PrunedIntegrati
     if (
         input.schema !== PRUNED_INTEGRATION_REGISTRY_CANDIDATE_SCHEMA ||
         typeof input.candidateId !== "string" ||
+        (input.submittedBy !== undefined && !isSubmitter(input.submittedBy)) ||
         typeof input.kind !== "string" ||
         typeof input.version !== "string" ||
         !isDigest(input.candidateDigest) ||
@@ -115,6 +120,16 @@ export async function readPrunedCandidate(path: string): Promise<PrunedIntegrati
         throw new Error("Pruned candidate audit is invalid");
     }
     return value as PrunedIntegrationRegistryCandidateRecord;
+}
+
+function isSubmitter(value: unknown): value is string {
+    return (
+        typeof value === "string" &&
+        Boolean(value.trim()) &&
+        value.length <= 512 &&
+        !/[\u0000-\u001f\u007f]/u.test(value) &&
+        !/[\uD800-\uDFFF]/u.test(value)
+    );
 }
 
 function isDigest(value: unknown): value is string {

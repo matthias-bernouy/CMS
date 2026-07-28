@@ -9,6 +9,7 @@ export function assertStableIdentity(
     for (const field of [
         "schema",
         "candidateId",
+        "submittedBy",
         "kind",
         "version",
         "candidateDigest",

@@ -39,6 +39,7 @@ export type IntegrationRegistryCandidateFailure = Readonly<{
 
 type IntegrationRegistryCandidateRecordShared = Readonly<{
     candidateId: string;
+    submittedBy?: string;
     revision: number;
     status: IntegrationRegistryCandidateStatus;
     kind: string;
@@ -68,6 +69,7 @@ export type IntegrationRegistryCandidateRecord = IntegrationRegistryCandidateRec
 
 export type CreateIntegrationRegistryCandidateInput = Readonly<{
     candidateId: string;
+    submittedBy?: string;
     candidate: ValidatedIntegrationCandidateEnvelopeV1;
     createdAt: string;
     expiresAt: string;

@@ -20,10 +20,11 @@ describe("filesystem integration registry candidate store", () => {
     test("persists immutable objects before restart-safe canonical metadata", async () => {
         const fixture = await candidateStoreFixture();
         cleanup = fixture.cleanup;
-        const uploaded = await createCandidate(fixture);
+        const uploaded = await createCandidate(fixture, "admin@example.com");
         const restarted = new FsIntegrationRegistryCandidateStore({ root: fixture.root });
 
         expect(await restarted.get(fixture.candidateId)).toEqual(uploaded);
+        expect(uploaded.submittedBy).toBe("admin@example.com");
         expect((await restarted.objects(fixture.candidateId)).package.kind).toBe("example");
         expect(uploaded.requestedChannel).toBe("latest");
         const privateRoot = join(fixture.root, ".registry", "candidates");
@@ -70,7 +71,7 @@ describe("filesystem integration registry candidate store", () => {
     test("persists lifecycle revisions and allocates monotonically fenced claims", async () => {
         const fixture = await candidateStoreFixture();
         cleanup = fixture.cleanup;
-        const queued = await queueCandidate(fixture);
+        const queued = await queueCandidate(fixture, "admin@example.com");
         const running = await fixture.store.claim(fixture.candidateId, {
             expectedRevision: queued.revision,
             jobId: "job-1",
@@ -94,6 +95,7 @@ describe("filesystem integration registry candidate store", () => {
         });
 
         expect(second).toMatchObject({ status: "running", attemptCount: 2, lease: { fencingToken: 2 } });
+        expect(second.submittedBy).toBe("admin@example.com");
         expect(await fixture.store.listClaimable(CANDIDATE_TIMES.expiredLease)).toEqual([]);
         expect(readdirSync(join(fixture.root, ".registry", "candidates", "records", fixture.candidateId))).toHaveLength(
             6,

@@ -22,7 +22,7 @@ describe("private candidate report", () => {
         expect(response.status).toBe(200);
         expect((await response.json()).report).toMatchObject({
             schema: "cms.repository.management.candidate-report.v1",
-            candidate: { candidateId: "candidate-1", status: "queued" },
+            candidate: { candidateId: "candidate-1", submittedBy: "admin@example.com", status: "queued" },
             verification: {
                 state: "planned",
                 suites: [{ suiteId: "platform-install", source: "platform" }],

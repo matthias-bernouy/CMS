@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync, utimesSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ValidatedIntegrationCandidateEnvelopeV1 } from "@bernouy/cms-integration-verification";
@@ -42,17 +42,18 @@ export async function candidateStoreFixture(
     };
 }
 
-export async function createCandidate(fixture: CreatedCandidateStoreFixture) {
+export async function createCandidate(fixture: CreatedCandidateStoreFixture, submittedBy?: string) {
     return await fixture.store.create({
         candidateId: fixture.candidateId,
+        ...(submittedBy ? { submittedBy } : {}),
         candidate: fixture.candidate,
         createdAt: CANDIDATE_TIMES.created,
         expiresAt: fixture.expiresAt,
     });
 }
 
-export async function queueCandidate(fixture: CreatedCandidateStoreFixture) {
-    const uploaded = await createCandidate(fixture);
+export async function queueCandidate(fixture: CreatedCandidateStoreFixture, submittedBy?: string) {
+    const uploaded = await createCandidate(fixture, submittedBy);
     const validating = await fixture.store.advanceValidation(fixture.candidateId, {
         expectedRevision: uploaded.revision,
         now: CANDIDATE_TIMES.validating,
@@ -64,4 +65,21 @@ export async function queueCandidate(fixture: CreatedCandidateStoreFixture) {
         policy,
         admission: await candidateAdmission(fixture, policy),
     });
+}
+
+export async function expiredCandidate(candidateId: string) {
+    const fixture = await candidateStoreFixture(candidateId, "2026-07-26T10:02:00.000Z");
+    const uploaded = await createCandidate(fixture, "admin@example.com");
+    await fixture.store.expire(fixture.candidateId, uploaded.revision, "2026-07-26T10:02:00.000Z");
+    return fixture;
+}
+
+export function backdateCandidateObjects(root: string): void {
+    const timestamp = new Date("2026-07-27T12:00:00.000Z");
+    for (const directory of ["packages", "verifications"]) {
+        const inventory = join(root, ".registry", "candidates", "objects", directory);
+        for (const name of readdirSync(inventory)) {
+            utimesSync(join(inventory, name), timestamp, timestamp);
+        }
+    }
 }

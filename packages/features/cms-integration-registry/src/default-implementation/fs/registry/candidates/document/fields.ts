@@ -21,6 +21,7 @@ const STATUSES = new Set<IntegrationRegistryCandidateStatus>([
 
 export function parseCandidateSharedFields(input: Record<string, unknown>) {
     const candidateId = text(input.candidateId, "candidateId");
+    const submittedBy = input.submittedBy === undefined ? undefined : candidateSubmitter(input.submittedBy);
     const kind = text(input.kind, "kind");
     const version = text(input.version, "version");
     const packageDigest = digest(input.packageDigest, "packageDigest");
@@ -61,6 +62,7 @@ export function parseCandidateSharedFields(input: Record<string, unknown>) {
     }
     return {
         candidateId,
+        ...(submittedBy ? { submittedBy } : {}),
         revision,
         status,
         kind,
@@ -75,6 +77,19 @@ export function parseCandidateSharedFields(input: Record<string, unknown>) {
         ...(lease ? { lease } : {}),
         ...(lastFailure ? { lastFailure } : {}),
     };
+}
+
+function candidateSubmitter(value: unknown): string {
+    const submittedBy = text(value, "submittedBy");
+    if (
+        !submittedBy.trim() ||
+        submittedBy.length > 512 ||
+        /[\u0000-\u001f\u007f]/u.test(submittedBy) ||
+        /[\uD800-\uDFFF]/u.test(submittedBy)
+    ) {
+        invalid("Candidate submittedBy must be a bounded printable identity");
+    }
+    return submittedBy;
 }
 
 export function digestArray(value: unknown, field: string): readonly string[] {

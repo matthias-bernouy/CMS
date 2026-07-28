@@ -9,6 +9,7 @@ export function createIntegrationRegistryCandidateRecord(
     input: CreateIntegrationRegistryCandidateInput,
 ): IntegrationRegistryCandidateRecord {
     identifier(input.candidateId, "candidateId");
+    const submittedBy = input.submittedBy === undefined ? undefined : candidateSubmitter(input.submittedBy);
     const createdAt = timestamp(input.createdAt, "createdAt");
     const expiresAt = timestamp(input.expiresAt, "expiresAt");
     if (Date.parse(expiresAt) <= Date.parse(createdAt)) {
@@ -18,6 +19,7 @@ export function createIntegrationRegistryCandidateRecord(
     return freezeCandidateRecord({
         schema: INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
         candidateId: input.candidateId,
+        ...(submittedBy ? { submittedBy } : {}),
         revision: 0,
         status: "uploaded",
         kind: envelope.package.kind,
@@ -31,4 +33,17 @@ export function createIntegrationRegistryCandidateRecord(
         expiresAt,
         attemptCount: 0,
     });
+}
+
+function candidateSubmitter(value: unknown): string {
+    if (
+        typeof value !== "string" ||
+        !value.trim() ||
+        value.length > 512 ||
+        /[\u0000-\u001f\u007f]/u.test(value) ||
+        /[\uD800-\uDFFF]/u.test(value)
+    ) {
+        invalidCandidate("Candidate submittedBy must be a bounded printable identity");
+    }
+    return value;
 }

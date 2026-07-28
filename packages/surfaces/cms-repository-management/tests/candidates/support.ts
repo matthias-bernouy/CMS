@@ -115,13 +115,14 @@ export async function candidateProtocolFixture(
     };
 }
 
-export async function submitAndQueue(fixture: CandidateProtocolFixture) {
+export async function submitAndQueue(fixture: CandidateProtocolFixture, submittedBy?: string) {
     const submitted = await requestJson(
         fixture.server,
         "POST",
         "/api/integrations/candidates",
         fixture.candidate.envelope,
         "management-secret",
+        submittedBy,
     );
     if (submitted.status !== 202) {
         throw new Error(`Candidate submission failed with ${submitted.status}`);
@@ -133,11 +134,19 @@ export async function submitAndQueue(fixture: CandidateProtocolFixture) {
     return queued;
 }
 
-export async function requestJson(server: TestServer, method: string, path: string, value: unknown, token: string) {
+export async function requestJson(
+    server: TestServer,
+    method: string,
+    path: string,
+    value: unknown,
+    token: string,
+    submittedBy?: string,
+) {
     const bytes = canonicalJsonBytes(value);
     return await server.request(method, `/.cms/repository-management${path}`, {
         headers: {
             authorization: `Bearer ${token}`,
+            ...(submittedBy ? { "x-p9r-authenticated-actor": encodeURIComponent(submittedBy) } : {}),
             "content-type": "application/json",
             "content-length": String(bytes.byteLength),
         },

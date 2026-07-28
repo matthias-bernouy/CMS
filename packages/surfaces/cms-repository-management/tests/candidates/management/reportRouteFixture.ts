@@ -23,6 +23,7 @@ export async function reportFixture(status: IntegrationRegistryCandidateRecord["
     const record = {
         schema: "cms.integration.registry.candidate-record.v3",
         candidateId: "candidate-1",
+        submittedBy: "admin@example.com",
         revision: 3,
         status,
         kind: candidate.envelope.package.kind,

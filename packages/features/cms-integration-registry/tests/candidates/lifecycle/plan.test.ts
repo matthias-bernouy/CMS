@@ -19,6 +19,15 @@ describe("integration registry candidate validation and admission plan", () => {
                 expiresAt: TIMES.expires,
             }),
         ).toThrow(IntegrationRegistryCandidateError);
+        expect(() =>
+            createIntegrationRegistryCandidateRecord({
+                candidateId: "candidate-1",
+                submittedBy: "invalid-\ud800-actor",
+                candidate,
+                createdAt: TIMES.created,
+                expiresAt: TIMES.expires,
+            }),
+        ).toThrow(IntegrationRegistryCandidateError);
         const identity = await candidateIdentity();
         expect(() =>
             advanceIntegrationRegistryCandidate(identity.record, {

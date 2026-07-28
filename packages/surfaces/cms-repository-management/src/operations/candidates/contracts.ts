@@ -1,4 +1,5 @@
 import type {
+    CreateIntegrationRegistryCandidateInput,
     IntegrationRegistryCandidateRecord,
     IntegrationRegistryCandidatePlanningArtifacts,
     IntegrationRegistryCandidateStore,
@@ -81,14 +82,7 @@ export type RepositoryCandidateAdmissionPlanner = (
 ) => Promise<RepositoryCandidateAdmissionPlan>;
 
 export interface RepositoryCandidateAdmissionCoordinator {
-    submit(
-        input: Readonly<{
-            candidateId: string;
-            candidate: ValidatedIntegrationCandidateEnvelopeV1;
-            createdAt: string;
-            expiresAt: string;
-        }>,
-    ): Promise<IntegrationRegistryCandidateRecord>;
+    submit(input: CreateIntegrationRegistryCandidateInput): Promise<IntegrationRegistryCandidateRecord>;
 }
 
 export interface RepositoryCandidatePublicationFinalizer {
