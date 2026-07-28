@@ -79,6 +79,22 @@ describe("createAuthGuard role access", () => {
         });
     });
 
+    test("lets API surfaces replace the default forbidden response", async () => {
+        const guard = createAuthGuard<Role>({
+            basePath: "/.cms/management",
+            auth: new InMemoryAuthentication<Role>({ role: "user" }),
+            requiredRole: "admin",
+            onApiForbidden: () => Response.json({ code: "forbidden" }, { status: 403 }),
+        });
+
+        const response = await guard(new Request("http://localhost/.cms/management/api/status"), async () => {
+            throw new Error("unexpected downstream call");
+        });
+
+        expect(response.status).toBe(403);
+        expect(await response.json()).toEqual({ code: "forbidden" });
+    });
+
     test("still lets downstream failures escape the guard", async () => {
         const authentication = new TestAuthentication<Role>(async () => ({
             identifier: "admin-1",

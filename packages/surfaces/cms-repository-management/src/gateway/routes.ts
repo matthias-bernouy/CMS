@@ -1,5 +1,4 @@
-import { createAuthGuard, resolveRequestSubject } from "@bernouy/cms-auth";
-import type { Runner } from "@bernouy/http-runner";
+import { createAuthGuard } from "@bernouy/cms-auth";
 import {
     REPOSITORY_CANDIDATES_PATH,
     REPOSITORY_CANDIDATE_REPORT_PATH,
@@ -16,16 +15,21 @@ import {
 import { REPOSITORY_STABLE_PROMOTIONS_PATH } from "cms-repository-management/operations/promotionRoutes";
 import { REPOSITORY_COMPATIBILITY_REEVALUATIONS_PATH } from "cms-repository-management/operations/reevaluationRoutes";
 import { REPOSITORY_VERSION_BLOCKS_PATH } from "cms-repository-management/operations/versionEligibilityRoutes";
-import { assertGatewayBodyLimit, injectAuthenticatedActor, readGatewayBody } from "./body";
-import type { RepositoryManagementGatewayConfig, RepositoryManagementGatewayRequest } from "./contracts";
-import { gatewayError, sanitizedGatewayResponse } from "./responses";
+import { assertGatewayBodyLimit } from "./body";
+import type { RepositoryManagementGatewayConfig } from "./contracts";
+import {
+    handleRepositoryManagementGatewayRoute,
+    type RepositoryManagementGatewayLimits,
+    type RepositoryManagementGatewayRoute,
+} from "./handler";
+import { gatewayError } from "./responses";
 
 const DEFAULT_CANDIDATE_BODY_LIMIT_BYTES = 64 * 1_024 * 1_024;
+const DEFAULT_CANDIDATE_CONCURRENCY_LIMIT = 1;
+const DEFAULT_BODY_READ_TIMEOUT_MS = 120_000;
 const DEFAULT_MUTATION_BODY_LIMIT_BYTES = 64 * 1_024;
 
-type Route = Readonly<{ method: "GET" | "POST"; path: string; body: "none" | "candidate" | "actor-json" }>;
-
-const ROUTES: readonly Route[] = [
+const ROUTES: readonly RepositoryManagementGatewayRoute[] = [
     { method: "GET", path: REPOSITORY_STATUS_PATH, body: "none" },
     { method: "GET", path: REPOSITORY_DIAGNOSTICS_PATH, body: "none" },
     { method: "GET", path: REPOSITORY_VERSIONS_PATH, body: "none" },
@@ -43,86 +47,64 @@ export function mountCmsRepositoryManagementGateway<Role extends string>(
     config: RepositoryManagementGatewayConfig<Role>,
 ): void {
     const candidateLimit = config.candidateBodyLimitBytes ?? DEFAULT_CANDIDATE_BODY_LIMIT_BYTES;
+    const candidateConcurrencyLimit = config.candidateConcurrencyLimit ?? DEFAULT_CANDIDATE_CONCURRENCY_LIMIT;
+    const bodyReadTimeoutMs = config.bodyReadTimeoutMs ?? DEFAULT_BODY_READ_TIMEOUT_MS;
     const mutationLimit = config.mutationBodyLimitBytes ?? DEFAULT_MUTATION_BODY_LIMIT_BYTES;
     assertGatewayBodyLimit(candidateLimit, "Repository candidate gateway body limit");
     assertGatewayBodyLimit(mutationLimit, "Repository mutation gateway body limit");
+    if (!Number.isSafeInteger(candidateConcurrencyLimit) || candidateConcurrencyLimit < 1) {
+        throw new TypeError("Repository candidate gateway concurrency limit must be a positive safe integer");
+    }
+    if (!Number.isSafeInteger(bodyReadTimeoutMs) || bodyReadTimeoutMs < 1) {
+        throw new TypeError("Repository gateway body read timeout must be a positive safe integer");
+    }
     assertTransport(config.transport);
+    let activeCandidateRequests = 0;
+    const limits: RepositoryManagementGatewayLimits = {
+        candidateBodyBytes: candidateLimit,
+        mutationBodyBytes: mutationLimit,
+        bodyReadTimeoutMs,
+    };
 
     const guard = createAuthGuard({
         basePath: REPOSITORY_MANAGEMENT_BASE_PATH,
         auth: config.authentication,
         requiredRole: config.requiredRole,
         onUnauthenticated: () => gatewayError(401, "repository_management_unauthorized", "Authentication is required"),
-        onForbidden: () => gatewayError(403, "repository_management_forbidden", "Administrator access is required"),
+        onApiForbidden: () => gatewayError(403, "repository_management_forbidden", "Administrator access is required"),
     });
     config.runner.group(
         REPOSITORY_MANAGEMENT_BASE_PATH,
         (runner) => {
             for (const route of ROUTES) {
-                runner.addEndpoint(route.method, route.path, (request) =>
-                    handleRoute(request, route, config, candidateLimit, mutationLimit),
-                );
+                runner.addEndpoint(route.method, route.path, async (request) => {
+                    if (route.body !== "candidate") {
+                        return await handleRepositoryManagementGatewayRoute(request, route, config, limits);
+                    }
+                    if (activeCandidateRequests >= candidateConcurrencyLimit) {
+                        return gatewayBusy();
+                    }
+                    activeCandidateRequests += 1;
+                    try {
+                        return await handleRepositoryManagementGatewayRoute(request, route, config, limits);
+                    } finally {
+                        activeCandidateRequests -= 1;
+                    }
+                });
             }
         },
         [guard],
     );
 }
 
-async function handleRoute<Role extends string>(
-    request: Request,
-    route: Route,
-    config: RepositoryManagementGatewayConfig<Role>,
-    candidateLimit: number,
-    mutationLimit: number,
-): Promise<Response> {
-    const subject = await resolveRequestSubject(config.authentication, request).catch(() => null);
-    if (!subject || subject.role !== config.requiredRole || !validActor(subject.identifier)) {
-        return gatewayError(403, "repository_management_forbidden", "Administrator access is required");
-    }
-    try {
-        const forwarded = await gatewayRequest(request, route, subject.identifier, candidateLimit, mutationLimit);
-        return sanitizedGatewayResponse(await config.transport.forward(forwarded));
-    } catch (error) {
-        if (error && typeof error === "object" && "status" in error) {
-            const status = (error as { status?: unknown }).status;
-            if (status === 400 || status === 413) {
-                return gatewayError(
-                    status,
-                    status === 413 ? "repository_management_too_large" : "repository_management_invalid",
-                    "Management request body is invalid",
-                );
-            }
-        }
-        return gatewayError(503, "repository_management_unavailable", "Repository management is unavailable");
-    }
-}
-
-async function gatewayRequest(
-    request: Request,
-    route: Route,
-    actor: string,
-    candidateLimit: number,
-    mutationLimit: number,
-): Promise<RepositoryManagementGatewayRequest> {
-    const url = new URL(request.url);
-    if (route.body === "none") {
-        return { actor, method: route.method, path: route.path, query: url.search };
-    }
-    const limit = route.body === "candidate" ? candidateLimit : mutationLimit;
-    const input = await readGatewayBody(request, limit);
-    const body = route.body === "actor-json" ? injectAuthenticatedActor(input, actor, limit) : input;
-    return {
-        actor,
-        method: route.method,
-        path: route.path,
-        query: url.search,
-        contentType: request.headers.get("content-type") ?? "application/json",
-        body,
-    };
-}
-
-function validActor(value: string): boolean {
-    return Boolean(value.trim()) && value.length <= 512 && !/[\u0000-\u001f\u007f]/u.test(value);
+function gatewayBusy(): Response {
+    const response = gatewayError(
+        429,
+        "repository_management_candidate_busy",
+        "Another repository candidate upload is in progress",
+    );
+    response.headers.set("retry-after", "1");
+    return response;
 }
 
 function assertTransport(value: RepositoryManagementGatewayConfig<string>["transport"]): void {

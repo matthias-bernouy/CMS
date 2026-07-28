@@ -1,4 +1,11 @@
-import type { Authentication, Subject } from "@bernouy/cms-auth";
+import {
+    InMemoryLocalCredentialStore,
+    InMemoryPatRepository,
+    InMemoryUsersRepository,
+    LocalAuthentication,
+    SignedCookieCodec,
+    SubjectResolver,
+} from "@bernouy/cms-auth";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
@@ -30,6 +37,10 @@ export type RepositoryHubSurfaces = Readonly<{
     controlOrigin: string;
     deliveryOrigin: string;
     browserRequests: CapturedRequest[];
+    adminPat: string;
+    otherAdminPat: string;
+    userPat: string;
+    ownerSession: string;
     stop(): Promise<void>;
 }>;
 
@@ -46,10 +57,10 @@ export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promi
         browserRequests.push(await captureRequest(request));
         return await next();
     });
-    const authentication = new CmsAuthentication();
+    const authentication = await createAuthentication();
     mountCmsRepositoryManagementGateway({
         runner: controlRunner,
-        authentication,
+        authentication: authentication.local,
         requiredRole: "admin",
         transport: new HttpRepositoryManagementGateway({
             baseUrl: origins.managementRepositoryBaseUrl,
@@ -59,7 +70,7 @@ export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promi
     });
     const repository = new InMemoryCmsRepository();
     await seedRepositoryHubPage(repository);
-    const control = new ControlCms(controlRunner, repository, authentication, {
+    const control = new ControlCms(controlRunner, repository, authentication.local, {
         editorDataSources: [REPOSITORY_CATALOG_EDITOR_DATA_SOURCE],
     });
     await control.ready;
@@ -106,45 +117,46 @@ export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promi
         controlOrigin: runnerOrigin(controlRunner),
         deliveryOrigin: runnerOrigin(deliveryRunner),
         browserRequests,
+        adminPat: authentication.adminPat,
+        otherAdminPat: authentication.otherAdminPat,
+        userPat: authentication.userPat,
+        ownerSession: authentication.ownerSession,
         async stop() {
             await Promise.all([controlRunner.stopGracefully(1_000), deliveryRunner.stopGracefully(1_000)]);
         },
     };
 }
 
-class CmsAuthentication implements Authentication<string> {
-    readonly loginUrl = "/login";
-    readonly logoutUrl = "/logout";
-    readonly profileUrl = "/profile";
+type AcceptanceRole = "admin" | "user";
 
-    buildLoginUrl(returnTo: string): string {
-        return `/login?returnTo=${encodeURIComponent(returnTo)}`;
-    }
-
-    buildLogoutUrl(returnTo: string): string {
-        return `/logout?returnTo=${encodeURIComponent(returnTo)}`;
-    }
-
-    async getSubject(request: Request): Promise<Subject<string> | null> {
-        const token = request.headers.get("authorization")?.replace(/^Bearer /u, "");
-        if (token === "admin-pat") {
-            return { identifier: "repository-owner", role: "admin", email: "owner@example.test" };
-        }
-        if (token === "other-admin-pat") {
-            return { identifier: "another-administrator", role: "admin", email: "admin@example.test" };
-        }
-        if (token === "user-pat") {
-            return { identifier: "repository-user", role: "user", email: "user@example.test" };
-        }
-        const session = request.headers.get("cookie")?.match(/(?:^|;\s*)acceptance-session=([^;]+)/u)?.[1];
-        if (session === "owner") {
-            return { identifier: "repository-owner", role: "admin", email: "shared@example.test" };
-        }
-        if (session === "other-admin") {
-            return { identifier: "another-administrator", role: "admin", email: "shared@example.test" };
-        }
-        return null;
-    }
+async function createAuthentication() {
+    const users = new InMemoryUsersRepository<AcceptanceRole>();
+    const resolver = new SubjectResolver<AcceptanceRole>(users, "user");
+    const pats = new InMemoryPatRepository();
+    const codec = new SignedCookieCodec(new TextEncoder().encode("repository-acceptance-session-secret"));
+    const local = new LocalAuthentication<AcceptanceRole>({
+        providerId: "local",
+        loginPagePath: "/login",
+        logoutPath: "/logout",
+        credentials: new InMemoryLocalCredentialStore(),
+        resolver,
+        codec,
+        pats,
+        cookieName: "acceptance-session",
+        defaultHome: "/admin/pages",
+    });
+    const owner = await resolver.fromIdentity({ sub: "repository-owner", provider: "local" });
+    const otherAdmin = await resolver.fromIdentity({ sub: "another-administrator", provider: "local" });
+    const user = await resolver.fromIdentity({ sub: "repository-user", provider: "local" });
+    await users.setRole(owner.identifier, "admin");
+    await users.setRole(otherAdmin.identifier, "admin");
+    const [adminPat, otherAdminPat, userPat, ownerSession] = await Promise.all([
+        pats.create({ sub: owner.identifier, name: "owner-cli" }).then(({ token }) => token),
+        pats.create({ sub: otherAdmin.identifier, name: "other-admin-cli" }).then(({ token }) => token),
+        pats.create({ sub: user.identifier, name: "user-cli" }).then(({ token }) => token),
+        codec.sign({ kind: "session", sub: owner.identifier }, 3_600),
+    ]);
+    return { local, adminPat, otherAdminPat, userPat, ownerSession };
 }
 
 async function captureRequest(request: Request): Promise<CapturedRequest> {

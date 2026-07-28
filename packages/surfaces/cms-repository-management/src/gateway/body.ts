@@ -2,14 +2,14 @@ const READ_CHUNK_BYTES = 64 * 1_024;
 
 export class RepositoryManagementGatewayBodyError extends Error {
     constructor(
-        readonly status: 400 | 413,
+        readonly status: 400 | 408 | 413,
         message: string,
     ) {
         super(message);
     }
 }
 
-export async function readGatewayBody(request: Request, limit: number): Promise<Uint8Array> {
+export async function readGatewayBody(request: Request, limit: number, timeoutMs: number): Promise<Uint8Array> {
     const declared = request.headers.get("content-length");
     if (declared !== null) {
         if (!/^[0-9]+$/u.test(declared)) {
@@ -27,9 +27,17 @@ export async function readGatewayBody(request: Request, limit: number): Promise<
     const reader = request.body.getReader();
     const chunks: Uint8Array[] = [];
     let total = 0;
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+        timedOut = true;
+        void reader.cancel("Management request body read timed out").catch(() => undefined);
+    }, timeoutMs);
     try {
         while (true) {
             const result = await reader.read();
+            if (timedOut) {
+                throw new RepositoryManagementGatewayBodyError(408, "Management request body read timed out");
+            }
             if (result.done) {
                 break;
             }
@@ -40,6 +48,7 @@ export async function readGatewayBody(request: Request, limit: number): Promise<
             chunks.push(result.value);
         }
     } finally {
+        clearTimeout(timeout);
         reader.releaseLock();
     }
     const body = new Uint8Array(total);

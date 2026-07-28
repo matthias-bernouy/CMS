@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import type { Authentication, Subject } from "@bernouy/cms-auth";
 import { BunRunner } from "@bernouy/http-runner";
 import {
     mountCmsRepositoryManagementGateway,
     type RepositoryManagementGatewayRequest,
 } from "@bernouy/cms-repository-management/gateway";
+import { GatewayPatAuthentication } from "./authentication";
 
 let runner: BunRunner | undefined;
 
@@ -18,7 +18,16 @@ describe("CMS repository management gateway", () => {
         const fixture = startGateway();
 
         expect((await fetch(fixture.url("/api/status"), { redirect: "manual" })).status).toBe(401);
-        expect((await request(fixture.url("/api/status"), "user-pat")).status).toBe(403);
+        const forbidden = await request(fixture.url("/api/status"), "user-pat");
+        expect(forbidden.status).toBe(403);
+        expect(await forbidden.json()).toEqual({
+            code: "repository_management_forbidden",
+            error: "Administrator access is required",
+        });
+        expect(fixture.forwarded).toHaveLength(0);
+
+        const invalidActor = await request(fixture.url("/api/status"), "invalid-actor-pat");
+        expect(invalidActor.status).toBe(403);
         expect(fixture.forwarded).toHaveLength(0);
 
         const response = await request(fixture.url("/api/status"), "admin-pat");
@@ -87,17 +96,51 @@ describe("CMS repository management gateway", () => {
             kind: "commerce",
         });
     });
+
+    test("bounds concurrent candidate buffering before reading another upload", async () => {
+        let release!: () => void;
+        const blocked = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        const fixture = startGateway(async () => {
+            await blocked;
+            return Response.json({ ok: true });
+        }, 1);
+        const body = JSON.stringify({ schema: "candidate" });
+        const first = request(fixture.url("/api/integrations/candidates"), "admin-pat", {
+            method: "POST",
+            body,
+        });
+        while (fixture.forwarded.length === 0) {
+            await Bun.sleep(1);
+        }
+
+        const second = await request(fixture.url("/api/integrations/candidates"), "other-admin-pat", {
+            method: "POST",
+            body,
+        });
+        expect(second.status).toBe(429);
+        expect(second.headers.get("retry-after")).toBe("1");
+        expect(await second.json()).toMatchObject({ code: "repository_management_candidate_busy" });
+        expect(fixture.forwarded).toHaveLength(1);
+
+        release();
+        expect((await first).status).toBe(200);
+    });
 });
 
 function startGateway(
-    respond: (request: RepositoryManagementGatewayRequest) => Response = () => Response.json({ ok: true }),
+    respond: (request: RepositoryManagementGatewayRequest) => Response | Promise<Response> = () =>
+        Response.json({ ok: true }),
+    candidateConcurrencyLimit?: number,
 ) {
     const forwarded: RepositoryManagementGatewayRequest[] = [];
     runner = new BunRunner();
     mountCmsRepositoryManagementGateway({
         runner,
-        authentication: new PatAuthentication(),
+        authentication: new GatewayPatAuthentication(),
         requiredRole: "admin",
+        ...(candidateConcurrencyLimit ? { candidateConcurrencyLimit } : {}),
         transport: {
             async forward(input) {
                 forwarded.push(input);
@@ -117,29 +160,4 @@ function request(url: string, token: string, init: RequestInit = {}): Promise<Re
     const headers = new Headers(init.headers);
     headers.set("authorization", `Bearer ${token}`);
     return fetch(url, { ...init, headers, redirect: "manual" });
-}
-
-class PatAuthentication implements Authentication<"admin" | "user"> {
-    readonly loginUrl = "/login";
-    readonly logoutUrl = "/logout";
-    readonly profileUrl = "/profile";
-
-    buildLoginUrl(returnTo: string): string {
-        return `/login?returnTo=${encodeURIComponent(returnTo)}`;
-    }
-
-    buildLogoutUrl(returnTo: string): string {
-        return `/logout?returnTo=${encodeURIComponent(returnTo)}`;
-    }
-
-    async getSubject(request: Request): Promise<Subject<"admin" | "user"> | null> {
-        const token = request.headers.get("authorization")?.replace(/^Bearer /u, "");
-        if (token === "admin-pat") {
-            return { identifier: "cms-admin-1", role: "admin" };
-        }
-        if (token === "other-admin-pat") {
-            return { identifier: "cms-admin-2", role: "admin" };
-        }
-        return token === "user-pat" ? { identifier: "cms-user-1", role: "user" } : null;
-    }
 }

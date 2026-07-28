@@ -14,6 +14,7 @@ export interface AuthGuardContext<Role extends string> {
     auth: Authentication<Role>;
     requiredRole: Role;
     onUnauthenticated?: (req: Request, ctx: { loginUrl: string }) => Response | Promise<Response>;
+    onApiForbidden?: (req: Request, ctx: { basePath: string; logoutUrl: string }) => Response | Promise<Response>;
     onForbidden?: (req: Request, ctx: { basePath: string; logoutUrl: string }) => Response | Promise<Response>;
 }
 
@@ -74,6 +75,12 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
         }
         if (subject.role !== ctx.requiredRole) {
             if (url.pathname.startsWith(`${ctx.basePath}/api/`)) {
+                if (ctx.onApiForbidden) {
+                    return ctx.onApiForbidden(req, {
+                        basePath: ctx.basePath,
+                        logoutUrl: ctx.auth.buildLogoutUrl(`${ctx.basePath}/login`),
+                    });
+                }
                 return new Response("Forbidden", { status: 403 });
             }
             if (ctx.onForbidden) {

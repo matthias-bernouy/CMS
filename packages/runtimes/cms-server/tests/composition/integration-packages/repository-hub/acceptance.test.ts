@@ -68,17 +68,22 @@ describe("repository hub CMS process acceptance", () => {
 
         const managementPath = "/.cms/repository-management/api/status";
         expect((await fetch(`${cms.controlOrigin}${managementPath}`)).status).toBe(401);
-        expect((await patRequest(cms.controlOrigin, managementPath, "user-pat")).status).toBe(403);
-        expect((await patRequest(cms.controlOrigin, managementPath, "admin-pat")).status).toBe(200);
-        expect((await patRequest(cms.controlOrigin, managementPath, "other-admin-pat")).status).toBe(200);
+        expect((await patRequest(cms.controlOrigin, managementPath, cms.userPat)).status).toBe(403);
+        expect((await patRequest(cms.controlOrigin, managementPath, cms.adminPat)).status).toBe(200);
+        expect((await patRequest(cms.controlOrigin, managementPath, cms.otherAdminPat)).status).toBe(200);
         expect(
-            (await patRequest(cms.controlOrigin, "/.cms/repository-management/api/integrations/schema-baselines", "admin-pat"))
-                .status,
+            (
+                await patRequest(
+                    cms.controlOrigin,
+                    "/.cms/repository-management/api/integrations/schema-baselines",
+                    cms.adminPat,
+                )
+            ).status,
         ).toBe(404);
 
-        const removedApi = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
+        const removedApi = await controlRequest(cms.controlOrigin, "/api/repository/status", cms.ownerSession);
         expect(removedApi.status).toBe(404);
-        const adminPage = await controlRequest(cms.controlOrigin, "/admin/repository", "owner");
+        const adminPage = await controlRequest(cms.controlOrigin, "/admin/repository", cms.ownerSession);
         expect(adminPage.status).toBe(404);
         const adminHtml = await adminPage.text();
         expect(adminHtml).not.toContain("Integration repository");

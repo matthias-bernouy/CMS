@@ -52,7 +52,7 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
             return await this.fetchImpl(url, {
                 method: input.method,
                 headers,
-                body: input.body ? new Uint8Array(input.body) : undefined,
+                body: input.body ? exactBodyBuffer(input.body) : undefined,
                 redirect: "error",
                 signal: AbortSignal.timeout(this.config.timeoutMs),
             });
@@ -60,4 +60,11 @@ export class HttpRepositoryManagementGateway implements RepositoryManagementGate
             throw new Error("Repository management upstream request failed");
         }
     }
+}
+
+function exactBodyBuffer(body: Uint8Array): ArrayBuffer {
+    if (body.buffer instanceof ArrayBuffer && body.byteOffset === 0 && body.byteLength === body.buffer.byteLength) {
+        return body.buffer;
+    }
+    return body.slice().buffer as ArrayBuffer;
 }

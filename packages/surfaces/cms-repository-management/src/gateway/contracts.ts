@@ -20,5 +20,7 @@ export type RepositoryManagementGatewayConfig<Role extends string> = Readonly<{
     requiredRole: Role;
     transport: RepositoryManagementGatewayTransport;
     candidateBodyLimitBytes?: number;
+    candidateConcurrencyLimit?: number;
+    bodyReadTimeoutMs?: number;
     mutationBodyLimitBytes?: number;
 }>;
