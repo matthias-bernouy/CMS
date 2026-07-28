@@ -3,7 +3,7 @@ import type { RepositoryHubSurfaces } from "./cmsSurfaces";
 import { startRepositoryHubSurfaces } from "./cmsSurfaces";
 import type { RepositoryProcess } from "./repositoryProcess";
 import { startRepositoryProcess } from "./repositoryProcess";
-import { assertBrowserBoundary, controlRequest } from "./httpBoundary";
+import { assertBrowserBoundary, controlRequest, patRequest } from "./httpBoundary";
 
 let repository: RepositoryProcess | undefined;
 let cms: RepositoryHubSurfaces | undefined;
@@ -16,11 +16,13 @@ afterEach(async () => {
 });
 
 describe("repository hub CMS process acceptance", () => {
-    test("keeps the CMS-authored facade public without mounting management in Control", async () => {
+    test("keeps delivery public and exposes management only through CMS administrator authentication", async () => {
         repository = await startRepositoryProcess();
         const publicBaseUrl = `${repository.publicOrigin}/.cms/repository`;
         cms = await startRepositoryHubSurfaces({
             publicRepositoryBaseUrl: publicBaseUrl,
+            managementRepositoryBaseUrl: `${repository.managementOrigin}/.cms/repository-management`,
+            managementRepositoryToken: repository.token,
         });
 
         const anonymousCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations`);
@@ -63,6 +65,16 @@ describe("repository hub CMS process acceptance", () => {
         expect((await fetch(`${cms.deliveryOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
         expect((await fetch(`${repository.publicOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
         expect((await fetch(`${repository.managementOrigin}/.cms/repository/api/integrations`)).status).toBe(404);
+
+        const managementPath = "/.cms/repository-management/api/status";
+        expect((await fetch(`${cms.controlOrigin}${managementPath}`)).status).toBe(401);
+        expect((await patRequest(cms.controlOrigin, managementPath, "user-pat")).status).toBe(403);
+        expect((await patRequest(cms.controlOrigin, managementPath, "admin-pat")).status).toBe(200);
+        expect((await patRequest(cms.controlOrigin, managementPath, "other-admin-pat")).status).toBe(200);
+        expect(
+            (await patRequest(cms.controlOrigin, "/.cms/repository-management/api/integrations/schema-baselines", "admin-pat"))
+                .status,
+        ).toBe(404);
 
         const removedApi = await controlRequest(cms.controlOrigin, "/api/repository/status", "owner");
         expect(removedApi.status).toBe(404);

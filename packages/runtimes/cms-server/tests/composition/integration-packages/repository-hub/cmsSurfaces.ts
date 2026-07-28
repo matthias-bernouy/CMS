@@ -7,6 +7,7 @@ import { DEFAULT_INTEGRATION_PACKAGE_LIMITS } from "@bernouy/cms-integration-pac
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { RepositoryCms } from "@bernouy/cms-repository";
 import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
+import { mountCmsRepositoryManagementGateway } from "@bernouy/cms-repository-management/gateway";
 import { BunRunner } from "@bernouy/http-runner";
 import {
     DEFAULT_REPOSITORY_CATALOG_READER_LIMITS,
@@ -15,6 +16,7 @@ import {
     HttpRepositoryReleaseReader,
     HttpRepositoryVerificationBundleReader,
 } from "../../../../src/repositoryCatalog";
+import { HttpRepositoryManagementGateway } from "../../../../src/runtime/repository";
 import { seedRepositoryHubPage } from "./hubPage";
 
 export type CapturedRequest = Readonly<{
@@ -33,6 +35,8 @@ export type RepositoryHubSurfaces = Readonly<{
 
 type SurfaceOrigins = Readonly<{
     publicRepositoryBaseUrl: string;
+    managementRepositoryBaseUrl: string;
+    managementRepositoryToken: string;
 }>;
 
 export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promise<RepositoryHubSurfaces> {
@@ -42,9 +46,20 @@ export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promi
         browserRequests.push(await captureRequest(request));
         return await next();
     });
+    const authentication = new CmsAuthentication();
+    mountCmsRepositoryManagementGateway({
+        runner: controlRunner,
+        authentication,
+        requiredRole: "admin",
+        transport: new HttpRepositoryManagementGateway({
+            baseUrl: origins.managementRepositoryBaseUrl,
+            token: origins.managementRepositoryToken,
+            timeoutMs: 10_000,
+        }),
+    });
     const repository = new InMemoryCmsRepository();
     await seedRepositoryHubPage(repository);
-    const control = new ControlCms(controlRunner, repository, new CookieAuthentication(), {
+    const control = new ControlCms(controlRunner, repository, authentication, {
         editorDataSources: [REPOSITORY_CATALOG_EDITOR_DATA_SOURCE],
     });
     await control.ready;
@@ -97,7 +112,7 @@ export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promi
     };
 }
 
-class CookieAuthentication implements Authentication<string> {
+class CmsAuthentication implements Authentication<string> {
     readonly loginUrl = "/login";
     readonly logoutUrl = "/logout";
     readonly profileUrl = "/profile";
@@ -111,6 +126,16 @@ class CookieAuthentication implements Authentication<string> {
     }
 
     async getSubject(request: Request): Promise<Subject<string> | null> {
+        const token = request.headers.get("authorization")?.replace(/^Bearer /u, "");
+        if (token === "admin-pat") {
+            return { identifier: "repository-owner", role: "admin", email: "owner@example.test" };
+        }
+        if (token === "other-admin-pat") {
+            return { identifier: "another-administrator", role: "admin", email: "admin@example.test" };
+        }
+        if (token === "user-pat") {
+            return { identifier: "repository-user", role: "user", email: "user@example.test" };
+        }
         const session = request.headers.get("cookie")?.match(/(?:^|;\s*)acceptance-session=([^;]+)/u)?.[1];
         if (session === "owner") {
             return { identifier: "repository-owner", role: "admin", email: "shared@example.test" };
