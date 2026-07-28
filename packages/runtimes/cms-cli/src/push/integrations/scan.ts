@@ -7,9 +7,11 @@ import {
     type IntegrationDefinition,
     type IntegrationImportOptions,
 } from "@bernouy/cms-integrations";
+import { assertIntegrationPackageVersion } from "@bernouy/cms-integration-packages";
 
 export type LocalIntegrationImport = {
     kind: string;
+    version?: string;
     answers: Record<string, IntegrationAnswerValue>;
     options?: IntegrationImportOptions;
     definition?: IntegrationDefinition;
@@ -82,9 +84,11 @@ function normalizeIntegrationImport(value: unknown, _slug: string): LocalIntegra
     if (!answers) {
         throw new Error(`missing "answers" object`);
     }
+    const version = value.version === undefined ? undefined : assertIntegrationPackageVersion(value.version);
     const options = optionalRecord(value.options) as IntegrationImportOptions | undefined;
     return {
         kind,
+        ...(version ? { version } : {}),
         answers: answers as Record<string, IntegrationAnswerValue>,
         ...(options ? { options } : {}),
         ...(isRecord(value.definition) ? { definition: value.definition as unknown as IntegrationDefinition } : {}),

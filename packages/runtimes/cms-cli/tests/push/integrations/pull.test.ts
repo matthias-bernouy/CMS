@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { pullBlocs } from "cms-cli/push/blocs/pull";
 import { pullIntegrations, reconstructSource } from "cms-cli/push/integrations/pull";
+import { scanIntegrations } from "cms-cli/push/integrations/scan";
 import { encode, withFetch } from "./fixtures";
 
 describe("reconstructSource (pull)", () => {
@@ -93,6 +94,7 @@ describe("pullIntegrations", () => {
                 expect(result).toEqual({ pulled: ["demo"], failed: [] });
                 expect(JSON.parse(readFileSync(join(siteDir, "integrations", "demo.json"), "utf-8"))).toMatchObject({
                     kind: "demo",
+                    version: "1.0.0",
                     answers: { id: "main" },
                 });
                 expect(
@@ -101,6 +103,35 @@ describe("pullIntegrations", () => {
                         "utf-8",
                     ),
                 ).toContain(`"default-tag":"demo-card"`);
+            },
+        );
+    });
+
+    test("keeps an unversioned legacy installation pushable after pull", async () => {
+        const siteDir = mkdtempSync(join(tmpdir(), "p9r-int-pull-legacy-"));
+
+        await withFetch(
+            async (url) => {
+                if (url.endsWith("/api/integrations/installations")) {
+                    return Response.json([{ id: "demo" }]);
+                }
+                if (url.includes("/api/integrations/installations?id=demo")) {
+                    return Response.json({ ...demoDetail(), definitionVersion: "unversioned", artifacts: [] });
+                }
+                return new Response("not found", { status: 404 });
+            },
+            async () => {
+                expect(await pullIntegrations(new URL("http://cms.test/"), "token", siteDir)).toEqual({
+                    pulled: ["demo"],
+                    failed: [],
+                });
+
+                const serialized = JSON.parse(readFileSync(join(siteDir, "integrations", "demo.json"), "utf-8"));
+                expect(serialized.version).toBeUndefined();
+                expect((await scanIntegrations(siteDir))[0]?.request).toMatchObject({
+                    kind: "demo",
+                    answers: { id: "main" },
+                });
             },
         );
     });
@@ -173,7 +204,7 @@ function demoDetail(): Record<string, unknown> {
     return {
         id: "demo",
         label: "Demo",
-        definitionVersion: "1",
+        definitionVersion: "1.0.0",
         status: "success",
         createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-01T00:00:00.000Z",

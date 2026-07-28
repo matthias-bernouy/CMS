@@ -105,6 +105,7 @@ async function rerunIntegration(
         method: "POST",
         headers: HEADERS_JSON(token),
         body: JSON.stringify({
+            ...(request.version ? { version: request.version } : {}),
             answers: request.answers,
             options: { ...(request.options ?? {}), force: true },
         }),

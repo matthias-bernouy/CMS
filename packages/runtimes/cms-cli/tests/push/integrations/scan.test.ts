@@ -9,7 +9,9 @@ import type { PushState } from "cms-cli/push/shared/state";
 
 describe("scanIntegrations", () => {
     test("reads each integrations/*.json as an integration import", async () => {
-        const dir = makeSite({ "shop.json": JSON.stringify(manualSourceImport()) });
+        const dir = makeSite({
+            "shop.json": JSON.stringify({ ...manualSourceImport(), version: "1.2.3-beta.1+build.7" }),
+        });
         const entries = await scanIntegrations(dir);
 
         expect(entries.length).toBe(1);
@@ -17,6 +19,7 @@ describe("scanIntegrations", () => {
         expect(entries[0]!.slug).toBe("shop");
         expect(entries[0]!.file).toBe("integrations/shop.json");
         expect(entries[0]!.request.kind).toBe("manual-source");
+        expect(entries[0]!.request.version).toBe("1.2.3-beta.1+build.7");
         expect(entries[0]!.request.definition?.kind).toBe("manual-source");
         expect(entries[0]!.hash).toMatch(/^[0-9a-f]{64}$/);
     });
@@ -35,12 +38,26 @@ describe("scanIntegrations", () => {
             scanIntegrations(makeSite({ "noanswers.json": JSON.stringify({ kind: "manual-source" }) })),
         ).rejects.toThrow(/missing "answers" object/);
     });
+
+    test("rejects a version that is not exact canonical SemVer", async () => {
+        for (const version of ["1", "v1.2.3", " 1.2.3", "1.2.3 "]) {
+            const dir = makeSite({ "shop.json": JSON.stringify({ ...manualSourceImport(), version }) });
+            await expect(scanIntegrations(dir)).rejects.toThrow(/version must be an exact SemVer 2\.0 version/);
+        }
+    });
 });
 
 describe("canonicalIntegrationHash", () => {
     test("changes when the integration import changes", () => {
         const hash = canonicalIntegrationHash(manualSourceImport());
         expect(canonicalIntegrationHash(manualSourceImport("shop", "https://api.example.com/changed"))).not.toBe(hash);
+    });
+
+    test("includes the requested version", () => {
+        const request = manualSourceImport();
+        expect(canonicalIntegrationHash({ ...request, version: "1.0.0" })).not.toBe(
+            canonicalIntegrationHash({ ...request, version: "1.0.1" }),
+        );
     });
 });
 

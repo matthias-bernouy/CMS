@@ -10,7 +10,7 @@ import {
 import { fetchBlocSource, fetchRemoteBlocList, writeBlocSource } from "cms-cli/push/blocs/pull";
 import { assertSafeBlocTag } from "cms-cli/push/blocs/pullLocation";
 import { parseUrn, type Source } from "@bernouy/cms-sources";
-import type { IntegrationInstallation } from "@bernouy/cms-integrations";
+import { isExactIntegrationVersion, type IntegrationInstallation } from "@bernouy/cms-integrations";
 import type { RemoteIntegrationDetail, RemoteIntegrationListItem } from "./pullTypes";
 import { reconstructSource } from "./sourceReconstruction";
 
@@ -122,6 +122,7 @@ async function writeIntegrationImport(siteDir: string, detail: RemoteIntegration
         JSON.stringify(
             {
                 kind: detail.id,
+                ...(isExactIntegrationVersion(detail.definitionVersion) ? { version: detail.definitionVersion } : {}),
                 ...(detail.definition ? { definition: detail.definition } : {}),
                 answers: detail.answers ?? {},
             },

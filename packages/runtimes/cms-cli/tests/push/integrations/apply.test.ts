@@ -108,3 +108,25 @@ describe("fetchRemoteIntegrationDefinitions", () => {
         );
     });
 });
+
+describe("applyPushIntegrations version pinning", () => {
+    test("sends the exact requested version when rerunning an installation", async () => {
+        const entry = kindOnlyIntegration("commerce", "update");
+        entry.integration.request.version = "1.2.3";
+        let body: Record<string, unknown> | undefined;
+
+        await withFetch(
+            (url, init) => {
+                expect(url).toBe("https://cms.example/api/integrations/installations/rerun?id=commerce");
+                body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+                return new Response(null, { status: 200 });
+            },
+            async () => {
+                const result = await applyPushIntegrations(new URL("https://cms.example/"), "token", [entry]);
+                expect(result.failed).toEqual([]);
+            },
+        );
+
+        expect(body).toEqual({ version: "1.2.3", answers: {}, options: { force: true } });
+    });
+});
