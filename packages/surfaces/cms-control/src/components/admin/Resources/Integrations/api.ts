@@ -3,6 +3,7 @@ import type {
     IntegrationAnswerValue,
     IntegrationImportPayload,
     IntegrationInstallationDetail,
+    IntegrationUpgradeVersions,
 } from "./model";
 
 export type IntegrationImportResponse = {
@@ -77,11 +78,7 @@ export async function importIntegration(payload: IntegrationImportPayload): Prom
 }
 
 export async function getIntegrationInstallation(id: string): Promise<IntegrationInstallationDetail> {
-    const response = await fetch(`${route("/api/integrations/installations")}?id=${encodeURIComponent(id)}`);
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-    return response.json() as Promise<IntegrationInstallationDetail>;
+    return getJson(`${route("/api/integrations/installations")}?id=${encodeURIComponent(id)}`);
 }
 
 export async function rerunIntegrationInstallation(
@@ -95,11 +92,35 @@ export async function rerunIntegrationInstallation(
 }
 
 export async function getPageLinks(): Promise<IntegrationPageLink[]> {
-    const response = await fetch(route("/api/page/links?visible=published"));
-    if (!response.ok) {
-        throw new Error(await response.text());
+    return getJson(route("/api/page/links?visible=published"));
+}
+
+export async function integrationUpgradeVersions(id: string): Promise<IntegrationUpgradeVersions> {
+    return getJson(`${route("/api/integrations/installations/versions")}?id=${encodeURIComponent(id)}`);
+}
+
+export async function upgradeIntegrationInstallation(id: string, version: string): Promise<void> {
+    await postJson(`${route("/api/integrations/installations/upgrade")}?id=${encodeURIComponent(id)}`, { version });
+    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
+    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
+}
+
+export class IntegrationApiError extends Error {
+    constructor(
+        readonly status: number,
+        message: string,
+    ) {
+        super(message);
+        this.name = "IntegrationApiError";
     }
-    return response.json() as Promise<IntegrationPageLink[]>;
+}
+
+async function getJson<T>(url: string): Promise<T> {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw await responseError(response);
+    }
+    return response.json() as Promise<T>;
 }
 
 async function postJson<T = unknown>(url: string, body: unknown): Promise<T> {
@@ -109,7 +130,20 @@ async function postJson<T = unknown>(url: string, body: unknown): Promise<T> {
         body: JSON.stringify(body),
     });
     if (!response.ok) {
-        throw new Error(await response.text());
+        throw await responseError(response);
     }
     return response.json() as Promise<T>;
+}
+
+async function responseError(response: Response): Promise<IntegrationApiError> {
+    const fallback = `Request failed (HTTP ${response.status})`;
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+        const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+        const message =
+            typeof body?.error === "string" ? body.error : typeof body?.message === "string" ? body.message : null;
+        return new IntegrationApiError(response.status, message?.slice(0, 500) || fallback);
+    }
+    const text = (await response.text()).trim();
+    return new IntegrationApiError(response.status, text && !text.startsWith("<") ? text.slice(0, 500) : fallback);
 }

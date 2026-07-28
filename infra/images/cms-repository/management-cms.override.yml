@@ -1,0 +1,24 @@
+# Attach only the designated management CMS to the repository network.
+# Apply this file together with that CMS instance's regular compose.yml.
+services:
+    cms:
+        environment:
+            P9R_INTEGRATION_REPOSITORY_URL: http://cms-repository:3001/.cms/repository
+            P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL: http://cms-repository:3000/.cms/repository-management
+            P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE: /run/secrets/cms-repository-management-token
+            P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER: ${P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER:?P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER must identify the one repository administrator}
+            P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS: "${P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS:-60000}"
+        networks:
+            cms_repository: {}
+        secrets:
+            - source: cms_repository_management_token
+              target: cms-repository-management-token
+
+secrets:
+    cms_repository_management_token:
+        file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference the repository service secret file owned by UID/GID 1000}
+
+networks:
+    cms_repository:
+        external: true
+        name: ${CMS_REPOSITORY_NETWORK_NAME:-cms_repository}

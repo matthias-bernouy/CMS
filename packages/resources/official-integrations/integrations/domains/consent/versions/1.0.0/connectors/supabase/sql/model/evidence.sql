@@ -33,8 +33,10 @@ create table if not exists consent.acceptances (
     subject_claim_hash text not null,
     accepted_at timestamptz not null,
     committed_at timestamptz not null default now(),
-    unique (context_key, attempt_id),
-    unique (id, context_key),
+    constraint consent_acceptances_context_attempt_key
+        unique (context_key, attempt_id),
+    constraint consent_acceptances_id_context_key
+        unique (id, context_key),
     constraint consent_acceptance_user_id
         check (length(btrim(cms_user_id)) between 1 and 512),
     constraint consent_acceptance_claim_hash check (subject_claim_hash ~ '^[a-f0-9]{64}$'),

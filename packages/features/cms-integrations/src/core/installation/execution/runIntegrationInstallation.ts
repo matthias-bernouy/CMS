@@ -1,5 +1,5 @@
 import { runCreate } from "../create";
-import { runRerun } from "./rerun";
+import { runRerun, runUpgrade } from "./rerun";
 import { integrationInstallationId } from "../ids";
 import { reconcileDependentInstallations } from "./afterInstallation";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
@@ -10,6 +10,7 @@ import type {
 } from "../../../interfaces/IntegrationImport";
 import type { IntegrationInstallation, IntegrationRun } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationInstallationRepository } from "../../../interfaces/IntegrationInstallationRepository";
+import type { IntegrationPackageResolver } from "../../../interfaces/IntegrationConnectorDeployer";
 
 export type RunIntegrationInstallationCreateRequest = {
     mode: "create";
@@ -17,6 +18,7 @@ export type RunIntegrationInstallationCreateRequest = {
     installations: IntegrationInstallationRepository;
     dto: IntegrationImportDto;
     siteIntegrations?: IntegrationDefinition[];
+    packageResolver?: IntegrationPackageResolver;
 };
 
 export type RunIntegrationInstallationRerunRequest = {
@@ -26,6 +28,19 @@ export type RunIntegrationInstallationRerunRequest = {
     integrationId: string;
     body?: Record<string, unknown>;
     siteIntegrations?: IntegrationDefinition[];
+    packageResolver?: IntegrationPackageResolver;
+};
+
+export type RunIntegrationInstallationUpgradeRequest = {
+    mode: "upgrade";
+    deps: IntegrationImportDeps;
+    installations: IntegrationInstallationRepository;
+    integrationId: string;
+    targetDefinition: IntegrationDefinition;
+    expectedPackageDigest?: string;
+    body?: Record<string, unknown>;
+    siteIntegrations?: IntegrationDefinition[];
+    packageResolver?: IntegrationPackageResolver;
 };
 
 export type RunIntegrationInstallationResult = IntegrationImportResult & {
@@ -36,9 +51,17 @@ export type RunIntegrationInstallationResult = IntegrationImportResult & {
 export { integrationInstallationId };
 
 export async function runIntegrationInstallation(
-    request: RunIntegrationInstallationCreateRequest | RunIntegrationInstallationRerunRequest,
+    request:
+        | RunIntegrationInstallationCreateRequest
+        | RunIntegrationInstallationRerunRequest
+        | RunIntegrationInstallationUpgradeRequest,
 ): Promise<RunIntegrationInstallationResult> {
-    const result = request.mode === "create" ? await runCreate(request) : await runRerun(request);
+    const result =
+        request.mode === "create"
+            ? await runCreate(request)
+            : request.mode === "upgrade"
+              ? await runUpgrade(request)
+              : await runRerun(request);
     await reconcileDependentInstallations(request.deps, request.installations, result.installation.id);
     return result;
 }

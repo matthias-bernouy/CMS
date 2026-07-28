@@ -1,0 +1,29 @@
+{
+    "name": "@bernouy/cms-integration-packages",
+    "version": "0.1.0",
+    "description": "Deterministic package contracts and adapters for CMS integrations.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./fs": "./src/default-implementation/fs/index.ts",
+        "./http": "./src/default-implementation/http/index.ts"
+    },
+    "files": [
+        "src/",
+        "dist/",
+        "tsconfig.json"
+    ],
+    "dependencies": {
+        "canonicalize": "^3.0.0",
+        "jsonc-parser": "^3.3.1",
+        "semver": "^7.8.2"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    },
+    "devDependencies": {
+        "@types/semver": "^7.7.1"
+    }
+}

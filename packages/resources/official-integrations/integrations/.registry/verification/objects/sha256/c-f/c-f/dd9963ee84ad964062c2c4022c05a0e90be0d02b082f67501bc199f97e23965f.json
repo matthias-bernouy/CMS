@@ -1,0 +1,1 @@
+{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-schema-generator","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"mondial-relay","packageDigest":"7ee20c0f45b7709cea8e417e1c9b3010d053a8ea5b815f7cffa8d85de4a0c10b","version":"1.0.0"}}

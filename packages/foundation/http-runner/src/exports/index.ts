@@ -12,6 +12,13 @@ export type { RequestTimingClock, RequestTimingSnapshot } from "http-runner/inte
 export { BunRunner } from "http-runner/default-implementation/BunRunner";
 export { getRequestIP, setRequestIP } from "http-runner/core/request/ip";
 export {
+    ClientAddressUnavailableError,
+    InvalidForwardedChainError,
+    normalizeIpAddress,
+    resolveClientAddress,
+    type ClientAddressPolicy,
+} from "http-runner/core/request/clientAddress";
+export {
     CMS_CORRELATION_HEADER,
     MAX_REQUEST_TIMING_ENTRIES,
     SERVER_TIMING_HEADER,

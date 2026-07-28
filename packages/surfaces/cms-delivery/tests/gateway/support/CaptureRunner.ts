@@ -43,7 +43,10 @@ export class CaptureRunner implements Runner {
         callback(new CaptureRunner(joinPath(this.basePath, prefix), this.defaults, this.endpoints));
     }
 
-    setDefaultEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", handler: RouteHandler): void {
+    setDefaultEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS",
+        handler: RouteHandler,
+    ): void {
         this.defaults.set(`${method} ${this.basePath}`, handler);
     }
 

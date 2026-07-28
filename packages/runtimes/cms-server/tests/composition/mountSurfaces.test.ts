@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { ProductionIntegrationMigrationRuntime } from "@bernouy/cms-integrations";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
 import { surfaceMountFixtures, waitFor } from "./surfaceMountFixtures";
 
@@ -8,7 +9,6 @@ describe("production surface mounting", () => {
         const starts: Array<[string, number]> = [];
         const logs: string[] = [];
         const runners: FakeRunner[] = [];
-        const repositoryRunner = { basePath: "/.cms/repository" };
         let repositoryConfig: Record<string, unknown> | undefined;
         let controlArguments: unknown[] = [];
         let deliveryConfig: Record<string, unknown> | undefined;
@@ -30,8 +30,8 @@ describe("production surface mounting", () => {
                 events.push(`runner:${this.name}`);
             }
             group(prefix: string, callback: (runner: unknown) => void): void {
-                events.push(`group:${prefix}`);
-                callback(repositoryRunner);
+                events.push(`group:${this.name}:${prefix}`);
+                callback({ basePath: prefix, owner: this.name });
             }
             start(port: number): void {
                 events.push(`start:${this.name}`);
@@ -101,11 +101,8 @@ describe("production surface mounting", () => {
         const mounting = mountProductionSurfaces(options as never, runtime);
         await waitFor(() => events.includes("control"));
 
-        expect(events).toEqual(["workers", "runner:control", "group:/.cms/repository", "repository", "control"]);
-        expect(repositoryConfig).toEqual({
-            runner: repositoryRunner,
-            integrationCatalog: options.integrations.integrationRepositoryCatalog,
-        });
+        expect(events).toEqual(["workers", "runner:control", "control"]);
+        expect(repositoryConfig).toBeUndefined();
 
         releaseControl();
         const mounted = await mounting;
@@ -117,6 +114,9 @@ describe("production surface mounting", () => {
         expect(controlConfig).toMatchObject({
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
             integrationCatalog: options.integrations.integrationCatalog,
+            integrationPackageResolver: options.integrations.integrationPackageResolver,
+            integrationMigrationRuntime: expect.any(ProductionIntegrationMigrationRuntime),
+            integrationConnectorBaselineAdopters: options.integrations.integrationConnectorBaselineAdopters,
             publicAuth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -129,6 +129,10 @@ describe("production surface mounting", () => {
             sourceTrustedConnectorTarget: expect.any(Function),
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
+        expect(controlConfig.repositoryManagement).toBeUndefined();
+        expect(repositoryConfig?.runner).toEqual({ basePath: "/.cms/repository", owner: "delivery" });
+        expect(repositoryConfig?.integrationCatalog).toBe(options.integrations.publicRepositoryCatalog);
+        expect(repositoryConfig?.integrationPackages).toBe(options.integrations.publicRepositoryPackages);
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
@@ -147,6 +151,7 @@ describe("production surface mounting", () => {
                 passwordResetUrl: options.env.CMS_AUTH_PASSWORD_RESET_URL,
             },
         });
+        expect(deliveryConfig?.publicPageProviders).toBeUndefined();
         expect(workerOptions).toEqual({
             functions: options.features.functions,
             sources: options.features.deliverySources,
@@ -164,6 +169,7 @@ describe("production surface mounting", () => {
             ["control", 3100],
             ["delivery", 3101],
         ]);
+        expect(events.filter((event) => event.includes("group:"))).toEqual(["group:delivery:/.cms/repository"]);
         expect(logs).toEqual([
             "🚀 CMS listening",
             "   admin:        https://admin.example.test/admin/",

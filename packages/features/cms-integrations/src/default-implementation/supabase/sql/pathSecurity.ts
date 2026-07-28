@@ -1,6 +1,6 @@
-import { realpath, stat } from "node:fs/promises";
 import { dirname, extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { IntegrationRuntimeError } from "../../../core/errors";
+import { resolveExistingSupabaseFile } from "../paths";
 
 type SqlReferenceOptions = {
     connectorRoot: string;
@@ -12,19 +12,22 @@ type SqlReferenceOptions = {
 
 export async function resolveSqlReference(options: SqlReferenceOptions): Promise<string> {
     validateReference(options.reference, options.extension);
+    const unresolved = resolve(dirname(options.fromFile), options.reference);
+    assertWithin(options.connectorRoot, unresolved, "Supabase connector root", options.reference);
+    assertWithin(options.bundleRoot, unresolved, "bundle root", options.reference);
     let target: string;
     try {
-        target = await realpath(resolve(dirname(options.fromFile), options.reference));
-    } catch {
+        target = await resolveExistingSupabaseFile(options.connectorRoot, relative(options.connectorRoot, unresolved));
+    } catch (error) {
+        if (error instanceof IntegrationRuntimeError && !error.message.includes("was not found")) {
+            throw error;
+        }
         throw new IntegrationRuntimeError(
             `Supabase SQL ${referenceKind(options.extension)} was not found: ${options.reference}`,
         );
     }
     assertWithin(options.connectorRoot, target, "Supabase connector root", options.reference);
     assertWithin(options.bundleRoot, target, "bundle root", options.reference);
-    if (!(await stat(target)).isFile()) {
-        throw new IntegrationRuntimeError(`Supabase SQL reference is not a file: ${options.reference}`);
-    }
     return target;
 }
 

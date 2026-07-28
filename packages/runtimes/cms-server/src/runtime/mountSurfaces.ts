@@ -1,12 +1,20 @@
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ScheduledTriggerRunner } from "@bernouy/cms-triggers";
+import {
+    CmsSourceBindingMigrationHandler,
+    CmsSourceFunctionalMigrationProbe,
+    ProductionIntegrationMigrationRuntime,
+} from "@bernouy/cms-integrations";
 import type { ProductionAuthentication } from "./auth";
 import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
 import type { FeatureStores } from "./stores/features";
+import { productionRepositoryReadConfig } from "./repositoryReads";
 import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
+import { createProductionRepositoryManagementAccess } from "../repositoryManagement/composition";
+import { createProductionRepositoryCatalogProvider } from "../repositoryCatalog";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
@@ -24,6 +32,10 @@ export async function mountProductionSurfaces(
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
 ): Promise<ScheduledTriggerRunner> {
     const { env, core, features, integrations, authentication } = options;
+    const repositoryManagement = await createProductionRepositoryManagementAccess(env.repositoryManagement);
+    const repositoryCatalogProvider = repositoryManagement
+        ? createProductionRepositoryCatalogProvider(integrations)
+        : undefined;
     const scheduledTriggers = runtime.startWorkers({
         functions: features.functions,
         sources: features.deliverySources,
@@ -41,6 +53,28 @@ export async function mountProductionSurfaces(
         slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
         reportDiagnostic: runtime.log,
     });
+    const cmsBindingDeps = {
+        sources: features.sources,
+        functions: features.functions,
+        roles: core.roles,
+        secrets: core.secrets,
+        dashboards: features.dashboards,
+        relations: features.relations,
+        installations: features.integrationInstallations,
+        triggers: features.triggers,
+        sourceOverlays: features.sourceOverlays,
+        connectorDeployers: integrations.integrationConnectorDeployers,
+        provisioners: integrations.integrationProvisioners,
+        sourceExecutorDeps: { resolveSecret: features.resolveSecret, identities: features.identities },
+    };
+    const cmsBindingMigration = new CmsSourceBindingMigrationHandler(cmsBindingDeps);
+    const integrationMigrationRuntime = new ProductionIntegrationMigrationRuntime({
+        connectorAdapters: integrations.integrationConnectorMigrationAdapters,
+        functionDeployment: integrations.integrationFunctionMigrationHandler,
+        targetSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "target"),
+        cmsBinding: cmsBindingMigration,
+        cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "stable"),
+    });
     const { sourceImageInterceptor, responsivePublicSourceImagesEnabled, responsivePrivateSourceImagesEnabled } =
         await createRuntimeSourceImageComposition({
             cache: core.sourceImageCache,
@@ -54,12 +88,6 @@ export async function mountProductionSurfaces(
             report: runtime.log,
         });
     const controlRunner = new runtime.Runner();
-    controlRunner.group("/.cms/repository", (repositoryRunner) => {
-        new runtime.Repository({
-            runner: repositoryRunner,
-            integrationCatalog: integrations.integrationRepositoryCatalog,
-        });
-    });
     const controlCms = new runtime.Control(
         controlRunner,
         core.repo,
@@ -76,10 +104,15 @@ export async function mountProductionSurfaces(
                 optOutUrl: `${env.DELIVERY_PUBLIC_URL}/.cms/privacy/analytics`,
             },
             integrationCatalog: integrations.integrationCatalog,
+            integrationPackageResolver: integrations.integrationPackageResolver,
+            integrationUpgradeReleases: integrations.integrationUpgradeReleases,
             integrationInstallations: features.integrationInstallations,
             integrationConnectorProviders: features.integrationConnectorProviders,
             integrationConnectorDeployers: integrations.integrationConnectorDeployers,
+            integrationMigrationRuntime,
+            integrationConnectorBaselineAdopters: integrations.integrationConnectorBaselineAdopters,
             integrationProvisioners: integrations.integrationProvisioners,
+            ...(repositoryManagement ? { repositoryManagement } : {}),
             dashboards: features.dashboards,
             relations: features.relations,
             functions: features.functions,
@@ -116,6 +149,13 @@ export async function mountProductionSurfaces(
     await controlCms.ready;
 
     const deliveryRunner = new runtime.Runner();
+    const repositoryReads = productionRepositoryReadConfig(env, integrations, core, runtime.log);
+    deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
+        new runtime.Repository({
+            runner: repositoryRunner,
+            ...repositoryReads,
+        });
+    });
     new runtime.Delivery({
         runner: deliveryRunner,
         repository: core.repo,
@@ -142,6 +182,7 @@ export async function mountProductionSurfaces(
         filesMetadata: core.filesMetadata,
         filesBlob: core.filesBlob,
         variantStore: core.variantStore,
+        ...(repositoryCatalogProvider ? { publicPageProviders: [repositoryCatalogProvider] } : {}),
         auth: {
             ...authentication.publicAuthBase,
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,

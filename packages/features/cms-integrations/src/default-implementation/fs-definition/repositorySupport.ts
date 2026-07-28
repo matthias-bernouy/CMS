@@ -1,6 +1,11 @@
 import { realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { parseIntegrationIcon } from "../../core/parsing/definition/icon";
+import {
+    resolveExactIntegrationDefinitionVersion,
+    resolveInstallableIntegrationDefinitionVersion,
+} from "../../core/definitions/repositoryVersions";
+import { assertExactIntegrationVersion, isIntegrationPrerelease } from "../../core/definitions/versioning";
 import type {
     IntegrationDefinitionIndex,
     IntegrationDefinitionVersion,
@@ -12,13 +17,9 @@ export function resolveVersion(
     defaultChannel: "stable" | "latest",
 ): IntegrationDefinitionVersion | null {
     if (requestedVersion) {
-        return index.versions.find((version) => version.version === requestedVersion) ?? null;
+        return resolveExactIntegrationDefinitionVersion(index, requestedVersion);
     }
-    const target = index[defaultChannel] ?? index.stable ?? index.latest;
-    if (!target) {
-        return index.versions[0] ?? null;
-    }
-    return index.versions.find((version) => version.version === target) ?? null;
+    return resolveInstallableIntegrationDefinitionVersion(index, undefined, defaultChannel);
 }
 
 export function parseIntegrationDefinitionIndex(value: unknown, source: string): IntegrationDefinitionIndex {
@@ -37,6 +38,9 @@ export function parseIntegrationDefinitionIndex(value: unknown, source: string):
         throw new Error(`${source}: versions must be a non-empty array`);
     }
     const icon = parseIntegrationIcon(value.icon, `${source}.icon`);
+    const versions = value.versions.map((entry, index) => parseVersion(entry, `${source}: versions.${index}`));
+    const stable = parseChannel(value.stable, `${source}: stable`, versions, true);
+    const latest = parseChannel(value.latest, `${source}: latest`, versions, false);
     return {
         ...(text(value.schema) ? { schema: text(value.schema)! } : {}),
         kind,
@@ -44,9 +48,9 @@ export function parseIntegrationDefinitionIndex(value: unknown, source: string):
         ...(icon ? { icon } : {}),
         ...(text(value.category) ? { category: text(value.category)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
-        ...(text(value.stable) ? { stable: text(value.stable)! } : {}),
-        ...(text(value.latest) ? { latest: text(value.latest)! } : {}),
-        versions: value.versions.map((entry, index) => parseVersion(entry, `${source}: versions.${index}`)),
+        ...(stable ? { stable } : {}),
+        ...(latest ? { latest } : {}),
+        versions,
     };
 }
 
@@ -86,10 +90,10 @@ function parseVersion(value: unknown, source: string): IntegrationDefinitionVers
     if (!isRecord(value)) {
         throw new Error(`${source} must be an object`);
     }
-    const version = text(value.version);
+    const version = value.version;
     const path = text(value.path);
     const definition = text(value.definition);
-    if (!version) {
+    if (typeof version !== "string" || !version) {
         throw new Error(`${source}.version is required`);
     }
     if (!path) {
@@ -98,7 +102,58 @@ function parseVersion(value: unknown, source: string): IntegrationDefinitionVers
     if (!definition) {
         throw new Error(`${source}.definition is required`);
     }
-    return { version, path, definition };
+    const status = parseVersionStatus(value.status, `${source}.status`);
+    const verificationDigest = parseDigest(value.verificationDigest, `${source}.verificationDigest`);
+    return {
+        version: assertExactIntegrationVersion(version, `${source}.version`),
+        path,
+        definition,
+        ...(verificationDigest ? { verificationDigest } : {}),
+        ...(status ? { status } : {}),
+    };
+}
+
+function parseDigest(value: unknown, source: string): string | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (typeof value !== "string" || !/^[a-f0-9]{64}$/u.test(value)) {
+        throw new Error(`${source} must be lowercase SHA-256 when present`);
+    }
+    return value;
+}
+
+function parseVersionStatus(value: unknown, source: string): IntegrationDefinitionVersion["status"] {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value !== "blocked" && value !== "inadmissible" && value !== "unverified") {
+        throw new Error(`${source} must be blocked, inadmissible, or unverified when present`);
+    }
+    return value;
+}
+
+function parseChannel(
+    value: unknown,
+    source: string,
+    versions: readonly IntegrationDefinitionVersion[],
+    stable: boolean,
+): string | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (typeof value !== "string" || !value) {
+        throw new Error(`${source} must be an exact SemVer 2.0 version`);
+    }
+    const channel = value;
+    assertExactIntegrationVersion(channel, source);
+    if (stable && isIntegrationPrerelease(channel)) {
+        throw new Error(`${source} must not reference a prerelease version`);
+    }
+    if (!versions.some((entry) => entry.version === channel)) {
+        throw new Error(`${source} must reference a listed version`);
+    }
+    return channel;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

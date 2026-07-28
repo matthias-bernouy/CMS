@@ -1,11 +1,14 @@
 import { createProductionAuth } from "./runtime/auth";
 import { createProductionIntegrationServices } from "./runtime/integrations";
 import { mountProductionSurfaces } from "./runtime/mountSurfaces";
+import { createIntegrationPackageCacheObserver } from "./runtime/sourceTelemetry";
 import { createCoreStores } from "./runtime/stores/core";
 import { createFeatureStores } from "./runtime/stores/features";
+import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { readRuntimeEnv } from "./runtimeEnv";
 
 const env = readRuntimeEnv(process.env);
+await validateCmsStorageRoots(env.CMS_FILES_DIR, env.CMS_INTEGRATION_PACKAGE_CACHE_DIR);
 
 const core = await createCoreStores(env);
 const features = await createFeatureStores(core.db, core.secrets, {
@@ -14,9 +17,12 @@ const features = await createFeatureStores(core.db, core.secrets, {
 const integrations = createProductionIntegrationServices({
     providerRepository: features.integrationConnectorProviders,
     secrets: core.secrets,
-    localRepositoryUrl: `http://127.0.0.1:${env.CONTROL_PORT}/.cms/repository`,
+    localRepositoryUrl: `http://127.0.0.1:${env.DELIVERY_PORT}/.cms/repository`,
+    packageCacheDir: env.CMS_INTEGRATION_PACKAGE_CACHE_DIR,
+    packageCacheObserve: createIntegrationPackageCacheObserver(),
     environment: process.env,
 });
+await integrations.integrationPackageCache.init();
 const authentication = await createProductionAuth(env, core);
 
 const scheduledTriggers = await mountProductionSurfaces({

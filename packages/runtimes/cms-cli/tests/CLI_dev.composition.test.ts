@@ -47,6 +47,30 @@ describe("local CMS listener composition", () => {
         expect(text).toContain("stopping ??=");
     });
 
+    test("mounts repository reads only on Delivery and points loopback consumption at Delivery", async () => {
+        const servers = await source();
+        const services = await source("services.ts");
+        const integrations = await source("integrations.ts");
+        const controlSection = servers.slice(servers.indexOf("const runner"), servers.indexOf("const deliveryRunner"));
+        const deliverySection = servers.slice(servers.indexOf("const deliveryRunner"));
+
+        expect(controlSection).not.toContain('group("/.cms/repository"');
+        expect(deliverySection).toContain('deliveryRunner.group("/.cms/repository"');
+        expect(services).toContain("options.deliveryPort}/.cms/repository");
+        expect(services).not.toContain("options.port}/.cms/repository");
+        expect(integrations).toContain("new FsIntegrationPackageSource");
+        expect(integrations).toContain("new HttpIntegrationPackageSource");
+        expect(integrations).toContain("new FsIntegrationPackageCache");
+        expect(integrations).toContain("new FsIntegrationPackageResolver");
+        expect(integrations).toContain("integrationRepositoryCatalog.locateExactVersion");
+        expect(services).toContain("await createLocalIntegrationServices");
+        expect(controlSection).toContain("integrationPackageResolver: services.integrationPackageResolver");
+        expect(deliverySection).toContain("new InMemoryRateLimiter({ limit: 60, windowSeconds: 60 })");
+        expect(deliverySection).toContain('clientAddressPolicy: { mode: "direct" }');
+        expect(deliverySection).toContain("integrationCatalog: services.publicRepositoryCatalog");
+        expect(deliverySection).toContain("integrationPackages: services.publicRepositoryPackages");
+    });
+
     test("coalesces repeated process shutdown signals", async () => {
         const text = await source("index.ts");
 

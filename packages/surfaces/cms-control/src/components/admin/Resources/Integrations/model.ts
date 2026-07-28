@@ -8,6 +8,8 @@ import type {
 export type IntegrationInstallationRow = {
     id: string;
     label: string;
+    definitionVersion: string;
+    packageDigest?: string;
     status: IntegrationInstallationStatus;
     runCount: number;
     artifactCount: number;
@@ -19,6 +21,45 @@ export type IntegrationInstallationDetail = IntegrationInstallationRow & {
     answers: Record<string, IntegrationAnswerValue>;
     definition?: IntegrationDefinition;
     secretInputs: string[];
+};
+
+export type IntegrationUpgradeVersions = {
+    id: string;
+    current: string;
+    stable?: string;
+    latest?: string;
+    versions: string[];
+    targets?: IntegrationUpgradeTarget[];
+};
+
+export type IntegrationUpgradeTarget = {
+    version: string;
+    eligible: boolean;
+    evidence: "composite" | "legacy-index";
+    freshInstallOnly: boolean;
+    releaseLevel?: string;
+    packageDigest?: string;
+    reasons: string[];
+    migrations: Array<{
+        connectorKey: string;
+        lineageId: string;
+        supportedSourceRange: string;
+        rollback: string;
+        pointOfNoReturn: string;
+        cmsMediatedCutover: string;
+        providerDirectCutover: string;
+        cmsMediatedCutoverOutcome?: string;
+        providerDirectCutoverOutcome?: string;
+        activationOutcome?: string;
+        cmsDrainSeconds?: number;
+        providerDrainSeconds?: number;
+        downtimeStatus?: string;
+        observedDowntimeSeconds?: number;
+        rollbackVerified?: boolean;
+        pointOfNoReturnObservation?: string;
+        cleanupObserved?: boolean;
+        cleanupDelaySeconds?: number;
+    }>;
 };
 
 export type IntegrationImportPayload = Omit<IntegrationImportDto, "options"> & {

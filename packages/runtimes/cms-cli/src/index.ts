@@ -43,6 +43,17 @@ Usage:
                                    Write an .env.example with the remote's
                                    KEYS only (no values, ever). Default
                                    output: .env.example.
+  p9r repository publish-official [--dry-run]
+                                   Deterministically build and publish every
+                                   official integration package. Publishing
+                                   requires --url and --token-file (or their
+                                   repository-management env equivalents).
+  p9r repository import-official-schema-baselines [--dry-run]
+                                   Import reviewed legacy SQL baselines through
+                                   the separate maintenance capability.
+  p9r repository backfill-official-verification [--dry-run]
+                                   Attach legacy verification evidence to exact
+                                   packages through the maintenance capability.
   p9r help                         Show this help
 
 Env (loaded from .env or the environment):
@@ -75,6 +86,18 @@ try {
             break;
         case "files":
             await CLI_filesReindex(rest);
+            break;
+        case "repository":
+            process.exitCode =
+                rest[0] === "import-official-schema-baselines"
+                    ? await (
+                          await import("./repositoryPublication/baselineImportCommand")
+                      ).runRepositoryBaselineImportCommand(rest)
+                    : rest[0] === "backfill-official-verification"
+                      ? await (
+                            await import("./repositoryPublication/maintenance/backfillCommand")
+                        ).runRepositoryVerificationBackfillCommand(rest)
+                      : await (await import("./repositoryPublication/command")).runRepositoryPublicationCommand(rest);
             break;
         case undefined:
         case "help":

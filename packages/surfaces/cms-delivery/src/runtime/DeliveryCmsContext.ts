@@ -21,6 +21,7 @@ import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runn
 import { PageOptimizer } from "cms-delivery/core/pages/PageOptimizer";
 import type { DeliveryCmsConfig } from "cms-delivery/interfaces/DeliveryCmsConfig";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
+import type { PublicPageProvider } from "cms-delivery/interfaces/PublicPageProvider";
 
 export class DeliveryCmsContext {
     private readonly config: DeliveryCmsConfig;
@@ -61,6 +62,10 @@ export class DeliveryCmsContext {
 
     get headInjectors(): readonly HeadInjector[] {
         return this.config.headInjectors ?? [];
+    }
+
+    get publicPageProviders(): readonly PublicPageProvider[] {
+        return this.config.publicPageProviders ?? [];
     }
 
     get sources(): SourceRepository | undefined {

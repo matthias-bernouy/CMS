@@ -4,7 +4,7 @@ import type { CmsRelation, DashboardRelationProjection } from "@bernouy/cms-rela
 import { sourceDtoToSource, type Source, type SourceOverlay } from "@bernouy/cms-sources";
 import type { TriggerDefinition } from "@bernouy/cms-triggers";
 import { IntegrationInputError } from "../../../errors";
-import { resolveTemplate, resolveTemplates, type TemplateContext } from "../../../definitions/templates";
+import { resolveTemplate, resolveTemplates, type TemplateContext } from "../../../definitions/templating/templates";
 import type { DeclarativeBlocArtifactTemplate, IntegrationDefinition } from "../../../../interfaces/Integration";
 import type { IntegrationBlocArtifact } from "../../../../interfaces/IntegrationImport";
 

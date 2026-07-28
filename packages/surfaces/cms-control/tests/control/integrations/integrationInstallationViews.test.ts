@@ -5,7 +5,7 @@ import {
     buildIntegrationInstallationView,
     loadIntegrationArtifactContext,
     type IntegrationArtifactContext,
-} from "cms-control/core/management/integrations/installationViews";
+} from "cms-control/core/management/integrations/presentation/installationViews";
 import { makeCms } from "./support/helpers";
 
 describe("buildIntegrationInstallationView", () => {

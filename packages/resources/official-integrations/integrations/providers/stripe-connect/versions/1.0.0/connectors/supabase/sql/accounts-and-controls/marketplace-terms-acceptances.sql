@@ -58,7 +58,7 @@ create table if not exists stripe_connect.marketplace_terms_versions (
     constraint marketplace_terms_versions_actor_valid check (
         length(btrim(created_by)) between 1 and 200
     ),
-    unique (terms_version)
+    constraint marketplace_terms_versions_terms_version_unique unique (terms_version)
 );
 
 create unique index if not exists marketplace_terms_versions_acceptance_identity_idx

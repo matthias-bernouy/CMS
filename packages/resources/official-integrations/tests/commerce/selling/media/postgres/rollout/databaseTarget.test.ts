@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
     POSTGRES_CONTRACT_RESET_CONFIRMATION,
     requireDisposablePostgresContractTarget,
-} from "../../../../../helpers/postgresContractTarget";
+} from "../../../../../helpers/postgres/postgresContractTarget";
 
 describe("PostgreSQL contract destructive target guard", () => {
     test.each([

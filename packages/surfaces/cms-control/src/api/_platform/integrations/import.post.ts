@@ -53,6 +53,7 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
             installations: cms.integrationInstallations,
             dto: request.dto,
             siteIntegrations: request.siteIntegrations,
+            packageResolver: cms.integrationPackageResolver,
         });
         return Response.json(result);
     } finally {

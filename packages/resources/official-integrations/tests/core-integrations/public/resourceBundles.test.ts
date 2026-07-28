@@ -40,7 +40,7 @@ test("official definition and SQL bundles remain complete and maintainable", asy
         rootManifests.push(...graph.roots);
         orphanManifests.push(...graph.manifests.filter((file) => !graph.reachedManifests.includes(file)).map(show));
         for (const manifest of graph.roots) {
-            const connectorRoot = dirname(sqlRoot);
+            const connectorRoot = supabaseConnectorRoot(sqlRoot);
             const loaded = await loadSupabaseSqlBundle(connectorRoot, audit.portableRelative(connectorRoot, manifest));
             for (const source of loaded.sourceFiles) {
                 const file = resolve(dirname(manifest), source);
@@ -65,8 +65,8 @@ test("official definition and SQL bundles remain complete and maintainable", asy
     );
     const lineViolations = await oversizedBundleFiles(definitionTrees, sqlTrees);
     const legacyReferences = await findLegacyReferences((await audit.walkResourceTree(PACKAGE_ROOT)).files);
-    expect(bundles).toHaveLength(17);
-    expect(rootManifests).toHaveLength(11);
+    expect(bundles).toHaveLength(18);
+    expect(rootManifests).toHaveLength(12);
     expect(declaredManifests.map(show).sort()).toEqual(rootManifests.map(show).sort());
     const findings = [orphanDefinitions, orphanManifests, fragmentCoverage, legacySchemas, wideDirectories];
     findings.push(nonThematicPaths, lineViolations, legacyReferences);
@@ -86,12 +86,28 @@ async function discoverBundles(files: string[]): Promise<Bundle[]> {
     return bundles;
 }
 function sqlBundleRoots(files: string[]): string[] {
-    const marker = `${sep}connectors${sep}supabase${sep}sql${sep}`;
+    const markers = [
+        `${sep}connectors${sep}supabase${sep}sql${sep}`,
+        `${sep}connectors${sep}supabase${sep}install${sep}sql${sep}`,
+    ];
     return [
         ...new Set(
-            files.flatMap((file) => (file.includes(marker) ? [file.split(marker)[0] + marker.slice(0, -1)] : [])),
+            files.flatMap((file) =>
+                markers.flatMap((marker) =>
+                    file.includes(marker) ? [file.split(marker)[0] + marker.slice(0, -1)] : [],
+                ),
+            ),
         ),
     ];
+}
+
+function supabaseConnectorRoot(sqlRoot: string): string {
+    const marker = `${sep}connectors${sep}supabase`;
+    const index = sqlRoot.indexOf(marker);
+    if (index < 0) {
+        throw new Error(`SQL bundle root is outside a Supabase connector: ${sqlRoot}`);
+    }
+    return sqlRoot.slice(0, index + marker.length);
 }
 function declaredSchemas(bundles: ResolvedBundle[]): { declaredManifests: string[]; legacySchemas: string[] } {
     const declaredManifests: string[] = [];

@@ -128,6 +128,7 @@ import "./admin/Resources/Dashboards/view/DashboardView";
 import "./admin/Resources/Functions/detail/FunctionDetail";
 import "./admin/Resources/Functions/create/FunctionCreate";
 import "./admin/Resources/Integrations/IntegrationBrowser";
+import "./admin/Resources/Repository/component/RepositoryAdmin";
 import "./admin/Resources/Triggers/TriggersAdmin";
 import "./admin/Resources/Triggers/TriggerCreate";
 

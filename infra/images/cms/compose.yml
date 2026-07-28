@@ -37,6 +37,7 @@ services:
             CONTROL_PUBLIC_URL:   "https://admin.${DOMAIN:?DOMAIN must be set}"
             DELIVERY_PUBLIC_URL:  "https://${DOMAIN}"
             CMS_FILES_DIR:        /var/lib/cms/files
+            CMS_INTEGRATION_PACKAGE_CACHE_DIR: ${CMS_INTEGRATION_PACKAGE_CACHE_DIR:-/var/lib/cms/integration-packages}
 
             # Application secrets are injected from `.env`; no secret value is
             # stored in this file or included in the image.
@@ -46,6 +47,14 @@ services:
             CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
             ANALYTICS_SALT_SECRET: ${ANALYTICS_SALT_SECRET:?ANALYTICS_SALT_SECRET must be set and shared by all replicas}
             ANALYTICS_TRUST_PROXY: ${ANALYTICS_TRUST_PROXY:-false}
+
+            # Public integration-package downloads are limited by client IP.
+            # nginx-proxy is the standard deployment's one trusted ingress
+            # hop; include every additional CDN or proxy in this count.
+            CMS_HTTP_CLIENT_ADDRESS_MODE:                    ${CMS_HTTP_CLIENT_ADDRESS_MODE:-trusted-proxy}
+            CMS_HTTP_TRUSTED_PROXY_HOPS:                     "${CMS_HTTP_TRUSTED_PROXY_HOPS:-1}"
+            CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT:          "${CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT:-60}"
+            CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: "${CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS:-60}"
 
             # Source-endpoint observability. The aggregate collector is enabled
             # by default; detailed diagnostics remain sampled separately.
@@ -96,6 +105,11 @@ services:
             LETSENCRYPT_HOST: "${DOMAIN},admin.${DOMAIN}"
         volumes:
             - ./files:/var/lib/cms/files
+            - type: bind
+              source: ./integration-packages
+              target: ${CMS_INTEGRATION_PACKAGE_CACHE_DIR:-/var/lib/cms/integration-packages}
+              bind:
+                  create_host_path: false
         read_only: true
         tmpfs:
             - /tmp:rw,nosuid,nodev,noexec,size=256m

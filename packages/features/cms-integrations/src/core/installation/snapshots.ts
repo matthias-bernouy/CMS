@@ -46,6 +46,28 @@ export function sanitizeDefinitionSnapshot(definition: IntegrationDefinition): I
     };
 }
 
+export function definitionSnapshotsEqual(left: IntegrationDefinition, right: IntegrationDefinition): boolean {
+    return (
+        JSON.stringify(normalizeSnapshot(sanitizeDefinitionSnapshot(left))) ===
+        JSON.stringify(normalizeSnapshot(sanitizeDefinitionSnapshot(right)))
+    );
+}
+
 export function installationLabel(definition: IntegrationDefinition, dto: IntegrationImportDto): string {
     return cleanText(dto.answers.name) ?? cleanText(dto.answers.id) ?? definition.label;
+}
+
+function normalizeSnapshot(value: unknown): unknown {
+    if (Array.isArray(value)) {
+        return value.map(normalizeSnapshot);
+    }
+    if (!value || typeof value !== "object") {
+        return value;
+    }
+    return Object.fromEntries(
+        Object.entries(value)
+            .filter(([, child]) => child !== undefined)
+            .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+            .map(([key, child]) => [key, normalizeSnapshot(child)]),
+    );
 }

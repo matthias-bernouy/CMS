@@ -1,0 +1,151 @@
+import { isAbsolute, resolve } from "node:path";
+
+const DEFAULT_TIMEOUT_MS = 60_000;
+const MAX_TIMEOUT_MS = 120_000;
+
+export type RepositoryBaselineImportEnvironment = Readonly<Record<string, string | undefined>>;
+
+export type RepositoryBaselineImportConfig = Readonly<{
+    dryRun: boolean;
+    maintenanceUrl?: string;
+    tokenFile?: string;
+    timeoutMs: number;
+}>;
+
+export const REPOSITORY_BASELINE_IMPORT_HELP = `Usage:
+  p9r repository import-official-schema-baselines [--dry-run]
+      [--url=https://management.example/.cms/repository-management]
+      [--token-file=/absolute/path/to/maintenance-token]
+      [--timeout-ms=60000]
+
+Environment fallbacks:
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TIMEOUT_MS`;
+
+export const REPOSITORY_VERIFICATION_BACKFILL_HELP = `Usage:
+  p9r repository backfill-official-verification [--dry-run]
+      [--url=https://management.example/.cms/repository-management]
+      [--token-file=/absolute/path/to/maintenance-token]
+      [--timeout-ms=60000]
+
+Environment fallbacks:
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE
+  P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TIMEOUT_MS`;
+
+export function parseRepositoryBaselineImportConfig(
+    args: readonly string[],
+    environment: RepositoryBaselineImportEnvironment,
+): RepositoryBaselineImportConfig | "help" {
+    return parseMaintenanceConfig(args, environment, "import-official-schema-baselines", "Baseline import");
+}
+
+export function parseRepositoryVerificationBackfillConfig(
+    args: readonly string[],
+    environment: RepositoryBaselineImportEnvironment,
+): RepositoryBaselineImportConfig | "help" {
+    return parseMaintenanceConfig(args, environment, "backfill-official-verification", "Verification backfill");
+}
+
+function parseMaintenanceConfig(
+    args: readonly string[],
+    environment: RepositoryBaselineImportEnvironment,
+    command: string,
+    operation: string,
+): RepositoryBaselineImportConfig | "help" {
+    if (args[0] === "--help" || args[0] === "-h") {
+        return "help";
+    }
+    if (args[0] !== command) {
+        throw new Error(`Repository command must be ${command}`);
+    }
+    const flags = parseFlags(args.slice(1));
+    if (flags.help) {
+        return "help";
+    }
+    const rawUrl = flags.url ?? environment.P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL;
+    const rawTokenFile = flags.tokenFile ?? environment.P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE;
+    const rawTimeout = flags.timeoutMs ?? environment.P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TIMEOUT_MS;
+    if (!flags.dryRun && (!rawUrl?.trim() || !rawTokenFile?.trim())) {
+        throw new Error(`${operation} requires a maintenance URL and token file`);
+    }
+    return Object.freeze({
+        dryRun: flags.dryRun,
+        ...(rawUrl?.trim() ? { maintenanceUrl: normalizeUrl(rawUrl) } : {}),
+        ...(rawTokenFile?.trim() ? { tokenFile: normalizeTokenFile(rawTokenFile) } : {}),
+        timeoutMs: parseTimeout(rawTimeout),
+    });
+}
+
+type ParsedFlags = { dryRun: boolean; help: boolean; url?: string; tokenFile?: string; timeoutMs?: string };
+
+function parseFlags(args: readonly string[]): ParsedFlags {
+    const parsed: ParsedFlags = { dryRun: false, help: false };
+    const seen = new Set<string>();
+    for (const argument of args) {
+        const [name, value] = splitFlag(argument);
+        if (seen.has(name)) {
+            throw new Error(`Repository baseline import flag is duplicated: ${name}`);
+        }
+        seen.add(name);
+        if (name === "--dry-run" && value === undefined) {
+            parsed.dryRun = true;
+        } else if ((name === "--help" || name === "-h") && value === undefined) {
+            parsed.help = true;
+        } else if (name === "--url" && value !== undefined) {
+            parsed.url = value;
+        } else if (name === "--token-file" && value !== undefined) {
+            parsed.tokenFile = value;
+        } else if (name === "--timeout-ms" && value !== undefined) {
+            parsed.timeoutMs = value;
+        } else {
+            throw new Error("Unknown repository baseline import flag");
+        }
+    }
+    return parsed;
+}
+
+function splitFlag(argument: string): readonly [string, string | undefined] {
+    const separator = argument.indexOf("=");
+    return separator < 0 ? [argument, undefined] : [argument.slice(0, separator), argument.slice(separator + 1)];
+}
+
+function normalizeUrl(raw: string): string {
+    let url: URL;
+    try {
+        url = new URL(raw.trim());
+    } catch {
+        throw new Error("Repository maintenance URL must be an absolute HTTP(S) URL");
+    }
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+        throw new Error("Repository maintenance URL must be an absolute HTTP(S) URL");
+    }
+    if (url.username || url.password || url.search || url.hash || raw.includes("?") || raw.includes("#")) {
+        throw new Error("Repository maintenance URL must not contain credentials, query, or fragment");
+    }
+    url.pathname = url.pathname.replace(/\/+$/u, "") || "/";
+    return url.href.replace(/\/$/u, "");
+}
+
+function normalizeTokenFile(raw: string): string {
+    const path = raw.trim();
+    if (!isAbsolute(path)) {
+        throw new Error("Repository maintenance token file must be an absolute path");
+    }
+    return resolve(path);
+}
+
+function parseTimeout(raw: string | undefined): number {
+    if (raw === undefined) {
+        return DEFAULT_TIMEOUT_MS;
+    }
+    if (!/^[0-9]+$/u.test(raw)) {
+        throw new Error(`Repository baseline import timeout must be an integer between 1 and ${MAX_TIMEOUT_MS}`);
+    }
+    const value = Number(raw);
+    if (!Number.isSafeInteger(value) || value < 1 || value > MAX_TIMEOUT_MS) {
+        throw new Error(`Repository baseline import timeout must be an integer between 1 and ${MAX_TIMEOUT_MS}`);
+    }
+    return value;
+}

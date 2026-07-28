@@ -11,6 +11,7 @@ export function surfaceMountFixtures() {
             CMS_AUTH_EMAIL_VERIFICATION_URL: "https://www.example.test/auth/confirm-email",
             CMS_AUTH_PASSWORD_RESET_URL: "https://www.example.test/auth/reset-password",
             CMS_FILES_DIR: "/data/files",
+            CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
             ANALYTICS_TRUST_PROXY: false,
             ANALYTICS_TRUSTED_PROXY_VERIFIED: false,
             ENDPOINT_PERFORMANCE_ENABLED: true,
@@ -19,6 +20,16 @@ export function surfaceMountFixtures() {
             CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: true,
             CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: true,
             CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: true,
+            CMS_HTTP_CLIENT_ADDRESS_MODE: "trusted-proxy",
+            CMS_HTTP_TRUSTED_PROXY_HOPS: 1,
+            repositoryManagement: undefined as
+                | undefined
+                | {
+                      url: string;
+                      tokenFile: string;
+                      administratorSubjectIdentifier: string;
+                      timeoutMs: number;
+                  },
         },
         analyticsVisitorSecret: "analytics-secret",
         core: {
@@ -37,6 +48,7 @@ export function surfaceMountFixtures() {
             pats: token("pats"),
             credentials: token("credentials"),
             roles: token("roles"),
+            repositoryPackageDownloadRateLimit: token("repository-package-download-rate-limit"),
             db: { databaseName: "cms-test" },
         },
         features: {
@@ -56,9 +68,18 @@ export function surfaceMountFixtures() {
             resolveSecret: token("resolve-secret"),
         },
         integrations: {
+            repositoryReadMode: "embedded" as "embedded" | "global",
+            repositoryUrl: "http://127.0.0.1:3101/.cms/repository",
             integrationRepositoryCatalog: token("repository-catalog"),
+            integrationRepositoryPackages: token("repository-packages"),
+            publicRepositoryCatalog: token("public-repository-catalog"),
+            publicRepositoryPackages: token("public-repository-packages"),
             integrationCatalog: token("integration-catalog"),
+            integrationPackageResolver: token("package-resolver"),
             integrationConnectorDeployers: [token("deployer")],
+            integrationConnectorMigrationAdapters: [token("migration-adapter")],
+            integrationFunctionMigrationHandler: token("function-migration-handler"),
+            integrationConnectorBaselineAdopters: [token("baseline-adopter")],
             integrationProvisioners: [token("provisioner")],
         },
         authentication: {

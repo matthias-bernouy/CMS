@@ -1,0 +1,135 @@
+<div class="repository-console">
+    <section class="panel" aria-labelledby="repository-overview-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Repository health</p>
+                <h2 id="repository-overview-title">Operational overview</h2>
+            </div>
+            <button type="button" class="secondary" data-refresh>Refresh</button>
+        </div>
+        <div class="feedback" data-overview-feedback role="status" aria-live="polite"></div>
+        <div class="status-grid" data-status aria-live="polite"></div>
+        <div data-diagnostics></div>
+    </section>
+
+    <section class="panel" aria-labelledby="repository-versions-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Version catalogue</p>
+                <h2 id="repository-versions-title">Inspect an integration</h2>
+            </div>
+        </div>
+        <form class="lookup" data-versions-form>
+            <label>
+                <span>Integration kind</span>
+                <input name="kind" autocomplete="off" required placeholder="commerce">
+            </label>
+            <button type="submit">Load versions</button>
+        </form>
+        <div class="feedback" data-versions-feedback role="status" aria-live="polite"></div>
+        <div data-versions></div>
+    </section>
+
+    <section class="panel" aria-labelledby="repository-compatibility-title" data-compatibility-panel hidden>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Release evidence</p>
+                <h2 id="repository-compatibility-title" data-selection-title>Selected version</h2>
+            </div>
+        </div>
+        <div class="feedback" data-compatibility-feedback role="status" aria-live="polite"></div>
+        <div data-release></div>
+        <h3>Legacy compatibility history</h3>
+        <div data-compatibility></div>
+        <button type="button" class="secondary" data-load-more hidden>Load older revisions</button>
+    </section>
+
+    <section class="panel" aria-labelledby="repository-publish-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Verified publication</p>
+                <h2 id="repository-publish-title">Submit a release candidate</h2>
+            </div>
+        </div>
+        <p>Upload a canonical candidate containing the immutable runtime package and its separate verification bundle.</p>
+        <form data-candidate-form>
+            <label>
+                <span>Candidate JSON</span>
+                <input type="file" name="candidate" accept="application/json,.json" required>
+            </label>
+            <button type="submit">Submit for verification</button>
+        </form>
+        <div class="feedback" data-candidate-feedback role="status" aria-live="polite"></div>
+        <div class="feedback" data-candidate-progress role="status" aria-live="polite"></div>
+        <div data-candidate-report aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="repository-actions-title" data-actions-panel hidden>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Controlled changes</p>
+                <h2 id="repository-actions-title">Manage the selected version</h2>
+            </div>
+        </div>
+        <p class="selection-summary" data-action-selection></p>
+        <div class="action-grid">
+            <form data-reevaluation-form>
+                <fieldset>
+                    <legend>Reevaluate compatibility</legend>
+                    <label>
+                        <span>Reason</span>
+                        <textarea name="reason" rows="3" required></textarea>
+                    </label>
+                    <label>
+                        <span>Evidence IDs <small>(comma or line separated)</small></span>
+                        <textarea name="evidenceIds" rows="3"></textarea>
+                    </label>
+                    <button type="submit">Create report revision</button>
+                </fieldset>
+                <div class="feedback" data-reevaluation-feedback role="status" aria-live="polite"></div>
+            </form>
+
+            <form data-promotion-form>
+                <fieldset>
+                    <legend>Promote to stable</legend>
+                    <p>This action uses the current admissible composite release decision, never compatibility alone.</p>
+                    <label>
+                        <span>Type version <code data-confirm-version></code></span>
+                        <input name="confirmationVersion" autocomplete="off" required>
+                    </label>
+                    <label>
+                        <span>Type release decision ID <code data-confirm-report></code></span>
+                        <input name="confirmationReportRevisionId" autocomplete="off" required>
+                    </label>
+                    <label>
+                        <span>Reason <small>(optional)</small></span>
+                        <textarea name="reason" rows="2"></textarea>
+                    </label>
+                    <button type="submit" class="danger">Promote exact version</button>
+                </fieldset>
+                <div class="feedback" data-promotion-feedback role="status" aria-live="polite"></div>
+            </form>
+
+            <form data-block-form>
+                <fieldset>
+                    <legend>Block this version</legend>
+                    <p data-block-preview>Channel repair preview unavailable.</p>
+                    <label>
+                        <span>Type version <code data-block-confirm-version></code></span>
+                        <input name="blockVersion" autocomplete="off" required>
+                    </label>
+                    <label>
+                        <span>Type decision digest <code data-block-confirm-digest></code></span>
+                        <input name="blockDecisionDigest" autocomplete="off" required>
+                    </label>
+                    <label>
+                        <span>Blocking reason</span>
+                        <textarea name="reason" rows="3" required></textarea>
+                    </label>
+                    <button type="submit" class="danger">Block and repair channels</button>
+                </fieldset>
+                <div class="feedback" data-block-feedback role="status" aria-live="polite"></div>
+            </form>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,12 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "baseUrl": "./src",
+        "paths": {
+            "cms-integration-packages/*": ["./*"]
+        }
+    },
+    "include": ["src/**/*.ts"]
+}

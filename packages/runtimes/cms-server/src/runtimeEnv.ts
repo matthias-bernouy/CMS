@@ -3,11 +3,16 @@ import {
     parseBoundedNumber,
     parseHttpUrl,
     parseNonNegativeInteger,
+    parsePositiveInteger,
     parseOptionalHttpUrl,
     parsePort,
     requiredEnv,
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
+import {
+    parseRepositoryManagementGatewayConfig,
+    type RepositoryManagementGatewayConfig,
+} from "./repositoryManagement/config";
 
 export { parsePort } from "./runtimeEnvParsing";
 
@@ -21,6 +26,7 @@ export type RuntimeEnv = {
     CMS_ADMIN_EMAIL: string;
     CMS_ADMIN_PASSWORD: string;
     CMS_FILES_DIR: string;
+    CMS_INTEGRATION_PACKAGE_CACHE_DIR: string;
     MONGO_URL: string;
     CMS_AUTH_SITE_NAME: string;
     CMS_AUTH_EMAIL_COOLDOWN_SECONDS: number;
@@ -37,6 +43,11 @@ export type RuntimeEnv = {
     CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: boolean;
     CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: boolean;
     CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: boolean;
+    CMS_HTTP_CLIENT_ADDRESS_MODE: "direct" | "disabled" | "trusted-proxy";
+    CMS_HTTP_TRUSTED_PROXY_HOPS: number;
+    CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: number;
+    CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: number;
+    repositoryManagement: RepositoryManagementGatewayConfig | undefined;
 };
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
@@ -48,6 +59,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
 
     const CONTROL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
     const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
+    const clientAddress = parseClientAddressConfig(source);
 
     return {
         CONTROL_PORT,
@@ -59,6 +71,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CMS_ADMIN_EMAIL: requiredEnv(source, "CMS_ADMIN_EMAIL"),
         CMS_ADMIN_PASSWORD: requiredEnv(source, "CMS_ADMIN_PASSWORD"),
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
+        CMS_INTEGRATION_PACKAGE_CACHE_DIR: requiredEnv(source, "CMS_INTEGRATION_PACKAGE_CACHE_DIR"),
         MONGO_URL: requiredEnv(source, "MONGO_URL"),
         CMS_AUTH_SITE_NAME: source.CMS_AUTH_SITE_NAME?.trim() || "CMS",
         CMS_AUTH_EMAIL_COOLDOWN_SECONDS: parseNonNegativeInteger(
@@ -127,5 +140,40 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             "CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED",
             true,
         ),
+        ...clientAddress,
+        CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: parsePositiveInteger(
+            source.CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT,
+            "CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT",
+            60,
+        ),
+        CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: parsePositiveInteger(
+            source.CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS,
+            "CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS",
+            60,
+        ),
+        repositoryManagement: parseRepositoryManagementGatewayConfig(source),
     };
+}
+
+function parseClientAddressConfig(
+    source: RuntimeEnvSource,
+): Pick<RuntimeEnv, "CMS_HTTP_CLIENT_ADDRESS_MODE" | "CMS_HTTP_TRUSTED_PROXY_HOPS"> {
+    const mode = source.CMS_HTTP_CLIENT_ADDRESS_MODE?.trim() || "disabled";
+    if (mode !== "disabled" && mode !== "direct" && mode !== "trusted-proxy") {
+        throw new Error("CMS_HTTP_CLIENT_ADDRESS_MODE must be disabled, direct, or trusted-proxy");
+    }
+    if (mode === "trusted-proxy") {
+        return {
+            CMS_HTTP_CLIENT_ADDRESS_MODE: mode,
+            CMS_HTTP_TRUSTED_PROXY_HOPS: parsePositiveInteger(
+                source.CMS_HTTP_TRUSTED_PROXY_HOPS,
+                "CMS_HTTP_TRUSTED_PROXY_HOPS",
+            ),
+        };
+    }
+    const hops = parseNonNegativeInteger(source.CMS_HTTP_TRUSTED_PROXY_HOPS, "CMS_HTTP_TRUSTED_PROXY_HOPS", 0);
+    if (hops !== 0) {
+        throw new Error(`CMS_HTTP_TRUSTED_PROXY_HOPS must be 0 when client-address mode is ${mode}`);
+    }
+    return { CMS_HTTP_CLIENT_ADDRESS_MODE: mode, CMS_HTTP_TRUSTED_PROXY_HOPS: 0 };
 }

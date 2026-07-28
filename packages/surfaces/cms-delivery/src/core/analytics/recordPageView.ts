@@ -1,6 +1,7 @@
 import { buildPageViewEvent } from "@bernouy/cms-analytics";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { handlePageRequest, handlePageRequestWithResult } from "cms-delivery/core/pages/handlePageRequest";
+import { resolvePublicPage } from "cms-delivery/core/pages/resolvePublicPage";
 import { analyticsOptOutCookieName, isAnalyticsCollectionAllowed } from "./privacyPreference";
 
 /**
@@ -74,8 +75,12 @@ async function resolvePreviousPageId(req: Request, delivery: DeliveryCms): Promi
         ) {
             return;
         }
-        const previousPage = await delivery.repository.getPublishedPage(referrerUrl.pathname);
-        return previousPage?.id ?? undefined;
+        const publicPage = await resolvePublicPage(referrerUrl.pathname, delivery, referrerUrl.search);
+        if (publicPage) {
+            return publicPage.page.id;
+        }
+        const storedPage = await delivery.repository.getPublishedPage(referrerUrl.pathname);
+        return storedPage?.id ?? undefined;
     } catch {
         return;
     }

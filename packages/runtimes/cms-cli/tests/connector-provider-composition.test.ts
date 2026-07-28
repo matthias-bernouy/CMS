@@ -19,6 +19,7 @@ describe("local connector provider composition", () => {
         expect(integrations).toMatch(/integrationConnectorProviders\s*,\s*integrationConnectorDeployers\s*,/);
         expect(integrations).toMatch(/functionSecrets\s*:\s*readSupabaseFunctionSecrets\s*\(\s*process\.env\s*\)\s*,/);
         expect(integrations).not.toContain("process.env.SUPABASE_");
+        expect(integrations).not.toMatch(/integrationsRoot\s*:/);
         expect(integrations).not.toMatch(/new\s+SupabaseConnectorDeployer\s*\(/);
     });
 });

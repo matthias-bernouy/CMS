@@ -58,4 +58,14 @@ export class SuccessReplaceFailingIntegrationInstallationRepository extends InMe
         }
         return super.replace(installation);
     }
+
+    override async compareAndSwapMigration(
+        expected: IntegrationInstallation,
+        next: IntegrationInstallation,
+    ): Promise<IntegrationInstallation | null> {
+        if (next.status === "success" && next.runCount === 2) {
+            throw new Error("installation replace failed");
+        }
+        return await super.compareAndSwapMigration(expected, next);
+    }
 }

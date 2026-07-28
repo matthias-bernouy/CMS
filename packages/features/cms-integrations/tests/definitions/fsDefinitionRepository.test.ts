@@ -34,6 +34,7 @@ describe("FsIntegrationDefinitionRepository", () => {
             version: "1.0.0",
             inputs: [],
         });
+        writeFileSync(join(integrationRoot, "versions", "1.0.0", "README.md"), "Initial release.\n");
         writeJson(join(integrationRoot, "versions", "1.0.1", "definition.json"), {
             schema: "cms.integration.definition.v1",
             kind: "demo",
@@ -42,6 +43,7 @@ describe("FsIntegrationDefinitionRepository", () => {
             description: "Patch release",
             inputs: [],
         });
+        writeFileSync(join(integrationRoot, "versions", "1.0.1", "release-notes.txt"), "Patch release.\n");
 
         const stableRepo = new FsIntegrationDefinitionRepository(root);
         const latestRepo = new FsIntegrationDefinitionRepository({ root, defaultChannel: "latest" });
@@ -62,6 +64,17 @@ describe("FsIntegrationDefinitionRepository", () => {
         expect((await stableRepo.get("demo", "1.0.1"))?.description).toBe("Patch release");
         expect(await stableRepo.get("missing")).toBeNull();
         expect(await stableRepo.get("demo", "2.0.0")).toBeNull();
+        expect(await stableRepo.locateExactVersion("demo", "1.0.0")).toEqual({
+            root: join(integrationRoot, "versions", "1.0.0"),
+            definition: "definition.json",
+            releaseNotes: "README.md",
+        });
+        expect(await stableRepo.locateExactVersion("demo", "1.0.1")).toEqual({
+            root: join(integrationRoot, "versions", "1.0.1"),
+            definition: "definition.json",
+            releaseNotes: "release-notes.txt",
+        });
+        expect(await stableRepo.locateExactVersion("demo", "2.0.0")).toBeNull();
     });
 
     test("falls back to the first version when no channel is declared", async () => {

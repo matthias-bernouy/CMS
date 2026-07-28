@@ -5,7 +5,6 @@ import type {
 } from "../../interfaces/IntegrationConnectorDeployer";
 
 export type SupabaseConnectorDeployerConfig = {
-    integrationsRoot: string;
     projectRef: string;
     accessToken: string;
     apiBaseUrl?: string;

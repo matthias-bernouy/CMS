@@ -15,6 +15,22 @@ export class SupabaseManagementClient {
         await this.databaseQuery(sql);
     }
 
+    async applyMigrationTransaction(sql: string): Promise<void> {
+        await this.databaseQuery(sql);
+    }
+
+    async readDatabaseRows(sql: string): Promise<Record<string, unknown>[]> {
+        const response = await this.databaseQuery(sql);
+        const value = await response.json();
+        if (
+            !Array.isArray(value) ||
+            value.some((entry) => !entry || typeof entry !== "object" || Array.isArray(entry))
+        ) {
+            throw new IntegrationRuntimeError("Supabase database query returned an invalid row set");
+        }
+        return value as Record<string, unknown>[];
+    }
+
     async ensureDataApiSchemas(requiredSchemas: string[]): Promise<DataApiSchemaSyncResult> {
         const response = await this.request(`/v1/projects/${this.config.projectRef}/postgrest`, { method: "GET" });
         const current = (await response.json()) as { db_schema?: unknown };
@@ -64,8 +80,24 @@ export class SupabaseManagementClient {
         });
     }
 
-    private async databaseQuery(query: string): Promise<void> {
-        await this.request(`/v1/projects/${this.config.projectRef}/database/query`, {
+    async deployFunctionWithReceipt(name: string, body: FormData): Promise<unknown> {
+        const response = await this.request(
+            `/v1/projects/${this.config.projectRef}/functions/deploy?slug=${encodeURIComponent(name)}`,
+            { method: "POST", body },
+        );
+        return await response.json();
+    }
+
+    async getFunction(name: string): Promise<unknown> {
+        const response = await this.request(
+            `/v1/projects/${this.config.projectRef}/functions/${encodeURIComponent(name)}`,
+            { method: "GET" },
+        );
+        return await response.json();
+    }
+
+    private async databaseQuery(query: string): Promise<Response> {
+        return await this.request(`/v1/projects/${this.config.projectRef}/database/query`, {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({ query }),

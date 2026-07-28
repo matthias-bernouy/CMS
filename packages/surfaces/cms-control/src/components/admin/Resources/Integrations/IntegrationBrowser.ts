@@ -1,5 +1,5 @@
 import template from "./template.html" with { type: "text" };
-import { handleClick, openSetup as renderSetupError } from "./ui/actions";
+import { handleClick, openSetup as renderSetupError } from "./ui/actions/index";
 import { renderBrowser } from "./ui/browser";
 import { disconnectBoundSources, startBoundSources, waitForBoundData } from "./ui/data";
 import styles from "./ui/styles";

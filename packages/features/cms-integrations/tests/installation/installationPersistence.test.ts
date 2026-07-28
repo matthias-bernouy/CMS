@@ -30,7 +30,7 @@ describe("@bernouy/cms-integrations installation persistence", () => {
         const created = await installations.create({
             id: "test",
             label: "Retention",
-            definitionVersion: "1",
+            definitionVersion: "1.0.0",
             answersSnapshot: {},
             secretRefs: {},
             secretInputs: [],

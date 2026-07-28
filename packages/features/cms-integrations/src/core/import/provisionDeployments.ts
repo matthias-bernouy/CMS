@@ -1,5 +1,5 @@
 import { IntegrationInputError, IntegrationRuntimeError } from "../errors";
-import { resolveTemplates, type TemplateContext } from "../definitions/templates";
+import { resolveTemplates, type TemplateContext } from "../definitions/templating/templates";
 import type { DeclarativeProvisionTemplate, IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationImportDeps } from "../../interfaces/IntegrationImport";
 import type {

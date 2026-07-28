@@ -61,8 +61,9 @@ test("quality workflow keeps every G0 check visible", async () => {
         "bun run quality/ci/coverage/ratchet.ts",
         "bun run --cwd packages/foundation/components build",
         "docker compose version",
-        "bun run packages/resources/official-integrations/tests/helpers/runPostgresContracts.ts --filter commerce-media",
-        "bun run packages/resources/official-integrations/tests/helpers/runPostgresContracts.ts --filter commerce-negotiated-checkout",
+        "bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-media",
+        "bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-negotiated-checkout",
+        "bun run packages/resources/official-integrations/tests/helpers/postgres/schema-calibration/execution/baselines/generateBaselines.ts --check",
         "bun test packages/features/cms-source-images/tests",
         "packages/features/cms-sources/tests/http/interceptors",
         "packages/features/cms-sources/tests/http/observability/sourceImageTelemetry.test.ts",
@@ -105,6 +106,17 @@ test("quality workflow keeps every G0 check visible", async () => {
     expect(integrationWorkflow).toContain(
         "DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cmscore_contracts",
     );
+    expect(integrationWorkflow).toContain("name: Calibrate and verify all official PostgreSQL schema baselines");
+    expect(integrationWorkflow).toContain("docker run --rm --network host");
+    expect(integrationWorkflow).toContain('--volume "$GITHUB_WORKSPACE:/workspace:ro"');
+    expect(integrationWorkflow).toContain(
+        "oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",
+    );
+    expect(integrationWorkflow).toContain(
+        "CMS_SCHEMA_BASELINE_GENERATOR_IMAGE: oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",
+    );
+    expect(integrationWorkflow).toContain("--env CMS_SCHEMA_BASELINE_GENERATOR_IMAGE");
+    expect(integrationWorkflow).not.toContain("generateBaselines.ts --check --filter");
     expect(integrationWorkflow).toMatch(/postgres-contracts:[\s\S]*fetch-depth: 0/);
     expect(integrationWorkflow).toContain("name: Source image safety and Chromium smoke");
     expect(integrationWorkflow).toContain("PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright");

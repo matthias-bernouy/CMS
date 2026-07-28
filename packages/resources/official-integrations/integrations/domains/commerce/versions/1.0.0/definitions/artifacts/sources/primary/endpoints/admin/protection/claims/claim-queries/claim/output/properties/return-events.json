@@ -1,0 +1,26 @@
+{
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "providerEventId": {
+                "type": "string"
+            },
+            "providerReference": {
+                "type": "string"
+            },
+            "normalizedStatus": {
+                "type": "string"
+            },
+            "occurredAt": {
+                "type": "string"
+            },
+            "createdAt": {
+                "type": "string"
+            }
+        }
+    }
+}

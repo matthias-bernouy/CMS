@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
+import {
+    HttpIntegrationDefinitionRepository,
+    MAX_INTEGRATION_REPOSITORY_RESPONSE_BYTES,
+} from "@bernouy/cms-integrations/http";
 import { definition, repositoryWithAsset, sourceArtifact } from "./httpRepositoryFixtures";
 
 describe("HTTP integration icon assets", () => {
@@ -76,7 +79,7 @@ describe("HTTP integration icon assets", () => {
                 ),
         );
 
-        await expect(repository.get("remote-icons")).rejects.toThrow(/exceeds 32000 bytes/);
+        await expect(repository.get("remote-icons")).rejects.toThrow(/invalid response/);
         expect(chunksRead).toBeLessThan(10);
         expect(cancelled).toBe(true);
     });
@@ -92,21 +95,52 @@ describe("HTTP integration icon assets", () => {
                 }),
         );
 
-        await expect(repository.get("remote-icons")).rejects.toThrow(/exceeds 32000 bytes/);
+        await expect(repository.get("remote-icons")).rejects.toThrow(/invalid response/);
     });
 
     test("rejects remote icons without an SVG content type", async () => {
         const repository = repositoryWithAsset(() => new Response("<svg></svg>"));
 
-        await expect(repository.get("remote-icons")).rejects.toThrow(/must have an SVG content type/);
+        await expect(repository.get("remote-icons")).rejects.toThrow(/invalid response/);
     });
 
-    test("keeps explicit asset reads unbounded", async () => {
-        const repository = repositoryWithAsset(() => new Response("x".repeat(32_001)));
+    test("rejects oversized declared and chunked explicit asset responses", async () => {
+        for (const contentLength of [String(MAX_INTEGRATION_REPOSITORY_RESPONSE_BYTES + 1), "1e3"]) {
+            const declared = repositoryWithAsset(
+                () => new Response("x", { headers: { "content-length": contentLength } }),
+            );
+            await expect(declared.getAsset("remote-icons", "2.1.0", "assets/archive.bin")).rejects.toThrow(
+                /invalid response/,
+            );
+        }
 
-        const asset = await repository.getAsset("remote-icons", "2.1.0", "assets/archive.bin");
+        let canceled = false;
+        const chunked = repositoryWithAsset(
+            () =>
+                new Response(
+                    new ReadableStream<Uint8Array>({
+                        start(controller) {
+                            controller.enqueue(new Uint8Array(MAX_INTEGRATION_REPOSITORY_RESPONSE_BYTES));
+                            controller.enqueue(new Uint8Array(1));
+                        },
+                        cancel() {
+                            canceled = true;
+                        },
+                    }),
+                ),
+        );
+        await expect(chunked.getAsset("remote-icons", "2.1.0", "assets/archive.bin")).rejects.toThrow(
+            /invalid response/,
+        );
+        expect(canceled).toBeTrue();
+    });
 
-        expect(asset?.bytes.byteLength).toBe(32_001);
+    test("rejects an identity-encoded asset whose declared length does not match its body", async () => {
+        const repository = repositoryWithAsset(() => new Response("abc", { headers: { "content-length": "2" } }));
+
+        await expect(repository.getAsset("remote-icons", "2.1.0", "assets/archive.bin")).rejects.toThrow(
+            /invalid response/,
+        );
     });
 
     test("rejects mismatched definition identity before fetching icons", async () => {
@@ -117,14 +151,14 @@ describe("HTTP integration icon assets", () => {
             return new Response("<svg></svg>");
         }, wrongKind);
 
-        await expect(repository.get("remote-icons")).rejects.toThrow(/returned kind/);
+        await expect(repository.get("remote-icons")).rejects.toThrow(/invalid response/);
         expect(assetCalls).toBe(0);
 
         const repositoryWithWrongVersion = repositoryWithAsset(() => {
             assetCalls += 1;
             return new Response("<svg></svg>");
         });
-        await expect(repositoryWithWrongVersion.get("remote-icons", "1.0.0")).rejects.toThrow(/returned version/);
+        await expect(repositoryWithWrongVersion.get("remote-icons", "1.0.0")).rejects.toThrow(/invalid response/);
         expect(assetCalls).toBe(0);
     });
 

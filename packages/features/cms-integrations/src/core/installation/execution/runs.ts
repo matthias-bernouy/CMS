@@ -17,6 +17,8 @@ export function appendRun(
             | "label"
             | "definitionVersion"
             | "definitionSnapshot"
+            | "packageDigest"
+            | "connectorBindings"
         >
     >,
 ): IntegrationInstallation {

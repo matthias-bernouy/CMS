@@ -3,20 +3,43 @@ import { secretKeyToRef } from "@bernouy/cms-secrets";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../errors";
 import { resolveDependencyContext } from "../../import/dependencies";
 import { resolveIntegrationInputs } from "../../definitions/resolvedInputs";
-import { resolveTemplates, type TemplateContext } from "../../definitions/templates";
+import { resolveTemplates, type TemplateContext } from "../../definitions/templating/templates";
 import type { DeclarativeAfterInstallationTemplate, IntegrationDefinition } from "../../../interfaces/Integration";
 import type { IntegrationImportDeps } from "../../../interfaces/IntegrationImport";
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationInstallationRepository } from "../../../interfaces/IntegrationInstallationRepository";
 import { integrationInstallationId } from "../ids";
+import { isMigrationOwner, type MigrationOwner } from "../migration/state";
 import { markAfterInstallationFailed } from "./afterInstallationFailure";
+
+type ChangedInstallationReconcileOptions = {
+    migrationOwner?: MigrationOwner;
+    pendingOwner?: { id: string; updatedAt: Date };
+    now?: () => Date;
+    markFailure?: boolean;
+    validateOnly?: boolean;
+};
 
 export async function reconcileChangedInstallation(
     deps: IntegrationImportDeps,
     installations: IntegrationInstallationRepository,
     changedInstallationId: string,
+    options: ChangedInstallationReconcileOptions = {},
 ): Promise<void> {
-    await reconcileAfterInstallation(deps, installations, changedInstallationId, "changed");
+    await reconcileAfterInstallation(deps, installations, changedInstallationId, "changed", options);
+}
+
+export async function validateChangedInstallation(
+    deps: IntegrationImportDeps,
+    installations: IntegrationInstallationRepository,
+    changedInstallationId: string,
+    options: Omit<ChangedInstallationReconcileOptions, "validateOnly" | "markFailure"> = {},
+): Promise<void> {
+    await reconcileAfterInstallation(deps, installations, changedInstallationId, "changed", {
+        ...options,
+        markFailure: false,
+        validateOnly: true,
+    });
 }
 
 export async function reconcileDependentInstallations(
@@ -32,11 +55,34 @@ async function reconcileAfterInstallation(
     installations: IntegrationInstallationRepository,
     changedInstallationId: string,
     scope: "changed" | "dependents",
+    options: ChangedInstallationReconcileOptions = {},
 ): Promise<void> {
     const installed = await installations.list();
     for (const installation of installed) {
         const definition = installation.definitionSnapshot;
-        if (installation.status !== "success" || !definition?.afterInstallation?.length) {
+        const migration = installation.migrationOperation;
+        const pendingOwner = options.pendingOwner;
+        const activeMigration =
+            migration !== undefined &&
+            scope === "changed" &&
+            installation.id === changedInstallationId &&
+            options.migrationOwner !== undefined &&
+            isMigrationOwner(migration, options.migrationOwner) &&
+            migration.leaseExpiresAt.getTime() > (options.now?.() ?? new Date()).getTime() &&
+            migration.status !== "completed" &&
+            migration.status !== "aborted";
+        const claimedPending =
+            installation.status === "pending" &&
+            scope === "changed" &&
+            installation.id === changedInstallationId &&
+            pendingOwner !== undefined &&
+            pendingOwner.id === installation.pendingOperation?.id &&
+            pendingOwner.updatedAt.getTime() === installation.updatedAt.getTime() &&
+            (!migration || migration.status === "completed" || migration.status === "aborted");
+        if (
+            (installation.status !== "success" && !activeMigration && !claimedPending) ||
+            !definition?.afterInstallation?.length
+        ) {
             continue;
         }
         const isChanged = installation.id === changedInstallationId;
@@ -55,13 +101,63 @@ async function reconcileAfterInstallation(
                 continue;
             }
             try {
-                await executeAction(deps, definition, installation, dependencies, action);
+                const current = options.migrationOwner
+                    ? await requireMigrationOwner(installations, installation.id, {
+                          ...options,
+                          migrationOwner: options.migrationOwner,
+                      })
+                    : options.pendingOwner
+                      ? await requirePendingOwner(installations, installation.id, options.pendingOwner)
+                      : installation;
+                const fn = await buildAction(deps, definition, current, dependencies, action);
+                if (!options.validateOnly) {
+                    await executeAction(deps, current, action, fn);
+                }
             } catch (error) {
-                await markAfterInstallationFailed(installations, installation.id, error);
+                if (options.markFailure !== false) {
+                    await markAfterInstallationFailed(installations, installation.id, error);
+                }
                 throw error;
             }
         }
     }
+}
+
+async function requirePendingOwner(
+    installations: IntegrationInstallationRepository,
+    installationId: string,
+    expected: { id: string; updatedAt: Date },
+): Promise<IntegrationInstallation> {
+    const current = await installations.get(installationId);
+    if (
+        !current ||
+        current.status !== "pending" ||
+        current.pendingOperation?.id !== expected.id ||
+        current.updatedAt.getTime() !== expected.updatedAt.getTime() ||
+        current.migrationOperation?.status === "running" ||
+        current.migrationOperation?.status === "paused" ||
+        current.migrationOperation?.status === "activated"
+    ) {
+        throw new IntegrationRuntimeError("integration installation operation was fenced", 409);
+    }
+    return current;
+}
+
+async function requireMigrationOwner(
+    installations: IntegrationInstallationRepository,
+    installationId: string,
+    options: ChangedInstallationReconcileOptions & { migrationOwner: MigrationOwner },
+): Promise<IntegrationInstallation> {
+    const current = await installations.get(installationId);
+    const operation = current?.migrationOperation;
+    if (
+        !current ||
+        !isMigrationOwner(operation, options.migrationOwner) ||
+        operation.leaseExpiresAt.getTime() <= (options.now?.() ?? new Date()).getTime()
+    ) {
+        throw new IntegrationRuntimeError("integration migration attempt was fenced", 409);
+    }
+    return current;
 }
 
 function isAffected(
@@ -76,13 +172,13 @@ function isAffected(
     );
 }
 
-async function executeAction(
+async function buildAction(
     deps: IntegrationImportDeps,
     definition: IntegrationDefinition,
     installation: IntegrationInstallation,
     dependencies: NonNullable<TemplateContext["dependencies"]>,
     action: DeclarativeAfterInstallationTemplate,
-): Promise<void> {
+): Promise<CmsFunction> {
     const resolved = await resolveIntegrationInputs(
         definition,
         installation.answersSnapshot,
@@ -108,6 +204,15 @@ async function executeAction(
     if (errors.length) {
         throw new IntegrationInputError(`afterInstallation.${installation.id}.${action.id}`, errors.join("; "));
     }
+    return fn;
+}
+
+async function executeAction(
+    deps: IntegrationImportDeps,
+    installation: IntegrationInstallation,
+    action: DeclarativeAfterInstallationTemplate,
+    fn: CmsFunction,
+): Promise<void> {
     const response = await executeFunction(
         fn,
         new Request("https://cms.internal/integration/after-installation", {

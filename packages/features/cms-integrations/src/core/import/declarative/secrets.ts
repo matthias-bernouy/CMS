@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { secretKeyError } from "@bernouy/cms-secrets";
 import { IntegrationInputError } from "../../errors";
 import { assertPasswordInputsDeclareSecrets, sensitiveInputNames } from "../../shared/inputSensitivity";
-import { resolveTemplate, type TemplateContext } from "../../definitions/templates";
+import { resolveTemplate, type TemplateContext } from "../../definitions/templating/templates";
 import type {
     DeclarativeGeneratedSecretTemplate,
     DeclarativeSecretTemplate,

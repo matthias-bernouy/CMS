@@ -9,6 +9,8 @@ export type IntegrationDefinitionVersion = {
     version: string;
     path: string;
     definition: string;
+    verificationDigest?: string;
+    status?: "blocked" | "inadmissible" | "unverified";
 };
 
 export type IntegrationDefinitionIndex = {

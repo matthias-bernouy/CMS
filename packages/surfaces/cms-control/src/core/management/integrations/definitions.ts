@@ -1,8 +1,17 @@
 import {
+    assertIntegrationVersionInstallable,
+    assertRerunVersion,
+    assertUpgradeEligible,
+    IntegrationInputError,
+    IntegrationRepositoryError,
     integrationRegistry,
+    MissingIntegrationParam,
+    parseIntegrationDefinition,
+    resolveInstallableIntegrationDefinitionVersion,
     type IntegrationDefinition,
     type IntegrationDefinitionRepository,
     type IntegrationInstallationRepository,
+    type IntegrationPackageResolver,
 } from "@bernouy/cms-integrations";
 
 export async function listIntegrationDefinitions(
@@ -13,7 +22,10 @@ export async function listIntegrationDefinitions(
         summaries.map(async (summary) => {
             try {
                 return await repository.get(summary.kind);
-            } catch {
+            } catch (error) {
+                if (error instanceof IntegrationRepositoryError) {
+                    throw error;
+                }
                 return null;
             }
         }),
@@ -21,16 +33,71 @@ export async function listIntegrationDefinitions(
     return integrationRegistry(compact(definitions));
 }
 
+export async function definitionForUpgrade(
+    repository: IntegrationDefinitionRepository,
+    integrationId: string,
+    body: Record<string, unknown>,
+): Promise<IntegrationDefinition> {
+    const version = text(body.version);
+    if (!version) {
+        throw new MissingIntegrationParam("version");
+    }
+    const index = await repository.getIndex(integrationId);
+    if (!index) {
+        throw new IntegrationInputError("version", `unknown integration version "${integrationId}@${version}"`);
+    }
+    assertUpgradeEligible(index, version);
+    const definition = await repository.get(integrationId, version);
+    if (!definition) {
+        throw new IntegrationInputError("version", `unknown integration version "${integrationId}@${version}"`);
+    }
+    return definition;
+}
+
 export async function definitionsForImport(
     repository: IntegrationDefinitionRepository,
     body: Record<string, unknown>,
 ): Promise<IntegrationDefinition[]> {
-    const kind = text(body.kind);
+    const manualDefinition = body.definition === undefined ? undefined : parseIntegrationDefinition(body.definition);
+    const requestedKind = text(body.kind);
+    if (manualDefinition && requestedKind && manualDefinition.kind !== requestedKind) {
+        throw new IntegrationInputError(
+            "definition",
+            "manual definition kind does not match the requested integration kind",
+        );
+    }
+    const kind = requestedKind ?? manualDefinition?.kind;
     if (!kind) {
         return [];
     }
-    const definition = await repository.get(kind, text(body.version));
+    const requestedVersion = text(body.version) ?? manualDefinition?.version;
+    const index = await repository.getIndex(kind);
+    if (!index) {
+        const legacyDefinition = await repository.get(kind, requestedVersion);
+        rejectManualRepositoryOverride(manualDefinition, legacyDefinition);
+        return legacyDefinition ? [legacyDefinition] : [];
+    }
+    rejectManualRepositoryOverride(manualDefinition, true);
+    const selected = requestedVersion
+        ? assertIntegrationVersionInstallable(index, requestedVersion)
+        : resolveInstallableIntegrationDefinitionVersion(index, undefined, "stable");
+    if (!selected) {
+        throw new IntegrationInputError("version", `integration "${kind}" has no installable version`);
+    }
+    const definition = await repository.get(kind, selected.version);
     return definition ? [definition] : [];
+}
+
+function rejectManualRepositoryOverride(
+    manualDefinition: IntegrationDefinition | undefined,
+    repositoryDefinition: IntegrationDefinition | true | null,
+): void {
+    if (manualDefinition && repositoryDefinition) {
+        throw new IntegrationInputError(
+            "definition",
+            `integration "${manualDefinition.kind}" is repository-managed and cannot be installed from a manual definition`,
+        );
+    }
 }
 
 export async function definitionsForRerun(
@@ -38,12 +105,23 @@ export async function definitionsForRerun(
     installations: IntegrationInstallationRepository,
     integrationId: string,
     body: Record<string, unknown>,
+    packageResolver?: IntegrationPackageResolver,
 ): Promise<IntegrationDefinition[]> {
     const installation = await installations.get(integrationId);
     if (!installation) {
         return [];
     }
-    const definition = await repository.get(installation.id, text(body.version));
+    assertRerunVersion(installation, body.version);
+    if (installation.definitionSnapshot) {
+        return [installation.definitionSnapshot];
+    }
+    if (installation.definitionVersion === "unversioned") {
+        return [];
+    }
+    if (packageResolver) {
+        return [];
+    }
+    const definition = await repository.get(installation.id, installation.definitionVersion);
     return definition ? [definition] : [];
 }
 

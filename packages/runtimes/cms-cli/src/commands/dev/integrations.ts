@@ -3,36 +3,81 @@ import type {
     IntegrationDefinitionRepository,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
+import { FsIntegrationDefinitionRepository, FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
+import { join } from "node:path";
 import { LocalFsIntegrationConnectorProviderRepository } from "../../dev-server/stores/connectorProviders";
 
-export function createLocalIntegrationServices(siteDir: string, repositoryUrl: string, secrets: SecretStore) {
+type LocalIntegrationServiceOptions = {
+    environment?: Record<string, string | undefined>;
+    definitionFetch?: typeof fetch;
+    packageFetch?: typeof fetch;
+};
+
+export const LOCAL_INTEGRATION_PACKAGE_CACHE_PATH = ".p9r/integration-packages";
+
+export async function createLocalIntegrationServices(
+    siteDir: string,
+    localRepositoryUrl: string,
+    secrets: SecretStore,
+    options: LocalIntegrationServiceOptions = {},
+) {
+    const environment = options.environment ?? process.env;
     const integrationConnectorProviders = new LocalFsIntegrationConnectorProviderRepository(siteDir);
     const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
         new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
             providerRepository: integrationConnectorProviders,
             secrets,
             functionSecrets: readSupabaseFunctionSecrets(process.env),
         }),
     ];
     const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    const integrationRepositoryPackages = new FsIntegrationPackageSource({
+        locate: (kind, version) => integrationRepositoryCatalog.locateExactVersion(kind, version),
+    });
     const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
-    const remoteRepositoryUrl = process.env.P9R_INTEGRATION_REPOSITORY_URL?.trim();
-    const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository(
-        remoteRepositoryUrl || repositoryUrl,
-    );
+    const globalRepositoryUrl = environment.P9R_INTEGRATION_REPOSITORY_URL?.trim();
+    const repositoryReadMode = globalRepositoryUrl ? "global" : "embedded";
+    const repositoryUrl = globalRepositoryUrl || localRepositoryUrl;
+    const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository({
+        baseUrl: repositoryUrl,
+        ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+    });
+    const integrationPackageSource = new HttpIntegrationPackageSource({
+        baseUrl: repositoryUrl,
+        ...(options.packageFetch ? { fetch: options.packageFetch } : {}),
+    });
+    const integrationPackageCache = new FsIntegrationPackageCache({
+        root: join(siteDir, LOCAL_INTEGRATION_PACKAGE_CACHE_PATH),
+    });
+    const integrationPackageResolver = new FsIntegrationPackageResolver({
+        cache: integrationPackageCache,
+        source: integrationPackageSource,
+        embeddedSource: integrationRepositoryPackages,
+    });
+    await integrationPackageCache.init();
+    const publicRepositoryCatalog = repositoryReadMode === "global" ? integrationCatalog : integrationRepositoryCatalog;
+    const publicRepositoryPackages =
+        repositoryReadMode === "global" ? integrationPackageSource : integrationRepositoryPackages;
     return {
+        repositoryReadMode,
         integrationConnectorProviders,
         integrationConnectorDeployers,
         integrationProvisioners,
         integrationRepositoryCatalog,
+        integrationRepositoryPackages,
+        publicRepositoryCatalog,
+        publicRepositoryPackages,
         integrationCatalog,
+        integrationPackageSource,
+        integrationPackageCache,
+        integrationPackageResolver,
     };
 }
 

@@ -204,8 +204,3 @@ as $$
         where claim.id = p_claim_id
     ), jsonb_build_object('state', 'not_found'));
 $$;
-
-revoke execute on function commerce.get_marketplace_claim_read_model(bigint)
-from public, anon, authenticated;
-grant execute on function commerce.get_marketplace_claim_read_model(bigint)
-to service_role;

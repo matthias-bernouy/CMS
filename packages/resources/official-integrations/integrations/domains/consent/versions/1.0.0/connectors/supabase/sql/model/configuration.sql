@@ -85,7 +85,8 @@ create table if not exists consent.document_versions (
         check (strpos(consent_text, label) > 0),
     constraint consent_version_actor_not_blank
         check (length(btrim(materialized_by)) between 1 and 512),
-    unique (context_key, document_key, version_id, content_hash)
+    constraint consent_document_versions_content_key
+        unique (context_key, document_key, version_id, content_hash)
 );
 
 alter table consent.documents

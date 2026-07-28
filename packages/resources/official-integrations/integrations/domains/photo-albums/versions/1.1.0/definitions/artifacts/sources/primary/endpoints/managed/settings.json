@@ -1,0 +1,87 @@
+[
+    {
+        "endpointId": "settings",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/settings",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/settings.json"
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "updateSettings",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/settings",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "galleryTitle": {
+                    "type": "string"
+                },
+                "defaultPageSize": {
+                    "type": "number"
+                },
+                "maxPhotosPerAlbum": {
+                    "type": "number"
+                },
+                "allowDownloads": {
+                    "type": "boolean"
+                },
+                "showCaptions": {
+                    "type": "boolean"
+                },
+                "showTakenAt": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "galleryTitle",
+                "defaultPageSize",
+                "maxPhotosPerAlbum",
+                "allowDownloads",
+                "showCaptions",
+                "showTakenAt",
+                "version"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/settings.json"
+                }
+            }
+        ]
+    }
+]

@@ -1,0 +1,53 @@
+[
+    {
+        "widget": "w-navigation-list",
+        "id": "categoriesList",
+        "title": "Album categories",
+        "source": {
+            "endpoint": "manageCategories",
+            "params": {
+                "limit": "100"
+            },
+            "itemsPath": "items"
+        },
+        "rowKey": "id",
+        "item": {
+            "title": {
+                "path": "name"
+            },
+            "subtitle": {
+                "path": "slug"
+            },
+            "badge": {
+                "path": "albumCount"
+            }
+        },
+        "selection": {
+            "opens": "categoryDetail"
+        },
+        "reorderable": {
+            "action": "reorderCategories"
+        },
+        "actions": [
+            {
+                "id": "createCategory",
+                "label": "Create category",
+                "tone": "primary",
+                "placement": "primary",
+                "selection": {
+                    "opens": "categoryDetail"
+                }
+            },
+            {
+                "id": "reorderCategories",
+                "label": "Reorder categories",
+                "endpoint": {
+                    "endpoint": "reorderCategories",
+                    "body": {
+                        "categoryIds": "$value"
+                    }
+                }
+            }
+        ]
+    }
+]

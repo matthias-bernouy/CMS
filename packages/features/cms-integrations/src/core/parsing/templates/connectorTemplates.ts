@@ -1,16 +1,21 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import type { DeclarativeConnectorTemplate } from "../../../interfaces/Integration";
 import { isRecord, text } from "../definition/values";
+import { parseConnectorFunctionCompatibility } from "./connector-compatibility/function";
+import { parseConnectorCompatibility } from "./connector-compatibility";
 import { parseConnectorSchemas } from "./connectorSchemaTemplates";
+import { parseConnectorMigrationPlan, validateMigrationAwareConnectorLayout } from "./connector-migration";
 
-export function parseConnectorTemplates(value: unknown): DeclarativeConnectorTemplate[] {
+export function parseConnectorTemplates(value: unknown, definitionVersion?: string): DeclarativeConnectorTemplate[] {
     if (value === undefined || value === null) {
         return [];
     }
     if (!Array.isArray(value)) {
         throw new IntegrationInputError("definition.connectors", "must be an array");
     }
-    return value.map((entry, index) => parseConnectorTemplate(entry, `definition.connectors.${index}`));
+    return value.map((entry, index) =>
+        parseConnectorTemplate(entry, `definition.connectors.${index}`, definitionVersion),
+    );
 }
 
 export function validateConnectorDefinition(connector: DeclarativeConnectorTemplate): void {
@@ -48,9 +53,17 @@ export function validateConnectorDefinition(connector: DeclarativeConnectorTempl
             );
         }
     }
+    validateMigrationAwareConnectorLayout(
+        connector,
+        `definition.connectors.${connector.connectorKey ?? connector.provider}`,
+    );
 }
 
-function parseConnectorTemplate(value: unknown, name: string): DeclarativeConnectorTemplate {
+function parseConnectorTemplate(
+    value: unknown,
+    name: string,
+    definitionVersion?: string,
+): DeclarativeConnectorTemplate {
     if (!isRecord(value)) {
         throw new IntegrationInputError(name, "must be an object");
     }
@@ -60,6 +73,14 @@ function parseConnectorTemplate(value: unknown, name: string): DeclarativeConnec
     }
     return {
         provider,
+        ...(text(value.connectorKey) ? { connectorKey: text(value.connectorKey)! } : {}),
+        ...(text(value.lineageId) ? { lineageId: text(value.lineageId)! } : {}),
+        ...(value.migrationRevision !== undefined
+            ? { migrationRevision: parseMigrationRevision(value.migrationRevision, `${name}.migrationRevision`) }
+            : {}),
+        ...(value.migration !== undefined
+            ? { migration: parseConnectorMigrationPlan(value.migration, `${name}.migration`, definitionVersion) }
+            : {}),
         ...(text(value.root) ? { root: text(value.root)! } : {}),
         ...(value.dataApiSchemas !== undefined
             ? { dataApiSchemas: parseConnectorStringList(value.dataApiSchemas, `${name}.dataApiSchemas`) }
@@ -68,7 +89,17 @@ function parseConnectorTemplate(value: unknown, name: string): DeclarativeConnec
         ...(value.functions !== undefined
             ? { functions: parseConnectorFunctions(value.functions, `${name}.functions`) }
             : {}),
+        ...(value.compatibility !== undefined
+            ? { compatibility: parseConnectorCompatibility(value.compatibility, provider, `${name}.compatibility`) }
+            : {}),
     };
+}
+
+function parseMigrationRevision(value: unknown, name: string): number {
+    if (!Number.isSafeInteger(value) || (value as number) < 0) {
+        throw new IntegrationInputError(name, "must be a non-negative safe integer");
+    }
+    return value as number;
 }
 
 function parseConnectorStringList(value: unknown, name: string): string[] {
@@ -111,6 +142,9 @@ function parseConnectorFunction(
         directory,
         ...(text(value.configPath) ? { configPath: text(value.configPath)! } : {}),
         ...(value.secrets !== undefined ? { secrets: parseConnectorSecretMap(value.secrets, `${name}.secrets`) } : {}),
+        ...(value.compatibility !== undefined
+            ? { compatibility: parseConnectorFunctionCompatibility(value.compatibility, `${name}.compatibility`) }
+            : {}),
     };
 }
 

@@ -19,13 +19,19 @@
         { "path": "packages/features/cms-dashboards" },
         { "path": "packages/features/cms-relations" },
         { "path": "packages/features/cms-integrations" },
+        { "path": "packages/features/cms-integration-packages" },
+        { "path": "packages/features/cms-integration-verification" },
+        { "path": "packages/features/cms-integration-registry" },
         { "path": "packages/features/cms-notifications" },
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/foundation/components" },
         { "path": "packages/surfaces/cms-repository" },
+        { "path": "packages/surfaces/cms-repository-management" },
         { "path": "packages/surfaces/cms-delivery" },
         { "path": "packages/surfaces/cms-control" },
         { "path": "packages/runtimes/cms-cli" },
+        { "path": "packages/runtimes/cms-integration-verifier" },
+        { "path": "packages/runtimes/cms-repository-server" },
         { "path": "packages/runtimes/cms-server" }
     ]
 }

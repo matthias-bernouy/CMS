@@ -1,4 +1,5 @@
-import { readFile, stat } from "node:fs/promises";
+import { resolveIntegrationPackageLimits } from "@bernouy/cms-integration-packages";
+import { readBoundedRegularFile } from "@bernouy/cms-integration-packages/fs";
 import { dirname, relative, sep } from "node:path";
 import { IntegrationRuntimeError } from "../../../core/errors";
 import { SUPABASE_SQL_BUNDLE_LIMITS, type SupabaseSqlBundleLimits } from "./constants";
@@ -21,6 +22,15 @@ export type LoadedSupabaseSqlBundle = {
     sql: string;
     sourceFiles: string[];
 };
+
+const SUPABASE_SQL_FILE_LIMITS = resolveIntegrationPackageLimits({
+    maxDepth: SUPABASE_SQL_BUNDLE_LIMITS.maxDepth,
+    maxFiles: SUPABASE_SQL_BUNDLE_LIMITS.maxFiles,
+    maxFileBytes: SUPABASE_SQL_BUNDLE_LIMITS.maxBytes,
+    maxDecodedBytes: SUPABASE_SQL_BUNDLE_LIMITS.maxBytes,
+});
+
+const strictUtf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
 export async function assembleSupabaseSqlBundle(
     connectorRoot: string,
@@ -100,16 +110,25 @@ async function readLimited(path: string, state: LoadState): Promise<string> {
     if (state.files > state.limits.maxFiles) {
         throw new IntegrationRuntimeError(`Supabase SQL bundle exceeds ${state.limits.maxFiles} files`);
     }
-    const size = (await stat(path)).size;
-    if (state.bytes + size > state.limits.maxBytes) {
-        throw new IntegrationRuntimeError(`Supabase SQL bundle exceeds ${state.limits.maxBytes} bytes`);
+    let bytes: Uint8Array;
+    try {
+        bytes = await readBoundedRegularFile(path, state.bytes, {
+            ...SUPABASE_SQL_FILE_LIMITS,
+            maxFileBytes: state.limits.maxBytes,
+            maxDecodedBytes: state.limits.maxBytes,
+        });
+    } catch (error) {
+        if (error instanceof Error && error.message.includes("exceed")) {
+            throw new IntegrationRuntimeError(`Supabase SQL bundle exceeds ${state.limits.maxBytes} bytes`);
+        }
+        throw error;
     }
-    const text = await readFile(path, "utf-8");
-    state.bytes += Buffer.byteLength(text);
-    if (state.bytes > state.limits.maxBytes) {
-        throw new IntegrationRuntimeError(`Supabase SQL bundle exceeds ${state.limits.maxBytes} bytes`);
+    state.bytes += bytes.byteLength;
+    try {
+        return strictUtf8.decode(bytes);
+    } catch {
+        throw new IntegrationRuntimeError(`Supabase SQL bundle file must be valid UTF-8: ${displayPath(state, path)}`);
     }
-    return text;
 }
 
 function parseJson(text: string, source: string): unknown {

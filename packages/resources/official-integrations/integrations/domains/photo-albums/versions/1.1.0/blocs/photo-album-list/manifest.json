@@ -1,0 +1,10 @@
+{
+    "default-tag": "photo-album-list",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Photo album list",
+        "description": "Public album catalogue bound to a Photo Albums Source."
+    }
+}

@@ -2,7 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { SourceOverlaySourceRepository } from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { Db } from "mongodb";
-import { createCoreStores, createRuntimeSourceImageCache } from "../src/runtime/stores/core";
+import {
+    createCoreStores,
+    createRepositoryPackageDownloadRateLimiter,
+    createRuntimeSourceImageCache,
+} from "../src/runtime/stores/core";
 import { createFeatureStores } from "../src/runtime/stores/features";
 import { readRuntimeEnv } from "../src/runtimeEnv";
 
@@ -68,6 +72,7 @@ describe("production runtime stores", () => {
             CMS_ADMIN_EMAIL: "admin@example.test",
             CMS_ADMIN_PASSWORD: "Correct-Horse-Battery-Staple-42!",
             CMS_FILES_DIR: "/data/files",
+            CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
             MONGO_URL: "not-a-mongodb-url",
             ANALYTICS_SALT_SECRET: "shared-analytics-secret",
         });
@@ -82,5 +87,22 @@ describe("production runtime stores", () => {
         });
 
         expect(cache).toBeNull();
+    });
+
+    test("uses a dedicated Mongo namespace for public package downloads", async () => {
+        const collections: string[] = [];
+        const db = {
+            collection(name: string) {
+                collections.push(name);
+                return { createIndex: async () => `${name}-ttl` };
+            },
+        } as unknown as Db;
+
+        await createRepositoryPackageDownloadRateLimiter(db, {
+            CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: 12,
+            CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: 90,
+        });
+
+        expect(collections).toEqual(["repository_package_download_rate_limits"]);
     });
 });

@@ -8,6 +8,7 @@ import type { SecretStore } from "@bernouy/cms-secrets";
 import type { IntegrationAnswerValue, IntegrationDefinition } from "./Integration";
 import type { IntegrationInstallationRepository } from "./IntegrationInstallationRepository";
 import type { IntegrationConnectorDeployer, IntegrationConnectorDeployResult } from "./IntegrationConnectorDeployer";
+import type { IntegrationMigrationRuntime } from "./IntegrationConnectorDeployer";
 
 export type IntegrationProvisionOutput = {
     name: string;
@@ -123,6 +124,12 @@ export type IntegrationImportDeps = {
     connectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
     provisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     sourceExecutorDeps?: ExecutorDeps;
+    packageRoot?: string;
+    packageDigest?: string;
+    connectorInstanceIds?: Record<string, string>;
+    migrationRuntime?: IntegrationMigrationRuntime;
+    migrationClock?: { now(): Date };
+    migrationLeaseMs?: number;
     env?: Record<string, string | undefined>;
     resolvePublishedPage?: IntegrationPublishedPageResolver;
 };

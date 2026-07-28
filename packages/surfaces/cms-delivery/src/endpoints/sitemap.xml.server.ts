@@ -1,5 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { compress, sendCompressed } from "@bernouy/http-runner";
+import { collectPublicPageProviderPaths, isDeliveryReservedPath } from "cms-delivery/core/pages/publicPagePaths";
 
 const XML_ESCAPE: Record<string, string> = {
     "<": "&lt;",
@@ -13,37 +14,36 @@ function escapeXml(s: string): string {
     return s.replace(/[<>&'"]/g, (c) => XML_ESCAPE[c]!);
 }
 
-/**
- * Delivery reserves only its own asset prefix (`cmsPathPrefix`) plus the
- * well-known root files (`/robots.txt`, `/sitemap.xml`). Anything else is a
- * legitimate user page and belongs in the sitemap.
- */
-function isReservedForDelivery(path: string, prefix: string): boolean {
-    if (path === "/robots.txt" || path === "/sitemap.xml") {
-        return true;
+export default async function SitemapServer(req: Request, delivery: DeliveryCms) {
+    try {
+        return await buildSitemapResponse(req, delivery);
+    } catch (err) {
+        console.error("Delivery sitemap failure", {
+            errorType: err instanceof Error ? err.name : "UnknownError",
+        });
+        return new Response("Internal Server Error", { status: 500 });
     }
-    if (path === prefix || path.startsWith(prefix + "/")) {
-        return true;
-    }
-    return false;
 }
 
-export default async function SitemapServer(req: Request, delivery: DeliveryCms) {
+async function buildSitemapResponse(req: Request, delivery: DeliveryCms): Promise<Response> {
     const origin = new URL(req.url).origin;
     const prefix = delivery.cmsPathPrefix;
-    const pages = await delivery.repository.getPublishedPages();
+    const [pages, providerPaths] = await Promise.all([
+        delivery.repository.getPublishedPages(),
+        collectPublicPageProviderPaths(delivery.publicPageProviders, prefix),
+    ]);
 
     const urls: string[] = [];
     const seen = new Set<string>();
-    for (const p of pages) {
-        if (isReservedForDelivery(p.path, prefix)) {
+    for (const path of [...pages.map((page) => page.path), ...providerPaths]) {
+        if (isDeliveryReservedPath(path, prefix)) {
             continue;
         }
-        if (seen.has(p.path)) {
+        if (seen.has(path)) {
             continue;
         }
-        seen.add(p.path);
-        urls.push(`  <url><loc>${escapeXml(origin + p.path)}</loc></url>`);
+        seen.add(path);
+        urls.push(`  <url><loc>${escapeXml(origin + path)}</loc></url>`);
     }
 
     const xml = [

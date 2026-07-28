@@ -12,7 +12,16 @@
     gap: 14px;
 }
 
+.definitions-source {
+    display: contents;
+}
+
 .catalogue-view > [data-catalogue-source] {
+    display: grid;
+    gap: 14px;
+}
+
+.catalogue-content {
     display: grid;
     gap: 14px;
 }

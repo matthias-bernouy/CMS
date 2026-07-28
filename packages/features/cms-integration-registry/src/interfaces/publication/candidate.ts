@@ -1,0 +1,126 @@
+import type {
+    AdmissionInputSnapshotV1,
+    CandidateAdmissionJobResultV1,
+    CompatibilityReportV2,
+    ReleaseAdmissionPolicySnapshotV1,
+    MigrationVerificationInputV1,
+    StatefulChangeSelectionV1,
+    ValidatedIntegrationCandidateEnvelopeV1,
+} from "@bernouy/cms-integration-verification";
+
+export const INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA = "cms.integration.registry.candidate-record.v1" as const;
+
+export type IntegrationRegistryCandidateStatus =
+    | "uploaded"
+    | "validating"
+    | "queued"
+    | "running"
+    | "passed"
+    | "publishing"
+    | "published"
+    | "rejected"
+    | "expired";
+
+export type IntegrationRegistryCandidateLease = Readonly<{
+    jobId: string;
+    attemptId: string;
+    fencingToken: number;
+    workerId: string;
+    claimedAt: string;
+    leaseExpiresAt: string;
+}>;
+
+export type IntegrationRegistryCandidateFailure = Readonly<{
+    kind: "validation" | "suite" | "infrastructure" | "stale";
+    code: string;
+    message: string;
+    occurredAt: string;
+}>;
+
+type IntegrationRegistryCandidateRecordShared = Readonly<{
+    candidateId: string;
+    revision: number;
+    status: IntegrationRegistryCandidateStatus;
+    kind: string;
+    version: string;
+    packageDigest: string;
+    verificationDigest: string;
+    requestedChannel?: "latest";
+    createdAt: string;
+    updatedAt: string;
+    expiresAt: string;
+    attemptCount: number;
+    lease?: IntegrationRegistryCandidateLease;
+    lastFailure?: IntegrationRegistryCandidateFailure;
+}>;
+
+export type IntegrationRegistryCandidateRecord = IntegrationRegistryCandidateRecordShared &
+    Readonly<{
+        schema: typeof INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA;
+        candidateDigest: string;
+        policyDigest?: string;
+        admissionInputDigest?: string;
+        compatibilityReportDigest?: string;
+        statefulChangeSelectionDigest?: string;
+        migrationInputDigests?: readonly string[];
+        admissionJobResultDigest?: string;
+    }>;
+
+export type CreateIntegrationRegistryCandidateInput = Readonly<{
+    candidateId: string;
+    candidate: ValidatedIntegrationCandidateEnvelopeV1;
+    createdAt: string;
+    expiresAt: string;
+}>;
+
+export type IntegrationRegistryCandidatePlanningArtifacts = Readonly<{
+    compatibilityReport: CompatibilityReportV2;
+    compatibilityEvaluatorInputDigest: string;
+    statefulChanges: StatefulChangeSelectionV1;
+}>;
+
+export type QueueIntegrationRegistryCandidateInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+    policy: ReleaseAdmissionPolicySnapshotV1;
+    admission: AdmissionInputSnapshotV1;
+    migrationInputs?: readonly MigrationVerificationInputV1[];
+    planningArtifacts?: IntegrationRegistryCandidatePlanningArtifacts;
+}>;
+
+export type RejectIntegrationRegistryCandidateValidationInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+    failure: IntegrationRegistryCandidateFailure & Readonly<{ kind: "validation" }>;
+}>;
+
+export type ClaimIntegrationRegistryCandidateInput = Readonly<{
+    expectedRevision: number;
+    jobId: string;
+    attemptId: string;
+    workerId: string;
+    now: string;
+    leaseExpiresAt: string;
+}>;
+
+export type CompleteIntegrationRegistryCandidateInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+    result: CandidateAdmissionJobResultV1;
+}>;
+
+export type BeginIntegrationRegistryCandidatePublicationInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+}>;
+
+export type CompleteIntegrationRegistryCandidatePublicationInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+}>;
+
+export type RejectIntegrationRegistryCandidatePublicationInput = Readonly<{
+    expectedRevision: number;
+    now: string;
+    failure: IntegrationRegistryCandidateFailure & Readonly<{ kind: "stale" }>;
+}>;

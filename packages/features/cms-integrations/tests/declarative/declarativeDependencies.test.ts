@@ -8,7 +8,7 @@ import {
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { resolveDependencyContext } from "cms-integrations/core/import/dependencies";
-import { resolveTemplate, type TemplateContext } from "cms-integrations/core/definitions/templates";
+import { resolveTemplate, type TemplateContext } from "cms-integrations/core/definitions/templating/templates";
 import { BAN_DEFINITION, BAN_SOURCE, sourceArtifact } from "../helpers";
 import { installLegacySecretDependency, installProductsDependency } from "./dependencyFixtures";
 

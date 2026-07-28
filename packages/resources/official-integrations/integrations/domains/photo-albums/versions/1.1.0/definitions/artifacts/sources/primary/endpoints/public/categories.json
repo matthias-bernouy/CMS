@@ -1,0 +1,27 @@
+[
+    {
+        "endpointId": "categories",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/public/categories",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/categories.json"
+                }
+            }
+        ]
+    }
+]

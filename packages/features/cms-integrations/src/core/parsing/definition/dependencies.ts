@@ -1,4 +1,5 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
+import { isSupportedIntegrationVersionRange } from "../../definitions/versioning";
 import type { IntegrationDefinition, IntegrationDependency } from "../../../interfaces/Integration";
 import { isRecord, text } from "./values";
 
@@ -35,9 +36,20 @@ function parseDependency(value: unknown, name: string): IntegrationDependency {
     if (!kind) {
         throw new MissingIntegrationParam(`${name}.kind`);
     }
+    const versionRange = text(value.versionRange);
+    if (value.versionRange !== undefined && !versionRange) {
+        throw new IntegrationInputError(`${name}.versionRange`, "must be a non-empty string");
+    }
+    if (versionRange && !isSupportedIntegrationVersionRange(versionRange)) {
+        throw new IntegrationInputError(
+            `${name}.versionRange`,
+            "must be an exact, caret, tilde, or bounded comparator range such as >=1.2.0 <2.0.0",
+        );
+    }
     return {
         name: dependencyName,
         kind,
+        ...(versionRange ? { versionRange } : {}),
         ...(value.optional === true ? { optional: true } : {}),
     };
 }
@@ -50,6 +62,17 @@ function validateDependencyList(dependencies: readonly IntegrationDependency[], 
         }
         if (!dependency.kind) {
             throw new IntegrationInputError(`definition.dependencies.${dependency.name}.kind`, "is required");
+        }
+        if (
+            dependency.versionRange !== undefined &&
+            (typeof dependency.versionRange !== "string" ||
+                dependency.versionRange.trim() !== dependency.versionRange ||
+                !isSupportedIntegrationVersionRange(dependency.versionRange))
+        ) {
+            throw new IntegrationInputError(
+                `definition.dependencies.${dependency.name}.versionRange`,
+                "must be an exact, caret, tilde, or bounded comparator range such as >=1.2.0 <2.0.0",
+            );
         }
         if (dependency.kind === definitionKind) {
             throw new IntegrationInputError(

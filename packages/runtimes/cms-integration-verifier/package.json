@@ -1,0 +1,36 @@
+{
+    "name": "@bernouy/cms-integration-verifier",
+    "version": "0.1.0",
+    "description": "Credential-isolating supervisor for external integration verification sandboxes.",
+    "license": "UNLICENSED",
+    "private": true,
+    "type": "module",
+    "main": "./src/index.ts",
+    "scripts": {
+        "start": "bun run src/runtime/main.ts"
+    },
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "files": [
+        "src/",
+        "dist/",
+        "tsconfig.json"
+    ],
+    "dependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
+        "@bernouy/cms-repository-management": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    },
+    "devDependencies": {
+        "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-official-integrations": "workspace:*",
+        "@bernouy/cms-repository-server": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/rate-limiter": "workspace:*"
+    }
+}

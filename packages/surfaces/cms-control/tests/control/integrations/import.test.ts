@@ -3,9 +3,81 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import { compress } from "@bernouy/http-runner";
 import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
-import { makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./support/helpers";
+import {
+    makeCms,
+    manualSourceDefinition,
+    postImport,
+    recordingPackageResolver,
+    sourceWithFunctionDefinition,
+} from "./support/helpers";
 
 describe("POST /api/integrations/import", () => {
+    for (const status of ["blocked", "inadmissible", "unverified"] as const) {
+        test(`rejects a forged exact install for a ${status} repository version`, async () => {
+            const { cms, integrationCatalog, integrationInstallations } = makeCms();
+            integrationCatalog.getIndex = async () => ({
+                kind: "test-secret-source",
+                label: "Test secret source",
+                stable: "1.0.0",
+                latest: "1.0.0",
+                versions: [
+                    {
+                        version: "1.0.0",
+                        path: "versions/1.0.0",
+                        definition: "integration.json",
+                        status,
+                    },
+                ],
+            });
+
+            await expect(
+                postIntegrationImport(
+                    postImport({
+                        kind: "test-secret-source",
+                        version: "1.0.0",
+                        answers: { id: "secret-source-main", apiKey: "sk_test" },
+                    }),
+                    cms,
+                ),
+            ).rejects.toThrow(`is ${status} and cannot be installed or upgraded`);
+
+            expect(await integrationInstallations.get("test-secret-source")).toBeNull();
+        });
+    }
+
+    for (const status of ["blocked", "inadmissible", "unverified"] as const) {
+        test(`rejects a manual-definition override for a ${status} repository version`, async () => {
+            const { cms, integrationCatalog, integrationInstallations } = makeCms();
+            integrationCatalog.getIndex = async () => ({
+                kind: "test-secret-source",
+                label: "Test secret source",
+                stable: "1.0.0",
+                latest: "1.0.0",
+                versions: [
+                    {
+                        version: "1.0.0",
+                        path: "versions/1.0.0",
+                        definition: "integration.json",
+                        status,
+                    },
+                ],
+            });
+            const forged = { ...manualSourceDefinition(), kind: "test-secret-source", version: "1.0.0" };
+
+            await expect(
+                postIntegrationImport(
+                    postImport({
+                        definition: forged,
+                        answers: { id: "manual", targetUrl: "https://attacker.invalid/items" },
+                    }),
+                    cms,
+                ),
+            ).rejects.toThrow('integration "test-secret-source" is repository-managed');
+
+            expect(await integrationInstallations.get("test-secret-source")).toBeNull();
+        });
+    }
+
     test("creates a tracked Test secret source installation without exposing the secret value", async () => {
         const { cms, secrets, sources, integrationInstallations, cache } = makeCms();
         cache.set(P9R_CACHE.STYLE, compress("old-style", "text/css"));
@@ -145,6 +217,29 @@ describe("POST /api/integrations/import", () => {
         expect(response.status).toBe(200);
         expect(paths).toEqual(["/terms"]);
         expect(body.installation.answersSnapshot).toEqual({ documents: [{ page: "/terms" }] });
+    });
+
+    test("injects the package resolver and persists its digest on create", async () => {
+        const { cms, integrationInstallations } = makeCms();
+        const { resolver, requests } = recordingPackageResolver();
+        cms.integrationPackageResolver = resolver;
+
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
+
+        expect(requests).toHaveLength(1);
+        expect(requests[0]).toMatchObject({
+            kind: "test-secret-source",
+            version: "1.0.0",
+            reason: "create",
+            allowEmbeddedFallback: false,
+        });
+        expect((await integrationInstallations.get("test-secret-source"))?.packageDigest).toBe("a".repeat(64));
     });
 
     test("fails before writing when no integration installation repository is configured", async () => {

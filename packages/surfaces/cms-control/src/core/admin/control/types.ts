@@ -15,11 +15,14 @@ import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms
 import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type {
+    IntegrationConnectorBaselineAdopter,
     IntegrationConnectorDeployer,
     IntegrationConnectorProviderRepository,
     IntegrationDefinitionRepository,
     IntegrationInstallationRepository,
+    IntegrationPackageResolver,
     IntegrationProvisioner,
+    IntegrationMigrationRuntime,
 } from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { RelationRepository } from "@bernouy/cms-relations";
@@ -34,6 +37,8 @@ import type {
 import type { ScheduledTriggerRunResult, TriggerRepository } from "@bernouy/cms-triggers";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { CMS_ROLES } from "types/roles";
+import type { RepositoryManagementAccess } from "cms-control/core/admin/control/mountRoutes/repositoryAccess";
+import type { IntegrationUpgradeReleaseReader } from "cms-control/core/management/integrations/upgrade/contracts";
 
 type Configuration = {
     deliveryUrl?: string;
@@ -42,9 +47,14 @@ type Configuration = {
 };
 
 export type ControlCmsOptions = Configuration & {
+    repositoryManagement?: RepositoryManagementAccess;
     integrationCatalog?: IntegrationDefinitionRepository;
+    integrationPackageResolver?: IntegrationPackageResolver;
+    integrationUpgradeReleases?: IntegrationUpgradeReleaseReader;
     integrationInstallations?: IntegrationInstallationRepository;
     integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
+    integrationMigrationRuntime?: IntegrationMigrationRuntime;
+    integrationConnectorBaselineAdopters?: IntegrationConnectorBaselineAdopter[];
     integrationProvisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     integrationConnectorProviders?: IntegrationConnectorProviderRepository;
     dashboards?: DashboardRepository;
@@ -91,6 +101,7 @@ export type ControlCmsState = {
     analytics: AnalyticsStore | null;
     roles: RolesRepository;
     integrationCatalog: IntegrationDefinitionRepository;
+    integrationPackageResolver: IntegrationPackageResolver | undefined;
     integrationInstallations: IntegrationInstallationRepository | null;
     integrationConnectorProviders: IntegrationConnectorProviderRepository;
     dashboards: DashboardRepository;

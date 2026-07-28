@@ -43,13 +43,13 @@ describe("Supabase SQL bundle security", () => {
         );
     });
 
-    test("rejects duplicate fragments by canonical path", async () => {
+    test("rejects internal fragment symlinks", async () => {
         const root = await createSqlRoot();
         await writeSql(root, "sql/shared.sql", "select 1;\n");
         await symlink("shared.sql", join(root, "sql", "alias.sql"));
         await writeManifest(root, "sql/manifest.json", [{ file: "shared.sql" }, { file: "alias.sql" }]);
 
-        await expect(loadSupabaseSqlBundle(root, "sql/manifest.json")).rejects.toThrow(/included more than once/);
+        await expect(loadSupabaseSqlBundle(root, "sql/manifest.json")).rejects.toThrow(/must not contain symlinks/);
     });
 
     test("rejects fragment symlinks outside the connector root", async () => {
@@ -72,13 +72,13 @@ describe("Supabase SQL bundle security", () => {
         await expect(loadSupabaseSqlBundle(root, "manifest.json")).rejects.toThrow(/escapes Supabase connector root/);
     });
 
-    test("confines fragments to the root manifest directory", async () => {
+    test("rejects internal symlinks even when their target stays in the connector", async () => {
         const root = await createSqlRoot();
         await writeSql(root, "outside.sql", "select 'outside';\n");
         await writeManifest(root, "sql/manifest.json", [{ file: "linked.sql" }]);
         await symlink(join(root, "outside.sql"), join(root, "sql", "linked.sql"));
 
-        await expect(loadSupabaseSqlBundle(root, "sql/manifest.json")).rejects.toThrow(/escapes bundle root/);
+        await expect(loadSupabaseSqlBundle(root, "sql/manifest.json")).rejects.toThrow(/must not contain symlinks/);
     });
 
     test("rejects a root manifest symlink outside the connector", async () => {
@@ -88,5 +88,14 @@ describe("Supabase SQL bundle security", () => {
         await symlink(join(outside, "manifest.json"), join(root, "manifest.json"));
 
         await expect(loadSupabaseSqlBundle(root, "manifest.json")).rejects.toThrow(/escapes Supabase connector root/);
+    });
+
+    test("rejects special SQL files without opening them", async () => {
+        const root = await createSqlRoot();
+        const fifo = join(root, "stream.sql");
+        expect(Bun.spawnSync(["mkfifo", fifo]).exitCode).toBe(0);
+        await writeManifest(root, "manifest.json", [{ file: "stream.sql" }]);
+
+        await expect(loadSupabaseSqlBundle(root, "manifest.json")).rejects.toThrow(/is not a file/);
     });
 });

@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { listIntegrationDefinitions } from "cms-control/core/management/integrations/definitions";
-import { buildIntegrationCatalogue } from "cms-control/core/management/integrations/catalogue";
+import { buildIntegrationCatalogue } from "cms-control/core/management/integrations/presentation/catalogue";
 
 export default async function getIntegrationCatalogue(req: Request, cms: ControlCms): Promise<Response> {
     const url = new URL(req.url);

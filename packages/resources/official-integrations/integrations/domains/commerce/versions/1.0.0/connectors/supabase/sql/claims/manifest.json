@@ -9,6 +9,7 @@
         { "file": "evidence/get-claim-evidence-download-context.sql" },
         { "file": "returns/get-claim-return-authorization-context.sql" },
         { "file": "read-models/get-marketplace-claim-read-model.sql" },
+        { "file": "read-models/get-marketplace-claim-read-model-privileges.sql" },
         { "file": "refunds/calculate-protection-fee-refund.sql" },
         { "file": "refunds/calculate-allocated-protection-fee-refund.sql" },
         { "file": "refunds/create-refund-request.sql" },

@@ -14,6 +14,7 @@ export type RemoteIntegrationDetail = {
     id: string;
     label: string;
     definitionVersion: string;
+    packageDigest?: string;
     status: IntegrationInstallation["status"];
     createdAt: string | Date;
     updatedAt: string | Date;

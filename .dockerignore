@@ -37,6 +37,7 @@ node_modules
 **/.env
 **/.env.*
 !**/.env.example
+infra/images/cms-repository/secrets/
 .p9r-dev/
 **/.p9r-dev/
 

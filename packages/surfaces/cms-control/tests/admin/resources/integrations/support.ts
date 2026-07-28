@@ -16,6 +16,7 @@ export const definition: IntegrationDefinition = {
 const installation = {
     id: "stripe-connect",
     label: "Stripe Connect",
+    definitionVersion: "1.0.0",
     status: "success" as const,
     runCount: 1,
     artifactCount: 3,

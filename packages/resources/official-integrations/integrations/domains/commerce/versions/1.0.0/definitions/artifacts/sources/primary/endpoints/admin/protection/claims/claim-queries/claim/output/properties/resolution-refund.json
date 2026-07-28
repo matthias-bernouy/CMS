@@ -1,0 +1,71 @@
+{
+    "type": "object",
+    "nullable": true,
+    "properties": {
+        "id": {
+            "type": "number"
+        },
+        "status": {
+            "type": "string"
+        },
+        "requestedAmount": {
+            "type": "number"
+        },
+        "merchandiseRefundAmount": {
+            "type": "number"
+        },
+        "shippingRefundAmount": {
+            "type": "number"
+        },
+        "protectionFeeRefundAmount": {
+            "type": "number"
+        },
+        "allocationVersion": {
+            "type": "number"
+        },
+        "sellerRecoveryAmount": {
+            "type": "number"
+        },
+        "sellerReserveOffsetAmount": {
+            "type": "number"
+        },
+        "platformContributionAmount": {
+            "type": "number"
+        },
+        "requiresFinanceApproval": {
+            "type": "boolean"
+        },
+        "dualApprovalRequired": {
+            "type": "boolean"
+        },
+        "firstApprovedBy": {
+            "type": "string",
+            "nullable": true
+        },
+        "firstApprovedAt": {
+            "type": "string",
+            "nullable": true
+        },
+        "secondApprovedBy": {
+            "type": "string",
+            "nullable": true
+        },
+        "secondApprovedAt": {
+            "type": "string",
+            "nullable": true
+        },
+        "decisionReason": {
+            "type": "string",
+            "nullable": true
+        },
+        "version": {
+            "type": "number"
+        },
+        "createdAt": {
+            "type": "string"
+        },
+        "updatedAt": {
+            "type": "string"
+        }
+    }
+}

@@ -7,10 +7,11 @@
     "main": "./index.ts",
     "types": "./dist/index.d.ts",
     "scripts": {
-        "test:postgres": "bun run tests/helpers/runPostgresContracts.ts"
+        "test:postgres": "bun run tests/helpers/postgres/runPostgresContracts.ts"
     },
     "files": [
         "index.ts",
+        "publication",
         "dist/",
         "integrations"
     ],
@@ -19,6 +20,11 @@
             "types": "./dist/index.d.ts",
             "bun": "./index.ts",
             "default": "./index.ts"
+        },
+        "./publication": {
+            "types": "./dist/publication/index.d.ts",
+            "bun": "./publication/index.ts",
+            "default": "./publication/index.ts"
         },
         "./integrations/ban/*": "./integrations/providers/ban/*",
         "./integrations/basic-blocs/*": "./integrations/foundation/basic-blocs/*",
@@ -37,5 +43,15 @@
         "./integrations/sales-configurator/*": "./integrations/domains/sales-configurator/*",
         "./integrations/stripe-connect/*": "./integrations/providers/stripe-connect/*",
         "./integrations/user-account/*": "./integrations/domains/user-account/*"
+    },
+    "dependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
+        "semver": "^7.8.2"
+    },
+    "devDependencies": {
+        "@types/semver": "^7.7.1"
     }
 }

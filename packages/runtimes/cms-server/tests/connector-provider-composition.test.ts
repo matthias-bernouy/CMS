@@ -14,6 +14,9 @@ describe("production connector provider composition", () => {
             /const\s+secrets\s*=\s*new\s+ValidatingSecretStore\s*\(\s*new\s+EncryptedMongoSecretStore\s*\(\s*\{/,
         );
         expect(integrations).toMatch(/new\s+ConfiguredSupabaseConnectorDeployer\s*\(\s*\{/);
+        expect(integrations).toMatch(/new\s+ConfiguredSupabaseConnectorMigrationAdapter\s*\(/);
+        expect(integrations).toMatch(/new\s+ConfiguredSupabaseFunctionMigrationHandler\s*\(/);
+        expect(integrations).toMatch(/new\s+ConfiguredSupabaseConnectorBaselineAdopter\s*\(/);
         expect(integrations).toMatch(/providerRepository\s*:\s*options\.providerRepository\s*,/);
         expect(integrations).toMatch(
             /functionSecrets\s*:\s*readSupabaseFunctionSecrets\s*\(\s*options\.environment\s*\)\s*,/,
@@ -21,6 +24,7 @@ describe("production connector provider composition", () => {
         expect(entrypoint).toMatch(/providerRepository\s*:\s*features\.integrationConnectorProviders\s*,/);
         expect(entrypoint).toMatch(/secrets\s*:\s*core\.secrets\s*,/);
         expect(integrations).not.toContain("source.SUPABASE_");
+        expect(integrations).not.toMatch(/integrationsRoot\s*:/);
         expect(integrations).not.toMatch(/new\s+SupabaseConnectorDeployer\s*\(/);
     });
 });

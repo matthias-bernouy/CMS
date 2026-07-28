@@ -17,6 +17,7 @@ import type {
 import type { TriggerRepository } from "@bernouy/cms-triggers";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { HeadInjector } from "./HeadInjector";
+import type { PublicPageProvider } from "./PublicPageProvider";
 
 export type DeliveryCmsConfig = {
     runner?: Runner;
@@ -27,6 +28,8 @@ export type DeliveryCmsConfig = {
      * immediately after the basic HTML head is built.
      */
     headInjectors?: readonly HeadInjector[];
+    /** Ordered public page adapters consulted before the ContentReader fallback. */
+    publicPageProviders?: readonly PublicPageProvider[];
     /** Data sources exposed by the optional same-origin source gateway. */
     sources?: SourceRepository;
     /** Overlay definitions materialized only after source authorization. */

@@ -18,7 +18,7 @@ import { InMemoryCache } from "@bernouy/http-runner";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 import { ValidatingSecretStore } from "@bernouy/cms-secrets";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
-import { MongoClient } from "mongodb";
+import { type Db, MongoClient } from "mongodb";
 import { join } from "node:path";
 import { migrateLegacyOperatorRoles } from "../../migrateLegacyOperatorRoles";
 import type { RuntimeEnv } from "../../runtimeEnv";
@@ -57,6 +57,7 @@ export async function createCoreStores(env: RuntimeEnv) {
 
     const rateLimit = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 });
     await rateLimit.init();
+    const repositoryPackageDownloadRateLimit = await createRepositoryPackageDownloadRateLimiter(db, env);
     const mongoRoles = new MongoRolesRepository(db.collection("cms_roles"));
     await mongoRoles.init();
     const migration = await migrateLegacyOperatorRoles(users, mongoRoles);
@@ -88,10 +89,27 @@ export async function createCoreStores(env: RuntimeEnv) {
         pats,
         authTokens,
         rateLimit,
+        repositoryPackageDownloadRateLimit,
         roles,
         secrets,
         cache: new InMemoryCache(),
     };
+}
+
+export async function createRepositoryPackageDownloadRateLimiter(
+    db: Db,
+    env: Pick<RuntimeEnv, "CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT" | "CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS">,
+): Promise<MongoRateLimiter> {
+    const limiter = new MongoRateLimiter(
+        db,
+        {
+            limit: env.CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT,
+            windowSeconds: env.CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS,
+        },
+        { collectionPrefix: "repository_package_download_" },
+    );
+    await limiter.init();
+    return limiter;
 }
 
 export async function createRuntimeSourceImageCache(

@@ -1,0 +1,259 @@
+import { describe, expect, test } from "bun:test";
+import { P9R_CACHE } from "@bernouy/cms-content";
+import { compress } from "@bernouy/http-runner";
+import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
+import postIntegrationInstallationRerun from "cms-control/api/_platform/integrations/installations/rerun.post";
+import postIntegrationInstallationUpgrade from "cms-control/api/_platform/integrations/installations/upgrade.post";
+import { makeCms, postImport, postRerun, postUpgrade, TEST_SECRET_SOURCE_DEFINITION } from "../support/helpers";
+
+describe("POST /api/integrations/installations/rerun", () => {
+    test("reruns a tracked integration installation with stored secrets", async () => {
+        const { cms, sources, cache } = makeCms();
+
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
+        cache.set(P9R_CACHE.STYLE, compress("old-style", "text/css"));
+        cache.set(P9R_CACHE.page("/cached"), compress("old-page", "text/html"));
+        let repositoryReads = 0;
+        cms.integrationCatalog = {
+            ...cms.integrationCatalog,
+            get: async () => {
+                repositoryReads += 1;
+                throw new Error("the stored snapshot should avoid repository access");
+            },
+        };
+
+        const res = await postIntegrationInstallationRerun(postRerun("test-secret-source"), cms);
+        const body = await res.json();
+
+        expect(res.status).toBe(200);
+        expect(body.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "updated" }]);
+        expect(body.installation.runCount).toBe(2);
+        expect((await sources.getSource("urn:secret-source-main"))?.endpoints).toHaveLength(1);
+        expect(JSON.stringify(body)).not.toContain("sk_test");
+        expect(repositoryReads).toBe(0);
+        expect(cache.get(P9R_CACHE.STYLE)).toBeNull();
+        expect(cache.get(P9R_CACHE.page("/cached"))).toBeNull();
+    });
+
+    test("accepts rerun answer overrides", async () => {
+        const { cms } = makeCms();
+
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_old" },
+            }),
+            cms,
+        );
+
+        const res = await postIntegrationInstallationRerun(
+            postRerun("test-secret-source", {
+                answers: { apiKey: "sk_new" },
+            }),
+            cms,
+        );
+        const body = await res.json();
+
+        expect(body.installation.runCount).toBe(2);
+        expect(JSON.stringify(body)).not.toContain("sk_new");
+    });
+
+    test("invalidates theme and page caches when a started rerun fails", async () => {
+        const { cms, cache, integrationInstallations } = makeCms();
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
+        cache.set(P9R_CACHE.STYLE, compress("old-style", "text/css"));
+        cache.set(P9R_CACHE.page("/cached"), compress("old-page", "text/html"));
+
+        await expect(
+            postIntegrationInstallationRerun(
+                postRerun("test-secret-source", { answers: { id: "different-identity" } }),
+                cms,
+            ),
+        ).rejects.toThrow();
+
+        expect((await integrationInstallations.get("test-secret-source"))?.status).toBe("failed");
+        expect(cache.get(P9R_CACHE.STYLE)).toBeNull();
+        expect(cache.get(P9R_CACHE.page("/cached"))).toBeNull();
+    });
+
+    test("rotates a secret and its matching public configuration atomically", async () => {
+        const definition = {
+            ...TEST_SECRET_SOURCE_DEFINITION,
+            inputs: [
+                ...TEST_SECRET_SOURCE_DEFINITION.inputs,
+                { name: "publicKey", label: "Public key", type: "text" as const, required: true },
+            ],
+        };
+        const { cms, integrationInstallations, secrets } = makeCms([definition]);
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test_old", publicKey: "pk_test_old" },
+            }),
+            cms,
+        );
+
+        const response = await postIntegrationInstallationRerun(
+            postRerun("test-secret-source", {
+                answers: { apiKey: "sk_live_new", publicKey: "pk_live_new" },
+            }),
+            cms,
+        );
+        const installation = await integrationInstallations.get("test-secret-source");
+
+        expect(response.status).toBe(200);
+        expect(installation?.answersSnapshot).toEqual({ id: "secret-source-main", publicKey: "pk_live_new" });
+        expect(await secrets.get(installation!.secretRefs.apiKey!)).toBe("sk_live_new");
+        expect(JSON.stringify(await response.json())).not.toContain("sk_live_new");
+    });
+
+    test("rejects an implicit version change before starting a rerun", async () => {
+        const { cms, integrationInstallations } = makeCms();
+
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
+
+        await expect(
+            postIntegrationInstallationRerun(postRerun("test-secret-source", { version: "2.0.0" }), cms),
+        ).rejects.toThrow(/explicit upgrade action/);
+
+        const installation = await integrationInstallations.get("test-secret-source");
+        expect(installation?.status).toBe("success");
+        expect(installation?.runCount).toBe(1);
+        expect(installation?.definitionVersion).toBe("1.0.0");
+    });
+
+    test("requests the installed exact version when a legacy snapshot is absent", async () => {
+        const { cms, integrationInstallations } = makeCms();
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
+        const installed = await integrationInstallations.get("test-secret-source");
+        if (!installed) {
+            throw new Error("expected the test installation");
+        }
+        await integrationInstallations.replace({ ...installed, definitionSnapshot: undefined });
+        const requests: Array<[string, string | undefined]> = [];
+        cms.integrationCatalog = {
+            ...cms.integrationCatalog,
+            get: async (kind: string, version?: string) => {
+                requests.push([kind, version]);
+                return kind === TEST_SECRET_SOURCE_DEFINITION.kind && version === "1.0.0"
+                    ? TEST_SECRET_SOURCE_DEFINITION
+                    : null;
+            },
+        };
+
+        await postIntegrationInstallationRerun(postRerun("test-secret-source"), cms);
+
+        expect(requests).toEqual([["test-secret-source", "1.0.0"]]);
+    });
+
+    test("requires an integration id", async () => {
+        const { cms } = makeCms();
+
+        await expect(postIntegrationInstallationRerun(postRerun(), cms)).rejects.toThrow(/Missing param id/);
+    });
+});
+
+describe("POST /api/integrations/installations/upgrade", () => {
+    for (const status of ["blocked", "inadmissible", "unverified"] as const) {
+        test(`rejects a forged upgrade to a ${status} exact version`, async () => {
+            const target = {
+                ...TEST_SECRET_SOURCE_DEFINITION,
+                version: "1.1.0",
+                label: "Test secret source upgraded",
+            };
+            const { cms, integrationCatalog, integrationInstallations } = makeCms([
+                TEST_SECRET_SOURCE_DEFINITION,
+                target,
+            ]);
+            await postIntegrationImport(
+                postImport({
+                    kind: "test-secret-source",
+                    version: "1.0.0",
+                    answers: { id: "secret-source-main", apiKey: "sk_test" },
+                }),
+                cms,
+            );
+            integrationCatalog.getIndex = async () => ({
+                kind: "test-secret-source",
+                label: "Test secret source",
+                stable: "1.0.0",
+                latest: "1.1.0",
+                versions: [
+                    { version: "1.0.0", path: "versions/1.0.0", definition: "integration.json" },
+                    { version: "1.1.0", path: "versions/1.1.0", definition: "integration.json", status },
+                ],
+            });
+
+            await expect(
+                postIntegrationInstallationUpgrade(postUpgrade("test-secret-source", { version: "1.1.0" }), cms),
+            ).rejects.toThrow(`is ${status} and cannot be installed or upgraded`);
+
+            expect((await integrationInstallations.get("test-secret-source"))?.definitionVersion).toBe("1.0.0");
+        });
+    }
+
+    test("resolves an explicit target and updates the pin after success", async () => {
+        const target = {
+            ...TEST_SECRET_SOURCE_DEFINITION,
+            version: "1.1.0",
+            label: "Test secret source upgraded",
+        };
+        const { cms, integrationInstallations, cache } = makeCms([TEST_SECRET_SOURCE_DEFINITION, target]);
+
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                version: "1.0.0",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
+        cache.set(P9R_CACHE.STYLE, compress("old-style", "text/css"));
+        cache.set(P9R_CACHE.page("/cached"), compress("old-page", "text/html"));
+
+        const response = await postIntegrationInstallationUpgrade(
+            postUpgrade("test-secret-source", { version: "1.1.0" }),
+            cms,
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.installation.definitionVersion).toBe("1.1.0");
+        expect(body.installation.definitionSnapshot.version).toBe("1.1.0");
+        expect((await integrationInstallations.get("test-secret-source"))?.definitionVersion).toBe("1.1.0");
+        expect(cache.get(P9R_CACHE.STYLE)).toBeNull();
+        expect(cache.get(P9R_CACHE.page("/cached"))).toBeNull();
+    });
+
+    test("requires an explicit target version", async () => {
+        const { cms } = makeCms();
+
+        await expect(postIntegrationInstallationUpgrade(postUpgrade("test-secret-source", {}), cms)).rejects.toThrow(
+            /Missing param version/,
+        );
+    });
+});

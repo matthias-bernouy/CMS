@@ -1,0 +1,26 @@
+<photo-album-gallery source-id="photo-albums" slug-param="slug" grid-min="sm" grid-max="none" grid-gap="sm">
+    <basic-skeleton slot="loading" height="24rem" animation="wave" label="Loading photo album" cms-condition="$source.loading"></basic-skeleton>
+
+    <basic-toast slot="error" role="alert" cms-condition="$source.error">This photo album could not be loaded.</basic-toast>
+
+    <basic-stack slot="album" gap="md" cms-condition="$source.loaded">
+        <header>
+            <p cms-condition="data.category.name">{{ data.category.name }}</p>
+            <h1>{{ data.title }}</h1>
+            <p cms-condition="data.description">{{ data.description }}</p>
+        </header>
+
+        <basic-card appearance="outlined" background-color="var(--integration-photo-albums-card-background, var(--bg-surface, Canvas))" border-color="var(--integration-photo-albums-card-border, var(--border-default, currentColor))" text-color="var(--integration-photo-albums-card-text, var(--text-main, inherit))" muted-text-color="var(--integration-photo-albums-card-muted-text, var(--text-muted, currentColor))" cms-condition="data.photoCount == 0">
+            <strong slot="title">This album has no photos yet.</strong>
+        </basic-card>
+
+        <basic-grid min="sm" max="none" gap="sm" data-photo-grid cms-condition="data.photoCount > 0">
+            <figure cms-repeat="data.photos as photo">
+                <img src="/.cms/sources/photo-albums/publicPhoto?id={{ photo.id }}" data-photo-source-url="publicPhoto" data-source-image-access="public" data-source-width="{{ photo.width }}" data-source-height="{{ photo.height }}" alt="{{ photo.alt }}" loading="lazy" decoding="async" style="display:block;width:100%;height:auto">
+                <figcaption cms-condition="data.display.showCaptions && photo.caption">{{ photo.caption }}</figcaption>
+                <time datetime="{{ photo.takenAt }}" cms-condition="data.display.showTakenAt && photo.takenAt">{{ photo.takenAt }}</time>
+                <a href="/.cms/sources/photo-albums/publicPhoto?id={{ photo.id }}" data-photo-source-url="publicPhoto" download cms-condition="data.display.allowDownloads">Download original</a>
+            </figure>
+        </basic-grid>
+    </basic-stack>
+</photo-album-gallery>

@@ -2,7 +2,11 @@ import { describe, expect, test } from "bun:test";
 import getIntegrationCatalogue from "cms-control/api/_platform/integrations/catalogue.get";
 import getIntegrations from "cms-control/api/_platform/integrations/list.get";
 import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
-import type { IntegrationDefinition, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import {
+    IntegrationRepositoryUnavailableError,
+    type IntegrationDefinition,
+    type IntegrationDefinitionRepository,
+} from "@bernouy/cms-integrations";
 import { makeCms, postImport, TEST_SECRET_SOURCE_DEFINITION } from "./support/helpers";
 
 describe("GET /api/integrations/list", () => {
@@ -61,6 +65,24 @@ describe("GET /api/integrations/list", () => {
         ).json();
 
         expect(body).toEqual([validDefinition]);
+    });
+
+    test("surfaces repository unavailability instead of returning an empty partial catalogue", async () => {
+        const unavailable = new IntegrationRepositoryUnavailableError();
+        const integrationCatalog: IntegrationDefinitionRepository = {
+            list: async () => [{ kind: "remote", label: "Remote", versions: ["1.0.0"] }],
+            getIndex: async () => null,
+            listVersions: async () => [],
+            get: async () => {
+                throw unavailable;
+            },
+        };
+
+        await expect(
+            getIntegrations(new Request("http://localhost/cms/api/integrations/list"), {
+                integrationCatalog,
+            } as any),
+        ).rejects.toBe(unavailable);
     });
 });
 

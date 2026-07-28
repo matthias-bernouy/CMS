@@ -8,6 +8,11 @@
                 "manifest": "sql/schema.manifest.json"
             }
         ],
+        "compatibility": {
+            "schema": {
+                "$include": "compatibility/schema.json"
+            }
+        },
         "functions": [
             {
                 "name": "cms-consent",

@@ -36,6 +36,7 @@ import {
     registerDeliverySourceProxy,
 } from "cms-delivery/core/sources/registerSourceProxy";
 import { deliverySourceOverlaySchemaCache } from "cms-delivery/core/sources/requestScope";
+import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 import {
     PRIVACY_ANALYTICS_ROUTES,
     analyticsPreferencePost,
@@ -151,6 +152,15 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     }
 
     runner.setDefaultEndpoint("GET", (req) => recordPageView(req, delivery));
+    runner.setDefaultEndpoint("HEAD", async (req) => withoutBody(await handlePageRequest(req, delivery)));
+}
+
+function withoutBody(response: Response): Response {
+    return new Response(null, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+    });
 }
 
 function canonicalSignupSourceRequest(request: Request, basePath: string): Request {

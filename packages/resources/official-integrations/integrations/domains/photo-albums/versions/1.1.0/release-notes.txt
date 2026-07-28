@@ -1,0 +1,12 @@
+Photo Albums 1.1.0
+
+This minor release adds optional, separately stored photo attribution metadata.
+The new photo_albums.photo_credits relation leaves every 1.0.0 row and public
+endpoint compatible while providing a stable persistence contract for future
+credit editing and rendering.
+
+Existing 1.0.0 installations are adopted by exact package digest and observed
+schema, then upgraded through the atomic add-photo-credit migration. Fresh
+installs record the same migration lineage and apply the same named constraints.
+The existing public immutable-cache policy, album-card theme tokens, and their
+bloc bindings remain unchanged.

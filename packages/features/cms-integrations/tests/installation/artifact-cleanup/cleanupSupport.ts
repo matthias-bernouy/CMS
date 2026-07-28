@@ -28,9 +28,9 @@ export function install(definition: IntegrationDefinition, repositories: Cleanup
     });
 }
 
-export function rerun(definition: IntegrationDefinition, repositories: CleanupRepositories) {
+export function upgrade(definition: IntegrationDefinition, repositories: CleanupRepositories) {
     return runIntegrationInstallation({
-        mode: "rerun",
+        mode: "upgrade",
         deps: {
             sources: repositories.sources,
             functions: repositories.functions,
@@ -38,6 +38,6 @@ export function rerun(definition: IntegrationDefinition, repositories: CleanupRe
         },
         installations: repositories.installations,
         integrationId: definition.kind,
-        siteIntegrations: [definition],
+        targetDefinition: definition,
     });
 }

@@ -90,6 +90,12 @@ export class ControlCms {
     get integrationCatalog() {
         return controlCmsAccessors.integrationCatalog(this.state);
     }
+    get integrationPackageResolver() {
+        return controlCmsAccessors.integrationPackageResolver(this.state);
+    }
+    get integrationUpgradeReleases() {
+        return controlCmsAccessors.integrationUpgradeReleases(this.state);
+    }
     get dashboards() {
         return controlCmsAccessors.dashboards(this.state);
     }
@@ -113,6 +119,12 @@ export class ControlCms {
     }
     get integrationConnectorDeployers() {
         return controlCmsAccessors.integrationConnectorDeployers(this.state);
+    }
+    get integrationMigrationRuntime() {
+        return controlCmsAccessors.integrationMigrationRuntime(this.state);
+    }
+    get integrationConnectorBaselineAdopters() {
+        return controlCmsAccessors.integrationConnectorBaselineAdopters(this.state);
     }
     get integrationProvisioners() {
         return controlCmsAccessors.integrationProvisioners(this.state);

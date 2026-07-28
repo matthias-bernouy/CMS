@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import { LocalFsIntegrationInstallationRepository } from "cms-cli/dev-server/stores/integrationInstallations";
 import type { IntegrationRun } from "@bernouy/cms-integrations";
 
+const PACKAGE_DIGEST = "a".repeat(64);
+
 describe("LocalFsIntegrationInstallationRepository", () => {
     test("persists integration installations across repository objects", async () => {
         const siteDir = await mkdtemp(join(tmpdir(), "p9r-integrations-"));
@@ -15,6 +17,7 @@ describe("LocalFsIntegrationInstallationRepository", () => {
             id: "test",
             label: "Test",
             definitionVersion: "1",
+            packageDigest: PACKAGE_DIGEST,
             answersSnapshot: { id: "main" },
             secretRefs: { apiKey: "TEST_MAIN_API_KEY" },
             secretInputs: ["apiKey"],
@@ -26,6 +29,7 @@ describe("LocalFsIntegrationInstallationRepository", () => {
         const loaded = await second.get("test");
 
         expect(loaded?.id).toBe("test");
+        expect(loaded?.packageDigest).toBe(PACKAGE_DIGEST);
         expect(loaded?.createdAt).toBeInstanceOf(Date);
         expect(loaded?.runs[0]?.startedAt).toBeInstanceOf(Date);
         expect((await second.list()).map((installation) => installation.id)).toEqual(["test"]);
@@ -35,7 +39,13 @@ describe("LocalFsIntegrationInstallationRepository", () => {
             kind: "test",
             answers: { id: "main" },
         });
+        expect(Object.hasOwn(authoringImport, "packageDigest")).toBeFalse();
         expect(JSON.stringify(authoringImport)).not.toContain("apiKey");
+
+        const generatedInstallations = JSON.parse(
+            await readFile(join(siteDir, ".p9r", "generated", "integration-installations.json"), "utf-8"),
+        );
+        expect(generatedInstallations[0]?.packageDigest).toBe(PACKAGE_DIGEST);
     });
 
     test("keeps only the last twenty runs on replace", async () => {

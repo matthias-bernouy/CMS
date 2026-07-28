@@ -3,6 +3,7 @@
     "transaction": "atomic",
     "entries": [
         { "file": "model.sql" },
+        { "manifest": "model/manifest.json" },
         { "file": "authorization.sql" },
         { "file": "admin-commands.sql" },
         { "file": "client-command.sql" }

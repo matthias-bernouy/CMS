@@ -1,13 +1,25 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
     currentIntegrationRoute,
+    IntegrationApiError,
+    integrationUpgradeVersions,
     integrationRouteUrl,
     pushIntegrationRoute,
     replaceIntegrationRoute,
+    upgradeIntegrationInstallation,
 } from "cms-control/components/admin/Resources/Integrations/api";
+import {
+    confirmIntegrationUpgrade,
+    integrationUpgradeErrorMessage,
+    renderUpgradeChoices,
+} from "cms-control/components/admin/Resources/Integrations/ui/actions/installation";
+
+const realFetch = globalThis.fetch;
 
 afterEach(() => {
+    globalThis.fetch = realFetch;
     document.head.innerHTML = "";
+    document.body.replaceChildren();
     history.replaceState(null, "", "/");
 });
 
@@ -34,3 +46,187 @@ describe("integration admin routes", () => {
         expect(currentIntegrationRoute()).toEqual({ view: "list", tab: "catalogue" });
     });
 });
+
+describe("explicit integration upgrade UI", () => {
+    test("loads newer exact versions and submits only the confirmed target", async () => {
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+        const requests: Array<{ url: string; method: string; body: unknown }> = [];
+        globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+            const url = String(input);
+            requests.push({
+                url,
+                method: init?.method ?? "GET",
+                body: init?.body ? JSON.parse(String(init.body)) : null,
+            });
+            if (url.includes("/versions")) {
+                return Response.json({
+                    id: "commerce",
+                    current: "1.0.0",
+                    stable: "1.1.0",
+                    latest: "2.0.0-beta.1",
+                    versions: ["1.1.0", "2.0.0-beta.1"],
+                });
+            }
+            return Response.json({ installation: { definitionVersion: "1.1.0" } });
+        }) as unknown as typeof fetch;
+
+        const choices = await integrationUpgradeVersions("commerce");
+        await upgradeIntegrationInstallation("commerce", choices.stable!);
+
+        expect(requests).toEqual([
+            {
+                url: "/cms/api/integrations/installations/versions?id=commerce",
+                method: "GET",
+                body: null,
+            },
+            {
+                url: "/cms/api/integrations/installations/upgrade?id=commerce",
+                method: "POST",
+                body: { version: "1.1.0" },
+            },
+        ]);
+    });
+
+    test("renders channel labels without converting them into mutable upgrade targets", () => {
+        const panel = upgradePanel();
+
+        renderUpgradeChoices(panel, {
+            id: "commerce",
+            current: "1.0.0",
+            stable: "1.1.0",
+            versions: ["1.1.0"],
+            targets: [
+                {
+                    version: "1.1.0",
+                    eligible: true,
+                    evidence: "composite",
+                    freshInstallOnly: false,
+                    releaseLevel: "minor",
+                    reasons: [],
+                    migrations: [
+                        {
+                            connectorKey: "primary",
+                            lineageId: "commerce-supabase-v1",
+                            supportedSourceRange: "^1.0.0",
+                            rollback: "available",
+                            pointOfNoReturn: "cleanup",
+                            cmsMediatedCutover: "binding-revision",
+                            providerDirectCutover: "expand-in-code",
+                            cmsMediatedCutoverOutcome: "not-supported",
+                            providerDirectCutoverOutcome: "not-supported",
+                            activationOutcome: "not-supported",
+                            cmsDrainSeconds: 30,
+                        },
+                        {
+                            connectorKey: "audit",
+                            lineageId: "commerce-audit-v1",
+                            supportedSourceRange: ">=1.0.0 <1.1.0",
+                            rollback: "unavailable-after-ponr",
+                            pointOfNoReturn: "contract",
+                            cmsMediatedCutover: "binding-revision",
+                            providerDirectCutover: "provider-journal",
+                            cmsMediatedCutoverOutcome: "passed",
+                            providerDirectCutoverOutcome: "passed",
+                            activationOutcome: "not-applicable",
+                            providerDrainSeconds: 60,
+                            downtimeStatus: "zero-downtime",
+                            observedDowntimeSeconds: 0,
+                            rollbackVerified: true,
+                            pointOfNoReturnObservation: "not-crossed",
+                        },
+                    ],
+                },
+                {
+                    version: "2.0.0-beta.1",
+                    eligible: false,
+                    evidence: "composite",
+                    freshInstallOnly: true,
+                    releaseLevel: "major",
+                    reasons: ["The release is fresh-install-only."],
+                    migrations: [],
+                },
+            ],
+        });
+
+        const select = panel.querySelector<HTMLSelectElement>("[data-upgrade-target]")!;
+        expect(Array.from(select.options).map(({ value, textContent }) => ({ value, textContent }))).toEqual([
+            {
+                value: "1.1.0",
+                textContent:
+                    "1.1.0 (stable, primary from ^1.0.0; rollback available, audit from >=1.0.0 <1.1.0; rollback unavailable-after-ponr)",
+            },
+        ]);
+        expect(select.value).toBe("1.1.0");
+        expect(panel.querySelector<HTMLInputElement>("[data-upgrade-confirmation]")?.placeholder).toBe("1.1.0");
+        expect(panel.textContent).toContain("Select and confirm an exact target version");
+        expect(panel.textContent).toContain("tested migration ^1.0.0");
+        expect(panel.textContent).toContain("tested migration >=1.0.0 <1.1.0");
+        expect(panel.textContent).toContain("CMS-mediated binding-revision");
+        expect(panel.textContent).toContain("provider-direct expand-in-code");
+        expect(panel.textContent).toContain("provider-direct provider-journal");
+        expect(panel.textContent).toContain("not-supported: declared, not executed by current runner");
+        expect(panel.textContent).toContain("CMS-mediated binding-revision (passed: executed by runner)");
+        expect(panel.textContent).toContain("activation not-applicable");
+        expect(panel.textContent).toContain("PONR cleanup");
+        expect(panel.textContent).toContain("PONR contract (not-crossed)");
+        expect(panel.textContent).toContain("PONR cleanup (not recorded)");
+        expect(panel.textContent).toContain("drain 30s");
+        expect(panel.textContent).toContain("rollback (not verified)");
+        expect(panel.textContent).toContain("downtime evidence not recorded");
+        expect(panel.textContent).toContain("downtime zero-downtime 0s");
+        expect(panel.textContent).toContain("2.0.0-beta.1: The release is fresh-install-only");
+    });
+
+    test("does not submit until the administrator types the exact selected version", async () => {
+        const panel = upgradePanel();
+        panel.dataset.integrationId = "commerce";
+        const button = document.createElement("button");
+        button.dataset.upgradeConfirm = "";
+        panel.append(button);
+        renderUpgradeChoices(panel, {
+            id: "commerce",
+            current: "1.0.0",
+            stable: "1.1.0",
+            versions: ["1.1.0"],
+        });
+        let requests = 0;
+        globalThis.fetch = (async () => {
+            requests++;
+            return Response.json({});
+        }) as unknown as typeof fetch;
+
+        panel.querySelector<HTMLInputElement>("[data-upgrade-confirmation]")!.value = "stable";
+        await confirmIntegrationUpgrade(button);
+        expect(requests).toBe(0);
+        expect(panel.querySelector("[data-upgrade-status]")?.textContent).toContain("Type 1.1.0 exactly");
+
+        panel.querySelector<HTMLInputElement>("[data-upgrade-confirmation]")!.value = "1.1.0";
+        await confirmIntegrationUpgrade(button);
+        expect(requests).toBe(1);
+    });
+
+    test("turns repository conflicts, validation failures, and outages into actionable messages", () => {
+        expect(integrationUpgradeErrorMessage(new IntegrationApiError(409, "conflict"))).toContain(
+            "Reload the available versions",
+        );
+        expect(integrationUpgradeErrorMessage(new IntegrationApiError(422, "dependency range failed"))).toContain(
+            "dependency range failed",
+        );
+        expect(integrationUpgradeErrorMessage(new IntegrationApiError(503, "offline"))).toContain(
+            "installed version remains unchanged",
+        );
+    });
+});
+
+function upgradePanel(): HTMLElement {
+    const panel = document.createElement("section");
+    panel.dataset.upgradePanel = "";
+    panel.innerHTML = `
+        <div data-upgrade-form hidden>
+            <select data-upgrade-target></select>
+            <input data-upgrade-confirmation />
+        </div>
+        <p data-upgrade-status></p>
+    `;
+    return panel;
+}

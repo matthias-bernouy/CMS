@@ -52,6 +52,7 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",

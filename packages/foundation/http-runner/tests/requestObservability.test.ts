@@ -70,6 +70,52 @@ describe("request correlation", () => {
             server.stop();
         }
     });
+
+    test("serializes an explicit public error code without exposing private fields", async () => {
+        const errorLog = spyOn(console, "error").mockImplementation(() => {});
+        const runner = new BunRunner();
+        runner.get("/coded-error", () => {
+            throw Object.assign(new Error("Repository unavailable"), {
+                status: 503,
+                publicCode: "repository_unavailable",
+                privateDetail: "internal.example.test",
+            });
+        });
+        const server = serveForTest(runner);
+
+        try {
+            const response = await server.request("GET", "/coded-error");
+            expect(response.status).toBe(503);
+            expect(await response.json()).toEqual({
+                error: "Repository unavailable",
+                code: "repository_unavailable",
+            });
+        } finally {
+            server.stop();
+            errorLog.mockRestore();
+        }
+    });
+
+    test("dispatches explicit HEAD routes inside groups", async () => {
+        const runner = new BunRunner();
+        runner.group("/public", (group) => {
+            group.addEndpoint(
+                "HEAD",
+                "/resource",
+                () => new Response(null, { headers: { etag: '"resource-digest"' } }),
+            );
+        });
+        const server = serveForTest(runner);
+
+        try {
+            const response = await server.request("HEAD", "/public/resource");
+            expect(response.status).toBe(200);
+            expect(response.headers.get("etag")).toBe('"resource-digest"');
+            expect(await response.text()).toBe("");
+        } finally {
+            server.stop();
+        }
+    });
 });
 
 describe("request timing", () => {

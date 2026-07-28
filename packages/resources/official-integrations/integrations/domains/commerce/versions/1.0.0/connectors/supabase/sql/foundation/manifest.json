@@ -22,6 +22,8 @@
         { "file": "order-financial/legal/buyer-legal-acceptance.sql" },
         { "file": "order-financial/legal/marketplace-service-withdrawal-requests.sql" },
         { "file": "order-financial/fulfillment/order-fulfillments.sql" },
+        { "file": "order-financial/fulfillment/order-fulfillment-deadline-migrations.sql" },
+        { "file": "order-financial/fulfillment/order-fulfillment-indexes.sql" },
         { "file": "order-financial/fulfillment/order-settlements.sql" },
         { "file": "order-financial/claims/marketplace-claims.sql" },
         { "file": "order-financial/claims/claim-events-evidence-and-returns.sql" },

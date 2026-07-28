@@ -6,10 +6,18 @@ integration catalogues.
 ## Boundaries
 
 - This package mounts read-only repository endpoints onto a provided `Runner`.
+- The explicit `./catalog` subpath exposes the repository-specific SSR page
+  provider. It receives a `RepositoryCatalogReader`, returns CMS page values,
+  and stays structurally compatible with Delivery without importing it.
 - This package consumes feature contracts and receives concrete repositories
   through its constructor.
 - Do not import filesystem, database, or network adapters here. Runtimes decide
   whether a repository is backed by local resources, storage, or another API.
+- Do not import mutable-registry internals into the catalog provider. Map the
+  public compatibility DTO at the injected reader boundary.
+- The optional public compatibility route receives a structural reader and
+  projects an explicit allowlist. Never expose report actors, filesystem paths,
+  evidence-source locations, or unknown upstream fields.
 
 ## Rules
 

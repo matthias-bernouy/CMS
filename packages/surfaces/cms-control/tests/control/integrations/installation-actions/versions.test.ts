@@ -1,0 +1,190 @@
+import { describe, expect, test } from "bun:test";
+import type { IntegrationDefinitionIndex } from "@bernouy/cms-integrations";
+import getIntegrationInstallationVersions from "cms-control/api/_platform/integrations/installations/versions.get";
+import { createInstallation, makeCms, TEST_SECRET_SOURCE_DEFINITION } from "../support/helpers";
+
+const INDEX: IntegrationDefinitionIndex = {
+    kind: "test-secret-source",
+    label: "Test secret source",
+    stable: "1.1.0",
+    latest: "2.0.0-beta.1",
+    versions: [
+        { version: "1.0.0", path: "versions/1.0.0", definition: "definition.json" },
+        { version: "1.1.0", path: "versions/1.1.0", definition: "definition.json" },
+        { version: "2.0.0-beta.1", path: "versions/2.0.0-beta.1", definition: "definition.json" },
+    ],
+};
+
+describe("GET integration installation versions", () => {
+    test("returns channel and exact-version choices without repository paths", async () => {
+        const { cms, integrationInstallations, integrationCatalog } = makeCms();
+        await createInstallation(integrationInstallations, "test-secret-source");
+        integrationCatalog.getIndex = async () => INDEX;
+
+        const response = await getIntegrationInstallationVersions(
+            new Request("http://control.test/api/integrations/installations/versions?id=test-secret-source"),
+            cms,
+        );
+        const text = await response.text();
+        expect(response.status).toBe(200);
+        const body = JSON.parse(text);
+        expect(body).toMatchObject({
+            id: "test-secret-source",
+            current: "1.0.0",
+            stable: "1.1.0",
+            latest: "2.0.0-beta.1",
+            versions: ["1.1.0", "2.0.0-beta.1"],
+        });
+        expect(body.targets).toEqual([
+            expect.objectContaining({ version: "1.1.0", eligible: true, evidence: "legacy-index" }),
+            expect.objectContaining({ version: "2.0.0-beta.1", eligible: true, evidence: "legacy-index" }),
+        ]);
+        expect(text).not.toContain("versions/1.0.0");
+        expect(text).not.toContain("definition.json");
+    });
+
+    test("omits installed and older versions from the upgrade choices", async () => {
+        const { cms, integrationInstallations, integrationCatalog } = makeCms();
+        await createInstallation(integrationInstallations, "test-secret-source");
+        const installation = await integrationInstallations.get("test-secret-source");
+        await integrationInstallations.replace({ ...installation!, definitionVersion: "1.1.0" });
+        integrationCatalog.getIndex = async () => INDEX;
+
+        const response = await getIntegrationInstallationVersions(
+            new Request("http://control.test/api/integrations/installations/versions?id=test-secret-source"),
+            cms,
+        );
+
+        expect(await response.json()).toMatchObject({
+            id: "test-secret-source",
+            current: "1.1.0",
+            latest: "2.0.0-beta.1",
+            versions: ["2.0.0-beta.1"],
+            targets: [expect.objectContaining({ version: "2.0.0-beta.1", eligible: true })],
+        });
+    });
+
+    test("omits blocked, inadmissible, and unverified versions from upgrade choices and channels", async () => {
+        const { cms, integrationInstallations, integrationCatalog } = makeCms();
+        await createInstallation(integrationInstallations, "test-secret-source");
+        integrationCatalog.getIndex = async () => ({
+            ...INDEX,
+            stable: "1.1.0",
+            latest: "2.0.0-beta.1",
+            versions: [
+                INDEX.versions[0]!,
+                { ...INDEX.versions[1]!, status: "blocked" },
+                { ...INDEX.versions[2]!, status: "unverified" },
+                {
+                    version: "2.0.0",
+                    path: "versions/2.0.0",
+                    definition: "definition.json",
+                    status: "inadmissible",
+                },
+            ],
+        });
+
+        const response = await getIntegrationInstallationVersions(
+            new Request("http://control.test/api/integrations/installations/versions?id=test-secret-source"),
+            cms,
+        );
+
+        const body = await response.json();
+        expect(body).toMatchObject({
+            id: "test-secret-source",
+            current: "1.0.0",
+            versions: [],
+        });
+        expect(body.targets).toEqual([
+            expect.objectContaining({
+                version: "1.1.0",
+                eligible: false,
+                reasons: [expect.stringContaining("blocked")],
+            }),
+            expect.objectContaining({
+                version: "2.0.0-beta.1",
+                eligible: false,
+                reasons: [expect.stringContaining("unverified")],
+            }),
+            expect.objectContaining({
+                version: "2.0.0",
+                eligible: false,
+                reasons: [expect.stringContaining("inadmissible")],
+            }),
+        ]);
+    });
+
+    test("uses exact composite evidence to separate eligible upgrades from fresh-install-only releases", async () => {
+        const sourceDigest = "a".repeat(64);
+        const fixture = makeCms([
+            TEST_SECRET_SOURCE_DEFINITION,
+            { ...TEST_SECRET_SOURCE_DEFINITION, version: "1.1.0" },
+            { ...TEST_SECRET_SOURCE_DEFINITION, version: "2.0.0-beta.1" },
+        ]);
+        await createInstallation(fixture.integrationInstallations, "test-secret-source", sourceDigest);
+        fixture.integrationCatalog.getIndex = async () => INDEX;
+        Object.assign(fixture.cms, {
+            integrationUpgradeReleases: {
+                get: async (_kind: string, version: string) => ({
+                    kind: "test-secret-source",
+                    version,
+                    packageDigest: version === "1.1.0" ? "b".repeat(64) : "c".repeat(64),
+                    status: "installable",
+                    installable: true,
+                    freshInstallOnly: version !== "1.1.0",
+                    compatibility: { releaseLevel: version === "1.1.0" ? "minor" : "major" },
+                    decision: { admissible: true },
+                    migrations: [],
+                }),
+            },
+        });
+
+        const response = await getIntegrationInstallationVersions(
+            new Request("http://control.test/api/integrations/installations/versions?id=test-secret-source"),
+            fixture.cms,
+        );
+        const body = await response.json();
+
+        expect(body.versions).toEqual(["1.1.0"]);
+        expect(body.stable).toBe("1.1.0");
+        expect(body.latest).toBeUndefined();
+        expect(body.targets).toEqual([
+            expect.objectContaining({ version: "1.1.0", eligible: true, evidence: "composite" }),
+            expect.objectContaining({
+                version: "2.0.0-beta.1",
+                eligible: false,
+                freshInstallOnly: true,
+                reasons: expect.arrayContaining([expect.stringContaining("fresh-install-only")]),
+            }),
+        ]);
+    });
+
+    test("distinguishes missing installations and unavailable repository history", async () => {
+        const { cms, integrationInstallations, integrationCatalog } = makeCms();
+        const missing = await getIntegrationInstallationVersions(
+            new Request("http://control.test/api/integrations/installations/versions?id=missing"),
+            cms,
+        );
+        expect(missing.status).toBe(404);
+        expect(await missing.json()).toMatchObject({ code: "integration_installation_not_found" });
+
+        await createInstallation(integrationInstallations, "test-secret-source");
+        integrationCatalog.getIndex = async () => null;
+        const unavailable = await getIntegrationInstallationVersions(
+            new Request("http://control.test/api/integrations/installations/versions?id=test-secret-source"),
+            cms,
+        );
+        expect(unavailable.status).toBe(404);
+        expect(await unavailable.json()).toMatchObject({ code: "integration_versions_not_found" });
+    });
+
+    test("requires an installation identifier", async () => {
+        const { cms } = makeCms();
+        await expect(
+            getIntegrationInstallationVersions(
+                new Request("http://control.test/api/integrations/installations/versions"),
+                cms,
+            ),
+        ).rejects.toThrow(/id/);
+    });
+});

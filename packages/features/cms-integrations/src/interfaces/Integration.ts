@@ -1,5 +1,6 @@
 import type { DeclarativeArtifactTemplate } from "./IntegrationArtifacts";
 import type { FunctionStep } from "@bernouy/cms-functions";
+import type { DeclarativeConnectorTemplate } from "./IntegrationConnectorDeployer";
 
 export type {
     DeclarativeArtifactTemplate,
@@ -12,6 +13,51 @@ export type {
     DeclarativeSourceOverlayArtifactTemplate,
     DeclarativeTriggerArtifactTemplate,
 } from "./IntegrationArtifacts";
+export type {
+    DeclarativeConnectorCompatibility,
+    DeclarativeConnectorFunctionCompatibility,
+    DeclarativeConnectorFunctionHttpContract,
+    DeclarativeConnectorFunctionHttpDataShape,
+    DeclarativeConnectorFunctionHttpEndpointContract,
+    DeclarativeConnectorFunctionHttpResponseContract,
+    DeclarativeConnectorFunctionHttpStringFormat,
+    DeclarativeConnectorFunctionTemplate,
+    DeclarativeConnectorSchemaColumnContract,
+    DeclarativeConnectorSchemaConstraintContract,
+    DeclarativeConnectorSchemaContract,
+    DeclarativeConnectorSchemaForeignKeyAction,
+    DeclarativeConnectorSchemaNamespaceContract,
+    DeclarativeConnectorSchemaRelationContract,
+    DeclarativeConnectorSchemaRelationKind,
+    DeclarativeConnectorSchemaTemplate,
+    DeclarativeConnectorTemplate,
+} from "./IntegrationConnectorDeployer";
+export { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES } from "./IntegrationConnectorDeployer";
+export type {
+    DeclarativeConnectorDatabaseClockDefaultProjection,
+    DeclarativeConnectorLegacyAdoptionBaseline,
+    DeclarativeConnectorInstallBaseline,
+    DeclarativeConnectorMigrationDescriptor,
+    DeclarativeConnectorMigrationEquivalence,
+    DeclarativeConnectorMigrationPlan,
+    DeclarativeConnectorMigrationReference,
+    DeclarativeConnectorMigrationSource,
+    DeclarativeConnectorRepeatableDescriptor,
+    IntegrationCmsMediatedCutover,
+    IntegrationMigrationChecksum,
+    IntegrationMigrationHttpSmoke,
+    IntegrationProviderDirectCutover,
+} from "./IntegrationConnectorDeployer";
+export {
+    OBSERVED_SCHEMA_CONTRACT_V1,
+    type ObservedSchemaColumnV1,
+    type ObservedSchemaConstraintV1,
+    type ObservedSchemaContractIdentity,
+    type ObservedSchemaContractV1,
+    type ObservedSchemaNamespaceV1,
+    type ObservedSchemaOwnerV1,
+    type ObservedSchemaRelationV1,
+} from "./IntegrationConnectorDeployer";
 
 export type IntegrationIcon = { path: string };
 
@@ -122,6 +168,7 @@ export type IntegrationThemeDefinition = {
 export type IntegrationDependency = {
     name: string;
     kind: string;
+    versionRange?: string;
     optional?: boolean;
 };
 
@@ -136,25 +183,6 @@ export type DeclarativeGeneratedSecretTemplate = {
     generator?: "token";
     bytes?: number;
     prefix?: string;
-};
-
-export type DeclarativeConnectorSchemaTemplate =
-    | { path: string; manifest?: never }
-    | { manifest: string; path?: never };
-
-export type DeclarativeConnectorFunctionTemplate = {
-    name: string;
-    directory: string;
-    configPath?: string;
-    secrets?: Record<string, string>;
-};
-
-export type DeclarativeConnectorTemplate = {
-    provider: string;
-    root?: string;
-    dataApiSchemas?: string[];
-    schemas?: DeclarativeConnectorSchemaTemplate[];
-    functions?: DeclarativeConnectorFunctionTemplate[];
 };
 
 export type DeclarativeProvisionOutputTemplate = {

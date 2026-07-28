@@ -54,8 +54,8 @@ The public routes are:
   gateway while `cms_mongo` remains internal.
 - Ports 80 and 443 reachable from the internet.
 - `openssl`, `rsync`, `gzip`, and `sha256sum` on the deployment machines.
-- Enough disk space for the MongoDB volume, per-instance `files` directories,
-  image tarballs, and backups.
+- Enough disk space for the MongoDB volume, per-instance `files` and
+  `integration-packages` directories, image tarballs, staging, and backups.
 - A clean CmsCore checkout and its complete workspace when building the image.
 
 Before starting an instance, create DNS records for both its public domain and
@@ -239,23 +239,30 @@ CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
     printf 'CMS_ADMIN_EMAIL=%s\n' "admin@${DOMAIN}"
     printf 'CMS_ADMIN_PASSWORD=%s\n' "${CMS_ADMIN_PASSWORD}"
     printf 'ANALYTICS_SALT_SECRET=%s\n' "$(openssl rand -hex 32)"
+    printf 'CMS_HTTP_CLIENT_ADDRESS_MODE=%s\n' 'trusted-proxy'
+    printf 'CMS_HTTP_TRUSTED_PROXY_HOPS=%s\n' '1'
+    printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT=%s\n' '60'
+    printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS=%s\n' '60'
+    printf 'CMS_INTEGRATION_PACKAGE_CACHE_DIR=%s\n' '/var/lib/cms/integration-packages'
 } > .env
 
 chmod 600 .env
 unset MONGO_APP_PASSWORD CMS_ADMIN_PASSWORD
 
-sudo install -d -o 1000 -g 1000 -m 0750 files
+sudo install -d -o 1000 -g 1000 -m 0750 files integration-packages
 
 docker compose config --quiet
 docker compose up -d --wait
 docker compose ps
 ```
 
-The image runs with UID/GID 1000. The bind-mounted `files` directory must be
-writable by that identity. Keep the generated initial admin password in a
-password manager before removing it from any operator workflow; it remains in
-the protected `.env` because Compose requires the variable on every start, but
-the runtime uses it only when bootstrapping a missing local credential.
+The image runs with UID/GID 1000. The bind-mounted `files` and
+`integration-packages` directories must be writable by that identity and stay
+separate. The runtime resolves both roots and rejects aliases or parent/child
+overlap before connecting to MongoDB. Keep the generated initial admin password
+in a password manager before removing it from any operator workflow; it remains
+in the protected `.env` because Compose requires the variable on every start,
+but the runtime uses it only when bootstrapping a missing local credential.
 
 Check both public URLs and an authenticated file upload after deployment. TLS
 issuance may take a short time after a domain is first attached.
@@ -337,14 +344,74 @@ closed: the runtime keeps both responsive cohorts disabled, and a residual
 `cms-width` request receives a non-cacheable `503` instead of an original under
 a false width descriptor.
 
+### Public repository download protection
+
+Integration catalog reads are public and anonymous. Exact packages include the
+complete integration sources, so Delivery applies a fixed-window download limit
+before reading a package from disk or fetching it from a remote repository. No
+repository read token exists or needs to be configured.
+
+The standard deployment sets `CMS_HTTP_CLIENT_ADDRESS_MODE=trusted-proxy` and
+`CMS_HTTP_TRUSTED_PROXY_HOPS=1` because `nginx-proxy` is its only trusted public
+ingress hop. The hop count is the complete trusted suffix of the forwarding
+chain. If a CDN is added in front of `nginx-proxy`, set
+`CMS_HTTP_TRUSTED_PROXY_HOPS=2` and verify that the CDN overwrites or appends
+`X-Forwarded-For` as expected. Add one for every further trusted ingress hop;
+an incorrect count can group unrelated clients or reject valid downloads.
+
+`CMS_HTTP_CLIENT_ADDRESS_MODE` is intentionally independent of
+`ANALYTICS_TRUST_PROXY`. Do not enable trusted-proxy mode for a directly exposed
+listener, and do not rely on client-supplied forwarding headers. The
+configuration-safe runtime default is `disabled`, but this Compose file
+explicitly enables the limiter even when no CDN is installed. Manual
+deployments that retain `disabled` accept the documented residual bandwidth and
+abuse risk and emit an operational warning.
+
+`CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT` defaults to 60 accepted package GETs
+per client within the 60-second
+`CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS` window. A rejected download
+returns `429 Too Many Requests` with `Retry-After`; catalog metadata and `HEAD`
+requests do not consume this budget. Tune both values together using observed
+traffic. An ingress cache or CDN is recommended for immutable packages, but is
+not required for the origin limiter to be active.
+
 ### Integrations and SMTP
 
 | Variable | Purpose |
 | --- | --- |
-| `P9R_INTEGRATION_REPOSITORY_URL` | Optional remote integration catalog; the embedded official catalog is used when unset. |
+| `P9R_INTEGRATION_REPOSITORY_URL` | Optional public, anonymous global integration catalog; the embedded official catalog is used when unset. |
+| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL` | Internal management API base URL for the one designated repository-management CMS. Configure it only through the management override. |
+| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE` | Absolute in-container path to the shared management-token secret. Token bytes are read server-side and never sent to the browser. |
+| `P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER` | Exact opaque authentication subject allowed to open the repository console and gateway routes. Roles alone do not grant this capability. |
+| `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS` | Bounded private upstream timeout; defaults to 60 seconds in the management override. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Optional SMTP connection settings forwarded when deploying Supabase connector functions. |
 | `SMTP_USER`, `SMTP_PASSWORD` | Optional SMTP credentials forwarded to those functions. |
 | `SMTP_FROM`, `SMTP_REPLY_TO` | Optional sender settings forwarded to those functions. |
+
+When `P9R_INTEGRATION_REPOSITORY_URL` is set, the CMS enters global repository
+read mode. Its Delivery `/.cms/repository` routes re-serve only the remote
+catalog, definitions, assets, release notes, and exact packages; they do not
+merge in official packages embedded in the image. Delivery applies its public
+package-download limit before fetching the upstream package. The embedded
+catalog remains an internal legacy fallback for already installed packages.
+When the variable is unset, Delivery serves that embedded catalog directly and
+the CMS consumer uses its Delivery loopback without recursively calling itself.
+Neither mode uses a repository read token.
+
+The designated management CMS additionally publishes the searchable public
+catalog at `/integrations` through Delivery and exposes `/admin/repository`
+through authenticated Control. The console can inspect health, versions and
+compatibility history, upload an immutable package, append a compatibility
+reassessment, and explicitly promote a report-backed version to `stable`.
+Only the exact configured subject can reach the page or its `/api/repository/*`
+gateway. Browser requests remain same-origin and never contain the internal
+management URL, Bearer token, report actors, filesystem paths, or raw upstream
+responses.
+
+Use `infra/images/cms-repository/management-cms.override.yml` only for that CMS
+instance. Ordinary CMS instances should configure at most the anonymous
+`P9R_INTEGRATION_REPOSITORY_URL`; leaving every management variable unset keeps
+the private capability and its navigation entry absent.
 
 Configure Supabase connector deployments after the CMS is running: open
 **Settings → Connector providers → Supabase**, then enter the project reference
@@ -360,9 +427,21 @@ secrets. Never expose them to browser code or commit them to the repository.
 ## Backups
 
 Back up MongoDB, every instance's `files` directory, and the protected `.env`
-files. Keep backups encrypted and test restoration regularly. To obtain a
-cross-store consistent backup, pause the affected CMS containers while dumping
-their databases and archiving their files; this causes a planned interruption.
+files. The `integration-packages` cache has a separate recovery policy: it is
+reconstructible while every pinned repository package remains available, but a
+backup is required to guarantee connector reruns during an outage or after a
+historical package disappears. Keep cache backups separate from authoritative
+media backups, encrypted, and restore them with UID/GID 1000 and mode `0750`.
+
+Lot 0 performs no automatic object garbage collection. Monitor the capacity of
+each `integration-packages` bind mount and retain headroom for one complete
+staging object in addition to committed packages. A full cache must fail before
+an installation pin changes; it must never spill into `/tmp`, the image root,
+or the media directory.
+
+Test restoration regularly. To obtain a cross-store consistent backup, pause
+the affected CMS containers while dumping their databases and archiving their
+files; this causes a planned interruption.
 
 For an all-sites backup, stop every local instance before starting the dump.
 The following loop deliberately ignores template directories without a `.env`:
@@ -422,8 +501,8 @@ cd /opt/cms-sites/client
 umask 077
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 docker compose stop cms
-tar --numeric-owner -czf "client-instance-${STAMP}.tar.gz" \
-    files .env compose.yml
+tar --numeric-owner -czf "client-media-${STAMP}.tar.gz" files .env compose.yml
+tar --numeric-owner -czf "client-integration-packages-${STAMP}.tar.gz" integration-packages
 docker compose up -d --wait
 ```
 
@@ -437,9 +516,19 @@ external MongoDB. Copy backups away from the application server.
 
 ### CMS image
 
-Build and transfer every release under a new tag. After loading or pulling the
-new image, edit only `CMS_IMAGE` in the instance `.env`, validate, and recreate
-the service:
+Build and transfer every release under a new tag. Before the first update that
+adds the integration package cache, install the matching Compose file and
+prepare its dedicated bind mount explicitly; Compose is configured to fail
+instead of silently creating a root-owned directory:
+
+```bash
+cd /opt/cms-sites/client
+sudo install -d -o 1000 -g 1000 -m 0750 integration-packages
+```
+
+This one-time storage migration must complete before recreating the service.
+After loading or pulling subsequent images, edit only `CMS_IMAGE` in the
+instance `.env`, validate, and recreate the service:
 
 ```bash
 cd /opt/cms-sites/client

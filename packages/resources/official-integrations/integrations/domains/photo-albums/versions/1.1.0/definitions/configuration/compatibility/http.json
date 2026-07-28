@@ -1,0 +1,12 @@
+{
+    "endpoints": {
+        "$files": [
+            "http/albums.json",
+            "http/health.json",
+            "http/photos.json",
+            "http/public.json",
+            "http/settings.json"
+        ]
+    },
+    "requiredSecrets": ["CMS_PHOTO_ALBUMS_API_KEY"]
+}

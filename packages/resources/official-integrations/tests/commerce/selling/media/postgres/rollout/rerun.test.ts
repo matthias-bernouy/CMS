@@ -19,9 +19,15 @@ type ManagementRequest = { body: BodyInit | null | undefined; method: string; ur
 
 describe("Commerce media connector rerun", () => {
     test("reruns an existing installation and applies current SQL before deploying current Edge", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        const integrationRepository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+        const definition = await integrationRepository.get("commerce");
         if (!definition) {
             throw new Error("Commerce definition not found.");
+        }
+        const version = definition.version ?? "";
+        const located = await integrationRepository.locateExactVersion(definition.kind, version);
+        if (!located) {
+            throw new Error("Commerce package root not found.");
         }
         const requests: ManagementRequest[] = [];
         const forceOptions: boolean[] = [];
@@ -34,12 +40,20 @@ describe("Commerce media connector rerun", () => {
         });
         await secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, "sbp_rollout");
         const deployer = new ConfiguredSupabaseConnectorDeployer({
-            integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
             providerRepository,
             secrets,
             apiBaseUrl: "https://api.supabase.test",
             fetch: managementApi(requests),
         });
+        const packageResolver = {
+            resolve: async () => ({
+                root: located.root,
+                kind: definition.kind,
+                version,
+                digest: "a".repeat(64),
+                definition,
+            }),
+        };
         const deps = {
             sources: new InMemorySourceRepository(),
             sourceOverlays: new InMemorySourceOverlayRepository(),
@@ -61,6 +75,7 @@ describe("Commerce media connector rerun", () => {
             mode: "create",
             deps,
             installations,
+            packageResolver,
             siteIntegrations: [definition],
             dto: { kind: "commerce", answers: { id: "commerce" }, options: {} },
         });
@@ -71,6 +86,7 @@ describe("Commerce media connector rerun", () => {
             mode: "rerun",
             deps,
             installations,
+            packageResolver,
             integrationId: "commerce",
             body: {},
         });

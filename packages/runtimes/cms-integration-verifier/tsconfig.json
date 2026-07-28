@@ -1,0 +1,18 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "baseUrl": ".",
+        "paths": {
+            "cms-integration-verifier/*": ["src/*"]
+        }
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../../features/cms-integration-packages" },
+        { "path": "../../features/cms-integration-verification" },
+        { "path": "../../features/cms-integrations" },
+        { "path": "../../surfaces/cms-repository-management" }
+    ]
+}

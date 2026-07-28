@@ -29,6 +29,31 @@ describe("production CMS composition", () => {
         expect(surfaces).toMatch(/sourceResolveSecret\s*:\s*features\.resolveSecret\s*,/);
     });
 
+    test("mounts anonymous repository reads only on Delivery and uses its loopback port", async () => {
+        const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
+        const entrypoint = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const controlSection = surfaces.slice(
+            surfaces.indexOf("const controlRunner"),
+            surfaces.indexOf("const deliveryRunner"),
+        );
+        const deliverySection = surfaces.slice(surfaces.indexOf("const deliveryRunner"));
+
+        expect(controlSection).not.toContain('group("/.cms/repository"');
+        expect(deliverySection).toContain('deliveryRunner.group("/.cms/repository"');
+        expect(entrypoint).toContain("127.0.0.1:${env.DELIVERY_PORT}/.cms/repository");
+        expect(entrypoint).not.toContain("127.0.0.1:${env.CONTROL_PORT}/.cms/repository");
+    });
+
+    test("initializes the durable package cache before mounting listeners", async () => {
+        const entrypoint = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const cacheReady = entrypoint.search(/await\s+integrations\.integrationPackageCache\.init\s*\(\s*\)/);
+        const surfaces = entrypoint.search(/await\s+mountProductionSurfaces\s*\(\s*\{/);
+
+        expect(cacheReady).toBeGreaterThan(-1);
+        expect(surfaces).toBeGreaterThan(cacheReady);
+        expect(entrypoint).toContain("packageCacheObserve: createIntegrationPackageCacheObserver()");
+    });
+
     test("wires durable functions and triggers into Control and Delivery", async () => {
         const stores = await Bun.file(new URL("../src/runtime/stores/features.ts", import.meta.url)).text();
         const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();

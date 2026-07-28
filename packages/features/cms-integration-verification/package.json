@@ -1,0 +1,22 @@
+{
+    "name": "@bernouy/cms-integration-verification",
+    "version": "0.1.0",
+    "description": "Pure verification and release-admission contracts for CMS integrations.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./sdk/v1": "./src/sdk/v1.ts"
+    },
+    "files": [
+        "src/",
+        "dist/",
+        "tsconfig.json"
+    ],
+    "dependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
+        "typescript": "^5.9.3"
+    }
+}

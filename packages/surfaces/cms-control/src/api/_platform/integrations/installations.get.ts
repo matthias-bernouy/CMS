@@ -2,7 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import {
     buildIntegrationInstallationView,
     loadIntegrationArtifactContext,
-} from "cms-control/core/management/integrations/installationViews";
+} from "cms-control/core/management/integrations/presentation/installationViews";
 
 export default async function getIntegrationInstallations(req: Request, cms: ControlCms) {
     const id = new URL(req.url).searchParams.get("id");

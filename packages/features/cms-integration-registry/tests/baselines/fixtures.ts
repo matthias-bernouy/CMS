@@ -1,0 +1,53 @@
+import { identifyObservedSchemaContract } from "@bernouy/cms-integrations";
+import { parseReviewedSchemaBaseline, type ReviewedSchemaBaselineV1 } from "@bernouy/cms-integration-verification";
+
+export const PACKAGE_DIGEST = "a".repeat(64);
+const ENVIRONMENT_DIGEST = "b".repeat(64);
+const IMAGE_DIGEST = `sha256:${"c".repeat(64)}`;
+const CREATED_AT = "2026-07-26T10:00:00.000Z";
+
+export async function reviewedBaseline(
+    reportId = "baseline-root",
+    options: Readonly<{
+        supersedes?: string;
+        reason?: string;
+        kind?: string;
+        version?: string;
+        packageDigest?: string;
+    }> = {},
+): Promise<ReviewedSchemaBaselineV1> {
+    const kind = options.kind ?? "example";
+    const connectorKey = "primary";
+    const lineageId = `${kind}-supabase-v1`;
+    const observedSchema = {
+        schema: "cms.integration.observed-schema.v1",
+        owner: { connectorKey, lineageId },
+        namespaces: [{ name: "public", relations: [] }],
+    } as const;
+    return await parseReviewedSchemaBaseline({
+        schema: "cms.integration.reviewed-schema-baseline.v1",
+        reportId,
+        revisionType: options.supersedes ? "revision" : "root",
+        origin: "legacy-backfill",
+        createdAt: CREATED_AT,
+        ...(options.supersedes ? { supersedes: options.supersedes } : {}),
+        kind,
+        version: options.version ?? "1.0.0",
+        packageDigest: options.packageDigest ?? PACKAGE_DIGEST,
+        connectorKey,
+        lineageId,
+        legacySelector: { provider: "supabase", root: "connectors/supabase" },
+        dependencies: [],
+        observedSchema,
+        observedSchemaDigest: (await identifyObservedSchemaContract(observedSchema)).digest,
+        generator: { name: "cms-schema-generator", version: "1.0.0", imageDigest: IMAGE_DIGEST },
+        environment: { digest: ENVIRONMENT_DIGEST, postgresVersion: "16.10" },
+        policy: { name: "legacy-schema-baseline", version: "1.0.0" },
+        generatedAt: CREATED_AT,
+        provenance: {
+            actor: "official-integrations-ci",
+            reason: options.reason ?? "Reviewed pinned schema observation.",
+            evidenceIds: ["observed-example"],
+        },
+    });
+}

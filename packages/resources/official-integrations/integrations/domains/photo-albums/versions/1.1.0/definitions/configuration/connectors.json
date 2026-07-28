@@ -1,0 +1,40 @@
+[
+    {
+        "provider": "supabase",
+        "connectorKey": "primary",
+        "lineageId": "photo-albums-supabase-v1",
+        "migrationRevision": 1,
+        "root": "connectors/supabase",
+        "dataApiSchemas": [
+            "photo_albums"
+        ],
+        "schemas": [
+            {
+                "manifest": "install/sql/schema.manifest.json"
+            }
+        ],
+        "compatibility": {
+            "schema": {
+                "$include": "compatibility/schema.json"
+            }
+        },
+        "migration": {
+            "$include": "compatibility/migration.json"
+        },
+        "functions": [
+            {
+                "name": "cms-photo-albums",
+                "directory": "functions/cms-photo-albums",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_PHOTO_ALBUMS_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/http.json"
+                    }
+                }
+            }
+        ]
+    }
+]
