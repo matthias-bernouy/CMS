@@ -12,6 +12,9 @@ later.
 - `GET /api/integrations` lists integration summaries.
 - `GET /api/integrations/index?kind=<kind>` returns one integration index.
 - `GET /api/integrations/versions?kind=<kind>` returns the available versions.
+- `GET /api/integrations/catalog` returns the CMS-friendly public catalogue
+  projection. Optional `q`, `category`, `provider`, `compatibility`, `kind`, and
+  `version` query parameters select its list, integration, or exact-version view.
 - `GET /api/integrations/definition?kind=<kind>&version=<semver>` returns one
   installable definition. `version` is optional and resolves through the
   repository default channel.
@@ -19,6 +22,16 @@ later.
   canonical version package and its digest metadata.
 - `GET /api/integrations/release-notes?kind=<kind>&version=<semver>` returns the
   exact immutable Markdown notes, or `404` for a bootstrapped legacy package.
+
+When a `RepositoryCatalogReader` is injected as `repositoryCatalog`, the
+surface also mounts `GET /api/integrations/catalog`. The response schema is
+`cms.repository.catalog.v1`; its `view` discriminator is `list`, `integration`,
+or `version` according to the optional `kind` and `version` query parameters.
+List responses accept the same bounded `q`, `category`, `provider`, and
+`compatibility` filters as the server-rendered catalogue. DTO collections use
+arrays rather than record-shaped maps, exact versions include public download
+URLs, and release-note and instruction HTML is rendered through the shared
+Markdown sanitizer.
 
 Every route also exposes `HEAD` and CORS preflight behavior. Package and release
 note routes require an exact version and use immutable public caching.
@@ -39,12 +52,18 @@ projection drops internal source or filesystem locations and unknown upstream
 fields. Responses use the short public cache policy and a representation ETag
 that changes when history is appended.
 
-## Public Catalog Provider
+## Transitional Public Catalog Provider
 
 `@bernouy/cms-repository/catalog` exports `RepositoryCatalogPageProvider`. A
 runtime injects a bounded `RepositoryCatalogReader`, then registers the provider
 with Delivery. The provider has no network adapter, registry dependency, or
 Delivery dependency of its own.
+
+The CMS-authored `/integrations` page from `@bernouy/cms-official-sites` is the
+authoritative public UI once it has been published. Delivery consults stored CMS
+pages first; this provider remains a rollout fallback for repository-management
+instances that have not received the site resource yet. It can be removed in a
+later release after deployments have converged.
 
 It renders canonical, server-side pages for:
 

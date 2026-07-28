@@ -14,7 +14,8 @@ import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } fro
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { createProductionRepositoryManagementAccess } from "../repositoryManagement/composition";
-import { createProductionRepositoryCatalogProvider } from "../repositoryCatalog";
+import { RepositoryCatalogPageProvider } from "@bernouy/cms-repository/catalog";
+import { createProductionRepositoryCatalogReader } from "../repositoryCatalog";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
@@ -33,8 +34,9 @@ export async function mountProductionSurfaces(
 ): Promise<ScheduledTriggerRunner> {
     const { env, core, features, integrations, authentication } = options;
     const repositoryManagement = await createProductionRepositoryManagementAccess(env.repositoryManagement);
-    const repositoryCatalogProvider = repositoryManagement
-        ? createProductionRepositoryCatalogProvider(integrations)
+    const repositoryCatalog = repositoryManagement ? createProductionRepositoryCatalogReader(integrations) : undefined;
+    const repositoryCatalogProvider = repositoryCatalog
+        ? new RepositoryCatalogPageProvider(repositoryCatalog)
         : undefined;
     const scheduledTriggers = runtime.startWorkers({
         functions: features.functions,
@@ -154,6 +156,7 @@ export async function mountProductionSurfaces(
         new runtime.Repository({
             runner: repositoryRunner,
             ...repositoryReads,
+            ...(repositoryCatalog ? { repositoryCatalog } : {}),
         });
     });
     new runtime.Delivery({

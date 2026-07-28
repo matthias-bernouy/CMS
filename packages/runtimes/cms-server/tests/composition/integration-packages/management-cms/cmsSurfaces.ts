@@ -16,6 +16,7 @@ import {
     HttpRepositoryVerificationBundleReader,
 } from "../../../../src/repositoryCatalog";
 import { HttpRepositoryManagementGateway } from "../../../../src/repositoryManagement/gateway";
+import { seedRepositoryHubPage } from "./hubPage";
 
 export type CapturedRequest = Readonly<{
     method: string;
@@ -59,6 +60,7 @@ export async function startManagementCmsSurfaces(origins: SurfaceOrigins): Promi
         fetch: gatewayFetch,
     });
     const repository = new InMemoryCmsRepository();
+    await seedRepositoryHubPage(repository);
     const control = new ControlCms(controlRunner, repository, new CookieAuthentication(), {
         repositoryManagement: {
             administratorSubjectIdentifier: "repository-owner",
@@ -86,10 +88,15 @@ export async function startManagementCmsSurfaces(origins: SurfaceOrigins): Promi
         timeoutMs: 10_000,
         maxResponseBytes: DEFAULT_INTEGRATION_PACKAGE_LIMITS.maxDocumentBytes,
     });
+    const repositoryCatalog = new HttpRepositoryCatalogReader({
+        catalog: publicCatalog,
+        baseUrl: origins.publicRepositoryBaseUrl,
+    });
     deliveryRunner.group("/.cms/repository", (runner) => {
         new RepositoryCms({
             runner,
             integrationCatalog: publicCatalog,
+            repositoryCatalog,
             integrationCompatibility: publicCompatibility,
             integrationProjectedReleases: publicReleases,
             integrationVerificationBundles: publicVerificationBundles,
@@ -100,14 +107,7 @@ export async function startManagementCmsSurfaces(origins: SurfaceOrigins): Promi
     new DeliveryCms({
         runner: deliveryRunner,
         repository,
-        publicPageProviders: [
-            new RepositoryCatalogPageProvider(
-                new HttpRepositoryCatalogReader({
-                    catalog: publicCatalog,
-                    baseUrl: origins.publicRepositoryBaseUrl,
-                }),
-            ),
-        ],
+        publicPageProviders: [new RepositoryCatalogPageProvider(repositoryCatalog)],
     });
     deliveryRunner.start(0);
 

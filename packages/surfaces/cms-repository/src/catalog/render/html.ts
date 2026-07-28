@@ -1,26 +1,7 @@
 import { escapeAttr, escapeHtml } from "@bernouy/http-runner/html";
+import { formatBytes, humanLabel } from "../view/presentation";
 
-export { escapeAttr, escapeHtml };
-
-export function humanLabel(value: string): string {
-    return value
-        .replace(/([a-z])([A-Z])/g, "$1 $2")
-        .replaceAll("-", " ")
-        .replace(/^./, (first) => first.toUpperCase());
-}
-
-export function formatBytes(bytes: number | undefined): string {
-    if (bytes === undefined) {
-        return "Size unavailable";
-    }
-    if (bytes < 1_024) {
-        return `${bytes} B`;
-    }
-    if (bytes < 1_024 * 1_024) {
-        return `${(bytes / 1_024).toFixed(1)} KiB`;
-    }
-    return `${(bytes / (1_024 * 1_024)).toFixed(1)} MiB`;
-}
+export { escapeAttr, escapeHtml, formatBytes, humanLabel };
 
 export function selected(value: string, expected: string): string {
     return value === expected ? " selected" : "";

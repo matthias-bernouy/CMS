@@ -1,5 +1,6 @@
 export type PublicRepositoryReadResource =
     | "integrations"
+    | "integration-catalog"
     | "integration-index"
     | "integration-versions"
     | "integration-definition"

@@ -1,6 +1,8 @@
 import type { Runner } from "@bernouy/http-runner";
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import { integrationCatalogApiRouteHandler } from "cms-repository/catalog/api/handler";
+import type { RepositoryCatalogReader } from "cms-repository/catalog/contracts";
 import type {
     RepositoryCompatibilityReader,
     RepositoryProjectedCompatibilityReader,
@@ -41,6 +43,7 @@ import {
 type RepositoryCmsBaseConfig = {
     runner: Runner;
     integrationCatalog: IntegrationDefinitionRepository;
+    repositoryCatalog?: RepositoryCatalogReader;
     integrationCompatibility?: RepositoryCompatibilityReader;
     integrationProjectedCompatibility?: RepositoryProjectedCompatibilityReader;
     integrationReleases?: RepositoryReleaseReader;
@@ -62,6 +65,7 @@ export class RepositoryCms {
     private readonly runner: Runner;
     private readonly integrationCatalog: IntegrationDefinitionRepository;
     private readonly integrationCompatibility?: RepositoryCompatibilityReader;
+    private readonly repositoryCatalog?: RepositoryCatalogReader;
     private readonly integrationProjectedCompatibility?: RepositoryProjectedCompatibilityReader;
     private readonly integrationReleases?: RepositoryReleaseReader;
     private readonly integrationProjectedReleases?: RepositoryProjectedReleaseReader;
@@ -73,6 +77,7 @@ export class RepositoryCms {
     constructor(config: RepositoryCmsConfig) {
         this.runner = config.runner;
         this.integrationCatalog = config.integrationCatalog;
+        this.repositoryCatalog = config.repositoryCatalog;
         this.integrationCompatibility = config.integrationCompatibility;
         this.integrationProjectedCompatibility = config.integrationProjectedCompatibility;
         this.integrationReleases = config.integrationReleases;
@@ -102,6 +107,14 @@ export class RepositoryCms {
         this.registerPublicRead("/api/integrations", "integrations", async (req) =>
             publicJsonResponse(req, await this.integrationCatalog.list(), "catalog"),
         );
+
+        if (this.repositoryCatalog) {
+            this.registerPublicRead(
+                "/api/integrations/catalog",
+                "integration-catalog",
+                integrationCatalogApiRouteHandler(this.repositoryCatalog),
+            );
+        }
 
         this.registerPublicRead("/api/integrations/index", "integration-index", async (req) => {
             const kind = requiredSearchParam(req, "kind");

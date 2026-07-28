@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { RepositoryCatalogPageProvider } from "@bernouy/cms-repository/catalog";
+import { HttpRepositoryCatalogReader } from "../../src/repositoryCatalog";
 import type { SourceEndpoint, SourceEndpointInterceptor } from "@bernouy/cms-sources";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
 import { surfaceMountFixtures } from "./surfaceMountFixtures";
@@ -10,6 +11,7 @@ import { surfaceMountFixtures } from "./surfaceMountFixtures";
 type CapturedSurfaces = {
     control?: Record<string, unknown>;
     delivery?: Record<string, unknown>;
+    repository?: Record<string, unknown>;
 };
 
 function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime {
@@ -27,7 +29,11 @@ function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime 
 
     return {
         Runner: FakeRunner,
-        Repository: class {},
+        Repository: class {
+            constructor(config: Record<string, unknown>) {
+                captured.repository = config;
+            }
+        },
         Control: class {
             readonly ready = Promise.resolve();
 
@@ -78,6 +84,7 @@ describe("production image rollout composition", () => {
                 administratorSubjectIdentifier: "opaque-admin-subject",
                 gateway: expect.any(Object),
             });
+            expect(captured.repository?.repositoryCatalog).toBeInstanceOf(HttpRepositoryCatalogReader);
             expect(captured.delivery?.publicPageProviders).toEqual([expect.any(RepositoryCatalogPageProvider)]);
             await mounted.stop();
         } finally {

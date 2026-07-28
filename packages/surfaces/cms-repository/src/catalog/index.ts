@@ -26,3 +26,18 @@ export type {
     RepositoryCatalogVersionPage,
     RepositoryCatalogVersionSummary,
 } from "./contracts";
+export {
+    REPOSITORY_CATALOG_API_SCHEMA,
+    type RepositoryCatalogApiArtifact,
+    type RepositoryCatalogApiCompatibilityHistory,
+    type RepositoryCatalogApiFacet,
+    type RepositoryCatalogApiIntegration,
+    type RepositoryCatalogApiIntegrationView,
+    type RepositoryCatalogApiList,
+    type RepositoryCatalogApiProvider,
+    type RepositoryCatalogApiRelease,
+    type RepositoryCatalogApiResponse,
+    type RepositoryCatalogApiVersionDetail,
+    type RepositoryCatalogApiVersionItem,
+    type RepositoryCatalogApiVersionView,
+} from "./api/contracts";

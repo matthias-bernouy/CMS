@@ -4,6 +4,7 @@ import { startManagementCmsSurfaces } from "./cmsSurfaces";
 import { candidateDocument } from "./publication";
 import type { RepositoryProcess } from "./repositoryProcess";
 import { startRepositoryProcess } from "./repositoryProcess";
+import { assertBrowserBoundary, controlRequest } from "./httpBoundary";
 
 let repository: RepositoryProcess | undefined;
 let cms: ManagementCmsSurfaces | undefined;
@@ -32,6 +33,16 @@ describe("management CMS process acceptance", () => {
         expect(initialCatalog).toHaveLength(14);
         expect(initialCatalog).toContainEqual(expect.objectContaining({ kind: "commerce", versions: ["1.0.0"] }));
         expect(anonymousCatalog.headers.get("access-control-allow-origin")).toBe("*");
+        const catalogView = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations/catalog`);
+        expect(catalogView.status).toBe(200);
+        expect(catalogView.headers.get("access-control-allow-origin")).toBe("*");
+        expect(await catalogView.json()).toMatchObject({
+            schema: "cms.repository.catalog.v1",
+            view: "list",
+            count: 14,
+            total: 14,
+            integrations: expect.arrayContaining([expect.objectContaining({ kind: "commerce" })]),
+        });
         const releaseResponse = await fetch(
             `${cms.deliveryOrigin}/.cms/repository/api/integrations/release?kind=commerce&version=1.0.0`,
         );
@@ -131,6 +142,7 @@ describe("management CMS process acceptance", () => {
         const catalogPage = await fetch(`${cms.deliveryOrigin}/integrations`);
         expect(catalogPage.status).toBe(200);
         const catalogHtml = await catalogPage.text();
+        expect(catalogHtml).toContain("CMS_REPOSITORY_HUB");
         expect(catalogHtml).not.toContain("Remote demo");
         assertBrowserBoundary(cms, repository, privateBaseUrl, [
             submittedText,
@@ -155,29 +167,10 @@ describe("management CMS process acceptance", () => {
         expect(unavailableText).not.toContain(repository.token);
         expect(unavailableText).not.toContain(privateBaseUrl);
         expect(unavailableText).not.toMatch(/ECONNREFUSED|fetch failed/iu);
-        expect((await fetch(`${cms.deliveryOrigin}/integrations`)).status).toBe(503);
+        const unavailableCatalog = await fetch(`${cms.deliveryOrigin}/.cms/repository/api/integrations/catalog`);
+        expect(unavailableCatalog.status).toBe(503);
+        const availableHub = await fetch(`${cms.deliveryOrigin}/integrations`);
+        expect(availableHub.status).toBe(200);
+        expect(await availableHub.text()).toContain("CMS_REPOSITORY_HUB");
     }, 75_000);
 });
-
-function controlRequest(origin: string, path: string, session: string, init: RequestInit = {}): Promise<Response> {
-    const headers = new Headers(init.headers);
-    headers.set("cookie", `acceptance-session=${session}`);
-    headers.set("origin", origin);
-    return fetch(`${origin}${path}`, { ...init, headers, redirect: "manual" });
-}
-
-function assertBrowserBoundary(
-    surfaces: ManagementCmsSurfaces,
-    process: RepositoryProcess,
-    privateBaseUrl: string,
-    browserResponses: readonly string[],
-): void {
-    const browserTraffic = JSON.stringify(surfaces.browserRequests);
-    expect(browserTraffic).not.toContain(process.token);
-    expect(browserTraffic).not.toContain(privateBaseUrl);
-    expect(surfaces.browserRequests.every((request) => request.authorization === null)).toBeTrue();
-    for (const response of browserResponses) {
-        expect(response).not.toContain(process.token);
-        expect(response).not.toContain(privateBaseUrl);
-    }
-}
