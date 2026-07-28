@@ -3,13 +3,11 @@ import type { PublicPageProvider } from "@bernouy/cms-delivery";
 import { mountPublicPages, publicPage } from "./publicPage.fixture";
 
 describe("Delivery public page providers", () => {
-    test("renders a provider page before the stored-page fallback with bounded query values", async () => {
+    test("renders a published CMS page before the provider fallback", async () => {
         const paths: string[] = [];
-        const queries: Array<Readonly<Record<string, readonly string[]>>> = [];
         const provider: PublicPageProvider = {
-            resolvePage: async (path, context) => {
+            resolvePage: async (path) => {
                 paths.push(path);
-                queries.push(context.searchParams);
                 return {
                     page: publicPage("catalog", path, "<main>REMOTE_CATALOG</main>"),
                     cacheIdentity: "catalog-v1",
@@ -25,30 +23,51 @@ describe("Delivery public page providers", () => {
         const html = await response.text();
 
         expect(response.status).toBe(200);
+        expect(html).toContain("STORED_PAGE");
+        expect(html).not.toContain("REMOTE_CATALOG");
+        expect(paths).toEqual([]);
+        expect(mounted.storedLookups).toEqual(["/integrations"]);
+    });
+
+    test("uses a provider with bounded query values when no published CMS page exists", async () => {
+        const queries: Array<Readonly<Record<string, readonly string[]>>> = [];
+        const mounted = mountPublicPages({
+            providers: [
+                {
+                    resolvePage: async (path, context) => {
+                        queries.push(context.searchParams);
+                        return {
+                            page: publicPage("catalog", path, "<main>REMOTE_CATALOG</main>"),
+                            cacheIdentity: "catalog-v1",
+                        };
+                    },
+                },
+            ],
+        });
+
+        const response = await mounted.get(new Request("https://example.test/integrations?q=commerce"));
+
+        expect(response.status).toBe(200);
         expect(response.headers.get("cache-control")).toBe("no-store");
-        expect(html).toContain("REMOTE_CATALOG");
-        expect(html).not.toContain("STORED_PAGE");
-        expect(paths).toEqual(["/integrations"]);
+        expect(await response.text()).toContain("REMOTE_CATALOG");
         expect(queries).toEqual([{ q: ["commerce"] }]);
         expect(Object.isFrozen(queries[0])).toBe(true);
         expect(Object.isFrozen(queries[0]?.q)).toBe(true);
-        expect(mounted.storedLookups).toEqual([]);
+        expect(mounted.storedLookups).toEqual(["/integrations"]);
     });
 
-    test("falls through providers in order and then preserves stored page behavior", async () => {
+    test("falls through providers in order after a stored-page miss", async () => {
         const calls: string[] = [];
         const mounted = mountPublicPages({
             providers: [
                 { resolvePage: async () => (calls.push("first"), null) },
                 { resolvePage: async () => (calls.push("second"), null) },
             ],
-            storedPages: [publicPage("stored", "/about", "<main>STORED_ABOUT</main>")],
         });
 
         const response = await mounted.get(new Request("https://example.test/about"));
 
-        expect(response.status).toBe(200);
-        expect(await response.text()).toContain("STORED_ABOUT");
+        expect(response.status).toBe(404);
         expect(calls).toEqual(["first", "second"]);
         expect(mounted.storedLookups).toEqual(["/about"]);
     });
@@ -126,7 +145,7 @@ describe("Delivery public page providers", () => {
             const response = await mounted.get(new Request("https://example.test/integrations"));
             expect(response.status).toBe(500);
             expect(await response.text()).not.toContain("internal upstream location");
-            expect(mounted.storedLookups).toEqual([]);
+            expect(mounted.storedLookups).toEqual(["/integrations"]);
         }
     });
 
@@ -151,7 +170,7 @@ describe("Delivery public page providers", () => {
         expect(missing.status).toBe(404);
     });
 
-    test("uses provider page identities for same-origin analytics referrers", async () => {
+    test("uses stored page identities before provider identities for same-origin analytics referrers", async () => {
         const provider: PublicPageProvider = {
             resolvePage: async (path) =>
                 path === "/integrations"
@@ -160,7 +179,14 @@ describe("Delivery public page providers", () => {
                       ? { page: publicPage("detail", path), cacheIdentity: "detail-v1" }
                       : null,
         };
-        const mounted = mountPublicPages({ providers: [provider], analytics: true });
+        const mounted = mountPublicPages({
+            providers: [provider],
+            storedPages: [
+                publicPage("stored-catalog", "/integrations"),
+                publicPage("stored-detail", "/integrations/example"),
+            ],
+            analytics: true,
+        });
 
         await mounted.get(
             new Request("https://example.test/integrations/example", {
@@ -173,6 +199,6 @@ describe("Delivery public page providers", () => {
         );
         await mounted.recorded;
 
-        expect(mounted.events[0]).toMatchObject({ pageId: "detail", previousPageId: "catalog" });
+        expect(mounted.events[0]).toMatchObject({ pageId: "stored-detail", previousPageId: "stored-catalog" });
     });
 });

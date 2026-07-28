@@ -11,8 +11,9 @@ import { InvalidPublicPageRequestError } from "cms-delivery/core/pages/publicPag
 
 /**
  * Shared entry point for every public page GET registered by Delivery.
- * Injected page providers are consulted before ContentReader. The selected
- * page renders through the same pipeline and system fallbacks as stored pages.
+ * ContentReader is authoritative for published CMS pages. Injected page
+ * providers are fallback adapters for paths without a stored published page.
+ * The selected page renders through the same pipeline and system fallbacks.
  *
  * Image optimization does NOT block the response. The first render serves the
  * page with original `<img>` sources and fire-and-forget enqueues variant
@@ -41,6 +42,16 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
     const prefix = delivery.cmsPathPrefix;
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
         return { response: new Response("Not Found", { status: 404 }) };
+    }
+
+    const page = await delivery.repository.getPublishedPage(pathname);
+    if (page) {
+        const sourceAccess = await preflightPageSourceAccess(req, page, delivery);
+        if (sourceAccess) {
+            return { response: sourceAccess, pageId: page.id };
+        }
+
+        return { response: await renderWithFallbacks(req, page, pathname, delivery, null, 200), pageId: page.id };
     }
 
     let dynamicPage;
@@ -78,17 +89,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         };
     }
 
-    const page = await delivery.repository.getPublishedPage(pathname);
-    if (!page) {
-        return { response: await renderRef(req, delivery, "notFound", 404, "Page not found") };
-    }
-
-    const sourceAccess = await preflightPageSourceAccess(req, page, delivery);
-    if (sourceAccess) {
-        return { response: sourceAccess, pageId: page.id };
-    }
-
-    return { response: await renderWithFallbacks(req, page, pathname, delivery, null, 200), pageId: page.id };
+    return { response: await renderRef(req, delivery, "notFound", 404, "Page not found") };
 }
 
 async function renderWithFallbacks(

@@ -28,7 +28,7 @@ export type DeliveryCmsConfig = {
      * immediately after the basic HTML head is built.
      */
     headInjectors?: readonly HeadInjector[];
-    /** Ordered public page adapters consulted before the ContentReader fallback. */
+    /** Ordered fallback adapters consulted only when ContentReader has no published page for the request path. */
     publicPageProviders?: readonly PublicPageProvider[];
     /** Data sources exposed by the optional same-origin source gateway. */
     sources?: SourceRepository;

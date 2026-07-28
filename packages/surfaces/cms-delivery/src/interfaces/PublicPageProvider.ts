@@ -23,9 +23,10 @@ export type PublicPageRequestContext = Readonly<{
 }>;
 
 /**
- * Adapter-light seam for public pages backed by data outside ContentReader.
- * Providers run in registration order. Query-bearing provider pages are
- * always rendered with `no-store`, regardless of their cache identity.
+ * Adapter-light fallback for public pages backed by data outside ContentReader.
+ * A published CMS page always wins for the same pathname. When ContentReader
+ * has no such page, providers run in registration order. Query-bearing provider
+ * pages are always rendered with `no-store`, regardless of their cache identity.
  */
 export type PublicPageProvider = Readonly<{
     resolvePage(pathname: string, context: PublicPageRequestContext): Promise<PublicPageResolution | null>;
