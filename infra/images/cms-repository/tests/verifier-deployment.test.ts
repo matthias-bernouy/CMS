@@ -133,6 +133,7 @@ composeTest("renders exact network membership, identities, secrets, and resource
     const supervisor = config.services["cms-integration-verifier"]!;
     const sandbox = config.services["cms-integration-verifier-sandbox"]!;
     const postgres = config.services["cms-integration-verifier-postgres"]!;
+    const repository = config.services["cms-repository"]!;
     const secretCheck = config.services["cms-repository-secret-check"]!;
     expect(secretCheck).toMatchObject({
         user: "0:0",
@@ -148,6 +149,13 @@ composeTest("renders exact network membership, identities, secrets, and resource
     expect(supervisor.user).toBe("1001:1001");
     expect(sandbox.user).toBe("1002:1002");
     expect(postgres.user).toBe("70:70");
+    for (const service of [repository, supervisor, sandbox]) {
+        expect(service.environment).toMatchObject({
+            CMS_INTEGRATION_VERIFIER_RUNNER_NAME: "cms-postgres",
+            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0",
+            CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: `sha256:${"b".repeat(64)}`,
+        });
+    }
     expect(supervisor.secrets).toEqual(
         expect.arrayContaining([
             expect.objectContaining({ source: "cms_integration_verifier_worker_token" }),

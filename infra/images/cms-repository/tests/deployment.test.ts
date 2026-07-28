@@ -6,6 +6,9 @@ const imageRoot = resolve(import.meta.dir, "..");
 const composeFile = resolve(imageRoot, "compose.yml");
 const composeSource = readFileSync(composeFile, "utf8");
 const dockerfileSource = readFileSync(resolve(imageRoot, "Dockerfile"), "utf8");
+const runtimeManifest = JSON.parse(
+    readFileSync(resolve(imageRoot, "../../../packages/runtimes/cms-repository-server/package.json"), "utf8"),
+) as { dependencies?: Record<string, string> };
 const envExampleSource = readFileSync(resolve(imageRoot, ".env.example"), "utf8");
 const overrideSource = readFileSync(resolve(imageRoot, "management-cms.override.yml"), "utf8");
 const readmeSource = readFileSync(resolve(imageRoot, "README.md"), "utf8");
@@ -23,6 +26,7 @@ describe("repository image", () => {
             expect(image).toMatch(/^oven\/bun:1\.3\.14-alpine@sha256:[a-f0-9]{64}$/);
         }
         expect(dockerfileSource).toContain("--filter=@bernouy/cms-repository-server");
+        expect(runtimeManifest.dependencies?.["@bernouy/cms-integration-packages"]).toBe("workspace:*");
         expect(dockerfileSource).toContain("USER bun");
         expect(dockerfileSource).toContain("/var/lib/cms-repository/registry");
         expect(dockerfileSource).not.toMatch(/CMS_REPOSITORY_(?:(?:MANAGEMENT|MAINTENANCE)_)?TOKEN=/);
@@ -221,6 +225,9 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
         CMS_REPOSITORY_CANDIDATE_OBJECT_GRACE_MS: "86400000",
         CMS_REPOSITORY_CANDIDATE_TERMINAL_RETENTION_MS: "604800000",
         CMS_REPOSITORY_CANDIDATE_PRUNE_AUDIT_RETENTION_MS: "2592000000",
+        CMS_INTEGRATION_VERIFIER_RUNNER_NAME: "cms-postgres",
+        CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0",
+        CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: "sha256:" + "d".repeat(64),
     });
     expect(config.services["cms-repository"]?.secrets).toEqual(
         expect.arrayContaining([
