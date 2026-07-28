@@ -12,7 +12,7 @@ import { createRepositoryManagementGuard } from "@bernouy/cms-repository-managem
 
 const guard = createRepositoryManagementGuard({
     serviceToken: process.env.REPOSITORY_MANAGEMENT_TOKEN!,
-    servicePrincipal: "management-cms",
+    servicePrincipal: "repository-operator",
     rateLimiter,
 });
 

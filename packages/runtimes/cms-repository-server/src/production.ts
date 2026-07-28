@@ -98,7 +98,7 @@ export async function startProductionRepositoryServer(
 
     const managementGuard = createRepositoryManagementGuard({
         serviceToken: managementToken,
-        servicePrincipal: "management-cms",
+        servicePrincipal: "repository-operator",
         rateLimiter: new InMemoryRateLimiter({
             limit: env.managementRateLimit,
             windowSeconds: env.managementRateLimitWindowSeconds,

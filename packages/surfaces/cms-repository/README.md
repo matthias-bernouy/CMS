@@ -61,6 +61,7 @@ the UI; `kind` and `version` select the richer API projections. Deploying the
 site resource is therefore required: there is no programmatic Delivery fallback.
 
 `@bernouy/cms-repository/catalog` exports a typed editor data-source descriptor
-for the catalog route. The repository-management runtime injects that descriptor
-into Control, so CMS authors can select catalog fields without representing the
-repository API as an installable integration.
+for the catalog route. The designated hub CMS injects that descriptor into its
+own Control editor when `CMS_REPOSITORY_HUB_FACADE_ENABLED=true`, so authors can
+select catalog fields without representing the repository API as an installable
+integration. Ordinary CMS instances do not receive this descriptor.

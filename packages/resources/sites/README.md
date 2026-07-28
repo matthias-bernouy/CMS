@@ -5,9 +5,10 @@ and theme resources that CmsCore exposes to its users.
 
 ## Sites
 
-- `cms-repository-hub` is the public integration catalogue for a repository
-  managed by a CMS instance. It reads the anonymous, same-origin repository API
-  and keeps all browser state in query parameters.
+- `cms-repository-hub` is the CMS-authored public catalogue for the external
+  global integration repository. A designated CMS renders the site, reads the
+  anonymous same-origin repository facade, and keeps all browser state in query
+  parameters; it does not manage repository mutations.
 
 ## Authoring And Deployment
 
@@ -31,9 +32,9 @@ then installs pinned integrations before publishing pages without forcing their
 rerun. Deployment credentials and the target CMS Control URL are supplied to
 the CLI; they are never stored here.
 
-The production target must be the repository-management CMS, because that
-runtime exposes the enriched catalogue projection consumed by the page. The
-runtime does not generate a fallback catalogue page, so this site must be
+The production target must be the designated repository hub CMS, because only
+that instance enables the enriched catalogue projection consumed by the page.
+The runtime does not generate a fallback catalogue page, so this site must be
 deployed before `/integrations` is announced publicly. The
 current clean-clone `p9r dev` and `p9r preview` composition does not provide that
 projection or materialize imported integration Blocs automatically; use a

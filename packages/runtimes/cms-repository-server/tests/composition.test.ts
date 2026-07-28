@@ -153,7 +153,7 @@ async function startFixture(loadCatalog: () => Promise<IntegrationRegistryCatalo
         packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
         managementGuard: createRepositoryManagementGuard({
             serviceToken: "management-secret",
-            servicePrincipal: "management-cms",
+            servicePrincipal: "repository-operator",
             rateLimiter: new InMemoryRateLimiter({ limit: 10, windowSeconds: 60 }),
         }),
         mountManagement(runner) {
