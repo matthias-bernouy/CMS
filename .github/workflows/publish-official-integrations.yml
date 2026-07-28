@@ -3,12 +3,16 @@ name: Publish official integrations
 on:
   workflow_dispatch:
     inputs:
-      management_url:
-        description: Internal repository management base URL
+      cms_url:
+        description: Public repository-manager CMS base URL used by p9r
+        required: true
+        type: string
+      maintenance_url:
+        description: Private repository maintenance base URL
         required: true
         type: string
       deployment_environment:
-        description: GitHub environment holding the management token
+        description: GitHub environment holding the CMS PAT and maintenance token
         required: true
         default: integration-repository
         type: string
@@ -24,12 +28,16 @@ on:
         type: boolean
   workflow_call:
     inputs:
-      management_url:
-        description: Internal repository management base URL
+      cms_url:
+        description: Public repository-manager CMS base URL used by p9r
+        required: true
+        type: string
+      maintenance_url:
+        description: Private repository maintenance base URL
         required: true
         type: string
       deployment_environment:
-        description: GitHub environment holding the management token
+        description: GitHub environment holding the CMS PAT and maintenance token
         required: false
         default: integration-repository
         type: string
@@ -44,8 +52,8 @@ on:
         default: false
         type: boolean
     secrets:
-      REPOSITORY_MANAGEMENT_TOKEN:
-        description: Bearer token accepted by the private management listener
+      P9R_TOKEN:
+        description: CMS Personal Access Token accepted by the repository manager
         required: false
       REPOSITORY_MAINTENANCE_TOKEN:
         description: Bearer token accepted by the privileged maintenance capability
@@ -93,7 +101,7 @@ jobs:
     environment: ${{ inputs.deployment_environment }}
     timeout-minutes: 30
     env:
-      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ inputs.management_url }}
+      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ inputs.maintenance_url }}
       P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE: ${{ runner.temp }}/repository-maintenance-token
       # Maintenance requests are individually bounded to two minutes by the CLI.
       # Candidate admission keeps the independently configurable polling timeout.
@@ -131,19 +139,15 @@ jobs:
         run: rm -f -- "$REPOSITORY_MAINTENANCE_TOKEN_FILE"
 
   publish:
-    name: Verify and publish through the private candidate API
+    name: Verify and publish through the repository-manager CMS
     needs: [plan, import-baselines]
     if: ${{ ! inputs.dry_run }}
-    runs-on: [self-hosted, linux, repository-management]
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.deployment_environment }}
     timeout-minutes: 30
     env:
-      P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL: ${{ inputs.management_url }}
-      P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE: ${{ runner.temp }}/repository-management-token
+      P9R_URL: ${{ inputs.cms_url }}
       P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS: ${{ inputs.timeout_ms }}
-      # This self-hosted runner reaches only the private Docker management network.
-      P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP: "true"
-      REPOSITORY_TOKEN_FILE: ${{ runner.temp }}/repository-management-token
     steps:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -153,24 +157,20 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Materialize the ephemeral management credential
+      - name: Validate the CMS publication credential
         shell: bash
         env:
-          MANAGEMENT_TOKEN: ${{ secrets.REPOSITORY_MANAGEMENT_TOKEN }}
+          P9R_TOKEN: ${{ secrets.P9R_TOKEN }}
         run: |
           set -euo pipefail
-          if [[ -z "$MANAGEMENT_TOKEN" || "$MANAGEMENT_TOKEN" =~ [[:space:]] ]]; then
-            echo "::error::REPOSITORY_MANAGEMENT_TOKEN must contain one non-whitespace token"
+          if [[ -z "${P9R_TOKEN:-}" || "$P9R_TOKEN" =~ [[:space:]] ]]; then
+            echo "::error::P9R_TOKEN must contain one non-whitespace CMS Personal Access Token"
             exit 1
           fi
-          umask 077
-          printf '%s' "$MANAGEMENT_TOKEN" > "$REPOSITORY_TOKEN_FILE"
 
       - name: Submit and poll official candidates in deterministic order
+        env:
+          P9R_TOKEN: ${{ secrets.P9R_TOKEN }}
         run: >-
           bun run packages/runtimes/cms-cli/src/index.ts
           repository publish-official
-
-      - name: Remove the ephemeral management credential
-        if: ${{ always() }}
-        run: rm -f -- "$REPOSITORY_TOKEN_FILE"
