@@ -38,6 +38,7 @@ describe("repository publication configuration", () => {
             }),
         ).toEqual({
             cmsUrl: "https://admin.repository.internal/cms",
+            credentialLookupUrl: "HTTPS://Admin.Repository.Internal:443/cms",
             dryRun: false,
             source: { type: "official" },
             timeoutMs: 90_000,

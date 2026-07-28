@@ -8,6 +8,7 @@ export type RepositoryPublicationEnvironment = Readonly<Record<string, string | 
 
 export type RepositoryPublicationConfig = Readonly<{
     cmsUrl?: string;
+    credentialLookupUrl?: string;
     dryRun: boolean;
     source: Readonly<{ type: "integration"; root: string }> | Readonly<{ type: "official" }>;
     timeoutMs: number;
@@ -65,11 +66,20 @@ export function parseRepositoryPublicationConfig(
     }
 
     return Object.freeze({
-        ...(rawUrl?.trim() ? { cmsUrl: normalizeRepositoryCmsUrl(rawUrl, allowInsecureHttp) } : {}),
+        ...(rawUrl?.trim()
+            ? {
+                  cmsUrl: normalizeRepositoryCmsUrl(rawUrl, allowInsecureHttp),
+                  credentialLookupUrl: legacyCredentialLookupUrl(rawUrl),
+              }
+            : {}),
         dryRun: flags.dryRun,
         source,
         timeoutMs: parseTimeout(rawTimeout),
     });
+}
+
+function legacyCredentialLookupUrl(raw: string): string {
+    return raw.trim().replace(/\/+$/u, "");
 }
 
 function parseSource(args: readonly string[]): RepositoryPublicationConfig["source"] {

@@ -81,7 +81,10 @@ export function exactPublishedVersion(
         return "absent";
     }
     const version = record(exact)!;
-    return version.digest === candidate.packageDigest ? "unchanged" : "conflict";
+    const release = record(version.release);
+    return version.digest === candidate.packageDigest && release?.verificationDigest === candidate.verificationDigest
+        ? "unchanged"
+        : "conflict";
 }
 
 export function safeCode(value: unknown): string | undefined {

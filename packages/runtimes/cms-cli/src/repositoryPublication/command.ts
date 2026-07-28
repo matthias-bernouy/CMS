@@ -58,13 +58,14 @@ export async function runRepositoryPublicationCommand(
     }
 
     const cmsUrl = config.cmsUrl;
-    if (!cmsUrl) {
+    const credentialLookupUrl = config.credentialLookupUrl;
+    if (!cmsUrl || !credentialLookupUrl) {
         writeError("Repository publication configuration is incomplete");
         return 1;
     }
     let token: string | null;
     try {
-        token = await (dependencies.getAccessToken ?? getAccessToken)(cmsUrl);
+        token = await (dependencies.getAccessToken ?? getAccessToken)(credentialLookupUrl);
     } catch {
         writeError("CMS Personal Access Token store could not be read");
         return 1;

@@ -48,7 +48,7 @@ describe("repository candidate HTTP flow", () => {
         expect(requests[1]?.body).toBe(new TextDecoder().decode(CANDIDATE.canonicalBytes));
     });
 
-    test("skips an immutable version whose package digest already matches", async () => {
+    test("skips an immutable version whose package and verification digests already match", async () => {
         const server = serveCandidateClient(() =>
             candidateJson(200, {
                 kind: CANDIDATE.kind,
@@ -57,6 +57,7 @@ describe("repository candidate HTTP flow", () => {
                         version: CANDIDATE.version,
                         digest: CANDIDATE.packageDigest,
                         status: "blocked",
+                        release: { verificationDigest: CANDIDATE.verificationDigest, admissible: false },
                     },
                 ],
             }),
@@ -81,6 +82,67 @@ describe("repository candidate HTTP flow", () => {
             status: 409,
             code: "integration_version_exists",
         });
+    });
+
+    test("rejects reuse of an existing package with different verification evidence", async () => {
+        const server = serveCandidateClient(() =>
+            candidateJson(200, {
+                kind: CANDIDATE.kind,
+                versions: [
+                    {
+                        version: CANDIDATE.version,
+                        digest: CANDIDATE.packageDigest,
+                        release: { verificationDigest: "e".repeat(64), admissible: true },
+                    },
+                ],
+            }),
+        );
+
+        expect(await publishIntegrationCandidate(candidateClientConfig(server), CANDIDATE)).toEqual({
+            outcome: "failed",
+            reason: "conflict",
+            status: 409,
+            code: "integration_version_exists",
+        });
+    });
+
+    test("reconciles a concurrent identical publication after stale admission", async () => {
+        let requestCount = 0;
+        const server = serveCandidateClient(() => {
+            requestCount += 1;
+            if (requestCount === 1) {
+                return candidateJson(404, { code: "integration_not_found" });
+            }
+            if (requestCount === 2) {
+                return candidateJson(202, {
+                    candidate: {
+                        candidateId: "candidate-stale",
+                        status: "rejected",
+                        kind: CANDIDATE.kind,
+                        version: CANDIDATE.version,
+                        candidateDigest: CANDIDATE.candidateDigest,
+                        packageDigest: CANDIDATE.packageDigest,
+                        verificationDigest: CANDIDATE.verificationDigest,
+                        lastFailure: { code: "admission_inputs_stale" },
+                    },
+                });
+            }
+            return candidateJson(200, {
+                kind: CANDIDATE.kind,
+                versions: [
+                    {
+                        version: CANDIDATE.version,
+                        digest: CANDIDATE.packageDigest,
+                        release: { verificationDigest: CANDIDATE.verificationDigest },
+                    },
+                ],
+            });
+        });
+
+        expect(await publishIntegrationCandidate(candidateClientConfig(server), CANDIDATE)).toEqual({
+            outcome: "unchanged",
+        });
+        expect(requestCount).toBe(3);
     });
 
     test("returns a sanitized candidate rejection without polling", async () => {

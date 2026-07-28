@@ -73,12 +73,12 @@ describe("repository publication command", () => {
             { outcome: "unchanged" } as const,
         ];
         const exit = await runRepositoryPublicationCommand(
-            ["publish-official", "--url=https://admin.repository.internal/cms"],
+            ["publish-official", "--url=HTTPS://Admin.Repository.Internal:443/cms"],
             {
                 environment: {},
                 buildCandidates: async () => [PACKAGE_A, PACKAGE_B],
                 getAccessToken: async (cmsUrl) => {
-                    expect(cmsUrl).toBe("https://admin.repository.internal/cms");
+                    expect(cmsUrl).toBe("HTTPS://Admin.Repository.Internal:443/cms");
                     return "pat-admin";
                 },
                 publish: async (config, candidate) => {

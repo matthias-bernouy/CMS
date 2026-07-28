@@ -24,9 +24,27 @@ export async function publishIntegrationCandidate(
     }
     const submitted = await submit(config, candidate, deadline, now);
     if (submitted.outcome !== "submitted") {
-        return submitted;
+        return await reconcileConcurrentPublication(config, candidate, submitted, deadline, now);
     }
-    return await poll(config, candidate, submitted.candidateId, deadline, now);
+    const result = await poll(config, candidate, submitted.candidateId, deadline, now);
+    return await reconcileConcurrentPublication(config, candidate, result, deadline, now);
+}
+
+async function reconcileConcurrentPublication(
+    config: RepositoryManagementCandidateClientConfig,
+    candidate: BuiltIntegrationCandidate,
+    result: ManagementCandidateResult,
+    deadline: number,
+    now: () => number,
+): Promise<ManagementCandidateResult> {
+    if (
+        result.outcome !== "failed" ||
+        !["admission_inputs_stale", "admission_stale", "integration_version_exists"].includes(result.code ?? "")
+    ) {
+        return result;
+    }
+    const current = await inspectExisting(config, candidate, deadline, now);
+    return current !== "absent" && current.outcome === "unchanged" ? current : result;
 }
 
 async function inspectExisting(
