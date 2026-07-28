@@ -25,13 +25,15 @@ describe("official integration publication workflow", () => {
         const publishJob = jobSection(source, "publish");
 
         expect(maintenanceJob).toContain("runs-on: [self-hosted, linux, repository-management]");
-        expect(maintenanceJob).toContain("P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ inputs.maintenance_url }}");
+        expect(maintenanceJob).toContain(
+            "P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ vars.REPOSITORY_MAINTENANCE_URL }}",
+        );
         expect(maintenanceJob).toContain("MAINTENANCE_TOKEN: ${{ secrets.REPOSITORY_MAINTENANCE_TOKEN }}");
         expect(maintenanceJob).toContain('printf \'%s\' "$MAINTENANCE_TOKEN" > "$REPOSITORY_MAINTENANCE_TOKEN_FILE"');
         expect(maintenanceJob).toContain('run: rm -f -- "$REPOSITORY_MAINTENANCE_TOKEN_FILE"');
 
         expect(publishJob).toContain("runs-on: ubuntu-24.04");
-        expect(publishJob).toContain("P9R_URL: ${{ inputs.cms_url }}");
+        expect(publishJob).toContain("P9R_URL: ${{ vars.REPOSITORY_CMS_URL }}");
         expect(publishJob).toContain("P9R_TOKEN: ${{ secrets.P9R_TOKEN }}");
         expect(
             publishJob.slice(0, publishJob.indexOf("- name: Validate the CMS publication credential")),
@@ -43,6 +45,10 @@ describe("official integration publication workflow", () => {
         expect(publishJob).not.toContain("P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP");
         expect(publishJob).not.toContain("REPOSITORY_TOKEN_FILE");
         expect(source).not.toContain("REPOSITORY_MANAGEMENT_TOKEN");
+        expect(source).not.toContain("cms_url:");
+        expect(source).not.toContain("maintenance_url:");
+        expect(source).not.toContain("deployment_environment:");
+        expect(source.match(/environment: integration-repository/gu)).toHaveLength(2);
         expect(source).not.toContain("--token=");
     });
 
@@ -54,7 +60,7 @@ describe("official integration publication workflow", () => {
         expect(importJob).toBeGreaterThan(0);
         expect(publishJob).toBeGreaterThan(importJob);
         expect(source).toContain("needs: [plan, import-baselines]");
-        expect(source).toContain("P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ inputs.maintenance_url }}");
+        expect(source).toContain("P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ vars.REPOSITORY_MAINTENANCE_URL }}");
         expect(source).toContain("repository import-official-schema-baselines");
         expect(source).toContain("repository backfill-official-verification");
         expect(source.indexOf("repository backfill-official-verification")).toBeLessThan(publishJob);

@@ -3,19 +3,6 @@ name: Publish official integrations
 on:
   workflow_dispatch:
     inputs:
-      cms_url:
-        description: Public repository-manager CMS base URL used by p9r
-        required: true
-        type: string
-      maintenance_url:
-        description: Private repository maintenance base URL
-        required: true
-        type: string
-      deployment_environment:
-        description: GitHub environment holding the CMS PAT and maintenance token
-        required: true
-        default: integration-repository
-        type: string
       timeout_ms:
         description: Per-candidate admission and polling timeout in milliseconds
         required: true
@@ -28,19 +15,6 @@ on:
         type: boolean
   workflow_call:
     inputs:
-      cms_url:
-        description: Public repository-manager CMS base URL used by p9r
-        required: true
-        type: string
-      maintenance_url:
-        description: Private repository maintenance base URL
-        required: true
-        type: string
-      deployment_environment:
-        description: GitHub environment holding the CMS PAT and maintenance token
-        required: false
-        default: integration-repository
-        type: string
       timeout_ms:
         description: Per-candidate admission and polling timeout in milliseconds
         required: false
@@ -98,10 +72,10 @@ jobs:
     needs: plan
     if: ${{ ! inputs.dry_run }}
     runs-on: [self-hosted, linux, repository-management]
-    environment: ${{ inputs.deployment_environment }}
+    environment: integration-repository
     timeout-minutes: 30
     env:
-      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ inputs.maintenance_url }}
+      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ vars.REPOSITORY_MAINTENANCE_URL }}
       P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE: ${{ runner.temp }}/repository-maintenance-token
       # Maintenance requests are individually bounded to two minutes by the CLI.
       # Candidate admission keeps the independently configurable polling timeout.
@@ -143,10 +117,10 @@ jobs:
     needs: [plan, import-baselines]
     if: ${{ ! inputs.dry_run }}
     runs-on: ubuntu-24.04
-    environment: ${{ inputs.deployment_environment }}
+    environment: integration-repository
     timeout-minutes: 30
     env:
-      P9R_URL: ${{ inputs.cms_url }}
+      P9R_URL: ${{ vars.REPOSITORY_CMS_URL }}
       P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS: ${{ inputs.timeout_ms }}
     steps:
       - name: Check out repository
