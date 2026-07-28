@@ -44,11 +44,17 @@ Usage:
                                    Write an .env.example with the remote's
                                    KEYS only (no values, ever). Default
                                    output: .env.example.
+  p9r repository publish <integration-root> [--dry-run]
+                                   Build every version declared by one local
+                                   integration and publish missing immutable
+                                   versions through the management API.
+                                   Publishing requires --url and --token-file
+                                   (or their management env equivalents).
   p9r repository publish-official [--dry-run]
                                    Deterministically build and publish every
                                    official integration package. Publishing
                                    requires --url and --token-file (or their
-                                   repository-management env equivalents).
+                                   management env equivalents).
   p9r repository import-official-schema-baselines [--dry-run]
                                    Import reviewed legacy SQL baselines through
                                    the separate maintenance capability.

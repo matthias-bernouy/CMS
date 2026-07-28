@@ -376,6 +376,7 @@
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-notifications": "workspace:*",
         "@bernouy/cms-official-integrations": "workspace:*",
@@ -386,9 +387,11 @@
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "semver": "^7.8.2",
       },
       "devDependencies": {
         "@bernouy/cms-repository": "workspace:*",
+        "@types/semver": "^7.7.1",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",

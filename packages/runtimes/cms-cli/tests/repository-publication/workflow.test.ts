@@ -23,6 +23,7 @@ describe("official integration publication workflow", () => {
         const source = await readFile(WORKFLOW, "utf8");
 
         expect(source).toContain("runs-on: [self-hosted, linux, repository-management]");
+        expect(source).toContain('P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP: "true"');
         expect(source).toContain("environment: ${{ inputs.deployment_environment }}");
         expect(source).toContain("MANAGEMENT_TOKEN: ${{ secrets.REPOSITORY_MANAGEMENT_TOKEN }}");
         expect(source).toContain("MAINTENANCE_TOKEN: ${{ secrets.REPOSITORY_MAINTENANCE_TOKEN }}");

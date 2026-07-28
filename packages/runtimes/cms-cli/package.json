@@ -26,6 +26,7 @@
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-notifications": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-official-integrations": "workspace:*",
@@ -36,12 +37,14 @@
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-source-images": "workspace:*"
+        "@bernouy/cms-source-images": "workspace:*",
+        "semver": "^7.8.2"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"
     },
     "devDependencies": {
-        "@bernouy/cms-repository": "workspace:*"
+        "@bernouy/cms-repository": "workspace:*",
+        "@types/semver": "^7.7.1"
     }
 }

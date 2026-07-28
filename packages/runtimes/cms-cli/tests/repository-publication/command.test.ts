@@ -1,11 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import type { BuiltOfficialIntegrationCandidate } from "@bernouy/cms-official-integrations/publication";
 import { runRepositoryPublicationCommand } from "../../src/repositoryPublication/command";
+import type { BuiltIntegrationCandidate } from "../../src/repositoryPublication/candidate/contracts";
+import { IntegrationCandidateBuildError } from "../../src/repositoryPublication/candidate/errors";
 
 const PACKAGE_A = integrationPackage("alpha", "1.0.0", "a");
 const PACKAGE_B = integrationPackage("beta", "2.0.0", "b");
 
-describe("official repository publication command", () => {
+describe("repository publication command", () => {
     test("dry-run builds and reports without reading credentials or making requests", async () => {
         const output: string[] = [];
         const exit = await runRepositoryPublicationCommand(["publish-official", "--dry-run"], {
@@ -23,6 +24,44 @@ describe("official repository publication command", () => {
             expect.stringMatching(/^PLAN alpha@1\.0\.0 package-sha256:a{64} verification-sha256:/),
             expect.stringMatching(/^PLAN beta@2\.0\.0 package-sha256:b{64} verification-sha256:/),
             "Summary: planned=2 published=0 unchanged=0 failed=0 skipped=0",
+        ]);
+    });
+
+    test("publishes a generic integration root with the neutral command output", async () => {
+        const output: string[] = [];
+        const sources: unknown[] = [];
+        const exit = await runRepositoryPublicationCommand(["publish", "./demo", "--dry-run"], {
+            environment: {},
+            buildCandidates: async (source) => {
+                sources.push(source);
+                return [PACKAGE_A];
+            },
+            write: (line) => output.push(line),
+            writeError: (line) => output.push(`ERROR ${line}`),
+        });
+
+        expect(exit).toBe(0);
+        expect(sources).toEqual([{ type: "integration", root: expect.stringMatching(/\/demo$/u) }]);
+        expect(output[0]).toBe("Repository candidate plan: 1 candidate(s)");
+    });
+
+    test("reports an actionable allowlisted generic build failure", async () => {
+        const errors: string[] = [];
+        const exit = await runRepositoryPublicationCommand(["publish", "./demo", "--dry-run"], {
+            environment: {},
+            buildCandidates: async () => {
+                throw new IntegrationCandidateBuildError(
+                    "verification_missing",
+                    "Verification bundle verification/1.0.0.json must be a bounded, non-symlink regular file",
+                );
+            },
+            write: () => undefined,
+            writeError: (line) => errors.push(line),
+        });
+
+        expect(exit).toBe(1);
+        expect(errors).toEqual([
+            "Integration candidate build failed [verification_missing]: Verification bundle verification/1.0.0.json must be a bounded, non-symlink regular file",
         ]);
     });
 
@@ -106,7 +145,7 @@ describe("official repository publication command", () => {
     });
 });
 
-function integrationPackage(kind: string, version: string, digestCharacter: string): BuiltOfficialIntegrationCandidate {
+function integrationPackage(kind: string, version: string, digestCharacter: string): BuiltIntegrationCandidate {
     return {
         kind,
         version,

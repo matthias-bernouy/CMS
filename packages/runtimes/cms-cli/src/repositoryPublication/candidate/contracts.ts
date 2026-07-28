@@ -1,4 +1,11 @@
-import type { BuiltOfficialIntegrationCandidate } from "@bernouy/cms-official-integrations/publication";
+export type BuiltIntegrationCandidate = Readonly<{
+    kind: string;
+    version: string;
+    packageDigest: string;
+    verificationDigest: string;
+    candidateDigest: string;
+    canonicalBytes: Uint8Array;
+}>;
 
 export type ManagementCandidateResult =
     | Readonly<{ outcome: "published"; candidateId: string }>
@@ -34,7 +41,7 @@ export type CandidateProjection = Readonly<{
 
 export function parseCandidateProjection(
     body: Readonly<Record<string, unknown>>,
-    expected: BuiltOfficialIntegrationCandidate,
+    expected: BuiltIntegrationCandidate,
 ): CandidateProjection | null {
     const value = record(body.candidate);
     const failure = record(value?.lastFailure);
@@ -64,8 +71,8 @@ export function parseCandidateProjection(
 
 export function exactPublishedVersion(
     body: Readonly<Record<string, unknown>>,
-    candidate: BuiltOfficialIntegrationCandidate,
-): "absent" | "admissible" | "inadmissible" | "conflict" | "invalid" {
+    candidate: BuiltIntegrationCandidate,
+): "absent" | "unchanged" | "conflict" | "invalid" {
     if (body.kind !== candidate.kind || !Array.isArray(body.versions)) {
         return "invalid";
     }
@@ -74,30 +81,7 @@ export function exactPublishedVersion(
         return "absent";
     }
     const version = record(exact)!;
-    const release = record(version.release);
-    if (version.digest !== candidate.packageDigest) {
-        return "conflict";
-    }
-    if (!release || release.verificationDigest === undefined) {
-        return "inadmissible";
-    }
-    if (
-        typeof release.verificationDigest !== "string" ||
-        !/^[a-f0-9]{64}$/u.test(release.verificationDigest) ||
-        (release.verificationOrigin !== "admission" && release.verificationOrigin !== "legacy-backfill")
-    ) {
-        return "invalid";
-    }
-    if (
-        release.verificationOrigin !== "legacy-backfill" &&
-        release.verificationDigest !== candidate.verificationDigest
-    ) {
-        return "conflict";
-    }
-    if (version.status === "unverified") {
-        return "inadmissible";
-    }
-    return release.admissible === true ? "admissible" : "inadmissible";
+    return version.digest === candidate.packageDigest ? "unchanged" : "conflict";
 }
 
 export function safeCode(value: unknown): string | undefined {

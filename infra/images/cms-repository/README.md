@@ -273,6 +273,20 @@ p9r repository publish /path/to/integration --dry-run
 p9r repository publish /path/to/integration
 ```
 
+Every version published through this generic command must also provide a valid
+`cms.integration.verification.v1` document at
+`verification/<version>.json`, outside the corresponding `versions/<version>/`
+runtime package. The document targets the exact package digest, retains the
+`cms-postgres` `^1.0.0` runner requirement, and declares at least one author
+contract or conformance suite. Its source closure is validated before upload;
+putting an undeclared test under the runtime version directory does not make it
+an executable admission test. The source JSON may be formatted for humans; the
+CLI canonicalizes the combined candidate before hashing and upload.
+When authoring a new bundle, a temporary 64-zero package digest is sufficient
+to make the document structurally valid: `--dry-run` then reports the exact
+`package-sha256` expected for that version. Replace the placeholder and rerun;
+any later runtime-package change intentionally makes that binding stale again.
+
 An absent version enters the normal candidate verification and publication
 workflow. An existing coordinate with the same package digest is reported as
 `UNCHANGED` and skipped, even if its later release state is blocked or no longer
@@ -299,8 +313,12 @@ and is never passed as a command-line argument:
 ```bash
 P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL=http://cms-repository:3000/.cms/repository-management \
 P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE=/run/secrets/cms-repository-management-token \
+P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP=true \
 bun run packages/runtimes/cms-cli/src/index.ts repository publish-official
 ```
+
+The insecure-HTTP opt-in is required only for this trusted isolated-network
+example. Remote workstations must use the HTTPS ingress and must not set it.
 
 Packages are published sequentially by kind and ascending SemVer. Re-running
 the command is idempotent only when the registry's immutable existing digest

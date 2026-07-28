@@ -23,6 +23,7 @@
         { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-integration-packages" },
         { "path": "../../features/cms-integration-registry" },
+        { "path": "../../features/cms-integration-verification" },
         { "path": "../../features/cms-notifications" },
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-source-images" },

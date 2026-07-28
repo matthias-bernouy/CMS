@@ -141,6 +141,8 @@ jobs:
       P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL: ${{ inputs.management_url }}
       P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE: ${{ runner.temp }}/repository-management-token
       P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS: ${{ inputs.timeout_ms }}
+      # This self-hosted runner reaches only the private Docker management network.
+      P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP: "true"
       REPOSITORY_TOKEN_FILE: ${{ runner.temp }}/repository-management-token
     steps:
       - name: Check out repository

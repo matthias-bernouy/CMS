@@ -1,28 +1,28 @@
-import type { BuiltOfficialIntegrationCandidate } from "@bernouy/cms-official-integrations/publication";
 import {
     exactPublishedVersion,
     parseCandidateProjection,
     safeCode,
+    type BuiltIntegrationCandidate,
     type ManagementCandidateResult,
     type RepositoryManagementCandidateClientConfig,
 } from "./contracts";
-import { candidateHttpRequest, retryAfter } from "./http";
+import { candidateHttpRequest, retryAfter, retryRateLimitedCandidateRequest } from "./http";
 
 const CANDIDATE_PATH = "/api/integrations/candidates";
 const CANDIDATE_STATUS_PATH = "/api/integrations/candidates/status";
 const VERSIONS_PATH = "/api/integrations/versions";
 
-export async function publishOfficialIntegrationCandidate(
+export async function publishIntegrationCandidate(
     config: RepositoryManagementCandidateClientConfig,
-    candidate: BuiltOfficialIntegrationCandidate,
+    candidate: BuiltIntegrationCandidate,
 ): Promise<ManagementCandidateResult> {
     const now = config.now ?? Date.now;
     const deadline = now() + config.timeoutMs;
-    const existing = await inspectExisting(config, candidate, remaining(deadline, now));
+    const existing = await inspectExisting(config, candidate, deadline, now);
     if (existing !== "absent") {
         return existing;
     }
-    const submitted = await submit(config, candidate, remaining(deadline, now));
+    const submitted = await submit(config, candidate, deadline, now);
     if (submitted.outcome !== "submitted") {
         return submitted;
     }
@@ -31,14 +31,17 @@ export async function publishOfficialIntegrationCandidate(
 
 async function inspectExisting(
     config: RepositoryManagementCandidateClientConfig,
-    candidate: BuiltOfficialIntegrationCandidate,
-    timeoutMs: number,
+    candidate: BuiltIntegrationCandidate,
+    deadline: number,
+    now: () => number,
 ): Promise<ManagementCandidateResult | "absent"> {
-    const request = await candidateHttpRequest(
-        config,
-        `${config.managementUrl}${VERSIONS_PATH}?kind=${encodeURIComponent(candidate.kind)}`,
-        { headers: authorization(config.token) },
-        timeoutMs,
+    const request = await retryRateLimitedCandidateRequest(config, deadline, now, (timeoutMs) =>
+        candidateHttpRequest(
+            config,
+            `${config.managementUrl}${VERSIONS_PATH}?kind=${encodeURIComponent(candidate.kind)}`,
+            { headers: authorization(config.token) },
+            timeoutMs,
+        ),
     );
     if ("outcome" in request) {
         return request;
@@ -52,12 +55,10 @@ async function inspectExisting(
     switch (exactPublishedVersion(request.body, candidate)) {
         case "absent":
             return "absent";
-        case "admissible":
+        case "unchanged":
             return { outcome: "unchanged" };
         case "conflict":
             return { outcome: "failed", reason: "conflict", status: 409, code: "integration_version_exists" };
-        case "inadmissible":
-            return { outcome: "failed", reason: "rejected", status: 422, code: "release_not_admissible" };
         default:
             return { outcome: "failed", reason: "invalid-response", status: 200 };
     }
@@ -65,24 +66,27 @@ async function inspectExisting(
 
 async function submit(
     config: RepositoryManagementCandidateClientConfig,
-    candidate: BuiltOfficialIntegrationCandidate,
-    timeoutMs: number,
+    candidate: BuiltIntegrationCandidate,
+    deadline: number,
+    now: () => number,
 ): Promise<ManagementCandidateResult | Readonly<{ outcome: "submitted"; candidateId: string }>> {
-    const body = new Uint8Array(candidate.canonicalBytes);
-    const request = await candidateHttpRequest(
-        config,
-        `${config.managementUrl}${CANDIDATE_PATH}`,
-        {
-            method: "POST",
-            headers: {
-                ...authorization(config.token),
-                "content-length": String(body.byteLength),
-                "content-type": "application/json",
+    const request = await retryRateLimitedCandidateRequest(config, deadline, now, (timeoutMs) => {
+        const body = new Uint8Array(candidate.canonicalBytes);
+        return candidateHttpRequest(
+            config,
+            `${config.managementUrl}${CANDIDATE_PATH}`,
+            {
+                method: "POST",
+                headers: {
+                    ...authorization(config.token),
+                    "content-length": String(body.byteLength),
+                    "content-type": "application/json",
+                },
+                body: body.buffer,
             },
-            body: body.buffer,
-        },
-        timeoutMs,
-    );
+            timeoutMs,
+        );
+    });
     if ("outcome" in request) {
         return request;
     }
@@ -99,7 +103,7 @@ async function submit(
 
 async function poll(
     config: RepositoryManagementCandidateClientConfig,
-    candidate: BuiltOfficialIntegrationCandidate,
+    candidate: BuiltIntegrationCandidate,
     candidateId: string,
     deadline: number,
     now: () => number,
@@ -108,11 +112,16 @@ async function poll(
     const interval = config.pollIntervalMs ?? 2_000;
     while (remaining(deadline, now) > 0) {
         await wait(Math.min(interval, remaining(deadline, now)));
-        const request = await candidateHttpRequest(
-            config,
-            `${config.managementUrl}${CANDIDATE_STATUS_PATH}?candidateId=${encodeURIComponent(candidateId)}`,
-            { headers: authorization(config.token) },
-            remaining(deadline, now),
+        if (remaining(deadline, now) <= 0) {
+            break;
+        }
+        const request = await retryRateLimitedCandidateRequest(config, deadline, now, (timeoutMs) =>
+            candidateHttpRequest(
+                config,
+                `${config.managementUrl}${CANDIDATE_STATUS_PATH}?candidateId=${encodeURIComponent(candidateId)}`,
+                { headers: authorization(config.token) },
+                timeoutMs,
+            ),
         );
         if ("outcome" in request) {
             return request;

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { readBoundedJsonObjectResponse } from "../../../src/http/readBoundedJsonObjectResponse";
-import { publishOfficialIntegrationCandidate } from "../../../src/repositoryPublication/candidate/client";
+import { publishIntegrationCandidate } from "../../../src/repositoryPublication/candidate/client";
 import {
     CANDIDATE,
     candidateClientConfig,
@@ -14,18 +14,18 @@ afterEach(stopCandidateClientServers);
 
 const MAX_RESPONSE_BYTES = 1_048_576;
 
-describe("official repository candidate HTTP safety", () => {
+describe("repository candidate HTTP safety", () => {
     test("bounds responses, enforces JSON, times out, and refuses redirects", async () => {
         const oversized = serveCandidateClient(
             () => new Response("x".repeat(1_048_577), { headers: { "content-type": "application/json" } }),
         );
-        expect(await publishOfficialIntegrationCandidate(candidateClientConfig(oversized), CANDIDATE)).toEqual({
+        expect(await publishIntegrationCandidate(candidateClientConfig(oversized), CANDIDATE)).toEqual({
             outcome: "failed",
             reason: "invalid-response",
             status: 200,
         });
         const wrongType = serveCandidateClient(() => new Response("{}", { headers: { "content-type": "text/plain" } }));
-        expect(await publishOfficialIntegrationCandidate(candidateClientConfig(wrongType), CANDIDATE)).toEqual({
+        expect(await publishIntegrationCandidate(candidateClientConfig(wrongType), CANDIDATE)).toEqual({
             outcome: "failed",
             reason: "invalid-response",
             status: 200,
@@ -35,7 +35,7 @@ describe("official repository candidate HTTP safety", () => {
             return candidateJson(404, {});
         });
         expect(
-            await publishOfficialIntegrationCandidate({ ...candidateClientConfig(delayed), timeoutMs: 5 }, CANDIDATE),
+            await publishIntegrationCandidate({ ...candidateClientConfig(delayed), timeoutMs: 5 }, CANDIDATE),
         ).toEqual({ outcome: "failed", reason: "timeout" });
 
         let targetCalls = 0;
@@ -44,7 +44,7 @@ describe("official repository candidate HTTP safety", () => {
             return candidateJson(200, {});
         });
         const redirect = serveCandidateClient(() => Response.redirect(`${candidateServerOrigin(target)}/capture`, 302));
-        expect(await publishOfficialIntegrationCandidate(candidateClientConfig(redirect), CANDIDATE)).toEqual({
+        expect(await publishIntegrationCandidate(candidateClientConfig(redirect), CANDIDATE)).toEqual({
             outcome: "failed",
             reason: "transport",
         });

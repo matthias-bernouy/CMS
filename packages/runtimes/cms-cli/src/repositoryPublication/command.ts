@@ -1,21 +1,21 @@
-import {
-    buildOfficialIntegrationCandidates,
-    type BuiltOfficialIntegrationCandidate,
-} from "@bernouy/cms-official-integrations/publication";
-import { publishOfficialIntegrationCandidate } from "./candidate/client";
-import type { ManagementCandidateResult } from "./candidate/contracts";
+import { buildOfficialIntegrationCandidates } from "@bernouy/cms-official-integrations/publication";
+import { buildIntegrationCandidates } from "./candidate/build";
+import { publishIntegrationCandidate } from "./candidate/client";
+import type { BuiltIntegrationCandidate, ManagementCandidateResult } from "./candidate/contracts";
+import { IntegrationCandidateBuildError } from "./candidate/errors";
 import {
     parseRepositoryPublicationConfig,
     REPOSITORY_PUBLICATION_HELP,
+    type RepositoryPublicationConfig,
     type RepositoryPublicationEnvironment,
 } from "./config";
 import { readRepositoryPublicationToken } from "./tokenFile";
 
 export type RepositoryPublicationCommandDependencies = Readonly<{
     environment?: RepositoryPublicationEnvironment;
-    buildCandidates?: () => Promise<readonly BuiltOfficialIntegrationCandidate[]>;
+    buildCandidates?: (source: RepositoryPublicationConfig["source"]) => Promise<readonly BuiltIntegrationCandidate[]>;
     readToken?: (path: string) => Promise<string>;
-    publish?: typeof publishOfficialIntegrationCandidate;
+    publish?: typeof publishIntegrationCandidate;
     write?: (line: string) => void;
     writeError?: (line: string) => void;
 }>;
@@ -39,14 +39,15 @@ export async function runRepositoryPublicationCommand(
         return 0;
     }
 
-    let candidates: readonly BuiltOfficialIntegrationCandidate[];
+    let candidates: readonly BuiltIntegrationCandidate[];
     try {
-        candidates = await (dependencies.buildCandidates ?? buildOfficialIntegrationCandidates)();
-    } catch {
-        writeError("Official integration candidate build failed");
+        candidates = await (dependencies.buildCandidates ?? buildCandidates)(config.source);
+    } catch (error) {
+        writeError(candidateBuildFailure(config.source, error));
         return 1;
     }
-    write(`Official repository candidate plan: ${candidates.length} candidate(s)`);
+    const planLabel = config.source.type === "official" ? "Official repository" : "Repository";
+    write(`${planLabel} candidate plan: ${candidates.length} candidate(s)`);
     if (config.dryRun) {
         for (const candidate of candidates) {
             write(candidateLine("PLAN", candidate));
@@ -70,7 +71,7 @@ export async function runRepositoryPublicationCommand(
     }
 
     const counts = { published: 0, unchanged: 0, failed: 0, skipped: 0 };
-    const publish = dependencies.publish ?? publishOfficialIntegrationCandidate;
+    const publish = dependencies.publish ?? publishIntegrationCandidate;
     for (let index = 0; index < candidates.length; index += 1) {
         const candidate = candidates[index]!;
         const result = await publish({ managementUrl, token, timeoutMs: config.timeoutMs }, candidate);
@@ -93,12 +94,29 @@ export async function runRepositoryPublicationCommand(
     return counts.failed === 0 ? 0 : 1;
 }
 
-function candidateLine(action: string, candidate: BuiltOfficialIntegrationCandidate): string {
+function candidateBuildFailure(source: RepositoryPublicationConfig["source"], error: unknown): string {
+    if (source.type === "integration" && error instanceof IntegrationCandidateBuildError) {
+        return `Integration candidate build failed [${error.code}]: ${error.message}`;
+    }
+    return source.type === "official"
+        ? "Official integration candidate build failed"
+        : "Integration candidate build failed";
+}
+
+async function buildCandidates(
+    source: RepositoryPublicationConfig["source"],
+): Promise<readonly BuiltIntegrationCandidate[]> {
+    return source.type === "official"
+        ? await buildOfficialIntegrationCandidates()
+        : await buildIntegrationCandidates(source.root);
+}
+
+function candidateLine(action: string, candidate: BuiltIntegrationCandidate): string {
     return `${action} ${candidate.kind}@${candidate.version} package-sha256:${candidate.packageDigest} verification-sha256:${candidate.verificationDigest} candidate-sha256:${candidate.candidateDigest} ${candidate.canonicalBytes.byteLength} bytes`;
 }
 
 function failureLine(
-    candidate: BuiltOfficialIntegrationCandidate,
+    candidate: BuiltIntegrationCandidate,
     failure: Extract<ManagementCandidateResult, { outcome: "failed" }>,
 ): string {
     const status = failure.status ? ` status=${failure.status}` : "";

@@ -1,4 +1,5 @@
 import { isAbsolute, resolve } from "node:path";
+import { normalizeRepositoryManagementUrl } from "./candidate/managementUrl";
 
 const DEFAULT_TIMEOUT_MS = 900_000;
 const MAX_TIMEOUT_MS = 1_800_000;
@@ -8,52 +9,90 @@ export type RepositoryPublicationEnvironment = Readonly<Record<string, string | 
 export type RepositoryPublicationConfig = Readonly<{
     dryRun: boolean;
     managementUrl?: string;
+    source: Readonly<{ type: "integration"; root: string }> | Readonly<{ type: "official" }>;
     tokenFile?: string;
     timeoutMs: number;
 }>;
 
 export const REPOSITORY_PUBLICATION_HELP = `Usage:
+  p9r repository publish <integration-root> [--dry-run]
+      [--url=https://management.example/.cms/repository-management]
+      [--token-file=/absolute/path/to/token]
+      [--allow-insecure-http]
+      [--timeout-ms=900000]
+
   p9r repository publish-official [--dry-run]
       [--url=https://management.example/.cms/repository-management]
       [--token-file=/absolute/path/to/token]
+      [--allow-insecure-http]
       [--timeout-ms=900000]
 
 Environment fallbacks:
   P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL
   P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE
-  P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS`;
+  P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP
+  P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS
+
+Generic publication requires one author verification bundle per declared version at:
+  <integration-root>/verification/<version>.json
+
+Each bundle must target the exact package digest, retain the platform cms-postgres
+runner requirement, and declare at least one executable contract or conformance suite.`;
 
 export function parseRepositoryPublicationConfig(
     args: readonly string[],
     environment: RepositoryPublicationEnvironment,
 ): RepositoryPublicationConfig | "help" {
-    if (args[0] === "--help" || args[0] === "-h") {
+    if (
+        args[0] === "--help" ||
+        args[0] === "-h" ||
+        ((args[0] === "publish" || args[0] === "publish-official") && (args[1] === "--help" || args[1] === "-h"))
+    ) {
         return "help";
     }
-    if (args[0] !== "publish-official") {
-        throw new Error("Repository command must be publish-official");
-    }
-
-    const flags = parseFlags(args.slice(1));
+    const source = parseSource(args);
+    const flags = parseFlags(args.slice(source.type === "official" ? 1 : 2));
     if (flags.help) {
         return "help";
     }
     const rawUrl = flags.url ?? environment.P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL;
     const rawTokenFile = flags.tokenFile ?? environment.P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE;
     const rawTimeout = flags.timeoutMs ?? environment.P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS;
+    const allowInsecureHttp =
+        flags.allowInsecureHttp ||
+        parseBooleanEnvironment(
+            environment.P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP,
+            "P9R_INTEGRATION_REPOSITORY_MANAGEMENT_ALLOW_INSECURE_HTTP",
+        );
     if (!flags.dryRun && (!rawUrl?.trim() || !rawTokenFile?.trim())) {
         throw new Error("Publishing requires a management URL and token file");
     }
 
     return Object.freeze({
         dryRun: flags.dryRun,
-        ...(rawUrl?.trim() ? { managementUrl: normalizeManagementUrl(rawUrl) } : {}),
+        source,
+        ...(rawUrl?.trim() ? { managementUrl: normalizeRepositoryManagementUrl(rawUrl, allowInsecureHttp) } : {}),
         ...(rawTokenFile?.trim() ? { tokenFile: normalizeTokenFile(rawTokenFile) } : {}),
         timeoutMs: parseTimeout(rawTimeout),
     });
 }
 
+function parseSource(args: readonly string[]): RepositoryPublicationConfig["source"] {
+    if (args[0] === "publish-official") {
+        return { type: "official" };
+    }
+    if (args[0] !== "publish") {
+        throw new Error("Repository command must be publish or publish-official");
+    }
+    const root = args[1]?.trim();
+    if (!root || root.startsWith("-")) {
+        throw new Error("Repository publication requires an integration root");
+    }
+    return { type: "integration", root: resolve(root) };
+}
+
 type ParsedFlags = {
+    allowInsecureHttp: boolean;
     dryRun: boolean;
     help: boolean;
     url?: string;
@@ -62,7 +101,7 @@ type ParsedFlags = {
 };
 
 function parseFlags(args: readonly string[]): ParsedFlags {
-    const parsed: ParsedFlags = { dryRun: false, help: false };
+    const parsed: ParsedFlags = { allowInsecureHttp: false, dryRun: false, help: false };
     const seen = new Set<string>();
     for (const argument of args) {
         const [name, value] = splitFlag(argument);
@@ -72,6 +111,8 @@ function parseFlags(args: readonly string[]): ParsedFlags {
         seen.add(name);
         if (name === "--dry-run" && value === undefined) {
             parsed.dryRun = true;
+        } else if (name === "--allow-insecure-http" && value === undefined) {
+            parsed.allowInsecureHttp = true;
         } else if ((name === "--help" || name === "-h") && value === undefined) {
             parsed.help = true;
         } else if (name === "--url" && value !== undefined) {
@@ -90,23 +131,6 @@ function parseFlags(args: readonly string[]): ParsedFlags {
 function splitFlag(argument: string): readonly [string, string | undefined] {
     const separator = argument.indexOf("=");
     return separator < 0 ? [argument, undefined] : [argument.slice(0, separator), argument.slice(separator + 1)];
-}
-
-function normalizeManagementUrl(raw: string): string {
-    let url: URL;
-    try {
-        url = new URL(raw.trim());
-    } catch {
-        throw new Error("Repository management URL must be an absolute HTTP(S) URL");
-    }
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-        throw new Error("Repository management URL must be an absolute HTTP(S) URL");
-    }
-    if (url.username || url.password || url.search || url.hash || raw.includes("?") || raw.includes("#")) {
-        throw new Error("Repository management URL must not contain credentials, query, or fragment");
-    }
-    url.pathname = url.pathname.replace(/\/+$/u, "") || "/";
-    return url.href.replace(/\/$/u, "");
 }
 
 function normalizeTokenFile(raw: string): string {
@@ -129,4 +153,14 @@ function parseTimeout(raw: string | undefined): number {
         throw new Error(`Repository publication timeout must be an integer between 1 and ${MAX_TIMEOUT_MS}`);
     }
     return value;
+}
+
+function parseBooleanEnvironment(raw: string | undefined, name: string): boolean {
+    if (raw === undefined || raw.trim() === "false") {
+        return false;
+    }
+    if (raw.trim() === "true") {
+        return true;
+    }
+    throw new Error(`${name} must be true or false when set`);
 }

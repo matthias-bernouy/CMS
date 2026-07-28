@@ -1,8 +1,8 @@
-import type { BuiltOfficialIntegrationCandidate } from "@bernouy/cms-official-integrations/publication";
+import type { BuiltIntegrationCandidate } from "../../../src/repositoryPublication/candidate/contracts";
 
 const servers: Bun.Server<unknown>[] = [];
 
-export const CANDIDATE: BuiltOfficialIntegrationCandidate = {
+export const CANDIDATE: BuiltIntegrationCandidate = {
     kind: "demo",
     version: "1.1.0",
     packageDigest: "a".repeat(64),
