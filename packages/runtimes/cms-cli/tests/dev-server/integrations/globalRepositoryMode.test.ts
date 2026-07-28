@@ -25,8 +25,8 @@ afterEach(async () => {
     await Promise.all(cleanup.splice(0).map((stop) => stop()));
 });
 
-describe("CLI global repository read mode", () => {
-    test("uses the remote-only anonymous catalog for public reads", async () => {
+describe("CLI global repository consumption", () => {
+    test("reads remote-only definitions and packages from the configured repository", async () => {
         const siteDir = await mkdtemp(join(tmpdir(), "p9r-global-repository-"));
         const runner = new BunRunner();
         const authorizations: Array<string | null> = [];
@@ -48,22 +48,16 @@ describe("CLI global repository read mode", () => {
             await rm(siteDir, { recursive: true, force: true });
         });
         const repositoryUrl = `${origin(runner)}/.cms/repository`;
-        const services = await createLocalIntegrationServices(siteDir, "http://127.0.0.1:9", {} as never, {
-            environment: { P9R_INTEGRATION_REPOSITORY_URL: repositoryUrl },
-        });
+        const services = await createLocalIntegrationServices(siteDir, repositoryUrl, {} as never);
 
-        expect(services.repositoryReadMode).toBe("global");
-        expect(services.publicRepositoryCatalog).toBe(services.integrationCatalog);
-        expect(services.publicRepositoryPackages).toBe(services.integrationPackageSource);
-        expect(await services.integrationRepositoryCatalog.get(KIND)).toBeNull();
-        expect(await services.publicRepositoryCatalog.list()).toEqual([
+        expect(await services.integrationCatalog.list()).toEqual([
             expect.objectContaining({ kind: KIND, versions: [VERSION] }),
         ]);
-        expect(await services.publicRepositoryCatalog.get(KIND, VERSION)).toMatchObject({
+        expect(await services.integrationCatalog.get(KIND, VERSION)).toMatchObject({
             kind: KIND,
             version: VERSION,
         });
-        expect((await services.publicRepositoryPackages.getPackage(KIND, VERSION))?.envelope.kind).toBe(KIND);
+        expect((await services.integrationPackageSource.getPackage(KIND, VERSION))?.envelope.kind).toBe(KIND);
         expect(authorizations.length).toBeGreaterThan(0);
         expect(authorizations.every((authorization) => authorization === null)).toBeTrue();
     });

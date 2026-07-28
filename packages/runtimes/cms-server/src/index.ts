@@ -17,7 +17,7 @@ const features = await createFeatureStores(core.db, core.secrets, {
 const integrations = createProductionIntegrationServices({
     providerRepository: features.integrationConnectorProviders,
     secrets: core.secrets,
-    localRepositoryUrl: `http://127.0.0.1:${env.DELIVERY_PORT}/.cms/repository`,
+    repository: env.integrationRepository,
     packageCacheDir: env.CMS_INTEGRATION_PACKAGE_CACHE_DIR,
     packageCacheObserve: createIntegrationPackageCacheObserver(),
     environment: process.env,

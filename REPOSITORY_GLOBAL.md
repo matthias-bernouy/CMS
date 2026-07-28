@@ -1,5 +1,13 @@
 # Global Integration Repository Plan
 
+> Historical implementation plan. The implemented runtime contract now
+> requires exactly one global repository URL, has no embedded or loopback read
+> mode, and mounts the anonymous repository facade only on the designated
+> repository-management CMS. The public `/integrations` UI is deployed from
+> `packages/resources/sites/cms-repository-hub`; obsolete embedded, mirrored,
+> and programmatic page-provider steps below are retained only as design
+> history and must not be used as current deployment instructions.
+
 ## Status
 
 This document defines the target architecture and delivery plan for a global,

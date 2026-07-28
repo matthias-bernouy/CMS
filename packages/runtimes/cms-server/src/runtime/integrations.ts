@@ -8,10 +8,10 @@ import type {
     IntegrationMigrationExternalPhaseHandler,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
-import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs";
 import type { IntegrationPackageCacheEvent } from "@bernouy/cms-integration-packages/fs";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
-import { FsIntegrationDefinitionRepository, FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
+import { FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import {
     ConfiguredSupabaseConnectorBaselineAdopter,
@@ -20,7 +20,6 @@ import {
     ConfiguredSupabaseFunctionMigrationHandler,
 } from "@bernouy/cms-integrations/supabase";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog/compatibility/reader";
 import { DEFAULT_REPOSITORY_CATALOG_READER_LIMITS } from "../repositoryCatalog/limits";
@@ -30,7 +29,7 @@ import { HttpRepositoryVerificationBundleReader } from "../repositoryCatalog/rel
 type IntegrationServiceOptions = {
     providerRepository: IntegrationConnectorProviderRepository;
     secrets: SecretStore;
-    localRepositoryUrl: string;
+    repository: Readonly<{ url: string }>;
     packageCacheDir: string;
     definitionFetch?: typeof fetch;
     packageFetch?: typeof fetch;
@@ -39,13 +38,7 @@ type IntegrationServiceOptions = {
 };
 
 export function createProductionIntegrationServices(options: IntegrationServiceOptions) {
-    const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-    const integrationRepositoryPackages = new FsIntegrationPackageSource({
-        locate: (kind, version) => integrationRepositoryCatalog.locateExactVersion(kind, version),
-    });
-    const globalRepositoryUrl = options.environment.P9R_INTEGRATION_REPOSITORY_URL?.trim();
-    const repositoryReadMode = globalRepositoryUrl ? "global" : "embedded";
-    const repositoryUrl = globalRepositoryUrl || options.localRepositoryUrl;
+    const repositoryUrl = options.repository.url;
     const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository({
         baseUrl: repositoryUrl,
         ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
@@ -61,7 +54,6 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
     const integrationPackageResolver = new FsIntegrationPackageResolver({
         cache: integrationPackageCache,
         source: integrationPackageSource,
-        embeddedSource: integrationRepositoryPackages,
     });
     const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
         new ConfiguredSupabaseConnectorDeployer({
@@ -83,44 +75,28 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
         new ConfiguredSupabaseConnectorBaselineAdopter(supabaseMigrationConfig),
     ];
     const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
-    const publicRepositoryCatalog = repositoryReadMode === "global" ? integrationCatalog : integrationRepositoryCatalog;
-    const publicRepositoryPackages =
-        repositoryReadMode === "global" ? integrationPackageSource : integrationRepositoryPackages;
-    const publicRepositoryCompatibility = globalRepositoryUrl
-        ? new HttpRepositoryCompatibilityReader({
-              baseUrl: globalRepositoryUrl,
-              ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
-          })
-        : undefined;
-    const upgradeReleaseReader = globalRepositoryUrl
-        ? new HttpRepositoryReleaseReader({
-              baseUrl: globalRepositoryUrl,
-              ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
-              timeoutMs: 10_000,
-              maxResponseBytes: DEFAULT_REPOSITORY_CATALOG_READER_LIMITS.releaseEvidenceBytes,
-          })
-        : undefined;
-    const publicRepositoryVerificationBundles = globalRepositoryUrl
-        ? new HttpRepositoryVerificationBundleReader({
-              baseUrl: globalRepositoryUrl,
-              ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
-              timeoutMs: 10_000,
-              maxResponseBytes: DEFAULT_INTEGRATION_PACKAGE_LIMITS.maxDocumentBytes,
-          })
-        : undefined;
-    const integrationUpgradeReleases = upgradeReleaseReader
-        ? {
-              get: async (kind: string, version: string) =>
-                  (await upgradeReleaseReader.getDocument(kind, version))?.value ?? null,
-          }
-        : undefined;
+    const publicRepositoryCompatibility = new HttpRepositoryCompatibilityReader({
+        baseUrl: repositoryUrl,
+        ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+    });
+    const upgradeReleaseReader = new HttpRepositoryReleaseReader({
+        baseUrl: repositoryUrl,
+        ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+        timeoutMs: 10_000,
+        maxResponseBytes: DEFAULT_REPOSITORY_CATALOG_READER_LIMITS.releaseEvidenceBytes,
+    });
+    const publicRepositoryVerificationBundles = new HttpRepositoryVerificationBundleReader({
+        baseUrl: repositoryUrl,
+        ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+        timeoutMs: 10_000,
+        maxResponseBytes: DEFAULT_INTEGRATION_PACKAGE_LIMITS.maxDocumentBytes,
+    });
+    const integrationUpgradeReleases = {
+        get: async (kind: string, version: string) =>
+            (await upgradeReleaseReader.getDocument(kind, version))?.value ?? null,
+    };
     return {
-        repositoryReadMode,
         repositoryUrl,
-        integrationRepositoryCatalog,
-        integrationRepositoryPackages,
-        publicRepositoryCatalog,
-        publicRepositoryPackages,
         publicRepositoryCompatibility,
         publicRepositoryReleases: upgradeReleaseReader,
         publicRepositoryVerificationBundles,

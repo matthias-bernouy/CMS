@@ -29,7 +29,7 @@ describe("production CMS composition", () => {
         expect(surfaces).toMatch(/sourceResolveSecret\s*:\s*features\.resolveSecret\s*,/);
     });
 
-    test("mounts anonymous repository reads only on Delivery and uses its loopback port", async () => {
+    test("mounts repository reads only for the management CMS and never uses a loopback repository", async () => {
         const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
         const entrypoint = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
         const controlSection = surfaces.slice(
@@ -40,8 +40,11 @@ describe("production CMS composition", () => {
 
         expect(controlSection).not.toContain('group("/.cms/repository"');
         expect(deliverySection).toContain('deliveryRunner.group("/.cms/repository"');
-        expect(entrypoint).toContain("127.0.0.1:${env.DELIVERY_PORT}/.cms/repository");
-        expect(entrypoint).not.toContain("127.0.0.1:${env.CONTROL_PORT}/.cms/repository");
+        expect(deliverySection).toMatch(
+            /if\s*\(repositoryCatalog\)\s*\{[\s\S]*deliveryRunner\.group\("\/\.cms\/repository"/,
+        );
+        expect(entrypoint).not.toContain("127.0.0.1");
+        expect(entrypoint).toContain("repository: env.integrationRepository");
     });
 
     test("initializes the durable package cache before mounting listeners", async () => {

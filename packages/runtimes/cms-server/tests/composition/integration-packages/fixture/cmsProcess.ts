@@ -9,7 +9,6 @@ import {
     SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
 } from "@bernouy/cms-integrations";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
-import { RepositoryCms } from "@bernouy/cms-repository";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { BunRunner } from "@bernouy/http-runner";
@@ -39,10 +38,10 @@ export async function startCmsFixture(config: CmsProcessConfig) {
     const integrations = createProductionIntegrationServices({
         providerRepository: providers,
         secrets,
-        localRepositoryUrl: config.repositoryUrl,
+        repository: { url: config.repositoryUrl },
         packageCacheDir: config.cacheRoot,
         packageFetch: observedFetch,
-        environment: { P9R_INTEGRATION_REPOSITORY_URL: config.repositoryUrl },
+        environment: {},
     });
     await integrations.integrationPackageCache.init();
 
@@ -79,14 +78,6 @@ export async function startCmsFixture(config: CmsProcessConfig) {
 
     const deliveryRunner = new BunRunner();
     deliveryRunner.get("/health", () => Response.json({ ok: true, pid: process.pid }));
-    deliveryRunner.group("/.cms/repository", (runner) => {
-        new RepositoryCms({
-            runner,
-            integrationCatalog: integrations.integrationRepositoryCatalog,
-            integrationPackages: integrations.integrationRepositoryPackages,
-            packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
-        });
-    });
     new DeliveryCms({ runner: deliveryRunner, repository: content, integrationInstallations: installations });
     controlRunner.start(0);
     deliveryRunner.start(0);

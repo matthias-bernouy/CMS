@@ -30,6 +30,7 @@ import { createLocalIntegrationServices } from "./integrations";
 type ServiceOptions = {
     siteDir: string;
     built: Map<string, BuiltBloc>;
+    integrationRepositoryUrl: string;
     publicHost: string;
     port: number;
     deliveryPort: number;
@@ -50,7 +51,7 @@ export async function createLocalServices(options: ServiceOptions) {
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(options.siteDir));
     const integrations = await createLocalIntegrationServices(
         options.siteDir,
-        `http://${options.publicHost}:${options.deliveryPort}/.cms/repository`,
+        options.integrationRepositoryUrl,
         secrets,
     );
     const integrationInstallations = new LocalFsIntegrationInstallationRepository(options.siteDir);

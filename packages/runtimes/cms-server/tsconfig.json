@@ -25,7 +25,6 @@
         { "path": "../../features/cms-notifications" },
         { "path": "../../features/cms-analytics" },
         { "path": "../../features/cms-permissions" },
-        { "path": "../../resources/official-integrations" },
         { "path": "../../surfaces/cms-repository" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }

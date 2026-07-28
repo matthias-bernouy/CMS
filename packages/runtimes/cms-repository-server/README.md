@@ -55,7 +55,8 @@ image backup documentation. Never merge a cache backup into the registry or
 restore registry files selectively from a cache.
 
 On a completely empty registry root, production prevalidates and publishes the
-14 checked-in official packages before starting either listener. A durable
+closed historical bootstrap set of 14 official packages before starting either
+listener. Later checked-in releases use explicit publication. A durable
 in-progress marker makes an interrupted seed fail closed on every later start;
 an initialized volume is never reconciled with a newer image. The operator
 procedure is documented in `infra/images/cms-repository/README.md`.

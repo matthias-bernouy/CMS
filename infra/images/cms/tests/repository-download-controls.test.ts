@@ -14,6 +14,28 @@ const deploymentEnvironment = {
     MONGO_URL: "mongodb://cms_app:password@mongo:27017/cms_integrations?authSource=admin",
 };
 
+test("requires every CMS instance to configure the global integration repository", () => {
+    expect(instanceComposeSource).toContain(
+        "${P9R_INTEGRATION_REPOSITORY_URL:?P9R_INTEGRATION_REPOSITORY_URL must point to the public integration repository API}",
+    );
+    expect(instanceComposeSource).not.toContain("P9R_INTEGRATION_REPOSITORY_URL:-");
+    expect(instanceEnvExampleSource).toContain(
+        "P9R_INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository",
+    );
+});
+
+composeTest("rejects an instance whose global integration repository URL is missing", () => {
+    const { P9R_INTEGRATION_REPOSITORY_URL: _repositoryUrl, ...withoutRepository } = requiredCmsEnvironment;
+
+    expect(() =>
+        renderCompose(instanceComposeFile, {
+            ...withoutRepository,
+            DOMAIN: "missing-repository.example.test",
+            MONGO_URL: "mongodb://cms_app:password@mongo:27017/cms_missing_repository?authSource=admin",
+        }),
+    ).toThrow(/P9R_INTEGRATION_REPOSITORY_URL/u);
+});
+
 composeTest("enables package download protection for the standard proxy topology", () => {
     const config = renderCompose(instanceComposeFile, deploymentEnvironment);
 

@@ -13,8 +13,9 @@ Usage:
   p9r dev [--port=N --host=H --no-workers --no-source-images]
                                     Run the editor locally; scheduled triggers start by default.
                                    Responsive Source images are enabled by default.
-                                   No remote calls, no auth. Run \`p9r pull\`
-                                   first to bootstrap site/ from a tenant.
+                                   Uses the configured public integration repository;
+                                   no remote CMS auth. Run \`p9r pull\` first to
+                                   bootstrap site/ from a tenant.
   p9r preview [--port=N --host=H --no-workers --no-source-images]
                                    Run the same local CMS with production
                                    caching, minification, and security headers.
@@ -57,6 +58,9 @@ Usage:
   p9r help                         Show this help
 
 Env (loaded from .env or the environment):
+  P9R_INTEGRATION_REPOSITORY_URL
+               Public integration repository base URL. Required by \`dev\` and
+               \`preview\`, e.g. https://repository.example/.cms/repository.
   P9R_URL      Base URL of the remote Cms CMS
                e.g. http://localhost:4999/cms
   P9R_TOKEN    Bearer token for remote commands — a CMS Personal Access Token

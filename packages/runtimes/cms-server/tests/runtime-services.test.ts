@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
     InMemoryAuthTokenStore,
     InMemoryIdentityProviderRepository,
@@ -12,7 +12,7 @@ import {
     ConfiguredSupabaseConnectorMigrationAdapter,
     ConfiguredSupabaseFunctionMigrationHandler,
 } from "@bernouy/cms-integrations/supabase";
-import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
 import { FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
@@ -36,6 +36,7 @@ const runtimeEnv = () =>
         CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
         MONGO_URL: "mongodb://mongo:27017/cms",
         ANALYTICS_SALT_SECRET: "shared-analytics-secret",
+        P9R_INTEGRATION_REPOSITORY_URL: "https://repository.example.test/.cms/repository",
     });
 
 function authStores(): CoreStores {
@@ -102,10 +103,9 @@ describe("production runtime services", () => {
         const services = createProductionIntegrationServices({
             providerRepository: {} as never,
             secrets: {} as never,
-            localRepositoryUrl: "http://127.0.0.1:3000/.cms/repository",
+            repository: { url: "https://integrations.example.test/catalog" },
             packageCacheDir: "/data/integration-packages",
             environment: {
-                P9R_INTEGRATION_REPOSITORY_URL: "  https://integrations.example.test/catalog  ",
                 SMTP_HOST: " smtp.example.test ",
                 SMTP_PASSWORD: " secret ",
                 UNRELATED_SECRET: "must-not-leak",
@@ -114,22 +114,15 @@ describe("production runtime services", () => {
 
         expect(services.integrationCatalog).toBeInstanceOf(HttpIntegrationDefinitionRepository);
         expect(services.integrationPackageSource).toBeInstanceOf(HttpIntegrationPackageSource);
-        expect(services.repositoryReadMode).toBe("global");
         expect(services.repositoryUrl).toBe("https://integrations.example.test/catalog");
-        expect(services.publicRepositoryCatalog).toBe(services.integrationCatalog);
-        expect(services.publicRepositoryPackages).toBe(services.integrationPackageSource);
         expect(services.publicRepositoryCompatibility).toBeInstanceOf(HttpRepositoryCompatibilityReader);
         expect(services.integrationUpgradeReleases).toBeDefined();
         expect(services.integrationPackageCache).toBeInstanceOf(FsIntegrationPackageCache);
         expect(services.integrationPackageResolver).toBeInstanceOf(FsIntegrationPackageResolver);
-        expect(services.integrationRepositoryPackages).toBeInstanceOf(FsIntegrationPackageSource);
-        const embeddedPackage = await services.integrationRepositoryPackages.getPackage("commerce", "1.0.0");
-        expect(embeddedPackage?.envelope).toMatchObject({
-            kind: "commerce",
-            version: "1.0.0",
-            releaseNotes: "README.md",
-        });
-        expect(embeddedPackage?.digest).toMatch(/^[a-f0-9]{64}$/);
+        expect(
+            (services.integrationPackageResolver as unknown as { config: { embeddedSource?: unknown } }).config
+                .embeddedSource,
+        ).toBeUndefined();
         expect((services.integrationCatalog as unknown as { baseUrl: string }).baseUrl).toBe(
             "https://integrations.example.test/catalog",
         );
@@ -153,34 +146,5 @@ describe("production runtime services", () => {
             SMTP_HOST: "smtp.example.test",
             SMTP_PASSWORD: "secret",
         });
-    });
-
-    test("keeps embedded public reads on filesystem without recursing through loopback", async () => {
-        const definitionFetch = mock(async () => {
-            throw new Error("embedded public reads must not use loopback HTTP");
-        });
-        const packageFetch = mock(async () => {
-            throw new Error("embedded public reads must not use loopback HTTP");
-        });
-        const services = createProductionIntegrationServices({
-            providerRepository: {} as never,
-            secrets: {} as never,
-            localRepositoryUrl: "http://127.0.0.1:3001/.cms/repository",
-            packageCacheDir: "/data/integration-packages",
-            environment: {},
-            definitionFetch: definitionFetch as unknown as typeof fetch,
-            packageFetch: packageFetch as unknown as typeof fetch,
-        });
-
-        expect(services.repositoryReadMode).toBe("embedded");
-        expect(services.repositoryUrl).toBe("http://127.0.0.1:3001/.cms/repository");
-        expect(services.publicRepositoryCatalog).toBe(services.integrationRepositoryCatalog);
-        expect(services.publicRepositoryPackages).toBe(services.integrationRepositoryPackages);
-        expect(services.publicRepositoryCompatibility).toBeUndefined();
-        expect(services.integrationUpgradeReleases).toBeUndefined();
-        expect((await services.publicRepositoryCatalog.list()).some(({ kind }) => kind === "commerce")).toBeTrue();
-        expect(await services.publicRepositoryPackages.getPackage("commerce", "1.0.0")).not.toBeNull();
-        expect(definitionFetch).not.toHaveBeenCalled();
-        expect(packageFetch).not.toHaveBeenCalled();
     });
 });

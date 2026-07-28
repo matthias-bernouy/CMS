@@ -17,6 +17,8 @@ const EXPECTED_COORDINATES = [
     "commerce-mondial-relay-fulfillment@1.0.0",
     "commerce-negotiation@1.0.0",
     "commerce-stripe-payments@1.0.0",
+    "consent@1.0.0",
+    "documentation-blocs@1.0.0",
     "emailer@1.0.0",
     "mondial-relay@1.0.0",
     "newsletter@1.0.0",
@@ -25,6 +27,7 @@ const EXPECTED_COORDINATES = [
     "sales-configurator@1.0.0",
     "stripe-connect@1.0.0",
     "user-account@1.0.0",
+    "workspace-blocs@1.0.0",
 ] as const;
 
 const roots: string[] = [];

@@ -47,6 +47,7 @@ export type RuntimeEnv = {
     CMS_HTTP_TRUSTED_PROXY_HOPS: number;
     CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: number;
     CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: number;
+    integrationRepository: Readonly<{ url: string }>;
     repositoryManagement: RepositoryManagementGatewayConfig | undefined;
 };
 
@@ -151,8 +152,20 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             "CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS",
             60,
         ),
+        integrationRepository: parseIntegrationRepository(source),
         repositoryManagement: parseRepositoryManagementGatewayConfig(source),
     };
+}
+
+function parseIntegrationRepository(source: RuntimeEnvSource): RuntimeEnv["integrationRepository"] {
+    const name = "P9R_INTEGRATION_REPOSITORY_URL";
+    const raw = requiredEnv(source, name);
+    const parsed = new URL(parseHttpUrl(raw, name));
+    if (parsed.username || parsed.password || parsed.search || parsed.hash || raw.includes("?") || raw.includes("#")) {
+        throw new Error(`${name} must not contain credentials, query, or fragment`);
+    }
+    parsed.pathname = parsed.pathname.replace(/\/+$/u, "") || "/";
+    return Object.freeze({ url: parsed.href.replace(/\/$/u, "") });
 }
 
 function parseClientAddressConfig(

@@ -15,7 +15,6 @@
         { "path": "../../features/cms-analytics" },
         { "path": "../../features/cms-permissions" },
         { "path": "../../foundation/http-runner" },
-        { "path": "../../foundation/rate-limiter" },
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-bloc-compile" },
         { "path": "../../features/cms-content" },
@@ -32,7 +31,6 @@
         { "path": "../../features/cms-triggers" },
         { "path": "../../features/cms-relations" },
         { "path": "../../resources/official-integrations" },
-        { "path": "../../surfaces/cms-repository" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }
     ]

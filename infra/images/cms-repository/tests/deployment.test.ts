@@ -121,7 +121,10 @@ describe("registry lifecycle documentation", () => {
     });
 
     test("documents empty-only bootstrap and image-upgrade immutability", () => {
-        expect(readmeSource).toMatch(/all 14 checked-in official\s+packages/);
+        expect(readmeSource).toMatch(/closed historical bootstrap\s+set of 14 official packages/);
+        expect(readmeSource).toMatch(
+            /First publish[\s\S]*documentation-blocs@1\.0\.0[\s\S]*Then deploy[\s\S]*cms-repository-hub/,
+        );
         expect(readmeSource).toContain(".official-bootstrap-in-progress");
         expect(readmeSource).toContain("every later startup fails closed");
         expect(readmeSource).toContain("Any non-empty registry without that marker is already initialized");
@@ -283,6 +286,7 @@ composeTest("management CMS override renders one private client and no repositor
             CMS_KEK_HEX: "b".repeat(64),
             CMS_ADMIN_PASSWORD: "acceptance-password",
             ANALYTICS_SALT_SECRET: "c".repeat(64),
+            P9R_INTEGRATION_REPOSITORY_URL: "http://cms-repository:3001/.cms/repository",
             P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER: "opaque-admin-subject",
             CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-token",
         },

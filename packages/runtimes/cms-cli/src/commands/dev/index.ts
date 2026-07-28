@@ -4,6 +4,7 @@ import { createReloadEmitter } from "../../dev-server/watch/index";
 import { loadPushConfig } from "../../push/shared/config";
 import { prepareLocalBlocs } from "./blocs";
 import { LOCAL_RUNTIME_PROFILES, type LocalRuntimeOptions, parseDevFlags } from "./flags";
+import { readIntegrationRepositoryUrl } from "./integrations";
 import { createLocalServices } from "./services";
 import { startLocalServers } from "./servers";
 
@@ -12,6 +13,7 @@ export async function runLocalCms(args: string[], runtime: LocalRuntimeOptions) 
     const cwd = process.cwd();
     const config = await loadPushConfig(cwd);
     const flags = parseFlagsOrExit(args);
+    const integrationRepositoryUrl = readIntegrationRepositoryUrl(process.env);
 
     console.log(`→ Site dir : ${config.siteDir}`);
     await warnMissingGeneratedIntegrationArtifacts(config.siteDir);
@@ -21,6 +23,7 @@ export async function runLocalCms(args: string[], runtime: LocalRuntimeOptions) 
     const services = await createLocalServices({
         siteDir: config.siteDir,
         built: blocs.built,
+        integrationRepositoryUrl,
         publicHost: flags.publicHost,
         port: flags.port,
         deliveryPort: flags.deliveryPort,
@@ -35,7 +38,7 @@ export async function runLocalCms(args: string[], runtime: LocalRuntimeOptions) 
         services,
     });
 
-    logReady(runtime, flags, config.siteDir, blocs.authored.length, services.devAdmin.sub);
+    logReady(runtime, flags, config.siteDir, blocs.authored.length, services.devAdmin.sub, integrationRepositoryUrl);
     let stopping = false;
     const shutdown = async (signal: string) => {
         if (stopping) {
@@ -70,6 +73,7 @@ function logReady(
     siteDir: string,
     blocCount: number,
     adminSubject: string,
+    integrationRepositoryUrl: string,
 ): void {
     console.log("");
     console.log(
@@ -82,6 +86,7 @@ function logReady(
     console.log(`  Admin    : http://${flags.host}:${flags.port}/admin/pages`);
     console.log(`  Public   : http://${flags.host}:${flags.deliveryPort}/  (rendered site + image optimization)`);
     console.log(`  Repo     : ${siteDir} (writes go straight to disk)`);
+    console.log(`  Registry : ${integrationRepositoryUrl}`);
     console.log(`  Profile  : ${adminSubject} / current password "${DEV_PASSWORD}" (Profile → Password)`);
     console.log(`  Watching : ${blocCount} authored bloc folder(s) — edit + auto-reload`);
     console.log(`  Workers  : ${flags.workers ? "enabled" : "paused for this runtime (--no-workers)"}`);

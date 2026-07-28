@@ -47,6 +47,7 @@ export const requiredCmsEnvironment = {
     CMS_KEK_HEX: "d".repeat(64),
     CMS_ADMIN_PASSWORD: "deployment-test-password",
     ANALYTICS_SALT_SECRET: "e".repeat(64),
+    P9R_INTEGRATION_REPOSITORY_URL: "https://repository.example.test/.cms/repository",
 };
 
 export function renderCompose(composeFile: string, environment: Record<string, string>): ComposeConfig {

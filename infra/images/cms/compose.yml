@@ -20,6 +20,7 @@
 #   CMS_SESSION_SECRET=$(openssl rand -hex 32)
 #   CMS_KEK_HEX=$(openssl rand -hex 32)
 #   CMS_ADMIN_PASSWORD=$(openssl rand -base64 18)
+#   P9R_INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository
 #
 # `MONGO_URL` may instead target an external cluster. It remains explicit so
 # local shared-Mongo and managed-cluster deployments follow the same contract.
@@ -81,8 +82,9 @@ services:
             CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL: ${CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL:-https://admin.${DOMAIN}/auth/verify-email}
             CMS_CONTROL_AUTH_PASSWORD_RESET_URL:     ${CMS_CONTROL_AUTH_PASSWORD_RESET_URL:-https://admin.${DOMAIN}/auth/reset-password}
 
-            # Optional integration repository and connector function secrets.
-            P9R_INTEGRATION_REPOSITORY_URL: ${P9R_INTEGRATION_REPOSITORY_URL:-}
+            # Every CMS consumes the canonical public integration repository.
+            # Ordinary Delivery listeners do not mirror these repository routes.
+            P9R_INTEGRATION_REPOSITORY_URL: ${P9R_INTEGRATION_REPOSITORY_URL:?P9R_INTEGRATION_REPOSITORY_URL must point to the public integration repository API}
             SMTP_HOST:                      ${SMTP_HOST:-}
             SMTP_PORT:                      ${SMTP_PORT:-}
             SMTP_SECURE:                    ${SMTP_SECURE:-}

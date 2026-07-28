@@ -1,5 +1,12 @@
 # Global Integration Repository Traceability
 
+> Historical implementation trace. It records the worktree and intermediate
+> contracts used while building the repository, including embedded, loopback,
+> mirrored Delivery, and programmatic page-provider stages that have since been
+> removed. The current contract is one mandatory global repository per runtime,
+> no public repository routes on ordinary CMS instances, and a CMS-authored hub
+> on the repository-management CMS.
+
 This matrix tracks implementation evidence for
 [`REPOSITORY_GLOBAL.md`](REPOSITORY_GLOBAL.md). A requirement is complete only
 when both implementation and verification evidence exist in this worktree.

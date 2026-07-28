@@ -12,6 +12,7 @@ const validEnv = () => ({
     CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
     MONGO_URL: "mongodb://mongo:27017/cms",
     ANALYTICS_SALT_SECRET: "shared-analytics-secret",
+    P9R_INTEGRATION_REPOSITORY_URL: "https://repository.example.com/.cms/repository",
 });
 
 describe("runtime env validation", () => {
@@ -71,6 +72,9 @@ describe("runtime env validation", () => {
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_PASSWORD_RESET_URL: "not a url" })).toThrow(
             /CMS_AUTH_PASSWORD_RESET_URL must be a valid URL/,
         );
+        expect(() =>
+            readRuntimeEnv({ ...validEnv(), P9R_INTEGRATION_REPOSITORY_URL: "ftp://repository.example.com" }),
+        ).toThrow(/P9R_INTEGRATION_REPOSITORY_URL must use http/);
     });
 
     test("rejects missing required values and invalid email cooldowns", () => {
@@ -80,6 +84,9 @@ describe("runtime env validation", () => {
         );
         expect(() => readRuntimeEnv({ ...validEnv(), ANALYTICS_SALT_SECRET: " " })).toThrow(
             /env ANALYTICS_SALT_SECRET missing/,
+        );
+        expect(() => readRuntimeEnv({ ...validEnv(), P9R_INTEGRATION_REPOSITORY_URL: " " })).toThrow(
+            /env P9R_INTEGRATION_REPOSITORY_URL missing/,
         );
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "-1" })).toThrow(
             /must be a non-negative integer/,

@@ -5,6 +5,13 @@ manually, then use the local runtime as the contract test.
 
 ## Local Loop
 
+Configure the one required public integration repository in the project `.env`
+or process environment before starting either local runtime:
+
+```dotenv
+P9R_INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository
+```
+
 ```bash
 p9r dev
 ```

@@ -4,11 +4,22 @@ import { readRuntimeEnv } from "../../src/runtimeEnv";
 describe("repository runtime environment", () => {
     test("keeps download protection explicitly disabled for bare processes", () => {
         expect(readRuntimeEnv(validEnv())).toMatchObject({
+            integrationRepository: { url: "https://repository.example.com/.cms/repository" },
             CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
             CMS_HTTP_TRUSTED_PROXY_HOPS: 0,
             CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: 60,
             CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: 60,
         });
+    });
+
+    test.each([
+        "https://user:secret@repository.example.com/.cms/repository",
+        "https://repository.example.com/.cms/repository?tenant=one",
+        "https://repository.example.com/.cms/repository#catalog",
+    ])("rejects repository authority or request state in the base URL: %s", (url) => {
+        expect(() => readRuntimeEnv({ ...validEnv(), P9R_INTEGRATION_REPOSITORY_URL: url })).toThrow(
+            /must not contain credentials, query, or fragment/,
+        );
     });
 
     test("parses direct, one-hop, and CDN two-hop policies", () => {
@@ -80,5 +91,6 @@ function validEnv() {
         CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
         MONGO_URL: "mongodb://mongo:27017/cms",
         ANALYTICS_SALT_SECRET: "shared-analytics-secret",
+        P9R_INTEGRATION_REPOSITORY_URL: "https://repository.example.com/.cms/repository/",
     };
 }

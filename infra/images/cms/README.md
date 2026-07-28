@@ -223,6 +223,7 @@ INSTANCE=client
 DATABASE="cms_${INSTANCE}"
 CMS_IMAGE=bernouy/cms:2026.07.15-1
 MONGO_APP_USERNAME=cms_runtime
+INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository
 
 read -r -s -p 'Shared MongoDB application password: ' MONGO_APP_PASSWORD
 printf '\n'
@@ -239,6 +240,7 @@ CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
     printf 'CMS_ADMIN_EMAIL=%s\n' "admin@${DOMAIN}"
     printf 'CMS_ADMIN_PASSWORD=%s\n' "${CMS_ADMIN_PASSWORD}"
     printf 'ANALYTICS_SALT_SECRET=%s\n' "$(openssl rand -hex 32)"
+    printf 'P9R_INTEGRATION_REPOSITORY_URL=%s\n' "${INTEGRATION_REPOSITORY_URL}"
     printf 'CMS_HTTP_CLIENT_ADDRESS_MODE=%s\n' 'trusted-proxy'
     printf 'CMS_HTTP_TRUSTED_PROXY_HOPS=%s\n' '1'
     printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT=%s\n' '60'
@@ -309,6 +311,7 @@ environment file.
 | `CMS_KEK_HEX` | Exactly 32 random bytes encoded as 64 hexadecimal characters. |
 | `CMS_ADMIN_PASSWORD` | Initial local admin password; only used if the credential does not yet exist. |
 | `ANALYTICS_SALT_SECRET` | Stable HMAC secret shared by every Delivery replica for this site. |
+| `P9R_INTEGRATION_REPOSITORY_URL` | Public, anonymous canonical integration-repository API base URL. It is consumed server-to-server and must not contain credentials, a query, or a fragment. |
 
 ### Optional CMS and authentication settings
 
@@ -346,10 +349,17 @@ a false width descriptor.
 
 ### Public repository download protection
 
-Integration catalog reads are public and anonymous. Exact packages include the
-complete integration sources, so Delivery applies a fixed-window download limit
-before reading a package from disk or fetching it from a remote repository. No
-repository read token exists or needs to be configured.
+Integration catalog reads are public and anonymous at the canonical repository
+origin. An ordinary CMS consumes that API server-to-server and does not mount or
+mirror `/.cms/repository` on its own Delivery domain. It therefore never exposes
+its integration cache, installation records, answers, secrets, or repository
+packages through those routes.
+
+The designated repository-management CMS is the sole exception: it mounts a
+same-origin `/.cms/repository` facade for the CMS-authored public hub. Exact
+packages include the complete integration sources, so that facade applies a
+fixed-window download limit before fetching a package from the canonical
+repository. No repository read token exists or needs to be configured.
 
 The standard deployment sets `CMS_HTTP_CLIENT_ADDRESS_MODE=trusted-proxy` and
 `CMS_HTTP_TRUSTED_PROXY_HOPS=1` because `nginx-proxy` is its only trusted public
@@ -361,11 +371,11 @@ an incorrect count can group unrelated clients or reject valid downloads.
 
 `CMS_HTTP_CLIENT_ADDRESS_MODE` is intentionally independent of
 `ANALYTICS_TRUST_PROXY`. Do not enable trusted-proxy mode for a directly exposed
-listener, and do not rely on client-supplied forwarding headers. The
-configuration-safe runtime default is `disabled`, but this Compose file
-explicitly enables the limiter even when no CDN is installed. Manual
-deployments that retain `disabled` accept the documented residual bandwidth and
-abuse risk and emit an operational warning.
+listener, and do not rely on client-supplied forwarding headers. The base
+Compose file carries these settings because it is also used by the management
+CMS; they are inert for ordinary CMS instances that do not mount the facade.
+The configuration-safe runtime default is `disabled`, but this Compose file
+explicitly enables the management facade limiter even when no CDN is installed.
 
 `CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT` defaults to 60 accepted package GETs
 per client within the 60-second
@@ -379,7 +389,6 @@ not required for the origin limiter to be active.
 
 | Variable | Purpose |
 | --- | --- |
-| `P9R_INTEGRATION_REPOSITORY_URL` | Optional public, anonymous global integration catalog; the embedded official catalog is used when unset. |
 | `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL` | Internal management API base URL for the one designated repository-management CMS. Configure it only through the management override. |
 | `P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE` | Absolute in-container path to the shared management-token secret. Token bytes are read server-side and never sent to the browser. |
 | `P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER` | Exact opaque authentication subject allowed to open the repository console and gateway routes. Roles alone do not grant this capability. |
@@ -388,30 +397,39 @@ not required for the origin limiter to be active.
 | `SMTP_USER`, `SMTP_PASSWORD` | Optional SMTP credentials forwarded to those functions. |
 | `SMTP_FROM`, `SMTP_REPLY_TO` | Optional sender settings forwarded to those functions. |
 
-When `P9R_INTEGRATION_REPOSITORY_URL` is set, the CMS enters global repository
-read mode. Its Delivery `/.cms/repository` routes re-serve only the remote
-catalog, definitions, assets, release notes, and exact packages; they do not
-merge in official packages embedded in the image. Delivery applies its public
-package-download limit before fetching the upstream package. The embedded
-catalog remains an internal legacy fallback for already installed packages.
-When the variable is unset, Delivery serves that embedded catalog directly and
-the CMS consumer uses its Delivery loopback without recursively calling itself.
-Neither mode uses a repository read token.
+Every CMS reads metadata, definitions, upgrade evidence, and requested exact
+packages directly from `P9R_INTEGRATION_REPOSITORY_URL`. There is no embedded
+repository mode and no Delivery loopback. Metadata is fetched lazily when
+Control lists integrations or checks upgrades; a complete package is fetched
+only when an exact version must be installed, upgraded, or recovered into the
+durable cache. Neither operation uses a repository read token.
 
-The designated management CMS additionally publishes the searchable public
-catalog at `/integrations` through Delivery and exposes `/admin/repository`
-through authenticated Control. The console can inspect health, versions and
+The package cache remains private to the CMS. A rerun whose exact digest is
+already materialized continues to work while the repository is offline. Public
+site Delivery also continues serving normal content. Catalog and upgrade views
+report repository unavailability, and an install, upgrade, legacy rerun without
+a materialized digest, or recovery from a missing/corrupt cache object fails
+closed until the exact package is available again. The runtime never substitutes
+an image-embedded package for the recorded version.
+
+The designated management CMS additionally mounts the same-origin public
+repository facade and exposes `/admin/repository` through authenticated
+Control. Deploy `packages/resources/sites/cms-repository-hub` to that instance
+to publish the searchable `/integrations` page; the runtime has no generated UI
+fallback when this CMS resource has not been pushed. The console can inspect
+health, versions and
 compatibility history, upload an immutable package, append a compatibility
 reassessment, and explicitly promote a report-backed version to `stable`.
 Only the exact configured subject can reach the page or its `/api/repository/*`
-gateway. Browser requests remain same-origin and never contain the internal
-management URL, Bearer token, report actors, filesystem paths, or raw upstream
-responses.
+management gateway. Browser requests remain same-origin and never contain the
+internal management URL, Bearer token, report actors, filesystem paths, or raw
+upstream responses.
 
 Use `infra/images/cms-repository/management-cms.override.yml` only for that CMS
-instance. Ordinary CMS instances should configure at most the anonymous
-`P9R_INTEGRATION_REPOSITORY_URL`; leaving every management variable unset keeps
-the private capability and its navigation entry absent.
+instance. Every ordinary CMS must configure the anonymous
+`P9R_INTEGRATION_REPOSITORY_URL`, but must leave every management variable unset;
+that keeps the private capability, same-origin facade, and navigation entry
+absent.
 
 Configure Supabase connector deployments after the CMS is running: open
 **Settings → Connector providers → Supabase**, then enter the project reference
@@ -517,9 +535,31 @@ external MongoDB. Copy backups away from the application server.
 ### CMS image
 
 Build and transfer every release under a new tag. Before the first update that
-adds the integration package cache, install the matching Compose file and
-prepare its dedicated bind mount explicitly; Compose is configured to fail
-instead of silently creating a root-owned directory:
+requires the global integration repository, add
+`P9R_INTEGRATION_REPOSITORY_URL` to the instance `.env` while the old container
+is still running. Point it at the canonical public API base, verify that the
+catalog is reachable from the deployment host, then install the matching
+Compose file. The new Compose contract fails during `docker compose config` if
+the variable is absent or empty, before replacing the working container:
+
+```bash
+cd /opt/cms-sites/client
+printf '%s\n' \
+    'P9R_INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository' \
+    >> .env
+docker compose config --quiet
+```
+
+Do this for every existing site before upgrading its image. The repository must
+already contain every official version referenced by existing installations.
+Do not delete or recreate `integration-packages`: installations with a valid
+digest already present in that cache can rerun during a repository outage,
+whereas a legacy installation without a materialized digest and a missing or
+corrupt cache object now requires the canonical repository to recover.
+
+Before the first update that adds the integration package cache, prepare its
+dedicated bind mount explicitly; Compose is configured to fail instead of
+silently creating a root-owned directory:
 
 ```bash
 cd /opt/cms-sites/client

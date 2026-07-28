@@ -126,9 +126,13 @@ maintenance secret files contain the same token.
 
 Before applying the override, identify the one administrator by its stable
 opaque user `sub` (visible in the Control Users response and detail URL), not by
-email, and add these values to that CMS instance's private `.env`:
+email, and add these values to that CMS instance's private `.env`. The read URL
+is repeated because Compose expands required variables in the base file before
+merging the management override; the rendered service still receives the same
+internal URL from the override:
 
 ```dotenv
+P9R_INTEGRATION_REPOSITORY_URL=http://cms-repository:3001/.cms/repository
 P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER=<opaque-user-sub>
 CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE=/opt/cms-repository/secrets/repository-management-token
 CMS_REPOSITORY_NETWORK_NAME=cms_repository
@@ -148,6 +152,17 @@ docker compose \
   up -d --wait
 ```
 
+The override exposes the catalog API but does not create public pages in the
+CMS database. First publish the checked-in official releases through the normal
+candidate workflow described below; the hub pins the post-bootstrap
+`documentation-blocs@1.0.0` release. Then deploy
+`packages/resources/sites/cms-repository-hub` to this CMS before announcing the
+public hub, following the
+[official-sites deployment runbook](../../../packages/resources/sites/README.md).
+Until that explicit `p9r push` succeeds, `/integrations` returns the site's
+normal not-found response. There is deliberately no code-rendered catalog
+fallback: the public UI is entirely made of CMS pages, integrations, and Blocs.
+
 The standard deployment applies end-user package-download limiting at the CMS
 Delivery gateway. Server-to-server repository calls do not carry
 `X-Forwarded-For`, so the internal listener explicitly uses
@@ -159,12 +174,14 @@ preceding CDN. `direct` is suitable only when callers connect without a proxy.
 
 ## Empty-volume bootstrap policy
 
-On first startup only, the default image builds all 14 checked-in official
-packages with the shared canonical package builder and prevalidates the entire
-publication plan before writing to a completely empty registry bind mount. A
-separate, explicitly privileged bootstrap publisher admits the nine legacy SQL
-packages that predate `compatibility.schema`; the normal management publisher
-remains strict and cannot use that exemption.
+On first startup only, the default image builds the closed historical bootstrap
+set of 14 official packages with the shared canonical package builder and
+prevalidates the entire publication plan before writing to a completely empty
+registry bind mount. Later checked-in releases are published through the normal
+explicit workflow; image startup never reconciles them into an initialized
+volume. A separate, explicitly privileged bootstrap publisher admits the nine
+legacy SQL packages that predate `compatibility.schema`; the normal management
+publisher remains strict and cannot use that exemption.
 
 After preflight, the runtime durably creates
 `.official-bootstrap-in-progress`, publishes the prepared packages through the

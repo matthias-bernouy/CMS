@@ -42,6 +42,7 @@ describe("per-instance Compose rendering", () => {
         expect(cms.environment).toMatchObject({
             CMS_FILES_DIR: "/var/lib/cms/files",
             CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/var/lib/cms/integration-packages",
+            P9R_INTEGRATION_REPOSITORY_URL: "https://repository.example.test/.cms/repository",
             ENDPOINT_PERFORMANCE_ENABLED: "true",
             SOURCE_TIMING_SAMPLE_RATE: "0.01",
             SOURCE_SLOW_REQUEST_THRESHOLD_MS: "1000",

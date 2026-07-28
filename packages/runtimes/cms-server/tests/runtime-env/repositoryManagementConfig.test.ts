@@ -125,5 +125,6 @@ function validRuntimeEnv() {
         CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
         MONGO_URL: "mongodb://mongo:27017/cms",
         ANALYTICS_SALT_SECRET: "shared-analytics-secret",
+        P9R_INTEGRATION_REPOSITORY_URL: "https://repository.example.com/.cms/repository",
     };
 }

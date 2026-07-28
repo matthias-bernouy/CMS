@@ -3,32 +3,30 @@ import type {
     IntegrationDefinitionRepository,
     IntegrationProvisioner,
 } from "@bernouy/cms-integrations";
-import { FsIntegrationPackageCache, FsIntegrationPackageSource } from "@bernouy/cms-integration-packages/fs";
+import { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
-import { FsIntegrationDefinitionRepository, FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
+import { FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { join } from "node:path";
 import { LocalFsIntegrationConnectorProviderRepository } from "../../dev-server/stores/connectorProviders";
 
 type LocalIntegrationServiceOptions = {
-    environment?: Record<string, string | undefined>;
     definitionFetch?: typeof fetch;
     packageFetch?: typeof fetch;
 };
 
 export const LOCAL_INTEGRATION_PACKAGE_CACHE_PATH = ".p9r/integration-packages";
+export const INTEGRATION_REPOSITORY_URL_ENV = "P9R_INTEGRATION_REPOSITORY_URL";
 
 export async function createLocalIntegrationServices(
     siteDir: string,
-    localRepositoryUrl: string,
+    repositoryUrl: string,
     secrets: SecretStore,
     options: LocalIntegrationServiceOptions = {},
 ) {
-    const environment = options.environment ?? process.env;
     const integrationConnectorProviders = new LocalFsIntegrationConnectorProviderRepository(siteDir);
     const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
         new ConfiguredSupabaseConnectorDeployer({
@@ -37,14 +35,7 @@ export async function createLocalIntegrationServices(
             functionSecrets: readSupabaseFunctionSecrets(process.env),
         }),
     ];
-    const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-    const integrationRepositoryPackages = new FsIntegrationPackageSource({
-        locate: (kind, version) => integrationRepositoryCatalog.locateExactVersion(kind, version),
-    });
     const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
-    const globalRepositoryUrl = environment.P9R_INTEGRATION_REPOSITORY_URL?.trim();
-    const repositoryReadMode = globalRepositoryUrl ? "global" : "embedded";
-    const repositoryUrl = globalRepositoryUrl || localRepositoryUrl;
     const integrationCatalog: IntegrationDefinitionRepository = new HttpIntegrationDefinitionRepository({
         baseUrl: repositoryUrl,
         ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
@@ -59,26 +50,45 @@ export async function createLocalIntegrationServices(
     const integrationPackageResolver = new FsIntegrationPackageResolver({
         cache: integrationPackageCache,
         source: integrationPackageSource,
-        embeddedSource: integrationRepositoryPackages,
     });
     await integrationPackageCache.init();
-    const publicRepositoryCatalog = repositoryReadMode === "global" ? integrationCatalog : integrationRepositoryCatalog;
-    const publicRepositoryPackages =
-        repositoryReadMode === "global" ? integrationPackageSource : integrationRepositoryPackages;
     return {
-        repositoryReadMode,
         integrationConnectorProviders,
         integrationConnectorDeployers,
         integrationProvisioners,
-        integrationRepositoryCatalog,
-        integrationRepositoryPackages,
-        publicRepositoryCatalog,
-        publicRepositoryPackages,
         integrationCatalog,
         integrationPackageSource,
         integrationPackageCache,
         integrationPackageResolver,
     };
+}
+
+export function readIntegrationRepositoryUrl(environment: Record<string, string | undefined>): string {
+    const raw = environment[INTEGRATION_REPOSITORY_URL_ENV]?.trim();
+    if (!raw) {
+        throw new Error(`${INTEGRATION_REPOSITORY_URL_ENV} is required for p9r dev and p9r preview`);
+    }
+    let url: URL;
+    try {
+        url = new URL(raw);
+    } catch {
+        throw new Error(`${INTEGRATION_REPOSITORY_URL_ENV} must be an absolute HTTP(S) URL`);
+    }
+    if (
+        !["http:", "https:"].includes(url.protocol) ||
+        url.username ||
+        url.password ||
+        url.search ||
+        url.hash ||
+        raw.includes("?") ||
+        raw.includes("#")
+    ) {
+        throw new Error(
+            `${INTEGRATION_REPOSITORY_URL_ENV} must be an absolute HTTP(S) URL without credentials, query, or fragment`,
+        );
+    }
+    url.pathname = url.pathname.replace(/\/+$/u, "") || "/";
+    return url.href.replace(/\/$/u, "");
 }
 
 function readSupabaseFunctionSecrets(source: Record<string, string | undefined>): Record<string, string> {

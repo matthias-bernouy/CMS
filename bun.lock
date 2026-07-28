@@ -381,13 +381,14 @@
         "@bernouy/cms-official-integrations": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/rate-limiter": "workspace:*",
+      },
+      "devDependencies": {
+        "@bernouy/cms-repository": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -446,7 +447,6 @@
         "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-notifications": "workspace:*",
-        "@bernouy/cms-official-integrations": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
@@ -458,6 +458,9 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "mongodb": "^7.2.0",
+      },
+      "devDependencies": {
+        "@bernouy/cms-official-integrations": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",

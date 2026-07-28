@@ -35,6 +35,7 @@ export async function assertDelivery(fixture: FixtureProcess): Promise<void> {
     const base = `http://127.0.0.1:${fixture.ready.deliveryPort}`;
     expect(await (await fetch(`${base}/health`)).json()).toEqual({ ok: true, pid: fixture.ready.pid });
     expect((await fetch(`${base}/robots.txt`)).status).toBe(200);
+    expect((await fetch(`${base}/.cms/repository/api/integrations`)).status).toBe(404);
 }
 
 export async function postControl(fixture: FixtureProcess, path: string, body: unknown): Promise<InstallationResponse> {

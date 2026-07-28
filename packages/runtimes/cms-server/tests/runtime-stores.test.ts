@@ -75,6 +75,7 @@ describe("production runtime stores", () => {
             CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
             MONGO_URL: "not-a-mongodb-url",
             ANALYTICS_SALT_SECRET: "shared-analytics-secret",
+            P9R_INTEGRATION_REPOSITORY_URL: "https://repository.example.test/.cms/repository",
         });
 
         await expect(createCoreStores(env)).rejects.toThrow(/Invalid scheme/);
