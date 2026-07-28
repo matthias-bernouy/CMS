@@ -11,6 +11,7 @@ const runtimeManifest = JSON.parse(
 ) as { dependencies?: Record<string, string> };
 const envExampleSource = readFileSync(resolve(imageRoot, ".env.example"), "utf8");
 const hubOverrideSource = readFileSync(resolve(imageRoot, "repository-hub.override.yml"), "utf8");
+const cmsComposeSource = readFileSync(resolve(imageRoot, "../cms/compose.yml"), "utf8");
 const readmeSource = readFileSync(resolve(imageRoot, "README.md"), "utf8");
 const gitignoreSource = readFileSync(resolve(imageRoot, "../../..", ".gitignore"), "utf8");
 const dockerignoreSource = readFileSync(resolve(imageRoot, "../../..", ".dockerignore"), "utf8");
@@ -76,6 +77,8 @@ describe("repository Compose isolation", () => {
         expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_WORKER_TOKEN=/m);
         expect(envExampleSource).not.toMatch(/^CMS_REPOSITORY_WORKER_CAPABILITY_KEY=/m);
         expect(`${composeSource}\n${envExampleSource}`).not.toMatch(/READ_TOKEN|REPOSITORY_TOKEN=/);
+        expect(hubOverrideSource).toContain("cms_repository_management_upstream_token");
+        expect(hubOverrideSource).not.toContain("cms_repository_maintenance_token");
         expect(hubOverrideSource).not.toContain("cms_repository_worker_token");
         expect(hubOverrideSource).not.toContain("cms_repository_worker_capability_key");
         expect(gitignoreSource).toContain("/infra/images/cms-repository/secrets/");
@@ -91,14 +94,28 @@ describe("repository Compose isolation", () => {
         expect(readmeSource).toContain("reject every normal CMS fetch as an invalid forwarding chain");
     });
 
-    test("provides a secret-free internal-network attachment for the public repository hub", () => {
+    test("keeps ordinary CMS management disabled and equips only the designated hub manager", () => {
+        expect(cmsComposeSource).toContain(
+            'CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED: "${CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED:-false}"',
+        );
+        expect(cmsComposeSource).not.toContain("CMS_REPOSITORY_MANAGEMENT_UPSTREAM_URL:");
+        expect(cmsComposeSource).not.toContain("CMS_REPOSITORY_MANAGEMENT_UPSTREAM_TOKEN_FILE:");
         expect(hubOverrideSource).toContain('CMS_REPOSITORY_HUB_FACADE_ENABLED: "true"');
         expect(hubOverrideSource).toContain(
             "P9R_INTEGRATION_REPOSITORY_URL: http://cms-repository:3001/.cms/repository",
         );
+        expect(hubOverrideSource).toContain('CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED: "true"');
+        expect(hubOverrideSource).toContain(
+            "CMS_REPOSITORY_MANAGEMENT_UPSTREAM_URL: http://cms-repository:3000/.cms/repository-management",
+        );
+        expect(hubOverrideSource).toContain(
+            "CMS_REPOSITORY_MANAGEMENT_UPSTREAM_TOKEN_FILE: /run/secrets/repository-management-upstream-token",
+        );
+        expect(hubOverrideSource).toContain("CMS_REPOSITORY_MANAGEMENT_UPSTREAM_TOKEN_SECRET_FILE");
         expect(hubOverrideSource).toMatch(/cms_repository:\n\s+external: true/);
-        expect(hubOverrideSource).not.toMatch(/MANAGEMENT|MAINTENANCE|TOKEN|secrets:/u);
-        expect(hubOverrideSource).not.toContain("3000:");
+        expect(hubOverrideSource).not.toMatch(/MAINTENANCE|WORKER/u);
+        expect(hubOverrideSource).not.toMatch(/^\s+ports:/mu);
+        expect(hubOverrideSource).not.toContain("3000:3000");
     });
 });
 
@@ -260,7 +277,7 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
     expect(config.networks.cms_repository).toMatchObject({ internal: true });
 });
 
-composeTest("repository hub override renders one secret-free public-catalog client", () => {
+composeTest("repository hub override renders one CMS-authenticated management gateway", () => {
     const cmsCompose = resolve(imageRoot, "../cms/compose.yml");
     const rendered = Bun.spawnSync({
         cmd: [
@@ -287,6 +304,7 @@ composeTest("repository hub override renders one secret-free public-catalog clie
             CMS_ADMIN_PASSWORD: "acceptance-password",
             ANALYTICS_SALT_SECRET: "c".repeat(64),
             P9R_INTEGRATION_REPOSITORY_URL: "http://cms-repository:3001/.cms/repository",
+            CMS_REPOSITORY_MANAGEMENT_UPSTREAM_TOKEN_SECRET_FILE: "/run/operator-secrets/repository-token",
         },
         stdout: "pipe",
         stderr: "pipe",
@@ -311,9 +329,17 @@ composeTest("repository hub override renders one secret-free public-catalog clie
     expect(cms?.environment).toMatchObject({
         CMS_REPOSITORY_HUB_FACADE_ENABLED: "true",
         P9R_INTEGRATION_REPOSITORY_URL: "http://cms-repository:3001/.cms/repository",
+        CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED: "true",
+        CMS_REPOSITORY_MANAGEMENT_UPSTREAM_URL: "http://cms-repository:3000/.cms/repository-management",
+        CMS_REPOSITORY_MANAGEMENT_UPSTREAM_TOKEN_FILE: "/run/secrets/repository-management-upstream-token",
     });
     expect(cms?.environment).not.toHaveProperty("P9R_INTEGRATION_REPOSITORY_MANAGEMENT_URL");
     expect(cms?.environment).not.toHaveProperty("P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TOKEN_FILE");
     expect(cms?.environment).not.toHaveProperty("P9R_INTEGRATION_REPOSITORY_ADMIN_SUBJECT_IDENTIFIER");
-    expect(cms?.secrets).toBeUndefined();
+    expect(cms?.secrets).toEqual([
+        expect.objectContaining({
+            source: "cms_repository_management_upstream_token",
+            target: "repository-management-upstream-token",
+        }),
+    ]);
 });

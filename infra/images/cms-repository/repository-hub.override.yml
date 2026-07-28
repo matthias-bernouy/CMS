@@ -1,10 +1,18 @@
-# Attach only the CMS-authored public repository hub to the repository network.
-# Apply this file together with that CMS instance's regular compose.yml.
+# Turn the designated CMS into both the public repository hub and the repository
+# management authority. Apply this file together with that CMS instance's
+# regular compose.yml. Human operators authenticate to Control with their CMS
+# PAT; only the server-side gateway receives the internal repository credential.
 services:
     cms:
         environment:
             CMS_REPOSITORY_HUB_FACADE_ENABLED: "true"
             P9R_INTEGRATION_REPOSITORY_URL: http://cms-repository:3001/.cms/repository
+            CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED: "true"
+            CMS_REPOSITORY_MANAGEMENT_UPSTREAM_URL: http://cms-repository:3000/.cms/repository-management
+            CMS_REPOSITORY_MANAGEMENT_UPSTREAM_TOKEN_FILE: /run/secrets/repository-management-upstream-token
+        secrets:
+            - source: cms_repository_management_upstream_token
+              target: repository-management-upstream-token
         networks:
             cms_repository: {}
 
@@ -12,3 +20,7 @@ networks:
     cms_repository:
         external: true
         name: ${CMS_REPOSITORY_NETWORK_NAME:-cms_repository}
+
+secrets:
+    cms_repository_management_upstream_token:
+        file: ${CMS_REPOSITORY_MANAGEMENT_UPSTREAM_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_UPSTREAM_TOKEN_SECRET_FILE must reference a mode-0600 copy of the repository management credential}

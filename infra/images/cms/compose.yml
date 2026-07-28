@@ -83,9 +83,11 @@ services:
             CMS_CONTROL_AUTH_PASSWORD_RESET_URL:     ${CMS_CONTROL_AUTH_PASSWORD_RESET_URL:-https://admin.${DOMAIN}/auth/reset-password}
 
             # Every CMS consumes the canonical public integration repository.
-            # Ordinary Delivery listeners do not mirror these repository routes.
+            # Ordinary Delivery listeners do not mirror these repository routes,
+            # and ordinary Control listeners never expose its management gateway.
             P9R_INTEGRATION_REPOSITORY_URL: ${P9R_INTEGRATION_REPOSITORY_URL:?P9R_INTEGRATION_REPOSITORY_URL must point to the public integration repository API}
             CMS_REPOSITORY_HUB_FACADE_ENABLED: "${CMS_REPOSITORY_HUB_FACADE_ENABLED:-false}"
+            CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED: "${CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED:-false}"
             SMTP_HOST:                      ${SMTP_HOST:-}
             SMTP_PORT:                      ${SMTP_PORT:-}
             SMTP_SECURE:                    ${SMTP_SECURE:-}
