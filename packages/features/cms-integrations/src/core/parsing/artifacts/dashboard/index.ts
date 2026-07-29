@@ -1,7 +1,7 @@
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
 import { parseArtifactIcon } from "../../definition/icon";
-import { isRecord, text } from "../../definition/values";
+import { isRecord, preservedText, text } from "../../definition/values";
 import { parseWidget } from "./widgets";
 
 export function parseDashboardTemplate(value: Record<string, unknown>, name: string): DashboardDto {
@@ -34,6 +34,6 @@ function parseDashboardMeta(value: Record<string, unknown>, name: string): Dashb
     return {
         name: metaName,
         ...(icon ? { icon } : {}),
-        ...(text(value.svg) ? { svg: text(value.svg)! } : {}),
+        ...(preservedText(value.svg) ? { svg: preservedText(value.svg)! } : {}),
     };
 }

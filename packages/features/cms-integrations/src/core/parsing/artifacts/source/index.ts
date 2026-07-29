@@ -1,7 +1,7 @@
 import type { SourceDto } from "@bernouy/cms-sources";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
 import { parseArtifactIcon } from "../../definition/icon";
-import { isRecord, text } from "../../definition/values";
+import { isRecord, preservedText, text } from "../../definition/values";
 import { parseEndpointTemplate } from "./endpoint";
 
 export function parseSourceTemplate(value: Record<string, unknown>, name: string): SourceDto {
@@ -26,7 +26,7 @@ export function parseSourceTemplate(value: Record<string, unknown>, name: string
             name: metaName,
             ...(text(value.meta.description) ? { description: text(value.meta.description)! } : {}),
             ...(metaIcon ? { icon: metaIcon } : {}),
-            ...(text(value.meta.svg) ? { svg: text(value.meta.svg)! } : {}),
+            ...(preservedText(value.meta.svg) ? { svg: preservedText(value.meta.svg)! } : {}),
         },
         endpoints: value.endpoints.map((endpoint, index) =>
             parseEndpointTemplate(endpoint, `${name}.endpoints.${index}`),

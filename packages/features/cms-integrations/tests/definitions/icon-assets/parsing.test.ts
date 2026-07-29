@@ -26,6 +26,29 @@ describe("integration artifact icon parsing", () => {
         expect(() => definitionWithIcon("assets/../icon.svg")).toThrow(/must reference an SVG inside assets/);
         expect(() => definitionWithIcon("assets\\icon.svg")).toThrow(/must reference an SVG inside assets/);
     });
+
+    test("preserves hydrated SVG bytes across repository parsing", () => {
+        const svg = '  <svg viewBox="0 0 24 24"></svg>\n';
+        const definition = parseIntegrationDefinition({
+            kind: "hydrated-icons",
+            label: "Hydrated icons",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "source",
+                    source: { id: "items", meta: { name: "Items", svg }, endpoints: [] },
+                },
+                {
+                    type: "dashboard",
+                    dashboard: { id: "items", source: "items", meta: { name: "Items", svg }, views: [] },
+                },
+            ],
+        });
+        const [source, dashboard] = definition.artifacts ?? [];
+
+        expect(source?.type === "source" ? source.source.meta.svg : null).toBe(svg);
+        expect(dashboard?.type === "dashboard" ? dashboard.dashboard.meta?.svg : null).toBe(svg);
+    });
 });
 
 function definitionWithIcon(icon: unknown): void {
