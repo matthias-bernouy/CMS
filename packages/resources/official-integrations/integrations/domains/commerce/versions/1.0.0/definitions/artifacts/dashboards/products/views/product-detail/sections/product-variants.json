@@ -14,7 +14,7 @@
                     "id": "fieldKey",
                     "label": "Product metadata",
                     "path": "fieldKey",
-                    "width": "minmax(14rem, 1fr)",
+                    "width": "minmax(10rem, 1fr)",
                     "editable": true,
                     "type": "combobox",
                     "lookup": {
@@ -32,7 +32,7 @@
                     "id": "values",
                     "label": "Values",
                     "path": "values",
-                    "width": "minmax(14rem, 1.2fr)",
+                    "width": "minmax(10rem, 1.2fr)",
                     "editable": true,
                     "type": "tokens"
                 }

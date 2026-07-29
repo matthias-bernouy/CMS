@@ -126,35 +126,46 @@ describe("TokenInput", () => {
         expect(control.value).toBe("");
     });
 
-    test("creates typed values and renders the appropriate empty states", () => {
+    test("creates free-form values without presenting an empty option list", () => {
         const control = mountTokenInput({ creatable: "" }, false);
         const input = shadowElement<HTMLInputElement>(control, "input");
+        const labelRow = shadowElement<HTMLElement>(control, ".label-row");
+        const list = shadowElement<HTMLElement>(control, "[role='listbox']");
         const createButton = shadowElement<HTMLButtonElement>(control, "[data-create]");
-        let detail: unknown;
+        const changes: unknown[] = [];
         control.addEventListener("change", (event) => {
-            detail = (event as CustomEvent).detail;
+            changes.push((event as CustomEvent).detail);
         });
 
         input.focus();
-        expect(shadowElement<HTMLElement>(control, ".option.create").textContent).toContain("Type to create");
+        expect({ listHidden: list.hidden, createHidden: createButton.hidden, labelRowHidden: labelRow.hidden }).toEqual(
+            {
+                listHidden: true,
+                createHidden: true,
+                labelRowHidden: true,
+            },
+        );
         write(input, " Gamma ");
-        const createEvent = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
-        createButton.dispatchEvent(createEvent);
-        expect(createEvent.defaultPrevented).toBe(true);
-        expect({ value: control.value, detail }).toEqual({
-            value: "Gamma",
-            detail: { value: "Gamma", values: ["Gamma"], created: true },
+        expect(press(input, "Enter").defaultPrevented).toBe(true);
+        write(input, "Delta");
+        expect(press(input, ",").defaultPrevented).toBe(true);
+        expect({ value: control.value, changes }).toEqual({
+            value: "Gamma,Delta",
+            changes: [
+                { value: "Gamma", values: ["Gamma"], created: true },
+                { value: "Gamma,Delta", values: ["Gamma", "Delta"], created: true },
+            ],
         });
+    });
 
-        createButton.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
-        expect(shadowElement<HTMLElement>(control, ".option.create").textContent).toContain("Type to create");
-
+    test("renders an empty state when values must come from options", () => {
         const fixed = mountTokenInput({}, false);
         const fixedInput = shadowElement<HTMLInputElement>(fixed, "input");
         fixedInput.focus();
         expect(shadowElement<HTMLElement>(fixed, ".empty").textContent).toBe("No results");
         press(fixedInput, "ArrowDown");
         expect(press(fixedInput, "Escape").defaultPrevented).toBe(true);
+        expect(fixed.value).toBe("");
     });
 
     test("removes its input listeners when disconnected", () => {

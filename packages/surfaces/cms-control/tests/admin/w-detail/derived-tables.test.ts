@@ -86,9 +86,15 @@ describe("dashboard detail widget actions", () => {
         document.body.append(detail);
         await Promise.resolve();
 
-        const tokens = detail.shadowRoot!.querySelector("p9r-token-input") as HTMLElement & { value: string };
-        tokens.value = "L1,L2";
-        tokens.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        const tokens = detail.shadowRoot!.querySelector("p9r-token-input") as HTMLElement & {
+            shadowRoot: ShadowRoot;
+        };
+        const input = tokens.shadowRoot.querySelector("input")!;
+        expect(tokens.hasAttribute("creatable")).toBe(true);
+        expect(tokens.shadowRoot.querySelector<HTMLElement>(".label-row")?.hidden).toBe(true);
+        input.value = "L2";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
 
         const matrix = detail.shadowRoot!.querySelectorAll("[data-field-control]")[1] as HTMLElement;
         const rows = Array.from(matrix.querySelectorAll("[data-table-row]"));

@@ -75,6 +75,10 @@ jobs:
         if: matrix.name == 'infrastructure'
         run: docker compose version
 
+      - name: Install Chromium for surface browser tests
+        if: matrix.name == 'surfaces'
+        run: bun node_modules/playwright/cli.js install --with-deps chromium
+
       - name: Run tests
         env:
           TEST_PATH: ${{ matrix.path }}

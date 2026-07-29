@@ -11,9 +11,7 @@ import { TokenInputView, type TokenInputHandlers } from "./TokenInputView";
 
 export class TokenInput extends Component {
     static formAssociated = true;
-    static get observedAttributes(): string[] {
-        return ["value", "label", "placeholder", "disabled", "creatable"];
-    }
+    static readonly observedAttributes = ["value", "label", "placeholder", "disabled", "creatable"];
 
     private readonly view: TokenInputView;
     private options: ComboOption[] = [];
@@ -91,10 +89,19 @@ export class TokenInput extends Component {
 
     private syncDisplay(): void {
         this.view.syncDisplay(this.value, this.selected, this.options, this.removeValue);
-        this.view.syncAttributes(this, this.disabled, this.selected.length);
+        this.view.syncAttributes(
+            this,
+            this.disabled,
+            this.selected.length,
+            this.hasAttribute("creatable") && this.options.length > 0,
+        );
     }
 
     private renderList(query: string): void {
+        if (this.hasAttribute("creatable") && this.options.length === 0) {
+            this.hideList();
+            return;
+        }
         this.items = tokenItemsFor(this.options, this.selected, query, this.hasAttribute("creatable"));
         const emptyState = this.hasAttribute("creatable")
             ? createPromptItem("Type to create", () => this.view.input?.focus())
@@ -136,6 +143,16 @@ export class TokenInput extends Component {
     }
 
     private onKeydown(event: KeyboardEvent): void {
+        if (
+            (event.key === "Enter" || event.key === ",") &&
+            this.hasAttribute("creatable") &&
+            this.options.length === 0 &&
+            this.query
+        ) {
+            event.preventDefault();
+            this.selectItem({ kind: "create", value: this.query, label: this.query, disabled: false });
+            return;
+        }
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             this.moveActive(event);
         } else if (event.key === "Enter" || event.key === ",") {

@@ -169,6 +169,7 @@ describe("Combobox", () => {
 
         input.focus();
         const options = Array.from(list.querySelectorAll<HTMLElement>("[role='option']"));
+        expect(list.getAttribute("popover")).toBe("manual");
         expect(input.getAttribute("aria-controls")).toBe(list.id);
         expect([input.selectionStart, input.selectionEnd]).toEqual([0, "Beta".length]);
         expect(options.map((option) => option.getAttribute("aria-selected"))).toEqual(["false", "true"]);

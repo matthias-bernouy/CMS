@@ -96,6 +96,9 @@ test("quality workflow keeps every G0 check visible", async () => {
     expect(workflow).not.toContain("continue-on-error");
     expect(workflow).not.toContain("run: bun run check:architecture");
     expect(workflow).not.toContain("run: bun run check:repository-shape");
+    expect(workflow).toMatch(
+        /name: Install Chromium for surface browser tests\s+if: matrix\.name == 'surfaces'\s+run: bun node_modules\/playwright\/cli\.js install --with-deps chromium/,
+    );
     expect(workflow).toContain("uses: ./.github/workflows/quality-integration-contracts.yml");
     expect(integrationWorkflow).toContain("name: PostgreSQL integration contracts");
     expect(integrationWorkflow).toContain(

@@ -6,6 +6,10 @@
     min-height: 13px;
 }
 
+.label-row[hidden] {
+    display: none;
+}
+
 .create-button {
     appearance: none;
     display: inline-grid;

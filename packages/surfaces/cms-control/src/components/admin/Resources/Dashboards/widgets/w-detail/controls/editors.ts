@@ -56,6 +56,7 @@ function tokensEditor(value: unknown): TokenControl {
     const input = document.createElement("p9r-token-input") as TokenControl;
     const values = Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
     input.setAttribute("value", values.join(","));
+    input.setAttribute("creatable", "");
     return input;
 }
 

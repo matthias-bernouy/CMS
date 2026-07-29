@@ -1,4 +1,5 @@
 import { emptyItem, renderComboItem } from "./list";
+import { ComboListPopover } from "./listPopover";
 import type { ComboItem } from "./types";
 
 export type ComboboxHandlers = {
@@ -14,10 +15,12 @@ export class ComboboxView {
     readonly input: HTMLInputElement | null;
     readonly optionSlot: HTMLSlotElement | null;
     private readonly label: HTMLElement | null;
+    private readonly control: HTMLElement | null;
     private readonly listbox: HTMLElement | null;
     private readonly hint: HTMLElement | null;
     private readonly clearButton: HTMLButtonElement | null;
     private readonly chevron: SVGElement | null;
+    private readonly listPopover: ComboListPopover | null;
 
     constructor(
         root: ShadowRoot | null,
@@ -25,11 +28,13 @@ export class ComboboxView {
     ) {
         this.input = root?.querySelector("input") ?? null;
         this.label = root?.querySelector(".label") ?? null;
+        this.control = root?.querySelector(".control") ?? null;
         this.listbox = root?.querySelector("[role='listbox']") ?? null;
         this.hint = root?.querySelector(".hint") ?? null;
         this.clearButton = root?.querySelector("[data-clear]") ?? null;
         this.chevron = root?.querySelector(".chevron") ?? null;
         this.optionSlot = root?.querySelector("slot") ?? null;
+        this.listPopover = this.control && this.listbox ? new ComboListPopover(this.control, this.listbox) : null;
     }
 
     connect(handlers: ComboboxHandlers): void {
@@ -48,6 +53,7 @@ export class ComboboxView {
         this.input?.removeEventListener("blur", handlers.blur);
         this.clearButton?.removeEventListener("mousedown", handlers.clear);
         this.optionSlot?.removeEventListener("slotchange", handlers.options);
+        this.hideList();
     }
 
     syncAttributes(host: HTMLElement, disabled: boolean): void {
@@ -113,13 +119,13 @@ export class ComboboxView {
         if (items.length === 0) {
             this.listbox.append(emptyItem());
         }
-        this.listbox.hidden = false;
+        this.listPopover?.show();
         this.input?.setAttribute("aria-expanded", "true");
     }
 
     hideList(): void {
         if (this.listbox) {
-            this.listbox.hidden = true;
+            this.listPopover?.hide();
         }
         this.input?.setAttribute("aria-expanded", "false");
         this.input?.removeAttribute("aria-activedescendant");

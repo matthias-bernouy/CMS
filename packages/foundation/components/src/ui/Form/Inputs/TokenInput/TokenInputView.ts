@@ -14,6 +14,7 @@ export type TokenInputHandlers = {
 export class TokenInputView {
     readonly input: HTMLInputElement | null;
     readonly optionSlot: HTMLSlotElement | null;
+    private readonly labelRow: HTMLElement | null;
     private readonly label: HTMLElement | null;
     private readonly tokens: HTMLElement | null;
     private readonly listbox: HTMLElement | null;
@@ -24,6 +25,7 @@ export class TokenInputView {
         private readonly internals: ElementInternals,
     ) {
         this.input = root?.querySelector("input") ?? null;
+        this.labelRow = root?.querySelector(".label-row") ?? null;
         this.label = root?.querySelector(".label") ?? null;
         this.tokens = root?.querySelector("[data-tokens]") ?? null;
         this.listbox = root?.querySelector("[role='listbox']") ?? null;
@@ -49,9 +51,9 @@ export class TokenInputView {
         this.optionSlot?.removeEventListener("slotchange", handlers.options);
     }
 
-    syncAttributes(host: HTMLElement, disabled: boolean, selectedCount: number): void {
+    syncAttributes(host: HTMLElement, disabled: boolean, selectedCount: number, showCreateAction = false): void {
+        const label = host.getAttribute("label") ?? "";
         if (this.label) {
-            const label = host.getAttribute("label") ?? "";
             this.label.textContent = label;
             this.label.hidden = label === "";
         }
@@ -60,7 +62,10 @@ export class TokenInputView {
             this.input.disabled = disabled;
         }
         if (this.createButton) {
-            this.createButton.hidden = !host.hasAttribute("creatable");
+            this.createButton.hidden = !showCreateAction;
+        }
+        if (this.labelRow) {
+            this.labelRow.hidden = label === "" && !showCreateAction;
         }
     }
 
