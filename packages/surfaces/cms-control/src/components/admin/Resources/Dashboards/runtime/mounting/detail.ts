@@ -10,6 +10,11 @@ export function detailElement(
     detail: DetailSelection | null,
 ): HTMLElement {
     const rowKey = detail?.row ?? "";
+    if (rowKey === "__new__") {
+        const element = detailContent(widget, context, rowKey);
+        element.setAttribute("data-source-json", jsonAttr({}));
+        return element;
+    }
     const directResource = matchingDetailResource(widget, context, rowKey);
     if (directResource) {
         return detailContent(widget, context, rowKey, directResource);

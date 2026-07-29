@@ -127,6 +127,61 @@ describe("dashboard runtime source states", () => {
         expect(requests).toHaveLength(0);
     });
 
+    test("mounts a new detail without requesting the source with its internal row key", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+            requests.push(new Request(input, init));
+            return Response.json({});
+        }) as unknown as typeof fetch;
+        const dashboard: DashboardDto = {
+            id: "photo-albums",
+            source: "photoAlbums",
+            views: [],
+        };
+        const widget = {
+            widget: "w-detail",
+            id: "albumDetail",
+            source: { endpoint: "manageAlbum", params: { id: "$selection.id" } },
+            main: [],
+        } satisfies Extract<DashboardWidget, { widget: "w-detail" }>;
+        const group: DashboardSourceGroup = {
+            source: {
+                urn: "urn:photo-albums",
+                id: "photoAlbums",
+                name: "Photo albums",
+                endpointCount: 1,
+                dashboardCount: 1,
+                readonly: false,
+            },
+            endpoints: [
+                {
+                    endpointId: "manageAlbum",
+                    method: "GET",
+                    targetUrl: "https://example.test/albums",
+                    params: [{ name: "id", in: "query", type: "string", required: true }],
+                },
+            ],
+            dashboards: [dashboard],
+        };
+        const root = document.createElement("div");
+        const detail = { collection: "albumDetail", row: "__new__" };
+
+        mountDashboardWidgets(
+            root,
+            [widget],
+            { group, dashboard, selectedRows: new Map(), drafts: new Map() },
+            "root",
+            new Map(),
+            detail,
+        );
+        document.body.append(root);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+
+        expect(root.querySelector("[cms-source]")).toBeNull();
+        expect(root.querySelector("cms-dashboard-w-detail")?.getAttribute("data-source-json")).toBe("{}");
+        expect(requests).toHaveLength(0);
+    });
+
     test("mounts table sources with the current widget filters", () => {
         const dashboard: DashboardDto = {
             id: "products",

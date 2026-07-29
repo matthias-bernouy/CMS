@@ -20140,6 +20140,8 @@ w13c-lateral-menu-item {
       }
     }
   }
+  // ../../features/cms-sources/src/core/validation/sourceMediaEffectBindings.ts
+  var MAX_MEDIA_EFFECT_RESPONSE_BYTES = 64 * 1024;
   // ../../features/cms-sources/src/core/upstream/endpointHeaders.ts
   function hasComputedParams(endpoint) {
     return (endpoint.input?.params ?? []).some((param) => param.source?.from === "computed");
@@ -26687,6 +26689,11 @@ slot { display: contents; }
   // src/components/admin/Resources/Dashboards/runtime/mounting/detail.ts
   function detailElement2(widget, context, detail) {
     const rowKey = detail?.row ?? "";
+    if (rowKey === "__new__") {
+      const element2 = detailContent(widget, context, rowKey);
+      element2.setAttribute("data-source-json", jsonAttr({}));
+      return element2;
+    }
     const directResource = matchingDetailResource(widget, context, rowKey);
     if (directResource) {
       return detailContent(widget, context, rowKey, directResource);
