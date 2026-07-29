@@ -1,0 +1,29 @@
+{
+    "name": "@bernouy/cms-site-templates",
+    "version": "0.1.0",
+    "description": "Reusable, declarative CmsCore site templates.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./index.ts",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "test": "bun test default-site/tests site-photo/tests"
+    },
+    "files": [
+        "index.ts",
+        "dist/",
+        "default-site",
+        "site-photo"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "bun": "./index.ts",
+            "default": "./index.ts"
+        }
+    },
+    "devDependencies": {
+        "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-official-integrations": "workspace:*"
+    }
+}

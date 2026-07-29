@@ -1,0 +1,65 @@
+---
+title: "Cookies et traceurs — Stillroom"
+description: "Informations sur les cookies, traceurs et choix disponibles sur le site Stillroom."
+visible: true
+tags: ["cookies", "privacy", "legal"]
+---
+<photo-site-shell>
+    <photo-site-header slot="header"></photo-site-header>
+    <photo-hero layout="split" scale="page">
+        <span slot="eyebrow">Informations</span>
+        <h1 slot="title">Cookies et traceurs</h1>
+        <p slot="summary">Version du 25 juillet 2026 · Inventaire à refaire sur chaque déploiement final.</p>
+    </photo-hero>
+    <photo-section spacing="compact">
+        <basic-alert type="warning" role="note">
+            <h2 slot="title">Pas de bannière fictive.</h2>
+            <p>Le template n’intègre volontairement aucun traceur marketing. Cela ne dispense pas d’auditer le CMS, l’hébergeur et les services ajoutés au site réellement publié.</p>
+        </basic-alert>
+    </photo-section>
+    <photo-section layout="sidebar" spacing="compact" divider="top">
+        <basic-stack slot="aside" gap="sm">
+            <span>Sommaire</span>
+            <nav aria-label="Sommaire de la politique relative aux cookies">
+                <basic-stack gap="xs">
+                    <a href="#definition">Définition</a>
+                    <a href="#inventaire">Inventaire</a>
+                    <a href="#consentement">Consentement</a>
+                    <a href="#configuration">Avant publication</a>
+                </basic-stack>
+            </nav>
+        </basic-stack>
+        <basic-stack gap="xl">
+            <basic-card id="definition" appearance="plain" density="spacious">
+                <h2 slot="title">01 · Qu’est-ce qu’un traceur ?</h2>
+                <p>Un cookie ou autre traceur peut lire ou écrire des informations sur votre appareil. Certains sont strictement nécessaires au service demandé ; d’autres, utilisés pour la publicité, la personnalisation ou certaines mesures d’audience, nécessitent un choix préalable.</p>
+            </basic-card>
+            <basic-card id="inventaire" appearance="plain" density="spacious">
+                <h2 slot="title">02 · État du template</h2>
+                <p>Les pages fournies ici ne chargent ni publicité, ni pixel marketing, ni lecteur vidéo tiers, ni police distante. Les albums et leurs images passent par les routes du CMS et la Source Photo Albums.</p>
+                <p data-template-placeholder="">[À vérifier sur le déploiement final : cookies techniques du CMS, journaux de l’hébergeur, outil de mesure d’audience et services ajoutés.]</p>
+            </basic-card>
+            <basic-card id="consentement" appearance="plain" density="spacious">
+                <h2 slot="title">03 · Si des traceurs facultatifs sont ajoutés</h2>
+                <p>Ils doivent rester bloqués tant que la personne n’a pas exprimé un choix. Accepter et refuser doivent être proposés avec une simplicité comparable, sans mise en avant trompeuse. Le retrait du consentement doit rester accessible à tout moment.</p>
+                <p>Le lien « Gérer mes cookies » ne doit apparaître dans le pied de page que lorsqu’un véritable gestionnaire de consentement est installé et fonctionnel.</p>
+            </basic-card>
+            <basic-card id="configuration" appearance="plain" density="spacious">
+                <h2 slot="title">04 · Checklist avant publication</h2>
+                <ul>
+                    <li>Inventorier chaque cookie, stockage local, pixel, SDK et appel tiers.</li>
+                    <li>Documenter fournisseur, finalité, durée et nécessité du consentement.</li>
+                    <li>Bloquer les traceurs facultatifs avant le choix.</li>
+                    <li>Tester « tout refuser » aussi soigneusement que « tout accepter ».</li>
+                    <li>Mettre à jour la politique de confidentialité et cette page.</li>
+                </ul>
+            </basic-card>
+            <basic-alert type="info" role="note">
+                <h2 slot="title">Référence de préparation</h2>
+                <p>La CNIL détaille les règles applicables aux cookies et autres traceurs, notamment la liberté du choix et la facilité du refus.</p>
+                <basic-button slot="actions" action="link" href="https://www.cnil.fr/fr/cookies-et-autres-traceurs/que-dit-la-loi" target="_blank" appearance="ghost">Consulter la ressource officielle</basic-button>
+            </basic-alert>
+        </basic-stack>
+    </photo-section>
+    <photo-site-footer slot="footer"></photo-site-footer>
+</photo-site-shell>

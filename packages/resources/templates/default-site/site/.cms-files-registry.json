@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "byId": {
+    "019fadc7-6f5b-7000-adbb-45a7507e5537": {
+      "path": "template",
+      "hash": null
+    },
+    "019fadc7-6f5b-7001-88e1-beaea806763a": {
+      "path": "template/hero-studio.webp",
+      "hash": "4494c3311f8a3e32ce9a015d5c793c20b688e3450558b7b1a1671363eb524c80"
+    },
+    "019fadc7-6f5b-7002-b474-1dd916562b7b": {
+      "path": "template/project-coast.webp",
+      "hash": "c8904e27823205b71316cf0455dc4cbb255e5e402bb01d1980800d12efa6c6b3"
+    },
+    "019fadc7-6f5b-7003-ab85-bf8c7315d09c": {
+      "path": "template/project-objects.webp",
+      "hash": "7b9f367dc7215bba5a85ae0f09594115fbbc94728056c7b4d9e11cf10446d6d5"
+    }
+  },
+  "byPath": {
+    "template": "019fadc7-6f5b-7000-adbb-45a7507e5537",
+    "template/hero-studio.webp": "019fadc7-6f5b-7001-88e1-beaea806763a",
+    "template/project-coast.webp": "019fadc7-6f5b-7002-b474-1dd916562b7b",
+    "template/project-objects.webp": "019fadc7-6f5b-7003-ab85-bf8c7315d09c"
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "initializationStep": 1,
+    "site": {
+        "name": "Stillroom — Studio photographique",
+        "favicon": "/.cms/files/by-id/019847c0-5c00-7000-8000-000000000002",
+        "visible": true,
+        "host": "",
+        "language": "fr-FR",
+        "notFound": {
+            "path": "/404"
+        },
+        "forbidden": null,
+        "serverError": null,
+        "login": null
+    },
+    "editor": {
+        "layoutCategory": "Layout"
+    }
+}

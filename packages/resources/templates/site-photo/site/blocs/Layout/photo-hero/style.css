@@ -1,0 +1,67 @@
+:host {
+    container-type: inline-size;
+    display: grid;
+    box-sizing: border-box;
+    inline-size: min(var(--wide-width, 84rem), calc(100% - 3rem));
+    margin-inline: auto;
+    padding-block: clamp(3.5rem, 8vw, 7rem) 2rem;
+    gap: clamp(1.5rem, 5vw, 5rem);
+}
+
+[part="copy"] {
+    display: grid;
+    align-content: end;
+    gap: 1rem;
+}
+
+[part="summary"] {
+    display: grid;
+    align-content: end;
+    gap: 1.5rem;
+}
+
+::slotted([slot="eyebrow"]) {
+    margin: 0;
+    color: var(--text-muted, #6b6a65);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+::slotted([slot="title"]) {
+    max-inline-size: 17ch;
+    margin: 0;
+    font-family: var(--font-heading, inherit);
+    font-size: clamp(2.75rem, 7vw, var(--font-size-display, 5.6rem));
+    font-weight: 500;
+    letter-spacing: -0.055em;
+    line-height: 0.98;
+}
+
+::slotted([slot="summary"]) {
+    max-inline-size: 34rem;
+    margin: 0;
+    color: var(--text-muted, #6b6a65);
+    font-size: clamp(1rem, 1.5vw, 1.16rem);
+}
+
+:host([scale="page"]) ::slotted([slot="title"]) {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+:host([layout="stacked"]) {
+    grid-template-columns: 1fr;
+}
+
+@container (min-width: 48rem) {
+    :host([layout="split"]) {
+        grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    }
+}
+
+@media (max-width: 48rem) {
+    :host {
+        inline-size: min(var(--wide-width, 84rem), calc(100% - 2rem));
+    }
+}

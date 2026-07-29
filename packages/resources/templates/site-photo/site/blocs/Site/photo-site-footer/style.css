@@ -1,0 +1,108 @@
+:host {
+    display: block;
+    margin-top: auto;
+    color: var(--text-main, #171717);
+    background: var(--bg-base, #f4f3ef);
+    font-family: var(--font-body, Arial, sans-serif);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+[part="footer"] {
+    border-top: 1px solid var(--border-default, #d7d5cf);
+}
+
+[part="shell"] {
+    display: grid;
+    width: min(var(--wide-width, 84rem), calc(100% - 3rem));
+    margin-inline: auto;
+    padding-block: 2.5rem 1.25rem;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
+}
+
+[part="brand"] {
+    color: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+[part="description"],
+[part="location"] {
+    margin: 0.8rem 0 0;
+    color: var(--text-muted, #6b6a65);
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+[part="location"] {
+    margin-top: 0;
+}
+
+[part="main-navigation"] {
+    display: grid;
+    min-width: 8rem;
+    align-content: start;
+    gap: 0.45rem;
+}
+
+[part="main-link"],
+[part="legal-link"] {
+    width: fit-content;
+    color: inherit;
+    font-size: 0.82rem;
+    text-decoration: none;
+}
+
+[part="main-link"]:hover,
+[part="main-link"]:focus-visible,
+[part="legal-link"]:hover,
+[part="legal-link"]:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+}
+
+[part="bottom"] {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-default, #d7d5cf);
+    color: var(--text-muted, #6b6a65);
+    font-size: 0.72rem;
+}
+
+[part="legal-navigation"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+[part="legal-link"] {
+    color: inherit;
+    font-size: inherit;
+}
+
+a:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 4px;
+}
+
+@media (max-width: 42rem) {
+    [part="shell"] {
+        width: min(var(--wide-width, 84rem), calc(100% - 2rem));
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    [part="bottom"] {
+        display: grid;
+        grid-column: auto;
+    }
+}

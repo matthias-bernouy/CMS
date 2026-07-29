@@ -1,0 +1,129 @@
+:host {
+    display: block;
+    color: var(--text-main, #171717);
+    background: var(--bg-base, #f4f3ef);
+    font-family: var(--font-body, Arial, sans-serif);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+[part="skip"] {
+    position: fixed;
+    z-index: 20;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    color: var(--primary-contrasted, #f4f3ef);
+    background: var(--primary-base, #171717);
+    text-decoration: none;
+    transform: translateY(-200%);
+}
+
+[part="skip"]:focus {
+    transform: translateY(0);
+}
+
+[part="header"] {
+    border-bottom: 1px solid var(--border-default, #d7d5cf);
+}
+
+[part="shell"] {
+    display: flex;
+    width: min(var(--wide-width, 84rem), calc(100% - 3rem));
+    min-height: 4.5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-inline: auto;
+    gap: 2rem;
+}
+
+[part="brand"] {
+    color: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+[part="navigation"] {
+    display: flex;
+    align-items: center;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+[part="navigation-link"],
+[part="menu-link"] {
+    color: inherit;
+    font-size: 0.84rem;
+    text-decoration: none;
+}
+
+[part="navigation-link"] {
+    padding-block: 0.2rem;
+    border-bottom: 1px solid transparent;
+}
+
+[part="navigation-link"]:hover,
+[part="navigation-link"]:focus-visible {
+    border-color: currentcolor;
+}
+
+[part="menu"] {
+    position: relative;
+    display: none;
+}
+
+[part="menu-label"] {
+    padding-block: 0.35rem;
+    border-bottom: 1px solid currentcolor;
+    cursor: pointer;
+    font-size: 0.82rem;
+    list-style: none;
+}
+
+[part="menu-label"]::-webkit-details-marker {
+    display: none;
+}
+
+[part="menu-navigation"] {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 0.8rem);
+    right: 0;
+    display: grid;
+    width: min(15rem, calc(100vw - 2rem));
+    border: 1px solid var(--border-default, #d7d5cf);
+    background: var(--bg-base, #f4f3ef);
+}
+
+[part="menu-link"] {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--border-default, #d7d5cf);
+}
+
+[part="menu-link"]:last-child {
+    border-bottom: 0;
+}
+
+a:focus-visible,
+summary:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 4px;
+}
+
+@media (max-width: 42rem) {
+    [part="shell"] {
+        width: min(var(--wide-width, 84rem), calc(100% - 2rem));
+        min-height: 4rem;
+    }
+
+    [part="navigation"] {
+        display: none;
+    }
+
+    [part="menu"] {
+        display: block;
+    }
+}

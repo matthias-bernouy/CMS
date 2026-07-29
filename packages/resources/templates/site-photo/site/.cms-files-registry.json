@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "byId": {
+        "019f9a04-31a0-7000-afc6-79b6008c1864": {
+            "path": "template",
+            "hash": null
+        },
+        "019847c0-5c00-7000-8000-000000000002": {
+            "path": "template/studio-placeholder.svg",
+            "hash": "acd4bf72416dd6070582ecd91609fcd3d4ba6cc34f60e8ab0f63c74acc35bef6"
+        },
+        "019f9a04-31a1-7000-b7a3-994a75a9120d": {
+            "path": "template/coastal-dawn.jpg",
+            "hash": "3064e20e2d186fa50b86bfa0ddf842179685b7f631aacbb202d702e52c1830b0"
+        }
+    },
+    "byPath": {
+        "template": "019f9a04-31a0-7000-afc6-79b6008c1864",
+        "template/studio-placeholder.svg": "019847c0-5c00-7000-8000-000000000002",
+        "template/coastal-dawn.jpg": "019f9a04-31a1-7000-b7a3-994a75a9120d"
+    }
+}

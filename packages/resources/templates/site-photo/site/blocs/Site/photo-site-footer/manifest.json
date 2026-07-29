@@ -1,0 +1,15 @@
+{
+    "runtime": "1.0.0",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "photo-site-footer",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "P9R",
+        "title": "Photo site footer",
+        "description": "Compact footer with studio and legal navigation.",
+        "categories": [
+            "Site"
+        ]
+    }
+}

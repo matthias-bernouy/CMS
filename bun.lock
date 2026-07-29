@@ -29,6 +29,7 @@
         "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/cms-repository-server": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-site-templates": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
@@ -358,6 +359,14 @@
         "@bernouy/cms-official-integrations": "workspace:*",
       },
     },
+    "packages/resources/templates": {
+      "name": "@bernouy/cms-site-templates",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-official-integrations": "workspace:*",
+      },
+    },
     "packages/runtimes/cms-cli": {
       "name": "@bernouy/cms-cli",
       "version": "0.1.0",
@@ -620,6 +629,8 @@
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 
     "@bernouy/cms-server": ["@bernouy/cms-server@workspace:packages/runtimes/cms-server"],
+
+    "@bernouy/cms-site-templates": ["@bernouy/cms-site-templates@workspace:packages/resources/templates"],
 
     "@bernouy/cms-source-images": ["@bernouy/cms-source-images@workspace:packages/features/cms-source-images"],
 

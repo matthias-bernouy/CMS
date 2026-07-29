@@ -1,0 +1,89 @@
+:host {
+    --photo-section-width: var(--wide-width, 84rem);
+    --photo-section-padding: clamp(3rem, 7vw, 6rem);
+
+    container-type: inline-size;
+    display: block;
+    box-sizing: border-box;
+    inline-size: min(var(--photo-section-width), calc(100% - 3rem));
+    margin-inline: auto;
+    padding-block: var(--photo-section-padding);
+}
+
+:host([width="copy"]) { --photo-section-width: 48rem; }
+:host([width="content"]) { --photo-section-width: var(--content-width, 68rem); }
+:host([width="wide"]) { --photo-section-width: var(--wide-width, 84rem); }
+:host([width="full"]) { --photo-section-width: 100%; }
+:host([spacing="compact"]) { --photo-section-padding: 1.5rem; }
+:host([spacing="generous"]) { --photo-section-padding: clamp(5rem, 10vw, 9rem); }
+
+:host([divider="top"]),
+:host([divider="both"]) {
+    border-block-start: 1px solid var(--border-default, #d7d5cf);
+}
+
+:host([divider="bottom"]),
+:host([divider="both"]) {
+    border-block-end: 1px solid var(--border-default, #d7d5cf);
+}
+
+[part="shell"] {
+    display: grid;
+    gap: clamp(1.5rem, 5vw, 5rem);
+}
+
+[part="heading"],
+[part="aside"],
+[part="content"],
+[part="actions"] {
+    min-inline-size: 0;
+}
+
+[part="content"] {
+    display: grid;
+    gap: var(--space-xl, 2rem);
+}
+
+:host(:not(:has([slot="heading"]))) [part="heading"],
+:host(:not(:has([slot="aside"]))) [part="aside"],
+:host(:not(:has([slot="actions"]))) [part="actions"] {
+    display: none;
+}
+
+::slotted([slot="heading"]) {
+    margin: 0;
+}
+
+@container (min-width: 48rem) {
+    :host([layout="split"]) [part="shell"] {
+        grid-template-columns: minmax(8rem, 1fr) minmax(0, 3fr);
+    }
+
+    :host([layout="split"]) [part="content"],
+    :host([layout="split"]) [part="actions"] {
+        grid-column: 2;
+    }
+
+    :host([layout="sidebar"]) [part="shell"] {
+        grid-template-columns: 12rem minmax(0, 1fr);
+    }
+
+    :host([layout="sidebar"]) [part="heading"] {
+        grid-column: 1 / -1;
+    }
+
+    :host([layout="sidebar"]) [part="aside"] {
+        grid-column: 1;
+    }
+
+    :host([layout="sidebar"]) [part="content"],
+    :host([layout="sidebar"]) [part="actions"] {
+        grid-column: 2;
+    }
+}
+
+@media (max-width: 48rem) {
+    :host {
+        inline-size: min(var(--photo-section-width), calc(100% - 2rem));
+    }
+}

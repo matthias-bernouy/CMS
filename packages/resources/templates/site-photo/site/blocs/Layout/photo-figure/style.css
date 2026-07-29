@@ -1,0 +1,41 @@
+:host {
+    display: block;
+    min-inline-size: 0;
+}
+
+[part="figure"] {
+    display: grid;
+    margin: 0;
+    gap: 0.65rem;
+}
+
+[part="media"] {
+    overflow: hidden;
+    background: var(--bg-surface, #e8e6df);
+}
+
+::slotted([slot="media"]) {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    object-fit: var(--photo-figure-fit, cover);
+}
+
+:host([aspect="portrait"]) [part="media"] { aspect-ratio: 4 / 5; }
+:host([aspect="landscape"]) [part="media"] { aspect-ratio: 4 / 3; }
+:host([aspect="square"]) [part="media"] { aspect-ratio: 1; }
+:host([fit="contain"]) { --photo-figure-fit: contain; }
+:host([fit="cover"]) { --photo-figure-fit: cover; }
+
+:host(:not([aspect="auto"])) ::slotted([slot="media"]) {
+    block-size: 100%;
+}
+
+[part="caption"] {
+    color: var(--text-muted, #6b6a65);
+    font-size: 0.78rem;
+}
+
+:host(:not(:has([slot="caption"]))) [part="caption"] {
+    display: none;
+}

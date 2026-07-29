@@ -48,6 +48,7 @@
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-official-integrations": "workspace:*",
         "@bernouy/cms-official-sites": "workspace:*",
+        "@bernouy/cms-site-templates": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",

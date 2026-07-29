@@ -1,0 +1,51 @@
+---
+title: "Album — Stillroom"
+description: "Un album photographique publié par le studio Stillroom."
+visible: true
+tags: ["portfolio", "photography", "album-detail"]
+---
+<photo-site-shell>
+    <photo-site-header slot="header"></photo-site-header>
+    <photo-section spacing="compact">
+        <basic-button action="link" href="/albums" appearance="ghost">Retour aux albums</basic-button>
+    </photo-section>
+    <photo-section spacing="compact">
+        <photo-album-gallery source-id="photo-albums" slug-param="slug" grid-min="sm" grid-max="none" grid-gap="lg">
+            <basic-stack slot="loading" gap="lg" cms-condition="$source.loading">
+                <basic-skeleton height="5rem" animation="wave" label="Chargement de l’album"></basic-skeleton>
+                <basic-skeleton height="28rem" animation="wave" aria-hidden="true"></basic-skeleton>
+            </basic-stack>
+            <basic-alert slot="error" type="danger" role="alert" cms-condition="$source.error">
+                <h2 slot="title">Album introuvable.</h2>
+                <p>Son adresse a peut-être changé ou il n’est plus publié.</p>
+                <basic-button slot="actions" action="link" href="/albums" appearance="outlined">Voir tous les albums</basic-button>
+            </basic-alert>
+            <basic-stack slot="album" gap="xl" cms-condition="$source.loaded">
+                <photo-hero layout="split" scale="page">
+                    <span slot="eyebrow" cms-condition="data.category.name">{{ data.category.name }}</span>
+                    <h1 slot="title">{{ data.title }}</h1>
+                    <p slot="summary" cms-condition="data.description">{{ data.description }}</p>
+                    <basic-stack slot="actions" direction="row" gap="sm" wrap="true">
+                        <basic-badge color="neutral" variant="soft" cms-condition="data.photoCount == 1">1 photo</basic-badge>
+                        <basic-badge color="neutral" variant="soft" cms-condition="data.photoCount != 1">{{ data.photoCount }} photos</basic-badge>
+                    </basic-stack>
+                </photo-hero>
+                <basic-alert type="info" role="status" cms-condition="data.photoCount == 0">
+                    <h2 slot="title">Cet album ne contient pas encore de photos.</h2>
+                </basic-alert>
+                <basic-grid min="sm" max="none" gap="lg" data-photo-grid="" cms-condition="data.photoCount > 0">
+                    <photo-figure aspect="auto" cms-repeat="data.photos as photo">
+                        <img slot="media" src="/.cms/sources/photo-albums/publicPhoto?id={{ photo.id }}" data-photo-source-url="publicPhoto" data-source-image-access="public" data-source-width="{{ photo.width }}" data-source-height="{{ photo.height }}" alt="{{ photo.alt }}" loading="lazy" decoding="async">
+                        <basic-stack slot="caption" direction="row" gap="sm" justify-content="space-between" wrap="true">
+                            <span cms-condition="data.display.showCaptions && photo.caption">{{ photo.caption }}</span>
+                            <span cms-condition="data.display.showTakenAt && photo.takenAt">{{ photo.takenAt }}</span>
+                            <a href="/.cms/sources/photo-albums/publicPhoto?id={{ photo.id }}" data-photo-source-url="publicPhoto" download="" cms-condition="data.display.allowDownloads">Télécharger</a>
+                        </basic-stack>
+                    </photo-figure>
+                </basic-grid>
+                <basic-button action="link" href="/albums" appearance="outlined">Tous les albums</basic-button>
+            </basic-stack>
+        </photo-album-gallery>
+    </photo-section>
+    <photo-site-footer slot="footer"></photo-site-footer>
+</photo-site-shell>
