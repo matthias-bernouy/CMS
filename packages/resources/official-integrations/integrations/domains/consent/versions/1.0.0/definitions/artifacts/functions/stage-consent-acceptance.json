@@ -9,12 +9,12 @@
             "description": "Forward only the bounded consent claim needed by the request-phase gate."
         },
         "input": {
-            "body": { "type": "object" }
+            "body": { "$include": "../sources/primary/shared/stage-acceptance-request.json" }
         },
         "output": [
             {
                 "status": "200",
-                "body": { "type": "object" }
+                "body": { "$include": "../sources/primary/shared/stage-acceptance-response.json" }
             }
         ],
         "steps": [

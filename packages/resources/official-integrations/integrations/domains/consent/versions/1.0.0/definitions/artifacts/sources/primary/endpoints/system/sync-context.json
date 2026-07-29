@@ -12,7 +12,7 @@
         "headers": {
             "$include": "../../shared/service-header.json"
         },
-        "body": { "type": "object" },
+        "body": { "$include": "../../shared/sync-context-request.json" },
         "output": [
             {
                 "status": "200",

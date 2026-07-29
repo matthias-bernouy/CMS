@@ -29,6 +29,39 @@ describe("Consent integration contract", () => {
             ["listAcceptances", { mode: "admin" }],
             ["health", { mode: "admin" }],
         ]);
+
+        const httpContract = definition?.connectors?.[0]?.functions?.[0]?.compatibility?.http;
+        expect(httpContract?.requiredSecrets).toEqual(["CMS_CONSENT_API_KEY"]);
+        expect(
+            httpContract?.endpoints.map(({ method, route, requiredInputs, requiredHeaders }) => ({
+                method,
+                route,
+                requiredInputs,
+                requiredHeaders,
+            })),
+        ).toEqual([
+            { method: "GET", route: "/acceptances", requiredInputs: [], requiredHeaders: ["authorization"] },
+            {
+                method: "POST",
+                route: "/acceptances/commit",
+                requiredInputs: ["cmsUserId", "contextKey"],
+                requiredHeaders: ["authorization"],
+            },
+            {
+                method: "POST",
+                route: "/acceptances/stage",
+                requiredInputs: ["contextKey"],
+                requiredHeaders: ["authorization"],
+            },
+            { method: "POST", route: "/context/sync", requiredInputs: [], requiredHeaders: ["authorization"] },
+            { method: "GET", route: "/health", requiredInputs: [], requiredHeaders: ["authorization"] },
+            {
+                method: "GET",
+                route: "/requirements",
+                requiredInputs: ["context"],
+                requiredHeaders: ["authorization"],
+            },
+        ]);
     });
 
     test("request and response gates forward only bounded consent fields", async () => {
@@ -66,8 +99,24 @@ describe("Consent integration contract", () => {
             expect(source).not.toContain('"$request.body"');
             expect(source).not.toContain("password");
         }
-        expect(stageFunction.function.input.body).toEqual({ type: "object" });
-        expect(commitFunction.function.input.body).toEqual({ type: "object" });
+        expect(stageFunction.function.input.body).toEqual({
+            $include: "../sources/primary/shared/stage-acceptance-request.json",
+        });
+        expect(commitFunction.function.input.body).toEqual({
+            $include: "../sources/primary/shared/commit-acceptance-request.json",
+        });
+        const stageRequest = await json("definitions/artifacts/sources/primary/shared/stage-acceptance-request.json");
+        const commitRequest = await json("definitions/artifacts/sources/primary/shared/commit-acceptance-request.json");
+        expect(stageRequest).toMatchObject({
+            type: "object",
+            required: ["contextKey"],
+            properties: { acceptedVersionIds: { type: "array", items: { type: "string" } } },
+        });
+        expect(commitRequest).toMatchObject({
+            type: "object",
+            required: ["contextKey", "cmsUserId"],
+            properties: { cmsUserId: { type: "string" } },
+        });
         expect(JSON.stringify(stageTrigger)).not.toContain("targetSourceId");
         expect(JSON.stringify(stageTrigger)).not.toContain("targetEndpointId");
     });

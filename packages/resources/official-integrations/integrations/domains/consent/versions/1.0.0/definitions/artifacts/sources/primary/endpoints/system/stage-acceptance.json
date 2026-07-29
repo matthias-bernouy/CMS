@@ -12,19 +12,11 @@
         "headers": {
             "$include": "../../shared/service-header.json"
         },
-        "body": { "type": "object" },
+        "body": { "$include": "../../shared/stage-acceptance-request.json" },
         "output": [
             {
                 "status": "200",
-                "body": {
-                    "type": "object",
-                    "properties": {
-                        "staged": { "type": "boolean" },
-                        "attemptId": { "type": "string" },
-                        "requiredCount": { "type": "number" }
-                    },
-                    "required": ["staged", "attemptId", "requiredCount"]
-                }
+                "body": { "$include": "../../shared/stage-acceptance-response.json" }
             },
             {
                 "status": "default",

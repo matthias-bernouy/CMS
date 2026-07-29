@@ -12,20 +12,11 @@
         "headers": {
             "$include": "../../shared/service-header.json"
         },
-        "body": { "type": "object" },
+        "body": { "$include": "../../shared/commit-acceptance-request.json" },
         "output": [
             {
                 "status": "200",
-                "body": {
-                    "type": "object",
-                    "properties": {
-                        "committed": { "type": "boolean" },
-                        "acceptanceId": { "type": "string", "nullable": true },
-                        "cmsUserId": { "type": "string" },
-                        "acceptedAt": { "type": "string", "nullable": true }
-                    },
-                    "required": ["committed", "acceptanceId", "cmsUserId", "acceptedAt"]
-                }
+                "body": { "$include": "../../shared/commit-acceptance-response.json" }
             },
             {
                 "status": "default",

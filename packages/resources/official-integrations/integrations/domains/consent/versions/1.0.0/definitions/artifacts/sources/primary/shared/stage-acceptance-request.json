@@ -1,0 +1,23 @@
+{
+    "type": "object",
+    "properties": {
+        "contextKey": {
+            "type": "string"
+        },
+        "subjectClaim": {
+            "type": "string"
+        },
+        "attemptId": {
+            "type": "string"
+        },
+        "acceptedVersionIds": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "contextKey"
+    ]
+}

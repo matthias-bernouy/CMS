@@ -9,12 +9,12 @@
             "description": "Associate a staged claim with the private CMS subject emitted by the target endpoint."
         },
         "input": {
-            "body": { "type": "object" }
+            "body": { "$include": "../sources/primary/shared/commit-acceptance-request.json" }
         },
         "output": [
             {
                 "status": "200",
-                "body": { "type": "object" }
+                "body": { "$include": "../sources/primary/shared/commit-acceptance-response.json" }
             }
         ],
         "steps": [
