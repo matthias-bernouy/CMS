@@ -209,4 +209,50 @@ describe("filesystem candidate release publication", () => {
             lastFailure: { kind: "stale", code: "admission_inputs_stale" },
         });
     });
+
+    test("rejects stale publishing candidates during restart recovery", async () => {
+        const fixture = registryFixture();
+        const setup = await passedCandidate(fixture, "candidate-stale-recovery");
+        const passed = await setup.store.get("candidate-stale-recovery");
+        expect(passed?.status).toBe("passed");
+        await setup.store.beginPublication("candidate-stale-recovery", {
+            expectedRevision: passed!.revision,
+            now: "2026-07-26T10:00:04.500Z",
+        });
+        const changedPolicy: ReleaseAdmissionPolicySnapshotV1 = {
+            ...setup.policy,
+            identity: { ...setup.policy.identity, version: "1.0.1" },
+        };
+
+        const result = await releaseFinalizer(fixture, setup.store, changedPolicy).recover("candidate-stale-recovery");
+
+        expect(result.status).toBe("rejected");
+        expect(await setup.store.get("candidate-stale-recovery")).toMatchObject({
+            status: "rejected",
+            lastFailure: { kind: "stale", code: "admission_inputs_stale" },
+        });
+        expect(fixture.snapshots.current().locateExactVersion("demo", "1.0.0")).toBeNull();
+    });
+
+    test("makes an inadmissible composite decision terminal instead of leaving publication pending", async () => {
+        const fixture = registryFixture();
+        await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        const candidate = await verificationCandidate(
+            await publicationPackage("demo", "1.1.0", {
+                inputs: [{ name: "account", label: "Account", type: "text", required: true }],
+            }),
+        );
+        const policy = await planningPolicy();
+        const setup = await completePassedCandidate(fixture, "candidate-inadmissible", candidate, policy);
+        expect(setup.plan.planningArtifacts.compatibilityReport.contractAdmissible).toBeFalse();
+
+        const result = await releaseFinalizer(fixture, setup.store, setup.policy).finalize("candidate-inadmissible");
+
+        expect(result.status).toBe("rejected");
+        expect(await setup.store.get("candidate-inadmissible")).toMatchObject({
+            status: "rejected",
+            lastFailure: { kind: "stale", code: "admission_rejected" },
+        });
+        expect(fixture.snapshots.current().locateExactVersion("demo", "1.1.0")).toBeNull();
+    });
 });

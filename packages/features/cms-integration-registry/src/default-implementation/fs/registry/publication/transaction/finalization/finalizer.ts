@@ -56,7 +56,15 @@ export class FsIntegrationRegistryCandidateFinalizer {
             if (recovered?.status === "published") {
                 return await this.#publishedResult(recovered);
             }
-            return await this.#finalize(recovered ?? record);
+            try {
+                return await this.#finalize(recovered ?? record);
+            } catch (error) {
+                const rejected = await this.#rejectStaleUnpublishedCandidate(candidateId, error);
+                if (rejected) {
+                    return rejected;
+                }
+                throw error;
+            }
         }
         if (record.status !== "passed") {
             throw new FsIntegrationRegistryCandidateFinalizationError(
@@ -71,29 +79,41 @@ export class FsIntegrationRegistryCandidateFinalizer {
             });
             return await this.#finalize(record);
         } catch (error) {
-            if (error instanceof FsIntegrationRegistryCandidateFinalizationError && error.code === "admission_stale") {
-                const current = await this.config.candidates.get(candidateId);
-                if (
-                    current &&
-                    (current.status === "passed" || current.status === "publishing") &&
-                    !this.config.snapshots.current().locateExactVersion(current.kind, current.version)
-                ) {
-                    const occurredAt = now(this.config);
-                    await this.config.candidates.rejectPublication(candidateId, {
-                        expectedRevision: current.revision,
-                        now: occurredAt,
-                        failure: {
-                            kind: "stale",
-                            code: "admission_inputs_stale",
-                            message: error.message,
-                            occurredAt,
-                        },
-                    });
-                    return { ...identity(current), status: "rejected" };
-                }
+            const rejected = await this.#rejectStaleUnpublishedCandidate(candidateId, error);
+            if (rejected) {
+                return rejected;
             }
             throw error;
         }
+    }
+
+    async #rejectStaleUnpublishedCandidate(
+        candidateId: string,
+        error: unknown,
+    ): Promise<FinalizedIntegrationRegistryCandidate | null> {
+        if (!(error instanceof FsIntegrationRegistryCandidateFinalizationError) || error.code !== "admission_stale") {
+            return null;
+        }
+        const current = await this.config.candidates.get(candidateId);
+        if (
+            !current ||
+            (current.status !== "passed" && current.status !== "publishing") ||
+            this.config.snapshots.current().locateExactVersion(current.kind, current.version)
+        ) {
+            return null;
+        }
+        const occurredAt = now(this.config);
+        const rejected = await this.config.candidates.rejectPublication(candidateId, {
+            expectedRevision: current.revision,
+            now: occurredAt,
+            failure: {
+                kind: "stale",
+                code: "admission_inputs_stale",
+                message: error.message,
+                occurredAt,
+            },
+        });
+        return { ...identity(rejected), status: "rejected" };
     }
 
     async #finalize(
@@ -141,10 +161,18 @@ export class FsIntegrationRegistryCandidateFinalizer {
             createDecisionId: this.config.createDecisionId ?? (() => `decision-${record.candidateDigest.slice(0, 32)}`),
         });
         if (!evidence.decision.admissible) {
-            throw new FsIntegrationRegistryCandidateFinalizationError(
-                "admission_rejected",
-                `Candidate composite admission failed: ${evidence.decision.reasons.join(",")}`,
-            );
+            const occurredAt = now(this.config);
+            const rejected = await this.config.candidates.rejectPublication(record.candidateId, {
+                expectedRevision: record.revision,
+                now: occurredAt,
+                failure: {
+                    kind: "stale",
+                    code: "admission_rejected",
+                    message: `Candidate composite admission failed: ${evidence.decision.reasons.join(",")}`,
+                    occurredAt,
+                },
+            });
+            return { ...identity(rejected), status: "rejected" };
         }
         await this.config.verificationBundles.put({
             envelope: objects.verification,
