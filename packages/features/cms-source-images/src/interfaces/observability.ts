@@ -27,6 +27,7 @@ export const SOURCE_IMAGE_REASONS = [
     "animated_image",
     "pixel_limit",
     "cache_stale",
+    "job_queued",
     "semaphore_saturated",
     "processing_failed",
 ] as const;

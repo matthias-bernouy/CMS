@@ -10,6 +10,7 @@
         "./browser": "./src/exports/browser.ts",
         "./browser-host": "./src/exports/browser-host.ts",
         "./local-fs": "./src/exports/local-fs.ts",
+        "./mongo": "./src/exports/mongo.ts",
         "./sharp": "./src/exports/sharp.ts"
     },
     "dependencies": {
@@ -17,6 +18,7 @@
         "sharp": "^0.34.5"
     },
     "peerDependencies": {
+        "mongodb": "^7.2.0",
         "typescript": "^5.9.3"
     }
 }

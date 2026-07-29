@@ -54,7 +54,7 @@ describe("Source image processing admission", () => {
         expect(transformer.maxActive).toBeLessThanOrEqual(2);
     });
 
-    test("returns a retryable non-image response when saturated", async () => {
+    test("keeps a retryable response for saturated private transforms", async () => {
         const transformer = new FakeImageTransformer();
         transformer.delayMs = 30;
         const harness = interceptorHarness({

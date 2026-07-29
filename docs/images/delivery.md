@@ -9,12 +9,12 @@ they do not share generation, cache, URL, or authorization semantics.
 | --- | --- | --- |
 | Recognized URL | Concrete `/.cms/files/by-id/<id>` | Bound same-origin `/.cms/sources/...` |
 | Candidate ladder | 320, 640, 960, 1280, 1920 | 64, 128, 256, 384, 512, 768, 1024, 1280, 1600, 1920, 2560 |
-| Generation | Background, after a page render | On demand for the browser-selected width |
+| Generation | Background, after a page render | Eager after declared media mutations; queued fallback on a miss |
 | Request-path encoding | Never | Yes, after Source authorization |
 | Output | WebP, quality 75 | WebP, quality 75 |
 | Upscaling | Never | Never |
 | Variant URL | `/.cms/img/<id>/<width>.webp?v=<contentHash>` | Original Source URL plus `cms-width=<width>` |
-| Cache | CMS File variant store | Dedicated Source image cache |
+| Cache | CMS File variant store | Persistent derivatives plus a Mongo media index and queue |
 | Original fallback | First render and missing variant | `src`, or the only URL when dimensions are unavailable |
 
 ## CMS Files
@@ -99,10 +99,38 @@ change to the ladder, format, quality, metadata handling, or animation policy
 must receive a new recipe id. When the recipe id or encoder identity changes,
 incompatible bytes are not reused.
 
-The production composition currently admits one complete Source image
-processing operation at a time and waits up to five seconds for admission. It
-uses local single-flight for identical public cold requests and for identical
-final derivative generation.
+An integration can declare a versioned `effects.producesMedia` contract on an
+upload or replacement endpoint. The bounded response projection supplies the
+image identity, revision and dimensions and maps them to a public Source image
+endpoint. A successful mutation immediately updates the global media index and
+enqueues one job for the image. The worker fetches and inspects the original
+once, then emits every bounded width from that same source buffer. Widths above
+the intrinsic width share the non-upscaled derivative.
+
+`effects.removesMedia` can resolve an identity from the successful response or
+from a declared mutation request parameter. The latter lets a replacement
+invalidate the old media generation without widening its public response schema.
+
+Production queue state and the media index are separate Mongo collections.
+Jobs are JSON-safe, atomically deduplicated, claimed with renewable leases and
+retried with backoff. Critical upload work and cache maintenance have separate
+pools. Local enqueues wake a worker immediately; cross-process polling begins at
+one second and backs off to five seconds while idle. An opaque-cursor inventory
+contract is available for imports and audits, not continuous rescanning.
+
+A public miss is only a repair path. Delivery serves the original with
+`private, no-store`, ensures the index/job exists, and performs no decode or
+encode in the request. The next request can therefore observe a prepared
+variant without a processing-saturation `503`. The in-process scheduler remains
+the development default; the production runtime uses the persistent queue.
+
+Remote CMS and worker processes must share a `SourceImageCache` adapter. The
+official single-node default stores reconstructible derivatives on local disk
+without arbitrary LRU eviction and garbage-collects obsolete generations from
+the media index. A deployment can instead supply a shared object-store adapter,
+then place regional or global HTTP caches in front of Delivery. Public
+derivatives already emit shared immutable headers. Private images stay
+synchronous because authorization must be re-evaluated on every request.
 
 ## Private And Public Freshness
 
@@ -112,14 +140,15 @@ validation. Their response is `private, no-store`; a derivative cache entry is
 never proof of access.
 
 A public Source lookup may bypass the upstream only for an endpoint declared
-public whose identity is not computed from the caller and whose target is a
-recognized connector. The previous response must explicitly allow shared
-caching, vary only on `Accept` and/or `Accept-Language`, and retain a valid
-positive freshness lifetime. Upstream cookies are never exposed. Their presence
-does not disable caching for this bounded public flow; every other cookie-bearing
-response remains private. `Accept-Encoding` is removed from `Vary` because the
-proxy has already decoded the upstream representation and removes its encoding
-headers.
+as a public file whose identity is not computed from the caller. The previous
+response must explicitly allow shared caching, vary only on `Accept` and/or
+`Accept-Language`, and retain a valid positive freshness lifetime. Upstream
+cookies are never exposed. Their presence does not disable caching for this
+bounded public flow; every other cookie-bearing response remains private. This
+rule does not depend on connector discovery, so a provider configured at runtime
+does not require a CMS restart before its public files become cacheable.
+`Accept-Encoding` is removed from `Vary` because the proxy has already decoded
+the upstream representation and removes its encoding headers.
 
 CmsCore caps public freshness at one year. Public responses use the remaining
 `max-age`, `immutable`, `must-revalidate`, and

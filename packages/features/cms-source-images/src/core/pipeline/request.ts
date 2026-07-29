@@ -1,4 +1,5 @@
 import type { SourceEndpoint } from "@bernouy/cms-sources";
+import type { SourceImageWidth } from "../../interfaces/recipe";
 
 export type RequestedTransform =
     | { kind: "passthrough"; reason: "not_requested" }
@@ -7,7 +8,7 @@ export type RequestedTransform =
           reason: "unsupported_parameter" | "invalid_width" | "range_request" | "ineligible_endpoint";
           response: Response;
       }
-    | { kind: "transform"; width: number; request: Request };
+    | { kind: "transform"; width: SourceImageWidth; request: Request };
 
 const DECLARED_RASTER_MEDIA = new Set([
     "image/*",
@@ -22,7 +23,7 @@ const DECLARED_RASTER_MEDIA = new Set([
 export function requestedSourceImageTransform(
     endpoint: SourceEndpoint,
     request: Request,
-    widths: readonly number[],
+    widths: readonly SourceImageWidth[],
 ): RequestedTransform {
     const url = new URL(request.url);
     const reserved = [...url.searchParams.keys()].filter((name) => name.trim().toLowerCase().startsWith("cms-"));
@@ -35,7 +36,7 @@ export function requestedSourceImageTransform(
     const values = url.searchParams.getAll("cms-width");
     const raw = values.length === 1 ? values[0] : null;
     const width = raw && /^[1-9]\d*$/.test(raw) ? Number(raw) : Number.NaN;
-    if (!Number.isSafeInteger(width) || String(width) !== raw || !widths.includes(width)) {
+    if (!Number.isSafeInteger(width) || String(width) !== raw || !widths.includes(width as SourceImageWidth)) {
         return reject("invalid_width", "unsupported CMS image width");
     }
     if (!isEligibleEndpoint(endpoint)) {
@@ -45,7 +46,7 @@ export function requestedSourceImageTransform(
         return reject("range_request", "Range is incompatible with CMS image transforms");
     }
     url.searchParams.delete("cms-width");
-    return { kind: "transform", width, request: new Request(url, request) };
+    return { kind: "transform", width: width as SourceImageWidth, request: new Request(url, request) };
 }
 
 export function isEligibleEndpoint(endpoint: SourceEndpoint): boolean {

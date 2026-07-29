@@ -37,6 +37,7 @@ export type ProcessSourceImageUpstreamOptions = {
     readTimeoutMs: number;
     flights: SourceImageSingleFlight<GeneratedDerivative>;
     now: () => number;
+    onSaturated?: () => Promise<UpstreamResult>;
 };
 
 export async function processSourceImageUpstream(options: ProcessSourceImageUpstreamOptions): Promise<UpstreamResult> {
@@ -44,6 +45,9 @@ export async function processSourceImageUpstream(options: ProcessSourceImageUpst
         options.semaphore.acquire(options.semaphoreWaitTimeoutMs),
     );
     if (!releaseAdmission) {
+        if (options.onSaturated) {
+            return options.onSaturated();
+        }
         await options.telemetry.finish("failed", "semaphore_saturated");
         return {
             kind: "response",

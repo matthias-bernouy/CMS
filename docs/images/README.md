@@ -31,7 +31,7 @@ CmsCore has two separate optimization pipelines:
 | Image URL | Optimization path | When work happens |
 | --- | --- | --- |
 | Concrete raster `<img src="/.cms/files/by-id/<id>">` rendered by Delivery | CMS Files variants | In a background job after a rendered page first references the file. |
-| Bound same-origin `/.cms/sources/...` file URL | CMS Source image derivatives | On demand, after the normal Source request has been resolved and authorized. |
+| Bound same-origin `/.cms/sources/...` file URL | CMS Source image derivatives | Eagerly after a declared mutation, with a queued first-miss safety net. |
 | Other image URL | No responsive derivative pipeline | CmsCore emits no generated candidates for it. |
 
 The two caches and URL contracts are deliberately independent. A CMS File
@@ -51,15 +51,15 @@ authoritative CMS file
   -> the browser selects one ready WebP
 ```
 
-For a CMS Source image:
+For a CMS Source image declared by an integration effect:
 
 ```text
-bound URL and intrinsic dimensions resolve
-  -> the browser receives a finite srcset
-  -> the browser selects one cms-width URL
-  -> normal Source resolution and authorization run
-  -> the CMS validates the original
-  -> the cache retrieves, or Sharp/libvips creates, one WebP derivative
+successful upload or replacement declares the public image identity
+  -> the CMS persists the media generation and queues one critical job
+  -> a worker reads and validates the original once
+  -> the worker creates every applicable bounded WebP variant
+  -> browser requests resolve directly to the current generation
+  -> an undeclared cold miss serves the original immediately and queues the same work
 ```
 
 ## Platform Invariants

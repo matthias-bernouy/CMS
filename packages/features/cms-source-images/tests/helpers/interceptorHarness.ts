@@ -5,6 +5,8 @@ import {
     InMemorySourceImageCache,
     SourceImageSemaphore,
     type SourceImageObservation,
+    type SourceImageJobFetch,
+    type SourceImageJobScheduler,
     type SourceImageRecipe,
     type SourceImageTransformer,
 } from "@bernouy/cms-source-images";
@@ -116,6 +118,10 @@ export function interceptorHarness(
         now?: { value: number };
         semaphore?: SourceImageSemaphore;
         semaphoreWaitTimeoutMs?: number;
+        jobScheduler?: SourceImageJobScheduler;
+        jobFetch?: SourceImageJobFetch;
+        jobSemaphoreWaitTimeoutMs?: number;
+        jobMaxQueue?: number;
         recipe?: SourceImageRecipe;
         readTimeoutMs?: number;
     } = {},
@@ -127,7 +133,7 @@ export function interceptorHarness(
     const interceptor = createSourceImageInterceptor({
         cache,
         transformer,
-        scope: "site-test",
+        scope: "https://cms.test",
         ...(options.recipe ? { recipe: options.recipe } : {}),
         observe: (observation) => {
             observations.push(observation);
@@ -136,6 +142,18 @@ export function interceptorHarness(
         ...(options.semaphore ? { semaphore: options.semaphore } : {}),
         ...(options.semaphoreWaitTimeoutMs !== undefined
             ? { semaphoreWaitTimeoutMs: options.semaphoreWaitTimeoutMs }
+            : {}),
+        ...(options.jobScheduler ? { jobScheduler: options.jobScheduler } : {}),
+        ...(options.jobFetch || options.jobSemaphoreWaitTimeoutMs !== undefined || options.jobMaxQueue !== undefined
+            ? {
+                  localJobs: {
+                      ...(options.jobFetch ? { fetch: options.jobFetch } : {}),
+                      ...(options.jobSemaphoreWaitTimeoutMs !== undefined
+                          ? { semaphoreWaitTimeoutMs: options.jobSemaphoreWaitTimeoutMs }
+                          : {}),
+                      ...(options.jobMaxQueue !== undefined ? { maxQueue: options.jobMaxQueue } : {}),
+                  },
+              }
             : {}),
         ...(options.readTimeoutMs !== undefined ? { readTimeoutMs: options.readTimeoutMs } : {}),
     });

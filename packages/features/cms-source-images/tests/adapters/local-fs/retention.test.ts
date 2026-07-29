@@ -18,6 +18,28 @@ describe("LocalSourceImageCache retention", () => {
         expect(await cache.getDerivative("two")).not.toBeNull();
     });
 
+    test("persistent retention leaves derivatives to explicit media-index garbage collection", async () => {
+        const root = await fixture.cacheRoot();
+        const first = new LocalSourceImageCache({
+            directory: root,
+            retention: "persistent",
+            maxEntries: 1,
+            maxBytes: 1,
+            maxDerivativeAgeMs: 1,
+            now: () => 10,
+        });
+        await first.putDerivative("one", await derivative("one", 10));
+        expect((await first.putDerivative("two", await derivative("two", 10))).evicted).toBe(0);
+        const restarted = new LocalSourceImageCache({
+            directory: root,
+            retention: "persistent",
+            now: () => 1_000,
+        });
+
+        expect(await restarted.getDerivative("one")).not.toBeNull();
+        expect(await restarted.getDerivative("two")).not.toBeNull();
+    });
+
     test("expires derivatives and lookup indexes independently", async () => {
         const root = await fixture.cacheRoot();
         let now = 10;

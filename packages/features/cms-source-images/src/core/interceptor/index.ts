@@ -21,4 +21,9 @@ export function createDisabledSourceImageInterceptor(observe?: SourceImageObserv
     };
 }
 
-export type { CreateSourceImageInterceptorOptions, SourceImageInterceptor } from "./types";
+export type {
+    CreateSourceImageInterceptorOptions,
+    LocalSourceImageJobsOptions,
+    PublicSourceImageMissMode,
+    SourceImageInterceptor,
+} from "./types";

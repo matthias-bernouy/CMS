@@ -42,6 +42,20 @@ export function sourceImageBusyResponse(): Response {
     });
 }
 
+export function sourceImageFallbackResponse(upstream: Response): Response {
+    const headers = new Headers(upstream.headers);
+    headers.set("cache-control", "private, no-store");
+    headers.set("x-content-type-options", "nosniff");
+    for (const name of ["age", "etag", "last-modified", "set-cookie"]) {
+        headers.delete(name);
+    }
+    return new Response(upstream.body, {
+        status: upstream.status,
+        statusText: upstream.statusText,
+        headers,
+    });
+}
+
 export function sourceImageDisabledResponse(): Response {
     return new Response("Source Image Transforms Disabled", {
         status: 503,

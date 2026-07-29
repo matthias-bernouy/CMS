@@ -6,8 +6,11 @@ import {
     SOURCE_IMAGE_STAGES,
     SourceImageSemaphore,
     type SourceImageCache,
+    type SourceImageJobScheduler,
     type SourceImageObservation,
     type SourceImageObserver,
+    type PublicSourceImageMissMode,
+    type SourceImageMediaCoordinator,
 } from "@bernouy/cms-source-images";
 import type { SourceEndpointInterceptor } from "@bernouy/cms-sources";
 
@@ -26,6 +29,9 @@ export async function createRuntimeSourceImageInterceptor(config: {
     sampleRate: number;
     report: (message: string) => void;
     observe?: SourceImageObserver;
+    jobScheduler?: SourceImageJobScheduler;
+    publicMissMode?: PublicSourceImageMissMode;
+    mediaCoordinator?: SourceImageMediaCoordinator;
 }): Promise<SourceEndpointInterceptor> {
     const { SharpSourceImageTransformer } = await import("@bernouy/cms-source-images/sharp");
     return createSourceImageInterceptor({
@@ -35,6 +41,9 @@ export async function createRuntimeSourceImageInterceptor(config: {
         semaphoreWaitTimeoutMs: 5_000,
         scope: config.scope,
         observe: config.observe ?? createSourceImageTelemetryObserver(config),
+        ...(config.jobScheduler ? { jobScheduler: config.jobScheduler } : {}),
+        ...(config.publicMissMode ? { publicMissMode: config.publicMissMode } : {}),
+        ...(config.mediaCoordinator ? { mediaCoordinator: config.mediaCoordinator } : {}),
     });
 }
 
@@ -46,6 +55,9 @@ export async function createRuntimeSourceImageComposition(config: {
     scope: string;
     sampleRate: number;
     report: (message: string) => void;
+    jobScheduler?: SourceImageJobScheduler;
+    publicMissMode?: PublicSourceImageMissMode;
+    mediaCoordinator?: SourceImageMediaCoordinator;
 }): Promise<{
     sourceImageInterceptor: SourceEndpointInterceptor;
     responsivePublicSourceImagesEnabled: boolean;
@@ -69,6 +81,9 @@ export async function createRuntimeSourceImageComposition(config: {
             sampleRate: config.sampleRate,
             report: config.report,
             observe,
+            ...(config.jobScheduler ? { jobScheduler: config.jobScheduler } : {}),
+            ...(config.publicMissMode ? { publicMissMode: config.publicMissMode } : {}),
+            ...(config.mediaCoordinator ? { mediaCoordinator: config.mediaCoordinator } : {}),
         }),
         responsivePublicSourceImagesEnabled: config.responsivePublicMarkupEnabled,
         responsivePrivateSourceImagesEnabled: config.responsivePrivateMarkupEnabled,

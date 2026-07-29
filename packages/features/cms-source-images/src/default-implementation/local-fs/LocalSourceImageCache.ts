@@ -10,6 +10,8 @@ import { LocalLookupStore } from "./lookups";
 
 export type LocalSourceImageCacheOptions = {
     directory: string;
+    /** Persistent mode keeps reconstructible derivatives until explicit, index-driven garbage collection. */
+    retention?: "bounded" | "persistent";
     maxBytes?: number;
     maxEntries?: number;
     maxLookupEntries?: number;
@@ -25,15 +27,16 @@ export class LocalSourceImageCache implements SourceImageCache {
 
     constructor(options: LocalSourceImageCacheOptions) {
         const now = options.now ?? Date.now;
+        const persistent = options.retention === "persistent";
         this.derivatives = new LocalDerivativeStore(join(options.directory, "objects"), {
-            maxBytes: options.maxBytes ?? 512 * 1024 * 1024,
-            maxEntries: options.maxEntries ?? 10_000,
-            maxAgeMs: options.maxDerivativeAgeMs ?? 7 * 24 * 60 * 60 * 1000,
+            maxBytes: persistent ? Number.POSITIVE_INFINITY : (options.maxBytes ?? 512 * 1024 * 1024),
+            maxEntries: persistent ? Number.POSITIVE_INFINITY : (options.maxEntries ?? 10_000),
+            maxAgeMs: persistent ? Number.POSITIVE_INFINITY : (options.maxDerivativeAgeMs ?? 7 * 24 * 60 * 60 * 1000),
             now,
         });
         this.lookups = new LocalLookupStore(join(options.directory, "lookups"), {
-            maxEntries: options.maxLookupEntries ?? 20_000,
-            maxAgeMs: options.maxLookupAgeMs ?? 24 * 60 * 60 * 1000,
+            maxEntries: persistent ? Number.POSITIVE_INFINITY : (options.maxLookupEntries ?? 20_000),
+            maxAgeMs: persistent ? Number.POSITIVE_INFINITY : (options.maxLookupAgeMs ?? 24 * 60 * 60 * 1000),
             now,
         });
     }

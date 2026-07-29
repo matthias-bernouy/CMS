@@ -12,6 +12,7 @@ import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
 import { LocalFsCmsFilesBlob, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-files/mongo";
 import { LocalSourceImageCache } from "@bernouy/cms-source-images/local-fs";
+import { MongoSourceImageJobQueue, MongoSourceMediaIndex } from "@bernouy/cms-source-images/mongo";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { createFieldCrypto, MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
 import { InMemoryCache } from "@bernouy/http-runner";
@@ -45,6 +46,9 @@ export async function createCoreStores(env: RuntimeEnv) {
     const filesBlob = new LocalFsCmsFilesBlob(env.CMS_FILES_DIR);
     const variantStore = new LocalFsCmsFilesBlob(`${env.CMS_FILES_DIR}/.variants`);
     const sourceImageCache = await createRuntimeSourceImageCache(env);
+    const sourceImageJobs = new MongoSourceImageJobQueue(db);
+    const sourceMediaIndex = new MongoSourceMediaIndex(db);
+    await Promise.all([sourceImageJobs.init(), sourceMediaIndex.init()]);
 
     const users = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
     const identityProviders = new MongoIdentityProviderRepository(db);
@@ -86,6 +90,8 @@ export async function createCoreStores(env: RuntimeEnv) {
         filesBlob,
         variantStore,
         sourceImageCache,
+        sourceImageJobs,
+        sourceMediaIndex,
         users,
         identityProviders,
         credentials,
@@ -123,6 +129,7 @@ export async function createRuntimeSourceImageCache(
     }
     const cache = new LocalSourceImageCache({
         directory: join(env.CMS_FILES_DIR, ".source-images"),
+        retention: "persistent",
     });
     await cache.initialize();
     return cache;

@@ -3,12 +3,16 @@ import { SourceImageSemaphore, SourceImageSingleFlight } from "../../concurrency
 import { sourceImageLogicalKey, sourceImageLookupKey, sourceImagePublicFlightKey } from "../../identity";
 import { requestedSourceImageTransform } from "../../pipeline";
 import { immutableSourceImageRecipe, SOURCE_RESPONSIVE_WEBP_V1 } from "../../recipe";
+import type { SourceImageWidth } from "../../../interfaces/recipe";
+import type { SourceImageMediaContext } from "../../../interfaces/media";
 import type { GeneratedDerivative } from "../generation";
 import { invalidSourceImageResponse } from "../responses";
 import { SourceImageRequestTelemetry } from "../telemetry";
 import type { CreateSourceImageInterceptorOptions } from "../types";
 import { processSourceImageUpstream, type UpstreamResult } from "../upstream";
 import { publicDerivativeResponse, responseFromUpstreamResult } from "./publicCache";
+import { PublicSourceImageFallback } from "./publicFallback";
+import { createLocalSourceImageJobScheduler } from "./localJobs";
 
 type Next = (request: Request) => Promise<Response>;
 
@@ -18,8 +22,10 @@ export class SourceImageProcessor {
     private readonly finalFlights = new SourceImageSingleFlight<GeneratedDerivative>();
     private readonly publicFlights = new SourceImageSingleFlight<UpstreamResult>();
     private readonly now;
+    private readonly publicFallback;
     private readonly readTimeoutMs;
     private readonly semaphoreWaitTimeoutMs;
+    private readonly publicMissMode;
 
     constructor(private readonly options: CreateSourceImageInterceptorOptions) {
         if (!options.scope.trim()) {
@@ -30,6 +36,27 @@ export class SourceImageProcessor {
         this.now = options.clock ?? Date.now;
         this.readTimeoutMs = options.readTimeoutMs ?? 10_000;
         this.semaphoreWaitTimeoutMs = options.semaphoreWaitTimeoutMs ?? 250;
+        this.publicMissMode = options.publicMissMode ?? (options.jobScheduler ? "queued" : "inline");
+        const jobScheduler =
+            options.jobScheduler ??
+            createLocalSourceImageJobScheduler({
+                scope: options.scope,
+                cache: options.cache,
+                transformer: options.transformer,
+                recipe: this.recipe,
+                semaphore: this.semaphore,
+                flights: this.finalFlights,
+                readTimeoutMs: this.readTimeoutMs,
+                observe: options.observe,
+                clock: this.now,
+                ...(options.localJobs ? { local: options.localJobs } : {}),
+            });
+        this.publicFallback = new PublicSourceImageFallback({
+            scheduler: jobScheduler,
+            scope: options.scope,
+            recipe: this.recipe,
+            encoderIdentity: options.transformer.encoderIdentity,
+        });
     }
 
     intercept = async (endpoint: SourceEndpoint, request: Request, next: Next): Promise<Response> => {
@@ -59,16 +86,22 @@ export class SourceImageProcessor {
     private async processTransform(
         endpoint: SourceEndpoint,
         request: Request,
-        width: number,
+        width: SourceImageWidth,
         next: Next,
         telemetry: SourceImageRequestTelemetry,
     ): Promise<Response> {
-        const logicalKey = await sourceImageLogicalKey({
-            scope: this.options.scope,
-            endpoint,
-            request,
-            policy: telemetry.policy!,
-        });
+        const media =
+            telemetry.policy === "public"
+                ? await this.options.mediaCoordinator?.resolveRequest(endpoint, request)
+                : null;
+        const logicalKey =
+            media?.logicalKey ??
+            (await sourceImageLogicalKey({
+                scope: this.options.scope,
+                endpoint,
+                request,
+                policy: telemetry.policy!,
+            }));
         const lookupKey = await sourceImageLookupKey({
             logicalKey,
             width,
@@ -91,9 +124,15 @@ export class SourceImageProcessor {
         }
         telemetry.cache ??= "miss";
         const flightKey = await sourceImagePublicFlightKey(lookupKey);
-        const flight = this.publicFlights.run(flightKey, () =>
-            this.processUpstream(endpoint, request, next, logicalKey, lookupKey, telemetry),
-        );
+        const flight = this.publicFlights.run(flightKey, () => {
+            const fallback = (reason: "job_queued" | "semaphore_saturated") =>
+                this.fallback({ request, next, logicalKey, lookupKey, width, telemetry, reason, media });
+            return this.publicMissMode === "queued"
+                ? fallback("job_queued")
+                : this.processUpstream(endpoint, request, next, logicalKey, lookupKey, telemetry, 0, () =>
+                      fallback("semaphore_saturated"),
+                  );
+        });
         const result = await flight.promise;
         if (flight.joined) {
             telemetry.joinedSingleFlight = true;
@@ -105,6 +144,31 @@ export class SourceImageProcessor {
         return responseFromUpstreamResult(result, request, this.now(), flight.joined);
     }
 
+    private async fallback(input: {
+        request: Request;
+        next: Next;
+        logicalKey: string;
+        lookupKey: string;
+        width: SourceImageWidth;
+        telemetry: SourceImageRequestTelemetry;
+        reason: "job_queued" | "semaphore_saturated";
+        media?: SourceImageMediaContext | null;
+    }): Promise<UpstreamResult> {
+        if (input.media) {
+            await this.options.mediaCoordinator?.markQueued(input.media, this.now());
+        }
+        return this.publicFallback.respond({
+            request: input.request,
+            next: input.next,
+            logicalKey: input.logicalKey,
+            lookupKey: input.lookupKey,
+            width: input.width,
+            telemetry: input.telemetry,
+            reason: input.reason,
+            ...(input.media ? { media: input.media } : {}),
+        });
+    }
+
     private async processUpstream(
         endpoint: SourceEndpoint,
         request: Request,
@@ -112,6 +176,8 @@ export class SourceImageProcessor {
         logicalKey: string,
         lookupKey: string,
         telemetry: SourceImageRequestTelemetry,
+        semaphoreWaitTimeoutMs = this.semaphoreWaitTimeoutMs,
+        onSaturated?: () => Promise<UpstreamResult>,
     ): Promise<UpstreamResult> {
         return processSourceImageUpstream({
             endpoint,
@@ -124,10 +190,11 @@ export class SourceImageProcessor {
             transformer: this.options.transformer,
             recipe: this.recipe,
             semaphore: this.semaphore,
-            semaphoreWaitTimeoutMs: this.semaphoreWaitTimeoutMs,
+            semaphoreWaitTimeoutMs,
             readTimeoutMs: this.readTimeoutMs,
             flights: this.finalFlights,
             now: this.now,
+            ...(onSaturated ? { onSaturated } : {}),
         });
     }
 }

@@ -3,7 +3,7 @@ import { executeEndpoint } from "@bernouy/cms-sources";
 import { interceptorHarness, invoke, sourceRequest, upstreamImage } from "../../helpers/interceptorHarness";
 
 describe("Source image connector response caching", () => {
-    test("reuses a public derivative when infrastructure adds a cookie and compression Vary", async () => {
+    test("reuses a public derivative without connector trust configuration", async () => {
         const harness = interceptorHarness();
         const fetchImpl = mock(async () =>
             upstreamImage({
@@ -14,12 +14,7 @@ describe("Source image connector response caching", () => {
                 },
             }),
         );
-        const next = mock((request: Request) =>
-            executeEndpoint(harness.endpoint, request, {
-                fetchImpl,
-                isTrustedConnectorTarget: () => true,
-            }),
-        );
+        const next = mock((request: Request) => executeEndpoint(harness.endpoint, request, { fetchImpl }));
 
         const first = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);
         const second = await invoke(harness.interceptor, harness.endpoint, sourceRequest(), next);

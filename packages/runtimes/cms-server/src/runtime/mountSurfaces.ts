@@ -16,9 +16,11 @@ import type { FeatureStores } from "./stores/features";
 import { productionRepositoryReadConfig } from "./repository";
 import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
+import { createRuntimeSourceImageWorkers } from "./stores/sourceImages";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
 import { createProductionRepositoryCatalogReader } from "../repositoryCatalog";
+import { composeSourceEndpointInterceptors } from "@bernouy/cms-sources";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
@@ -79,18 +81,40 @@ export async function mountProductionSurfaces(
         cmsBinding: cmsBindingMigration,
         cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "stable"),
     });
-    const { sourceImageInterceptor, responsivePublicSourceImagesEnabled, responsivePrivateSourceImagesEnabled } =
-        await createRuntimeSourceImageComposition({
-            cache: core.sourceImageCache,
-            transformsEnabled: env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED,
-            responsivePublicMarkupEnabled:
-                env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED,
-            responsivePrivateMarkupEnabled:
-                env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED,
-            scope: env.DELIVERY_PUBLIC_URL,
-            sampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
-            report: runtime.log,
-        });
+    const sourceImageWorkers =
+        env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && core.sourceImageCache
+            ? createRuntimeSourceImageWorkers({
+                  scope: env.DELIVERY_PUBLIC_URL,
+                  cache: core.sourceImageCache,
+                  queue: core.sourceImageJobs,
+                  index: core.sourceMediaIndex,
+                  sources: features.sources,
+                  installations: features.integrationInstallations,
+                  reportError: (error) => runtime.reportError("Source image worker failed", error),
+              })
+            : null;
+    const sourceImageComposition = await createRuntimeSourceImageComposition({
+        cache: core.sourceImageCache,
+        transformsEnabled: env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED,
+        responsivePublicMarkupEnabled:
+            env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED,
+        responsivePrivateMarkupEnabled:
+            env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED,
+        scope: env.DELIVERY_PUBLIC_URL,
+        sampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
+        report: runtime.log,
+        ...(sourceImageWorkers
+            ? {
+                  jobScheduler: sourceImageWorkers.scheduler,
+                  mediaCoordinator: sourceImageWorkers.coordinator,
+                  publicMissMode: "queued" as const,
+              }
+            : {}),
+    });
+    const sourceImageInterceptor =
+        composeSourceEndpointInterceptors(sourceImageWorkers?.effects, sourceImageComposition.sourceImageInterceptor) ??
+        sourceImageComposition.sourceImageInterceptor;
+    const { responsivePublicSourceImagesEnabled, responsivePrivateSourceImagesEnabled } = sourceImageComposition;
     const controlRunner = new runtime.Runner();
     if (options.repositoryManagementGateway) {
         mountCmsRepositoryManagementGateway({
@@ -226,6 +250,7 @@ export async function mountProductionSurfaces(
             await Promise.all([controlRunner.stopGracefully(), deliveryRunner.stopGracefully()]);
             await endpointPerformanceFlusher.run();
             await scheduledTriggers.stop();
+            await sourceImageWorkers?.stop();
             await core.sourceImageCache?.dispose();
         },
     };
