@@ -11,7 +11,7 @@ const publicFileEndpoint = (): SourceEndpoint =>
     });
 
 describe("executeEndpoint cache header projection", () => {
-    test("drops any upstream cookie without disabling an eligible public connector cache", async () => {
+    test("keeps an eligible public file cache when connector discovery is stale", async () => {
         const fetchImpl = mock(
             async () =>
                 new Response("image", {
@@ -26,7 +26,7 @@ describe("executeEndpoint cache header projection", () => {
 
         const response = await executeEndpoint(publicFileEndpoint(), new Request("https://cms.test/source"), {
             fetchImpl,
-            isTrustedConnectorTarget: () => true,
+            isTrustedConnectorTarget: () => false,
         });
 
         expect(response.headers.get("set-cookie")).toBeNull();
@@ -36,14 +36,14 @@ describe("executeEndpoint cache header projection", () => {
 
     test.each([
         {
-            name: "untrusted target",
-            endpoint: publicFileEndpoint(),
-            deps: { isTrustedConnectorTarget: () => false },
-        },
-        {
             name: "authenticated endpoint",
             endpoint: { ...publicFileEndpoint(), access: { mode: "auth" as const } },
-            deps: { isTrustedConnectorTarget: () => true },
+            deps: {},
+        },
+        {
+            name: "non-file endpoint",
+            endpoint: { ...publicFileEndpoint(), responseKind: "json" as const },
+            deps: {},
         },
         {
             name: "computed identity header",
@@ -51,16 +51,25 @@ describe("executeEndpoint cache header projection", () => {
                 ...publicFileEndpoint(),
                 headers: [{ name: "X-User-ID", source: { from: "computed" as const, ref: "userID" as const } }],
             },
-            deps: { isTrustedConnectorTarget: () => true, resolveContext: async () => ({ userID: "user-1" }) },
+            deps: { resolveContext: async () => ({ userID: "user-1" }) },
         },
         {
-            name: "throwing trust matcher",
-            endpoint: publicFileEndpoint(),
-            deps: {
-                isTrustedConnectorTarget: () => {
-                    throw new Error("matcher unavailable");
+            name: "computed identity parameter",
+            endpoint: {
+                ...publicFileEndpoint(),
+                input: {
+                    params: [
+                        {
+                            name: "user_id",
+                            in: "query" as const,
+                            required: true,
+                            source: { from: "computed" as const, ref: "userID" as const },
+                            schema: { type: "string" as const },
+                        },
+                    ],
                 },
             },
+            deps: { resolveContext: async () => ({ userID: "user-1" }) },
         },
     ])("keeps a cookie-bearing $name response private", async ({ endpoint, deps }) => {
         const fetchImpl = mock(

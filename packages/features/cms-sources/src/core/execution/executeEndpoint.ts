@@ -125,13 +125,7 @@ export async function executeEndpoint(
         }
         const upstream = await timedExecution(deps, "cms_upstream", () => doFetch(built.url, init));
         const projected = await timedExecution(deps, "cms_projection", () =>
-            projectSourceResponse(
-                endpoint,
-                request,
-                upstream,
-                deps,
-                allowsPublicCacheWithUpstreamCookie(endpoint, new URL(built.url), deps?.isTrustedConnectorTarget),
-            ),
+            projectSourceResponse(endpoint, request, upstream, deps, allowsPublicCacheWithUpstreamCookie(endpoint)),
         );
         const bindingError = await timedExecution(deps, "cms_identity_binding", () =>
             bindResponseIdentities(endpoint, projected, computed, deps?.identities),

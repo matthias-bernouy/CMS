@@ -17,8 +17,6 @@ export type ResponseHeaderProjectionPolicy = Readonly<{
     allowPublicCacheWithUpstreamCookie?: boolean;
 }>;
 
-type TrustedConnectorTargetMatcher = (endpoint: SourceEndpoint, target: URL) => boolean;
-
 export function hasComputedParams(endpoint: SourceEndpoint): boolean {
     return (endpoint.input?.params ?? []).some((param) => param.source?.from === "computed");
 }
@@ -27,27 +25,15 @@ export function hasComputedHeaders(endpoint: SourceEndpoint): boolean {
     return (endpoint.headers ?? []).some((header) => header.source.from === "computed");
 }
 
-export function allowsPublicCacheWithUpstreamCookie(
-    endpoint: SourceEndpoint,
-    target: URL,
-    isTrustedConnectorTarget: TrustedConnectorTargetMatcher | undefined,
-): boolean {
-    if (
-        endpoint.method !== "GET" ||
-        endpoint.responseKind !== "file" ||
-        endpoint.access?.mode !== "public" ||
-        hasComputedParams(endpoint) ||
-        hasComputedHeaders(endpoint) ||
-        (endpoint.effects?.identityBindings?.length ?? 0) > 0 ||
-        !isTrustedConnectorTarget
-    ) {
-        return false;
-    }
-    try {
-        return isTrustedConnectorTarget(endpoint, target);
-    } catch {
-        return false;
-    }
+export function allowsPublicCacheWithUpstreamCookie(endpoint: SourceEndpoint): boolean {
+    return (
+        endpoint.method === "GET" &&
+        endpoint.responseKind === "file" &&
+        endpoint.access?.mode === "public" &&
+        !hasComputedParams(endpoint) &&
+        !hasComputedHeaders(endpoint) &&
+        (endpoint.effects?.identityBindings?.length ?? 0) === 0
+    );
 }
 
 export async function buildForwardHeaders(
