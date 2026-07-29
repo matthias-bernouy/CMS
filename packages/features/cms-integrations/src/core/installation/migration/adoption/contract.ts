@@ -54,12 +54,9 @@ export function requiredTargetConnector(target: ResolvedIntegrationPackageRoot, 
     return connector;
 }
 
-export function assertAdoptionState(installation: IntegrationInstallation, connectorKey: string): void {
+export function assertAdoptionState(installation: IntegrationInstallation): void {
     if (installation.status !== "success" || installation.migrationOperation) {
         throw new IntegrationRuntimeError("legacy baseline adoption requires an idle successful installation", 409);
-    }
-    if (installation.connectorBindings?.[connectorKey]) {
-        throw new IntegrationRuntimeError(`connector "${connectorKey}" already has a persisted identity`, 409);
     }
 }
 

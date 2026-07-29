@@ -25,6 +25,22 @@ describe("migration target Source reconciliation", () => {
         });
     });
 
+    test("resolves the unique provider alias from a keyed connector during reconciliation", async () => {
+        const fixture = await migrationFixture();
+        const target = fakeMigrationTargetWithSource({
+            providerDirectOnly: true,
+            targetUrl: "{{connectors.supabase.functionsBaseUrl}}/setup",
+        });
+        const sources = new TrackingSourceRepository();
+        await seedSourceInstallation(fixture, sources);
+
+        await upgrade(fixture, target, sources);
+
+        expect((await sources.getSource("urn:commerce-api"))?.endpoints[0]?.targetUrl).toBe(
+            "https://target.example/functions/v1/setup",
+        );
+    });
+
     test("deletes a Source removed by the target definition", async () => {
         const fixture = await migrationFixture();
         const sources = new TrackingSourceRepository();

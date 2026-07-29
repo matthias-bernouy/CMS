@@ -17,6 +17,7 @@ import {
     requiredTargetConnector,
     requiredTargetVersion,
 } from "./contract";
+import { reattestLegacyConnectorBaseline } from "./reattestation";
 
 export { legacyBaselineAdoptionConfirmation } from "./contract";
 
@@ -59,7 +60,7 @@ export async function adoptLegacyConnectorBaseline(request: AdoptLegacyConnector
             `target does not declare an exact legacy baseline for ${request.installation.definitionVersion}@${sourceDigest}`,
         );
     }
-    assertAdoptionState(request.installation, request.connectorKey);
+    assertAdoptionState(request.installation);
     const expectedConfirmation = legacyBaselineAdoptionConfirmation({
         integrationId: request.installation.id,
         sourceVersion: request.installation.definitionVersion,
@@ -83,6 +84,21 @@ export async function adoptLegacyConnectorBaseline(request: AdoptLegacyConnector
     );
     const expectedBaselineDigest = (await identifyObservedSchemaContract(baseline.legacyAdoption.observedSchema))
         .digest;
+    const reattested = await reattestLegacyConnectorBaseline({
+        installations: request.installations,
+        installation: request.installation,
+        targetPackage: request.targetPackage,
+        connectorKey: request.connectorKey,
+        actor: request.actor,
+        adoptedAt: (request.clock ?? { now: () => new Date() }).now(),
+        connector,
+        connectorInstanceId,
+        migrationRevision: baseline.migrationRevision,
+        baselineDigest: expectedBaselineDigest,
+    });
+    if (reattested) {
+        return reattested;
+    }
     const attemptId = randomUUID();
     const adopted = await adopter.adopt({
         integrationKind: request.installation.id,

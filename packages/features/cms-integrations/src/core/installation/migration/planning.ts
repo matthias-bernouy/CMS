@@ -46,20 +46,21 @@ export function planConnectorTransitions(
             ) {
                 throw new IntegrationRuntimeError("Parsed migration-aware connector is missing its identity");
             }
-            const source = connector.migration.supportedSources.find((candidate) =>
-                integrationVersionSatisfies(sourceVersion, candidate.range),
-            );
-            if (!source) {
-                throw new IntegrationInputError(
-                    "version",
-                    `connector "${connector.connectorKey}" does not support migration from ${sourceVersion}`,
-                );
-            }
             const existing = installation.connectorBindings?.[connector.connectorKey];
             if (!existing) {
                 throw new IntegrationInputError(
                     "version",
                     `connector "${connector.connectorKey}" requires explicit legacy baseline adoption before migration`,
+                );
+            }
+            const unchangedRevision = hasUnchangedMigrationConnectorRevision(installation, connector);
+            const source = connector.migration.supportedSources.find((candidate) =>
+                integrationVersionSatisfies(sourceVersion, candidate.range),
+            );
+            if (!unchangedRevision && !source) {
+                throw new IntegrationInputError(
+                    "version",
+                    `connector "${connector.connectorKey}" does not support migration from ${sourceVersion}`,
                 );
             }
             assertMigrationBindingProvenance(
@@ -69,7 +70,7 @@ export function planConnectorTransitions(
                 connector.connectorKey,
                 connector.provider,
                 connector.lineageId,
-                source.migrationRevision,
+                source?.migrationRevision ?? existing.migrationRevision,
                 existing,
             );
             if (existing.provider !== connector.provider || existing.lineageId !== connector.lineageId) {
@@ -79,7 +80,7 @@ export function planConnectorTransitions(
                 );
             }
             const fromRevision = existing.migrationRevision;
-            if (fromRevision !== source.migrationRevision) {
+            if (!unchangedRevision && fromRevision !== source?.migrationRevision) {
                 throw new IntegrationInputError(
                     "version",
                     `connector "${connector.connectorKey}" source revision does not match its supported source declaration`,
@@ -107,6 +108,34 @@ export function planConnectorTransitions(
                 plan: connector.migration,
             };
         });
+}
+
+export function hasUnchangedMigrationConnectorRevision(
+    installation: IntegrationInstallation,
+    connector: NonNullable<IntegrationDefinition["connectors"]>[number],
+): boolean {
+    if (
+        !connector.migration ||
+        !connector.connectorKey ||
+        !connector.lineageId ||
+        connector.migrationRevision === undefined
+    ) {
+        return false;
+    }
+    const binding = installation.connectorBindings?.[connector.connectorKey];
+    const sourceConnector = installation.definitionSnapshot?.connectors?.find(
+        (candidate) => candidate.connectorKey === connector.connectorKey,
+    );
+    return Boolean(
+        binding &&
+            sourceConnector?.migration &&
+            binding.provider === connector.provider &&
+            binding.lineageId === connector.lineageId &&
+            binding.migrationRevision === connector.migrationRevision &&
+            sourceConnector.provider === binding.provider &&
+            sourceConnector.lineageId === binding.lineageId &&
+            sourceConnector.migrationRevision === binding.migrationRevision,
+    );
 }
 
 function assertMigrationBindingProvenance(

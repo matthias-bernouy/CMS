@@ -90,7 +90,7 @@ export async function deployConnectorDeployments(
         };
     }
 
-    return { results, outputs };
+    return { results, outputs: connectorOutputsWithProviderAliases(deployments, outputs) };
 }
 
 export async function previewConnectorOutputs(
@@ -100,9 +100,11 @@ export async function previewConnectorOutputs(
 ): Promise<Record<string, Record<string, string>>> {
     const deployers = connectorDeployersByProvider(deps.connectorDeployers);
     const outputs: Record<string, Record<string, string>> = {};
+    const identities: Array<{ provider: string; connectorKey: string }> = [];
     for (const connector of definition.connectors ?? []) {
         const provider = resolveTemplates(connector.provider, context);
         const connectorKey = resolveTemplates(connector.connectorKey ?? provider, context);
+        identities.push({ provider, connectorKey });
         const deployer = deployers.get(provider);
         if (!deployer) {
             throw new IntegrationRuntimeError(`connector deployer "${provider}" not configured`);
@@ -115,7 +117,26 @@ export async function previewConnectorOutputs(
             ...(await deployer.previewOutputs()),
         };
     }
-    return outputs;
+    return connectorOutputsWithProviderAliases(identities, outputs);
+}
+
+export function connectorOutputsWithProviderAliases(
+    connectors: ReadonlyArray<{ provider: string; connectorKey?: string }>,
+    outputs: Record<string, Record<string, string>>,
+): Record<string, Record<string, string>> {
+    const aliases = { ...outputs };
+    const providerCounts = new Map<string, number>();
+    for (const connector of connectors) {
+        providerCounts.set(connector.provider, (providerCounts.get(connector.provider) ?? 0) + 1);
+    }
+    for (const connector of connectors) {
+        const connectorKey = connector.connectorKey ?? connector.provider;
+        const value = outputs[connectorKey];
+        if (connectorKey !== connector.provider && providerCounts.get(connector.provider) === 1 && value) {
+            aliases[connector.provider] ??= value;
+        }
+    }
+    return aliases;
 }
 
 function connectorDeployersByProvider(

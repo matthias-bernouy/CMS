@@ -2,7 +2,7 @@ import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages
 import { secretKeyToRef } from "@bernouy/cms-secrets";
 import type { Source } from "@bernouy/cms-sources";
 import { IntegrationRuntimeError } from "../../../errors";
-import { previewConnectorOutputs } from "../../../import/connectorDeployments";
+import { connectorOutputsWithProviderAliases, previewConnectorOutputs } from "../../../import/connectorDeployments";
 import { resolveDependencyContext } from "../../../import/dependencies";
 import { buildSourceArtifacts } from "../../../import/declarative/builders/artifactBuilders";
 import type { IntegrationDefinition } from "../../../../interfaces/Integration";
@@ -28,7 +28,10 @@ export async function buildCmsSourceBindingTarget(
     }
     const secrets = integrationSecretRefs(context);
     const dependencies = await resolveDependencyContext(context.targetDefinition, deps.installations);
-    const existingOutputs = currentConnectorOutputs(context);
+    const existingOutputs = connectorOutputsWithProviderAliases(
+        context.targetDefinition.connectors ?? [],
+        currentConnectorOutputs(context),
+    );
     const previewed = await previewConnectorOutputs(deps, context.targetDefinition, {
         answers: context.installation.answersSnapshot,
         secrets,
@@ -63,7 +66,7 @@ export async function buildCmsSourceBindingSnapshot(
         answers: context.installation.answersSnapshot,
         secrets,
         dependencies,
-        connectors: connectorOutputs,
+        connectors: connectorOutputsWithProviderAliases(definition.connectors ?? [], connectorOutputs),
         secretInputs: new Set(context.installation.secretInputs),
     });
     if (sources.length !== 1) {

@@ -1,5 +1,6 @@
 import {
     integrationVersionReleaseLevel,
+    hasUnchangedMigrationConnectorRevision,
     IntegrationInputError,
     isIntegrationDefinitionVersionInstallable,
     type IntegrationDefinitionRepository,
@@ -18,7 +19,8 @@ type PreflightInput = Readonly<{
 }>;
 
 export async function preflightIntegrationUpgrade(input: PreflightInput): Promise<IntegrationUpgradeTarget> {
-    const releaseLevel = integrationVersionReleaseLevel(input.installation.definitionVersion, input.version.version);
+    const installation = preflightSourceInstallation(input.installation, input.version.version);
+    const releaseLevel = integrationVersionReleaseLevel(installation.definitionVersion, input.version.version);
     if (!isIntegrationDefinitionVersionInstallable(input.version)) {
         return {
             version: input.version.version,
@@ -54,16 +56,18 @@ export async function preflightIntegrationUpgrade(input: PreflightInput): Promis
     if (!releaseLevel) {
         reasons.push("The target is not newer than the installed version.");
     }
-    const migrations =
-        definition && release ? verifiedMigrations(input.installation, definition, release.migrations) : [];
+    const migrations = definition && release ? verifiedMigrations(installation, definition, release.migrations) : [];
     const migrationConnectors = definition?.connectors?.filter((connector) => connector.migration) ?? [];
-    const sourcePackageDigest = input.installation.packageDigest;
+    const requiredMigrationConnectors = migrationConnectors.filter(
+        (connector) => releaseLevel === "major" || !hasUnchangedMigrationConnectorRevision(installation, connector),
+    );
+    const sourcePackageDigest = installation.packageDigest;
     const lacksPackageProvenance = migrationConnectors.length > 0 && !sourcePackageDigest;
     const passedMigrations = sourcePackageDigest
         ? migrations.map((migration) => ({
               source: {
-                  kind: input.installation.id,
-                  version: input.installation.definitionVersion,
+                  kind: installation.id,
+                  version: installation.definitionVersion,
                   packageDigest: sourcePackageDigest,
               },
               connectorKey: migration.connectorKey,
@@ -76,7 +80,7 @@ export async function preflightIntegrationUpgrade(input: PreflightInput): Promis
         lacksPackageProvenance ||
         isIntegrationReleaseFreshInstallOnly({
             releaseLevel: releaseLevel ?? undefined,
-            requiredMigrations: migrationRequirements(input.installation, definition),
+            requiredMigrations: migrationRequirements(installation, definition, releaseLevel === "major"),
             migrations: passedMigrations,
         });
     if (releaseLevel === "major" && migrationConnectors.length === 0) {
@@ -84,7 +88,7 @@ export async function preflightIntegrationUpgrade(input: PreflightInput): Promis
             "A major release requires a tested source-to-target migration and is otherwise fresh-install-only.",
         );
     }
-    for (const connector of migrationConnectors) {
+    for (const connector of requiredMigrationConnectors) {
         if (!migrations.some((migration) => migration.connectorKey === connector.connectorKey)) {
             reasons.push(
                 `No passed migration proof covers connector "${connector.connectorKey}" from this installation.`,
@@ -100,6 +104,28 @@ export async function preflightIntegrationUpgrade(input: PreflightInput): Promis
         ...(release ? { packageDigest: release.packageDigest } : {}),
         reasons,
         migrations,
+    };
+}
+
+function preflightSourceInstallation(
+    installation: IntegrationInstallation,
+    targetVersion: string,
+): IntegrationInstallation {
+    const operation = installation.migrationOperation;
+    if (
+        !operation ||
+        operation.targetVersion !== targetVersion ||
+        operation.status === "completed" ||
+        operation.status === "aborted"
+    ) {
+        return installation;
+    }
+    return {
+        ...installation,
+        definitionVersion: operation.currentVersion,
+        definitionSnapshot: operation.sourceDefinition,
+        ...(operation.currentPackageDigest ? { packageDigest: operation.currentPackageDigest } : {}),
+        connectorBindings: operation.sourceState?.connectorBindings ?? installation.connectorBindings,
     };
 }
 

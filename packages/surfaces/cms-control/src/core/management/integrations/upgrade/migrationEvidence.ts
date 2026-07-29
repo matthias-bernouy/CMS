@@ -1,4 +1,5 @@
 import {
+    hasUnchangedMigrationConnectorRevision,
     integrationVersionSatisfies,
     type IntegrationDefinition,
     type IntegrationInstallation,
@@ -9,6 +10,7 @@ import type { IntegrationUpgradeMigrationEvidence, IntegrationUpgradeTarget } fr
 export function migrationRequirements(
     installation: IntegrationInstallation,
     definition: IntegrationDefinition | null,
+    requireUnchangedRevisions = false,
 ): RequiredMigrationEvidence[] {
     const packageDigest = installation.packageDigest;
     if (!packageDigest) {
@@ -16,6 +18,9 @@ export function migrationRequirements(
     }
     return (definition?.connectors ?? []).flatMap((connector) => {
         if (!connector.migration || !connector.connectorKey || !connector.lineageId) {
+            return [];
+        }
+        if (!requireUnchangedRevisions && hasUnchangedMigrationConnectorRevision(installation, connector)) {
             return [];
         }
         return [

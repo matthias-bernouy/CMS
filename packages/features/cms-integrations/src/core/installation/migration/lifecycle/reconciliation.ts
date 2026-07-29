@@ -2,6 +2,7 @@ import { secretKeyToRef } from "@bernouy/cms-secrets";
 import type { DependencyTemplateContext, TemplateContext } from "../../../definitions/templating/templates";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../../errors";
 import { resolveIntegrationInputs } from "../../../definitions/resolvedInputs";
+import { connectorOutputsWithProviderAliases } from "../../../import/connectorDeployments";
 import { resolveDependencyContext } from "../../../import/dependencies";
 import {
     executeDeclarativeArtifactWrites,
@@ -222,8 +223,11 @@ async function prepareTargetReconciliation(
             Object.entries(installation.secretRefs).map(([name, key]) => [name, secretKeyToRef(key)]),
         ),
         secretInputs: new Set(installation.secretInputs),
-        connectors: Object.fromEntries(
-            Object.entries(installation.connectorBindings ?? {}).map(([key, binding]) => [key, binding.outputs]),
+        connectors: connectorOutputsWithProviderAliases(
+            definition.connectors ?? [],
+            Object.fromEntries(
+                Object.entries(installation.connectorBindings ?? {}).map(([key, binding]) => [key, binding.outputs]),
+            ),
         ),
     };
     assertNoDeferredMigrationHooks(definition, dependencies);

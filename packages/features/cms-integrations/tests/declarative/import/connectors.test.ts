@@ -115,6 +115,31 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         expect(JSON.stringify(result)).not.toContain("mr_private");
     });
 
+    test("keeps the unique provider alias for an explicitly keyed connector", async () => {
+        const sources = new InMemorySourceRepository();
+        const definition = connectorBackedDefinition();
+        definition.connectors![0]!.connectorKey = "primary";
+        const deployer: IntegrationConnectorDeployer = {
+            provider: "supabase",
+            async deploy() {
+                return {
+                    provider: "supabase",
+                    outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
+                };
+            },
+        };
+
+        await importIntegration(
+            { sources, secrets: new InMemorySecretStore(), connectorDeployers: [deployer] },
+            { kind: "connector-source", answers: { id: "main" }, options: {} },
+            [definition],
+        );
+
+        expect((await sources.getSource("urn:main"))?.endpoints[0]?.targetUrl).toBe(
+            "https://project.supabase.co/functions/v1/cms-connector/health",
+        );
+    });
+
     test("rolls back generated secrets when a connector deployer is missing", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();

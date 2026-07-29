@@ -10,6 +10,7 @@ import {
 
 const SOURCE_DIGEST = "a".repeat(64);
 const TARGET_DIGEST = "b".repeat(64);
+const SECOND_TARGET_DIGEST = "c".repeat(64);
 const BASELINE: ObservedSchemaContractV1 = {
     schema: "cms.integration.observed-schema.v1",
     owner: { connectorKey: "primary", lineageId: "commerce-supabase-v1" },
@@ -65,6 +66,38 @@ describe("explicit legacy connector baseline adoption", () => {
         });
 
         expect(result.installation.updatedAt.getTime()).toBe(current.getTime() + 1);
+    });
+
+    test("reattests matching adopted provenance for another target without another external mutation", async () => {
+        const fixture = await adoptionFixture();
+        const first = await adoptLegacyConnectorBaseline({
+            ...fixture.request,
+            actor: "admin-42",
+            confirmation: confirmation(),
+        });
+        const target = targetDefinition(SOURCE_DIGEST, "1.2.0");
+        const second = await adoptLegacyConnectorBaseline({
+            ...fixture.request,
+            installation: first.installation,
+            targetPackage: {
+                root: "/tmp/commerce-1.2.0",
+                kind: "commerce",
+                version: "1.2.0",
+                digest: SECOND_TARGET_DIGEST,
+                definition: target,
+            },
+            actor: "admin-42",
+            confirmation: confirmation("1.2.0", SECOND_TARGET_DIGEST),
+        });
+
+        expect(fixture.contexts).toHaveLength(1);
+        expect(second.installation.connectorBaselineAdoptions).toHaveLength(2);
+        expect(second.audit).toMatchObject({
+            targetDefinitionVersion: "1.2.0",
+            targetPackageDigest: SECOND_TARGET_DIGEST,
+            externalOperationId: first.audit.externalOperationId,
+        });
+        expect(second.installation.connectorBindings?.primary).toEqual(first.installation.connectorBindings?.primary);
     });
 
     test("rejects stale or forged confirmation before any external mutation", async () => {
@@ -169,11 +202,11 @@ async function adoptionFixture(declaredSourceDigest = SOURCE_DIGEST) {
     };
 }
 
-function targetDefinition(declaredSourceDigest: string): IntegrationDefinition {
+function targetDefinition(declaredSourceDigest: string, version = "1.1.0"): IntegrationDefinition {
     return {
         kind: "commerce",
         label: "Commerce",
-        version: "1.1.0",
+        version,
         inputs: [],
         connectors: [
             {
@@ -204,13 +237,13 @@ function targetDefinition(declaredSourceDigest: string): IntegrationDefinition {
     };
 }
 
-function confirmation(): string {
+function confirmation(targetVersion = "1.1.0", targetPackageDigest = TARGET_DIGEST): string {
     return legacyBaselineAdoptionConfirmation({
         integrationId: "commerce",
         sourceVersion: "1.0.0",
         sourcePackageDigest: SOURCE_DIGEST,
-        targetVersion: "1.1.0",
-        targetPackageDigest: TARGET_DIGEST,
+        targetVersion,
+        targetPackageDigest,
         connectorKey: "primary",
     });
 }

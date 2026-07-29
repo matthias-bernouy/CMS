@@ -227,6 +227,7 @@ export {
     type DurableMigrationUpgradeRequest,
     type RetryAmbiguousMigrationReconciliationRequest,
 } from "../core/installation/migration/engine";
+export { hasUnchangedMigrationConnectorRevision } from "../core/installation/migration/planning";
 export {
     adoptLegacyConnectorBaseline,
     legacyBaselineAdoptionConfirmation,
