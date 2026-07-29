@@ -1,0 +1,126 @@
+[
+    {
+        "endpointId": "removePhoto",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/photos/remove",
+        "params": [
+            {
+                "name": "albumId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            },
+            {
+                "name": "photoId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "effects": {
+            "removesMedia": [
+                {
+                    "version": 1,
+                    "kind": "image",
+                    "targetEndpoint": "publicPhoto",
+                    "params": {
+                        "id": {
+                            "responsePath": "photoId"
+                        }
+                    }
+                }
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "removed": {
+                            "type": "boolean"
+                        },
+                        "photoId": {
+                            "type": "number"
+                        },
+                        "detachedAt": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "removed",
+                        "photoId"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "reorderPhotos",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/photos/reorder",
+        "params": [
+            {
+                "name": "albumId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "photoIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            },
+            "required": [
+                "photoIds"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "photoIds": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    "required": [
+                        "photoIds"
+                    ]
+                }
+            }
+        ]
+    }
+]

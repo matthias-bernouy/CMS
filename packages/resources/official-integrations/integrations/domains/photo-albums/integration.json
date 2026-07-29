@@ -17,6 +17,12 @@
             "path": "versions/1.1.0",
             "definition": "versions/1.1.0/definition.json",
             "status": "unverified"
+        },
+        {
+            "version": "1.2.0",
+            "path": "versions/1.2.0",
+            "definition": "versions/1.2.0/definition.json",
+            "status": "unverified"
         }
     ]
 }

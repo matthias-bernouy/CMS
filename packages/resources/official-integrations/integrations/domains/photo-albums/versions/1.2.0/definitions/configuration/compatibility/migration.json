@@ -1,0 +1,64 @@
+{
+    "install": {
+        "revision": 1,
+        "digest": "sha256:c7a9ed7ab0658119642e7fabab3758a16a51364639b29f1228189a5e2117eb77",
+        "coveredMigrations": [
+            {
+                "id": "add-photo-credit",
+                "checksum": "sha256:2a6a908885a39ba6ee60c3974b2fda1ba8723e79189cefc4db5f16d96b7c9f66",
+                "revision": 1,
+                "introducedIn": "1.1.0"
+            }
+        ]
+    },
+    "migrations": [
+        {
+            "id": "add-photo-credit",
+            "checksum": "sha256:2a6a908885a39ba6ee60c3974b2fda1ba8723e79189cefc4db5f16d96b7c9f66",
+            "fromRevision": 0,
+            "toRevision": 1,
+            "introducedIn": "1.1.0",
+            "transaction": "atomic",
+            "phase": "expand",
+            "path": "migrations/add-photo-credit.sql"
+        }
+    ],
+    "repeatables": [
+        {
+            "id": "function-privileges",
+            "checksum": "sha256:2c7534bd7a5b5bc0549e4489086d8952b67729c59cf2777a45602b341048d199",
+            "path": "repeatables/function-privileges.sql"
+        },
+        {
+            "id": "table-privileges",
+            "checksum": "sha256:96012605897e6704b8e46c38bb99a40f13df55ecd61247b5de1ab2e515b417ab",
+            "path": "repeatables/table-privileges.sql"
+        }
+    ],
+    "equivalence": {
+        "dataProjections": [
+            {
+                "kind": "database-clock-default",
+                "namespace": "photo_albums",
+                "relation": "settings",
+                "columns": ["created_at", "updated_at"]
+            }
+        ]
+    },
+    "supportedSources": [
+        {
+            "range": "1.0.0",
+            "migrationRevision": 0,
+            "legacyAdoption": {
+                "definitionVersion": "1.0.0",
+                "packageDigest": "61dd7b41ee3594a8bf8ed60d1adbdee993705787207d8cbef03383e6797b275f",
+                "installDigest": "sha256:d042ffb926742c1602fae4c74204f7eea7d1eed65e81fff61a27ea63aec06488",
+                "observedSchema": {
+                    "$include": "legacy-observed-schema.json"
+                },
+                "coveredMigrations": []
+            }
+        }
+    ],
+    "pointOfNoReturn": "before-contract"
+}

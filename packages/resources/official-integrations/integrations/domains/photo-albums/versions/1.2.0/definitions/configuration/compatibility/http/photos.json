@@ -1,0 +1,51 @@
+[
+    {
+        "route": "/photo",
+        "method": "GET",
+        "requiredInputs": ["id"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/photo/metadata",
+        "method": "GET",
+        "requiredInputs": ["id"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/photo/metadata",
+        "method": "POST",
+        "requiredInputs": ["albumId", "id", "version"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/photos/remove",
+        "method": "POST",
+        "requiredInputs": ["albumId", "photoId"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/photos/reorder",
+        "method": "POST",
+        "requiredInputs": ["albumId", "photoIds"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/photos/replace",
+        "method": "POST",
+        "requiredInputs": ["albumId", "photoId"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/photos/upload",
+        "method": "POST",
+        "requiredInputs": ["albumId"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    }
+]

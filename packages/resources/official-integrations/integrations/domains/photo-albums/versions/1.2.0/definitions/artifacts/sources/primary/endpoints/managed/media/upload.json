@@ -1,0 +1,73 @@
+[
+    {
+        "endpointId": "uploadPhoto",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/photos/upload",
+        "params": [
+            {
+                "name": "albumId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            },
+            {
+                "name": "alt",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "caption",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "takenAt",
+                "in": "query",
+                "type": "string"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "effects": {
+            "producesMedia": [
+                {
+                    "version": 1,
+                    "kind": "image",
+                    "targetEndpoint": "publicPhoto",
+                    "params": {
+                        "id": {
+                            "responsePath": "id"
+                        }
+                    },
+                    "revision": {
+                        "responsePath": "version"
+                    },
+                    "width": {
+                        "responsePath": "width"
+                    },
+                    "height": {
+                        "responsePath": "height"
+                    },
+                    "preset": "source-responsive-webp-v1"
+                }
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../../schemas/photo.json"
+                }
+            }
+        ]
+    }
+]

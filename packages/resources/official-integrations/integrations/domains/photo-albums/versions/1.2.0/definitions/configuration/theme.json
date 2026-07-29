@@ -1,0 +1,43 @@
+{
+    "categories": [
+        {
+            "id": "album-cards",
+            "label": "Album cards",
+            "description": "Colors and shape shared by the public album catalogue.",
+            "tokens": [
+                {
+                    "id": "card-background",
+                    "label": "Card background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--bg-surface)"
+                    }
+                },
+                {
+                    "id": "card-border",
+                    "label": "Card border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--border-subtle, var(--border-default))"
+                    }
+                },
+                {
+                    "id": "card-text",
+                    "label": "Card text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-main)"
+                    }
+                },
+                {
+                    "id": "card-muted-text",
+                    "label": "Muted card text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-muted)"
+                    }
+                }
+            ]
+        }
+    ]
+}

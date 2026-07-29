@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "photo-album-gallery",
+        "name": "Photo album gallery",
+        "group": "Photo Albums",
+        "description": "Public album detail and responsive photo gallery.",
+        "path": "blocs/photo-album-gallery"
+    }
+}

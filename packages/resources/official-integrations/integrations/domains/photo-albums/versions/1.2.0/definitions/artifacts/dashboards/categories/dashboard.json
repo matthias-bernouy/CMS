@@ -1,0 +1,11 @@
+{
+    "id": "{{answers.id}}-categories",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Album categories",
+        "icon": "folder"
+    },
+    "views": {
+        "$include": "views.json"
+    }
+}

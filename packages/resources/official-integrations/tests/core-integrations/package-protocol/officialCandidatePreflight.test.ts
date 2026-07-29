@@ -10,6 +10,7 @@ const EXPECTED_POST_BOOTSTRAP_RELEASES = [
     "consent@1.0.0",
     "documentation-blocs@1.0.0",
     "photo-albums@1.1.0",
+    "photo-albums@1.2.0",
     "workspace-blocs@1.0.0",
 ];
 
