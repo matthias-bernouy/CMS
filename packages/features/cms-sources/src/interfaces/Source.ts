@@ -21,6 +21,47 @@ export type SourceEndpointAccess = {
     mode: SourceEndpointAccessMode;
 };
 
+export const SOURCE_MEDIA_EFFECT_VERSION = 1 as const;
+
+export type SourceMediaResponseBinding = {
+    responsePath: string;
+};
+
+export type SourceMediaRequestBinding = {
+    requestParam: string;
+};
+
+export type SourceProducedMediaEffect = {
+    version: typeof SOURCE_MEDIA_EFFECT_VERSION;
+    kind: "image";
+    targetEndpoint: string;
+    /** When present, every array item at this path produces one media asset. */
+    itemsPath?: string;
+    params: Record<string, SourceMediaResponseBinding>;
+    revision?: SourceMediaResponseBinding;
+    width?: SourceMediaResponseBinding;
+    height?: SourceMediaResponseBinding;
+    preset?: string;
+};
+
+export type SourceRemovedMediaEffect = {
+    version: typeof SOURCE_MEDIA_EFFECT_VERSION;
+    kind: "image";
+    targetEndpoint: string;
+    /** When present, every array item at this path removes one media asset. */
+    itemsPath?: string;
+    params: Record<string, SourceMediaResponseBinding | SourceMediaRequestBinding>;
+};
+
+export type SourceMediaInventoryEffect = SourceProducedMediaEffect & {
+    /** Inventory pages expose a bounded array while treating pagination cursors as opaque strings. */
+    itemsPath: string;
+    cursor?: {
+        responsePath: string;
+        requestParam: string;
+    };
+};
+
 /** Effects declared by an endpoint after a successful response.
  *
  * `invalidatesSchema` means that CMS-derived definitions (sources, overlays and
@@ -32,6 +73,9 @@ export type SourceEndpointEffects = {
         kind: "user";
         responsePath: string;
     }>;
+    producesMedia?: SourceProducedMediaEffect[];
+    removesMedia?: SourceRemovedMediaEffect[];
+    mediaInventory?: SourceMediaInventoryEffect;
 };
 
 /** Where a request header's value comes from.

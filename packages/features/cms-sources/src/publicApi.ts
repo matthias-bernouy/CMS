@@ -14,6 +14,11 @@ export type {
     SourceEndpointAccess,
     SourceEndpointAccessMode,
     SourceEndpointEffects,
+    SourceMediaRequestBinding,
+    SourceMediaResponseBinding,
+    SourceMediaInventoryEffect,
+    SourceProducedMediaEffect,
+    SourceRemovedMediaEffect,
 } from "./interfaces/Source";
 export {
     COMPUTED_PARAM_REFS,
@@ -23,6 +28,7 @@ export {
     PARAM_INS,
     RESPONSE_KINDS,
     SOURCE_ENDPOINT_ACCESS_MODES,
+    SOURCE_MEDIA_EFFECT_VERSION,
 } from "./interfaces/Source";
 export {
     SOURCE_TIMING_STAGES,

@@ -2,6 +2,7 @@ import type { Source } from "cms-sources/interfaces/Source";
 import { isEndpointUrn, isSourceUrn, sourceUrnOf } from "cms-sources/core/system/urn";
 import { isSystemSourceUrn } from "cms-sources/core/system/systemSources";
 import { isValidResponseStatus, validateEndpoint } from "./sourceEndpointValidation";
+import { validateSourceMediaEffects } from "./sourceMediaEffectValidation";
 export {
     isAllowedSourceTargetUrl,
     validateSourceTargetUrl,
@@ -42,6 +43,7 @@ export function validateSource(source: Source): string[] {
         validateEndpointIdentity(endpoint, source.urn, seen, errors);
         validateEndpoint(endpoint, errors);
     }
+    validateSourceMediaEffects(source, errors);
 
     return errors;
 }

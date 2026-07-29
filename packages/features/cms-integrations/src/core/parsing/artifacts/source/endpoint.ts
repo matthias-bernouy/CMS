@@ -2,6 +2,7 @@ import { MAX_SOURCE_ENDPOINT_TIMEOUT_MS, type SourceEndpointDto } from "@bernouy
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
 import { isJsonValue, isRecord, text } from "../../definition/values";
 import { parseAccessTemplate } from "../common";
+import { parseEndpointEffects } from "./endpointEffects";
 import { parseHeaderTemplates, parseParamTemplate } from "./inputs";
 
 export function parseEndpointTemplate(value: unknown, name: string): SourceEndpointDto {
@@ -50,45 +51,6 @@ function parseTimeoutMs(value: unknown, name: string): number | undefined {
         throw new IntegrationInputError(name, `must be an integer between 1 and ${MAX_SOURCE_ENDPOINT_TIMEOUT_MS}`);
     }
     return value as number;
-}
-
-function parseEndpointEffects(value: unknown, name: string): NonNullable<SourceEndpointDto["effects"]> {
-    if (!isRecord(value)) {
-        throw new IntegrationInputError(name, "must be an object");
-    }
-    if (value.invalidatesSchema !== undefined && value.invalidatesSchema !== true) {
-        throw new IntegrationInputError(`${name}.invalidatesSchema`, "must be true");
-    }
-    const identityBindings =
-        value.identityBindings === undefined
-            ? undefined
-            : parseIdentityBindings(value.identityBindings, `${name}.identityBindings`);
-    return {
-        ...(value.invalidatesSchema === true ? { invalidatesSchema: true } : {}),
-        ...(identityBindings?.length ? { identityBindings } : {}),
-    };
-}
-
-function parseIdentityBindings(
-    value: unknown,
-    name: string,
-): NonNullable<NonNullable<SourceEndpointDto["effects"]>["identityBindings"]> {
-    if (!Array.isArray(value)) {
-        throw new IntegrationInputError(name, "must be an array");
-    }
-    return value.map((entry, index) => {
-        if (!isRecord(entry)) {
-            throw new IntegrationInputError(`${name}.${index}`, "must be an object");
-        }
-        if (entry.kind !== "user") {
-            throw new IntegrationInputError(`${name}.${index}.kind`, "must be user");
-        }
-        const responsePath = text(entry.responsePath);
-        if (!responsePath) {
-            throw new MissingIntegrationParam(`${name}.${index}.responsePath`);
-        }
-        return { kind: "user" as const, responsePath };
-    });
 }
 
 function parseResponseKind(value: unknown, name: string): SourceEndpointDto["responseKind"] | undefined {

@@ -53,6 +53,13 @@ export {
     type DataShapePathOptions,
 } from "../core/validation/parseDataShape";
 export {
+    resolveSourceMediaEffects,
+    resolveSourceMediaInventoryPage,
+    type ResolvedSourceMediaInventoryPage,
+    type ResolvedSourceMediaEffect,
+    type SourceMediaIdentityValue,
+} from "../core/validation/sourceMediaEffectBindings";
+export {
     DataShapeProjectionError,
     projectStrictDataShape,
     type StrictDataShapeProjectionOptions,
