@@ -55,10 +55,11 @@ that changes when history is appended.
 ## Public Catalog UI
 
 This surface does not render public pages. The `/integrations` UI belongs to the
-regular CMS site in `@bernouy/cms-official-sites`, where pages and Blocs bind to
-the anonymous same-origin catalog API. Dynamic selection remains query-based in
-the UI; `kind` and `version` select the richer API projections. Deploying the
-site resource is therefore required: there is no programmatic Delivery fallback.
+regular CMS site in `packages/resources/sites/cms-repository-hub`, where pages
+and Blocs bind to the anonymous same-origin catalog API. Dynamic selection
+remains query-based in the UI; `kind` and `version` select the richer API
+projections. Deploying the site resource is therefore required: there is no
+programmatic Delivery fallback.
 
 `@bernouy/cms-repository/catalog` exports a typed editor data-source descriptor
 for the catalog route. The designated hub CMS injects that descriptor into its

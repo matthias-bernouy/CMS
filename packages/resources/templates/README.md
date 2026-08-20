@@ -24,4 +24,4 @@ p9r push --yes
 ```
 
 Deployment credentials, connector configuration, final domains, and production
-content are intentionally not stored in this package.
+content are intentionally not stored in this collection.

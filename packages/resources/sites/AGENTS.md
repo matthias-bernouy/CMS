@@ -1,4 +1,4 @@
-# @bernouy/cms-official-sites
+# CmsCore Official Sites
 
 Versioned, declarative site resources maintained by CmsCore.
 

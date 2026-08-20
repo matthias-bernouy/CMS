@@ -22,14 +22,12 @@
         "@bernouy/cms-integration-verifier": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-official-integrations": "workspace:*",
-        "@bernouy/cms-official-sites": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/cms-repository-server": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-site-templates": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
@@ -56,7 +54,6 @@
         "tldts": "^7.4.9",
       },
       "peerDependencies": {
-        "mongodb": "^7.2.0",
         "typescript": "^5.9.3",
       },
     },
@@ -275,6 +272,7 @@
         "sharp": "^0.34.5",
       },
       "peerDependencies": {
+        "mongodb": "^7.2.0",
         "typescript": "^5.9.3",
       },
     },
@@ -349,22 +347,6 @@
       },
       "devDependencies": {
         "@types/semver": "^7.7.1",
-      },
-    },
-    "packages/resources/sites": {
-      "name": "@bernouy/cms-official-sites",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-official-integrations": "workspace:*",
-      },
-    },
-    "packages/resources/templates": {
-      "name": "@bernouy/cms-site-templates",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-official-integrations": "workspace:*",
       },
     },
     "packages/runtimes/cms-cli": {
@@ -614,8 +596,6 @@
 
     "@bernouy/cms-official-integrations": ["@bernouy/cms-official-integrations@workspace:packages/resources/official-integrations"],
 
-    "@bernouy/cms-official-sites": ["@bernouy/cms-official-sites@workspace:packages/resources/sites"],
-
     "@bernouy/cms-permissions": ["@bernouy/cms-permissions@workspace:packages/features/cms-permissions"],
 
     "@bernouy/cms-relations": ["@bernouy/cms-relations@workspace:packages/features/cms-relations"],
@@ -629,8 +609,6 @@
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 
     "@bernouy/cms-server": ["@bernouy/cms-server@workspace:packages/runtimes/cms-server"],
-
-    "@bernouy/cms-site-templates": ["@bernouy/cms-site-templates@workspace:packages/resources/templates"],
 
     "@bernouy/cms-source-images": ["@bernouy/cms-source-images@workspace:packages/features/cms-source-images"],
 

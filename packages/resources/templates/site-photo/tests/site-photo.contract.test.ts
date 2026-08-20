@@ -3,8 +3,9 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { hardenStoredHtml } from "@bernouy/cms-content";
 import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
-import { SITE_PHOTO_TEMPLATE_ROOT, SITE_PHOTO_TEMPLATE_SITE_ROOT } from "../../index";
 
+const SITE_PHOTO_TEMPLATE_ROOT = join(import.meta.dir, "..");
+const SITE_PHOTO_TEMPLATE_SITE_ROOT = join(SITE_PHOTO_TEMPLATE_ROOT, "site");
 const readSiteFile = (path: string): string => readFileSync(join(SITE_PHOTO_TEMPLATE_SITE_ROOT, path), "utf8");
 const pageNames = readdirSync(join(SITE_PHOTO_TEMPLATE_SITE_ROOT, "pages"), { recursive: true })
     .filter((name) => name.endsWith(".html"))

@@ -34,15 +34,17 @@ Foundation packages:
 - `@bernouy/components`: public custom elements (`<p9r-*>`, `<w13c-*>`) and
   the CMS data-binding runtime.
 
-Resource packages:
+Resources:
 
 - `@bernouy/cms-official-integrations`: local repository of official,
   versioned CMS integration resources. It stores manifests, source contracts,
   connector assets, and deployment blueprints without executing installs. It may
   depend on feature contracts to express typed integration definitions.
-- `@bernouy/cms-official-sites`: pushable CMS-authored sites built from pages,
+- `packages/resources/sites`: pushable CMS-authored P9R sites built from pages,
   themes, bindings, and existing integration Blocs. It includes the public
-  repository hub without mounting routes or selecting runtime adapters.
+  repository hub without forming a workspace package.
+- `packages/resources/templates`: reusable P9R project templates that can be
+  copied and configured independently. The collection is not a workspace package.
 
 Feature packages:
 

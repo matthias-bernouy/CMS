@@ -41,7 +41,8 @@ CmsCore/
 |   |   `-- cms-editor-system-v2/ @bernouy/cms-editor-system-v2
 |   |-- resources/
 |   |   |-- official-integrations/ @bernouy/cms-official-integrations
-|   |   `-- sites/                 @bernouy/cms-official-sites
+|   |   |-- sites/                 Pushable P9R sites
+|   |   `-- templates/             Reusable P9R site templates
 |   |-- surfaces/
 |   |   |-- cms-control/       @bernouy/cms-control
 |   |   |-- cms-repository/    @bernouy/cms-repository

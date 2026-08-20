@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { SITE_PHOTO_TEMPLATE_ROOT, SITE_PHOTO_TEMPLATE_SITE_ROOT } from "../../index";
 
+const SITE_PHOTO_TEMPLATE_ROOT = join(import.meta.dir, "..");
+const SITE_PHOTO_TEMPLATE_SITE_ROOT = join(SITE_PHOTO_TEMPLATE_ROOT, "site");
 const readSiteFile = (path: string): string => readFileSync(join(SITE_PHOTO_TEMPLATE_SITE_ROOT, path), "utf8");
 
 describe("site-photo template portability", () => {
