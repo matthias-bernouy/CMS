@@ -18,6 +18,17 @@ export function sourceEndpointAccessMode(endpoint: Pick<SourceEndpoint, "access"
     return endpoint.access?.mode ?? DEFAULT_SOURCE_ENDPOINT_ACCESS_MODE;
 }
 
+export function isPublicSourceImageEndpoint(endpoint: SourceEndpoint): boolean {
+    const mediaType = endpoint.mediaType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+    return (
+        endpoint.method === "GET" &&
+        endpoint.responseKind === "file" &&
+        (mediaType === "image/*" || mediaType.startsWith("image/")) &&
+        sourceEndpointAccessMode(endpoint) === "public" &&
+        !(endpoint.input?.params ?? []).some((param) => param.source?.from === "computed")
+    );
+}
+
 export function sourceEndpointAccessAllows(
     endpointMode: SourceEndpointAccessMode,
     callerMode: SourceEndpointAccessMode,

@@ -6,7 +6,7 @@ import type {
     SourceProducedMediaEffect,
     SourceRemovedMediaEffect,
 } from "cms-sources/interfaces/Source";
-import { sourceEndpointAccessMode } from "../execution/access";
+import { isPublicSourceImageEndpoint } from "../execution/access";
 import { dataShapeAtPath } from "./parseDataShape";
 
 type MediaEffect = SourceProducedMediaEffect | SourceRemovedMediaEffect;
@@ -66,7 +66,7 @@ function validateEffect(
         errors.push(`${prefix}: unknown target endpoint "${effect.targetEndpoint}"`);
         return;
     }
-    if (!isPublicImageEndpoint(target)) {
+    if (!isPublicSourceImageEndpoint(target)) {
         errors.push(`${prefix}: target "${effect.targetEndpoint}" must be a public GET file/image endpoint`);
     }
     const targetParams = new Map((target.input?.params ?? []).map((param) => [param.name, param]));
@@ -116,17 +116,6 @@ function validateRequestBinding(
     if (!param || param.source?.from === "computed" || param.schema.type !== expected) {
         errors.push(`${label}: requestParam "${requestParam}" is not a declared request ${expected} value`);
     }
-}
-
-function isPublicImageEndpoint(endpoint: SourceEndpoint): boolean {
-    const mediaType = endpoint.mediaType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
-    return (
-        endpoint.method === "GET" &&
-        endpoint.responseKind === "file" &&
-        (mediaType === "image/*" || mediaType.startsWith("image/")) &&
-        sourceEndpointAccessMode(endpoint) === "public" &&
-        !(endpoint.input?.params ?? []).some((param) => param.source?.from === "computed")
-    );
 }
 
 function validateResponseBinding(

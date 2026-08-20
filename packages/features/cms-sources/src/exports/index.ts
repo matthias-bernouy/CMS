@@ -42,6 +42,7 @@ export {
 } from "../core/model/errors";
 export {
     DEFAULT_SOURCE_ENDPOINT_ACCESS_MODE,
+    isPublicSourceImageEndpoint,
     isSourceEndpointAccessMode,
     sourceEndpointAccessAllows,
     sourceEndpointAccessMode,
