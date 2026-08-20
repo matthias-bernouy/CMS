@@ -89,4 +89,8 @@ export { injectMediaVersions } from "cms-files/core/media/injectMediaVersions";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { serveVariantRequest, type VariantServeDeps } from "cms-files/http/serveVariant";
-export { serveFilesRequest, type FilesServeDeps } from "cms-files/http/serveFilesRequest";
+export {
+    isInlineSafeFileType,
+    serveFilesRequest,
+    type FilesServeDeps,
+} from "cms-files/http/serveFilesRequest";

@@ -13,6 +13,7 @@ describe("Delivery public page provider sitemap", () => {
                 "/shared",
                 "/.cms/internal",
                 "/robots.txt",
+                "/favicon.ico",
             ],
         };
         const mounted = mountPublicPages({
@@ -34,6 +35,7 @@ describe("Delivery public page provider sitemap", () => {
         expect(xml.match(/<loc>https:\/\/example\.test\/shared<\/loc>/g)).toHaveLength(1);
         expect(xml).not.toContain("/.cms/");
         expect(xml).not.toContain("/robots.txt</loc>");
+        expect(xml).not.toContain("/favicon.ico</loc>");
     });
 
     test("fails explicitly for invalid or excessive provider output", async () => {

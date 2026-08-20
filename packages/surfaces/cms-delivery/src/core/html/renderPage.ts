@@ -96,7 +96,7 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     buildAssetPreloads(document, head, assets, { includeBindingCore: hasBindingCore });
     buildBindingCloak(document, head, hasBindingCore);
     buildFoucShell(document, head, usedTags);
-    defineMetaTags(document, head, page, settings, ctx.defaultFaviconUrl);
+    defineMetaTags(document, head, page, settings, ctx.faviconUrl);
     buildStylesheetLink(document, head, assets);
     buildScriptTags(document, head, assets);
 

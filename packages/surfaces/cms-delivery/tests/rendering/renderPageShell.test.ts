@@ -37,7 +37,7 @@ function makeCtx(legacyEditor?: Record<string, unknown>): RenderContext {
             blocUrls: [],
             scriptUrls: ["/.cms/assets/component.js?v=c"],
         }),
-        defaultFaviconUrl: "/.cms/assets/favicon",
+        faviconUrl: "/favicon.ico",
         headInjectors: [],
     };
 }

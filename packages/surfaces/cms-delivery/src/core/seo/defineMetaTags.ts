@@ -10,7 +10,7 @@ export function defineMetaTags(
     head: HTMLElement,
     page: TPage,
     settings: TSystem,
-    defaultFaviconUrl: string,
+    faviconUrl: string,
 ): void {
     const title = document.createElement("title");
     title.textContent = page.title;
@@ -23,7 +23,7 @@ export function defineMetaTags(
 
     const favicon = document.createElement("link");
     favicon.setAttribute("rel", "icon");
-    favicon.setAttribute("href", settings.site?.favicon?.trim() || defaultFaviconUrl);
+    favicon.setAttribute("href", faviconUrl);
     head.appendChild(favicon);
 
     // Canonical link when a host is configured. Trailing slash of the host

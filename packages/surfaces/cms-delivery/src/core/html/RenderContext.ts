@@ -17,10 +17,8 @@ import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
 export type RenderContext = {
     repository: ContentReader;
     resolveAssets: (usedTags: string[]) => Promise<AssetsManifest>;
-    /** URL emitted as `<link rel="icon">` when `site.favicon` is empty.
-     *  Runtime: `<cmsPathPrefix>/assets/favicon`. Build: CDN URL of the
-     *  uploaded default SVG. */
-    defaultFaviconUrl: string;
+    /** Public stable URL emitted as `<link rel="icon">`. */
+    faviconUrl: string;
     headInjectors: readonly HeadInjector[];
     /** Installed integration installations. Used only to include integration-owned
      *  CSP origins in rendered public pages. */

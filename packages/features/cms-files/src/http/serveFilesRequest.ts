@@ -26,6 +26,8 @@ const INLINE_SAFE_TYPES = new Set([
     "image/webp",
     "image/avif",
     "image/bmp",
+    "image/x-icon",
+    "image/vnd.microsoft.icon",
     "video/mp4",
     "video/webm",
     "video/ogg",
@@ -34,6 +36,10 @@ const INLINE_SAFE_TYPES = new Set([
     "audio/wav",
     "application/pdf",
 ]);
+
+export function isInlineSafeFileType(mimeType: string): boolean {
+    return INLINE_SAFE_TYPES.has(mimeType);
+}
 
 export type FilesServeDeps = {
     metadata: CmsFilesMetadataRepository;
@@ -115,7 +121,7 @@ export async function serveFilesRequest(
 /** Build the byte response: inline allow-list gating + the security headers,
  *  with the caller's cache policy. Shared by the id and path routes. */
 function fileResponse(item: FileItem, stream: ReadableStream<Uint8Array>, cacheControl: string): Response {
-    const inlineSafe = INLINE_SAFE_TYPES.has(item.mimeType);
+    const inlineSafe = isInlineSafeFileType(item.mimeType);
     return new Response(stream, {
         headers: {
             "Content-Type": inlineSafe ? item.mimeType : "application/octet-stream",

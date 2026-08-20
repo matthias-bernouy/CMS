@@ -1,6 +1,8 @@
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 
+export const FAVICON_ROUTE = "/favicon.ico";
+
 /**
  * Inline SVG used as the default favicon when `site.favicon` is empty.
  * Lives in `core/` (not `endpoints/`) so both the runtime endpoint and

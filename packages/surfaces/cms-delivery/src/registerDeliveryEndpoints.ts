@@ -44,6 +44,7 @@ import {
     analyticsSelfAssessment,
 } from "cms-delivery/core/analytics/privacyAnalyticsEndpoints";
 import { getDeliveryIntegrationThemeContributions } from "cms-delivery/core/assets/resolveAssets";
+import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -102,6 +103,8 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
 
     runner.addEndpoint("GET", "/robots.txt", (req) => RobotsServer(req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
+    runner.addEndpoint("GET", FAVICON_ROUTE, (req) => FaviconServer(req, delivery));
+    runner.addEndpoint("HEAD", FAVICON_ROUTE, (req) => FaviconServer(req, delivery));
 
     // Shared `.cms/*` handlers — Control mounts the same three, admin-guarded.
     // `generateStyleEntry` is the same producer `resolveAssets` uses for the

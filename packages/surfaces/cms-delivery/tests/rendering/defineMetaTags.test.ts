@@ -6,28 +6,28 @@ import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
 const page = { title: "Home", description: "d", path: "/" } as TPage;
 const settings = (favicon?: string) => ({ site: { favicon } }) as TSystem;
 
-function faviconHref(rawFavicon: string | undefined, fallback = "/default.ico"): string {
+function faviconHref(rawFavicon: string | undefined, stableUrl = "/favicon.ico"): string {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     defineMetaTags(
         document as unknown as Document,
         document.head as unknown as HTMLElement,
         page,
         settings(rawFavicon),
-        fallback,
+        stableUrl,
     );
     return document.querySelector('link[rel="icon"]')!.getAttribute("href")!;
 }
 
 describe("defineMetaTags favicon", () => {
-    test("emits an opaque by-id favicon URL unchanged (no resize rewrite)", () => {
-        expect(faviconHref("/.cms/files/by-id/01h-abc")).toBe("/.cms/files/by-id/01h-abc");
+    test("hides the configured file id behind the stable public URL", () => {
+        expect(faviconHref("/.cms/files/by-id/01h-abc")).toBe("/favicon.ico");
     });
 
-    test("keeps a plain `/media?...` favicon URL unchanged", () => {
-        expect(faviconHref("/x/media?foo=1")).toBe("/x/media?foo=1");
+    test("does not expose a legacy favicon URL in rendered metadata", () => {
+        expect(faviconHref("/x/media?foo=1")).toBe("/favicon.ico");
     });
 
-    test("falls back to the default when no favicon is set", () => {
-        expect(faviconHref(undefined)).toBe("/default.ico");
+    test("uses the same stable URL when no favicon is set", () => {
+        expect(faviconHref(undefined)).toBe("/favicon.ico");
     });
 });
