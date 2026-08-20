@@ -44,7 +44,7 @@ export function shipmentPayload(body: JsonRecord, settings: DeliverySettings | n
     const payload: ShipmentPayload = {
         id: crypto.randomUUID(),
         externalOrderId: stringValue(body.externalOrderId ?? body.external_order_id),
-        customerId: stringValue(body.customerId ?? body.customer_id),
+        customerReference: defaults.customerReference,
         modeCollection: (
             stringValue(body.modeCollection ?? body.mode_collection) || defaults.modeCollection
         ).toUpperCase(),

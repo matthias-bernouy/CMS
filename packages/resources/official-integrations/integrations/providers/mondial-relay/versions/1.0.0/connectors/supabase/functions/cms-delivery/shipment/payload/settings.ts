@@ -5,8 +5,9 @@ export function fallbackSettings(): DeliverySettings {
     const senderPhone = envDefault("MONDIAL_RELAY_SENDER_PHONE", "");
     return {
         id: "default",
-        modeCollection: envDefault("MONDIAL_RELAY_DEFAULT_MODE_COL", "CCC"),
+        modeCollection: envDefault("MONDIAL_RELAY_DEFAULT_MODE_COL", "REL"),
         modeDelivery: envDefault("MONDIAL_RELAY_DEFAULT_MODE_LIV", "24R"),
+        customerReference: envDefault("MONDIAL_RELAY_CUSTOMER_REFERENCE", "COURTSIDE").toUpperCase(),
         sender: {
             name: envDefault("MONDIAL_RELAY_SENDER_NAME", ""),
             firstName: envDefault("MONDIAL_RELAY_SENDER_FIRSTNAME", ""),

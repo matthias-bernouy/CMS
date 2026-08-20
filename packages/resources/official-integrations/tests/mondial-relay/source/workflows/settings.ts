@@ -14,8 +14,9 @@ export function registerSettingsTests(): void {
     test("updates delivery settings through the installed CMS source", async () => {
         const harness = await createHarness();
         const response = await setSettings(harness, {
-            modeCollection: "CCC",
+            modeCollection: "REL",
             modeDelivery: "24R",
+            customerReference: "shop42",
             senderName: "Updated Shop",
             senderAddressLine1: "2 Rue Test",
             senderPostalCode: "69001",
@@ -46,6 +47,8 @@ export function registerSettingsTests(): void {
         expect(response.status).toBe(200);
         expect(body).toMatchObject({
             id: "default",
+            modeCollection: "REL",
+            customerReference: "SHOP42",
             senderName: "Updated Shop",
             senderPhone: "+33608138404",
             defaultWeightGrams: 750,
@@ -67,13 +70,21 @@ export function registerSettingsTests(): void {
         };
         (harness.deliveryQuotes[0]!.recipient_snapshot as JsonRecord).phone = "+33608138404";
 
-        const shipmentBody = { ...validShipmentBody(), recipientPhone: "+330608138404", content: undefined };
+        const shipmentBody = {
+            ...validShipmentBody(),
+            modeCollection: undefined,
+            recipientPhone: "+330608138404",
+            content: undefined,
+        };
         const shipmentResponse = await createShipment(harness, shipmentBody);
         expect(shipmentResponse.status).toBe(201);
         expect(harness.connectRequestXml()).toContain("<Firstname>Updated</Firstname>");
+        expect(harness.connectRequestXml()).toContain('<CollectionMode Mode="REL" Location="" />');
+        expect(harness.connectRequestXml()).toContain("<CustomerNo>SHOP42</CustomerNo>");
         expect(harness.connectRequestXml()).toContain("<Lastname>Shop</Lastname>");
         expect(harness.connectRequestXml()).toContain("<PhoneNo>+33608138404</PhoneNo>");
         expect(harness.insertedShipments.at(-1)).toMatchObject({
+            mode_collection: "REL",
             sender_name: "Updated Shop",
             sender_phone: "+33608138404",
             recipient_phone: "+33608138404",
@@ -93,5 +104,14 @@ export function registerSettingsTests(): void {
 
         expect(shipmentResponse.status).toBe(400);
         expect(shipmentBody.error).toBe("recipient.phone must use E.164 international format");
+    });
+
+    test("rejects an invalid customer reference through the installed CMS source", async () => {
+        const harness = await createHarness();
+        const response = await setSettings(harness, { customerReference: "COURTSIDE-TOO-LONG" });
+        const body = await jsonBody(response);
+
+        expect(response.status).toBe(400);
+        expect(body.error).toBe("customerReference must contain 1 to 9 letters or digits");
     });
 }

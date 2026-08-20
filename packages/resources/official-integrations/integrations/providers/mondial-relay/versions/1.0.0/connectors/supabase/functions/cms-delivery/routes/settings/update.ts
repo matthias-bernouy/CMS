@@ -5,11 +5,12 @@ import type { JsonRecord } from "../../shipment/types.ts";
 export function settingsRowFromBody(body: JsonRecord): JsonRecord {
     const row: JsonRecord = {};
     setText(row, body, "modeCollection", "mode_collection", (value) =>
-        requireOneOf(value.toUpperCase(), ["CCC"], "modeCollection"),
+        requireOneOf(value.toUpperCase(), ["REL", "CCC"], "modeCollection"),
     );
     setText(row, body, "modeDelivery", "mode_delivery", (value) =>
         requireOneOf(value.toUpperCase(), ["24R"], "modeDelivery"),
     );
+    setText(row, body, "customerReference", "customer_reference", requireCustomerReference);
     setText(row, body, "senderName", "sender_name");
     setText(row, body, "senderFirstName", "sender_firstname");
     setText(row, body, "senderLastName", "sender_lastname");
@@ -93,6 +94,14 @@ function requireOneOf(value: string, options: string[], name: string): string {
         throw new HttpError(400, `${name} must be ${options.join(" or ")}`);
     }
     return value;
+}
+
+function requireCustomerReference(value: string): string {
+    const normalized = value.toUpperCase();
+    if (!/^[A-Z0-9]{1,9}$/.test(normalized)) {
+        throw new HttpError(400, "customerReference must contain 1 to 9 letters or digits");
+    }
+    return normalized;
 }
 
 function normalizeSettingsPhone(value: string, country: string, name: string): string {

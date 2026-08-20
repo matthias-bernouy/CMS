@@ -11,8 +11,12 @@
                 "type": "select",
                 "options": [
                     {
+                        "value": "REL",
+                        "label": "REL — Point Relais drop-off"
+                    },
+                    {
                         "value": "CCC",
-                        "label": "CCC"
+                        "label": "CCC — Merchant collection"
                     }
                 ]
             },
@@ -28,6 +32,13 @@
                         "label": "24R"
                     }
                 ]
+            },
+            {
+                "id": "customerReference",
+                "label": "Customer reference",
+                "path": "customerReference",
+                "required": true,
+                "type": "text"
             },
             {
                 "id": "defaultWeightGrams",

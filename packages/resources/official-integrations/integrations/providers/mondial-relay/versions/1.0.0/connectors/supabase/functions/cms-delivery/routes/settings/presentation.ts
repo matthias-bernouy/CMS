@@ -7,6 +7,7 @@ export function settingsJson(row: JsonRecord | null): JsonRecord {
         id: settings.id,
         modeCollection: settings.modeCollection,
         modeDelivery: settings.modeDelivery,
+        customerReference: settings.customerReference,
         senderName: settings.sender.name,
         senderFirstName: settings.sender.firstName,
         senderLastName: settings.sender.lastName,
@@ -39,8 +40,9 @@ export function settingsJson(row: JsonRecord | null): JsonRecord {
 export function settingsFromRow(row: JsonRecord | null): DeliverySettings {
     return {
         id: rowText(row, "id", "default"),
-        modeCollection: rowText(row, "mode_collection", "CCC").toUpperCase(),
+        modeCollection: rowText(row, "mode_collection", "REL").toUpperCase(),
         modeDelivery: rowText(row, "mode_delivery", "24R").toUpperCase(),
+        customerReference: rowText(row, "customer_reference", "COURTSIDE").toUpperCase(),
         sender: {
             name: rowText(row, "sender_name", ""),
             firstName: rowText(row, "sender_firstname", ""),

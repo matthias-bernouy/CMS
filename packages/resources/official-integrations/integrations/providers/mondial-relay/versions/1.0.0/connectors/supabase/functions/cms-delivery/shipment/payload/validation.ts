@@ -5,11 +5,14 @@ export function validateShipmentPayload(payload: ShipmentPayload): void {
     if (!payload.externalOrderId) {
         throw new HttpError(400, "externalOrderId is required for protected fulfillment");
     }
-    if (payload.modeCollection !== "CCC") {
-        throw new HttpError(400, "modeCollection must be CCC for Mondial Relay Connect France");
+    if (!["REL", "CCC"].includes(payload.modeCollection)) {
+        throw new HttpError(400, "modeCollection must be REL or CCC for Mondial Relay Connect France");
     }
     if (payload.modeDelivery !== "24R") {
         throw new HttpError(400, "modeDelivery must be 24R for Mondial Relay Connect France");
+    }
+    if (!/^[A-Z0-9]{1,9}$/.test(payload.customerReference)) {
+        throw new HttpError(400, "customerReference must contain 1 to 9 uppercase letters or digits");
     }
     requireFrance(payload.sender.country, "sender.country");
     requireFrance(payload.recipient.country, "recipient.country");

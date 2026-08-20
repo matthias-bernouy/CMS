@@ -22,7 +22,7 @@ export function connectShipmentXml(payload: ShipmentPayload): string {
   <ShipmentsList>
     <Shipment>
       <OrderNo>${xmlEscape(payload.externalOrderId || payload.id)}</OrderNo>
-      <CustomerNo>${xmlEscape(payload.customerId || "cms")}</CustomerNo>
+      <CustomerNo>${xmlEscape(payload.customerReference)}</CustomerNo>
       <ParcelCount>${payload.packageCount}</ParcelCount>
       <ShipmentValue Currency="${xmlEscape(payload.declaredCurrency)}" Amount="${xmlEscape(payload.declaredValue)}" />
       <DeliveryMode Mode="${xmlEscape(payload.modeDelivery)}" Location="${xmlEscape(payload.deliveryRelayLocation)}" />

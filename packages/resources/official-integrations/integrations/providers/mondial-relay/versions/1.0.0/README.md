@@ -10,8 +10,9 @@ eligibility.
 Version `1.0.0` deliberately supports only:
 
 - France to France delivery;
-- collection mode `CCC`;
+- collection modes `REL` (Point Relais drop-off, default) and `CCC` (merchant collection);
 - delivery mode `24R`;
+- an editable uppercase alphanumeric customer reference, defaulting to `COURTSIDE`;
 - EUR declared value;
 - one Commerce order, one shipment, and one parcel;
 - immutable, revisioned delivery quotes bound to one Commerce order version and

@@ -19,6 +19,7 @@ export type DeliverySettings = {
     id: string;
     modeCollection: string;
     modeDelivery: string;
+    customerReference: string;
     sender: Address;
     defaultWeightGrams: number;
     defaultPackageCount: number;
@@ -39,7 +40,7 @@ export type DeliverySettings = {
 export type ShipmentPayload = {
     id: string;
     externalOrderId: string;
-    customerId: string;
+    customerReference: string;
     modeCollection: string;
     modeDelivery: string;
     sender: Address;

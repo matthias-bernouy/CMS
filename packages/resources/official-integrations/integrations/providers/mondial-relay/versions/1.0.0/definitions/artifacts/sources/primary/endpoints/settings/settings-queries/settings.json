@@ -28,9 +28,16 @@
                                     "type": "string"
                                 },
                                 "modeCollection": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "enum": [
+                                        "REL",
+                                        "CCC"
+                                    ]
                                 },
                                 "modeDelivery": {
+                                    "type": "string"
+                                },
+                                "customerReference": {
                                     "type": "string"
                                 },
                                 "senderName": {

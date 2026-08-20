@@ -5,8 +5,9 @@
 -- ---------------------------------------------------------------------------
 create table if not exists delivery.settings (
     id text primary key default 'default',
-    mode_collection text not null default 'CCC',
+    mode_collection text not null default 'REL',
     mode_delivery text not null default '24R',
+    customer_reference text not null default 'COURTSIDE',
     sender_name text not null default '',
     sender_firstname text not null default '',
     sender_lastname text not null default '',
@@ -34,8 +35,9 @@ create table if not exists delivery.settings (
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
     constraint settings_id_default check (id = 'default'),
-    constraint settings_mode_collection_24r check (mode_collection = 'CCC'),
+    constraint settings_mode_collection_24r check (mode_collection in ('REL', 'CCC')),
     constraint settings_mode_delivery_24r check (mode_delivery = '24R'),
+    constraint settings_customer_reference_format check (customer_reference ~ '^[A-Z0-9]{1,9}$'),
     constraint settings_sender_country_fr check (sender_country = 'FR'),
     constraint settings_default_weight_positive check (default_weight_grams > 0),
     constraint settings_single_parcel check (default_package_count = 1),
@@ -54,6 +56,27 @@ create table if not exists delivery.settings (
 
 alter table delivery.settings
     add column if not exists default_shipping_amount bigint not null default 450;
+
+alter table delivery.settings
+    add column if not exists customer_reference text not null default 'COURTSIDE';
+
+alter table delivery.settings
+    alter column customer_reference set default 'COURTSIDE';
+
+alter table delivery.settings
+    drop constraint if exists settings_customer_reference_format;
+
+alter table delivery.settings
+    add constraint settings_customer_reference_format check (customer_reference ~ '^[A-Z0-9]{1,9}$');
+
+alter table delivery.settings
+    alter column mode_collection set default 'REL';
+
+alter table delivery.settings
+    drop constraint if exists settings_mode_collection_24r;
+
+alter table delivery.settings
+    add constraint settings_mode_collection_24r check (mode_collection in ('REL', 'CCC'));
 
 insert into delivery.settings (id)
 values ('default')
