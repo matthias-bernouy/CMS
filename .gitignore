@@ -24,3 +24,7 @@ build/
 .codex/
 .playwright-mcp/
 /site/
+
+
+# Generated files
+coverage/
