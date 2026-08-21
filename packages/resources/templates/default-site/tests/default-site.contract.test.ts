@@ -66,6 +66,33 @@ describe("default-site template contract", () => {
         }
     });
 
+    test("uses semantic component recipes instead of per-instance colors", () => {
+        const styledComponents = pageBodies
+            .flatMap((body) => [...body.matchAll(/<basic-(?:badge|button|card)\b[^>]*>/gu)])
+            .map(([tag]) => tag);
+        const buttons = styledComponents.filter((tag) => tag.startsWith("<basic-button"));
+        const cards = styledComponents.filter((tag) => tag.startsWith("<basic-card"));
+
+        expect(buttons.length).toBeGreaterThan(0);
+        expect(cards.length).toBeGreaterThan(0);
+        expect(
+            styledComponents.filter((tag) =>
+                /\b(?:accent|background|border|close|muted-text|selected-background|selected-text|text)-color=/u.test(
+                    tag,
+                ),
+            ),
+        ).toEqual([]);
+        expect(styledComponents.filter((tag) => /\b(?:color|variant)=/u.test(tag))).toEqual([]);
+        expect(buttons).toContainEqual(expect.stringContaining('tone="primary"'));
+        expect(buttons).toContainEqual(expect.stringContaining('tone="neutral"'));
+        expect(cards).toContainEqual(expect.stringContaining('appearance="filled"'));
+        expect(cards).toContainEqual(expect.stringContaining('appearance="soft"'));
+        for (const card of cards) {
+            const appearance = card.match(/\bappearance="([^"]+)"/u)?.[1] ?? "outlined";
+            expect(["filled", "soft", "outlined", "ghost"]).toContain(appearance);
+        }
+    });
+
     test("ships editable local media with stable CMS file ids", () => {
         const registry = JSON.parse(readSiteFile(".cms-files-registry.json"));
         const paths = ["template/hero-studio.webp", "template/project-coast.webp", "template/project-objects.webp"];
