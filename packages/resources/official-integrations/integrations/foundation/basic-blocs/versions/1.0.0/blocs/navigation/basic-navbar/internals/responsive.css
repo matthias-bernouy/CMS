@@ -1,0 +1,78 @@
+:host([collapsed]) [part="toggle"] {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-left: auto;
+    place-items: center;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+    border-radius: var(--integration-basic-blocs-action-radius, .5rem);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+:host([collapsed]) [part="toggle"]:focus-visible {
+    outline: 2px solid var(--_tone-focus);
+    outline-offset: 2px;
+}
+
+:host([collapsed]) [part="toggle-icon"] {
+    display: grid;
+    width: 1.25rem;
+    gap: .25rem;
+}
+
+:host([collapsed]) [part="toggle-icon"] i {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 160ms ease, opacity 160ms ease;
+}
+
+:host([collapsed][open]) [part="toggle-icon"] i:first-child { transform: translateY(.375rem) rotate(45deg); }
+:host([collapsed][open]) [part="toggle-icon"] i:nth-child(2) { opacity: 0; }
+:host([collapsed][open]) [part="toggle-icon"] i:last-child { transform: translateY(-.375rem) rotate(-45deg); }
+
+:host([collapsed]) [part="panel"] {
+    position: absolute;
+    top: calc(100% + var(--integration-basic-blocs-space-xs, .25rem));
+    right: 0;
+    left: 0;
+    display: none;
+    box-sizing: border-box;
+    justify-content: stretch;
+    padding: var(--integration-basic-blocs-space-sm, .5rem);
+    border: 1px solid var(--_tone-border);
+    border-radius: var(--integration-basic-blocs-surface-radius, .75rem);
+    background: var(--_navbar-panel-background);
+    box-shadow: var(--integration-basic-blocs-shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, CanvasText 14%, transparent));
+    color: var(--_navbar-color);
+}
+
+:host([collapsed][open]) [part="panel"] { display: grid; }
+
+:host([collapsed]) [part="links"],
+:host([collapsed]) [part="actions"] {
+    display: grid;
+    align-items: stretch;
+    justify-items: stretch;
+}
+
+:host([collapsed]) [part="actions"] {
+    margin-top: var(--integration-basic-blocs-space-sm, .5rem);
+    padding-top: var(--integration-basic-blocs-space-sm, .5rem);
+    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+:host([collapsed]) ::slotted(a[slot="navigation"]),
+:host([collapsed]) ::slotted(a[slot="actions"]) {
+    box-sizing: border-box;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [part="toggle-icon"] i { transition: none; }
+}

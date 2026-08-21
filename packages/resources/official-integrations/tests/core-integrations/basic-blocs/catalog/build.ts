@@ -26,6 +26,7 @@ export function registerBuildTest(): void {
             "basic-file-input",
             "basic-grid",
             "basic-input",
+            "basic-navbar",
             "basic-option",
             "basic-pagination",
             "basic-redirect",

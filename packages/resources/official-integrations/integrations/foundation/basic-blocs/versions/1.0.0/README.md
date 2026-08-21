@@ -28,6 +28,10 @@ alternative text, intrinsic dimensions, loading, decoding, and fetch priority
 to the editor. `basic-pagination` provides reusable previous and next controls
 and emits page, limit, and offset without owning URL navigation.
 
+`basic-navbar` provides brand, navigation, and action link regions. Its authored
+content remains literal HTML links for crawlers, while the component adds an
+accessible dropdown menu automatically when its authored content no longer fits.
+
 The current form set contains:
 
 - the native `form` editor;

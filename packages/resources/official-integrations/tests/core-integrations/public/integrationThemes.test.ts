@@ -107,6 +107,7 @@ describe("official integration Theme contracts", () => {
             "basic-file-input",
             "basic-grid",
             "basic-input",
+            "basic-navbar",
             "basic-pagination",
             "basic-select",
             "basic-skeleton",
