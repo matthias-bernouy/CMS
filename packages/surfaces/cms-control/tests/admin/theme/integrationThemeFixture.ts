@@ -6,12 +6,11 @@ export function integrationThemeEditorRoot(): ShadowRoot {
     root.innerHTML = `
         <span data-source-title></span>
         <div data-theme-switch></div>
-        <div data-editor-context><div data-category-actions><button data-add-theme-category></button><button data-add-element></button><button data-delete-category></button></div></div>
+        <div data-editor-context></div>
         <button data-save-theme></button><button data-activate-theme></button><span data-theme-status></span>
-        <input data-theme-name-input><div data-mode-switch></div>
+        <div data-mode-switch></div><span data-mode-note></span>
         <section data-category-section></section>
         <div data-groups></div>
-        <div data-category-fields><input data-category-label-input><input data-category-description-input></div>
     `;
     return root;
 }

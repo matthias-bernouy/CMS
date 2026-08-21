@@ -12,6 +12,10 @@
     border-bottom: 1px solid var(--border-light, var(--border-default));
 }
 
+.element-row.catalog-editable {
+    grid-template-columns: minmax(190px, .75fr) minmax(300px, 1.25fr) auto;
+}
+
 .element-row:hover,
 .element-row:focus-within {
     background: color-mix(in srgb, var(--bg-base) 68%, transparent);
@@ -24,70 +28,30 @@
     gap: 3px;
 }
 
-.token-label-text,
-.token-label-input {
+.token-label-text {
+    min-width: 0;
+    overflow: hidden;
     color: var(--text-main);
     font-size: 12px;
     font-weight: 700;
-}
-
-.token-label-input,
-.token-description-input,
-.token-type-select {
-    min-width: 0;
-    border: 0;
-    background: transparent;
-    color: var(--text-main);
-    font: inherit;
-}
-
-.token-label-input,
-.token-description-input {
-    width: 100%;
-    padding: 0;
-}
-
-.token-description-input,
-.element-label > span,
-.token-type-select,
-.token-details {
-    color: var(--theme-text-muted);
-    font-size: 10px;
-}
-
-.token-type-select {
-    width: max-content;
-    padding: 0;
-}
-
-.token-label-input:focus,
-.token-description-input:focus,
-.token-type-select:focus {
-    outline: 1px solid var(--primary-base);
-    outline-offset: 2px;
-}
-
-.token-details summary {
-    width: max-content;
-    cursor: pointer;
-}
-
-.token-details code,
-.token-details span,
-.token-details .delete-token {
-    display: block;
-    overflow: hidden;
-    margin-top: 3px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.token-details code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+.edit-token {
+    align-self: center;
+    justify-self: end;
 }
 
-.token-details .delete-token {
-    color: var(--danger-base, #c4473d);
+.token-description,
+.token-type-label {
+    color: var(--theme-text-muted);
+    font-size: 10px;
+}
+
+.token-type-label {
+    width: max-content;
+    padding: 0;
 }
 
 .token-value-line,
@@ -98,6 +62,25 @@
     gap: 7px;
 }
 
+.token-value-line {
+    align-items: flex-start;
+}
+
+.token-value-mode {
+    width: 180px;
+    flex: 0 0 180px;
+}
+
+.token-value-editor,
+.token-editor-panel {
+    width: 100%;
+    min-width: 0;
+}
+
+.token-editor-panel[hidden] {
+    display: none;
+}
+
 .value-control {
     width: 100%;
     min-width: 0;
@@ -105,6 +88,22 @@
 
 .color-control {
     flex: 1;
+}
+
+.length-editor {
+    display: grid;
+    grid-template-columns: minmax(100px, 1fr) 120px;
+    gap: 7px;
+}
+
+.length-expression {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.length-number[hidden],
+.length-expression[hidden] {
+    display: none;
 }
 
 .color-control input[type="color"] {
@@ -123,8 +122,7 @@
     justify-content: flex-end;
 }
 
-.token-default button,
-.delete-token {
+.token-default button {
     padding: 0;
     border: 0;
     background: transparent;
@@ -135,14 +133,27 @@
     font-weight: 700;
 }
 
-.delete-token:hover {
-    color: var(--danger-base, #c4473d);
-}
-
 @container theme-editor (max-width: 700px) {
-    .element-row {
+    .element-row,
+    .element-row.catalog-editable {
         grid-template-columns: 1fr;
         gap: 9px;
         padding-block: 14px;
+    }
+
+    .edit-token {
+        justify-self: end;
+    }
+}
+
+@container theme-editor (max-width: 520px) {
+    .token-value-line {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .token-value-mode {
+        width: 100%;
+        flex-basis: auto;
     }
 }

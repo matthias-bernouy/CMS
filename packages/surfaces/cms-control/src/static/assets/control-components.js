@@ -859,13 +859,13 @@
       this._handleClose();
     }
   }
-  var Lr = `<div class="avatar" part="avatar">
+  var Sr = `<div class="avatar" part="avatar">
     <img class="image" part="image" alt="" hidden />
     <span class="initials" part="initials" aria-hidden="true"></span>
     <span class="fallback" part="fallback"><slot></slot></span>
 </div>
 `;
-  var Sr = `:host {
+  var Lr = `:host {
   display: inline-block;
 
   --_size: 2.5rem;
@@ -954,7 +954,7 @@
       return ["src", "alt", "name", "initials"];
     }
     constructor() {
-      super({ css: Sr, template: Lr });
+      super({ css: Lr, template: Sr });
       this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
     }
     connectedCallback() {
@@ -1096,7 +1096,7 @@
     </footer>
 </article>
 `;
-  var Or = `:host {
+  var qr = `:host {
   display: block;
 
   --_bg: var(--bg-surface, #ffffff);
@@ -1180,7 +1180,7 @@
 
   class Nr extends s {
     constructor() {
-      super({ css: Or, template: Dr });
+      super({ css: qr, template: Dr });
     }
     connectedCallback() {
       this._headerSlot.addEventListener("slotchange", this._syncSlots), this._footerSlot.addEventListener("slotchange", this._syncSlots), this._syncSlots();
@@ -1189,7 +1189,7 @@
       this._headerSlot.removeEventListener("slotchange", this._syncSlots), this._footerSlot.removeEventListener("slotchange", this._syncSlots);
     }
     _syncSlots = () => {
-      this.toggleAttribute("has-header", qr(this._headerSlot)), this.toggleAttribute("has-footer", qr(this._footerSlot));
+      this.toggleAttribute("has-header", Or(this._headerSlot)), this.toggleAttribute("has-footer", Or(this._footerSlot));
     };
     get _headerSlot() {
       return this.shadowRoot.querySelector('slot[name="header"]');
@@ -1198,7 +1198,7 @@
       return this.shadowRoot.querySelector('slot[name="footer"]');
     }
   }
-  function qr(t) {
+  function Or(t) {
     return t.assignedNodes({ flatten: true }).some((e) => {
       if (e.nodeType !== Node.TEXT_NODE)
         return true;
@@ -2264,7 +2264,7 @@ input:focus-visible ~ .custom-box {
     let i = e?.checked ?? t.hasAttribute("checked");
     r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
   };
-  var Li = (t, e) => {
+  var Si = (t, e) => {
     if (!e)
       return;
     if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
@@ -2272,7 +2272,7 @@ input:focus-visible ~ .custom-box {
     if (t.hasAttribute("value"))
       e.value = t.getAttribute("value") ?? "";
   };
-  var Si = (t, e, r, i, o) => {
+  var Li = (t, e, r, i, o) => {
     if (!e)
       return;
     if (i === "checked")
@@ -2314,7 +2314,7 @@ input:focus-visible ~ .custom-box {
       this._input = this.shadowRoot?.querySelector("input") ?? null, this._labelText = this.shadowRoot?.querySelector(".label-text") ?? null, this._labelSlot = this.shadowRoot?.querySelector(".label-text slot:not([name])") ?? null;
     }
     connectedCallback() {
-      this._captureDefaults(), ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => c(this, t)), Li(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), B(this, this._input, this._internals);
+      this._captureDefaults(), ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => c(this, t)), Si(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), B(this, this._input, this._internals);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick), this._labelSlot?.removeEventListener("slotchange", this._syncLabel);
@@ -2334,7 +2334,7 @@ input:focus-visible ~ .custom-box {
       this.indeterminate = this._defaultIndeterminate, super.formResetCallback();
     }
     attributeChangedCallback(t, e, r) {
-      Si(this, this._input, this._internals, t, r);
+      Li(this, this._input, this._internals, t, r);
     }
     _onChange = () => Ci(this, this._input, this._internals);
     _onClick = (t) => Ti(this, t);
@@ -2632,14 +2632,14 @@ input:disabled {
       n.unshift({ kind: "create", value: e, label: `Add "${e}"`, disabled: false }), n.length = Math.min(n.length, 8);
     return n;
   }
-  function Lt(t, e, r, i, o) {
+  function St(t, e, r, i, o) {
     let n = document.createElement("div");
     return n.className = `option ${t.kind}`, n.id = `option-${e}`, n.dataset.active = String(e === r), n.dataset.selected = String(t.kind === "option" && t.value === i), n.setAttribute("role", "option"), n.setAttribute("aria-selected", n.dataset.selected), n.addEventListener("mousedown", (a) => {
       if (a.preventDefault(), !t.disabled)
         o(t);
     }), n.append(Ii(), Pi(t.label)), n;
   }
-  function St() {
+  function Lt() {
     let t = document.createElement("div");
     return t.className = "empty", t.textContent = "No results", t;
   }
@@ -2747,8 +2747,8 @@ input:disabled {
     renderList(t, e, r, i) {
       if (!this.listbox)
         return;
-      if (this.listbox.replaceChildren(...t.map((o, n) => Lt(o, n, e, r, i))), t.length === 0)
-        this.listbox.append(St());
+      if (this.listbox.replaceChildren(...t.map((o, n) => St(o, n, e, r, i))), t.length === 0)
+        this.listbox.append(Lt());
       this.listPopover?.show(), this.input?.setAttribute("aria-expanded", "true");
     }
     hideList() {
@@ -3940,7 +3940,7 @@ input:disabled {
     t.value = u.getAttribute("value") ?? "", u.focus();
   };
 
-  class Oo extends s {
+  class qo extends s {
     static formAssociated = true;
     _internals;
     _labelEl;
@@ -4974,7 +4974,7 @@ input:hover:not(:disabled) {
     return o.type = "button", o.setAttribute("aria-label", `Remove ${t.label}`), o.textContent = "x", o.addEventListener("click", () => e(t.value)), r.append(i, o), r;
   }
 
-  class Le {
+  class Se {
     internals;
     input;
     optionSlot;
@@ -5010,7 +5010,7 @@ input:hover:not(:disabled) {
     renderList(t, e, r, i) {
       if (!this.listbox)
         return;
-      if (this.listbox.replaceChildren(...t.map((o, n) => Lt(o, n, e, "", r))), t.length === 0)
+      if (this.listbox.replaceChildren(...t.map((o, n) => St(o, n, e, "", r))), t.length === 0)
         this.listbox.append(i);
       this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
     }
@@ -5034,7 +5034,7 @@ input:hover:not(:disabled) {
     activeIndex = -1;
     constructor() {
       super({ css: wt + kt + bn, template: mn });
-      this.view = new Le(this.shadowRoot, this.attachInternals());
+      this.view = new Se(this.shadowRoot, this.attachInternals());
     }
     connectedCallback() {
       for (let t of ["value", "disabled"])
@@ -5086,7 +5086,7 @@ input:hover:not(:disabled) {
         return;
       }
       this.items = xn(this.options, this.selected, t, this.hasAttribute("creatable"));
-      let e = this.hasAttribute("creatable") ? zi("Type to create", () => this.view.input?.focus()) : St();
+      let e = this.hasAttribute("creatable") ? zi("Type to create", () => this.view.input?.focus()) : Lt();
       this.view.renderList(this.items, this.activeIndex, this.selectItem, e);
     }
     selectItem = (t) => {
@@ -5141,7 +5141,7 @@ input:hover:not(:disabled) {
   }
   var An = `<slot></slot>
 `;
-  var Ln = `:host {
+  var Sn = `:host {
     --max-width: var(--p9r-container-md, 768px);
     display: block;
     width: 100%;
@@ -5162,9 +5162,9 @@ input:hover:not(:disabled) {
 :host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
 `;
 
-  class Sn extends s {
+  class Ln extends s {
     constructor() {
-      super({ css: Ln, template: An });
+      super({ css: Sn, template: An });
     }
   }
   var Cn = `<slot></slot>
@@ -5946,7 +5946,7 @@ input:hover:not(:disabled) {
     scroll-snap-align: start;
 }
 `;
-  var On = `.preview[hidden] {
+  var qn = `.preview[hidden] {
     display: none !important;
 }
 
@@ -6099,7 +6099,7 @@ input:hover:not(:disabled) {
     object-fit: cover;
 }
 `;
-  var qn = `:host([min="sm"]) { --min: 160px; }
+  var On = `:host([min="sm"]) { --min: 160px; }
 :host([min="md"]) { --min: 260px; }
 :host([min="lg"]) { --min: 340px; }
 :host([min="xl"]) { --min: 440px; }
@@ -6148,7 +6148,7 @@ input:hover:not(:disabled) {
 :host([align-self="end"]) { margin-inline: auto 0; }
 `;
 
-  class Se {
+  class Le {
     slot;
     album;
     legendAlbum;
@@ -6195,7 +6195,7 @@ input:hover:not(:disabled) {
     let n = document.createElement("figcaption");
     return n.setAttribute("part", "legend"), n.textContent = t.alt, n.hidden = t.alt.trim() === "", i.append(o), r.append(i, n), r;
   }
-  var ou = [Dn, On, qn].join(`
+  var ou = [Dn, qn, On].join(`
 `);
 
   class $n extends s {
@@ -6207,7 +6207,7 @@ input:hover:not(:disabled) {
     }
     constructor() {
       super({ css: ou, template: Bn });
-      this.view = new Se(this.shadowRoot);
+      this.view = new Le(this.shadowRoot);
     }
     connectedCallback() {
       this.view.slot.addEventListener("slotchange", this.syncImages), this.addEventListener("click", this.onHostClick), this.view.preview.addEventListener("click", this.onPreviewClick), this.view.strip.addEventListener("click", this.onStripClick), this.view.closeButton.addEventListener("click", this.closePreview), this.view.previousButton.addEventListener("click", this.showPrevious), this.view.nextButton.addEventListener("click", this.showNext), this.observer = new MutationObserver(this.syncImages), this.observer.observe(this, { attributes: true, childList: true, subtree: true, attributeFilter: ["src", "alt", "width", "height", "slot"] }), this.syncImages();
@@ -6825,15 +6825,25 @@ p {
     }
     _onKey = (t) => ra(this, t);
   }
-  var oa = `<a class="menu-item" part="item" tabindex="-1">
-    <span class="icon-wrapper" part="icon">
-        <slot name="icon"></slot>
+  var oa = `<div class="menu-item" part="item">
+    <a class="menu-item-link" part="link" tabindex="-1">
+        <span class="icon-wrapper" part="icon">
+            <slot name="icon"></slot>
+        </span>
+        <span class="label" part="label">
+            <slot></slot>
+        </span>
+        <span class="badge" part="badge" id="badge-element"></span>
+    </a>
+    <span class="actions" part="actions">
+        <span class="quick-actions" part="quick-actions">
+            <slot name="quick-actions"></slot>
+        </span>
+        <span class="more-actions" part="more-actions">
+            <slot name="more-actions"></slot>
+        </span>
     </span>
-    <span class="label" part="label">
-        <slot></slot>
-    </span>
-    <span class="badge" part="badge" id="badge-element"></span>
-</a>
+</div>
 `;
   var na = `:host {
     display: block;
@@ -6871,7 +6881,6 @@ p {
     height: 34px;
     padding: 0 10px;
     box-sizing: border-box;
-    text-decoration: none;
     color: var(--item-color);
     font-family: system-ui, -apple-system, sans-serif;
     font-size: var(--item-font-size, .8125rem);
@@ -6881,6 +6890,17 @@ p {
     border-radius: 6px;
     cursor: pointer;
     user-select: none;
+}
+
+.menu-item-link {
+    display: flex;
+    min-width: 0;
+    height: 100%;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    color: inherit;
+    text-decoration: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -6906,9 +6926,42 @@ p {
 }
 
 .label {
+    min-width: 0;
+    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.actions,
+.quick-actions,
+.more-actions {
+    display: none;
+    align-items: center;
+}
+
+:host([has-quick-actions]) .actions,
+:host([has-more-actions]) .actions,
+:host([has-quick-actions]) .quick-actions,
+:host([has-more-actions]) .more-actions {
+    display: inline-flex;
+}
+
+.actions {
+    gap: 2px;
+    flex: 0 0 auto;
+    opacity: 0;
+    pointer-events: none;
+}
+
+:host(:is([active], :hover, :focus-within)) .actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+::slotted([slot="quick-actions"]),
+::slotted([slot="more-actions"]) {
+    flex: 0 0 auto;
 }
 
 .badge {
@@ -6937,13 +6990,13 @@ p {
     outline-offset: 2px;
 }
 
-.menu-item.active {
+:host([active]) .menu-item {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
     font-weight: 700;
 }
 
-.menu-item.active::before {
+:host([active]) .menu-item::before {
     content: "";
     position: absolute;
     left: 0;
@@ -6955,7 +7008,7 @@ p {
     border-radius: 999px;
 }
 
-.menu-item.active ::slotted(svg) {
+:host([active]) .menu-item ::slotted(svg) {
     stroke: var(--item-color-active);
 }
 
@@ -6967,13 +7020,13 @@ p {
     background: transparent !important;
 }
 
-.menu-item:not(.active) .badge {
+:host(:not([active])) .badge {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
     box-shadow: 0 0 0 1px color-mix(in oklab, var(--item-color-active), transparent 90%);
 }
 
-.menu-item.active .badge {
+:host([active]) .badge {
     background-color: var(--item-color-active);
     color: var(--item-contrasted);
     box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
@@ -7037,9 +7090,11 @@ p {
   class la extends s {
     _anchor;
     _badgeEl;
+    _quickActionsSlot;
+    _moreActionsSlot;
     constructor() {
       super({ css: fu, template: oa });
-      this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
+      this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null, this._quickActionsSlot = this.shadowRoot?.querySelector('slot[name="quick-actions"]') ?? null, this._moreActionsSlot = this.shadowRoot?.querySelector('slot[name="more-actions"]') ?? null;
     }
     static get observedAttributes() {
       return ["href", "badge", "disabled", "active", "exact"];
@@ -7051,10 +7106,15 @@ p {
         this.setAttribute("role", "listitem");
       if (!this.hasAttribute("tabindex"))
         this.setAttribute("tabindex", "0");
-      Ce(this._anchor, this.getAttribute("href")), Te(this._badgeEl, this.getAttribute("badge")), $(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+      Ce(this._anchor, this.getAttribute("href")), Te(this._badgeEl, this.getAttribute("badge")), $(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey), this.addEventListener("click", this._onActionClick);
+      for (let t of this.actionSlots())
+        t.addEventListener("slotchange", this._syncActionSlots);
+      this._syncActionSlots();
     }
     disconnectedCallback() {
-      window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
+      window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey), this.removeEventListener("click", this._onActionClick);
+      for (let t of this.actionSlots())
+        t.removeEventListener("slotchange", this._syncActionSlots);
     }
     attributeChangedCallback(t, e, r) {
       if (!this._anchor)
@@ -7109,6 +7169,16 @@ p {
     }
     _onPopstate = () => $(this, this._anchor);
     _onKey = (t) => sa(this, this._anchor, t);
+    _onActionClick = (t) => {
+      if (t.target?.closest('[slot="quick-actions"], [slot="more-actions"]'))
+        t.stopPropagation();
+    };
+    _syncActionSlots = () => {
+      this.toggleAttribute("has-quick-actions", Boolean(this._quickActionsSlot?.assignedElements().length)), this.toggleAttribute("has-more-actions", Boolean(this._moreActionsSlot?.assignedElements().length));
+    };
+    actionSlots() {
+      return [this._quickActionsSlot, this._moreActionsSlot].filter((t) => t !== null);
+    }
   }
   var Ma = `:host {
   display: flex;
@@ -7347,7 +7417,7 @@ p {
         this.setAttribute("role", "cell");
     }
   }
-  var Oa = `<div class="header-wrapper" part="wrapper">
+  var qa = `<div class="header-wrapper" part="wrapper">
   <button
     type="button"
     class="label-section"
@@ -7377,7 +7447,7 @@ p {
   </div>
 </div>
 `;
-  var qa = `:host {
+  var Oa = `:host {
   display: table-cell;
   padding: 12px 20px;
   border-bottom: 2px solid var(--border-light);
@@ -7495,7 +7565,7 @@ p {
   background: var(--bg-base, #eee);
 }
 `;
-  var Ou = (t) => {
+  var qu = (t) => {
     let e = t.getAttribute("filter-name");
     if (!e)
       return "";
@@ -7510,7 +7580,7 @@ p {
       return;
     }
     e.removeAttribute("hidden");
-    let o = Ou(t);
+    let o = qu(t);
     if (r)
       r.value = o;
     if (o)
@@ -7557,7 +7627,7 @@ p {
   var Xa = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var qu = qa + Na;
+  var Ou = Oa + Na;
 
   class Ya extends s {
     _sortTrigger;
@@ -7568,7 +7638,7 @@ p {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: qu, template: Oa });
+      super({ css: Ou, template: qa });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
@@ -8448,7 +8518,7 @@ p {
 }
 `;
   var up = ks + Es;
-  function Ls(t) {
+  function Ss(t) {
     let e = new URL(t, window.location.href);
     for (let [r, i] of new URLSearchParams(window.location.search))
       e.searchParams.append(r, i);
@@ -8456,7 +8526,7 @@ p {
   }
   async function U(t) {
     try {
-      let e = await fetch(Ls(t), { headers: { Accept: "application/json" } });
+      let e = await fetch(Ss(t), { headers: { Accept: "application/json" } });
       return e.ok ? await e.json() : null;
     } catch {
       return null;
@@ -8473,7 +8543,7 @@ p {
       return `${(t * 100).toFixed(1).replace(".", ",")} %`;
     return pp.format(Math.round(t));
   }
-  var Ss = (t) => {
+  var Ls = (t) => {
     let e = new Date(t);
     return Number.isNaN(e.getTime()) ? t : hp.format(e);
   };
@@ -8655,7 +8725,7 @@ p {
         t.innerHTML = Dt(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
       }
-      let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = i.map((l) => ({ label: n ? Ss(String(l[n] ?? "")) : "", value: Number(l[o] ?? 0) }));
+      let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = i.map((l) => ({ label: n ? Ls(String(l[n] ?? "")) : "", value: Number(l[o] ?? 0) }));
       t.innerHTML = Cs(a);
     }
   }
@@ -8751,9 +8821,9 @@ p {
       t.innerHTML = Ts(a, this.hasAttribute("show-count"));
     }
   }
-  var Os = `<div class="tabs" role="group" aria-label="Période"></div>
+  var qs = `<div class="tabs" role="group" aria-label="Période"></div>
 `;
-  var qs = `:host {
+  var Os = `:host {
     display: inline-block;
 }
 
@@ -8793,7 +8863,7 @@ p {
 
   class Ns extends s {
     constructor() {
-      super({ css: qs, template: Os });
+      super({ css: Os, template: qs });
     }
     connectedCallback() {
       let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", r = (this.getAttribute("tabs") ?? "").split(",").map((o) => o.split(":")).filter((o) => o[0]), i = this.shadowRoot.querySelector(".tabs");
@@ -8808,7 +8878,7 @@ p {
   }
   var g = "cms-binding-core";
   var nt = "cms-binding-disabled";
-  var Ot = "cms-source-state-force";
+  var qt = "cms-source-state-force";
   var h = "cms-source";
   var Fe = "cms-source-body";
   var at = "cms-source-id";
@@ -8818,7 +8888,7 @@ p {
   var js = "cms-source-success-reset";
   var Us = "cms-source-success-redirect";
   var lt = "cms-repeat";
-  var S = "cms-condition";
+  var L = "cms-condition";
   var f = "cms-page-state";
   var kp = ["loaded", "loading", "empty", "error"];
   var Ep = ["auto", "submit", "change"];
@@ -8833,11 +8903,11 @@ p {
   var I = "cms-params:change";
   var C = "cms-state:change";
   var Ap = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
-  var Lp = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
-  var Sp = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+  var Sp = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
+  var Lp = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
   var Ys = new WeakMap;
   function Zs(t) {
-    return Lp.test(t);
+    return Sp.test(t);
   }
   function Gs(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
@@ -8850,7 +8920,7 @@ p {
   }
   function Js(t, e = document) {
     let r = De(e);
-    return t.replace(Sp, (i, o) => encodeURIComponent(r.get(o) ?? ""));
+    return t.replace(Lp, (i, o) => encodeURIComponent(r.get(o) ?? ""));
   }
   function Be(t, e) {
     let r = K();
@@ -8864,7 +8934,7 @@ p {
   function X(t, e = document) {
     return De(e).get(t.trim()) ?? "";
   }
-  function qt(t, e, r = document) {
+  function Ot(t, e, r = document) {
     let i = t.trim();
     if (!i)
       return;
@@ -8884,7 +8954,7 @@ p {
   }
   var Cp = 300;
 
-  class Oe {
+  class qe {
     el;
     key;
     timer = null;
@@ -8963,13 +9033,13 @@ p {
       let t = this.currentValue();
       if (t === this.last)
         return;
-      this.last = t, qt(this.key, t, this.el.ownerDocument);
+      this.last = t, Ot(this.key, t, this.el.ownerDocument);
     }
   }
   var y = "cms-param-sync";
   var Tp = 300;
 
-  class qe {
+  class Oe {
     el;
     key;
     timer = null;
@@ -9321,12 +9391,12 @@ p {
       r.removeChild(i), i = o;
     }
   }
-  var Op = { found: false, value: undefined };
+  var qp = { found: false, value: undefined };
   function R(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: qp(t) };
+      return { found: true, value: Op(t) };
     let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), o = r === -1 ? "" : e.slice(r + 1);
     for (let n = t;n; n = n.parent) {
       if (n.vars && i in n.vars)
@@ -9335,9 +9405,9 @@ p {
       if (xl(a) && i in a)
         return { found: true, value: gl(a[i], o) };
     }
-    return Op;
+    return qp;
   }
-  function qp(t) {
+  function Op(t) {
     let e = t.value;
     if (xl(e) && "value" in e)
       return e.value;
@@ -9647,22 +9717,22 @@ p {
     return (e.nodeValue ?? "").trim().match(Zp)?.[1] ?? null;
   }
   var Gp = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function Ll(t) {
+  function Sl(t) {
     let e = t.match(Gp);
     if (e)
       return { path: e[1], name: e[2] };
     return { path: t.trim() };
   }
-  function Sl(t, e, r, i, o, n) {
+  function Ll(t, e, r, i, o, n) {
     let a = t.getAttribute(lt) ?? "";
     if (r.skipRepeat || !t.hasAttribute(lt) || Z(a, r.submitBoundary))
       return false;
-    let l = t.getAttribute(S), u = l ? Ke(l, r.submitBoundary) : false;
-    return i.repeats.push({ path: e, spec: Ll(a), template: Tl(t, o, n, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!l && !u, submitBoundary: r.submitBoundary }), rootCondition: u || !l ? null : Ue(l) }), true;
+    let l = t.getAttribute(L), u = l ? Ke(l, r.submitBoundary) : false;
+    return i.repeats.push({ path: e, spec: Sl(a), template: Tl(t, o, n, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!l && !u, submitBoundary: r.submitBoundary }), rootCondition: u || !l ? null : Ue(l) }), true;
   }
   function Cl(t, e, r, i, o, n) {
-    let a = t.getAttribute(S) ?? "";
-    if (r.skipCondition || !t.hasAttribute(S) || Ke(a, r.submitBoundary))
+    let a = t.getAttribute(L) ?? "";
+    if (r.skipCondition || !t.hasAttribute(L) || Ke(a, r.submitBoundary))
       return false;
     return i.conditions.push({ path: e, condition: Ue(a), template: Tl(t, o, n, { removeCondition: !!r.submitBoundary, submitBoundary: r.submitBoundary }) }), true;
   }
@@ -9671,7 +9741,7 @@ p {
     if (i.removeRepeat)
       n.removeAttribute(lt);
     if (i.removeCondition)
-      n.removeAttribute(S);
+      n.removeAttribute(L);
     return o.appendChild(n), r(o, e, { skipRootCondition: true, skipRootRepeat: i.removeRepeat === true, submitBoundary: i.submitBoundary ?? null });
   }
   function Xe(t, e, r, i) {
@@ -9690,7 +9760,7 @@ p {
     if (t.nodeType !== Node.ELEMENT_NODE)
       return;
     let a = t;
-    if (Sl(a, e, r, i, o, n))
+    if (Ll(a, e, r, i, o, n))
       return;
     if (Cl(a, e, r, i, o, n))
       return;
@@ -9971,9 +10041,9 @@ p {
     }
   }
   function Il(t) {
-    let e = new Set, r = Array.from(t.children), i = Array.from(t.querySelectorAll(`[${S}]`));
+    let e = new Set, r = Array.from(t.children), i = Array.from(t.querySelectorAll(`[${L}]`));
     for (let o of [...r, ...i])
-      for (let n of Wp(o.getAttribute(S)))
+      for (let n of Wp(o.getAttribute(L)))
         e.add(n);
     return e;
   }
@@ -10498,7 +10568,7 @@ p {
     registerParamSync(t) {
       if (!t.isConnected || this.paramSyncs.has(t))
         return;
-      let e = new qe(t);
+      let e = new Oe(t);
       this.paramSyncs.set(t, e), e.start();
     }
     unregisterParamSync(t) {
@@ -10510,7 +10580,7 @@ p {
     registerPageStateSync(t) {
       if (!t.isConnected || this.pageStateSyncs.has(t))
         return;
-      let e = new Oe(t);
+      let e = new qe(t);
       this.pageStateSyncs.set(t, e), e.start();
     }
     unregisterPageStateSync(t) {
@@ -10619,24 +10689,24 @@ p {
   }
   var Dl = "cms-binding-cloak";
   var vh = `${g}{display:contents}[${h}]:not([${v}]){visibility:hidden}`;
-  function Ol(t) {
+  function ql(t) {
     if (t.getElementById(Dl))
       return;
     let e = t.createElement("style");
     e.id = Dl, e.textContent = vh, (t.head ?? t.documentElement).appendChild(e);
   }
-  var ql = {};
+  var Ol = {};
   function fh(t) {
-    ql = t;
+    Ol = t;
   }
 
   class Nl extends HTMLElement {
     _runtime = null;
     static get observedAttributes() {
-      return [nt, Ot];
+      return [nt, qt];
     }
     connectedCallback() {
-      Ol(this.ownerDocument ?? document), this._syncRuntime();
+      ql(this.ownerDocument ?? document), this._syncRuntime();
     }
     disconnectedCallback() {
       this._runtime?.stop(), this._runtime = null;
@@ -10651,7 +10721,7 @@ p {
       }
       if (this._runtime && !this._runtime.isStopped)
         return;
-      this._runtime = new mr(this, ql, { sourceStateForce: this._sourceStateForce() }), this._runtime.start();
+      this._runtime = new mr(this, Ol, { sourceStateForce: this._sourceStateForce() }), this._runtime.start();
     }
     attributeChangedCallback() {
       if (!this.isConnected)
@@ -10676,7 +10746,7 @@ p {
       return false;
     }
     _sourceStateForce() {
-      let t = this.getAttribute(Ot);
+      let t = this.getAttribute(qt);
       return Ks(t) ? t : undefined;
     }
     _revealInertSources() {
@@ -14964,8 +15034,9 @@ button {
     --shell-detail-main-width: var(--w-detail-main-width, 600px);
     --shell-detail-aside-width: var(--w-detail-aside-width, 285px);
     --shell-detail-gap: var(--w-detail-gap, 16px);
+    --shell-detail-header-gap: var(--w-detail-header-gap, var(--shell-detail-gap));
     display: grid;
-    gap: var(--shell-detail-gap);
+    gap: var(--shell-detail-header-gap);
     width: min(100%, calc(var(--shell-detail-main-width) + var(--shell-detail-aside-width) + var(--shell-detail-gap)));
     min-width: 0;
 }
@@ -17664,11 +17735,12 @@ circle.endpoint-timeline__errors {
   var THEME_CATEGORY_DELETED_EVENT = "cms:theme-category-deleted";
   var THEME_CATEGORY_UPDATED_EVENT = "cms:theme-category-updated";
   var THEME_SETTINGS_REFRESHED_EVENT = "cms:theme-settings-refreshed";
+  var THEME_NAV_ACTION_REQUESTED_EVENT = "cms:theme-nav-action-requested";
   function themeSelectionFromUrl(sources) {
     const url = new URL(window.location.href);
     const sourceId = url.searchParams.get("type") ?? "";
     const categoryId = url.searchParams.get("category") ?? "";
-    const source2 = sources.find((item) => item.id === sourceId) ?? sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? sources[0];
+    const source2 = sources.find((item) => item.id === sourceId) ?? sources.find((item) => item.categories.some((category2) => category2.id === categoryId)) ?? sources.find((item) => item.owner?.kind !== "integration" && item.categories.length > 0) ?? sources.find((item) => item.owner?.kind === "integration" && item.categories.length > 0) ?? sources[0];
     const category = source2?.categories.find((item) => item.id === categoryId) ?? source2?.categories[0];
     return { sourceId: source2?.id ?? "", categoryId: category?.id ?? "" };
   }
@@ -17686,6 +17758,170 @@ circle.endpoint-timeline__errors {
   }
   function dispatchThemeSettingsRefreshed() {
     window.dispatchEvent(new Event(THEME_SETTINGS_REFRESHED_EVENT));
+  }
+  function dispatchThemeNavActionRequested(action) {
+    window.dispatchEvent(new CustomEvent(THEME_NAV_ACTION_REQUESTED_EVENT, { detail: action }));
+  }
+
+  // src/components/admin/Theme/editor/controller/dialogs.ts
+  class ThemeEditorDialogs {
+    root;
+    contextAction;
+    editedTokenId;
+    constructor(root) {
+      this.root = root;
+    }
+    openContext(action, values) {
+      const creatingTheme = action === "create-theme";
+      const editingTheme = action === "rename-theme";
+      const title = creatingTheme ? "New theme" : editingTheme ? "Rename theme" : action === "create-group" ? "New group" : "Edit group";
+      this.contextAction = action;
+      this.query("[data-context-modal-title]").textContent = title;
+      this.query("[data-context-modal]").setAttribute("aria-label", title);
+      const name = this.query("[data-context-name]");
+      this.clearInvalid(name);
+      name.value = editingTheme ? values.themeName ?? "" : "";
+      this.query("[data-context-description]").value = action === "edit-group" ? values.categoryDescription ?? "" : "";
+      if (action === "edit-group") {
+        name.value = values.categoryLabel ?? "";
+      }
+      this.query("[data-context-description-field]").hidden = creatingTheme || editingTheme;
+      this.query("[data-context-submit]").textContent = creatingTheme || action === "create-group" ? "Create" : "Save";
+      this.open("[data-context-modal]", name);
+    }
+    readContext(form) {
+      if (!form.reportValidity() || !this.contextAction) {
+        return;
+      }
+      const name = this.requiredValue(this.query("[data-context-name]"));
+      if (!name) {
+        return;
+      }
+      return {
+        action: this.contextAction,
+        name,
+        description: this.query("[data-context-description]").value.trim()
+      };
+    }
+    closeContext() {
+      this.query("[data-context-modal]").removeAttribute("open");
+      this.resetContext();
+    }
+    openVariable() {
+      const name = this.query("[data-variable-name]");
+      this.clearInvalid(name);
+      this.resetVariable();
+      this.query("[data-variable-type]").value = "color";
+      this.open("[data-variable-modal]", name);
+    }
+    readVariable(form) {
+      if (!form.reportValidity()) {
+        return;
+      }
+      const label2 = this.requiredValue(this.query("[data-variable-name]"));
+      const type = this.query("[data-variable-type]").value;
+      if (!label2 || !isThemeTokenType(type)) {
+        return;
+      }
+      return {
+        label: label2,
+        description: this.query("[data-variable-description]").value.trim(),
+        type
+      };
+    }
+    closeVariable() {
+      this.query("[data-variable-modal]").removeAttribute("open");
+      this.resetVariable();
+    }
+    openVariableEdit(token) {
+      this.editedTokenId = token.id;
+      const name = this.query("[data-variable-edit-name]");
+      this.clearInvalid(name);
+      name.value = token.label;
+      this.query("[data-variable-edit-description]").value = token.description;
+      this.query("[data-variable-edit-type]").textContent = tokenTypeLabel(token.type);
+      this.open("[data-variable-edit-modal]", name);
+    }
+    readVariableEdit(form) {
+      if (!form.reportValidity() || !this.editedTokenId) {
+        return;
+      }
+      const label2 = this.requiredValue(this.query("[data-variable-edit-name]"));
+      if (!label2) {
+        return;
+      }
+      return {
+        tokenId: this.editedTokenId,
+        label: label2,
+        description: this.query("[data-variable-edit-description]").value.trim()
+      };
+    }
+    editedVariableId() {
+      return this.editedTokenId;
+    }
+    closeVariableEdit() {
+      this.query("[data-variable-edit-modal]").removeAttribute("open");
+      this.resetVariableEdit();
+    }
+    handleClose(event) {
+      const modal = event.target;
+      if (modal?.matches("[data-context-modal]")) {
+        this.resetContext();
+      } else if (modal?.matches("[data-variable-modal]")) {
+        this.resetVariable();
+      } else if (modal?.matches("[data-variable-edit-modal]")) {
+        this.resetVariableEdit();
+      }
+    }
+    open(selector, focusTarget) {
+      this.query(selector).setAttribute("open", "");
+      queueMicrotask(() => {
+        focusTarget.focus();
+      });
+    }
+    resetContext() {
+      this.contextAction = undefined;
+      this.query("[data-context-form]").reset();
+    }
+    resetVariable() {
+      this.query("[data-variable-form]").reset();
+    }
+    resetVariableEdit() {
+      this.editedTokenId = undefined;
+      this.query("[data-variable-edit-form]").reset();
+    }
+    requiredValue(control) {
+      const value2 = control.value.trim();
+      if (value2) {
+        return value2;
+      }
+      control.setAttribute("invalid", "");
+      control.setAttribute("hint", "Name is required.");
+      control.setAttribute("hint-level", "error");
+      control.focus();
+      return;
+    }
+    clearInvalid(control) {
+      control.removeAttribute("invalid");
+      control.removeAttribute("hint");
+      control.removeAttribute("hint-level");
+    }
+    query(selector) {
+      return this.root.querySelector(selector);
+    }
+  }
+  function isThemeTokenType(value2) {
+    return ["color", "font-family", "length", "number", "shadow", "value"].includes(value2);
+  }
+  function tokenTypeLabel(type) {
+    return {
+      color: "Color",
+      "font-family": "Font family",
+      length: "Length",
+      number: "Number",
+      shadow: "Shadow",
+      value: "CSS value"
+    }[type];
   }
 
   // src/components/admin/Theme/ownership.ts
@@ -17707,13 +17943,25 @@ circle.endpoint-timeline__errors {
   function currentTheme(settings, selectedThemeId) {
     return settings?.themes.find((item) => item.id === selectedThemeId) ?? settings?.themes[0];
   }
-  function addTheme(settings) {
+  function currentToken(settings, selection, tokenId) {
+    return currentCategory(settings, selection)?.tokens.find((token) => token.id === tokenId);
+  }
+  function addTheme(settings, name) {
     const number = settings.themes.length + 1;
     const id = uniqueId(`theme-${number}`, new Set(settings.themes.map((item) => item.id)));
-    settings.themes.push({ id, name: `New theme ${number}`, values: { light: {}, dark: {} } });
+    settings.themes.push({ id, name: name?.trim() || `New theme ${number}`, values: { light: {}, dark: {} } });
     return id;
   }
-  function addCategory(settings, selection) {
+  function renameTheme(settings, selectedThemeId, name) {
+    const theme = currentTheme(settings, selectedThemeId);
+    const normalized = name.trim();
+    if (!theme || !normalized) {
+      return false;
+    }
+    theme.name = normalized;
+    return true;
+  }
+  function addCategory(settings, selection, label2, description) {
     const source2 = currentSource(settings, selection);
     if (!isThemeCatalogEditable(source2)) {
       return;
@@ -17722,29 +17970,51 @@ circle.endpoint-timeline__errors {
     const id = uniqueId(`${source2.id}-category-${number}`, new Set(source2.categories.map((item) => item.id)));
     const category = {
       id,
-      label: `New category ${number}`,
-      description: `Theme tokens for ${source2.label}.`,
+      label: label2?.trim() || `New group ${number}`,
+      description: description?.trim() || `Variables for ${source2.label}.`,
       tokens: []
     };
     source2.categories.push(category);
     return { sourceId: source2.id, category };
   }
-  function addToken(settings, selection) {
+  function updateCategory(settings, selection, label2, description) {
+    const source2 = currentSource(settings, selection);
+    const category = currentCategory(settings, selection);
+    const normalized = label2.trim();
+    if (!source2 || !category || !isThemeCatalogEditable(source2) || !normalized) {
+      return;
+    }
+    category.label = normalized;
+    category.description = description.trim();
+    return { sourceId: source2.id, category };
+  }
+  function addToken(settings, selection, draft) {
     const source2 = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
     if (!isThemeCatalogEditable(source2) || !category) {
       return false;
     }
     const existingNames = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.flatMap((token) => [token.id, token.variable]))));
-    const number = existingNames.size + 1;
-    const id = uniqueId(`token-${number}`, existingNames);
+    const number = settings.sources.filter(isThemeCatalogEditable).flatMap((item) => item.categories).reduce((count, item) => count + item.tokens.length, 0) + 1;
+    const id = uniqueId(`variable-${number}`, existingNames);
     category.tokens.push({
       id,
       variable: id,
-      label: `New token ${number}`,
-      description: "New theme token",
-      type: "value"
+      label: draft?.label.trim() || `New variable ${number}`,
+      description: draft ? draft.description.trim() : "New site variable",
+      type: draft?.type ?? "value"
     });
+    return true;
+  }
+  function updateToken(settings, selection, tokenId, label2, description) {
+    const source2 = currentSource(settings, selection);
+    const token = currentToken(settings, selection, tokenId);
+    const normalized = label2.trim();
+    if (!isThemeCatalogEditable(source2) || !token || !normalized) {
+      return false;
+    }
+    token.label = normalized;
+    token.description = description.trim();
     return true;
   }
   function removeToken(settings, selection, tokenId) {
@@ -17821,116 +18091,6 @@ circle.endpoint-timeline__errors {
     return value2;
   }
 
-  // src/components/admin/Theme/editor/controller/inputEvents.ts
-  function handleThemeInput(event, context) {
-    const input = event.target;
-    const theme = currentTheme(context.settings, context.selectedThemeId);
-    if (!input || !theme) {
-      return;
-    }
-    if (input.matches("[data-theme-name-input]")) {
-      theme.name = input.value;
-      return;
-    }
-    const category = currentCategory(context.settings, context.selection);
-    const source2 = currentSource(context.settings, context.selection);
-    const catalogEditable = isThemeCatalogEditable(source2);
-    if (input.matches("[data-category-label-input]") && category && source2 && catalogEditable) {
-      category.label = input.value;
-      query3(context.root, "[data-category-section]").setAttribute("heading", category.label);
-      dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
-      return;
-    }
-    if (input.matches("[data-category-description-input]") && category && source2 && catalogEditable) {
-      category.description = input.value;
-      query3(context.root, "[data-category-section]").setAttribute("description", category.description);
-      dispatchThemeCategoryUpdated({ sourceId: source2.id, category });
-      return;
-    }
-    if (input.matches("[data-token-label]") && catalogEditable) {
-      updateToken(context, input, (token) => {
-        token.label = input.value;
-      });
-      return;
-    }
-    if (input.matches("[data-token-description]") && catalogEditable) {
-      updateToken(context, input, (token) => {
-        token.description = input.value;
-      });
-      return;
-    }
-    if (input.matches("[data-token-type-control]") && catalogEditable && isTokenType(input.value)) {
-      updateToken(context, input, (token) => {
-        token.type = input.value;
-      });
-      return;
-    }
-    const tokenValueControl = input.matches("[data-token-value-control]");
-    if (!input.matches("[data-value-control]") && !tokenValueControl) {
-      return;
-    }
-    if (tokenValueControl && event.type !== "change") {
-      return;
-    }
-    const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
-    if (!tokenId) {
-      return;
-    }
-    theme.values[context.mode] ??= {};
-    theme.values[context.mode][tokenId] = input.value;
-    if (input.type === "color") {
-      const text3 = input.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
-      if (text3) {
-        text3.value = input.value;
-        text3.setAttribute("value", input.value);
-      }
-    }
-  }
-  function resetThemeToken(event, settings, selection, selectedThemeId, mode) {
-    const tokenId = event.target?.closest("[data-reset-token]")?.dataset.resetToken;
-    return tokenId ? resetTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
-  }
-  function clickAction(event) {
-    const target2 = event.target;
-    const actions = ["theme", "category", "token", "delete-category", "delete-token", "save", "activate"];
-    const selectors = [
-      "[data-add-theme]",
-      "[data-add-theme-category]",
-      "[data-add-element]",
-      "[data-delete-category]",
-      "[data-delete-token]",
-      "[data-save-theme]",
-      "[data-activate-theme]"
-    ];
-    return actions.find((_3, index) => target2?.closest(selectors[index]));
-  }
-  function updateToken(context, input, update) {
-    const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
-    const source2 = currentSource(context.settings, context.selection);
-    const token = source2?.categories.flatMap((item) => item.tokens).find((item) => item.id === tokenId);
-    if (token) {
-      update(token);
-    }
-  }
-  function isTokenType(value2) {
-    return ["color", "font-family", "length", "number", "shadow", "value"].includes(value2);
-  }
-  function query3(root, selector) {
-    return root.querySelector(selector);
-  }
-
-  // src/components/admin/Theme/editor/api.ts
-  async function saveThemeSettings(settings) {
-    const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ theme: settings })
-    });
-    if (!response.ok) {
-      throw new Error(await response.text() || `Request failed (${response.status})`);
-    }
-  }
-
   // src/components/admin/Theme/editor/tokens/cssReference.ts
   function parseDirectTokenReference(value2) {
     const match = /^\s*var\(\s*--([a-z][a-z0-9-]*)\s*(?:,\s*(.+))?\)\s*$/is.exec(value2);
@@ -17945,6 +18105,130 @@ circle.endpoint-timeline__errors {
   }
   function directTokenReference(value2) {
     return parseDirectTokenReference(value2)?.variable;
+  }
+
+  // src/components/admin/Theme/editor/tokens/manualControl.ts
+  var FONT_STACKS = [
+    ["System sans serif", 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'],
+    ["Humanist sans serif", '"Trebuchet MS", system-ui, sans-serif'],
+    ["Editorial serif", 'Georgia, "Times New Roman", serif'],
+    ["Classic serif", '"Times New Roman", Times, serif'],
+    ["Monospace", 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace']
+  ];
+  var SHADOW_PRESETS = [
+    ["None", "none"],
+    ["Subtle", "0 .25rem .75rem rgb(18 30 24 / 10%)"],
+    ["Soft", "0 .5rem 1.5rem rgb(18 30 24 / 12%)"],
+    ["Strong", "0 .75rem 2rem rgb(18 30 24 / 18%)"]
+  ];
+  var LENGTH_UNITS = ["px", "rem", "em", "%", "vw", "vh", "vmin", "vmax", "ch"];
+  function renderManualControl(token, value2) {
+    const editor = document.createElement("div");
+    editor.className = "token-editor-panel manual-editor";
+    editor.dataset.manualEditor = "true";
+    editor.append(manualControl(token, value2));
+    return editor;
+  }
+  function manualControl(token, value2) {
+    if (token.type === "color") {
+      return colorControl(token, value2);
+    }
+    if (token.type === "font-family") {
+      return presetCombobox(token, value2, FONT_STACKS, "Choose or enter a font stack");
+    }
+    if (token.type === "length") {
+      return lengthControl(token, value2);
+    }
+    if (token.type === "number") {
+      return textControl(token, value2, "number", "1");
+    }
+    if (token.type === "shadow") {
+      return presetCombobox(token, value2, SHADOW_PRESETS, "Choose or enter a shadow");
+    }
+    return textControl(token, value2, "text", "Enter a value");
+  }
+  function colorControl(token, value2) {
+    const control = document.createElement("div");
+    control.className = "color-control";
+    const picker = document.createElement("input");
+    const hasPreview = /^#[0-9a-f]{6}$/i.test(value2);
+    picker.type = "color";
+    picker.value = hasPreview ? value2 : "#000000";
+    picker.dataset.valueControl = "true";
+    picker.ariaLabel = `${token.label} color picker`;
+    control.append(picker, textControl(token, value2, "text", "#000000"));
+    return control;
+  }
+  function lengthControl(token, value2) {
+    const parsed = parseLength(value2);
+    const control = document.createElement("div");
+    control.className = "length-editor";
+    const number = textControl(token, parsed?.number ?? "", "number", "1");
+    number.classList.add("length-number");
+    number.dataset.lengthNumber = "true";
+    number.removeAttribute("data-value-editor-control");
+    number.setAttribute("step", "any");
+    number.hidden = !parsed;
+    const unit = document.createElement("p9r-select");
+    unit.className = "length-unit";
+    unit.dataset.lengthUnit = "true";
+    unit.setAttribute("aria-label", `${token.label} unit`);
+    unit.append(option("", "Unitless"), ...LENGTH_UNITS.map((value3) => option(value3, value3)), option("advanced", "CSS expression"));
+    unit.setAttribute("value", parsed?.unit ?? "advanced");
+    unit.value = parsed?.unit ?? "advanced";
+    const advanced = textControl(token, value2, "text", "calc(100% - 2rem)");
+    advanced.classList.add("length-expression");
+    advanced.dataset.lengthExpression = "true";
+    advanced.hidden = Boolean(parsed);
+    control.append(number, unit, advanced);
+    return control;
+  }
+  function textControl(token, value2, type, placeholder) {
+    const input = document.createElement("p9r-input");
+    input.className = `value-control ${token.type}-control`;
+    input.dataset.valueEditorControl = "true";
+    input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
+    input.setAttribute("type", type);
+    input.setAttribute("placeholder", placeholder);
+    if (type === "number") {
+      input.setAttribute("step", "any");
+    }
+    input.setAttribute("value", value2);
+    input.value = value2;
+    return input;
+  }
+  function presetCombobox(token, value2, presets, placeholder) {
+    const input = document.createElement("p9r-combobox");
+    input.className = `value-control ${token.type}-control`;
+    input.dataset.valueEditorControl = "true";
+    input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
+    input.setAttribute("creatable", "");
+    input.setAttribute("placeholder", placeholder);
+    input.append(...presets.map(([label2, value3]) => option(value3, label2)));
+    input.setAttribute("value", value2);
+    input.value = value2;
+    return input;
+  }
+  function option(value2, label2) {
+    const item = document.createElement("option");
+    item.value = value2;
+    item.textContent = label2;
+    return item;
+  }
+  function parseLength(value2) {
+    const match = /^(-?(?:\d+(?:\.\d+)?|\.\d+))(px|rem|em|%|vw|vh|vmin|vmax|ch)?$/iu.exec(value2.trim());
+    return match ? { number: match[1], unit: match[2] ?? "" } : undefined;
+  }
+  function controlLabel(type) {
+    const labels = {
+      color: "color value",
+      "font-family": "font family",
+      length: "length",
+      number: "number",
+      shadow: "shadow",
+      value: "value"
+    };
+    return labels[type];
   }
 
   // src/components/admin/Theme/editor/tokens/values.ts
@@ -18024,190 +18308,307 @@ circle.endpoint-timeline__errors {
     return { ...resolved, raw, state: resolved.state === "literal" ? "resolved" : resolved.state };
   }
 
-  // src/components/admin/Theme/editor/tokens/controls.ts
-  function renderTokenControls(token, settings, theme, mode) {
-    const value2 = effectiveTokenValue(token, theme, mode);
-    const group = document.createElement("div");
-    group.className = "token-controls";
-    const valueLine = document.createElement("div");
-    valueLine.className = "token-value-line";
-    const resolved = resolveThemeTokenValue(settings, theme, mode, token.id);
-    valueLine.append(renderControl(token, settings, theme, value2, mode, resolved));
-    group.append(valueLine);
-    if (token.defaults && Object.hasOwn(theme.values[mode] ?? {}, token.id)) {
-      group.append(renderReset(token, mode));
-    }
-    return group;
-  }
-  function renderControl(token, settings, theme, value2, mode, resolved) {
-    if (token.type !== "color") {
-      return valueCombobox(token, settings, theme, mode, value2, resolved);
-    }
-    const control = document.createElement("div");
-    control.className = "color-control";
-    const picker = document.createElement("input");
-    const hasPreview = /^#[0-9a-f]{6}$/i.test(resolved.value);
-    picker.type = "color";
-    picker.value = hasPreview ? resolved.value : "#000000";
-    picker.hidden = !hasPreview;
-    picker.dataset.valueControl = "true";
-    picker.ariaLabel = `${token.label} color picker`;
-    control.append(picker, valueCombobox(token, settings, theme, mode, value2, resolved));
-    return control;
-  }
-  function valueCombobox(token, settings, theme, mode, value2, resolved) {
+  // src/components/admin/Theme/editor/tokens/referenceControl.ts
+  function renderReferenceControl(token, settings, theme, mode, value2, resolved) {
+    const editor = document.createElement("div");
+    editor.className = "token-editor-panel reference-editor";
+    editor.dataset.referenceEditor = "true";
     const input = document.createElement("p9r-combobox");
-    input.className = `value-control ${token.type}-control`;
-    input.dataset.tokenValueControl = "true";
-    input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
-    input.setAttribute("creatable", "");
-    input.setAttribute("placeholder", placeholderFor(token.type));
-    input.replaceChildren(...referenceOptions(token, settings, theme, mode));
-    input.setAttribute("value", value2);
-    input.value = value2;
+    input.className = "value-control reference-control";
+    input.dataset.valueEditorControl = "true";
+    input.setAttribute("aria-label", `Reference for ${token.label}`);
+    input.setAttribute("placeholder", "Select a variable");
+    const entries = themeTokenEntries(settings);
+    const options = referenceEntries(token, settings, theme, mode, entries);
+    input.append(...options.map(referenceOption));
+    const reference = parseDirectTokenReference(value2);
+    if (reference) {
+      const current = entries.find((entry) => entry.token.variable === reference.variable);
+      if (!options.some((entry) => `var(--${entry.token.variable})` === value2)) {
+        input.prepend(currentReferenceOption(value2, current));
+      }
+      input.setAttribute("value", value2);
+      input.value = value2;
+    } else if (options.length === 0) {
+      input.setAttribute("disabled", "");
+      input.setAttribute("placeholder", "No compatible variables");
+    }
     const error = referenceError(resolved);
     if (error) {
       input.setAttribute("invalid", "");
       input.setAttribute("hint", error);
       input.setAttribute("hint-level", "error");
     }
-    return input;
+    editor.append(input);
+    return editor;
   }
-  function referenceOptions(token, settings, theme, mode) {
-    return themeTokenEntries(settings).filter((entry) => canReferenceThemeToken(settings, theme, mode, token.id, entry.token.id)).map((entry) => {
-      const option = document.createElement("option");
-      option.value = `var(--${entry.token.variable})`;
-      option.textContent = `${entry.source.label} · ${entry.category.label} · ${entry.token.label} · --${entry.token.variable}`;
-      return option;
-    });
+  function referenceEntries(token, settings, theme, mode, entries) {
+    return entries.filter((entry) => canReferenceThemeToken(settings, theme, mode, token.id, entry.token.id));
+  }
+  function referenceOption(entry) {
+    const option2 = document.createElement("option");
+    option2.value = `var(--${entry.token.variable})`;
+    option2.textContent = referenceLabel(entry);
+    return option2;
+  }
+  function currentReferenceOption(value2, entry) {
+    const option2 = document.createElement("option");
+    option2.value = value2;
+    option2.textContent = entry ? referenceLabel(entry) : "Unavailable reference";
+    return option2;
+  }
+  function referenceLabel(entry) {
+    return `${entry.source.label} · ${entry.category.label} · ${entry.token.label}`;
   }
   function referenceError(resolved) {
     if (resolved.state === "cycle") {
-      return "Circular token reference. Choose a different token before saving.";
+      return "Circular reference. Choose a different variable before saving.";
     }
-    return resolved.state === "missing" ? "This value references a token that is not available." : undefined;
+    return resolved.state === "missing" ? "This reference is no longer available." : undefined;
   }
-  function renderReset(token, mode) {
+
+  // src/components/admin/Theme/editor/tokens/controls.ts
+  function renderTokenControls(token, settings, theme, mode) {
+    const value2 = effectiveTokenValue(token, theme, mode);
+    const resolved = resolveThemeTokenValue(settings, theme, mode, token.id);
+    const inputMode = parseDirectTokenReference(value2) ? "reference" : "manual";
+    const group = document.createElement("div");
+    group.className = "token-controls";
+    group.dataset.tokenControlMode = inputMode;
+    const valueLine = document.createElement("div");
+    valueLine.className = "token-value-line";
+    const editor = document.createElement("div");
+    editor.className = "token-value-editor";
+    const manual = renderManualControl(token, manualValue(value2, resolved.state, resolved.value));
+    const reference = renderReferenceControl(token, settings, theme, mode, value2, resolved);
+    setEditorActive(manual, inputMode === "manual");
+    setEditorActive(reference, inputMode === "reference");
+    editor.append(manual, reference);
+    valueLine.append(valueModeSwitch(token, inputMode), editor);
+    group.append(valueLine);
+    if (token.defaults && Object.hasOwn(theme.values[mode] ?? {}, token.id)) {
+      group.append(renderReset(token));
+    }
+    return group;
+  }
+  function setEditorActive(editor, active) {
+    editor.hidden = !active;
+    editor.querySelectorAll("[data-value-editor-control]").forEach((control) => {
+      control.toggleAttribute("data-token-value-control", active && !control.hidden);
+    });
+  }
+  function valueModeSwitch(token, value2) {
+    const switcher = document.createElement("p9r-segmented-switch");
+    switcher.className = "token-value-mode";
+    switcher.dataset.tokenInputMode = "true";
+    switcher.setAttribute("aria-label", `Choose how ${token.label} is defined`);
+    switcher.setAttribute("value", value2);
+    switcher.innerHTML = `<option value="manual">Manual</option><option value="reference">Reference</option>`;
+    return switcher;
+  }
+  function manualValue(raw, state, resolved) {
+    if (!parseDirectTokenReference(raw)) {
+      return raw;
+    }
+    return state === "resolved" ? resolved : "";
+  }
+  function renderReset(token) {
     const line3 = document.createElement("div");
     line3.className = "token-default";
-    const expected = token.defaults?.[mode];
     const reset = document.createElement("button");
     reset.type = "button";
     reset.dataset.resetToken = token.id;
     reset.textContent = "Reset to default";
-    reset.title = expected === undefined ? "Inherits the light value" : expected;
+    reset.title = "Restore the default value";
     reset.ariaLabel = `Reset ${token.label} to its default`;
     line3.append(reset);
     return line3;
   }
-  function controlLabel(type) {
-    return type === "font-family" ? "font family" : `${type} CSS value`;
+
+  // src/components/admin/Theme/editor/controller/inputEvents.ts
+  function handleThemeInput(event, context) {
+    const input = event.target;
+    const theme = currentTheme(context.settings, context.selectedThemeId);
+    if (!input || !theme) {
+      return;
+    }
+    const tokenValueControl = input.matches("[data-token-value-control]");
+    const lengthControl2 = input.matches("[data-length-number], [data-length-unit]");
+    if (!input.matches("[data-value-control]") && !tokenValueControl && !lengthControl2) {
+      return;
+    }
+    if (tokenValueControl && event.type !== "change") {
+      return;
+    }
+    const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
+    if (!tokenId) {
+      return;
+    }
+    const value2 = lengthControl2 ? lengthValue(input) : input.value;
+    if (value2 === undefined) {
+      return;
+    }
+    theme.values[context.mode] ??= {};
+    theme.values[context.mode][tokenId] = value2;
+    if (input.type === "color") {
+      const text3 = input.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
+      if (text3) {
+        text3.value = input.value;
+        text3.setAttribute("value", input.value);
+      }
+    }
   }
-  function placeholderFor(type) {
-    const examples = {
-      "font-family": "Inter, system-ui, sans-serif",
-      length: "1rem",
-      number: "1",
-      shadow: "0 2px 8px rgb(0 0 0 / 10%)"
-    };
-    return examples[type] ?? "CSS value";
+  function handleTokenControlMode(event) {
+    const switcher = event.target;
+    if (!switcher?.matches("[data-token-input-mode]") || switcher.value !== "manual" && switcher.value !== "reference") {
+      return false;
+    }
+    const controls = switcher.closest("[data-token-control-mode]");
+    if (!controls) {
+      return false;
+    }
+    controls.dataset.tokenControlMode = switcher.value;
+    setEditorActive(controls.querySelector("[data-manual-editor]"), switcher.value === "manual");
+    setEditorActive(controls.querySelector("[data-reference-editor]"), switcher.value === "reference");
+    queueMicrotask(() => {
+      controls.querySelector("[data-token-value-control]")?.focus();
+    });
+    return true;
+  }
+  function handleLengthControlMode(event) {
+    const unit = event.target;
+    if (!unit?.matches("[data-length-unit]")) {
+      return false;
+    }
+    const editor = unit.closest(".length-editor");
+    const number = editor?.querySelector("[data-length-number]");
+    const expression = editor?.querySelector("[data-length-expression]");
+    if (!number || !expression) {
+      return false;
+    }
+    const advanced = unit.value === "advanced";
+    number.hidden = advanced;
+    expression.hidden = !advanced;
+    expression.toggleAttribute("data-token-value-control", advanced);
+    if (advanced) {
+      expression.focus();
+    } else {
+      const numberControl = number;
+      if (!numberControl.value.trim()) {
+        numberControl.value = "0";
+        numberControl.setAttribute("value", "0");
+      }
+      numberControl.focus();
+    }
+    return advanced;
+  }
+  function resetThemeToken(event, settings, selection, selectedThemeId, mode) {
+    const tokenId = event.target?.closest("[data-reset-token]")?.dataset.resetToken;
+    return tokenId ? resetTokenValue(settings, selection, selectedThemeId, mode, tokenId) : false;
+  }
+  function clickAction(event) {
+    const target2 = event.target;
+    const actions = [
+      "theme",
+      "edit-theme",
+      "close-context",
+      "edit-token",
+      "close-variable-edit",
+      "delete-token",
+      "save",
+      "activate"
+    ];
+    const selectors = [
+      "[data-add-theme]",
+      "[data-edit-theme]",
+      "[data-context-cancel]",
+      "[data-edit-token]",
+      "[data-variable-edit-cancel]",
+      "[data-delete-token]",
+      "[data-save-theme]",
+      "[data-activate-theme]"
+    ];
+    return actions.find((_3, index) => target2?.closest(selectors[index]));
+  }
+  function lengthValue(input) {
+    const editor = input.closest(".length-editor");
+    const number = editor?.querySelector("[data-length-number]")?.value.trim();
+    const unit = editor?.querySelector("[data-length-unit]")?.value;
+    return number !== undefined && unit !== undefined && unit !== "advanced" ? `${number}${unit}` : undefined;
+  }
+
+  // src/components/admin/Theme/editor/api.ts
+  async function saveThemeSettings(settings) {
+    const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ theme: settings })
+    });
+    if (!response.ok) {
+      throw new Error(await response.text() || `Request failed (${response.status})`);
+    }
   }
 
   // src/components/admin/Theme/editor/tokens/view.ts
-  var TOKEN_TYPES = [
-    { value: "color", label: "Color" },
-    { value: "font-family", label: "Font family" },
-    { value: "length", label: "Length" },
-    { value: "number", label: "Number" },
-    { value: "shadow", label: "Shadow" },
-    { value: "value", label: "CSS value" }
-  ];
+  var TOKEN_TYPE_LABELS = {
+    color: "Color",
+    "font-family": "Font family",
+    length: "Length",
+    number: "Number",
+    shadow: "Shadow",
+    value: "CSS value"
+  };
   function renderToken(token, settings, theme, mode, catalogEditable) {
     const row = document.createElement("div");
     row.className = "element-row";
     row.dataset.tokenId = token.id;
     row.dataset.tokenType = token.type;
     row.append(renderLabel(token, catalogEditable), renderTokenControls(token, settings, theme, mode));
+    if (catalogEditable) {
+      row.classList.add("catalog-editable");
+      row.append(editTokenButton(token));
+    }
     return row;
   }
-  function deleteTokenButton(token) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "delete-token";
-    button.dataset.deleteToken = "true";
-    button.textContent = "Delete token";
-    button.ariaLabel = `Delete ${token.label}`;
+  function editTokenButton(token) {
+    const button = document.createElement("p9r-button");
+    button.className = "edit-token";
+    button.setAttribute("type", "button");
+    button.setAttribute("variant", "ghost");
+    button.dataset.editToken = "true";
+    button.textContent = "Edit";
+    button.ariaLabel = `Edit ${token.label}`;
     return button;
   }
   function renderLabel(token, catalogEditable) {
     const label2 = document.createElement("div");
     label2.className = "element-label";
-    label2.append(catalogEditable ? editableLabel(token) : fixedLabel(token));
-    const detail = catalogEditable ? editableDescription(token) : fixedDescription(token);
-    label2.append(detail, technicalDetails(token, catalogEditable));
-    return label2;
-  }
-  function technicalDetails(token, catalogEditable) {
-    const details = document.createElement("details");
-    details.className = "token-details";
-    const summary = document.createElement("summary");
-    summary.textContent = "Details";
-    const variable = document.createElement("code");
-    variable.textContent = `var(--${token.variable})`;
-    details.append(summary, variable);
-    if (token.defaults?.light !== undefined) {
-      const defaultValue = document.createElement("span");
-      defaultValue.textContent = `Default: ${token.defaults.light}`;
-      details.append(defaultValue);
-    }
+    label2.append(fixedLabel(token), fixedDescription(token));
     if (catalogEditable) {
-      details.append(deleteTokenButton(token));
+      label2.append(tokenType(token));
     }
-    return details;
-  }
-  function editableDescription(token) {
-    const input = document.createElement("input");
-    input.className = "token-description-input";
-    input.type = "text";
-    input.value = token.description;
-    input.ariaLabel = `Description for ${token.label}`;
-    input.dataset.tokenDescription = "true";
-    return input;
+    return label2;
   }
   function fixedDescription(token) {
     const detail = document.createElement("span");
+    detail.className = "token-description";
+    detail.dataset.tokenDescriptionText = "true";
     detail.textContent = token.description;
     return detail;
   }
-  function editableLabel(token) {
-    const fragment = document.createDocumentFragment();
-    const input = document.createElement("input");
-    input.className = "token-label-input";
-    input.type = "text";
-    input.value = token.label;
-    input.ariaLabel = `Label for --${token.variable}`;
-    input.dataset.tokenLabel = "true";
-    const type = document.createElement("select");
-    type.className = "token-type-select";
-    type.dataset.tokenTypeControl = "true";
-    type.ariaLabel = `Type for ${token.label}`;
-    type.append(...TOKEN_TYPES.map((item) => option(item.value, item.label, item.value === token.type)));
-    type.value = token.type;
-    fragment.append(input, type);
-    return fragment;
+  function tokenType(token) {
+    const type = document.createElement("span");
+    type.className = "token-type-label";
+    type.dataset.tokenTypeLabel = "true";
+    type.textContent = TOKEN_TYPE_LABELS[token.type];
+    return type;
   }
   function fixedLabel(token) {
     const name = document.createElement("strong");
     name.className = "token-label-text";
+    name.dataset.tokenLabelText = "true";
     name.textContent = token.label;
     return name;
-  }
-  function option(value2, label2, selected2) {
-    const element = document.createElement("option");
-    element.value = value2;
-    element.textContent = label2;
-    element.selected = selected2;
-    return element;
   }
 
   // src/components/admin/Theme/editor/tokens/explorer.ts
@@ -18230,7 +18631,7 @@ circle.endpoint-timeline__errors {
   function emptyCategory() {
     const empty = document.createElement("div");
     empty.className = "empty-category";
-    empty.textContent = "This group does not declare any token yet.";
+    empty.textContent = "This group has no variables yet.";
     return empty;
   }
 
@@ -18243,22 +18644,21 @@ circle.endpoint-timeline__errors {
       return state.mode;
     }
     const catalogEditable = isThemeCatalogEditable(source2);
-    const mode = source2.supportsModes ? state.mode : "light";
+    const valueMode = source2.supportsModes ? state.mode : "light";
     renderHeader(root, state, source2, theme);
-    renderActions(root, state, source2, theme, catalogEditable);
-    renderModes(root, source2, mode);
-    renderCategoryFields(root, category, catalogEditable);
-    const section = query4(root, "[data-category-section]");
+    renderActions(root, state, theme);
+    renderMode(root, source2, state.mode);
+    const section = query3(root, "[data-category-section]");
     section.setAttribute("heading", category.label);
     section.setAttribute("description", category.description);
     renderTokenExplorer(root, {
       settings: state.settings,
       category,
       theme,
-      mode,
+      mode: valueMode,
       catalogEditable
     });
-    return mode;
+    return state.mode;
   }
   function setThemeMessage(root, message, error = false) {
     const element = root?.querySelector("[data-message]");
@@ -18268,38 +18668,25 @@ circle.endpoint-timeline__errors {
     }
   }
   function renderHeader(root, state, source2, theme) {
-    query4(root, "[data-source-title]").textContent = source2.label;
-    query4(root, "[data-theme-name-input]").value = theme.name;
-    const select = query4(root, "[data-theme-switch]");
+    query3(root, "[data-source-title]").textContent = source2.label;
+    const select = query3(root, "[data-theme-switch]");
     select.setAttribute("value", theme.id);
     select.replaceChildren(...state.settings.themes.map(themeOption));
     select.value = theme.id;
-    select.hidden = state.settings.themes.length < 2;
   }
-  function renderActions(root, state, source2, theme, catalogEditable) {
+  function renderActions(root, state, theme) {
     const active = theme.id === state.settings.activeThemeId;
-    const status = query4(root, "[data-theme-status]");
+    const status = query3(root, "[data-theme-status]");
     status.textContent = active ? "Active" : "Draft";
     status.setAttribute("color", active ? "success" : "warning");
-    query4(root, "[data-activate-theme]").toggleAttribute("disabled", active);
-    query4(root, "[data-category-actions]").hidden = !catalogEditable;
-    query4(root, "[data-editor-context]").hidden = !catalogEditable && !source2.supportsModes;
-    const hasDeletionDestination = source2.categories.length > 1 || state.settings.sources.some((item) => item !== source2 && isThemeCatalogEditable(item) && item.categories.length > 0);
-    const deleteCategory = query4(root, "[data-delete-category]");
-    deleteCategory.toggleAttribute("disabled", !hasDeletionDestination);
-    deleteCategory.title = hasDeletionDestination ? "" : "Keep at least one editable group.";
+    query3(root, "[data-activate-theme]").toggleAttribute("disabled", active);
   }
-  function renderCategoryFields(root, category, editable) {
-    query4(root, "[data-category-fields]").hidden = !editable;
-    query4(root, "[data-category-label-input]").value = category.label;
-    query4(root, "[data-category-description-input]").value = category.description;
-  }
-  function renderModes(root, source2, mode) {
-    const modeSwitch = query4(root, "[data-mode-switch]");
-    modeSwitch.hidden = !source2.supportsModes;
-    if (source2.supportsModes && modeSwitch.value !== mode) {
+  function renderMode(root, source2, mode) {
+    const modeSwitch = query3(root, "[data-mode-switch]");
+    if (modeSwitch.value !== mode) {
       modeSwitch.value = mode;
     }
+    query3(root, "[data-mode-note]").hidden = source2.supportsModes;
   }
   function themeOption(theme) {
     const option2 = document.createElement("option");
@@ -18307,7 +18694,7 @@ circle.endpoint-timeline__errors {
     option2.textContent = theme.name;
     return option2;
   }
-  function query4(root, selector) {
+  function query3(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -18322,7 +18709,7 @@ circle.endpoint-timeline__errors {
       ...themeReferenceCycles(settings, theme, "dark")
     ]));
     if (cycles.size > 0) {
-      setThemeMessage(root, `Circular token references: ${[...cycles].join(", ")}.`, true);
+      setThemeMessage(root, `Circular variable references: ${[...cycles].join(", ")}.`, true);
       return;
     }
     const submitted = activate ? { ...settings, activeThemeId: state.selectedThemeId } : settings;
@@ -18356,7 +18743,10 @@ circle.endpoint-timeline__errors {
     selectedThemeId = "";
     applyLoaded(settings) {
       this.settings = structuredClone(settings);
-      this.selectedThemeId = this.settings.activeThemeId || this.settings.themes[0]?.id || "";
+      const url = new URL(window.location.href);
+      const requestedThemeId = url.searchParams.get("theme");
+      this.selectedThemeId = this.settings.themes.find((theme) => theme.id === requestedThemeId)?.id ?? this.settings.themes.find((theme) => theme.id === this.settings?.activeThemeId)?.id ?? this.settings.themes[0]?.id ?? "";
+      this.mode = url.searchParams.get("mode") === "dark" ? "dark" : "light";
       this.selection = themeSelectionFromUrl(this.settings.sources);
     }
     viewState() {
@@ -18370,28 +18760,40 @@ circle.endpoint-timeline__errors {
         mode: this.mode
       };
     }
-    createTheme() {
+    createTheme(name) {
       if (!this.settings) {
         return false;
       }
-      this.selectedThemeId = addTheme(this.settings);
+      this.selectedThemeId = addTheme(this.settings, name);
       return true;
     }
-    createCategory() {
+    renameTheme(name) {
+      return Boolean(this.settings && renameTheme(this.settings, this.selectedThemeId, name));
+    }
+    createCategory(label2, description) {
       if (!this.settings) {
         return;
       }
-      const added = addCategory(this.settings, this.selection);
+      const added = addCategory(this.settings, this.selection, label2, description);
       if (added) {
         this.selection = { sourceId: added.sourceId, categoryId: added.category.id };
       }
       return added;
     }
-    createToken() {
+    updateCategory(label2, description) {
+      return this.settings ? updateCategory(this.settings, this.selection, label2, description) : undefined;
+    }
+    createToken(draft) {
       if (!this.settings) {
         return false;
       }
-      return addToken(this.settings, this.selection);
+      return addToken(this.settings, this.selection, draft);
+    }
+    token(tokenId) {
+      return currentToken(this.settings, this.selection, tokenId);
+    }
+    updateToken(tokenId, label2, description) {
+      return Boolean(this.settings && updateToken(this.settings, this.selection, tokenId, label2, description));
     }
     deleteCategory() {
       if (!this.settings) {
@@ -18416,71 +18818,6 @@ circle.endpoint-timeline__errors {
     }
   }
 
-  // src/components/admin/Theme/editor/styles/category.css
-  var category_default = `.category-fields {
-    margin: 0 0 14px;
-    border-bottom: 1px solid var(--border-light, var(--border-default));
-}
-
-.category-fields[hidden] {
-    display: none;
-}
-
-.category-fields > summary {
-    width: max-content;
-    padding: 0 0 11px;
-    color: var(--theme-text-muted);
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 650;
-}
-
-.category-fields-grid {
-    display: grid;
-    grid-template-columns: minmax(160px, .7fr) minmax(240px, 1.3fr);
-    gap: 10px;
-    padding-bottom: 14px;
-}
-
-.category-fields label {
-    display: grid;
-    gap: 5px;
-}
-
-.category-fields label > span {
-    color: var(--theme-text-muted);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-}
-
-.category-fields input {
-    width: 100%;
-    min-width: 0;
-    min-height: 34px;
-    box-sizing: border-box;
-    padding: 0 9px;
-    border: 1px solid var(--border-light, var(--border-default));
-    border-radius: 6px;
-    background: var(--bg-surface);
-    color: var(--text-main);
-    font: inherit;
-    font-size: 12px;
-}
-
-.category-fields input:focus {
-    border-color: var(--primary-base);
-    outline: 0;
-}
-
-@media (max-width: 720px) {
-    .category-fields-grid {
-        grid-template-columns: 1fr;
-    }
-}
-`;
-
   // src/components/admin/Theme/editor/styles/editor.css
   var editor_default = `:host {
     display: block;
@@ -18498,49 +18835,76 @@ cms-shell-detail {
     --w-detail-main-width: min(940px, 100%);
     --w-detail-aside-width: 0px;
     --w-detail-gap: 0px;
+    --w-detail-header-gap: 16px;
 }
 
+.theme-page-header,
+.theme-page-context,
 .theme-actions,
-.category-actions,
-.context-controls,
-.editor-context-bar {
+.context-modal-actions,
+.variable-edit-actions {
     display: flex;
     align-items: center;
 }
 
+.theme-page-header {
+    width: min(940px, 100%);
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.theme-page-context {
+    min-width: 0;
+    gap: 10px;
+}
+
+h1 {
+    margin: 0 8px 0 0;
+    font-size: 32px;
+    line-height: 1;
+}
+
+.theme-page-context [data-theme-switch] {
+    width: 210px;
+}
+
+.theme-page-context [data-mode-switch] {
+    width: 150px;
+    flex: 0 0 auto;
+}
+
+.mode-note {
+    color: var(--theme-text-muted);
+    font-size: 11px;
+    font-weight: 650;
+}
+
 .theme-actions {
+    flex: 0 0 auto;
     justify-content: flex-end;
     gap: 8px;
 }
 
-.theme-actions [data-theme-switch][hidden],
-.category-actions[hidden],
-[data-mode-switch][hidden] {
+.mode-note[hidden],
+[data-context-description-field][hidden] {
     display: none;
 }
 
-.category-actions {
-    gap: 6px;
-}
-
-.context-controls {
+.theme-mark {
+    display: inline-grid;
+    width: 34px;
+    height: 34px;
     flex: 0 0 auto;
-    gap: 10px;
+    place-items: center;
+    border-radius: 7px;
+    background: var(--primary-muted);
+    color: var(--primary-base);
 }
 
-.editor-context-bar {
-    justify-content: flex-end;
-    gap: 16px;
-    margin-bottom: 14px;
-}
-
-.editor-context-bar[hidden] {
-    display: none;
-}
-
-[data-mode-switch] {
-    width: 150px;
-    flex: 0 0 auto;
+.theme-mark svg {
+    width: 18px;
+    height: 18px;
 }
 
 .theme-message {
@@ -18557,66 +18921,80 @@ cms-shell-detail {
     color: var(--danger-base, #c4473d);
 }
 
-.theme-settings {
-    margin-top: 14px;
-    border-top: 1px solid var(--border-light, var(--border-default));
+p9r-modal[data-context-modal],
+p9r-modal[data-variable-modal],
+p9r-modal[data-variable-edit-modal] {
+    --p9r-modal-width: 480px;
 }
 
-.theme-settings summary {
-    width: max-content;
-    padding-top: 12px;
-    color: var(--theme-text-muted);
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 650;
+p9r-modal[data-context-modal]::part(header),
+p9r-modal[data-context-modal]::part(footer),
+p9r-modal[data-variable-modal]::part(header),
+p9r-modal[data-variable-edit-modal]::part(header),
+p9r-modal[data-variable-edit-modal]::part(footer) {
+    display: flex;
 }
 
-.theme-name-field {
+.context-form {
     display: grid;
-    max-width: 360px;
-    gap: 5px;
-    margin-top: 10px;
+    gap: 16px;
 }
 
-.theme-name-field span {
+.context-modal-actions {
+    gap: 8px;
+}
+
+.variable-edit-actions {
+    width: 100%;
+    gap: 8px;
+}
+
+.variable-edit-spacer {
+    flex: 1;
+}
+
+.variable-type-readonly {
+    display: grid;
+    gap: 6px;
+}
+
+.variable-type-readonly > span {
     color: var(--theme-text-muted);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 650;
     letter-spacing: .04em;
     text-transform: uppercase;
 }
 
-.theme-name-field input {
-    min-height: 34px;
-    box-sizing: border-box;
-    padding: 0 9px;
-    border: 1px solid var(--border-light, var(--border-default));
-    border-radius: 6px;
-    background: var(--bg-surface);
-    color: var(--text-main);
-    font: inherit;
+.variable-type-readonly p9r-tag {
+    width: max-content;
 }
 
-@container theme-editor (max-width: 700px) {
-    .theme-actions {
-        width: 100%;
+@container theme-editor (max-width: 820px) {
+    .theme-page-header {
+        align-items: stretch;
+        flex-direction: column;
+        margin-bottom: 24px;
+    }
+
+    .theme-page-context {
         flex-wrap: wrap;
+    }
+
+    .theme-actions {
         justify-content: flex-start;
     }
+}
 
-    .theme-actions [data-theme-switch] {
+@container theme-editor (max-width: 520px) {
+    h1 {
         width: 100%;
+        margin-bottom: 4px;
     }
 
-    .editor-context-bar {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .context-controls {
+    .theme-page-context [data-theme-switch],
+    .theme-page-context [data-mode-switch] {
         width: 100%;
-        align-items: flex-start;
-        flex-direction: column;
     }
 
     .category-actions {
@@ -18670,6 +19048,10 @@ cms-shell-detail {
     border-bottom: 1px solid var(--border-light, var(--border-default));
 }
 
+.element-row.catalog-editable {
+    grid-template-columns: minmax(190px, .75fr) minmax(300px, 1.25fr) auto;
+}
+
 .element-row:hover,
 .element-row:focus-within {
     background: color-mix(in srgb, var(--bg-base) 68%, transparent);
@@ -18682,70 +19064,30 @@ cms-shell-detail {
     gap: 3px;
 }
 
-.token-label-text,
-.token-label-input {
+.token-label-text {
+    min-width: 0;
+    overflow: hidden;
     color: var(--text-main);
     font-size: 12px;
     font-weight: 700;
-}
-
-.token-label-input,
-.token-description-input,
-.token-type-select {
-    min-width: 0;
-    border: 0;
-    background: transparent;
-    color: var(--text-main);
-    font: inherit;
-}
-
-.token-label-input,
-.token-description-input {
-    width: 100%;
-    padding: 0;
-}
-
-.token-description-input,
-.element-label > span,
-.token-type-select,
-.token-details {
-    color: var(--theme-text-muted);
-    font-size: 10px;
-}
-
-.token-type-select {
-    width: max-content;
-    padding: 0;
-}
-
-.token-label-input:focus,
-.token-description-input:focus,
-.token-type-select:focus {
-    outline: 1px solid var(--primary-base);
-    outline-offset: 2px;
-}
-
-.token-details summary {
-    width: max-content;
-    cursor: pointer;
-}
-
-.token-details code,
-.token-details span,
-.token-details .delete-token {
-    display: block;
-    overflow: hidden;
-    margin-top: 3px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.token-details code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+.edit-token {
+    align-self: center;
+    justify-self: end;
 }
 
-.token-details .delete-token {
-    color: var(--danger-base, #c4473d);
+.token-description,
+.token-type-label {
+    color: var(--theme-text-muted);
+    font-size: 10px;
+}
+
+.token-type-label {
+    width: max-content;
+    padding: 0;
 }
 
 .token-value-line,
@@ -18756,6 +19098,25 @@ cms-shell-detail {
     gap: 7px;
 }
 
+.token-value-line {
+    align-items: flex-start;
+}
+
+.token-value-mode {
+    width: 180px;
+    flex: 0 0 180px;
+}
+
+.token-value-editor,
+.token-editor-panel {
+    width: 100%;
+    min-width: 0;
+}
+
+.token-editor-panel[hidden] {
+    display: none;
+}
+
 .value-control {
     width: 100%;
     min-width: 0;
@@ -18763,6 +19124,22 @@ cms-shell-detail {
 
 .color-control {
     flex: 1;
+}
+
+.length-editor {
+    display: grid;
+    grid-template-columns: minmax(100px, 1fr) 120px;
+    gap: 7px;
+}
+
+.length-expression {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.length-number[hidden],
+.length-expression[hidden] {
+    display: none;
 }
 
 .color-control input[type="color"] {
@@ -18781,8 +19158,7 @@ cms-shell-detail {
     justify-content: flex-end;
 }
 
-.token-default button,
-.delete-token {
+.token-default button {
     padding: 0;
     border: 0;
     background: transparent;
@@ -18793,105 +19169,187 @@ cms-shell-detail {
     font-weight: 700;
 }
 
-.delete-token:hover {
-    color: var(--danger-base, #c4473d);
-}
-
 @container theme-editor (max-width: 700px) {
-    .element-row {
+    .element-row,
+    .element-row.catalog-editable {
         grid-template-columns: 1fr;
         gap: 9px;
         padding-block: 14px;
+    }
+
+    .edit-token {
+        justify-self: end;
+    }
+}
+
+@container theme-editor (max-width: 520px) {
+    .token-value-line {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .token-value-mode {
+        width: 100%;
+        flex-basis: auto;
     }
 }
 `;
 
   // src/components/admin/Theme/editor/styles/index.ts
-  var styles_default = [editor_default, category_default, explorer_default, tokens_default].join(`
+  var styles_default = [editor_default, explorer_default, tokens_default].join(`
 `);
 
   // src/components/admin/Theme/editor/ThemeEditor.html
-  var ThemeEditor_default = `<cms-shell-detail>
-    <span slot="title" data-source-title>Theme</span>
-    <div slot="actions" class="theme-actions">
+  var ThemeEditor_default = `<header class="theme-page-header">
+    <div class="theme-page-context">
+        <h1>Theme</h1>
         <p9r-select data-theme-switch aria-label="Select theme"></p9r-select>
         <p9r-tag color="success" data-theme-status>Active</p9r-tag>
+        <p9r-segmented-switch data-mode-switch value="light" aria-label="Select mode">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </p9r-segmented-switch>
+        <span class="mode-note" data-mode-note hidden>Shared across modes</span>
+    </div>
+    <div class="theme-actions">
         <p9r-button type="button" color="primary" data-save-theme>Save</p9r-button>
         <p9r-action-menu label="Theme actions">
             <p9r-action-menu-section label="Theme">
                 <p9r-action-menu-item data-add-theme>New theme</p9r-action-menu-item>
+                <p9r-action-menu-item data-edit-theme>Rename theme</p9r-action-menu-item>
                 <p9r-action-menu-item data-activate-theme>Activate theme</p9r-action-menu-item>
             </p9r-action-menu-section>
         </p9r-action-menu>
     </div>
+</header>
+
+<cms-shell-detail>
+    <span slot="back" class="theme-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.1A4.1 4.1 0 0 0 21 10.5 8.9 8.9 0 0 0 12 3Z"></path>
+            <circle cx="7.5" cy="11" r=".7" fill="currentColor" stroke="none"></circle>
+            <circle cx="10" cy="7.5" r=".7" fill="currentColor" stroke="none"></circle>
+            <circle cx="14.5" cy="7" r=".7" fill="currentColor" stroke="none"></circle>
+        </svg>
+    </span>
+    <span slot="title" data-source-title>Theme</span>
 
     <p class="theme-message" slot="main" data-message aria-live="polite"></p>
 
     <cms-detail-section slot="main" density="compact" data-category-section>
-        <div class="editor-context-bar" data-editor-context>
-            <div class="context-controls">
-                <p9r-segmented-switch data-mode-switch value="light" label="Mode" hidden>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </p9r-segmented-switch>
-                <div class="category-actions" data-category-actions hidden>
-                    <p9r-button type="button" variant="ghost" data-add-element>Add token</p9r-button>
-                    <p9r-action-menu label="Group actions">
-                        <p9r-action-menu-section label="Group">
-                            <p9r-action-menu-item data-add-theme-category>New group</p9r-action-menu-item>
-                            <p9r-action-menu-item color="danger" data-delete-category>Delete group</p9r-action-menu-item>
-                        </p9r-action-menu-section>
-                    </p9r-action-menu>
-                </div>
-            </div>
-        </div>
-
-        <details class="category-fields" data-category-fields hidden>
-            <summary>Group details</summary>
-            <div class="category-fields-grid">
-                <label>
-                    <span>Name</span>
-                    <input type="text" data-category-label-input>
-                </label>
-                <label>
-                    <span>Description</span>
-                    <input type="text" data-category-description-input>
-                </label>
-            </div>
-        </details>
-
         <div class="groups" data-groups></div>
-
-        <details class="theme-settings">
-            <summary>Theme details</summary>
-            <label class="theme-name-field">
-                <span>Name</span>
-                <input type="text" data-theme-name-input>
-            </label>
-        </details>
     </cms-detail-section>
 </cms-shell-detail>
+
+<p9r-modal data-context-modal aria-label="Edit theme">
+    <span slot="title" data-context-modal-title>Edit theme</span>
+    <form id="theme-context-form" class="context-form" data-context-form>
+        <p9r-input label="Name" required max-count="80" data-context-name></p9r-input>
+        <p9r-textarea
+            label="Description"
+            rows="3"
+            maxlength="240"
+            max-count="240"
+            data-context-description
+            data-context-description-field
+        ></p9r-textarea>
+    </form>
+    <div slot="footer" class="context-modal-actions">
+        <p9r-button type="button" variant="outlined" data-context-cancel>Cancel</p9r-button>
+        <p9r-button type="submit" form="theme-context-form" color="primary" data-context-submit>Save</p9r-button>
+    </div>
+</p9r-modal>
+
+<p9r-modal data-variable-modal aria-label="Create a variable">
+    <span slot="title">Variable creation</span>
+    <form id="theme-variable-form" data-variable-form>
+        <p9r-stack gap="m">
+            <p9r-input
+                name="label"
+                label="Name"
+                placeholder="Primary color"
+                required
+                max-count="80"
+                data-variable-name
+            ></p9r-input>
+            <p9r-textarea
+                name="description"
+                label="Description"
+                placeholder="Used for primary actions and highlights."
+                rows="3"
+                maxlength="240"
+                max-count="240"
+                data-variable-description
+            ></p9r-textarea>
+            <p9r-select name="type" label="Type" value="color" data-variable-type>
+                <option value="color">Color</option>
+                <option value="font-family">Font family</option>
+                <option value="length">Length</option>
+                <option value="number">Number</option>
+                <option value="shadow">Shadow</option>
+                <option value="value">CSS value</option>
+            </p9r-select>
+            <p9r-button color="primary" fullWidth type="submit" form="theme-variable-form" data-variable-submit>
+                Create variable
+            </p9r-button>
+        </p9r-stack>
+    </form>
+</p9r-modal>
+
+<p9r-modal data-variable-edit-modal aria-label="Edit variable">
+    <span slot="title">Edit variable</span>
+    <form id="theme-variable-edit-form" class="context-form" data-variable-edit-form>
+        <p9r-input label="Name" required max-count="80" data-variable-edit-name></p9r-input>
+        <p9r-textarea
+            label="Description"
+            rows="3"
+            maxlength="240"
+            max-count="240"
+            data-variable-edit-description
+        ></p9r-textarea>
+        <div class="variable-type-readonly">
+            <span>Type</span>
+            <p9r-tag data-variable-edit-type></p9r-tag>
+        </div>
+    </form>
+    <div slot="footer" class="variable-edit-actions">
+        <p9r-button type="button" color="danger" variant="outlined" data-delete-token>Delete variable</p9r-button>
+        <span class="variable-edit-spacer"></span>
+        <p9r-button type="button" variant="outlined" data-variable-edit-cancel>Cancel</p9r-button>
+        <p9r-button type="submit" form="theme-variable-edit-form" color="primary" data-variable-edit-submit>
+            Save
+        </p9r-button>
+    </div>
+</p9r-modal>
 `;
 
   // src/components/admin/Theme/ThemeEditor.ts
   class CmsThemeEditor extends U2 {
     state = new ThemeEditorState;
+    dialogs;
     constructor() {
       super({ css: styles_default, template: ThemeEditor_default });
+      this.dialogs = new ThemeEditorDialogs(this.shadowRoot);
     }
     connectedCallback() {
       super.connectedCallback();
       this.shadowRoot?.addEventListener("click", this.onClick);
       this.shadowRoot?.addEventListener("change", this.onChange);
       this.shadowRoot?.addEventListener("input", this.onInput);
+      this.shadowRoot?.addEventListener("submit", this.onSubmit);
+      this.shadowRoot?.addEventListener("close", this.onModalClose);
       window.addEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected);
+      window.addEventListener(THEME_NAV_ACTION_REQUESTED_EVENT, this.onNavigationAction);
       this.load();
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
       this.shadowRoot?.removeEventListener("change", this.onChange);
       this.shadowRoot?.removeEventListener("input", this.onInput);
+      this.shadowRoot?.removeEventListener("submit", this.onSubmit);
+      this.shadowRoot?.removeEventListener("close", this.onModalClose);
       window.removeEventListener(THEME_CATEGORY_SELECTED_EVENT, this.onCategorySelected);
+      window.removeEventListener(THEME_NAV_ACTION_REQUESTED_EVENT, this.onNavigationAction);
     }
     async load() {
       setThemeMessage(this.shadowRoot, "Loading theme…");
@@ -18910,29 +19368,23 @@ cms-shell-detail {
       }
     }
     onClick = (event) => {
-      if (this.state.settings && resetThemeToken(event, this.state.settings, this.state.selection, this.state.selectedThemeId, this.state.mode)) {
+      if (this.state.settings && resetThemeToken(event, this.state.settings, this.state.selection, this.state.selectedThemeId, this.valueMode())) {
         this.render();
         return;
       }
       const action = clickAction(event);
       if (action === "theme") {
-        if (this.state.createTheme()) {
-          this.render();
-        }
-      } else if (action === "category") {
-        const added = this.state.createCategory();
-        if (added) {
-          this.render();
-          dispatchThemeCategoryAdded(added);
-        }
-      } else if (action === "token") {
-        if (this.state.createToken()) {
-          this.render();
-        }
-      } else if (action === "delete-category") {
-        this.deleteCategory();
+        this.openContextModal("create-theme");
+      } else if (action === "edit-theme") {
+        this.openContextModal("rename-theme");
+      } else if (action === "close-context") {
+        this.dialogs.closeContext();
+      } else if (action === "edit-token") {
+        this.openVariableEdit(event);
+      } else if (action === "close-variable-edit") {
+        this.dialogs.closeVariableEdit();
       } else if (action === "delete-token") {
-        this.deleteToken(event);
+        this.deleteToken();
       } else if (action === "save" || action === "activate") {
         persistTheme(this.shadowRoot, this.state, action === "activate", () => this.refreshAfterSave());
       }
@@ -18942,19 +19394,24 @@ cms-shell-detail {
     };
     onChange = (event) => {
       const target2 = event.target;
+      if (handleTokenControlMode(event) || handleLengthControlMode(event)) {
+        return;
+      }
       if (target2.matches?.("[data-theme-switch]") && target2.value) {
         this.state.selectedThemeId = target2.value;
+        this.updateContextUrl("theme", target2.value);
         this.render();
         return;
       }
       if (target2.matches?.("[data-mode-switch]") && (target2.value === "light" || target2.value === "dark")) {
         if (this.state.mode !== target2.value) {
           this.state.mode = target2.value;
+          this.updateContextUrl("mode", target2.value);
           this.render();
         }
         return;
       }
-      if (target2.matches?.("[data-token-type-control], [data-token-value-control], input[type='color']")) {
+      if (target2.matches?.("[data-token-value-control], [data-length-number], [data-length-unit], input[type='color']")) {
         this.handleInput(event);
         this.render();
       }
@@ -18964,6 +19421,73 @@ cms-shell-detail {
         this.render();
       }
     };
+    onNavigationAction = (event) => {
+      if (event.detail === "create-group") {
+        this.openContextModal("create-group");
+      } else if (event.detail === "add-variable") {
+        this.dialogs.openVariable();
+      } else if (event.detail === "edit-group") {
+        this.openContextModal("edit-group");
+      } else if (event.detail === "delete-group") {
+        this.deleteCategory();
+      }
+    };
+    onSubmit = (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) {
+        return;
+      }
+      if (form.matches("[data-context-form]")) {
+        event.preventDefault();
+        this.submitContext(form);
+      } else if (form.matches("[data-variable-form]")) {
+        event.preventDefault();
+        const draft = this.dialogs.readVariable(form);
+        if (draft && this.state.createToken(draft)) {
+          this.render();
+          this.dialogs.closeVariable();
+        }
+      } else if (form.matches("[data-variable-edit-form]")) {
+        event.preventDefault();
+        const submission = this.dialogs.readVariableEdit(form);
+        if (submission && this.state.updateToken(submission.tokenId, submission.label, submission.description)) {
+          this.render();
+          this.dialogs.closeVariableEdit();
+        }
+      }
+    };
+    submitContext(form) {
+      const submission = this.dialogs.readContext(form);
+      if (!submission) {
+        return;
+      }
+      let completed = false;
+      if (submission.action === "create-theme") {
+        completed = this.state.createTheme(submission.name);
+        if (completed) {
+          this.updateContextUrl("theme", this.state.selectedThemeId);
+        }
+      } else if (submission.action === "rename-theme") {
+        completed = this.state.renameTheme(submission.name);
+      } else if (submission.action === "create-group") {
+        const added = this.state.createCategory(submission.name, submission.description);
+        completed = Boolean(added);
+        if (added) {
+          dispatchThemeCategoryAdded(added);
+        }
+      } else {
+        const updated = this.state.updateCategory(submission.name, submission.description);
+        completed = Boolean(updated);
+        if (updated) {
+          dispatchThemeCategoryUpdated(updated);
+        }
+      }
+      if (completed) {
+        this.render();
+        this.dialogs.closeContext();
+      }
+    }
+    onModalClose = (event) => this.dialogs.handleClose(event);
     handleInput(event) {
       if (!this.state.settings || !this.shadowRoot) {
         return;
@@ -18973,7 +19497,7 @@ cms-shell-detail {
         settings: this.state.settings,
         selection: this.state.selection,
         selectedThemeId: this.state.selectedThemeId,
-        mode: this.state.mode
+        mode: this.valueMode()
       });
     }
     async refreshAfterSave() {
@@ -18987,7 +19511,7 @@ cms-shell-detail {
       dispatchThemeSettingsRefreshed();
     }
     deleteCategory() {
-      if (!window.confirm("Delete this group and all of its tokens?")) {
+      if (!window.confirm("Delete this group and all of its variables?")) {
         return;
       }
       const removed = this.state.deleteCategory();
@@ -18996,19 +19520,273 @@ cms-shell-detail {
         dispatchThemeCategoryDeleted(removed);
       }
     }
-    deleteToken(event) {
-      const tokenId = event.target?.closest("[data-token-id]")?.dataset.tokenId;
-      if (tokenId && window.confirm("Delete this token from every theme?") && this.state.deleteToken(tokenId)) {
+    deleteToken() {
+      const tokenId = this.dialogs.editedVariableId();
+      if (tokenId && window.confirm("Delete this variable from every theme?") && this.state.deleteToken(tokenId)) {
+        this.dialogs.closeVariableEdit();
         this.render();
       }
+    }
+    openVariableEdit(event) {
+      const tokenId = event.target?.closest("[data-token-id]")?.dataset.tokenId;
+      const token = tokenId ? this.state.token(tokenId) : undefined;
+      if (token) {
+        this.dialogs.openVariableEdit(token);
+      }
+    }
+    valueMode() {
+      const source2 = this.state.settings?.sources.find((item) => item.id === this.state.selection.sourceId);
+      return source2?.supportsModes ? this.state.mode : "light";
+    }
+    updateContextUrl(key, value2) {
+      const url = new URL(window.location.href);
+      url.searchParams.set(key, value2);
+      window.history.replaceState(null, "", url);
+    }
+    openContextModal(action) {
+      const settings = this.state.settings;
+      if (!settings) {
+        return;
+      }
+      const theme = settings.themes.find((item) => item.id === this.state.selectedThemeId);
+      const source2 = settings.sources.find((item) => item.id === this.state.selection.sourceId);
+      const category = source2?.categories.find((item) => item.id === this.state.selection.categoryId);
+      this.dialogs.openContext(action, {
+        themeName: theme?.name,
+        categoryLabel: category?.label,
+        categoryDescription: category?.description
+      });
     }
   }
   if (!customElements.get("cms-theme-editor")) {
     customElements.define("cms-theme-editor", CmsThemeEditor);
   }
 
+  // src/components/admin/Theme/nav/ThemeNav.html
+  var ThemeNav_default = `<w13c-lateral-menu aria-label="Theme categories">
+    <span slot="header">Theme</span>
+</w13c-lateral-menu>
+`;
+
+  // src/components/admin/Resources/Integrations/api.ts
+  function basePath() {
+    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
+    return raw.replace(/\/+$/, "");
+  }
+  function route(path) {
+    return `${basePath()}${path}`;
+  }
+  function currentIntegrationRoute() {
+    const params = new URL(window.location.href).searchParams;
+    const installation = params.get("integration")?.trim();
+    if (installation) {
+      return { view: "installation", id: installation };
+    }
+    const setup = params.get("setup")?.trim();
+    if (setup) {
+      return { view: "setup", kind: setup };
+    }
+    return { view: "list", tab: params.get("tab") === "catalogue" ? "catalogue" : "installed" };
+  }
+  function integrationRouteUrl(next) {
+    const params = new URLSearchParams;
+    if (next.view === "installation") {
+      params.set("integration", next.id);
+    } else if (next.view === "setup") {
+      params.set("setup", next.kind);
+    } else if (next.tab === "catalogue") {
+      params.set("tab", "catalogue");
+    }
+    const suffix = params.toString() ? `?${params.toString()}` : "";
+    return route(`/admin/integrations${suffix}`);
+  }
+  function pushIntegrationRoute(next) {
+    history.pushState(null, "", integrationRouteUrl(next));
+  }
+  function replaceIntegrationRoute(next) {
+    history.replaceState(null, "", integrationRouteUrl(next));
+  }
+  async function importIntegration(payload) {
+    const result = await postJson(route("/api/integrations/import"), payload);
+    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
+    return result;
+  }
+  async function getIntegrationInstallation(id) {
+    return getJson(`${route("/api/integrations/installations")}?id=${encodeURIComponent(id)}`);
+  }
+  async function rerunIntegrationInstallation(id, answers) {
+    const body = answers ? { answers } : {};
+    await postJson(`${route("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, body);
+    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
+    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
+  }
+  async function getPageLinks() {
+    return getJson(route("/api/page/links?visible=published"));
+  }
+  async function integrationUpgradeVersions(id) {
+    return getJson(`${route("/api/integrations/installations/versions")}?id=${encodeURIComponent(id)}`);
+  }
+  async function upgradeIntegrationInstallation(id, version) {
+    await postJson(`${route("/api/integrations/installations/upgrade")}?id=${encodeURIComponent(id)}`, { version });
+    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
+    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
+  }
+
+  class IntegrationApiError extends Error {
+    status;
+    constructor(status, message) {
+      super(message);
+      this.status = status;
+      this.name = "IntegrationApiError";
+    }
+  }
+  async function getJson(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw await responseError(response);
+    }
+    return response.json();
+  }
+  async function postJson(url, body) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      throw await responseError(response);
+    }
+    return response.json();
+  }
+  async function responseError(response) {
+    const fallback = `Request failed (HTTP ${response.status})`;
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      const body = await response.json().catch(() => null);
+      const message = typeof body?.error === "string" ? body.error : typeof body?.message === "string" ? body.message : null;
+      return new IntegrationApiError(response.status, message?.slice(0, 500) || fallback);
+    }
+    const text3 = (await response.text()).trim();
+    return new IntegrationApiError(response.status, text3 && !text3.startsWith("<") ? text3.slice(0, 500) : fallback);
+  }
+
+  // src/components/admin/Theme/nav/integrationIcons.ts
+  async function loadIntegrationThemeIcons(sources) {
+    const integrationIds = Array.from(new Set(sources.flatMap((source2) => source2.owner?.kind === "integration" ? [source2.owner.integrationId] : [])));
+    const definitions = await Promise.all(integrationIds.map(async (integrationId) => {
+      try {
+        const installation = await getIntegrationInstallation(integrationId);
+        return installation.definition ? [integrationId, installation.definition] : undefined;
+      } catch {
+        return;
+      }
+    }));
+    return new Map(definitions.filter((entry) => entry !== undefined));
+  }
+
+  // src/components/admin/Theme/nav/ThemeNavActions.css
+  var ThemeNavActions_default = `.theme-category-action,
+.theme-group-actions-trigger {
+    display: inline-grid;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: currentColor;
+    cursor: pointer;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.theme-category-action:hover,
+.theme-category-action:focus-visible,
+.theme-group-actions-trigger:hover,
+.theme-group-actions-trigger:focus-visible {
+    background: var(--bg-hover);
+    outline: none;
+}
+
+.theme-group-actions {
+    position: relative;
+}
+
+.theme-group-actions-trigger {
+    list-style: none;
+}
+
+.theme-group-actions-trigger::-webkit-details-marker {
+    display: none;
+}
+
+.theme-group-actions-panel {
+    position: absolute;
+    inset-block-start: calc(100% + 4px);
+    inset-inline-end: 0;
+    z-index: 40;
+    display: grid;
+    width: 156px;
+    padding: 5px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--bg-overlay, var(--bg-surface));
+    box-shadow: 0 12px 30px rgb(0 0 0 / 14%);
+}
+
+.theme-group-action {
+    width: 100%;
+    padding: 8px 9px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-main);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    text-align: left;
+}
+
+.theme-group-action:is(:hover, :focus-visible) {
+    background: var(--bg-hover);
+    outline: none;
+}
+
+.theme-group-action.danger {
+    color: var(--danger-base);
+}
+
+.theme-group-action:disabled {
+    cursor: default;
+    opacity: .45;
+}
+
+.theme-new-group {
+    width: 100%;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--primary-base);
+    cursor: pointer;
+    font: inherit;
+    font-size: .8125rem;
+    font-weight: 700;
+    text-align: left;
+}
+
+.theme-new-group:is(:hover, :focus-visible) {
+    background: var(--bg-hover);
+    outline: none;
+}
+`;
+
   // src/components/admin/Theme/nav/ThemeNav.css
-  var ThemeNav_default = `:host {
+  var ThemeNav_default2 = `:host {
     display: block;
     height: 100%;
 }
@@ -19027,124 +19805,670 @@ w13c-lateral-menu-item[data-generated] {
 }
 
 w13c-lateral-menu-item.category-item {
-    margin-left: 18px;
-    --item-font-size: .8125rem;
+    --item-font-size: .875rem;
 }
 
-w13c-lateral-menu-item.integration-item {
-    margin-top: 8px;
+w13c-lateral-menu-item.category-item::part(icon) {
+    display: none;
 }
 
-w13c-lateral-menu-item.integration-item::part(label) {
-    font-weight: 650;
+w13c-lateral-menu-item.category-item::part(item) {
+    gap: 0;
 }
 
-w13c-lateral-menu-item.integration-category {
-    margin-left: 22px;
+.theme-category-label {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.theme-source-heading {
+    min-width: 0;
+    margin-top: 4px;
+    gap: 10px;
+}
+
+.theme-source-heading .integration-icon {
+    display: inline-grid;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    place-items: center;
+    color: currentColor;
+}
+
+.theme-source-heading .integration-icon :is(svg, img) {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+.theme-source-heading > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 `;
 
-  // src/components/admin/Theme/nav/ThemeNav.html
-  var ThemeNav_default2 = `<w13c-lateral-menu aria-label="Theme categories">
-    <span slot="header">Theme</span>
-</w13c-lateral-menu>
+  // src/components/admin/Theme/nav/styles.ts
+  var styles_default2 = `${ThemeNav_default2}
+${ThemeNavActions_default}`;
+
+  // src/components/admin/Resources/Integrations/ui/resources/format.ts
+  function artifactLabels(definition) {
+    const types2 = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
+    return types2.length ? types2.map(typeLabel) : ["No artifacts"];
+  }
+  function formatRelativeDate(value2) {
+    if (!value2) {
+      return "Never";
+    }
+    const date = new Date(value2);
+    if (Number.isNaN(date.getTime())) {
+      return value2;
+    }
+    const now = new Date;
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const time = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(date);
+    if (date.toDateString() === now.toDateString()) {
+      return `Today ${time}`;
+    }
+    if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday ${time}`;
+    }
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+  function statusLabel(status) {
+    if (status === "success") {
+      return "Active";
+    }
+    if (status === "failed") {
+      return "Failed";
+    }
+    return "Pending";
+  }
+  function typeLabel(type) {
+    if (type === "sourceOverlay") {
+      return "Source overlay";
+    }
+    if (type === "dashboardRelation") {
+      return "Dashboard relation";
+    }
+    return type[0].toUpperCase() + type.slice(1);
+  }
+  // src/components/admin/Resources/Integrations/ui/templates/browser.html
+  var browser_default = `<template data-template="installed-head">
+    <div class="installed-head" aria-hidden="true">
+        <span>Integration</span>
+        <span>Status</span>
+        <span>Artifacts</span>
+        <span>Last sync</span>
+    </div>
+</template>
+
+<template data-template="installed-row">
+    <a class="installed-row">
+        <span class="integration-title-cell">
+            <span data-icon-host></span>
+            <span class="integration-title-copy">
+                <strong data-label></strong>
+                <small data-kind></small>
+            </span>
+        </span>
+        <span><span class="status-pill" data-status></span></span>
+        <span class="badge-row" data-badges></span>
+        <span class="muted" data-updated></span>
+    </a>
+</template>
 `;
 
-  // src/components/admin/Theme/nav/icons.ts
-  function createSourceIcon(sourceId) {
-    return createIcon(sourceIconPaths(sourceId));
-  }
-  function createCategoryIcon() {
-    return createIcon('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8"/><path d="M8 13h5"/>');
-  }
-  function createIcon(paths) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("slot", "icon");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "2");
-    svg.setAttribute("stroke-linecap", "round");
-    svg.setAttribute("stroke-linejoin", "round");
-    svg.innerHTML = paths;
-    return svg;
-  }
-  function sourceIconPaths(sourceId) {
-    if (sourceId === "colors") {
-      return '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.7-.13 2.45-.35 1.1-.33 1.5-1.65.9-2.65-.58-.98-1.35-1.45-1.35-2.4 0-1.1.9-2 2-2h4c1.1 0 2-.9 2-2A10 10 0 0 0 12 2Z"/>';
+  // src/components/admin/Resources/Integrations/ui/templates/detail.html
+  var detail_default = `<template data-template="detail-shell">
+    <div class="detail-source" cms-reload-on="integration:updated">
+        <template>
+            <p class="detail-loading" cms-condition="$source.loading">Loading integration...</p>
+            <p class="detail-loading" cms-condition="$source.error">Unable to load this integration.</p>
+            <cms-shell-detail cms-condition="$source.loaded">
+                <button type="button" slot="back" data-detail-back aria-label="Back to installed integrations" data-back-icon></button>
+                <span slot="title" data-title></span>
+                <div slot="actions" class="integration-detail-actions">
+                    <p9r-button type="button" color="primary" data-run-sync>Run sync</p9r-button>
+                    <p9r-action-menu label="More actions">
+                        <p9r-action-menu-section label="Configuration">
+                            <p9r-action-menu-item data-reconfigure>Reconfigure</p9r-action-menu-item>
+                        </p9r-action-menu-section>
+                        <p9r-action-menu-section label="Danger zone">
+                            <p9r-action-menu-item color="danger" disabled title="No uninstall endpoint is available yet.">Uninstall</p9r-action-menu-item>
+                        </p9r-action-menu-section>
+                    </p9r-action-menu>
+                    <span class="action-status" role="status" aria-live="polite" data-action-status></span>
+                </div>
+
+                <cms-detail-section slot="main" heading="Created resources">
+                    <div class="resource-list">
+                        <article class="resource-row" cms-repeat="integration.artifacts as artifact">
+                            <span class="resource-icon" data-grid-icon aria-hidden="true"></span>
+                            <span>
+                                <strong>{{ artifact.id }}</strong>
+                                <small>{{ artifact.typeLabel }} - {{ artifact.actionLabel }}</small>
+                            </span>
+                            <span class="resource-state">{{ artifact.existsLabel }}</span>
+                        </article>
+                    </div>
+                </cms-detail-section>
+
+                <cms-detail-section slot="main" heading="Recent activity">
+                    <div class="activity-list">
+                        <article class="activity-row" cms-repeat="integration.runs as run">
+                            <span class="activity-dot"></span>
+                            <span>
+                                <strong>Run #{{ run.runNumber }} - {{ run.statusLabel }}</strong>
+                                <small>{{ run.startedAtLabel }}</small>
+                            </span>
+                        </article>
+                    </div>
+                </cms-detail-section>
+
+                <cms-detail-section slot="aside" heading="Installation">
+                    <dl class="summary-grid">
+                        <div><dt>Description</dt><dd data-description></dd></div>
+                        <div><dt>Identifier</dt><dd>{{ integration.id }}</dd></div>
+                        <div><dt>Status</dt><dd>{{ integration.statusLabel }}</dd></div>
+                        <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
+                        <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
+                    </dl>
+                </cms-detail-section>
+
+                <cms-detail-section slot="aside" heading="Version upgrade">
+                    <div class="upgrade-panel" data-upgrade-panel>
+                        <p>Upgrades are explicit. Syncing never changes the installed version.</p>
+                        <p9r-button type="button" data-upgrade-open>Check for upgrades</p9r-button>
+                        <div class="upgrade-form" data-upgrade-form hidden>
+                            <label>
+                                Target version
+                                <select data-upgrade-target aria-label="Target integration version"></select>
+                            </label>
+                            <label>
+                                Type the exact target version to confirm
+                                <input data-upgrade-confirmation type="text" autocomplete="off" spellcheck="false" />
+                            </label>
+                            <div class="upgrade-actions">
+                                <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
+                                <button type="button" class="secondary-action" data-upgrade-cancel>Cancel</button>
+                            </div>
+                        </div>
+                        <p class="upgrade-status" data-upgrade-status role="status" aria-live="polite"></p>
+                    </div>
+                </cms-detail-section>
+
+                <cms-detail-section slot="aside" heading="Linked integrations">
+                    <div data-linked></div>
+                </cms-detail-section>
+            </cms-shell-detail>
+        </template>
+    </div>
+</template>
+`;
+
+  // src/components/admin/Resources/Integrations/ui/templates/icons.html
+  var icons_default = `<template data-icon="chevron"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></template>
+<template data-icon="table"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 9h8"></path><path d="M8 13h5"></path></svg></template>
+<template data-icon="receipt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18l-2-1-2 1-2-1-2 1-2-1V3z"></path><path d="M9 8h6"></path><path d="M9 12h6"></path><path d="M9 16h4"></path></svg></template>
+<template data-icon="cube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 8-9-5-9 5 9 5 9-5z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg></template>
+<template data-icon="tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13 11 4H4v7l9 9 7-7z"></path><path d="M7.5 7.5h.01"></path></svg></template>
+<template data-icon="mail"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="m4 8 8 6 8-6"></path></svg></template>
+<template data-icon="user"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg></template>
+<template data-icon="card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M3 10h18"></path><path d="M7 15h3"></path></svg></template>
+<template data-icon="truck"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3z"></path><path d="M14 11h4l3 3v3h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></template>
+<template data-icon="pin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.2 7-11a7 7 0 0 0-14 0c0 5.8 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></template>
+<template data-icon="grid"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg></template>
+<template data-icon="spark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"></path><path d="m19 15 .9 2.6 2.6.9-2.6.9L19 23l-.9-2.6-2.6-.9 2.6-.9L19 15z"></path></svg></template>
+<template data-icon="key"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="14.5" r="3.5"></circle><path d="M10 12 21 1"></path><path d="m16 6 2 2"></path><path d="m14 8 2 2"></path></svg></template>
+`;
+
+  // src/components/admin/Resources/Integrations/ui/templates/importing.html
+  var importing_default = `<template data-template="importing-shell">
+    <cms-shell-detail class="integration-setup-shell">
+        <button type="button" slot="back" aria-label="Back to catalogue" disabled data-back-icon></button>
+        <span slot="title" data-title></span>
+        <div slot="actions" class="integration-detail-actions">
+            <p9r-button type="button" variant="outlined" disabled>Cancel</p9r-button>
+            <p9r-button type="button" color="primary" disabled>
+                <span class="spinner"></span> Importing
+            </p9r-button>
+        </div>
+
+        <cms-detail-section slot="main" heading="Installing integration" description="This can take a moment when connector deployment is required.">
+            <div class="installing-state">
+                <span class="spinner"></span>
+                <strong>Installation in progress</strong>
+                <small>The installed detail opens automatically when the import completes.</small>
+            </div>
+        </cms-detail-section>
+
+        <cms-detail-section slot="aside" heading="Import summary" description="The server is creating these resources now.">
+            <div data-summary></div>
+        </cms-detail-section>
+    </cms-shell-detail>
+</template>
+`;
+
+  // src/components/admin/Resources/Integrations/ui/templates/items.html
+  var items_default = `<template data-template="badge">
+    <span class="badge"></span>
+</template>
+
+<template data-template="resource-row">
+    <article class="resource-row">
+        <span class="resource-icon" data-icon-host aria-hidden="true"></span>
+        <span>
+            <strong data-label></strong>
+            <small data-detail></small>
+        </span>
+        <span class="resource-state" data-type></span>
+    </article>
+</template>
+
+<template data-template="summary-grid">
+    <dl class="summary-grid"></dl>
+</template>
+
+<template data-template="summary-row">
+    <div><dt data-label></dt><dd data-value></dd></div>
+</template>
+
+<template data-template="placeholder">
+    <div class="placeholder-note">
+        <strong data-title></strong>
+        <small data-copy></small>
+    </div>
+</template>
+`;
+
+  // src/components/admin/Resources/Integrations/ui/templates/setup.html
+  var setup_default = `<template data-template="setup-shell">
+    <cms-shell-detail class="integration-setup-shell">
+        <button type="button" slot="back" data-setup-cancel aria-label="Back to catalogue" data-back-icon></button>
+        <span slot="title" data-title></span>
+        <div slot="actions" class="integration-detail-actions">
+            <p9r-button type="button" variant="outlined" data-setup-cancel>Cancel</p9r-button>
+            <p9r-button type="button" color="primary" data-import-setup>Import</p9r-button>
+            <span class="action-status" data-setup-status></span>
+        </div>
+
+        <cms-detail-section slot="main" heading="Configuration" description="Only values needed to create this integration are shown here.">
+            <div class="fields setup-fields" data-fields></div>
+        </cms-detail-section>
+
+        <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
+            <div class="resource-list" data-resources></div>
+        </cms-detail-section>
+
+        <cms-detail-section slot="aside" heading="Linked integrations" description="Related integrations stay available from this setup flow.">
+            <div data-linked></div>
+        </cms-detail-section>
+
+        <cms-detail-section slot="aside" heading="Import summary" description="The server creates the resources and deploys connectors when needed.">
+            <div data-summary></div>
+        </cms-detail-section>
+    </cms-shell-detail>
+</template>
+`;
+
+  // src/components/admin/Resources/Integrations/ui/templates/index.ts
+  var registry = document.createElement("template");
+  registry.innerHTML = [browser_default, detail_default, icons_default, importing_default, items_default, setup_default].join("");
+  function cloneElement(name) {
+    const template = registry.content.querySelector(`template[data-template="${name}"]`);
+    const element = template?.content.firstElementChild?.cloneNode(true);
+    if (!(element instanceof HTMLElement)) {
+      throw new Error(`Missing integration template: ${name}`);
     }
-    if (sourceId === "typography") {
-      return '<path d="M4 5V3h16v2"/><path d="M12 3v18"/><path d="M8 21h8"/>';
+    return element;
+  }
+  function cloneIcon(name) {
+    const template = registry.content.querySelector(`template[data-icon="${name}"]`) ?? registry.content.querySelector('template[data-icon="grid"]');
+    const icon = template?.content.firstElementChild?.cloneNode(true);
+    if (!icon) {
+      throw new Error(`Missing integration icon: ${name}`);
     }
-    if (sourceId === "spacing") {
-      return '<path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h16"/><path d="M17 9v6"/>';
+    return icon;
+  }
+  function text3(root, selector, value2) {
+    const element = root.querySelector(selector);
+    if (element) {
+      element.textContent = String(value2 ?? "");
     }
-    return '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 16 16 8"/>';
+  }
+  function fillIcon(root, selector, icon) {
+    const element = root.querySelector(selector);
+    if (element) {
+      element.replaceChildren(cloneIcon(icon));
+    }
   }
 
+  // src/components/admin/Resources/Integrations/ui/resources/icons.ts
+  function integrationIcon(definition) {
+    const icon = document.createElement("span");
+    icon.className = "integration-icon";
+    const path = definition?.icon?.path;
+    if (definition && path) {
+      const image = document.createElement("img");
+      image.src = integrationAssetUrl(definition, path);
+      image.alt = "";
+      image.decoding = "async";
+      image.addEventListener("error", () => icon.replaceChildren(fallbackIcon()));
+      icon.append(image);
+    } else {
+      icon.append(fallbackIcon());
+    }
+    return icon;
+  }
+  function iconForResourceType(type) {
+    const normalized = type.toLowerCase();
+    if (normalized === "dashboard") {
+      return "table";
+    }
+    if (normalized === "source") {
+      return "receipt";
+    }
+    if (normalized === "bloc") {
+      return "grid";
+    }
+    if (normalized === "function") {
+      return "spark";
+    }
+    if (normalized === "trigger") {
+      return "share";
+    }
+    if (normalized === "secret") {
+      return "key";
+    }
+    if (normalized === "connector") {
+      return "truck";
+    }
+    return "grid";
+  }
+  function fallbackIcon() {
+    return cloneIcon("grid");
+  }
+  function integrationAssetUrl(definition, path) {
+    const params = new URLSearchParams({ kind: definition.kind, path });
+    if (definition.version) {
+      params.set("version", definition.version);
+    }
+    return route(`/api/integrations/asset?${params.toString()}`);
+  }
+  // src/components/admin/Resources/Integrations/ui/resources/render.ts
+  function appendBadges(root, labels) {
+    root.replaceChildren();
+    const visible = labels.slice(0, 4);
+    const remaining = labels.length - visible.length;
+    for (const label2 of visible) {
+      root.append(badge(label2));
+    }
+    if (remaining > 0) {
+      const more = badge(`+${remaining} others`);
+      more.classList.add("badge-muted");
+      root.append(more);
+    }
+  }
+  function renderResourceRows(root, rows) {
+    root.replaceChildren();
+    if (!rows.length) {
+      root.append(empty("No resources declared by this integration."));
+      return;
+    }
+    for (const row of rows) {
+      const element = cloneElement("resource-row");
+      fillIcon(element, "[data-icon-host]", iconForResourceType(row.type));
+      text3(element, "[data-label]", row.label);
+      text3(element, "[data-detail]", row.detail);
+      text3(element, "[data-type]", row.type);
+      root.append(element);
+    }
+  }
+  function renderSummary(root, rows) {
+    const grid = cloneElement("summary-grid");
+    for (const row of rows) {
+      const element = cloneElement("summary-row");
+      text3(element, "[data-label]", row.label);
+      text3(element, "[data-value]", row.value);
+      grid.append(element);
+    }
+    root.replaceChildren(grid);
+  }
+  function renderPlaceholder(root, title, copy) {
+    const element = cloneElement("placeholder");
+    text3(element, "[data-title]", title);
+    text3(element, "[data-copy]", copy);
+    root.replaceChildren(element);
+  }
+  function empty(message) {
+    const element = document.createElement("p");
+    element.className = "empty";
+    element.textContent = message;
+    return element;
+  }
+  function badge(label2) {
+    const element = cloneElement("badge");
+    element.textContent = label2;
+    return element;
+  }
+  // src/components/admin/Resources/Integrations/ui/resources/rows.ts
+  function resourceRows(definition) {
+    return [
+      ...(definition.artifacts ?? []).map(artifactRow),
+      ...(definition.secrets ?? []).map((secret) => ({
+        type: "Secret",
+        label: inputLabel(definition, secret.input),
+        detail: `Secret key: ${secret.key}`
+      })),
+      ...(definition.generatedSecrets ?? []).map((secret) => ({
+        type: "Secret",
+        label: secret.name,
+        detail: `Generated key: ${secret.key}`
+      })),
+      ...(definition.connectors ?? []).map((connector) => ({
+        type: "Connector",
+        label: connector.provider,
+        detail: connector.root ? `Connector root: ${connector.root}` : "Connector deployment"
+      }))
+    ];
+  }
+  function artifactRow(artifact) {
+    if (artifact.type === "dashboard") {
+      return {
+        type: "Dashboard",
+        label: artifact.dashboard.meta?.name ?? artifact.dashboard.id,
+        detail: `Dashboard id: ${artifact.dashboard.id}`
+      };
+    }
+    if (artifact.type === "bloc") {
+      return { type: "Bloc", label: artifact.bloc.name, detail: `Tag: ${artifact.bloc.tag}` };
+    }
+    if (artifact.type === "function") {
+      return {
+        type: "Function",
+        label: artifact.function.meta?.name ?? artifact.function.id,
+        detail: `${artifact.function.method} ${artifact.function.id}`
+      };
+    }
+    if (artifact.type === "trigger") {
+      const event = artifact.trigger.event;
+      return {
+        type: "Trigger",
+        label: artifact.trigger.label ?? artifact.trigger.id,
+        detail: event.kind === "schedule" ? `every ${event.intervalMs}ms -> ${triggerTarget(artifact.trigger)}` : `${event.phase} ${event.source ?? "*"}.${event.endpoint ?? "*"} -> ${triggerTarget(artifact.trigger)}`
+      };
+    }
+    if (artifact.type === "sourceOverlay") {
+      return {
+        type: "Source overlay",
+        label: artifact.overlay.label ?? artifact.overlay.id,
+        detail: `Overlay id: ${artifact.overlay.id}`
+      };
+    }
+    if (artifact.type === "relation") {
+      return {
+        type: "Relation",
+        label: artifact.relation.label ?? artifact.relation.id,
+        detail: `Relation id: ${artifact.relation.id}`
+      };
+    }
+    if (artifact.type === "dashboardRelation") {
+      return {
+        type: "Dashboard relation",
+        label: artifact.projection.title ?? artifact.projection.relationId,
+        detail: `${artifact.projection.dashboardId}.${artifact.projection.viewId}`
+      };
+    }
+    return {
+      type: "Source",
+      label: artifact.source.meta?.name ?? artifact.source.id,
+      detail: `Source id: ${artifact.source.id}`
+    };
+  }
+  function triggerTarget(trigger) {
+    return trigger.function?.id ?? trigger.task?.id ?? "unknown";
+  }
+  function inputLabel(definition, inputName) {
+    return definition.inputs.find((input) => input.name === inputName)?.label ?? inputName;
+  }
   // src/components/admin/Theme/nav/view.ts
-  var CORE_SOURCE_LABELS = {
-    colors: "Colors",
-    typography: "Typography",
-    spacing: "Spacing & layout",
-    shape: "Shape & effects"
-  };
-  function renderThemeNav(root, sources, selection) {
+  function renderThemeNav(root, sources, selection, definitions = new Map, requestAction) {
     const menu = root?.querySelector("w13c-lateral-menu");
     if (!menu) {
       return;
     }
     menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
-    renderSources(menu, [...sources.filter((source2) => !isIntegrationSource(source2)), ...sources.filter(isIntegrationSource)], selection);
+    renderSources(menu, sources, selection, definitions, requestAction);
   }
-  function renderSources(menu, sources, selection) {
+  function renderSources(menu, sources, selection, definitions, requestAction) {
+    const siteSources = sources.filter((source2) => !isIntegrationSource(source2));
+    if (siteSources.length > 0) {
+      menu.append(siteHeading());
+      renderCategories(menu, siteSources, selection, true, requestAction);
+      menu.append(newGroupAction(siteSources, selection, requestAction));
+    }
+    for (const source2 of sources.filter(isIntegrationSource)) {
+      menu.append(integrationHeading(source2, definitions.get(source2.owner.integrationId)));
+      renderCategories(menu, [source2], selection, false, requestAction);
+    }
+  }
+  function renderCategories(menu, sources, selection, editable, requestAction) {
+    const canDelete = sources.reduce((total, source2) => total + source2.categories.length, 0) > 1;
     for (const source2 of sources) {
-      const integration = isIntegrationSource(source2);
-      const hasChildren = integration ? source2.categories.length > 0 : source2.categories.length > 1;
-      const expanded = hasChildren && source2.id === selection.sourceId;
-      const label2 = sourceNavigationLabel(source2);
-      const sourceItem = document.createElement("w13c-lateral-menu-item");
-      sourceItem.dataset.generated = "true";
-      sourceItem.dataset.source = source2.id;
-      sourceItem.ariaLabel = label2;
-      sourceItem.classList.toggle("integration-item", integration);
-      sourceItem.toggleAttribute("active", !hasChildren && source2.id === selection.sourceId);
-      if (hasChildren) {
-        sourceItem.setAttribute("role", "button");
-        sourceItem.setAttribute("aria-expanded", String(expanded));
-      } else {
-        sourceItem.setAttribute("aria-level", "1");
-      }
-      sourceItem.append(createSourceIcon(source2.id), document.createTextNode(label2));
-      menu.append(sourceItem);
-      if (!expanded) {
-        continue;
-      }
       for (const category of source2.categories) {
         const categoryItem = document.createElement("w13c-lateral-menu-item");
         categoryItem.classList.add("category-item");
-        categoryItem.classList.toggle("integration-category", integration);
+        categoryItem.classList.toggle("editable-category", editable);
         categoryItem.dataset.generated = "true";
         categoryItem.dataset.source = source2.id;
         categoryItem.dataset.category = category.id;
         categoryItem.ariaLabel = category.label;
-        categoryItem.setAttribute("aria-level", "2");
-        categoryItem.toggleAttribute("active", category.id === selection.categoryId);
-        categoryItem.append(createCategoryIcon(), document.createTextNode(category.label));
+        categoryItem.setAttribute("aria-level", "1");
+        categoryItem.toggleAttribute("active", source2.id === selection.sourceId && category.id === selection.categoryId);
+        categoryItem.append(categoryLabel(category));
+        if (editable) {
+          categoryItem.append(...categoryActions(source2, category, canDelete, requestAction));
+        }
         menu.append(categoryItem);
       }
     }
   }
-  function sourceNavigationLabel(source2) {
-    return CORE_SOURCE_LABELS[source2.id] ?? source2.label;
+  function categoryLabel(category) {
+    const label2 = document.createElement("span");
+    label2.className = "theme-category-label";
+    label2.dataset.themeCategoryLabel = "true";
+    label2.textContent = category.label;
+    return label2;
+  }
+  function categoryActions(source2, category, canDelete, requestAction) {
+    const selection = { sourceId: source2.id, categoryId: category.id };
+    const quickAction = actionButton("add-variable", "+", `Add a variable to ${category.label}`, selection, requestAction);
+    quickAction.slot = "quick-actions";
+    const menu = document.createElement("details");
+    menu.className = "theme-group-actions";
+    menu.slot = "more-actions";
+    const summary = document.createElement("summary");
+    summary.className = "theme-group-actions-trigger";
+    summary.ariaLabel = `Actions for ${category.label}`;
+    summary.title = "Group actions";
+    summary.textContent = "⋯";
+    const panel = document.createElement("span");
+    panel.className = "theme-group-actions-panel";
+    panel.setAttribute("role", "menu");
+    panel.append(menuButton("edit-group", "Edit group", selection, requestAction), deleteGroupButton(canDelete, selection, requestAction));
+    menu.append(summary, panel);
+    return [quickAction, menu];
+  }
+  function actionButton(action, label2, accessibleName, selection, requestAction) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "theme-category-action";
+    button.dataset.themeNavAction = action;
+    button.ariaLabel = accessibleName;
+    button.title = accessibleName;
+    button.textContent = label2;
+    button.addEventListener("click", () => requestAction?.({ action, selection }));
+    return button;
+  }
+  function menuButton(action, label2, selection, requestAction) {
+    const button = actionButton(action, label2, label2, selection, requestAction);
+    button.className = "theme-group-action";
+    button.setAttribute("role", "menuitem");
+    return button;
+  }
+  function deleteGroupButton(canDelete, selection, requestAction) {
+    const button = menuButton("delete-group", "Delete group", selection, requestAction);
+    button.classList.add("danger");
+    button.disabled = !canDelete;
+    button.title = canDelete ? "Delete group" : "Keep at least one site group.";
+    return button;
+  }
+  function newGroupAction(sources, selection, requestAction) {
+    const source2 = sources.find((item) => item.id === selection.sourceId && item.categories.length > 0) ?? sources.find((item) => item.categories.length > 0) ?? sources[0];
+    const category = source2.categories.find((item) => item.id === selection.categoryId) ?? source2.categories[0];
+    const target2 = { sourceId: source2.id, categoryId: category?.id ?? "" };
+    const button = actionButton("create-group", "+ New group", "Create a site variable group", target2, requestAction);
+    button.className = "theme-new-group";
+    button.dataset.generated = "true";
+    button.dataset.targetSource = source2.id;
+    if (category) {
+      button.dataset.targetCategory = category.id;
+    }
+    return button;
+  }
+  function siteHeading() {
+    const heading4 = document.createElement("div");
+    heading4.className = "menu-section theme-site-heading";
+    heading4.dataset.generated = "true";
+    heading4.dataset.themeGroup = "site";
+    heading4.textContent = "Site";
+    return heading4;
+  }
+  function integrationHeading(source2, definition) {
+    const heading4 = document.createElement("div");
+    heading4.className = "menu-section theme-source-heading";
+    heading4.dataset.generated = "true";
+    heading4.dataset.themeGroup = source2.id;
+    const label2 = document.createElement("span");
+    label2.textContent = source2.label;
+    heading4.append(integrationIcon(definition), label2);
+    return heading4;
   }
 
   // src/components/admin/Theme/ThemeNav.ts
   class CmsThemeNav extends U2 {
     sources = [];
     selection = { sourceId: "", categoryId: "" };
+    integrationDefinitions = new Map;
     constructor() {
-      super({ css: ThemeNav_default, template: ThemeNav_default2 });
+      super({ css: styles_default2, template: ThemeNav_default });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -19170,10 +20494,12 @@ w13c-lateral-menu-item.integration-category {
         this.sources = structuredClone(page.theme.sources);
         this.selection = themeSelectionFromUrl(this.sources);
         this.render();
+        this.integrationDefinitions = await loadIntegrationThemeIcons(this.sources);
+        this.render();
       } catch {}
     }
     render() {
-      renderThemeNav(this.shadowRoot, this.sources, this.selection);
+      renderThemeNav(this.shadowRoot, this.sources, this.selection, this.integrationDefinitions, this.requestAction);
     }
     select(sourceId, categoryId) {
       const source2 = this.sources.find((item) => item.id === sourceId);
@@ -19194,12 +20520,13 @@ w13c-lateral-menu-item.integration-category {
       const category = target2?.closest("[data-category]");
       if (category?.dataset.source && category.dataset.category) {
         this.select(category.dataset.source, category.dataset.category);
-        return;
       }
-      const source2 = target2?.closest("[data-source]");
-      if (source2?.dataset.source) {
-        this.select(source2.dataset.source);
+    };
+    requestAction = (request) => {
+      if (request.selection.sourceId && request.selection.categoryId) {
+        this.select(request.selection.sourceId, request.selection.categoryId);
       }
+      dispatchThemeNavActionRequested(request.action);
     };
     onPopState = () => {
       this.selection = themeSelectionFromUrl(this.sources);
@@ -19246,12 +20573,12 @@ w13c-lateral-menu-item.integration-category {
 
   // src/components/admin/Resources/Dashboards/api.ts
   var DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
-  function basePath() {
+  function basePath2() {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
   }
-  function route(path) {
-    return `${basePath()}${path}`;
+  function route2(path) {
+    return `${basePath2()}${path}`;
   }
   function currentSource2() {
     return new URL(window.location.href).searchParams.get("source") ?? "";
@@ -19296,16 +20623,16 @@ w13c-lateral-menu-item.integration-category {
       params.set("row", selection.row);
     }
     const suffix = params.toString() ? `?${params.toString()}` : "";
-    return route(`/admin/sources${suffix}`);
+    return route2(`/admin/sources${suffix}`);
   }
   function dispatchDashboardSelection(selection) {
     window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
   }
   async function fetchDashboards() {
-    return getJson(route("/api/dashboards"));
+    return getJson2(route2("/api/dashboards"));
   }
   async function fetchDashboardUsers() {
-    return getJson(route("/api/users"));
+    return getJson2(route2("/api/users"));
   }
   function dashboardUserOptions(users) {
     return users.flatMap((user) => {
@@ -19322,7 +20649,7 @@ w13c-lateral-menu-item.integration-category {
       return [{ value: sub, label: metadata ? `${humanLabel} · ${metadata}` : humanLabel }];
     });
   }
-  async function getJson(url) {
+  async function getJson2(url) {
     const response = await fetch(url, { headers: { Accept: "application/json" } });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -19450,7 +20777,7 @@ w13c-lateral-menu-item.integration-category {
     "y2"
   ]);
   function appendIconSlot(host, svg2, icon, fallback) {
-    const element = createIcon2(svg2, icon, fallback);
+    const element = createIcon(svg2, icon, fallback);
     if (!element) {
       return;
     }
@@ -19459,12 +20786,12 @@ w13c-lateral-menu-item.integration-category {
   }
   function renderIcon(target2, svg2, icon, fallback) {
     target2.replaceChildren();
-    const element = createIcon2(svg2, icon, fallback);
+    const element = createIcon(svg2, icon, fallback);
     if (element) {
       target2.append(element);
     }
   }
-  function createIcon2(svg2, icon, fallback) {
+  function createIcon(svg2, icon, fallback) {
     const iconName = toIconName(icon);
     const source2 = sanitizeSvg(svg2) ?? (iconName ? DASHBOARD_ICONS[iconName] : undefined) ?? DASHBOARD_ICONS[fallback];
     const template = document.createElement("template");
@@ -19512,11 +20839,11 @@ w13c-lateral-menu-item.integration-category {
   function renderDashboardNavigation(menu, groups, selectedSource, selectedDashboard) {
     clearGeneratedItems(menu);
     if (!groups.length) {
-      const empty = document.createElement("span");
-      empty.className = "empty";
-      empty.dataset.generated = "true";
-      empty.textContent = "No sources";
-      menu.append(empty);
+      const empty2 = document.createElement("span");
+      empty2.className = "empty";
+      empty2.dataset.generated = "true";
+      empty2.textContent = "No sources";
+      menu.append(empty2);
       return;
     }
     for (const group of groups) {
@@ -19648,7 +20975,7 @@ w13c-lateral-menu-item {
         return;
       }
       const source2 = this.query("[data-nav-list-source]");
-      source2.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
+      source2.setAttribute("cms-source", `${route2("/api/dashboards")} as dashboards`);
       this.observer = new MutationObserver(() => this.readBoundGroups());
       this.observer.observe(source2, { attributes: true, childList: true, subtree: true });
       this.readBoundGroups();
@@ -20619,7 +21946,7 @@ w13c-lateral-menu-item {
     if (!sourceId || !endpoint || !id) {
       return raw;
     }
-    return route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}?id=${encodeURIComponent(id)}`);
+    return route2(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}?id=${encodeURIComponent(id)}`);
   }
   function mediaFileEndpoint(field2) {
     const upload = field2.actions?.upload?.endpoint ?? "";
@@ -21556,7 +22883,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/index.ts
-  var styles_default2 = [field_default, preview_layout_default, preview_media_default].join(`
+  var styles_default3 = [field_default, preview_layout_default, preview_media_default].join(`
 `);
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/template.html
@@ -21695,16 +23022,16 @@ button {
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/controllers/previewView.ts
   function mediaPreviewElements(root) {
     return {
-      openButton: query5(root, "[data-preview-open]"),
-      dialog: query5(root, "[data-preview-dialog]"),
-      closeButton: query5(root, "[data-preview-action='close']"),
-      previousButton: query5(root, "[data-preview-action='previous']"),
-      nextButton: query5(root, "[data-preview-action='next']"),
-      image: query5(root, "[data-preview-image]"),
-      caption: query5(root, "[data-preview-caption]"),
-      counter: query5(root, "[data-preview-counter]"),
-      status: query5(root, "[data-preview-status]"),
-      strip: query5(root, "[data-preview-strip]")
+      openButton: query4(root, "[data-preview-open]"),
+      dialog: query4(root, "[data-preview-dialog]"),
+      closeButton: query4(root, "[data-preview-action='close']"),
+      previousButton: query4(root, "[data-preview-action='previous']"),
+      nextButton: query4(root, "[data-preview-action='next']"),
+      image: query4(root, "[data-preview-image]"),
+      caption: query4(root, "[data-preview-caption]"),
+      counter: query4(root, "[data-preview-counter]"),
+      status: query4(root, "[data-preview-status]"),
+      strip: query4(root, "[data-preview-strip]")
     };
   }
   function markImageReady(view) {
@@ -21743,7 +23070,7 @@ button {
   function thumbnailHasFocus(root) {
     return root.activeElement instanceof HTMLButtonElement && root.activeElement.dataset.previewIndex !== undefined;
   }
-  function query5(root, selector) {
+  function query4(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -21985,7 +23312,7 @@ button {
     pendingPick = { action: "upload" };
     suppressClick = false;
     constructor() {
-      super({ css: styles_default2, template: template_default9 });
+      super({ css: styles_default3, template: template_default9 });
       this.preview = new MediaPreviewController(this.shadowRoot, () => this.currentItems);
     }
     static get observedAttributes() {
@@ -22141,7 +23468,7 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/display.ts
-  function badge(value2) {
+  function badge2(value2) {
     const element = document.createElement("span");
     element.className = "badge";
     element.textContent = value2;
@@ -22178,12 +23505,12 @@ button {
     const list = document.createElement("ul");
     list.className = "readonly readonly-list";
     for (const item of value2) {
-      const text3 = typeof item === "string" ? item : String(item.id ?? "");
-      if (!text3) {
+      const text4 = typeof item === "string" ? item : String(item.id ?? "");
+      if (!text4) {
         continue;
       }
       const entry = document.createElement("li");
-      entry.textContent = text3;
+      entry.textContent = text4;
       list.append(entry);
     }
     return list;
@@ -22353,7 +23680,7 @@ button {
       return chips(field2);
     }
     if (field2.input === "badge") {
-      return badge(String(field2.value));
+      return badge2(String(field2.value));
     }
     if (field2.input === "image") {
       return image(field2);
@@ -22674,9 +24001,9 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/view.ts
   function renderList2(root, value2) {
-    query6(root, "[data-rows]").replaceChildren(...value2.items.map((item, index) => renderRow(value2, item, index)));
+    query5(root, "[data-rows]").replaceChildren(...value2.items.map((item, index) => renderRow(value2, item, index)));
     renderHeader2(root, value2);
-    const add = query6(root, "[data-add]");
+    const add = query5(root, "[data-add]");
     add.textContent = value2.addLabel ?? "Add item";
     add.disabled = value2.maxItems !== undefined && value2.items.length >= value2.maxItems;
   }
@@ -22684,7 +24011,7 @@ button {
     return Array.from(root.querySelectorAll(".row"));
   }
   function renderHeader2(root, value2) {
-    const header = query6(root, "[data-header]");
+    const header = query5(root, "[data-header]");
     header.style.setProperty("--reorderable-columns", columns(value2));
     const cells = [document.createElement("span")];
     for (const field2 of value2.fields) {
@@ -22728,7 +24055,7 @@ button {
   function columns(value2) {
     return ["24px", ...value2.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" ");
   }
-  function query6(root, selector) {
+  function query5(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -22958,24 +24285,24 @@ button {
   }
   function textEditor(value2) {
     const input = document.createElement("p9r-input");
-    const text3 = textValue3(value2);
-    input.setAttribute("value", text3);
-    input.value = text3;
+    const text4 = textValue3(value2);
+    input.setAttribute("value", text4);
+    input.value = text4;
     return input;
   }
   function selectEditor(column, value2) {
     const input = document.createElement("p9r-select");
-    const text3 = textValue3(value2);
-    input.setAttribute("value", text3);
-    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text3)));
+    const text4 = textValue3(value2);
+    input.setAttribute("value", text4);
+    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text4)));
     return input;
   }
   function comboboxEditor(column, value2) {
     const input = document.createElement("p9r-combobox");
-    const text3 = textValue3(value2);
-    input.setAttribute("value", text3);
-    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text3)));
-    input.value = text3;
+    const text4 = textValue3(value2);
+    input.setAttribute("value", text4);
+    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text4)));
+    input.value = text4;
     return input;
   }
   function tokensEditor(value2) {
@@ -24003,7 +25330,7 @@ p9r-token-input {
   }
   function sourceUrl(sourceId, ref, vars) {
     const targetSourceId = ref.sourceId ?? sourceId;
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
     for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
       url.searchParams.set(key, value2);
     }
@@ -24479,15 +25806,15 @@ p9r-token-input {
   function schemaDefinition(value2) {
     const row = record2(value2);
     const nested = record2(row?.definition);
-    const id = text3(row?.id, KEY_MAX_LENGTH) ?? text3(row?.fieldKey, KEY_MAX_LENGTH) ?? text3(row?.key, KEY_MAX_LENGTH);
-    const label2 = text3(row?.label, LABEL_MAX_LENGTH) ?? text3(nested?.label, LABEL_MAX_LENGTH) ?? id;
-    const rawType = text3(row?.type, 16) ?? text3(row?.fieldType, 16) ?? text3(nested?.fieldType, 16);
+    const id = text4(row?.id, KEY_MAX_LENGTH) ?? text4(row?.fieldKey, KEY_MAX_LENGTH) ?? text4(row?.key, KEY_MAX_LENGTH);
+    const label2 = text4(row?.label, LABEL_MAX_LENGTH) ?? text4(nested?.label, LABEL_MAX_LENGTH) ?? id;
+    const rawType = text4(row?.type, 16) ?? text4(row?.fieldType, 16) ?? text4(nested?.fieldType, 16);
     const type = rawType === "enum" ? "string" : rawType;
     if (!id || !label2 || !safeKey(id) || type !== "string" && type !== "number" && type !== "boolean") {
       return null;
     }
     const options = schemaOptions(row?.options ?? nested?.options);
-    const unit = text3(row?.unit, UNIT_MAX_LENGTH) ?? text3(nested?.unit, UNIT_MAX_LENGTH);
+    const unit = text4(row?.unit, UNIT_MAX_LENGTH) ?? text4(nested?.unit, UNIT_MAX_LENGTH);
     return {
       id,
       label: label2,
@@ -24505,14 +25832,14 @@ p9r-token-input {
     return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option2) => {
       let result;
       if (typeof option2 === "string" || typeof option2 === "number") {
-        const value3 = text3(option2, LABEL_MAX_LENGTH);
+        const value3 = text4(option2, LABEL_MAX_LENGTH);
         if (value3) {
           result = { value: value3, label: value3 };
         }
       } else {
         const entry = record2(option2);
-        const optionValue = text3(entry?.value, LABEL_MAX_LENGTH);
-        const optionLabel = text3(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
+        const optionValue = text4(entry?.value, LABEL_MAX_LENGTH);
+        const optionLabel = text4(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
         if (optionValue && optionLabel) {
           result = { value: optionValue, label: optionLabel };
         }
@@ -24527,7 +25854,7 @@ p9r-token-input {
   function safeKey(value2) {
     return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value2) && !["__proto__", "prototype", "constructor"].includes(value2);
   }
-  function text3(value2, maxLength) {
+  function text4(value2, maxLength) {
     if (typeof value2 !== "string" && typeof value2 !== "number") {
       return;
     }
@@ -25462,10 +26789,10 @@ slot {
         let control;
         if (filter.type === "select") {
           const select2 = document.createElement("select");
-          const empty = document.createElement("option");
-          empty.value = "";
-          empty.textContent = "All";
-          select2.append(empty, ...(filter.options ?? []).map((option2) => {
+          const empty2 = document.createElement("option");
+          empty2.value = "";
+          empty2.textContent = "All";
+          select2.append(empty2, ...(filter.options ?? []).map((option2) => {
             const element = document.createElement("option");
             element.value = option2.value;
             element.textContent = option2.label;
@@ -26235,9 +27562,9 @@ slot {
       const subtitle = this.getAttribute("subtitle") ?? "";
       setText2(root, "[data-subtitle]", subtitle);
       root.querySelector("[data-subtitle]").hidden = !subtitle;
-      const badge2 = this.getAttribute("badge") ?? "";
-      setText2(root, "[data-badge]", badge2);
-      root.querySelector("[data-badge]").hidden = !badge2;
+      const badge3 = this.getAttribute("badge") ?? "";
+      setText2(root, "[data-badge]", badge3);
+      root.querySelector("[data-badge]").hidden = !badge3;
       const icon = this.getAttribute("icon");
       const iconRoot = root.querySelector("[data-icon]");
       iconRoot.hidden = !icon;
@@ -26588,7 +27915,7 @@ slot { display: contents; }
   }
   function sourceUrl2(sourceId, ref, vars) {
     const targetSourceId = ref.sourceId ?? sourceId;
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
     for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
       url.searchParams.set(key, value2);
     }
@@ -26678,7 +28005,7 @@ slot { display: contents; }
     };
   }
   function relationPageUrl(widget) {
-    const url = new URL(route("/api/relations/page"), window.location.origin);
+    const url = new URL(route2("/api/relations/page"), window.location.origin);
     url.searchParams.set("relation", widget.relationId);
     url.searchParams.set("fromId", widget.fromId);
     url.searchParams.set("limit", String(widget.pageSize ?? 25));
@@ -26823,34 +28150,34 @@ slot { display: contents; }
 
   // src/components/admin/Resources/Dashboards/view/rendering.ts
   function renderDashboardShell(root, group, dashboard, detail, tabState, drafts, detailResource = null, groups = group ? [group] : [], filters = new Map) {
-    query7(root, "[data-empty]").hidden = Boolean(group);
-    query7(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
-    query7(root, "[data-dashboard-head]").hidden = !dashboard;
-    query7(root, "[data-detail-toolbar]").hidden = true;
-    query7(root, "[data-widgets]").hidden = !dashboard;
+    query6(root, "[data-empty]").hidden = Boolean(group);
+    query6(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
+    query6(root, "[data-dashboard-head]").hidden = !dashboard;
+    query6(root, "[data-detail-toolbar]").hidden = true;
+    query6(root, "[data-widgets]").hidden = !dashboard;
     if (!group || !dashboard) {
       return;
     }
-    query7(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
-    renderIcon(query7(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+    query6(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
+    renderIcon(query6(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
     const selectedRows = new Map;
     if (detail) {
       selectedRows.set(detail.collection, detail.row);
     }
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
-    mountDashboardWidgets(query7(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, filters, detailResource }, "root", tabState, detail);
+    mountDashboardWidgets(query6(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, filters, detailResource }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
-    query7(root, "[data-empty]").hidden = true;
-    query7(root, "[data-source-empty]").hidden = true;
-    query7(root, "[data-detail-toolbar]").hidden = true;
-    query7(root, "[data-dashboard-head]").hidden = false;
-    query7(root, "[data-widgets]").hidden = false;
-    query7(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
-    renderIcon(query7(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
-    mountDashboardWidgetExample(query7(root, "[data-widgets]"), selectedRow);
+    query6(root, "[data-empty]").hidden = true;
+    query6(root, "[data-source-empty]").hidden = true;
+    query6(root, "[data-detail-toolbar]").hidden = true;
+    query6(root, "[data-dashboard-head]").hidden = false;
+    query6(root, "[data-widgets]").hidden = false;
+    query6(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
+    renderIcon(query6(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
+    mountDashboardWidgetExample(query6(root, "[data-widgets]"), selectedRow);
   }
-  function query7(root, selector) {
+  function query6(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -27012,7 +28339,7 @@ slot { display: contents; }
         return;
       }
       const source2 = this.shadowRoot.querySelector("[data-dashboard-list-source]");
-      source2?.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
+      source2?.setAttribute("cms-source", `${route2("/api/dashboards")} as dashboards`);
       this.observer = new MutationObserver(() => this.readBoundGroups());
       if (source2) {
         this.observer.observe(source2, { attributes: true, childList: true, subtree: true });
@@ -27540,18 +28867,18 @@ p {
   }
 
   // src/components/admin/Resources/Functions/api.ts
-  function basePath2() {
+  function basePath3() {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
   }
-  function route2(path) {
-    return `${basePath2()}${path}`;
+  function route3(path) {
+    return `${basePath3()}${path}`;
   }
   function currentFunctionId() {
     return new URL(window.location.href).searchParams.get("id")?.trim() ?? "";
   }
   async function fetchFunctionDetail(id) {
-    const response = await fetch(route2(`/api/functions/detail?id=${encodeURIComponent(id)}`), {
+    const response = await fetch(route3(`/api/functions/detail?id=${encodeURIComponent(id)}`), {
       headers: { Accept: "application/json" }
     });
     if (!response.ok) {
@@ -27560,14 +28887,14 @@ p {
     return response.json();
   }
   async function fetchFunctionCatalog() {
-    const response = await fetch(route2("/api/functions/catalog"), { headers: { Accept: "application/json" } });
+    const response = await fetch(route3("/api/functions/catalog"), { headers: { Accept: "application/json" } });
     if (!response.ok) {
       throw new Error(await response.text());
     }
     return response.json();
   }
   async function createFunctionDefinition(definition) {
-    const response = await fetch(route2("/api/functions/create"), {
+    const response = await fetch(route3("/api/functions/create"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ definition })
@@ -27582,7 +28909,7 @@ p {
     if (input.includeBody) {
       payload.body = input.body;
     }
-    const response = await fetch(route2("/api/functions/execute"), {
+    const response = await fetch(route3("/api/functions/execute"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -27596,7 +28923,7 @@ p {
     };
   }
   async function fetchSourceEndpoint(source2, endpoint, params = {}) {
-    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(source2)}/${encodeURIComponent(endpoint)}`), window.location.origin);
+    const url = new URL(route3(`/.cms/sources/${encodeURIComponent(source2)}/${encodeURIComponent(endpoint)}`), window.location.origin);
     for (const [key, value2] of Object.entries(params)) {
       if (value2 !== "") {
         url.searchParams.set(key, value2);
@@ -27616,8 +28943,8 @@ p {
     if (contentType.includes("application/json")) {
       return response.json().catch(() => null);
     }
-    const text4 = await response.text();
-    return text4 || null;
+    const text5 = await response.text();
+    return text5 || null;
   }
 
   // src/components/admin/Resources/Functions/create/draft.ts
@@ -27767,7 +29094,7 @@ p {
   function backLink() {
     const back = document.createElement("a");
     back.slot = "back";
-    back.href = route2("/admin/functions");
+    back.href = route3("/admin/functions");
     back.textContent = "<";
     back.title = "Back to functions";
     back.setAttribute("aria-label", "Back to functions");
@@ -27807,13 +29134,13 @@ p {
     }
     return list;
   }
-  function label2(text4) {
+  function label2(text5) {
     const el2 = document.createElement("label");
-    el2.textContent = text4;
+    el2.textContent = text5;
     return el2;
   }
-  function helper(text4) {
-    return div("helper", text4);
+  function helper(text5) {
+    return div("helper", text5);
   }
   function textarea2(role, value2) {
     const el2 = document.createElement("textarea");
@@ -27822,22 +29149,22 @@ p {
     el2.value = value2;
     return el2;
   }
-  function button(text4, tone) {
+  function button(text5, tone) {
     const el2 = document.createElement("button");
     el2.type = "button";
     el2.className = `button ${tone}`;
-    el2.textContent = text4;
+    el2.textContent = text5;
     return el2;
   }
-  function option2(value2, text4) {
+  function option2(value2, text5) {
     const el2 = document.createElement("option");
     el2.value = value2;
-    el2.textContent = text4;
+    el2.textContent = text5;
     return el2;
   }
-  function pre(text4) {
+  function pre(text5) {
     const el2 = document.createElement("pre");
-    el2.textContent = text4;
+    el2.textContent = text5;
     return el2;
   }
   function div(className, ...children) {
@@ -28170,9 +29497,9 @@ pre {
     section.append(details);
     return section;
   }
-  function summary(text4) {
+  function summary(text5) {
     const element = document.createElement("summary");
-    element.textContent = text4;
+    element.textContent = text5;
     return element;
   }
 
@@ -28390,10 +29717,10 @@ pre {
     const root = document.createElement("div");
     root.className = "mapping-editor";
     if (!targets.length) {
-      const empty = document.createElement("div");
-      empty.className = "mapping-empty";
-      empty.textContent = emptyMessage;
-      root.append(empty);
+      const empty2 = document.createElement("div");
+      empty2.className = "mapping-empty";
+      empty2.textContent = emptyMessage;
+      root.append(empty2);
       return root;
     }
     for (const target2 of targets) {
@@ -28473,10 +29800,10 @@ pre {
     const root = document.createElement("div");
     root.className = "schema-fields";
     if (!fields.length) {
-      const empty = document.createElement("div");
-      empty.className = "mapping-empty";
-      empty.textContent = "No fields defined.";
-      root.append(empty);
+      const empty2 = document.createElement("div");
+      empty2.className = "mapping-empty";
+      empty2.textContent = "No fields defined.";
+      root.append(empty2);
     }
     fields.forEach((field2, index) => root.append(schemaFieldRow(field2, index, fields, onChange, showRequired)));
     const add = document.createElement("button");
@@ -29174,7 +30501,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Functions/create/styles/index.ts
-  var styles_default3 = [layout_default2, mapping_default, controls_default2, steps_default].join(`
+  var styles_default4 = [layout_default2, mapping_default, controls_default2, steps_default].join(`
 `);
 
   // src/components/admin/Resources/Functions/create/templates/aside.html
@@ -29418,7 +30745,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Functions/create/editor/shell.ts
   function renderCreateShell(host, state2) {
     const style = document.createElement("style");
-    style.textContent = styles_default3;
+    style.textContent = styles_default4;
     if (state2) {
       const message = document.createElement("div");
       message.className = "state";
@@ -29429,7 +30756,7 @@ details[open] > summary > .chevron {
     const shell = document.createElement("cms-shell-detail");
     shell.className = "create-shell";
     appendCreateTemplate(shell);
-    shell.querySelector(".back").href = route2("/admin/functions");
+    shell.querySelector(".back").href = route3("/admin/functions");
     host.replaceChildren(style, shell);
     return true;
   }
@@ -29639,9 +30966,9 @@ details[open] > summary > .chevron {
       }
       const context = this.editorContext();
       this.stepsRoot.replaceChildren(...this.steps.map((step, index) => stepCard(step, index, context)));
-      const empty = this.querySelector("[data-role='steps-empty']");
-      if (empty) {
-        empty.hidden = this.steps.length > 0;
+      const empty2 = this.querySelector("[data-role='steps-empty']");
+      if (empty2) {
+        empty2.hidden = this.steps.length > 0;
       }
       this.renderReturnPicker();
     }
@@ -29672,7 +30999,7 @@ details[open] > summary > .chevron {
       this.saveButton.disabled = true;
       try {
         const created = await createFunctionDefinition(buildDefinition(this, this.editorContext(), this.returnValue));
-        window.location.href = route2(`/admin/functions/detail?id=${encodeURIComponent(created.id)}`);
+        window.location.href = route3(`/admin/functions/detail?id=${encodeURIComponent(created.id)}`);
       } catch (error) {
         this.setMessage(error instanceof Error ? error.message : "Failed to create function.", "error");
         this.saveButton.disabled = false;
@@ -29688,12 +31015,12 @@ details[open] > summary > .chevron {
         moveStep: (index, offset) => this.move(index, offset)
       };
     }
-    setMessage(text4, kind) {
+    setMessage(text5, kind) {
       if (!this.message) {
         return;
       }
       this.message.className = `message ${kind}`.trim();
-      this.message.textContent = text4;
+      this.message.textContent = text5;
     }
   }
   if (!customElements.get("cms-function-create")) {
@@ -29810,108 +31137,6 @@ details[open] > summary > .chevron {
     </template>
 </div>
 `;
-
-  // src/components/admin/Resources/Integrations/api.ts
-  function basePath3() {
-    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
-    return raw.replace(/\/+$/, "");
-  }
-  function route3(path) {
-    return `${basePath3()}${path}`;
-  }
-  function currentIntegrationRoute() {
-    const params = new URL(window.location.href).searchParams;
-    const installation = params.get("integration")?.trim();
-    if (installation) {
-      return { view: "installation", id: installation };
-    }
-    const setup = params.get("setup")?.trim();
-    if (setup) {
-      return { view: "setup", kind: setup };
-    }
-    return { view: "list", tab: params.get("tab") === "catalogue" ? "catalogue" : "installed" };
-  }
-  function integrationRouteUrl(next) {
-    const params = new URLSearchParams;
-    if (next.view === "installation") {
-      params.set("integration", next.id);
-    } else if (next.view === "setup") {
-      params.set("setup", next.kind);
-    } else if (next.tab === "catalogue") {
-      params.set("tab", "catalogue");
-    }
-    const suffix = params.toString() ? `?${params.toString()}` : "";
-    return route3(`/admin/integrations${suffix}`);
-  }
-  function pushIntegrationRoute(next) {
-    history.pushState(null, "", integrationRouteUrl(next));
-  }
-  function replaceIntegrationRoute(next) {
-    history.replaceState(null, "", integrationRouteUrl(next));
-  }
-  async function importIntegration(payload) {
-    const result = await postJson(route3("/api/integrations/import"), payload);
-    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
-    return result;
-  }
-  async function getIntegrationInstallation(id) {
-    return getJson2(`${route3("/api/integrations/installations")}?id=${encodeURIComponent(id)}`);
-  }
-  async function rerunIntegrationInstallation(id, answers) {
-    const body = answers ? { answers } : {};
-    await postJson(`${route3("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, body);
-    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
-    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
-  }
-  async function getPageLinks() {
-    return getJson2(route3("/api/page/links?visible=published"));
-  }
-  async function integrationUpgradeVersions(id) {
-    return getJson2(`${route3("/api/integrations/installations/versions")}?id=${encodeURIComponent(id)}`);
-  }
-  async function upgradeIntegrationInstallation(id, version) {
-    await postJson(`${route3("/api/integrations/installations/upgrade")}?id=${encodeURIComponent(id)}`, { version });
-    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
-    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
-  }
-
-  class IntegrationApiError extends Error {
-    status;
-    constructor(status, message) {
-      super(message);
-      this.status = status;
-      this.name = "IntegrationApiError";
-    }
-  }
-  async function getJson2(url) {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw await responseError(response);
-    }
-    return response.json();
-  }
-  async function postJson(url, body) {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!response.ok) {
-      throw await responseError(response);
-    }
-    return response.json();
-  }
-  async function responseError(response) {
-    const fallback = `Request failed (HTTP ${response.status})`;
-    const contentType = response.headers.get("content-type") ?? "";
-    if (contentType.includes("application/json")) {
-      const body = await response.json().catch(() => null);
-      const message = typeof body?.error === "string" ? body.error : typeof body?.message === "string" ? body.message : null;
-      return new IntegrationApiError(response.status, message?.slice(0, 500) || fallback);
-    }
-    const text4 = (await response.text()).trim();
-    return new IntegrationApiError(response.status, text4 && !text4.startsWith("<") ? text4.slice(0, 500) : fallback);
-  }
 
   // src/components/admin/Resources/Integrations/fields/selects.ts
   function configureSelect(control, options2, value3, multiple) {
@@ -30198,10 +31423,10 @@ details[open] > summary > .chevron {
   function renderFields(root, template4, definition, answers = {}, options2 = {}) {
     root.replaceChildren();
     if (!definition.inputs.length) {
-      const empty = document.createElement("p");
-      empty.className = "empty";
-      empty.textContent = "No inputs required.";
-      root.append(empty);
+      const empty2 = document.createElement("p");
+      empty2.className = "empty";
+      empty2.textContent = "No inputs required.";
+      root.append(empty2);
       return;
     }
     let pageLinks;
@@ -30271,496 +31496,14 @@ details[open] > summary > .chevron {
     return counts;
   }
 
-  // src/components/admin/Resources/Integrations/ui/templates/browser.html
-  var browser_default = `<template data-template="installed-head">
-    <div class="installed-head" aria-hidden="true">
-        <span>Integration</span>
-        <span>Status</span>
-        <span>Artifacts</span>
-        <span>Last sync</span>
-    </div>
-</template>
-
-<template data-template="installed-row">
-    <a class="installed-row">
-        <span class="integration-title-cell">
-            <span data-icon-host></span>
-            <span class="integration-title-copy">
-                <strong data-label></strong>
-                <small data-kind></small>
-            </span>
-        </span>
-        <span><span class="status-pill" data-status></span></span>
-        <span class="badge-row" data-badges></span>
-        <span class="muted" data-updated></span>
-    </a>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/detail.html
-  var detail_default = `<template data-template="detail-shell">
-    <div class="detail-source" cms-reload-on="integration:updated">
-        <template>
-            <p class="detail-loading" cms-condition="$source.loading">Loading integration...</p>
-            <p class="detail-loading" cms-condition="$source.error">Unable to load this integration.</p>
-            <cms-shell-detail cms-condition="$source.loaded">
-                <button type="button" slot="back" data-detail-back aria-label="Back to installed integrations" data-back-icon></button>
-                <span slot="title" data-title></span>
-                <div slot="actions" class="integration-detail-actions">
-                    <p9r-button type="button" color="primary" data-run-sync>Run sync</p9r-button>
-                    <p9r-action-menu label="More actions">
-                        <p9r-action-menu-section label="Configuration">
-                            <p9r-action-menu-item data-reconfigure>Reconfigure</p9r-action-menu-item>
-                        </p9r-action-menu-section>
-                        <p9r-action-menu-section label="Danger zone">
-                            <p9r-action-menu-item color="danger" disabled title="No uninstall endpoint is available yet.">Uninstall</p9r-action-menu-item>
-                        </p9r-action-menu-section>
-                    </p9r-action-menu>
-                    <span class="action-status" role="status" aria-live="polite" data-action-status></span>
-                </div>
-
-                <cms-detail-section slot="main" heading="Created resources">
-                    <div class="resource-list">
-                        <article class="resource-row" cms-repeat="integration.artifacts as artifact">
-                            <span class="resource-icon" data-grid-icon aria-hidden="true"></span>
-                            <span>
-                                <strong>{{ artifact.id }}</strong>
-                                <small>{{ artifact.typeLabel }} - {{ artifact.actionLabel }}</small>
-                            </span>
-                            <span class="resource-state">{{ artifact.existsLabel }}</span>
-                        </article>
-                    </div>
-                </cms-detail-section>
-
-                <cms-detail-section slot="main" heading="Recent activity">
-                    <div class="activity-list">
-                        <article class="activity-row" cms-repeat="integration.runs as run">
-                            <span class="activity-dot"></span>
-                            <span>
-                                <strong>Run #{{ run.runNumber }} - {{ run.statusLabel }}</strong>
-                                <small>{{ run.startedAtLabel }}</small>
-                            </span>
-                        </article>
-                    </div>
-                </cms-detail-section>
-
-                <cms-detail-section slot="aside" heading="Installation">
-                    <dl class="summary-grid">
-                        <div><dt>Description</dt><dd data-description></dd></div>
-                        <div><dt>Identifier</dt><dd>{{ integration.id }}</dd></div>
-                        <div><dt>Status</dt><dd>{{ integration.statusLabel }}</dd></div>
-                        <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
-                        <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
-                    </dl>
-                </cms-detail-section>
-
-                <cms-detail-section slot="aside" heading="Version upgrade">
-                    <div class="upgrade-panel" data-upgrade-panel>
-                        <p>Upgrades are explicit. Syncing never changes the installed version.</p>
-                        <p9r-button type="button" data-upgrade-open>Check for upgrades</p9r-button>
-                        <div class="upgrade-form" data-upgrade-form hidden>
-                            <label>
-                                Target version
-                                <select data-upgrade-target aria-label="Target integration version"></select>
-                            </label>
-                            <label>
-                                Type the exact target version to confirm
-                                <input data-upgrade-confirmation type="text" autocomplete="off" spellcheck="false" />
-                            </label>
-                            <div class="upgrade-actions">
-                                <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
-                                <button type="button" class="secondary-action" data-upgrade-cancel>Cancel</button>
-                            </div>
-                        </div>
-                        <p class="upgrade-status" data-upgrade-status role="status" aria-live="polite"></p>
-                    </div>
-                </cms-detail-section>
-
-                <cms-detail-section slot="aside" heading="Linked integrations">
-                    <div data-linked></div>
-                </cms-detail-section>
-            </cms-shell-detail>
-        </template>
-    </div>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/icons.html
-  var icons_default = `<template data-icon="chevron"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></template>
-<template data-icon="table"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 9h8"></path><path d="M8 13h5"></path></svg></template>
-<template data-icon="receipt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18l-2-1-2 1-2-1-2 1-2-1V3z"></path><path d="M9 8h6"></path><path d="M9 12h6"></path><path d="M9 16h4"></path></svg></template>
-<template data-icon="cube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 8-9-5-9 5 9 5 9-5z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg></template>
-<template data-icon="tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13 11 4H4v7l9 9 7-7z"></path><path d="M7.5 7.5h.01"></path></svg></template>
-<template data-icon="mail"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="m4 8 8 6 8-6"></path></svg></template>
-<template data-icon="user"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg></template>
-<template data-icon="card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M3 10h18"></path><path d="M7 15h3"></path></svg></template>
-<template data-icon="truck"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3z"></path><path d="M14 11h4l3 3v3h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></template>
-<template data-icon="pin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.2 7-11a7 7 0 0 0-14 0c0 5.8 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></template>
-<template data-icon="grid"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg></template>
-<template data-icon="spark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"></path><path d="m19 15 .9 2.6 2.6.9-2.6.9L19 23l-.9-2.6-2.6-.9 2.6-.9L19 15z"></path></svg></template>
-<template data-icon="key"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="14.5" r="3.5"></circle><path d="M10 12 21 1"></path><path d="m16 6 2 2"></path><path d="m14 8 2 2"></path></svg></template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/importing.html
-  var importing_default = `<template data-template="importing-shell">
-    <cms-shell-detail class="integration-setup-shell">
-        <button type="button" slot="back" aria-label="Back to catalogue" disabled data-back-icon></button>
-        <span slot="title" data-title></span>
-        <div slot="actions" class="integration-detail-actions">
-            <p9r-button type="button" variant="outlined" disabled>Cancel</p9r-button>
-            <p9r-button type="button" color="primary" disabled>
-                <span class="spinner"></span> Importing
-            </p9r-button>
-        </div>
-
-        <cms-detail-section slot="main" heading="Installing integration" description="This can take a moment when connector deployment is required.">
-            <div class="installing-state">
-                <span class="spinner"></span>
-                <strong>Installation in progress</strong>
-                <small>The installed detail opens automatically when the import completes.</small>
-            </div>
-        </cms-detail-section>
-
-        <cms-detail-section slot="aside" heading="Import summary" description="The server is creating these resources now.">
-            <div data-summary></div>
-        </cms-detail-section>
-    </cms-shell-detail>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/items.html
-  var items_default = `<template data-template="badge">
-    <span class="badge"></span>
-</template>
-
-<template data-template="resource-row">
-    <article class="resource-row">
-        <span class="resource-icon" data-icon-host aria-hidden="true"></span>
-        <span>
-            <strong data-label></strong>
-            <small data-detail></small>
-        </span>
-        <span class="resource-state" data-type></span>
-    </article>
-</template>
-
-<template data-template="summary-grid">
-    <dl class="summary-grid"></dl>
-</template>
-
-<template data-template="summary-row">
-    <div><dt data-label></dt><dd data-value></dd></div>
-</template>
-
-<template data-template="placeholder">
-    <div class="placeholder-note">
-        <strong data-title></strong>
-        <small data-copy></small>
-    </div>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/setup.html
-  var setup_default = `<template data-template="setup-shell">
-    <cms-shell-detail class="integration-setup-shell">
-        <button type="button" slot="back" data-setup-cancel aria-label="Back to catalogue" data-back-icon></button>
-        <span slot="title" data-title></span>
-        <div slot="actions" class="integration-detail-actions">
-            <p9r-button type="button" variant="outlined" data-setup-cancel>Cancel</p9r-button>
-            <p9r-button type="button" color="primary" data-import-setup>Import</p9r-button>
-            <span class="action-status" data-setup-status></span>
-        </div>
-
-        <cms-detail-section slot="main" heading="Configuration" description="Only values needed to create this integration are shown here.">
-            <div class="fields setup-fields" data-fields></div>
-        </cms-detail-section>
-
-        <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
-            <div class="resource-list" data-resources></div>
-        </cms-detail-section>
-
-        <cms-detail-section slot="aside" heading="Linked integrations" description="Related integrations stay available from this setup flow.">
-            <div data-linked></div>
-        </cms-detail-section>
-
-        <cms-detail-section slot="aside" heading="Import summary" description="The server creates the resources and deploys connectors when needed.">
-            <div data-summary></div>
-        </cms-detail-section>
-    </cms-shell-detail>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/index.ts
-  var registry = document.createElement("template");
-  registry.innerHTML = [browser_default, detail_default, icons_default, importing_default, items_default, setup_default].join("");
-  function cloneElement(name) {
-    const template4 = registry.content.querySelector(`template[data-template="${name}"]`);
-    const element = template4?.content.firstElementChild?.cloneNode(true);
-    if (!(element instanceof HTMLElement)) {
-      throw new Error(`Missing integration template: ${name}`);
-    }
-    return element;
-  }
-  function cloneIcon(name) {
-    const template4 = registry.content.querySelector(`template[data-icon="${name}"]`) ?? registry.content.querySelector('template[data-icon="grid"]');
-    const icon = template4?.content.firstElementChild?.cloneNode(true);
-    if (!icon) {
-      throw new Error(`Missing integration icon: ${name}`);
-    }
-    return icon;
-  }
-  function text4(root, selector, value3) {
-    const element = root.querySelector(selector);
-    if (element) {
-      element.textContent = String(value3 ?? "");
-    }
-  }
-  function fillIcon(root, selector, icon) {
-    const element = root.querySelector(selector);
-    if (element) {
-      element.replaceChildren(cloneIcon(icon));
-    }
-  }
-
-  // src/components/admin/Resources/Integrations/ui/resources/format.ts
-  function artifactLabels(definition) {
-    const types2 = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
-    return types2.length ? types2.map(typeLabel) : ["No artifacts"];
-  }
-  function formatRelativeDate(value3) {
-    if (!value3) {
-      return "Never";
-    }
-    const date = new Date(value3);
-    if (Number.isNaN(date.getTime())) {
-      return value3;
-    }
-    const now = new Date;
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-    const time = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(date);
-    if (date.toDateString() === now.toDateString()) {
-      return `Today ${time}`;
-    }
-    if (date.toDateString() === yesterday.toDateString()) {
-      return `Yesterday ${time}`;
-    }
-    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
-  }
-  function statusLabel(status) {
-    if (status === "success") {
-      return "Active";
-    }
-    if (status === "failed") {
-      return "Failed";
-    }
-    return "Pending";
-  }
-  function typeLabel(type) {
-    if (type === "sourceOverlay") {
-      return "Source overlay";
-    }
-    if (type === "dashboardRelation") {
-      return "Dashboard relation";
-    }
-    return type[0].toUpperCase() + type.slice(1);
-  }
-  // src/components/admin/Resources/Integrations/ui/resources/icons.ts
-  function integrationIcon(definition) {
-    const icon = document.createElement("span");
-    icon.className = "integration-icon";
-    const path = definition?.icon?.path;
-    if (definition && path) {
-      const image2 = document.createElement("img");
-      image2.src = integrationAssetUrl(definition, path);
-      image2.alt = "";
-      image2.decoding = "async";
-      image2.addEventListener("error", () => icon.replaceChildren(fallbackIcon()));
-      icon.append(image2);
-    } else {
-      icon.append(fallbackIcon());
-    }
-    return icon;
-  }
-  function iconForResourceType(type) {
-    const normalized = type.toLowerCase();
-    if (normalized === "dashboard") {
-      return "table";
-    }
-    if (normalized === "source") {
-      return "receipt";
-    }
-    if (normalized === "bloc") {
-      return "grid";
-    }
-    if (normalized === "function") {
-      return "spark";
-    }
-    if (normalized === "trigger") {
-      return "share";
-    }
-    if (normalized === "secret") {
-      return "key";
-    }
-    if (normalized === "connector") {
-      return "truck";
-    }
-    return "grid";
-  }
-  function fallbackIcon() {
-    return cloneIcon("grid");
-  }
-  function integrationAssetUrl(definition, path) {
-    const params = new URLSearchParams({ kind: definition.kind, path });
-    if (definition.version) {
-      params.set("version", definition.version);
-    }
-    return route3(`/api/integrations/asset?${params.toString()}`);
-  }
-  // src/components/admin/Resources/Integrations/ui/resources/render.ts
-  function appendBadges(root, labels) {
-    root.replaceChildren();
-    const visible = labels.slice(0, 4);
-    const remaining = labels.length - visible.length;
-    for (const label3 of visible) {
-      root.append(badge2(label3));
-    }
-    if (remaining > 0) {
-      const more = badge2(`+${remaining} others`);
-      more.classList.add("badge-muted");
-      root.append(more);
-    }
-  }
-  function renderResourceRows(root, rows) {
-    root.replaceChildren();
-    if (!rows.length) {
-      root.append(empty("No resources declared by this integration."));
-      return;
-    }
-    for (const row of rows) {
-      const element = cloneElement("resource-row");
-      fillIcon(element, "[data-icon-host]", iconForResourceType(row.type));
-      text4(element, "[data-label]", row.label);
-      text4(element, "[data-detail]", row.detail);
-      text4(element, "[data-type]", row.type);
-      root.append(element);
-    }
-  }
-  function renderSummary(root, rows) {
-    const grid2 = cloneElement("summary-grid");
-    for (const row of rows) {
-      const element = cloneElement("summary-row");
-      text4(element, "[data-label]", row.label);
-      text4(element, "[data-value]", row.value);
-      grid2.append(element);
-    }
-    root.replaceChildren(grid2);
-  }
-  function renderPlaceholder(root, title2, copy) {
-    const element = cloneElement("placeholder");
-    text4(element, "[data-title]", title2);
-    text4(element, "[data-copy]", copy);
-    root.replaceChildren(element);
-  }
-  function empty(message) {
-    const element = document.createElement("p");
-    element.className = "empty";
-    element.textContent = message;
-    return element;
-  }
-  function badge2(label3) {
-    const element = cloneElement("badge");
-    element.textContent = label3;
-    return element;
-  }
-  // src/components/admin/Resources/Integrations/ui/resources/rows.ts
-  function resourceRows(definition) {
-    return [
-      ...(definition.artifacts ?? []).map(artifactRow),
-      ...(definition.secrets ?? []).map((secret) => ({
-        type: "Secret",
-        label: inputLabel(definition, secret.input),
-        detail: `Secret key: ${secret.key}`
-      })),
-      ...(definition.generatedSecrets ?? []).map((secret) => ({
-        type: "Secret",
-        label: secret.name,
-        detail: `Generated key: ${secret.key}`
-      })),
-      ...(definition.connectors ?? []).map((connector) => ({
-        type: "Connector",
-        label: connector.provider,
-        detail: connector.root ? `Connector root: ${connector.root}` : "Connector deployment"
-      }))
-    ];
-  }
-  function artifactRow(artifact) {
-    if (artifact.type === "dashboard") {
-      return {
-        type: "Dashboard",
-        label: artifact.dashboard.meta?.name ?? artifact.dashboard.id,
-        detail: `Dashboard id: ${artifact.dashboard.id}`
-      };
-    }
-    if (artifact.type === "bloc") {
-      return { type: "Bloc", label: artifact.bloc.name, detail: `Tag: ${artifact.bloc.tag}` };
-    }
-    if (artifact.type === "function") {
-      return {
-        type: "Function",
-        label: artifact.function.meta?.name ?? artifact.function.id,
-        detail: `${artifact.function.method} ${artifact.function.id}`
-      };
-    }
-    if (artifact.type === "trigger") {
-      const event = artifact.trigger.event;
-      return {
-        type: "Trigger",
-        label: artifact.trigger.label ?? artifact.trigger.id,
-        detail: event.kind === "schedule" ? `every ${event.intervalMs}ms -> ${triggerTarget(artifact.trigger)}` : `${event.phase} ${event.source ?? "*"}.${event.endpoint ?? "*"} -> ${triggerTarget(artifact.trigger)}`
-      };
-    }
-    if (artifact.type === "sourceOverlay") {
-      return {
-        type: "Source overlay",
-        label: artifact.overlay.label ?? artifact.overlay.id,
-        detail: `Overlay id: ${artifact.overlay.id}`
-      };
-    }
-    if (artifact.type === "relation") {
-      return {
-        type: "Relation",
-        label: artifact.relation.label ?? artifact.relation.id,
-        detail: `Relation id: ${artifact.relation.id}`
-      };
-    }
-    if (artifact.type === "dashboardRelation") {
-      return {
-        type: "Dashboard relation",
-        label: artifact.projection.title ?? artifact.projection.relationId,
-        detail: `${artifact.projection.dashboardId}.${artifact.projection.viewId}`
-      };
-    }
-    return {
-      type: "Source",
-      label: artifact.source.meta?.name ?? artifact.source.id,
-      detail: `Source id: ${artifact.source.id}`
-    };
-  }
-  function triggerTarget(trigger) {
-    return trigger.function?.id ?? trigger.task?.id ?? "unknown";
-  }
-  function inputLabel(definition, inputName) {
-    return definition.inputs.find((input2) => input2.name === inputName)?.label ?? inputName;
-  }
   // src/components/admin/Resources/Integrations/ui/browser.ts
   function renderBrowser(host) {
     renderInstallations(host);
     renderCounts(host);
   }
   function renderCounts(host) {
-    text4(host, "[data-installed-count]", host.installations.length);
-    text4(host, "[data-catalogue-count]", availableDefinitions(host).length);
+    text3(host, "[data-installed-count]", host.installations.length);
+    text3(host, "[data-catalogue-count]", availableDefinitions(host).length);
   }
   function renderInstallations(host) {
     const root = host.query("[data-installations]");
@@ -30784,15 +31527,15 @@ details[open] > summary > .chevron {
     row.href = integrationRouteUrl({ view: "installation", id: installation.id });
     row.dataset.integrationId = installation.id;
     row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text4(row, "[data-label]", installation.label);
-    text4(row, "[data-kind]", installation.id);
+    text3(row, "[data-label]", installation.label);
+    text3(row, "[data-kind]", installation.id);
     const status = row.querySelector("[data-status]");
     if (status) {
       status.textContent = statusLabel(installation.status);
       status.classList.add(`status-${installation.status}`);
     }
     appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
-    text4(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
+    text3(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
   }
 
@@ -30806,9 +31549,9 @@ details[open] > summary > .chevron {
     const definition = definitionFor(host, installation);
     const shell = cloneElement("detail-shell");
     const content = shell.querySelector("template").content;
-    shell.setAttribute("cms-source", `${route3("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
-    text4(content, "[data-title]", installation.label);
-    text4(content, "[data-description]", definition?.description ?? "No description.");
+    shell.setAttribute("cms-source", `${route("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
+    text3(content, "[data-title]", installation.label);
+    text3(content, "[data-description]", definition?.description ?? "No description.");
     content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
     const upgrade = content.querySelector("[data-upgrade-panel]");
     upgrade.dataset.integrationId = installation.id;
@@ -30978,9 +31721,9 @@ details[open] > summary > .chevron {
     const definitions = host.query("[data-definitions-source]");
     const installations = host.query("[data-installations-source]");
     const catalogue = host.query("[data-catalogue-source]");
-    definitions.setAttribute("cms-source", `${route3("/api/integrations/list")} as definitions`);
-    installations.setAttribute("cms-source", `${route3("/api/integrations/installations")} as installations`);
-    catalogue.setAttribute("cms-source", `${route3("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
+    definitions.setAttribute("cms-source", `${route("/api/integrations/list")} as definitions`);
+    installations.setAttribute("cms-source", `${route("/api/integrations/installations")} as installations`);
+    catalogue.setAttribute("cms-source", `${route("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
     host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
@@ -31062,7 +31805,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Integrations/ui/setup.ts
   function renderSetup(host, definition, options2 = {}) {
     const shell = cloneElement("setup-shell");
-    text4(shell, "[data-title]", `Install ${definition.label}`);
+    text3(shell, "[data-title]", `Install ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
     const status = shell.querySelector("[data-setup-status]");
     status.textContent = options2.error ?? "";
@@ -31075,7 +31818,7 @@ details[open] > summary > .chevron {
   }
   function renderImporting(host, definition, answers) {
     const shell = cloneElement("importing-shell");
-    text4(shell, "[data-title]", `Installing ${definition.label}`);
+    text3(shell, "[data-title]", `Installing ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
     host.query("[data-detail-view]").replaceChildren(shell);
@@ -32144,7 +32887,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default4 = [base_default4, browser_default2, detail_default2, reconfigure_default, setup_default2, states_default2, responsive_default].join(`
+  var styles_default5 = [base_default4, browser_default2, detail_default2, reconfigure_default, setup_default2, states_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
@@ -32265,7 +33008,7 @@ button[slot="back"]:disabled {
     onPopState = () => this.renderAll();
     mountTemplate() {
       const style = document.createElement("style");
-      style.textContent = styles_default4;
+      style.textContent = styles_default5;
       const body = document.createElement("template");
       body.innerHTML = template_default15;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -33097,7 +33840,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/index.ts
-  var styles_default5 = [layout_default3, mapping_default2, controls_default3, feedback_default].join(`
+  var styles_default6 = [layout_default3, mapping_default2, controls_default3, feedback_default].join(`
 `);
 
   // src/components/admin/Resources/Triggers/create/templates/aside.html
@@ -33338,7 +34081,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Triggers/create/view.ts
   function renderState(host, text5) {
     const style = document.createElement("style");
-    style.textContent = styles_default5;
+    style.textContent = styles_default6;
     const state2 = document.createElement("div");
     state2.className = "state";
     state2.textContent = text5;
@@ -33346,7 +34089,7 @@ details[open] > summary > .chevron {
   }
   function renderShell(host) {
     const style = document.createElement("style");
-    style.textContent = styles_default5;
+    style.textContent = styles_default6;
     const shell = document.createElement("cms-shell-detail");
     shell.className = "create-shell";
     appendCreateTemplate2(shell);
@@ -33853,7 +34596,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts
-  var styles_default6 = [String(part_1_default), String(part_2_default)].join(`
+  var styles_default7 = [String(part_1_default), String(part_2_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts
@@ -33914,7 +34657,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default17)}`;
+  template4.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default17)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -34196,12 +34939,12 @@ button:hover {
     if (binding.params) {
       return binding.params;
     }
-    const query8 = bindingQuery(source2.url, binding.url);
-    if (!query8) {
+    const query7 = bindingQuery(source2.url, binding.url);
+    if (!query7) {
       return {};
     }
     const params = {};
-    for (const [name, value3] of new URLSearchParams(query8).entries()) {
+    for (const [name, value3] of new URLSearchParams(query7).entries()) {
       params[name] = paramValue(value3);
     }
     return params;
@@ -34471,8 +35214,8 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourceGroups.ts
-  function filteredSources(sources, query8) {
-    const normalized = query8.trim().toLowerCase();
+  function filteredSources(sources, query7) {
+    const normalized = query7.trim().toLowerCase();
     if (!normalized) {
       return sources;
     }
@@ -34508,11 +35251,11 @@ button:hover {
       children: field3.children ? cloneBodyFields(field3.children) : undefined
     }));
   }
-  function firstProviderKey(sources, query8) {
-    return providerGroups(filteredSources(sources, query8))[0]?.key ?? "";
+  function firstProviderKey(sources, query7) {
+    return providerGroups(filteredSources(sources, query7))[0]?.key ?? "";
   }
-  function visibleSources(sources, query8, activeProvider) {
-    return filteredSources(sources, query8).filter((source2) => (source2.provider ?? "default") === activeProvider);
+  function visibleSources(sources, query7, activeProvider) {
+    return filteredSources(sources, query7).filter((source2) => (source2.provider ?? "default") === activeProvider);
   }
   function initialAlias(binding) {
     return binding?.alias ?? "data";
@@ -34735,11 +35478,11 @@ button:hover {
   function methodSources(sources, activeMethod) {
     return sources.filter((source2) => activeMethod === "all" || dataSourceMethod(source2) === activeMethod);
   }
-  function pickerProviderGroups(sources, activeMethod, query8) {
-    return providerGroups(filteredSources(methodSources(sources, activeMethod), query8));
+  function pickerProviderGroups(sources, activeMethod, query7) {
+    return providerGroups(filteredSources(methodSources(sources, activeMethod), query7));
   }
-  function pickerVisibleSources(sources, activeMethod, query8, activeProvider) {
-    return visibleSources(methodSources(sources, activeMethod), query8, activeProvider);
+  function pickerVisibleSources(sources, activeMethod, query7, activeProvider) {
+    return visibleSources(methodSources(sources, activeMethod), query7, activeProvider);
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
@@ -34767,17 +35510,17 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerElements.ts
   function queryDataSourcePickerElements(root) {
-    const query8 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query8(".backdrop"),
-      binding: query8(".binding"),
-      closeButton: query8(".close"),
-      details: query8(".details"),
-      methodFilter: query8(".method-filter"),
-      providers: query8(".providers"),
-      search: query8(".search"),
-      sourcesList: query8(".sources"),
-      subtitle: query8(".subtitle")
+      backdrop: query7(".backdrop"),
+      binding: query7(".binding"),
+      closeButton: query7(".close"),
+      details: query7(".details"),
+      methodFilter: query7(".method-filter"),
+      providers: query7(".providers"),
+      search: query7(".search"),
+      sourcesList: query7(".sources"),
+      subtitle: query7(".subtitle")
     };
   }
 
@@ -35320,12 +36063,12 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts
-  var styles_default7 = [String(part_1_default2), String(part_2_default2), String(part_3_default), String(part_4_default)].join(`
+  var styles_default8 = [String(part_1_default2), String(part_2_default2), String(part_3_default), String(part_4_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default19)}`;
+  template6.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default19)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -35822,14 +36565,14 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerView.ts
   function queryConditionPickerElements(root) {
-    const query8 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      applyButton: query8(".apply"),
-      backdrop: query8(".backdrop"),
-      body: query8(".body"),
-      closeButton: query8(".close"),
-      removeButton: query8(".remove"),
-      subtitle: query8(".subtitle")
+      applyButton: query7(".apply"),
+      backdrop: query7(".backdrop"),
+      body: query7(".body"),
+      closeButton: query7(".close"),
+      removeButton: query7(".remove"),
+      subtitle: query7(".subtitle")
     };
   }
   function conditionExpression(input3) {
@@ -36493,7 +37236,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts
-  var styles_default8 = [String(part_1_default3), String(part_2_default3), String(part_3_default2)].join(`
+  var styles_default9 = [String(part_1_default3), String(part_2_default3), String(part_3_default2)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
@@ -36573,8 +37316,8 @@ dd {
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option8, query8) {
-    if (!query8) {
+  function blockPickerOptionMatches(option8, query7) {
+    if (!query7) {
       return true;
     }
     const item = blockPickerOptionItem(option8);
@@ -36585,11 +37328,11 @@ dd {
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
       option8.slotLabel
-    ].some((value3) => value3?.toLowerCase().includes(query8));
+    ].some((value3) => value3?.toLowerCase().includes(query7));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
-  function blockPickerVisibleOptions(group, source2, category, query8) {
+  function blockPickerVisibleOptions(group, source2, category, query7) {
     return group?.options.filter((option8) => {
       const item = blockPickerOptionItem(option8);
       if (item.kind !== source2) {
@@ -36598,7 +37341,7 @@ dd {
       if (category && blockPickerCategoryLabel(option8) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option8, query8);
+      return blockPickerOptionMatches(option8, query7);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
@@ -36780,23 +37523,23 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts
   function queryBlockPickerElements(root) {
-    const query8 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query8(".backdrop"),
-      categories: query8(".categories"),
-      closeButton: query8(".close"),
-      details: query8(".details"),
-      results: query8(".results"),
-      search: query8(".search"),
-      sources: query8(".sources"),
-      subtitle: query8(".subtitle"),
-      tabs: query8(".slot-tabs")
+      backdrop: query7(".backdrop"),
+      categories: query7(".categories"),
+      closeButton: query7(".close"),
+      details: query7(".details"),
+      results: query7(".results"),
+      search: query7(".search"),
+      sources: query7(".sources"),
+      subtitle: query7(".subtitle"),
+      tabs: query7(".slot-tabs")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default21)}`;
+  template8.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default21)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -39479,8 +40222,8 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
-  function matchingDynamicDataOptions(options2, query8) {
-    const normalized = query8.trim().toLowerCase();
+  function matchingDynamicDataOptions(options2, query7) {
+    const normalized = query7.trim().toLowerCase();
     return normalized ? options2.filter((option8) => `${option8.label} ${option8.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
@@ -39917,7 +40660,7 @@ textarea:disabled {
   var G2 = ["src", "srcset"];
   var W2 = ["sizes", "media"];
   var D2 = "template";
-  function L(j2) {
+  function L2(j2) {
     let z = V2(j2, x2), F2 = new Set;
     for (let H2 of z.filter((J) => J.localName === "picture")) {
       let J = [H2, ...Array.from(H2.querySelectorAll("img,source")).filter((f2) => f2.closest("picture") === H2)];
@@ -39928,9 +40671,9 @@ textarea:disabled {
       if (!F2.has(H2) && C3(H2))
         y2(H2);
     for (let H2 of V2(j2, D2))
-      L(H2.content);
+      L2(H2.content);
   }
-  function S2(j2) {
+  function S(j2) {
     for (let z of V2(j2, x2)) {
       let F2 = z.hasAttribute(X2);
       for (let H2 of Y2) {
@@ -39943,7 +40686,7 @@ textarea:disabled {
       z.removeAttribute(X2);
     }
     for (let z of V2(j2, D2))
-      S2(z.content);
+      S(z.content);
   }
   function p(j2, z, F2) {
     if (!Q(j2)) {
@@ -39959,7 +40702,7 @@ textarea:disabled {
       return;
     }
     if (q(F2) || G2.includes(z) && !F2.trim()) {
-      j2.setAttribute(H2, F2), j2.removeAttribute(z), L(j2.localName === "picture" ? j2 : j2.closest("picture") ?? j2);
+      j2.setAttribute(H2, F2), j2.removeAttribute(z), L2(j2.localName === "picture" ? j2 : j2.closest("picture") ?? j2);
       return;
     }
     if (M3(j2)) {
@@ -40516,12 +41259,12 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts
-  var styles_default9 = [String(part_1_default4), String(part_2_default4)].join(`
+  var styles_default10 = [String(part_1_default4), String(part_2_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template14 = document.createElement("template");
-  template14.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default27)}`;
+  template14.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default27)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -40547,7 +41290,7 @@ textarea:disabled {
       this.hint.textContent = this.getAttribute("hint") ?? "";
       const content = this.ownerDocument.createElement("template");
       content.innerHTML = this.getAttribute("value") ?? "";
-      L(content.content);
+      L2(content.content);
       this.editor.replaceChildren(content.content);
       this.renderToolbar();
       this.editor.addEventListener("input", this.emitInput);
@@ -41350,7 +42093,7 @@ code {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
-  var styles_default10 = [String(part_1_default5), String(part_2_default5), String(part_3_default3)].join("");
+  var styles_default11 = [String(part_1_default5), String(part_2_default5), String(part_3_default3)].join("");
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
   function allowedLinkModes(options2) {
@@ -41471,8 +42214,8 @@ code {
   function renderPageLinkPages(input3) {
     input3.elements.pageList.replaceChildren();
     input3.elements.picker.hidden = !input3.pickerOpen || input3.elements.pagePanel.hidden;
-    const query8 = input3.query.trim().toLowerCase();
-    const pages = input3.pages.filter((page) => !query8 || page.title.toLowerCase().includes(query8) || page.path.toLowerCase().includes(query8));
+    const query7 = input3.query.trim().toLowerCase();
+    const pages = input3.pages.filter((page) => !query7 || page.title.toLowerCase().includes(query7) || page.path.toLowerCase().includes(query7));
     input3.elements.empty.hidden = !input3.pickerOpen || pages.length > 0;
     for (const page of pages) {
       const button2 = document.createElement("button");
@@ -41518,27 +42261,27 @@ code {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
   function queryPageLinkElements(root) {
-    const query8 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      empty: query8(".empty"),
-      externalInput: query8(".external-input"),
-      externalPanel: query8(".external-panel"),
-      fileAction: query8(".file-action"),
-      fileButton: query8(".file-button"),
-      filePreview: query8(".file-preview"),
-      fileTitle: query8(".file-title"),
-      fileValue: query8(".file-value"),
-      hint: query8(".hint"),
-      label: query8(".label"),
-      mediaPanel: query8(".media-panel"),
-      pageList: query8(".page-list"),
-      pagePanel: query8(".page-panel"),
-      picker: query8(".picker"),
-      searchInput: query8(".search"),
-      summaryTitle: query8(".target strong"),
-      summaryValue: query8(".target code"),
-      tabs: query8(".tabs"),
-      target: query8(".target")
+      empty: query7(".empty"),
+      externalInput: query7(".external-input"),
+      externalPanel: query7(".external-panel"),
+      fileAction: query7(".file-action"),
+      fileButton: query7(".file-button"),
+      filePreview: query7(".file-preview"),
+      fileTitle: query7(".file-title"),
+      fileValue: query7(".file-value"),
+      hint: query7(".hint"),
+      label: query7(".label"),
+      mediaPanel: query7(".media-panel"),
+      pageList: query7(".page-list"),
+      pagePanel: query7(".page-panel"),
+      picker: query7(".picker"),
+      searchInput: query7(".search"),
+      summaryTitle: query7(".target strong"),
+      summaryValue: query7(".target code"),
+      tabs: query7(".tabs"),
+      target: query7(".target")
     };
   }
 
@@ -41875,7 +42618,7 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
-  var styles_default11 = [String(part_1_default6), String(part_2_default6), String(part_3_default4)].join(`
+  var styles_default12 = [String(part_1_default6), String(part_2_default6), String(part_3_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
@@ -41957,18 +42700,18 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
   function queryFilesCenterElements(root) {
-    const query8 = (selector) => root.querySelector(selector);
+    const query7 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query8(".backdrop"),
-      breadcrumb: query8(".breadcrumb"),
-      cancelButton: query8(".cancel"),
-      closeButton: query8(".close"),
-      empty: query8(".empty"),
-      grid: query8(".grid"),
-      searchInput: query8(".search"),
-      selectButton: query8(".select"),
-      selectionTitle: query8(".selection strong"),
-      selectionValue: query8(".selection code")
+      backdrop: query7(".backdrop"),
+      breadcrumb: query7(".breadcrumb"),
+      cancelButton: query7(".cancel"),
+      closeButton: query7(".close"),
+      empty: query7(".empty"),
+      grid: query7(".grid"),
+      searchInput: query7(".search"),
+      selectButton: query7(".select"),
+      selectionTitle: query7(".selection strong"),
+      selectionValue: query7(".selection code")
     };
   }
   function wireFilesCenterElements(elements, callbacks) {
@@ -41997,12 +42740,12 @@ input {
   }
   function renderFilesList(input3) {
     input3.grid.replaceChildren();
-    const query8 = input3.query.trim().toLowerCase();
+    const query7 = input3.query.trim().toLowerCase();
     const items = input3.items.filter((item) => {
       if (item.type === "file" && !matchesFileAccept(item, input3.fileAccept)) {
         return false;
       }
-      return !query8 || item.name.toLowerCase().includes(query8);
+      return !query7 || item.name.toLowerCase().includes(query7);
     });
     input3.empty.hidden = items.length > 0;
     for (const item of items) {
@@ -42115,7 +42858,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default32)}`;
+  template18.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default32)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -42485,7 +43228,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
   var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default31)}`;
+  template19.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default31)}`;
 
   class PageLink extends PageLinkController {
     constructor() {
@@ -43468,12 +44211,12 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/index.ts
-  var styles_default12 = [String(part_1_default7), String(part_2_default7)].join(`
+  var styles_default13 = [String(part_1_default7), String(part_2_default7)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default33)}`;
+  template20.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default33)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -43873,7 +44616,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/index.ts
-  var styles_default13 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
+  var styles_default14 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
@@ -43903,8 +44646,8 @@ label {
       ];
     });
   }
-  function visibleRepeatOptions(options2, query8) {
-    const normalizedQuery = query8.trim().toLowerCase();
+  function visibleRepeatOptions(options2, query7) {
+    const normalizedQuery = query7.trim().toLowerCase();
     if (!normalizedQuery) {
       return options2;
     }
@@ -44010,7 +44753,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default34)}`;
+  template21.innerHTML = `<style>${String(styles_default14)}</style>${String(template_default34)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -44344,7 +45087,7 @@ label {
     if (!content) {
       return "";
     }
-    S2(content);
+    S(content);
     return content.innerHTML;
   }
   function runtimeContentFragment(contentRoot, targetDocument) {
@@ -44353,7 +45096,7 @@ label {
     if (!content) {
       return template22.content;
     }
-    L(content);
+    L2(content);
     template22.innerHTML = content.innerHTML;
     return template22.content;
   }
@@ -44538,7 +45281,7 @@ label {
     }
     if (item.kind === "block") {
       const fragment2 = createBlockFragment(document2, item.entry);
-      L(fragment2);
+      L2(fragment2);
       const slotElements2 = slotElementChildren(fragment2);
       for (const child of slotElements2) {
         applySlot(child, slotName);
@@ -44557,7 +45300,7 @@ label {
     const template22 = document2.createElement("template");
     template22.innerHTML = item.content;
     const fragment = template22.content.cloneNode(true);
-    L(fragment);
+    L2(fragment);
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
       applySlot(child, slotName);
@@ -45730,7 +46473,7 @@ label {
     if (format === "richtext") {
       const template22 = editor.target.ownerDocument.createElement("template");
       template22.innerHTML = value3;
-      L(template22.content);
+      L2(template22.content);
       fragment.append(template22.content.cloneNode(true));
     } else if (value3 !== "") {
       fragment.append(editor.target.ownerDocument.createTextNode(value3));
@@ -48170,8 +48913,8 @@ label {
     });
   }
   function siteBlocFrameUrl(tag, mode, revision, nonce) {
-    const query8 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
-    return `${getMetaBasePath()}/api/site-bloc/frame?${query8}`;
+    const query7 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
+    return `${getMetaBasePath()}/api/site-bloc/frame?${query7}`;
   }
   function siteBlocUrl(path, tag) {
     return `${getMetaBasePath()}/api/${path}?id=${encodeURIComponent(tag)}`;
@@ -52136,7 +52879,7 @@ dialog::backdrop {
   define("p9r-card", Nr);
   define("w13c-checkbox", Mi);
   define("p9r-combobox", Fi);
-  define("p9r-container", Sn);
+  define("p9r-container", Ln);
   define("p9r-grid", Mn);
   define("p9r-icon-button", ji);
   define("w13c-lateral-dialog", ai);
@@ -52148,7 +52891,7 @@ dialog::backdrop {
   define("p9r-input", no);
   define("p9r-select", Eo);
   define("p9r-photo-album", $n);
-  define("p9r-segmented-switch", Oo);
+  define("p9r-segmented-switch", qo);
   define("p9r-stack", Fn);
   define("p9r-tab-panel", cs);
   define("p9r-table", Ra);

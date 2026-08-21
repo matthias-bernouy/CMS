@@ -1,5 +1,6 @@
 import { Component } from "@bernouy/components/base";
 import type { ThemeSource } from "@bernouy/cms-content";
+import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import { adminSystemSettingsStore } from "../Common/SystemSettings/store";
 
 import {
@@ -8,18 +9,21 @@ import {
     THEME_CATEGORY_UPDATED_EVENT,
     THEME_SETTINGS_REFRESHED_EVENT,
     dispatchThemeCategorySelected,
+    dispatchThemeNavActionRequested,
     themeSelectionFromUrl,
     type ThemeCategoryAdded,
     type ThemeCategoryDeleted,
     type ThemeSelection,
 } from "./events";
-import css from "./nav/ThemeNav.css" with { type: "text" };
 import template from "./nav/ThemeNav.html" with { type: "text" };
-import { renderThemeNav } from "./nav/view";
+import { loadIntegrationThemeIcons } from "./nav/integrationIcons";
+import css from "./nav/styles";
+import { renderThemeNav, type ThemeNavActionRequest } from "./nav/view";
 
 export class CmsThemeNav extends Component {
     private sources: ThemeSource[] = [];
     private selection: ThemeSelection = { sourceId: "", categoryId: "" };
+    private integrationDefinitions: ReadonlyMap<string, IntegrationDefinition> = new Map();
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
@@ -51,13 +55,15 @@ export class CmsThemeNav extends Component {
             this.sources = structuredClone(page.theme.sources);
             this.selection = themeSelectionFromUrl(this.sources);
             this.render();
+            this.integrationDefinitions = await loadIntegrationThemeIcons(this.sources);
+            this.render();
         } catch {
             // The editor displays the actionable load error; navigation stays empty.
         }
     }
 
     private render(): void {
-        renderThemeNav(this.shadowRoot, this.sources, this.selection);
+        renderThemeNav(this.shadowRoot, this.sources, this.selection, this.integrationDefinitions, this.requestAction);
     }
 
     private select(sourceId: string, categoryId?: string): void {
@@ -80,12 +86,14 @@ export class CmsThemeNav extends Component {
         const category = target?.closest<HTMLElement>("[data-category]");
         if (category?.dataset.source && category.dataset.category) {
             this.select(category.dataset.source, category.dataset.category);
-            return;
         }
-        const source = target?.closest<HTMLElement>("[data-source]");
-        if (source?.dataset.source) {
-            this.select(source.dataset.source);
+    };
+
+    private requestAction = (request: ThemeNavActionRequest): void => {
+        if (request.selection.sourceId && request.selection.categoryId) {
+            this.select(request.selection.sourceId, request.selection.categoryId);
         }
+        dispatchThemeNavActionRequested(request.action);
     };
 
     private onPopState = (): void => {

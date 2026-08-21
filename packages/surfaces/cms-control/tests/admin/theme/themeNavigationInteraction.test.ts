@@ -5,12 +5,39 @@ import { CmsThemeEditor } from "cms-control/components/admin/Theme/ThemeEditor";
 import { CmsThemeNav } from "cms-control/components/admin/Theme/ThemeNav";
 import {
     THEME_CATEGORY_SELECTED_EVENT,
+    THEME_NAV_ACTION_REQUESTED_EVENT,
     THEME_SETTINGS_REFRESHED_EVENT,
+    type ThemeNavAction,
     type ThemeSelection,
 } from "cms-control/components/admin/Theme/events";
 
 describe("theme navigation interaction", () => {
-    test("selects the first integration group from its parent and an exact group from its child", () => {
+    test("opens the first site category when the URL has no selection", async () => {
+        const originalFetch = globalThis.fetch;
+        const initialUrl = window.location.href;
+        globalThis.fetch = (async () => settingsResponse("Portfolio")) as unknown as typeof fetch;
+        window.history.replaceState(null, "", "/admin/theme");
+        adminSystemSettingsStore.invalidate();
+        const nav = new CmsThemeNav() as unknown as ThemeNavHarness;
+
+        try {
+            await nav.load();
+
+            expect(nav.selection).toEqual({
+                sourceId: "colors",
+                categoryId: "brand",
+            });
+            expect(
+                nav.shadowRoot.querySelector("[data-source='colors'][data-category='brand'][active]"),
+            ).not.toBeNull();
+        } finally {
+            window.history.replaceState(null, "", initialUrl);
+            adminSystemSettingsStore.invalidate();
+            globalThis.fetch = originalFetch;
+        }
+    });
+
+    test("selects an exact category without an intermediate source selector", () => {
         const nav = new CmsThemeNav() as unknown as ThemeNavHarness;
         nav.sources = sources();
         nav.selection = { sourceId: "colors", categoryId: "brand" };
@@ -24,7 +51,8 @@ describe("theme navigation interaction", () => {
         nav.shadowRoot.addEventListener("click", nav.onClick);
 
         try {
-            click(nav, "[data-source='integration-photo-albums']");
+            expect(nav.shadowRoot.querySelector("[data-source]:not([data-category])")).toBeNull();
+            click(nav, "[data-source='integration-photo-albums'][data-category='gallery']");
             expect(selections.at(-1)).toEqual({
                 sourceId: "integration-photo-albums",
                 categoryId: "gallery",
@@ -40,12 +68,39 @@ describe("theme navigation interaction", () => {
                     "[data-source='integration-photo-albums'][data-category='viewer'][active]",
                 ),
             ).not.toBeNull();
-            expect(
-                nav.shadowRoot.querySelector("[data-source='integration-photo-albums']:not([data-category])[active]"),
-            ).toBeNull();
         } finally {
             nav.shadowRoot.removeEventListener("click", nav.onClick);
             window.removeEventListener(THEME_CATEGORY_SELECTED_EVENT, onSelection);
+            window.history.replaceState(null, "", initialUrl);
+        }
+    });
+
+    test("targets the site group before requesting its contextual action", () => {
+        const nav = new CmsThemeNav() as unknown as ThemeNavHarness;
+        nav.sources = sources();
+        nav.selection = { sourceId: "integration-photo-albums", categoryId: "viewer" };
+        nav.render();
+        const initialUrl = window.location.href;
+        const selections: ThemeSelection[] = [];
+        const actions: ThemeNavAction[] = [];
+        const onSelection = (event: Event) => selections.push((event as CustomEvent<ThemeSelection>).detail);
+        const onAction = (event: Event) => actions.push((event as CustomEvent<ThemeNavAction>).detail);
+        window.addEventListener(THEME_CATEGORY_SELECTED_EVENT, onSelection);
+        window.addEventListener(THEME_NAV_ACTION_REQUESTED_EVENT, onAction);
+        nav.shadowRoot.addEventListener("click", nav.onClick);
+
+        try {
+            click(nav, "[data-source='colors'][data-category='brand'] [data-theme-nav-action='add-variable']");
+            expect(selections.at(-1)).toEqual({ sourceId: "colors", categoryId: "brand" });
+            expect(actions.at(-1)).toBe("add-variable");
+
+            click(nav, "[data-theme-nav-action='create-group']");
+            expect(actions.at(-1)).toBe("create-group");
+            expect(nav.selection).toEqual({ sourceId: "colors", categoryId: "brand" });
+        } finally {
+            nav.shadowRoot.removeEventListener("click", nav.onClick);
+            window.removeEventListener(THEME_CATEGORY_SELECTED_EVENT, onSelection);
+            window.removeEventListener(THEME_NAV_ACTION_REQUESTED_EVENT, onAction);
             window.history.replaceState(null, "", initialUrl);
         }
     });
@@ -64,9 +119,11 @@ describe("theme navigation interaction", () => {
         try {
             await Promise.all([first.load(), second.load()]);
 
-            expect(calls).toBe(1);
-            expect(first.shadowRoot.querySelector("[data-source='colors']")).not.toBeNull();
-            expect(second.shadowRoot.querySelector("[data-source='integration-photo-albums']")).not.toBeNull();
+            expect(calls).toBe(3);
+            expect(first.shadowRoot.querySelector("[data-source='colors'][data-category='brand']")).not.toBeNull();
+            expect(
+                second.shadowRoot.querySelector("[data-source='integration-photo-albums'][data-category='gallery']"),
+            ).not.toBeNull();
         } finally {
             adminSystemSettingsStore.invalidate();
             globalThis.fetch = originalFetch;
@@ -101,7 +158,7 @@ describe("theme navigation interaction", () => {
             await refreshing;
             await Promise.resolve();
 
-            expect(calls).toBe(1);
+            expect(calls).toBe(2);
             expect(editor.shadowRoot.querySelector("[data-category-section]")?.getAttribute("heading")).toBe("Viewer");
             expect(
                 nav.shadowRoot.querySelector(

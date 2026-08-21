@@ -14,49 +14,76 @@ cms-shell-detail {
     --w-detail-main-width: min(940px, 100%);
     --w-detail-aside-width: 0px;
     --w-detail-gap: 0px;
+    --w-detail-header-gap: 16px;
 }
 
+.theme-page-header,
+.theme-page-context,
 .theme-actions,
-.category-actions,
-.context-controls,
-.editor-context-bar {
+.context-modal-actions,
+.variable-edit-actions {
     display: flex;
     align-items: center;
 }
 
+.theme-page-header {
+    width: min(940px, 100%);
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.theme-page-context {
+    min-width: 0;
+    gap: 10px;
+}
+
+h1 {
+    margin: 0 8px 0 0;
+    font-size: 32px;
+    line-height: 1;
+}
+
+.theme-page-context [data-theme-switch] {
+    width: 210px;
+}
+
+.theme-page-context [data-mode-switch] {
+    width: 150px;
+    flex: 0 0 auto;
+}
+
+.mode-note {
+    color: var(--theme-text-muted);
+    font-size: 11px;
+    font-weight: 650;
+}
+
 .theme-actions {
+    flex: 0 0 auto;
     justify-content: flex-end;
     gap: 8px;
 }
 
-.theme-actions [data-theme-switch][hidden],
-.category-actions[hidden],
-[data-mode-switch][hidden] {
+.mode-note[hidden],
+[data-context-description-field][hidden] {
     display: none;
 }
 
-.category-actions {
-    gap: 6px;
-}
-
-.context-controls {
+.theme-mark {
+    display: inline-grid;
+    width: 34px;
+    height: 34px;
     flex: 0 0 auto;
-    gap: 10px;
+    place-items: center;
+    border-radius: 7px;
+    background: var(--primary-muted);
+    color: var(--primary-base);
 }
 
-.editor-context-bar {
-    justify-content: flex-end;
-    gap: 16px;
-    margin-bottom: 14px;
-}
-
-.editor-context-bar[hidden] {
-    display: none;
-}
-
-[data-mode-switch] {
-    width: 150px;
-    flex: 0 0 auto;
+.theme-mark svg {
+    width: 18px;
+    height: 18px;
 }
 
 .theme-message {
@@ -73,66 +100,80 @@ cms-shell-detail {
     color: var(--danger-base, #c4473d);
 }
 
-.theme-settings {
-    margin-top: 14px;
-    border-top: 1px solid var(--border-light, var(--border-default));
+p9r-modal[data-context-modal],
+p9r-modal[data-variable-modal],
+p9r-modal[data-variable-edit-modal] {
+    --p9r-modal-width: 480px;
 }
 
-.theme-settings summary {
-    width: max-content;
-    padding-top: 12px;
-    color: var(--theme-text-muted);
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 650;
+p9r-modal[data-context-modal]::part(header),
+p9r-modal[data-context-modal]::part(footer),
+p9r-modal[data-variable-modal]::part(header),
+p9r-modal[data-variable-edit-modal]::part(header),
+p9r-modal[data-variable-edit-modal]::part(footer) {
+    display: flex;
 }
 
-.theme-name-field {
+.context-form {
     display: grid;
-    max-width: 360px;
-    gap: 5px;
-    margin-top: 10px;
+    gap: 16px;
 }
 
-.theme-name-field span {
+.context-modal-actions {
+    gap: 8px;
+}
+
+.variable-edit-actions {
+    width: 100%;
+    gap: 8px;
+}
+
+.variable-edit-spacer {
+    flex: 1;
+}
+
+.variable-type-readonly {
+    display: grid;
+    gap: 6px;
+}
+
+.variable-type-readonly > span {
     color: var(--theme-text-muted);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 650;
     letter-spacing: .04em;
     text-transform: uppercase;
 }
 
-.theme-name-field input {
-    min-height: 34px;
-    box-sizing: border-box;
-    padding: 0 9px;
-    border: 1px solid var(--border-light, var(--border-default));
-    border-radius: 6px;
-    background: var(--bg-surface);
-    color: var(--text-main);
-    font: inherit;
+.variable-type-readonly p9r-tag {
+    width: max-content;
 }
 
-@container theme-editor (max-width: 700px) {
-    .theme-actions {
-        width: 100%;
+@container theme-editor (max-width: 820px) {
+    .theme-page-header {
+        align-items: stretch;
+        flex-direction: column;
+        margin-bottom: 24px;
+    }
+
+    .theme-page-context {
         flex-wrap: wrap;
+    }
+
+    .theme-actions {
         justify-content: flex-start;
     }
+}
 
-    .theme-actions [data-theme-switch] {
+@container theme-editor (max-width: 520px) {
+    h1 {
         width: 100%;
+        margin-bottom: 4px;
     }
 
-    .editor-context-bar {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .context-controls {
+    .theme-page-context [data-theme-switch],
+    .theme-page-context [data-mode-switch] {
         width: 100%;
-        align-items: flex-start;
-        flex-direction: column;
     }
 
     .category-actions {

@@ -2,14 +2,14 @@ import type { ThemeDefinition, ThemeMode, ThemeSettings, ThemeToken, ThemeTokenT
 
 import { renderTokenControls } from "./controls";
 
-const TOKEN_TYPES: readonly { value: ThemeTokenType; label: string }[] = [
-    { value: "color", label: "Color" },
-    { value: "font-family", label: "Font family" },
-    { value: "length", label: "Length" },
-    { value: "number", label: "Number" },
-    { value: "shadow", label: "Shadow" },
-    { value: "value", label: "CSS value" },
-];
+const TOKEN_TYPE_LABELS: Record<ThemeTokenType, string> = {
+    color: "Color",
+    "font-family": "Font family",
+    length: "Length",
+    number: "Number",
+    shadow: "Shadow",
+    value: "CSS value",
+};
 
 export function renderToken(
     token: ThemeToken,
@@ -23,92 +23,54 @@ export function renderToken(
     row.dataset.tokenId = token.id;
     row.dataset.tokenType = token.type;
     row.append(renderLabel(token, catalogEditable), renderTokenControls(token, settings, theme, mode));
+    if (catalogEditable) {
+        row.classList.add("catalog-editable");
+        row.append(editTokenButton(token));
+    }
     return row;
 }
 
-function deleteTokenButton(token: ThemeToken): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "delete-token";
-    button.dataset.deleteToken = "true";
-    button.textContent = "Delete token";
-    button.ariaLabel = `Delete ${token.label}`;
+function editTokenButton(token: ThemeToken): HTMLElement {
+    const button = document.createElement("p9r-button");
+    button.className = "edit-token";
+    button.setAttribute("type", "button");
+    button.setAttribute("variant", "ghost");
+    button.dataset.editToken = "true";
+    button.textContent = "Edit";
+    button.ariaLabel = `Edit ${token.label}`;
     return button;
 }
 
 function renderLabel(token: ThemeToken, catalogEditable: boolean): HTMLElement {
     const label = document.createElement("div");
     label.className = "element-label";
-    label.append(catalogEditable ? editableLabel(token) : fixedLabel(token));
-    const detail = catalogEditable ? editableDescription(token) : fixedDescription(token);
-    label.append(detail, technicalDetails(token, catalogEditable));
-    return label;
-}
-
-function technicalDetails(token: ThemeToken, catalogEditable: boolean): HTMLDetailsElement {
-    const details = document.createElement("details");
-    details.className = "token-details";
-    const summary = document.createElement("summary");
-    summary.textContent = "Details";
-    const variable = document.createElement("code");
-    variable.textContent = `var(--${token.variable})`;
-    details.append(summary, variable);
-    if (token.defaults?.light !== undefined) {
-        const defaultValue = document.createElement("span");
-        defaultValue.textContent = `Default: ${token.defaults.light}`;
-        details.append(defaultValue);
-    }
+    label.append(fixedLabel(token), fixedDescription(token));
     if (catalogEditable) {
-        details.append(deleteTokenButton(token));
+        label.append(tokenType(token));
     }
-    return details;
-}
-
-function editableDescription(token: ThemeToken): HTMLInputElement {
-    const input = document.createElement("input");
-    input.className = "token-description-input";
-    input.type = "text";
-    input.value = token.description;
-    input.ariaLabel = `Description for ${token.label}`;
-    input.dataset.tokenDescription = "true";
-    return input;
+    return label;
 }
 
 function fixedDescription(token: ThemeToken): HTMLElement {
     const detail = document.createElement("span");
+    detail.className = "token-description";
+    detail.dataset.tokenDescriptionText = "true";
     detail.textContent = token.description;
     return detail;
 }
 
-function editableLabel(token: ThemeToken): DocumentFragment {
-    const fragment = document.createDocumentFragment();
-    const input = document.createElement("input");
-    input.className = "token-label-input";
-    input.type = "text";
-    input.value = token.label;
-    input.ariaLabel = `Label for --${token.variable}`;
-    input.dataset.tokenLabel = "true";
-    const type = document.createElement("select");
-    type.className = "token-type-select";
-    type.dataset.tokenTypeControl = "true";
-    type.ariaLabel = `Type for ${token.label}`;
-    type.append(...TOKEN_TYPES.map((item) => option(item.value, item.label, item.value === token.type)));
-    type.value = token.type;
-    fragment.append(input, type);
-    return fragment;
+function tokenType(token: ThemeToken): HTMLElement {
+    const type = document.createElement("span");
+    type.className = "token-type-label";
+    type.dataset.tokenTypeLabel = "true";
+    type.textContent = TOKEN_TYPE_LABELS[token.type];
+    return type;
 }
 
 function fixedLabel(token: ThemeToken): HTMLElement {
     const name = document.createElement("strong");
     name.className = "token-label-text";
+    name.dataset.tokenLabelText = "true";
     name.textContent = token.label;
     return name;
-}
-
-function option(value: string, label: string, selected: boolean): HTMLOptionElement {
-    const element = document.createElement("option");
-    element.value = value;
-    element.textContent = label;
-    element.selected = selected;
-    return element;
 }

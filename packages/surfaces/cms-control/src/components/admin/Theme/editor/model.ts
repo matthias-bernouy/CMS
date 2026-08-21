@@ -1,4 +1,11 @@
-import type { ThemeCategory, ThemeDefinition, ThemeSettings, ThemeSource } from "@bernouy/cms-content";
+import type {
+    ThemeCategory,
+    ThemeDefinition,
+    ThemeSettings,
+    ThemeSource,
+    ThemeToken,
+    ThemeTokenType,
+} from "@bernouy/cms-content";
 
 import type { ThemeSelection } from "../events";
 import { isThemeCatalogEditable } from "../ownership";
@@ -8,6 +15,12 @@ export type RemovedThemeCategory = {
     categoryId: string;
     sourceRemoved: boolean;
     selection: ThemeSelection;
+};
+
+export type NewThemeToken = {
+    label: string;
+    description: string;
+    type: ThemeTokenType;
 };
 
 export function currentSource(settings: ThemeSettings | null, selection: ThemeSelection): ThemeSource | undefined {
@@ -23,16 +36,36 @@ export function currentTheme(settings: ThemeSettings | null, selectedThemeId: st
     return settings?.themes.find((item) => item.id === selectedThemeId) ?? settings?.themes[0];
 }
 
-export function addTheme(settings: ThemeSettings): string {
+export function currentToken(
+    settings: ThemeSettings | null,
+    selection: ThemeSelection,
+    tokenId: string,
+): ThemeToken | undefined {
+    return currentCategory(settings, selection)?.tokens.find((token) => token.id === tokenId);
+}
+
+export function addTheme(settings: ThemeSettings, name?: string): string {
     const number = settings.themes.length + 1;
     const id = uniqueId(`theme-${number}`, new Set(settings.themes.map((item) => item.id)));
-    settings.themes.push({ id, name: `New theme ${number}`, values: { light: {}, dark: {} } });
+    settings.themes.push({ id, name: name?.trim() || `New theme ${number}`, values: { light: {}, dark: {} } });
     return id;
+}
+
+export function renameTheme(settings: ThemeSettings, selectedThemeId: string, name: string): boolean {
+    const theme = currentTheme(settings, selectedThemeId);
+    const normalized = name.trim();
+    if (!theme || !normalized) {
+        return false;
+    }
+    theme.name = normalized;
+    return true;
 }
 
 export function addCategory(
     settings: ThemeSettings,
     selection: ThemeSelection,
+    label?: string,
+    description?: string,
 ): { sourceId: string; category: ThemeCategory } | undefined {
     const source = currentSource(settings, selection);
     if (!isThemeCatalogEditable(source)) {
@@ -42,15 +75,32 @@ export function addCategory(
     const id = uniqueId(`${source.id}-category-${number}`, new Set(source.categories.map((item) => item.id)));
     const category: ThemeCategory = {
         id,
-        label: `New category ${number}`,
-        description: `Theme tokens for ${source.label}.`,
+        label: label?.trim() || `New group ${number}`,
+        description: description?.trim() || `Variables for ${source.label}.`,
         tokens: [],
     };
     source.categories.push(category);
     return { sourceId: source.id, category };
 }
 
-export function addToken(settings: ThemeSettings, selection: ThemeSelection): boolean {
+export function updateCategory(
+    settings: ThemeSettings,
+    selection: ThemeSelection,
+    label: string,
+    description: string,
+): { sourceId: string; category: ThemeCategory } | undefined {
+    const source = currentSource(settings, selection);
+    const category = currentCategory(settings, selection);
+    const normalized = label.trim();
+    if (!source || !category || !isThemeCatalogEditable(source) || !normalized) {
+        return undefined;
+    }
+    category.label = normalized;
+    category.description = description.trim();
+    return { sourceId: source.id, category };
+}
+
+export function addToken(settings: ThemeSettings, selection: ThemeSelection, draft?: NewThemeToken): boolean {
     const source = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
     if (!isThemeCatalogEditable(source) || !category) {
@@ -61,15 +111,37 @@ export function addToken(settings: ThemeSettings, selection: ThemeSelection): bo
             item.categories.flatMap((entry) => entry.tokens.flatMap((token) => [token.id, token.variable])),
         ),
     );
-    const number = existingNames.size + 1;
-    const id = uniqueId(`token-${number}`, existingNames);
+    const number =
+        settings.sources
+            .filter(isThemeCatalogEditable)
+            .flatMap((item) => item.categories)
+            .reduce((count, item) => count + item.tokens.length, 0) + 1;
+    const id = uniqueId(`variable-${number}`, existingNames);
     category.tokens.push({
         id,
         variable: id,
-        label: `New token ${number}`,
-        description: "New theme token",
-        type: "value",
+        label: draft?.label.trim() || `New variable ${number}`,
+        description: draft ? draft.description.trim() : "New site variable",
+        type: draft?.type ?? "value",
     });
+    return true;
+}
+
+export function updateToken(
+    settings: ThemeSettings,
+    selection: ThemeSelection,
+    tokenId: string,
+    label: string,
+    description: string,
+): boolean {
+    const source = currentSource(settings, selection);
+    const token = currentToken(settings, selection, tokenId);
+    const normalized = label.trim();
+    if (!isThemeCatalogEditable(source) || !token || !normalized) {
+        return false;
+    }
+    token.label = normalized;
+    token.description = description.trim();
     return true;
 }
 

@@ -20,11 +20,10 @@ export function renderThemeEditor(root: ShadowRoot, state: ThemeEditorViewState)
         return state.mode;
     }
     const catalogEditable = isThemeCatalogEditable(source);
-    const mode = source.supportsModes ? state.mode : "light";
+    const valueMode = source.supportsModes ? state.mode : "light";
     renderHeader(root, state, source, theme);
-    renderActions(root, state, source, theme, catalogEditable);
-    renderModes(root, source, mode);
-    renderCategoryFields(root, category, catalogEditable);
+    renderActions(root, state, theme);
+    renderMode(root, source, state.mode);
 
     const section = query<HTMLElement>(root, "[data-category-section]");
     section.setAttribute("heading", category.label);
@@ -33,10 +32,10 @@ export function renderThemeEditor(root: ShadowRoot, state: ThemeEditorViewState)
         settings: state.settings,
         category,
         theme,
-        mode,
+        mode: valueMode,
         catalogEditable,
     });
-    return mode;
+    return state.mode;
 }
 
 export function setThemeMessage(root: ShadowRoot | null, message: string, error = false): void {
@@ -54,51 +53,26 @@ function renderHeader(
     theme: ThemeDefinition,
 ): void {
     query<HTMLElement>(root, "[data-source-title]").textContent = source.label;
-    query<HTMLInputElement>(root, "[data-theme-name-input]").value = theme.name;
     const select = query<ValueElement>(root, "[data-theme-switch]");
     select.setAttribute("value", theme.id);
     select.replaceChildren(...state.settings.themes.map(themeOption));
     select.value = theme.id;
-    select.hidden = state.settings.themes.length < 2;
 }
 
-function renderActions(
-    root: ShadowRoot,
-    state: ThemeEditorViewState,
-    source: ThemeSource,
-    theme: ThemeDefinition,
-    catalogEditable: boolean,
-): void {
+function renderActions(root: ShadowRoot, state: ThemeEditorViewState, theme: ThemeDefinition): void {
     const active = theme.id === state.settings.activeThemeId;
     const status = query<HTMLElement>(root, "[data-theme-status]");
     status.textContent = active ? "Active" : "Draft";
     status.setAttribute("color", active ? "success" : "warning");
     query<HTMLElement>(root, "[data-activate-theme]").toggleAttribute("disabled", active);
-    query<HTMLElement>(root, "[data-category-actions]").hidden = !catalogEditable;
-    query<HTMLElement>(root, "[data-editor-context]").hidden = !catalogEditable && !source.supportsModes;
-
-    const hasDeletionDestination =
-        source.categories.length > 1 ||
-        state.settings.sources.some(
-            (item) => item !== source && isThemeCatalogEditable(item) && item.categories.length > 0,
-        );
-    const deleteCategory = query<HTMLElement>(root, "[data-delete-category]");
-    deleteCategory.toggleAttribute("disabled", !hasDeletionDestination);
-    deleteCategory.title = hasDeletionDestination ? "" : "Keep at least one editable group.";
 }
 
-function renderCategoryFields(root: ShadowRoot, category: ThemeSource["categories"][number], editable: boolean): void {
-    query<HTMLElement>(root, "[data-category-fields]").hidden = !editable;
-    query<HTMLInputElement>(root, "[data-category-label-input]").value = category.label;
-    query<HTMLInputElement>(root, "[data-category-description-input]").value = category.description;
-}
-
-function renderModes(root: ShadowRoot, source: ThemeSource, mode: "light" | "dark"): void {
+function renderMode(root: ShadowRoot, source: ThemeSource, mode: "light" | "dark"): void {
     const modeSwitch = query<ValueElement>(root, "[data-mode-switch]");
-    modeSwitch.hidden = !source.supportsModes;
-    if (source.supportsModes && modeSwitch.value !== mode) {
+    if (modeSwitch.value !== mode) {
         modeSwitch.value = mode;
     }
+    query<HTMLElement>(root, "[data-mode-note]").hidden = source.supportsModes;
 }
 
 function themeOption(theme: ThemeDefinition): HTMLOptionElement {

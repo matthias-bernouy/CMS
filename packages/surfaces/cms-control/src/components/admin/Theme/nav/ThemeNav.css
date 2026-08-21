@@ -17,18 +17,48 @@ w13c-lateral-menu-item[data-generated] {
 }
 
 w13c-lateral-menu-item.category-item {
-    margin-left: 18px;
-    --item-font-size: .8125rem;
+    --item-font-size: .875rem;
 }
 
-w13c-lateral-menu-item.integration-item {
-    margin-top: 8px;
+w13c-lateral-menu-item.category-item::part(icon) {
+    display: none;
 }
 
-w13c-lateral-menu-item.integration-item::part(label) {
-    font-weight: 650;
+w13c-lateral-menu-item.category-item::part(item) {
+    gap: 0;
 }
 
-w13c-lateral-menu-item.integration-category {
-    margin-left: 22px;
+.theme-category-label {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.theme-source-heading {
+    min-width: 0;
+    margin-top: 4px;
+    gap: 10px;
+}
+
+.theme-source-heading .integration-icon {
+    display: inline-grid;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    place-items: center;
+    color: currentColor;
+}
+
+.theme-source-heading .integration-icon :is(svg, img) {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+.theme-source-heading > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

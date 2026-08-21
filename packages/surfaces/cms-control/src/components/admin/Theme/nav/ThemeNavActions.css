@@ -1,0 +1,98 @@
+.theme-category-action,
+.theme-group-actions-trigger {
+    display: inline-grid;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: currentColor;
+    cursor: pointer;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.theme-category-action:hover,
+.theme-category-action:focus-visible,
+.theme-group-actions-trigger:hover,
+.theme-group-actions-trigger:focus-visible {
+    background: var(--bg-hover);
+    outline: none;
+}
+
+.theme-group-actions {
+    position: relative;
+}
+
+.theme-group-actions-trigger {
+    list-style: none;
+}
+
+.theme-group-actions-trigger::-webkit-details-marker {
+    display: none;
+}
+
+.theme-group-actions-panel {
+    position: absolute;
+    inset-block-start: calc(100% + 4px);
+    inset-inline-end: 0;
+    z-index: 40;
+    display: grid;
+    width: 156px;
+    padding: 5px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--bg-overlay, var(--bg-surface));
+    box-shadow: 0 12px 30px rgb(0 0 0 / 14%);
+}
+
+.theme-group-action {
+    width: 100%;
+    padding: 8px 9px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-main);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    text-align: left;
+}
+
+.theme-group-action:is(:hover, :focus-visible) {
+    background: var(--bg-hover);
+    outline: none;
+}
+
+.theme-group-action.danger {
+    color: var(--danger-base);
+}
+
+.theme-group-action:disabled {
+    cursor: default;
+    opacity: .45;
+}
+
+.theme-new-group {
+    width: 100%;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--primary-base);
+    cursor: pointer;
+    font: inherit;
+    font-size: .8125rem;
+    font-weight: 700;
+    text-align: left;
+}
+
+.theme-new-group:is(:hover, :focus-visible) {
+    background: var(--bg-hover);
+    outline: none;
+}

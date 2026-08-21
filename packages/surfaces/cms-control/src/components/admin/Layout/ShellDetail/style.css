@@ -10,8 +10,9 @@
     --shell-detail-main-width: var(--w-detail-main-width, 600px);
     --shell-detail-aside-width: var(--w-detail-aside-width, 285px);
     --shell-detail-gap: var(--w-detail-gap, 16px);
+    --shell-detail-header-gap: var(--w-detail-header-gap, var(--shell-detail-gap));
     display: grid;
-    gap: var(--shell-detail-gap);
+    gap: var(--shell-detail-header-gap);
     width: min(100%, calc(var(--shell-detail-main-width) + var(--shell-detail-aside-width) + var(--shell-detail-gap)));
     min-width: 0;
 }

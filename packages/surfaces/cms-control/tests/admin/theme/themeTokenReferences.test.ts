@@ -13,28 +13,30 @@ afterEach(() => {
     globalThis.fetch = originalFetch;
 });
 describe("theme token references", () => {
-    test("offers compatible references inline with searchable ownership labels", () => {
+    test("offers compatible references with readable ownership labels", () => {
         const settings = fixture();
         const token = settings.sources[2]!.categories[0]!.tokens[0]!;
         const row = renderToken(token, settings, settings.themes[0]!, "light", false);
-        const control = valueControl(row);
+        const control = referenceControl(row);
         const options = Array.from(control.querySelectorAll("option"), (option) => ({
             label: option.textContent,
             value: option.value,
         }));
 
         expect(control.localName).toBe("p9r-combobox");
-        expect(control.hasAttribute("creatable")).toBeTrue();
+        expect(control.hasAttribute("creatable")).toBeFalse();
         expect(options).toEqual([
             {
-                label: "Colors · General · Brand · --brand-color",
+                label: "Colors · General · Brand",
                 value: "var(--brand-color)",
             },
             {
-                label: "Photo Albums · General · Album border · --album-border",
+                label: "Photo Albums · General · Album border",
                 value: "var(--album-border)",
             },
         ]);
+        expect(options.map((option) => option.label).join(" ")).not.toContain("--");
+        expect(options.map((option) => option.label).join(" ")).not.toContain("integration-");
         expect(options.some((option) => option.value === "var(--album-accent)")).toBeFalse();
         expect(options.some((option) => option.value === "var(--space-md)")).toBeFalse();
         expect(options.some((option) => option.value === "var(--commerce-accent)")).toBeFalse();
@@ -44,7 +46,7 @@ describe("theme token references", () => {
         const settings = fixture();
         const token = settings.sources[0]!.categories[0]!.tokens[0]!;
         const row = renderToken(token, settings, settings.themes[0]!, "light", false);
-        const values = Array.from(valueControl(row).querySelectorAll("option"), (option) => option.value);
+        const values = Array.from(referenceControl(row).querySelectorAll("option"), (option) => option.value);
 
         expect(values).toContain("var(--album-border)");
         expect(values).toContain("var(--commerce-accent)");
@@ -119,12 +121,14 @@ describe("theme token references", () => {
         await persistTheme(root, state, false, () => {});
 
         expect(calls).toBe(0);
-        expect(root.querySelector("[data-message]")?.textContent).toContain("Circular token references");
+        expect(root.querySelector("[data-message]")?.textContent).toContain("Circular variable references");
     });
 });
 
-function valueControl(root: ParentNode): HTMLElement & { value: string } {
-    return root.querySelector("[data-token-value-control]") as HTMLElement & { value: string };
+function referenceControl(root: ParentNode): HTMLElement & { value: string } {
+    return root.querySelector("[data-reference-editor] [data-value-editor-control]") as HTMLElement & {
+        value: string;
+    };
 }
 
 function editorStateWithAlternate(): ThemeEditorState {

@@ -20,7 +20,7 @@ export async function persistTheme(
         ]),
     );
     if (cycles.size > 0) {
-        setThemeMessage(root, `Circular token references: ${[...cycles].join(", ")}.`, true);
+        setThemeMessage(root, `Circular variable references: ${[...cycles].join(", ")}.`, true);
         return;
     }
     const submitted = activate ? { ...settings, activeThemeId: state.selectedThemeId } : settings;

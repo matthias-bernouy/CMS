@@ -5,6 +5,9 @@ export const THEME_CATEGORY_ADDED_EVENT = "cms:theme-category-added";
 export const THEME_CATEGORY_DELETED_EVENT = "cms:theme-category-deleted";
 export const THEME_CATEGORY_UPDATED_EVENT = "cms:theme-category-updated";
 export const THEME_SETTINGS_REFRESHED_EVENT = "cms:theme-settings-refreshed";
+export const THEME_NAV_ACTION_REQUESTED_EVENT = "cms:theme-nav-action-requested";
+
+export type ThemeNavAction = "create-group" | "add-variable" | "edit-group" | "delete-group";
 
 export type ThemeSelection = {
     sourceId: string;
@@ -30,6 +33,8 @@ export function themeSelectionFromUrl(sources: ThemeSource[]): ThemeSelection {
     const source =
         sources.find((item) => item.id === sourceId) ??
         sources.find((item) => item.categories.some((category) => category.id === categoryId)) ??
+        sources.find((item) => item.owner?.kind !== "integration" && item.categories.length > 0) ??
+        sources.find((item) => item.owner?.kind === "integration" && item.categories.length > 0) ??
         sources[0];
     const category = source?.categories.find((item) => item.id === categoryId) ?? source?.categories[0];
     return { sourceId: source?.id ?? "", categoryId: category?.id ?? "" };
@@ -53,4 +58,8 @@ export function dispatchThemeCategoryUpdated(detail: ThemeCategoryAdded): void {
 
 export function dispatchThemeSettingsRefreshed(): void {
     window.dispatchEvent(new Event(THEME_SETTINGS_REFRESHED_EVENT));
+}
+
+export function dispatchThemeNavActionRequested(action: ThemeNavAction): void {
+    window.dispatchEvent(new CustomEvent<ThemeNavAction>(THEME_NAV_ACTION_REQUESTED_EVENT, { detail: action }));
 }

@@ -1,60 +1,121 @@
-<cms-shell-detail>
-    <span slot="title" data-source-title>Theme</span>
-    <div slot="actions" class="theme-actions">
+<header class="theme-page-header">
+    <div class="theme-page-context">
+        <h1>Theme</h1>
         <p9r-select data-theme-switch aria-label="Select theme"></p9r-select>
         <p9r-tag color="success" data-theme-status>Active</p9r-tag>
+        <p9r-segmented-switch data-mode-switch value="light" aria-label="Select mode">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </p9r-segmented-switch>
+        <span class="mode-note" data-mode-note hidden>Shared across modes</span>
+    </div>
+    <div class="theme-actions">
         <p9r-button type="button" color="primary" data-save-theme>Save</p9r-button>
         <p9r-action-menu label="Theme actions">
             <p9r-action-menu-section label="Theme">
                 <p9r-action-menu-item data-add-theme>New theme</p9r-action-menu-item>
+                <p9r-action-menu-item data-edit-theme>Rename theme</p9r-action-menu-item>
                 <p9r-action-menu-item data-activate-theme>Activate theme</p9r-action-menu-item>
             </p9r-action-menu-section>
         </p9r-action-menu>
     </div>
+</header>
+
+<cms-shell-detail>
+    <span slot="back" class="theme-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.1A4.1 4.1 0 0 0 21 10.5 8.9 8.9 0 0 0 12 3Z"></path>
+            <circle cx="7.5" cy="11" r=".7" fill="currentColor" stroke="none"></circle>
+            <circle cx="10" cy="7.5" r=".7" fill="currentColor" stroke="none"></circle>
+            <circle cx="14.5" cy="7" r=".7" fill="currentColor" stroke="none"></circle>
+        </svg>
+    </span>
+    <span slot="title" data-source-title>Theme</span>
 
     <p class="theme-message" slot="main" data-message aria-live="polite"></p>
 
     <cms-detail-section slot="main" density="compact" data-category-section>
-        <div class="editor-context-bar" data-editor-context>
-            <div class="context-controls">
-                <p9r-segmented-switch data-mode-switch value="light" label="Mode" hidden>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </p9r-segmented-switch>
-                <div class="category-actions" data-category-actions hidden>
-                    <p9r-button type="button" variant="ghost" data-add-element>Add token</p9r-button>
-                    <p9r-action-menu label="Group actions">
-                        <p9r-action-menu-section label="Group">
-                            <p9r-action-menu-item data-add-theme-category>New group</p9r-action-menu-item>
-                            <p9r-action-menu-item color="danger" data-delete-category>Delete group</p9r-action-menu-item>
-                        </p9r-action-menu-section>
-                    </p9r-action-menu>
-                </div>
-            </div>
-        </div>
-
-        <details class="category-fields" data-category-fields hidden>
-            <summary>Group details</summary>
-            <div class="category-fields-grid">
-                <label>
-                    <span>Name</span>
-                    <input type="text" data-category-label-input>
-                </label>
-                <label>
-                    <span>Description</span>
-                    <input type="text" data-category-description-input>
-                </label>
-            </div>
-        </details>
-
         <div class="groups" data-groups></div>
-
-        <details class="theme-settings">
-            <summary>Theme details</summary>
-            <label class="theme-name-field">
-                <span>Name</span>
-                <input type="text" data-theme-name-input>
-            </label>
-        </details>
     </cms-detail-section>
 </cms-shell-detail>
+
+<p9r-modal data-context-modal aria-label="Edit theme">
+    <span slot="title" data-context-modal-title>Edit theme</span>
+    <form id="theme-context-form" class="context-form" data-context-form>
+        <p9r-input label="Name" required max-count="80" data-context-name></p9r-input>
+        <p9r-textarea
+            label="Description"
+            rows="3"
+            maxlength="240"
+            max-count="240"
+            data-context-description
+            data-context-description-field
+        ></p9r-textarea>
+    </form>
+    <div slot="footer" class="context-modal-actions">
+        <p9r-button type="button" variant="outlined" data-context-cancel>Cancel</p9r-button>
+        <p9r-button type="submit" form="theme-context-form" color="primary" data-context-submit>Save</p9r-button>
+    </div>
+</p9r-modal>
+
+<p9r-modal data-variable-modal aria-label="Create a variable">
+    <span slot="title">Variable creation</span>
+    <form id="theme-variable-form" data-variable-form>
+        <p9r-stack gap="m">
+            <p9r-input
+                name="label"
+                label="Name"
+                placeholder="Primary color"
+                required
+                max-count="80"
+                data-variable-name
+            ></p9r-input>
+            <p9r-textarea
+                name="description"
+                label="Description"
+                placeholder="Used for primary actions and highlights."
+                rows="3"
+                maxlength="240"
+                max-count="240"
+                data-variable-description
+            ></p9r-textarea>
+            <p9r-select name="type" label="Type" value="color" data-variable-type>
+                <option value="color">Color</option>
+                <option value="font-family">Font family</option>
+                <option value="length">Length</option>
+                <option value="number">Number</option>
+                <option value="shadow">Shadow</option>
+                <option value="value">CSS value</option>
+            </p9r-select>
+            <p9r-button color="primary" fullWidth type="submit" form="theme-variable-form" data-variable-submit>
+                Create variable
+            </p9r-button>
+        </p9r-stack>
+    </form>
+</p9r-modal>
+
+<p9r-modal data-variable-edit-modal aria-label="Edit variable">
+    <span slot="title">Edit variable</span>
+    <form id="theme-variable-edit-form" class="context-form" data-variable-edit-form>
+        <p9r-input label="Name" required max-count="80" data-variable-edit-name></p9r-input>
+        <p9r-textarea
+            label="Description"
+            rows="3"
+            maxlength="240"
+            max-count="240"
+            data-variable-edit-description
+        ></p9r-textarea>
+        <div class="variable-type-readonly">
+            <span>Type</span>
+            <p9r-tag data-variable-edit-type></p9r-tag>
+        </div>
+    </form>
+    <div slot="footer" class="variable-edit-actions">
+        <p9r-button type="button" color="danger" variant="outlined" data-delete-token>Delete variable</p9r-button>
+        <span class="variable-edit-spacer"></span>
+        <p9r-button type="button" variant="outlined" data-variable-edit-cancel>Cancel</p9r-button>
+        <p9r-button type="submit" form="theme-variable-edit-form" color="primary" data-variable-edit-submit>
+            Save
+        </p9r-button>
+    </div>
+</p9r-modal>

@@ -35,6 +35,6 @@ function tokenGroup(tokens: ThemeCategory["tokens"], state: ExplorerState): HTML
 function emptyCategory(): HTMLElement {
     const empty = document.createElement("div");
     empty.className = "empty-category";
-    empty.textContent = "This group does not declare any token yet.";
+    empty.textContent = "This group has no variables yet.";
     return empty;
 }

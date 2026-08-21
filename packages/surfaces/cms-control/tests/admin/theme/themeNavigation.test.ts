@@ -1,24 +1,61 @@
 import { describe, expect, test } from "bun:test";
 import type { ThemeSource } from "@bernouy/cms-content";
-import { renderThemeNav, sourceNavigationLabel } from "cms-control/components/admin/Theme/nav/view";
+import { renderThemeNav } from "cms-control/components/admin/Theme/nav/view";
 
 describe("theme navigation", () => {
-    test("lists every catalogue once without giving ordinary sources an integration label", () => {
+    test("lists categories directly without technical source selectors", () => {
         const root = navigationRoot();
 
         renderThemeNav(root, sources(), { sourceId: "colors", categoryId: "brand" });
 
-        expect(root.querySelector("[data-theme-group]")).toBeNull();
-        expect(root.querySelector("[data-source='spacing']")?.textContent).toBe("Spacing & layout");
-        expect(root.querySelector("[data-source='site-brand']")?.textContent).toBe("Brand additions");
-        expect(root.querySelector("[data-source='other']")?.textContent).toBe("Other");
-        expect(root.querySelector("[data-source='integration-photo-albums']")?.textContent).toBe("Photo Albums");
-        expect(root.querySelectorAll("[data-source='integration-photo-albums']:not([data-category])")).toHaveLength(1);
-        expect(root.querySelector("[data-source='colors']")?.classList.contains("integration-item")).toBeFalse();
-        expect(root.querySelector("[data-source='colors']")?.textContent).not.toContain("Integration");
+        expect(root.querySelector("[data-source]:not([data-category])")).toBeNull();
+        const siteGroup = root.querySelector<HTMLElement>("[data-theme-group='site']")!;
+        expect(siteGroup.textContent).toBe("Site");
+        expect(siteGroup.querySelector("[slot='icon']")).toBeNull();
+        expect(categoryLabel(root, "colors", "brand")).toBe("Brand");
+        expect(categoryLabel(root, "colors", "surfaces")).toBe("Surfaces");
+        expect(categoryLabel(root, "spacing", "scale")).toBe("Scale");
+        expect(categoryLabel(root, "site-brand", "general")).toBe("General");
+        expect(
+            root.querySelector("[data-source='integration-photo-albums'][data-category='gallery']")?.textContent,
+        ).toBe("Gallery");
+        expect(root.querySelector("w13c-lateral-menu-item")?.getAttribute("data-source")).toBe("colors");
+        const group = root.querySelector<HTMLElement>("[data-theme-group='integration-photo-albums']")!;
+        expect(group.tagName).toBe("DIV");
+        expect(group.classList.contains("menu-section")).toBeTrue();
+        expect(group.textContent).toBe("Photo Albums");
+        expect(group.querySelector(".integration-icon svg")).not.toBeNull();
+        expect(group.hasAttribute("role")).toBeFalse();
+        const siteCategory = root.querySelector("[data-source='site-brand'][data-category='general']")!;
+        expect(siteCategory.querySelector("[slot='icon']")).toBeNull();
+        expect(siteCategory.querySelector("[data-theme-nav-action='add-variable']")?.ariaLabel).toBe(
+            "Add a variable to General",
+        );
+        expect(siteCategory.querySelector<HTMLElement>("[data-theme-nav-action='add-variable']")?.slot).toBe(
+            "quick-actions",
+        );
+        expect(siteCategory.querySelector<HTMLElement>(".theme-group-actions")?.slot).toBe("more-actions");
+        expect(siteCategory.querySelector("[data-theme-nav-action='edit-group']")?.textContent).toBe("Edit group");
+        expect(siteCategory.querySelector("[data-theme-nav-action='delete-group']")?.textContent).toBe("Delete group");
+        expect(
+            root
+                .querySelector("[data-source='integration-photo-albums'][data-category='gallery']")
+                ?.querySelector("[data-theme-nav-action]"),
+        ).toBeNull();
+        const newGroup = root.querySelector<HTMLElement>("[data-theme-nav-action='create-group']")!;
+        expect(newGroup.textContent).toBe("+ New group");
+        expect(newGroup.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(
+            Array.from(root.querySelectorAll("w13c-lateral-menu-item")).every(
+                (item) => item.querySelector("[slot='icon']") === null,
+            ),
+        ).toBeTrue();
+        expect(siteGroup.compareDocumentPosition(siteCategory) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(siteCategory.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(root.textContent).not.toContain("Brand additions");
     });
 
-    test("expands integration groups while keeping only the selected group active", () => {
+    test("keeps every category visible and only the exact selection active", () => {
         const root = navigationRoot();
 
         renderThemeNav(root, sources(), {
@@ -26,34 +63,16 @@ describe("theme navigation", () => {
             categoryId: "viewer",
         });
 
-        const parent = root.querySelector<HTMLElement>(
-            "[data-source='integration-photo-albums']:not([data-category])",
-        )!;
         const children = Array.from(
             root.querySelectorAll<HTMLElement>("[data-source='integration-photo-albums'][data-category]"),
         );
-        expect(parent.hasAttribute("active")).toBeFalse();
-        expect(parent.getAttribute("role")).toBe("button");
-        expect(parent.ariaLabel).toBe("Photo Albums");
-        expect(parent.hasAttribute("aria-level")).toBeFalse();
-        expect(parent.getAttribute("aria-expanded")).toBe("true");
         expect(children.map((item) => item.dataset.category)).toEqual(["gallery", "viewer"]);
         expect(children.map((item) => item.ariaLabel)).toEqual(["Gallery", "Viewer"]);
-        expect(children.every((item) => item.getAttribute("aria-level") === "2")).toBeTrue();
-        expect(children.every((item) => item.classList.contains("integration-category"))).toBeTrue();
+        expect(children.every((item) => item.getAttribute("aria-level") === "1")).toBeTrue();
+        expect(children.every((item) => item.classList.contains("category-item"))).toBeTrue();
+        expect(children.every((item) => !item.classList.contains("grouped-category"))).toBeTrue();
         expect(children.find((item) => item.dataset.category === "viewer")?.hasAttribute("active")).toBeTrue();
-        const entries = Array.from(root.querySelectorAll<HTMLElement>("w13c-lateral-menu-item"));
-        const parentIndex = entries.indexOf(parent);
-        expect(entries.slice(parentIndex + 1, parentIndex + 3).map((item) => item.dataset.category)).toEqual([
-            "gallery",
-            "viewer",
-        ]);
-        expect(root.querySelector("[data-source='integration-commerce'][data-category]")).toBeNull();
-        expect(
-            root
-                .querySelector("[data-source='integration-commerce']:not([data-category])")
-                ?.getAttribute("aria-expanded"),
-        ).toBe("false");
+        expect(root.querySelector("[data-source='integration-commerce'][data-category='catalogue']")).not.toBeNull();
 
         renderThemeNav(root, sources(), {
             sourceId: "integration-commerce",
@@ -64,29 +83,29 @@ describe("theme navigation", () => {
         expect(
             root.querySelector("[data-source='integration-commerce'][data-category='catalogue'][active]"),
         ).not.toBeNull();
-        expect(root.querySelector("[data-source='integration-photo-albums'][data-category]")).toBeNull();
+        expect(
+            root.querySelector("[data-source='integration-photo-albums'][data-category='viewer'][active]"),
+        ).toBeNull();
     });
 
-    test("keeps the existing expansion rules for ordinary categories", () => {
+    test("prevents deleting the last editable site group", () => {
         const root = navigationRoot();
 
-        renderThemeNav(root, sources(), { sourceId: "colors", categoryId: "surfaces" });
+        renderThemeNav(root, [ordinarySource("custom", "Site variables")], {
+            sourceId: "custom",
+            categoryId: "general",
+        });
 
-        expect(root.querySelector("[data-category='brand']")?.textContent).toContain("Brand");
-        expect(root.querySelector("[data-category='surfaces'][active]")?.textContent).toContain("Surfaces");
-        expect(root.querySelector("[data-category='brand']")?.classList.contains("integration-category")).toBeFalse();
-        expect(root.querySelector("[data-category][data-source='spacing']")).toBeNull();
-        expect(root.querySelector("[data-category][data-source='other']")).toBeNull();
-    });
-
-    test("keeps ordinary labels even when an id matches a legacy special case", () => {
-        expect(sourceNavigationLabel(ordinarySource("design-system", "Design system"))).toBe("Design system");
-        expect(sourceNavigationLabel(ordinarySource("site-tokens", "Legacy site tokens"))).toBe("Legacy site tokens");
-        expect(sourceNavigationLabel(ordinarySource("existing-css", "Legacy variables"))).toBe("Legacy variables");
-        expect(sourceNavigationLabel(ordinarySource("other", "Other"))).toBe("Other");
-        expect(sourceNavigationLabel(ordinarySource("custom", "Custom"))).toBe("Custom");
+        const deletion = root.querySelector<HTMLButtonElement>("[data-theme-nav-action='delete-group']")!;
+        expect(deletion.disabled).toBeTrue();
+        expect(deletion.title).toBe("Keep at least one site group.");
     });
 });
+
+function categoryLabel(root: ParentNode, sourceId: string, categoryId: string): string | null | undefined {
+    return root.querySelector(`[data-source='${sourceId}'][data-category='${categoryId}'] [data-theme-category-label]`)
+        ?.textContent;
+}
 
 function navigationRoot(): ShadowRoot {
     const host = document.createElement("div");
