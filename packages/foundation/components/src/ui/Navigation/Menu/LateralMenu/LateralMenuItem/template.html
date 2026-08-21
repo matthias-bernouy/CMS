@@ -1,9 +1,19 @@
-<a class="menu-item" part="item" tabindex="-1">
-    <span class="icon-wrapper" part="icon">
-        <slot name="icon"></slot>
+<div class="menu-item" part="item">
+    <a class="menu-item-link" part="link" tabindex="-1">
+        <span class="icon-wrapper" part="icon">
+            <slot name="icon"></slot>
+        </span>
+        <span class="label" part="label">
+            <slot></slot>
+        </span>
+        <span class="badge" part="badge" id="badge-element"></span>
+    </a>
+    <span class="actions" part="actions">
+        <span class="quick-actions" part="quick-actions">
+            <slot name="quick-actions"></slot>
+        </span>
+        <span class="more-actions" part="more-actions">
+            <slot name="more-actions"></slot>
+        </span>
     </span>
-    <span class="label" part="label">
-        <slot></slot>
-    </span>
-    <span class="badge" part="badge" id="badge-element"></span>
-</a>
+</div>

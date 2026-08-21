@@ -10,11 +10,15 @@ import { handleKeydown } from "./listener";
 export class LateralMenuItem extends Component {
     private _anchor: HTMLAnchorElement | null;
     private _badgeEl: HTMLElement | null;
+    private _quickActionsSlot: HTMLSlotElement | null;
+    private _moreActionsSlot: HTMLSlotElement | null;
 
     constructor() {
         super({ css, template: template as unknown as string });
         this._anchor = this.shadowRoot?.querySelector("a") ?? null;
         this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
+        this._quickActionsSlot = this.shadowRoot?.querySelector('slot[name="quick-actions"]') ?? null;
+        this._moreActionsSlot = this.shadowRoot?.querySelector('slot[name="more-actions"]') ?? null;
     }
 
     static get observedAttributes(): string[] {
@@ -39,11 +43,20 @@ export class LateralMenuItem extends Component {
 
         window.addEventListener("popstate", this._onPopstate);
         this.addEventListener("keydown", this._onKey);
+        this.addEventListener("click", this._onActionClick);
+        for (const slot of this.actionSlots()) {
+            slot.addEventListener("slotchange", this._syncActionSlots);
+        }
+        this._syncActionSlots();
     }
 
     disconnectedCallback(): void {
         window.removeEventListener("popstate", this._onPopstate);
         this.removeEventListener("keydown", this._onKey);
+        this.removeEventListener("click", this._onActionClick);
+        for (const slot of this.actionSlots()) {
+            slot.removeEventListener("slotchange", this._syncActionSlots);
+        }
     }
 
     attributeChangedCallback(name: string, _oldVal: string | null, newVal: string | null): void {
@@ -113,4 +126,18 @@ export class LateralMenuItem extends Component {
 
     private _onPopstate = () => checkActiveState(this, this._anchor);
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, this._anchor, e);
+    private _onActionClick = (event: Event): void => {
+        const target = event.target as Element | null;
+        if (target?.closest('[slot="quick-actions"], [slot="more-actions"]')) {
+            event.stopPropagation();
+        }
+    };
+    private _syncActionSlots = (): void => {
+        this.toggleAttribute("has-quick-actions", Boolean(this._quickActionsSlot?.assignedElements().length));
+        this.toggleAttribute("has-more-actions", Boolean(this._moreActionsSlot?.assignedElements().length));
+    };
+
+    private actionSlots(): HTMLSlotElement[] {
+        return [this._quickActionsSlot, this._moreActionsSlot].filter((slot): slot is HTMLSlotElement => slot !== null);
+    }
 }

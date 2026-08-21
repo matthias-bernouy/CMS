@@ -8,13 +8,13 @@
     outline-offset: 2px;
 }
 
-.menu-item.active {
+:host([active]) .menu-item {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
     font-weight: 700;
 }
 
-.menu-item.active::before {
+:host([active]) .menu-item::before {
     content: "";
     position: absolute;
     left: 0;
@@ -26,7 +26,7 @@
     border-radius: 999px;
 }
 
-.menu-item.active ::slotted(svg) {
+:host([active]) .menu-item ::slotted(svg) {
     stroke: var(--item-color-active);
 }
 
@@ -38,13 +38,13 @@
     background: transparent !important;
 }
 
-.menu-item:not(.active) .badge {
+:host(:not([active])) .badge {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
     box-shadow: 0 0 0 1px color-mix(in oklab, var(--item-color-active), transparent 90%);
 }
 
-.menu-item.active .badge {
+:host([active]) .badge {
     background-color: var(--item-color-active);
     color: var(--item-contrasted);
     box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
