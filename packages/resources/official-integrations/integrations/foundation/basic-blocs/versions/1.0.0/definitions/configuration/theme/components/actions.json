@@ -1,0 +1,56 @@
+{
+    "id": "actions",
+    "label": "Actions",
+    "description": "Semantic defaults for buttons, links and selected choices.",
+    "tokens": [
+        {
+            "id": "action-background",
+            "label": "Action background",
+            "description": "Background for prominent actions.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-primary-base)" }
+        },
+        {
+            "id": "action-text",
+            "label": "Action text",
+            "description": "Text and icons placed on prominent actions.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-primary-foreground)" }
+        },
+        {
+            "id": "action-border",
+            "label": "Action border",
+            "description": "Border for outlined and prominent actions.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-primary-base)" }
+        },
+        {
+            "id": "action-muted-background",
+            "label": "Muted action background",
+            "description": "Background for soft and secondary actions.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-primary-muted)" }
+        },
+        {
+            "id": "action-muted-text",
+            "label": "Muted action text",
+            "description": "Text and icons placed on soft action backgrounds.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-primary-contrasted)" }
+        },
+        {
+            "id": "action-radius",
+            "label": "Action radius",
+            "description": "Default rounding for buttons and selectable controls.",
+            "type": "length",
+            "defaults": { "light": "var(--integration-basic-blocs-radius-control)" }
+        },
+        {
+            "id": "focus-color",
+            "label": "Focus color",
+            "description": "Visible keyboard focus indicator.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-primary-base)" }
+        }
+    ]
+}

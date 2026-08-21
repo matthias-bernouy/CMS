@@ -11,17 +11,17 @@ the visual editor. The pages deliberately contain no classes, inline styles,
 raw layout wrappers, local Blocs, scripts, or remote assets. Three local WebP
 images are registered as CMS files and use the editable native image Bloc.
 
-`site/theme.css` defines shared design tokens and only three class-free semantic
-typography rules. Page composition, colors, media, spacing, and component
-settings remain editable through Blocs and the structured theme system.
+The template deliberately ships no `site/theme.css` and no implicit global
+tokens. Basic Blocs owns its complete design system, while the theme editor
+still lets a site author create independent custom variables when needed.
 
 ## Start Here
 
 1. Change the site name, language, host, and favicon in the CMS settings.
 2. Open the home, about, contact, and not-found pages in the visual editor and
    replace the starter copy, links, images, sections, and cards.
-3. Adjust the structured theme tokens instead of adding page-specific rules to
-   `theme.css`.
+3. Adjust the Basic Blocs design system or create a custom variable in the theme
+   editor when the site needs one.
 4. Review the not-found page and its return link.
 5. Inspect the import, then publish it from the template directory.
 

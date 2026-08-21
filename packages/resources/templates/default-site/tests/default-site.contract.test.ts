@@ -24,6 +24,7 @@ describe("default-site template contract", () => {
             language: "en",
             notFound: { path: "/404" },
         });
+        expect(system).not.toHaveProperty("theme");
         expect(JSON.stringify(system)).not.toMatch(/token|secret|password|https?:\/\//iu);
     });
 

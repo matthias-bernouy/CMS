@@ -1,0 +1,56 @@
+{
+    "id": "layout",
+    "label": "Spacing and layout",
+    "description": "Shared spacing steps and content widths.",
+    "tokens": [
+        {
+            "id": "space-xs",
+            "label": "Extra-small spacing",
+            "description": "Tight spacing between closely related elements.",
+            "type": "length",
+            "defaults": { "light": ".25rem" }
+        },
+        {
+            "id": "space-sm",
+            "label": "Small spacing",
+            "description": "Compact inline and control spacing.",
+            "type": "length",
+            "defaults": { "light": ".5rem" }
+        },
+        {
+            "id": "space-md",
+            "label": "Medium spacing",
+            "description": "Default component and content spacing.",
+            "type": "length",
+            "defaults": { "light": "1rem" }
+        },
+        {
+            "id": "space-lg",
+            "label": "Large spacing",
+            "description": "Separation between content groups.",
+            "type": "length",
+            "defaults": { "light": "1.5rem" }
+        },
+        {
+            "id": "space-xl",
+            "label": "Extra-large spacing",
+            "description": "Generous section and page spacing.",
+            "type": "length",
+            "defaults": { "light": "3rem" }
+        },
+        {
+            "id": "content-width",
+            "label": "Content width",
+            "description": "Maximum width for regular page content.",
+            "type": "length",
+            "defaults": { "light": "68rem" }
+        },
+        {
+            "id": "wide-width",
+            "label": "Wide content width",
+            "description": "Maximum width for galleries and broad page sections.",
+            "type": "length",
+            "defaults": { "light": "82rem" }
+        }
+    ]
+}

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const DEFAULT_SITE_TEMPLATE_ROOT = join(import.meta.dir, "..");
@@ -26,16 +26,8 @@ describe("default-site template portability", () => {
         }
     });
 
-    test("limits theme CSS to shared tokens and three semantic typography rules", () => {
-        const theme = readSiteFile("theme.css");
-        const rootRule = theme.match(/^:root\s*\{([^}]*)\}/u);
-
-        expect(rootRule).not.toBeNull();
-        expect(rootRule![1]!.split(";").filter((value) => value.trim() && !value.trim().startsWith("--"))).toEqual([]);
-        expect(theme).not.toMatch(/@import|url\s*\(|(^|[},])\s*\.[a-z_-][\w-]*/imu);
-        const selectors = [...theme.slice(rootRule![0]!.length).matchAll(/([^{}]+)\{[^{}]*\}/gu)].map((match) =>
-            match[1]!.trim(),
-        );
-        expect(selectors).toEqual([":where(h1, h2, h3)", ":where(h2)", ":where(blockquote)"]);
+    test("delegates the complete design system to Basic Blocs", () => {
+        expect(existsSync(join(DEFAULT_SITE_TEMPLATE_SITE_ROOT, "theme.css"))).toBeFalse();
+        expect(JSON.parse(readSiteFile("system.json"))).not.toHaveProperty("theme");
     });
 });

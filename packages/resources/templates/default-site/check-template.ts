@@ -7,7 +7,6 @@ const PAGES = resolve(SITE, "pages");
 const FILES = resolve(SITE, "files");
 const REQUIRED_PAGES = ["404.html", "about.html", "contact.html", "index.html"];
 const REQUIRED_MEDIA = ["template/hero-studio.webp", "template/project-coast.webp", "template/project-objects.webp"];
-const ALLOWED_THEME_SELECTORS = [":where(h1, h2, h3)", ":where(h2)", ":where(blockquote)"];
 const EDITABLE_TAGS = new Set([
     "a",
     "basic-badge",
@@ -62,27 +61,8 @@ for (const name of pageNames) {
     }
 }
 
-const theme = await Bun.file(resolve(SITE, "theme.css")).text();
-const rootRule = theme.match(/^:root\s*\{([^}]*)\}/u);
-if (!rootRule) {
-    errors.push("theme.css: a leading :root token rule is required");
-} else {
-    const declarations = rootRule[1]!
-        .split(";")
-        .map((value) => value.trim())
-        .filter(Boolean);
-    if (declarations.some((value) => !value.startsWith("--"))) {
-        errors.push("theme.css: :root may only contain custom properties");
-    }
-    const remainder = theme.slice(rootRule[0].length).trim();
-    const rules = [...remainder.matchAll(/([^{}]+)\{[^{}]*\}/gu)];
-    const selectors = rules.map((match) => match[1]!.trim());
-    if (JSON.stringify(selectors) !== JSON.stringify(ALLOWED_THEME_SELECTORS)) {
-        errors.push(`theme.css: expected only ${ALLOWED_THEME_SELECTORS.join(", ")} after :root`);
-    }
-    if (rules.reduce((css, match) => css.replace(match[0], ""), remainder).trim()) {
-        errors.push("theme.css: unsupported nested or free-form CSS");
-    }
+if (await Bun.file(resolve(SITE, "theme.css")).exists()) {
+    errors.push("theme.css: the default site must use the Basic Blocs design system without global CSS tokens");
 }
 
 const registry = await Bun.file(resolve(SITE, ".cms-files-registry.json")).json();

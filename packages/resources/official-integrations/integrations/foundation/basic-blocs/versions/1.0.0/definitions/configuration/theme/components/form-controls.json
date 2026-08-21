@@ -1,0 +1,49 @@
+{
+    "id": "form-controls",
+    "label": "Form controls",
+    "description": "Semantic defaults for fields, validation and supporting text.",
+    "tokens": [
+        {
+            "id": "field-background",
+            "label": "Field background",
+            "description": "Background for text fields and selectable controls.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-surface-background)" }
+        },
+        {
+            "id": "field-text",
+            "label": "Field text",
+            "description": "Text entered or selected in form controls.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-surface-text)" }
+        },
+        {
+            "id": "field-border",
+            "label": "Field border",
+            "description": "Default border for form controls.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-surface-border)" }
+        },
+        {
+            "id": "field-radius",
+            "label": "Field radius",
+            "description": "Default rounding for form controls.",
+            "type": "length",
+            "defaults": { "light": "var(--integration-basic-blocs-radius-control)" }
+        },
+        {
+            "id": "muted-text",
+            "label": "Supporting text",
+            "description": "Hints and secondary form-control text.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-surface-muted-text)" }
+        },
+        {
+            "id": "error-text",
+            "label": "Error text",
+            "description": "Validation errors and invalid-control messages.",
+            "type": "color",
+            "defaults": { "light": "var(--integration-basic-blocs-danger-base)" }
+        }
+    ]
+}

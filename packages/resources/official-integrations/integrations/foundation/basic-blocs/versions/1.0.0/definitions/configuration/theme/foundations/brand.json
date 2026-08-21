@@ -1,0 +1,63 @@
+{
+    "id": "brand",
+    "label": "Brand",
+    "description": "Primary and secondary colors shared by official interface elements.",
+    "tokens": [
+        {
+            "id": "primary-base",
+            "label": "Primary",
+            "description": "Main brand color used for prominent actions and highlights.",
+            "type": "color",
+            "defaults": { "light": "#16634d", "dark": "#66d3ad" }
+        },
+        {
+            "id": "primary-muted",
+            "label": "Primary muted",
+            "description": "Soft primary background used for subtle emphasis.",
+            "type": "color",
+            "defaults": { "light": "#e2f0ea", "dark": "#173c31" }
+        },
+        {
+            "id": "primary-contrasted",
+            "label": "Primary contrasted",
+            "description": "Readable primary color used on muted primary backgrounds.",
+            "type": "color",
+            "defaults": { "light": "#164534", "dark": "#b9f5df" }
+        },
+        {
+            "id": "primary-foreground",
+            "label": "Primary foreground",
+            "description": "Text and icons placed on the primary color.",
+            "type": "color",
+            "defaults": { "light": "#ffffff", "dark": "#10231d" }
+        },
+        {
+            "id": "secondary-base",
+            "label": "Secondary",
+            "description": "Secondary color used for neutral and supporting controls.",
+            "type": "color",
+            "defaults": { "light": "#e7eee9", "dark": "#34443e" }
+        },
+        {
+            "id": "secondary-muted",
+            "label": "Secondary muted",
+            "description": "Soft secondary background used for quiet emphasis.",
+            "type": "color",
+            "defaults": { "light": "#f1f5f2", "dark": "#26342f" }
+        },
+        {
+            "id": "secondary-contrasted",
+            "label": "Secondary contrasted",
+            "description": "Readable secondary color used on muted secondary backgrounds.",
+            "type": "color",
+            "defaults": { "light": "#17362c", "dark": "#d7e7df" }
+        },
+        {
+            "id": "secondary-foreground",
+            "label": "Secondary foreground",
+            "description": "Text and icons placed on the secondary color.",
+            "type": "color",
+            "defaults": { "light": "#17362c", "dark": "#eff7f3" }
+        }
+    ]
+}
