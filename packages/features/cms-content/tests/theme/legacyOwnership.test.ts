@@ -2,7 +2,27 @@ import { defaultThemeSettings, organizeThemeSettings, type ThemeSource } from "@
 
 test("turns legacy site and core ownership into independent catalogs without losing data", () => {
     const settings = defaultThemeSettings();
-    const colors = settings.sources.find((source) => source.id === "colors")!;
+    const colors: ThemeSource = {
+        id: "colors",
+        label: "Colors",
+        supportsModes: true,
+        categories: [
+            {
+                id: "brand",
+                label: "Brand",
+                description: "Legacy brand variables.",
+                tokens: [
+                    {
+                        id: "primary-base",
+                        variable: "primary-base",
+                        label: "Primary",
+                        description: "Legacy primary color",
+                        type: "color",
+                    },
+                ],
+            },
+        ],
+    };
     setLegacyOwner(colors, "core");
     const legacy: ThemeSource = {
         id: "site-tokens",
@@ -26,26 +46,30 @@ test("turns legacy site and core ownership into independent catalogs without los
         ],
     };
     setLegacyOwner(legacy, "site");
-    settings.sources.push(legacy);
+    settings.sources.push(colors, legacy);
+    settings.themes[0]!.values.light["primary-base"] = "#16634d";
     settings.themes[0]!.values.light["editorial-accent"] = "#123456";
 
     const organized = organizeThemeSettings(settings);
-    const migrated = organized.sources.find((source) => source.id === "site-tokens")!;
+    const migrated = organized.sources.find((source) => source.id === "custom")!;
 
     expect(colors.owner).toEqual({ kind: "core" });
-    expect(organized.sources.find((source) => source.id === "colors")?.owner).toBeUndefined();
+    expect(organized.sources.some((source) => source.id === "colors" || source.id === "site-tokens")).toBeFalse();
     expect(migrated).toMatchObject({
-        id: "site-tokens",
-        label: "Theme tokens",
+        id: "custom",
+        label: "Site variables",
         categories: [
             {
-                id: "general",
-                description: "Theme design tokens.",
-                tokens: [{ id: "editorial-accent", label: "Editorial accent" }],
+                id: "variables",
+                tokens: [
+                    { id: "primary-base", label: "Primary" },
+                    { id: "editorial-accent", label: "Editorial accent" },
+                ],
             },
         ],
     });
     expect(migrated.owner).toBeUndefined();
+    expect(organized.themes[0]!.values.light["primary-base"]).toBe("#16634d");
     expect(organized.themes[0]!.values.light["editorial-accent"]).toBe("#123456");
 });
 

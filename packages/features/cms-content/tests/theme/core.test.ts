@@ -8,34 +8,39 @@ import {
 describe("structured themes", () => {
     test("emits the active theme as CSS custom properties", () => {
         const settings = defaultThemeSettings();
-        settings.themes[0]!.values.dark["primary-base"] = "#000000";
+        addCustomToken(settings, "brand-accent", "color");
+        settings.themes[0]!.values.light["brand-accent"] = "#16634d";
+        settings.themes[0]!.values.dark["brand-accent"] = "#000000";
 
         const css = generateThemeCss(settings);
 
-        expect(css).toContain("--primary-base: #16634d;");
+        expect(css).toContain("--brand-accent: #16634d;");
         expect(css).toContain("@media (prefers-color-scheme: dark)");
         expect(css).toContain(':root[data-theme-mode="dark"]');
-        expect(css).toContain("--primary-base: #000000;");
+        expect(css).toContain("--brand-accent: #000000;");
     });
 
     test("only emits the selected theme", () => {
         const settings = defaultThemeSettings();
+        addCustomToken(settings, "brand-accent", "color");
+        settings.themes[0]!.values.light["brand-accent"] = "#16634d";
         settings.themes.push({
             id: "alternate",
             name: "Alternate",
-            values: { light: { "primary-base": "#123456" }, dark: {} },
+            values: { light: { "brand-accent": "#123456" }, dark: {} },
         });
         settings.activeThemeId = "alternate";
 
         const css = generateThemeCss(settings);
 
-        expect(css).toContain("--primary-base: #123456;");
-        expect(css).not.toContain("--primary-base: #16634d;");
+        expect(css).toContain("--brand-accent: #123456;");
+        expect(css).not.toContain("--brand-accent: #16634d;");
     });
 
     test("rejects CSS values that can escape a declaration", () => {
         const settings = defaultThemeSettings();
-        settings.themes[0]!.values.light["primary-base"] = "red; } body { display:none";
+        addCustomToken(settings, "brand-accent", "color");
+        settings.themes[0]!.values.light["brand-accent"] = "red; } body { display:none";
 
         expect(() => validateThemeSettings(settings)).toThrow(ContentValidationError);
     });
@@ -92,12 +97,25 @@ describe("structured themes", () => {
         expect(() => validateThemeSettings(settings)).toThrow("invalid token metadata");
     });
 
-    test("treats ordinary catalogs as independent sources", () => {
+    test("starts with one empty editable catalogue for user variables", () => {
         const settings = defaultThemeSettings();
 
-        expect(settings.sources).toHaveLength(4);
-        expect(settings.sources.every((source) => source.owner === undefined)).toBeTrue();
-        expect(settings.sources.some((source) => source.id === "site-tokens")).toBeFalse();
+        expect(settings.sources).toEqual([
+            {
+                id: "custom",
+                label: "Site variables",
+                supportsModes: true,
+                categories: [
+                    {
+                        id: "variables",
+                        label: "Variables",
+                        description: "Variables created by this site and reusable by installed integrations.",
+                        tokens: [],
+                    },
+                ],
+            },
+        ]);
+        expect(settings.themes[0]!.values).toEqual({ light: {}, dark: {} });
     });
 
     test("rejects theme links between separately owned integrations", () => {
@@ -112,6 +130,16 @@ describe("structured themes", () => {
         expect(() => validateThemeSettings(settings)).toThrow("integration token cannot reference another integration");
     });
 });
+
+function addCustomToken(settings: ReturnType<typeof defaultThemeSettings>, id: string, type: "color"): void {
+    settings.sources[0]!.categories[0]!.tokens.push({
+        id,
+        variable: id,
+        label: "Brand accent",
+        description: "Custom brand accent",
+        type,
+    });
+}
 
 function integrationSource(integrationId: string, label: string) {
     const id = `integration-${integrationId}-accent`;
