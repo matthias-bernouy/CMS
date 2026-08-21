@@ -1,17 +1,11 @@
 import {
     Editor,
     registerEditor,
-    type ColorSetting,
     type ContentSlot,
     type SettingSection,
     type TextCapability,
 } from "@bernouy/cms-content/editor";
-
-const color = (label: string, attribute: string): ColorSetting => ({
-    type: "color",
-    label,
-    attribute,
-});
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 export class BasicButtonEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -22,44 +16,55 @@ export class BasicButtonEditor extends Editor {
                 settings: [
                     {
                         type: "segmented",
-                        label: "Behavior",
+                        label: "Action",
                         attribute: "action",
                         defaultValue: "button",
                         options: [
                             { label: "Button", value: "button" },
+                            { label: "Submit", value: "submit" },
+                            { label: "Reset", value: "reset" },
                             { label: "Link", value: "link" },
                         ],
                         attributesOnValue: [
                             {
                                 value: "button",
                                 attributes: {
+                                    type: null,
                                     href: null,
                                     target: null,
                                     rel: null,
+                                    name: null,
+                                    value: null,
+                                },
+                            },
+                            {
+                                value: "submit",
+                                attributes: { type: null, href: null, target: null, rel: null },
+                            },
+                            {
+                                value: "reset",
+                                attributes: {
+                                    type: null,
+                                    href: null,
+                                    target: null,
+                                    rel: null,
+                                    name: null,
+                                    value: null,
                                 },
                             },
                             {
                                 value: "link",
-                                attributes: { type: null },
+                                attributes: { type: null, name: null, value: null },
                             },
                         ],
                     },
                     {
-                        type: "select",
-                        label: "Type",
-                        attribute: "type",
-                        defaultValue: "button",
-                        visibleWhen: { attribute: "action", equals: "button" },
-                        options: [
-                            { label: "Button", value: "button" },
-                            { label: "Submit", value: "submit" },
-                            { label: "Reset", value: "reset" },
-                        ],
-                    },
-                    {
-                        type: "text",
-                        label: "Link",
+                        type: "page-link",
+                        label: "Target",
                         attribute: "href",
+                        allowPage: true,
+                        allowExternal: true,
+                        allowMedia: true,
                         visibleWhen: { attribute: "action", equals: "link" },
                     },
                     {
@@ -87,20 +92,27 @@ export class BasicButtonEditor extends Editor {
                         type: "text",
                         label: "Name",
                         attribute: "name",
-                        visibleWhen: { attribute: "type", equals: "submit" },
+                        visibleWhen: { attribute: "action", equals: "submit" },
                     },
                     {
                         type: "text",
                         label: "Value",
                         attribute: "value",
-                        visibleWhen: { attribute: "type", equals: "submit" },
+                        visibleWhen: { attribute: "action", equals: "submit" },
                     },
                 ],
             },
             {
                 kind: "self",
-                label: "Layout",
+                label: "Style",
                 settings: [
+                    {
+                        type: "select",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "primary",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
                     {
                         type: "select",
                         label: "Appearance",
@@ -108,10 +120,17 @@ export class BasicButtonEditor extends Editor {
                         defaultValue: "filled",
                         options: [
                             { label: "Filled", value: "filled" },
+                            { label: "Soft", value: "soft" },
                             { label: "Outlined", value: "outlined" },
                             { label: "Ghost", value: "ghost" },
                         ],
                     },
+                ],
+            },
+            {
+                kind: "self",
+                label: "Layout",
+                settings: [
                     {
                         type: "select",
                         label: "Size",
@@ -146,16 +165,6 @@ export class BasicButtonEditor extends Editor {
                             { label: "Right", value: "right" },
                         ],
                     },
-                ],
-            },
-            {
-                kind: "self",
-                label: "Colors",
-                settings: [
-                    color("Text", "text-color"),
-                    color("Background", "background-color"),
-                    color("Border", "border-color"),
-                    color("Focus", "accent-color"),
                 ],
             },
         ];

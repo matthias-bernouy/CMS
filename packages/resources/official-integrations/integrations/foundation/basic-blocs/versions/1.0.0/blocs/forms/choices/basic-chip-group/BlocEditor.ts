@@ -1,16 +1,5 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type ContentSlot,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
-
-const color = (label: string, attribute: string): ColorSetting => ({
-    type: "color",
-    label,
-    attribute,
-});
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 export class BasicChipGroupEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -68,14 +57,26 @@ export class BasicChipGroupEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Colors",
+                label: "Style",
                 settings: [
-                    color("Text", "text-color"),
-                    color("Background", "background-color"),
-                    color("Border", "border-color"),
-                    color("Selected text", "selected-text-color"),
-                    color("Selected background", "selected-background-color"),
-                    color("Focus", "accent-color"),
+                    {
+                        type: "select",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "primary",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "segmented",
+                        label: "Appearance",
+                        attribute: "appearance",
+                        defaultValue: "filled",
+                        options: [
+                            { label: "Filled", value: "filled" },
+                            { label: "Soft", value: "soft" },
+                            { label: "Outlined", value: "outlined" },
+                        ],
+                    },
                 ],
             },
         ];

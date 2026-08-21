@@ -1,15 +1,5 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type ContentSlot,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
-const color = (label: string, attribute: string): ColorSetting => ({
-    type: "color",
-    label,
-    attribute,
-});
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 export class BasicSelectEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
@@ -88,12 +78,27 @@ export class BasicSelectEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Colors",
+                label: "Style",
                 settings: [
-                    color("Text", "text-color"),
-                    color("Background", "background-color"),
-                    color("Border", "border-color"),
-                    color("Focus", "accent-color"),
+                    {
+                        type: "select",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "primary",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "select",
+                        label: "Appearance",
+                        attribute: "appearance",
+                        defaultValue: "outlined",
+                        options: [
+                            { label: "Outlined", value: "outlined" },
+                            { label: "Soft", value: "soft" },
+                            { label: "Filled", value: "filled" },
+                            { label: "Ghost", value: "ghost" },
+                        ],
+                    },
                 ],
             },
         ];

@@ -1,18 +1,15 @@
+import { basicColorSchemeCss } from "./colorSchemes";
+
 class BasicCheckbox extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
         "accessible-label",
-        "accent-color",
-        "appearance",
-        "background-color",
-        "border-color",
         "checked",
         "checked-state",
-        "check-color",
         "disabled",
         "name",
+        "presentation",
         "required",
-        "text-color",
         "unchecked-value",
         "value",
     ];
@@ -24,10 +21,29 @@ class BasicCheckbox extends HTMLElement {
         this.showValidation = false;
         this.root.innerHTML = `
             <style>
+                ${basicColorSchemeCss()}
+
                 :host {
+                    --_checkbox-background: var(--integration-basic-blocs-field-background, Canvas);
+                    --_checkbox-border: var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 30%, transparent));
+                    --_checkbox-checked-background: var(--_tone-base);
+                    --_checkbox-checked-border: var(--_tone-border);
+                    --_checkbox-check-color: var(--_tone-foreground);
                     display: inline-block;
-                    color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit));
+                    color: var(--integration-basic-blocs-field-text, inherit);
                     font: inherit;
+                }
+
+                :host([appearance="soft"]) {
+                    --_checkbox-checked-background: var(--_tone-muted);
+                    --_checkbox-checked-border: var(--_tone-muted);
+                    --_checkbox-check-color: var(--_tone-contrasted);
+                }
+
+                :host([appearance="outlined"]) {
+                    --_checkbox-checked-background: transparent;
+                    --_checkbox-checked-border: var(--_tone-border);
+                    --_checkbox-check-color: var(--_tone-contrasted);
                 }
 
                 label {
@@ -47,10 +63,10 @@ class BasicCheckbox extends HTMLElement {
                     flex: 0 0 auto;
                     place-content: center;
                     margin: .15rem 0 0;
-                    border: 1px solid var(--cms-checkbox-border, var(--integration-basic-blocs-field-border, var(--border-default, color-mix(in srgb, currentColor 30%, transparent))));
+                    border: 1px solid var(--cms-checkbox-border, var(--_checkbox-border));
                     border-radius: .25rem;
-                    background: var(--cms-checkbox-background, var(--integration-basic-blocs-field-background, var(--bg-surface, Canvas)));
-                    color: var(--cms-checkbox-check-color, var(--integration-basic-blocs-action-text, var(--secondary-contrasted, Canvas)));
+                    background: var(--cms-checkbox-background, var(--_checkbox-background));
+                    color: var(--cms-checkbox-check-color, var(--_checkbox-check-color));
                     cursor: pointer;
                     transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
                 }
@@ -67,8 +83,8 @@ class BasicCheckbox extends HTMLElement {
                 }
 
                 input:checked {
-                    border-color: var(--cms-accent-color, var(--integration-basic-blocs-action-background, var(--secondary-base, currentColor)));
-                    background: var(--cms-accent-color, var(--integration-basic-blocs-action-background, var(--secondary-base, currentColor)));
+                    border-color: var(--cms-accent-color, var(--_checkbox-checked-border));
+                    background: var(--cms-accent-color, var(--_checkbox-checked-background));
                 }
 
                 input:checked::after {
@@ -77,11 +93,11 @@ class BasicCheckbox extends HTMLElement {
                 }
 
                 input:focus-visible {
-                    outline: 2px solid var(--cms-accent-color, var(--integration-basic-blocs-focus-color, var(--secondary-base, currentColor)));
+                    outline: 2px solid var(--cms-focus-color, var(--_tone-focus));
                     outline-offset: 2px;
                 }
 
-                :host([appearance="switch"]) input {
+                :host([presentation="switch"]) input {
                     position: relative;
                     display: block;
                     width: 2.5rem;
@@ -90,7 +106,7 @@ class BasicCheckbox extends HTMLElement {
                     border-radius: 999px;
                 }
 
-                :host([appearance="switch"]) input::after {
+                :host([presentation="switch"]) input::after {
                     position: absolute;
                     top: .2rem;
                     left: .2rem;
@@ -98,13 +114,13 @@ class BasicCheckbox extends HTMLElement {
                     height: .9rem;
                     border: 0;
                     border-radius: 50%;
-                    background: var(--cms-checkbox-check-color, var(--integration-basic-blocs-action-text, var(--secondary-contrasted, Canvas)));
+                    background: var(--cms-checkbox-check-color, var(--_checkbox-check-color));
                     opacity: 1;
                     transform: none;
                     transition: transform 120ms ease;
                 }
 
-                :host([appearance="switch"]) input:checked::after {
+                :host([presentation="switch"]) input:checked::after {
                     transform: translateX(1.1rem);
                 }
 
@@ -122,7 +138,6 @@ class BasicCheckbox extends HTMLElement {
             <small class="error" part="error" aria-live="polite"></small>
         `;
         this.control = this.root.querySelector("input");
-        this.labelElement = this.root.querySelector("label");
         this.errorElement = this.root.querySelector(".error");
     }
     connectedCallback() {
@@ -185,7 +200,6 @@ class BasicCheckbox extends HTMLElement {
         this.control.focus(options);
     }
     sync() {
-        this.syncColors();
         this.control.checked = this.checked;
         this.control.disabled = this.disabled;
         this.control.required = this.hasAttribute("required");
@@ -196,28 +210,12 @@ class BasicCheckbox extends HTMLElement {
         } else {
             this.control.removeAttribute("aria-label");
         }
-        if (this.getAttribute("appearance") === "switch") {
+        if (this.getAttribute("presentation") === "switch") {
             this.control.setAttribute("role", "switch");
         } else {
             this.control.removeAttribute("role");
         }
         this.updateFormValue();
-    }
-    syncColors() {
-        for (const [attribute, property] of [
-            ["accent-color", "--cms-accent-color"],
-            ["background-color", "--cms-checkbox-background"],
-            ["border-color", "--cms-checkbox-border"],
-            ["check-color", "--cms-checkbox-check-color"],
-            ["text-color", "--cms-input-color"],
-        ]) {
-            const value = this.getAttribute(attribute)?.trim();
-            if (value) {
-                this.labelElement.style.setProperty(property, value);
-            } else {
-                this.labelElement.style.removeProperty(property);
-            }
-        }
     }
     updateFormValue() {
         if (this.disabled) {

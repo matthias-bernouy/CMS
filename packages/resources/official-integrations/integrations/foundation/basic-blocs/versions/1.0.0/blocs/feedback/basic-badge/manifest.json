@@ -5,6 +5,6 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Badge",
-        "description": "Compact presentational label with semantic color, variant, size, and status-dot options."
+        "description": "Compact presentational label with semantic tone, appearance, size, and status-dot options."
     }
 }

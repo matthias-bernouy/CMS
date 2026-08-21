@@ -6,7 +6,7 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { decodeDefaultContent } from "../source";
 
 export function registerCardTest(): void {
-    test("card exposes generic regions, appearances, density, and theme colors", async () => {
+    test("card exposes generic regions, semantic styles, and scoped integration overrides", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
         const artifact = definition?.artifacts?.find(
@@ -29,7 +29,9 @@ export function registerCardTest(): void {
         new Function(built.viewJS)();
 
         const card = document.createElement("basic-card");
-        card.setAttribute("appearance", "elevated");
+        card.setAttribute("tone", "danger");
+        card.setAttribute("appearance", "soft");
+        card.setAttribute("elevation", "elevated");
         card.setAttribute("density", "spacious");
         card.setAttribute("stretch", "true");
         card.setAttribute("text-color", "#201810");
@@ -50,10 +52,16 @@ export function registerCardTest(): void {
         expect(surface?.style.getPropertyValue("--cms-card-border-color")).toBe("#ded8d1");
         expect(card.shadowRoot?.querySelector('slot[name="title"]')).not.toBeNull();
         expect(card.shadowRoot?.querySelector('slot[name="actions"]')).not.toBeNull();
-        expect(card.shadowRoot?.textContent).toContain(':host([appearance="elevated"])');
+        expect(card.shadowRoot?.textContent).toContain(':host([tone="danger"])');
+        expect(card.shadowRoot?.textContent).toContain(':host([appearance="soft"])');
+        expect(card.shadowRoot?.textContent).toContain(':host([appearance="ghost"])');
+        expect(card.shadowRoot?.textContent).toContain("--_card-color: var(--_tone-contrasted)");
+        expect(card.shadowRoot?.textContent).toContain(':host([elevation="elevated"])');
         expect(card.shadowRoot?.textContent).toContain(':host([density="spacious"])');
         expect(card.shadowRoot?.textContent).toContain(':host([stretch]:not([stretch="false"]))');
         expect(bloc.editorJS).toContain('attribute: "stretch"');
+        expect(bloc.editorJS).toContain('attribute: "tone"');
+        expect(bloc.editorJS).not.toContain("background-color");
         card.remove();
     });
 }

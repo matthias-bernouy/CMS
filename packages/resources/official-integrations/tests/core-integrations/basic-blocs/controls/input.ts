@@ -32,8 +32,8 @@ export function registerInputTest(): void {
         const form = document.createElement("form");
         const input = document.createElement("basic-input");
         input.setAttribute("name", "query");
-        input.setAttribute("text-color", "#123456");
-        input.setAttribute("accent-color", "var(--theme-focus)");
+        input.setAttribute("tone", "danger");
+        input.setAttribute("appearance", "soft");
         form.append(input);
         document.body.append(form);
 
@@ -53,9 +53,13 @@ export function registerInputTest(): void {
         );
 
         expect(submitCount).toBe(1);
-        const field = input.shadowRoot?.querySelector<HTMLElement>(".field");
-        expect(field?.style.getPropertyValue("--cms-input-color")).toBe("#123456");
-        expect(field?.style.getPropertyValue("--cms-focus-color")).toBe("var(--theme-focus)");
+        const styles = input.shadowRoot?.querySelector("style")?.textContent;
+        expect(styles).toContain(':host([tone="danger"])');
+        expect(styles).toContain(':host([appearance="soft"])');
+        expect(styles).toContain("--_field-background: var(--_tone-muted)");
+        expect(styles).toContain(':host([appearance="outlined"])');
+        expect(styles).toContain("--_field-border: var(--_tone-border)");
+        expect(styles).toContain("--_field-color: var(--_tone-contrasted)");
 
         const dateInput = document.createElement("basic-input");
         dateInput.setAttribute("name", "birthDate");

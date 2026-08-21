@@ -1,12 +1,16 @@
 :host {
-    --basic-toast-background: var(--integration-basic-blocs-surface-background, var(--bg-surface, Canvas));
-    --basic-toast-border: var(--integration-basic-blocs-surface-border, var(--border-default, color-mix(in srgb, currentColor 16%, transparent)));
-    --basic-toast-color: var(--integration-basic-blocs-surface-text, var(--text-main, CanvasText));
+    --basic-toast-background: var(--_tone-muted);
+    --basic-toast-border: var(--_tone-border);
+    --basic-toast-color: var(--_tone-contrasted);
     --basic-toast-close-color: var(--basic-toast-color);
     --basic-toast-padding: .75rem .875rem;
     --basic-toast-radius: var(--integration-basic-blocs-surface-radius, var(--radius-md, .5rem));
     --basic-toast-shadow: none;
     --basic-toast-width: max-content;
+    --ctx-bg: var(--basic-toast-background);
+    --ctx-fg: var(--basic-toast-color);
+    --ctx-fg-muted: color-mix(in srgb, var(--basic-toast-color) 68%, transparent);
+    --ctx-border: var(--basic-toast-border);
 
     position: fixed;
     z-index: 10000;
@@ -32,6 +36,20 @@
 
 :host([hidden]) {
     display: none !important;
+}
+
+:host([appearance="filled"]) {
+    --basic-toast-background: var(--_tone-base);
+    --basic-toast-color: var(--_tone-foreground);
+}
+
+:host([appearance="outlined"]) {
+    --basic-toast-background: var(--_tone-foreground);
+}
+
+:host([appearance="ghost"]) {
+    --basic-toast-background: var(--_tone-foreground);
+    --basic-toast-border: transparent;
 }
 
 :host([position="top-left"]) {
@@ -106,7 +124,7 @@ button {
 
 button:hover { opacity: 1; }
 button:focus-visible {
-    outline: 2px solid var(--integration-basic-blocs-focus-color, currentColor);
+    outline: 2px solid var(--_tone-focus);
     outline-offset: 2px;
 }
 

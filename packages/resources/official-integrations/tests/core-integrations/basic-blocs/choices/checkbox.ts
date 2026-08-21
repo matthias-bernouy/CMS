@@ -33,22 +33,20 @@ export function registerCheckboxTest(): void {
         checkbox.setAttribute("value", "true");
         checkbox.setAttribute("unchecked-value", "false");
         checkbox.setAttribute("checked-state", "false");
-        checkbox.setAttribute("background-color", "#ffffff");
-        checkbox.setAttribute("border-color", "#dddddd");
-        checkbox.setAttribute("accent-color", "#a85424");
-        checkbox.setAttribute("check-color", "#ffffff");
+        checkbox.setAttribute("tone", "warning");
+        checkbox.setAttribute("appearance", "soft");
         checkbox.setAttribute("required", "");
         const form = document.createElement("form");
         form.append(checkbox);
         document.body.append(form);
 
         const control = checkbox.shadowRoot?.querySelector<HTMLInputElement>("input");
-        const label = checkbox.shadowRoot?.querySelector<HTMLElement>("label");
         expect(checkbox.checked).toBe(false);
         expect(control?.checked).toBe(false);
-        expect(label?.style.getPropertyValue("--cms-checkbox-background")).toBe("#ffffff");
-        expect(label?.style.getPropertyValue("--cms-checkbox-border")).toBe("#dddddd");
-        expect(label?.style.getPropertyValue("--cms-checkbox-check-color")).toBe("#ffffff");
+        const styles = checkbox.shadowRoot?.querySelector("style")?.textContent;
+        expect(styles).toContain(':host([tone="warning"])');
+        expect(styles).toContain(':host([appearance="soft"])');
+        expect(styles).toContain("--_checkbox-checked-background: var(--_tone-muted)");
         expect(checkbox.shadowRoot?.querySelector(".error")?.textContent).toBe("");
 
         checkbox.setAttribute("checked-state", "true");
@@ -64,7 +62,7 @@ export function registerCheckboxTest(): void {
             value: true,
             writable: true,
         });
-        switchControl.setAttribute("appearance", "switch");
+        switchControl.setAttribute("presentation", "switch");
         switchControl.setAttribute("accessible-label", "Enable notifications");
         document.body.append(switchControl);
         const internalSwitch = switchControl.shadowRoot?.querySelector<HTMLInputElement>("input");

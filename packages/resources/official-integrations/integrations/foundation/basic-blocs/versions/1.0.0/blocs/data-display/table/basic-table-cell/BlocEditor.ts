@@ -1,38 +1,34 @@
-import {
-    Editor,
-    registerEditor,
-    type ContentSlot,
-    type SettingSection,
-    type TextCapability,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 export class BasicTableCellEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
             {
                 kind: "self",
-                label: "Appearance",
+                label: "Style",
                 settings: [
                     {
                         type: "select",
-                        label: "Semantic color",
-                        attribute: "variant",
-                        defaultValue: "default",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "neutral",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "segmented",
+                        label: "Appearance",
+                        attribute: "appearance",
+                        defaultValue: "text",
                         options: [
-                            { label: "Default", value: "default" },
-                            { label: "Primary", value: "primary" },
-                            { label: "Information", value: "info" },
-                            { label: "Success", value: "success" },
-                            { label: "Danger", value: "danger" },
+                            { label: "Text", value: "text" },
+                            { label: "Soft", value: "soft" },
+                            { label: "Filled", value: "filled" },
                         ],
                     },
                 ],
             },
         ];
-    }
-
-    protected override contentSlots(): ContentSlot[] {
-        return [{ label: "Content", accepts: [{ kind: "any-component" }] }];
     }
 
     protected override textCapability(): TextCapability {

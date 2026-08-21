@@ -1,24 +1,38 @@
 import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 export class BasicAlertEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
             {
                 kind: "self",
-                label: "Message",
+                label: "Style",
                 settings: [
                     {
                         type: "select",
-                        label: "Type",
-                        attribute: "type",
+                        label: "Tone",
+                        attribute: "tone",
                         defaultValue: "info",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "segmented",
+                        label: "Appearance",
+                        attribute: "appearance",
+                        defaultValue: "soft",
                         options: [
-                            { label: "Information", value: "info" },
-                            { label: "Success", value: "success" },
-                            { label: "Warning", value: "warning" },
-                            { label: "Danger", value: "danger" },
+                            { label: "Soft", value: "soft" },
+                            { label: "Filled", value: "filled" },
+                            { label: "Outlined", value: "outlined" },
+                            { label: "Ghost", value: "ghost" },
                         ],
                     },
+                ],
+            },
+            {
+                kind: "self",
+                label: "Message",
+                settings: [
                     {
                         type: "select",
                         label: "Announcement",

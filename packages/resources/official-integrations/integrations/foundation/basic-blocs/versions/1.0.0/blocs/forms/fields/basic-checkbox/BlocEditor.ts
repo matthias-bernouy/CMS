@@ -1,15 +1,5 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type SettingSection,
-    type TextCapability,
-} from "@bernouy/cms-content/editor";
-const color = (label: string, attribute: string): ColorSetting => ({
-    type: "color",
-    label,
-    attribute,
-});
+import { Editor, registerEditor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 export class BasicCheckboxEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
@@ -19,8 +9,8 @@ export class BasicCheckboxEditor extends Editor {
                 settings: [
                     {
                         type: "select",
-                        label: "Appearance",
-                        attribute: "appearance",
+                        label: "Presentation",
+                        attribute: "presentation",
                         defaultValue: "checkbox",
                         options: [
                             { label: "Checkbox", value: "checkbox" },
@@ -90,13 +80,26 @@ export class BasicCheckboxEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Colors",
+                label: "Style",
                 settings: [
-                    color("Text", "text-color"),
-                    color("Background", "background-color"),
-                    color("Border", "border-color"),
-                    color("Selection", "accent-color"),
-                    color("Check", "check-color"),
+                    {
+                        type: "select",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "primary",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "segmented",
+                        label: "Appearance",
+                        attribute: "appearance",
+                        defaultValue: "filled",
+                        options: [
+                            { label: "Filled", value: "filled" },
+                            { label: "Soft", value: "soft" },
+                            { label: "Outlined", value: "outlined" },
+                        ],
+                    },
                 ],
             },
         ];

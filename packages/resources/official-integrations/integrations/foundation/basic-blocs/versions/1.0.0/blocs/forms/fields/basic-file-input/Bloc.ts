@@ -1,10 +1,9 @@
+import { basicColorSchemeCss } from "./colorSchemes";
+
 class BasicFileInput extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
         "accept",
-        "accent-color",
-        "background-color",
-        "border-color",
         "capture",
         "disabled",
         "empty-label",
@@ -16,7 +15,6 @@ class BasicFileInput extends HTMLElement {
         "preview-shape",
         "preview-size",
         "required",
-        "text-color",
     ];
 
     constructor() {
@@ -28,7 +26,29 @@ class BasicFileInput extends HTMLElement {
         this.previewedFile = null;
         this.root.innerHTML = `
             <style>
-                :host { display: block; font: inherit; color: inherit; }
+                ${basicColorSchemeCss()}
+                :host {
+                    --_file-background: var(--_tone-base);
+                    --_file-border: var(--_tone-border);
+                    --_file-color: var(--_tone-foreground);
+                    display: block;
+                    font: inherit;
+                    color: inherit;
+                }
+                :host([appearance="soft"]) {
+                    --_file-background: var(--_tone-muted);
+                    --_file-border: var(--_tone-muted);
+                    --_file-color: var(--_tone-contrasted);
+                }
+                :host([appearance="outlined"]) {
+                    --_file-background: transparent;
+                    --_file-color: var(--_tone-contrasted);
+                }
+                :host([appearance="ghost"]) {
+                    --_file-background: transparent;
+                    --_file-border: transparent;
+                    --_file-color: var(--_tone-contrasted);
+                }
                 .field { display: grid; gap: var(--cms-field-gap, .375rem); }
                 .label { font: inherit; font-weight: var(--cms-label-weight, 650); }
                 .preview {
@@ -62,10 +82,10 @@ class BasicFileInput extends HTMLElement {
                     justify-content: center;
                     min-height: 2.5rem;
                     padding: .5rem .8rem;
-                    border: 1px solid var(--cms-file-border-color, var(--integration-basic-blocs-action-background, var(--primary-base, CanvasText)));
+                    border: 1px solid var(--cms-file-border-color, var(--_file-border));
                     border-radius: var(--cms-input-radius, var(--integration-basic-blocs-action-radius, .5rem));
-                    background: var(--cms-file-background, var(--integration-basic-blocs-action-background, var(--primary-base, CanvasText)));
-                    color: var(--cms-file-color, var(--integration-basic-blocs-action-text, var(--primary-foreground, var(--primary-contrasted, Canvas))));
+                    background: var(--cms-file-background, var(--_file-background));
+                    color: var(--cms-file-color, var(--_file-color));
                     font-weight: 700;
                     white-space: nowrap;
                 }
@@ -87,7 +107,7 @@ class BasicFileInput extends HTMLElement {
                     border: 0;
                 }
                 .picker:has(input:focus-visible) .picker-button {
-                    outline: 2px solid var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--primary-base, CanvasText)));
+                    outline: 2px solid var(--cms-focus-color, var(--_tone-focus));
                     outline-offset: 2px;
                 }
                 :host([disabled]) { opacity: .6; }
@@ -110,7 +130,6 @@ class BasicFileInput extends HTMLElement {
                 <small class="error" part="error" aria-live="polite"></small>
             </div>`;
         this.input = this.root.querySelector("input");
-        this.fieldElement = this.root.querySelector(".field");
         this.labelElement = this.root.querySelector(".label");
         this.pickerLabelElement = this.root.querySelector(".picker-button");
         this.fileNameElement = this.root.querySelector(".file-name");
@@ -189,7 +208,6 @@ class BasicFileInput extends HTMLElement {
     }
 
     sync() {
-        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         this.pickerLabelElement.textContent = this.getAttribute("picker-label") || "Choose file";
@@ -212,22 +230,6 @@ class BasicFileInput extends HTMLElement {
         this.syncSelectedPreview();
         this.syncPreview();
         this.updateFormValue();
-    }
-
-    syncColors() {
-        for (const [attribute, property] of [
-            ["accent-color", "--cms-focus-color"],
-            ["background-color", "--cms-file-background"],
-            ["border-color", "--cms-file-border-color"],
-            ["text-color", "--cms-file-color"],
-        ]) {
-            const value = this.getAttribute(attribute)?.trim();
-            if (value) {
-                this.fieldElement.style.setProperty(property, value);
-            } else {
-                this.fieldElement.style.removeProperty(property);
-            }
-        }
     }
 
     syncFileName() {

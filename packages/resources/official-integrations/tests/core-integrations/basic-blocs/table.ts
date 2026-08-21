@@ -30,6 +30,7 @@ export function registerTableTests(): void {
         expect(row?.editorJS).toContain('tag: "basic-table-cell"');
         expect(row?.editorJS).toContain('tag: "basic-table-header-cell"');
         expect(cell?.editorJS).toContain('format: "text", dynamic: true');
+        expect(cell?.editorJS).not.toContain("contentSlots()");
         expect(headerCell?.editorJS).toContain('attribute: "sort"');
         expect(headerCell?.editorJS).toContain('attribute: "filter-name"');
 

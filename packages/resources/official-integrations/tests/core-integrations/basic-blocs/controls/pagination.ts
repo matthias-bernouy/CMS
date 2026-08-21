@@ -56,6 +56,13 @@ export function registerPaginationTest(): void {
         expect(pagination.page).toBe(2);
         expect(detail).toEqual({ page: 2, limit: 12, offset: 12 });
         expect(pagination.shadowRoot?.querySelector("[data-summary]")?.textContent).toBe("Page 2 sur 3");
+        const previous = pagination.shadowRoot?.querySelector("[data-previous]");
+        expect(previous?.getAttribute("tone")).toBe("primary");
+        expect(previous?.getAttribute("appearance")).toBe("outlined");
+        pagination.setAttribute("tone", "danger");
+        pagination.setAttribute("appearance", "soft");
+        expect(previous?.getAttribute("tone")).toBe("danger");
+        expect(previous?.getAttribute("appearance")).toBe("soft");
         pagination.remove();
     });
 }

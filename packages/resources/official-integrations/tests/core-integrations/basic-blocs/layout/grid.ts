@@ -4,14 +4,20 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 export function registerGridTest(): void {
-    test("grid keeps intrinsic tracks while capping slotted item widths", async () => {
+    test("layout blocs keep intrinsic layout and observable semantic plain tones", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
         const artifact = definition?.artifacts?.find(
             (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "basic-grid",
         );
+        const stack = definition?.artifacts?.find(
+            (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "basic-stack",
+        );
         if (!artifact || artifact.type !== "bloc") {
             throw new Error("expected basic-grid artifact");
+        }
+        if (!stack || stack.type !== "bloc") {
+            throw new Error("expected basic-stack artifact");
         }
 
         const bloc = artifact.bloc;
@@ -26,6 +32,13 @@ export function registerGridTest(): void {
         expect(styles).toContain(':host([packing="fit"])');
         expect(styles).toContain(':host([min="lg"])');
         expect(styles).toContain(':host([max="xl"])');
+        expect(styles).toContain(':host([appearance="plain"])');
+        expect(styles).toContain("--basic-grid-color: var(--_tone-contrasted)");
+        const stackStyles = stack.bloc.source?.["style.css"]
+            ? Buffer.from(stack.bloc.source["style.css"], "base64").toString("utf8")
+            : "";
+        expect(stackStyles).toContain(':host([appearance="plain"])');
+        expect(stackStyles).toContain("--basic-stack-color: var(--_tone-contrasted)");
         expect(bloc.editorJS).toContain('attribute: "packing"');
         expect(bloc.editorJS).not.toContain('attribute: "columns"');
     });

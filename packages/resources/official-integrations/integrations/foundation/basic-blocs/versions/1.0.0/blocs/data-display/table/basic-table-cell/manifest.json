@@ -5,6 +5,6 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Table cell",
-        "description": "Editable data cell with optional semantic color."
+        "description": "Editable data cell with semantic tone and appearance."
     }
 }

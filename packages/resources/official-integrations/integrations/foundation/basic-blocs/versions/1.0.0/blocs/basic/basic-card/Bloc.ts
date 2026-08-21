@@ -1,3 +1,5 @@
+import { basicColorSchemeCss } from "./colorSchemes";
+
 export class BasicCard extends HTMLElement {
     static observedAttributes = ["background-color", "border-color", "muted-text-color", "text-color"];
 
@@ -12,17 +14,28 @@ export class BasicCard extends HTMLElement {
 
     attributeChangedCallback() {
         if (this.isConnected) {
-            this.syncColors();
+            this.syncLegacyColors();
         }
     }
 
     render() {
         this.root.innerHTML = `
             <style>
+                ${basicColorSchemeCss("neutral")}
+
                 :host {
                     display: block;
                     color: inherit;
                     font: inherit;
+                    --_card-background: var(--_tone-foreground);
+                    --_card-border: var(--_tone-border);
+                    --_card-color: var(--_tone-contrasted);
+                    --_card-muted: color-mix(in srgb, var(--_card-color) 68%, transparent);
+                    --_card-shadow: none;
+                    --ctx-bg: var(--_card-background);
+                    --ctx-fg: var(--_card-color);
+                    --ctx-fg-muted: var(--_card-muted);
+                    --ctx-border: var(--_card-border);
                 }
 
                 :host([hidden]) { display: none !important; }
@@ -34,15 +47,19 @@ export class BasicCard extends HTMLElement {
                 }
 
                 [part="card"] {
+                    --ctx-bg: var(--cms-card-background, var(--_card-background));
+                    --ctx-fg: var(--cms-card-color, var(--_card-color));
+                    --ctx-fg-muted: var(--cms-card-muted-color, var(--_card-muted));
+                    --ctx-border: var(--cms-card-border-color, var(--_card-border));
                     box-sizing: border-box;
                     display: grid;
                     gap: var(--cms-card-section-gap, 1.25rem);
                     padding: var(--cms-card-padding, 1.5rem);
-                    border: var(--cms-card-border, 1px solid var(--cms-card-border-color, var(--integration-basic-blocs-surface-border, var(--border-subtle, var(--border-default, color-mix(in srgb, currentColor 16%, transparent))))));
+                    border: var(--cms-card-border, 1px solid var(--cms-card-border-color, var(--_card-border)));
                     border-radius: var(--cms-card-radius, var(--integration-basic-blocs-surface-radius, var(--radius-lg, var(--radius-card, 1rem))));
-                    background: var(--cms-card-background, var(--integration-basic-blocs-surface-background, var(--bg-surface, Canvas)));
-                    color: var(--cms-card-color, var(--integration-basic-blocs-surface-text, var(--text-main, inherit)));
-                    box-shadow: var(--cms-card-shadow, none);
+                    background: var(--cms-card-background, var(--_card-background));
+                    color: var(--cms-card-color, var(--_card-color));
+                    box-shadow: var(--cms-card-shadow, var(--_card-shadow));
                 }
 
                 [part="header"] {
@@ -80,22 +97,33 @@ export class BasicCard extends HTMLElement {
 
                 ::slotted([slot="description"]) {
                     margin: 0;
-                    color: var(--cms-card-muted-color, var(--integration-basic-blocs-surface-muted-text, var(--text-muted, color-mix(in srgb, currentColor 68%, transparent))));
+                    color: var(--cms-card-muted-color, var(--_card-muted));
                 }
 
                 :host(:not(:has([slot="media"]))) [part="media"],
                 :host(:not(:has([slot="title"], [slot="description"]))) [part="header"],
                 :host(:not(:has([slot="actions"]))) [part="actions"] { display: none; }
 
-                :host([appearance="plain"]) [part="card"] {
-                    border-color: var(--cms-card-border-color, transparent);
-                    background: var(--cms-card-background, transparent);
-                    box-shadow: none;
+                :host([appearance="filled"]) {
+                    --_card-background: var(--_tone-base);
+                    --_card-color: var(--_tone-foreground);
+                    --_card-border: var(--_tone-base);
                 }
 
-                :host([appearance="elevated"]) [part="card"] {
-                    border-color: var(--cms-card-border-color, transparent);
-                    box-shadow: var(--cms-card-shadow, var(--ctx-shadow-rest, var(--integration-basic-blocs-elevated-shadow, var(--shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent)))));
+                :host([appearance="soft"]) {
+                    --_card-background: var(--_tone-muted);
+                    --_card-color: var(--_tone-contrasted);
+                    --_card-border: var(--_tone-muted);
+                }
+
+                :host([appearance="ghost"]) {
+                    --_card-background: transparent;
+                    --_card-border: transparent;
+                    --_card-color: var(--_tone-contrasted);
+                }
+
+                :host([elevation="elevated"]) {
+                    --_card-shadow: var(--ctx-shadow-rest, var(--integration-basic-blocs-elevated-shadow, var(--shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent))));
                 }
 
                 :host([density="compact"]) [part="card"] {
@@ -121,10 +149,10 @@ export class BasicCard extends HTMLElement {
             </section>
         `;
         this.card = this.root.querySelector('[part="card"]');
-        this.syncColors();
+        this.syncLegacyColors();
     }
 
-    syncColors() {
+    syncLegacyColors() {
         if (!this.card) {
             return;
         }

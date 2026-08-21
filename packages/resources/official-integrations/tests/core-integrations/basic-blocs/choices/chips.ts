@@ -46,9 +46,8 @@ export function registerChipTest(): void {
             value: ["club"],
             writable: true,
         });
-        group.setAttribute("accent-color", "#cedc50");
-        group.setAttribute("selected-background-color", "#a85424");
-        group.setAttribute("selected-text-color", "#ffffff");
+        group.setAttribute("tone", "success");
+        group.setAttribute("appearance", "soft");
         const club = document.createElement("basic-chip");
         club.setAttribute("value", "club");
         const professional = document.createElement("basic-chip");
@@ -62,13 +61,10 @@ export function registerChipTest(): void {
         expect(group.value).toEqual(["club", "pro"]);
         expect(professional.hasAttribute("selected")).toBe(true);
         const choices = group.shadowRoot?.querySelector<HTMLElement>(".choices");
-        expect(choices?.style.getPropertyValue("--cms-chip-selected-background")).toBe("#a85424");
-        expect(choices?.style.getPropertyValue("--cms-chip-selected-border")).toBe("#a85424");
-        expect(choices?.style.getPropertyValue("--cms-chip-selected-color")).toBe("#ffffff");
-        expect(group.style.getPropertyValue("--cms-chip-selected-background")).toBe("#a85424");
-        expect(group.style.getPropertyValue("--cms-chip-selected-border")).toBe("#a85424");
-        expect(group.style.getPropertyValue("--cms-chip-selected-color")).toBe("#ffffff");
-        expect(choices?.style.getPropertyValue("--cms-focus-color")).toBe("#cedc50");
+        const styles = group.shadowRoot?.querySelector("style")?.textContent;
+        expect(styles).toContain(':host([tone="success"])');
+        expect(styles).toContain(':host([appearance="soft"])');
+        expect(styles).toContain("--cms-chip-selected-background: var(--_tone-muted)");
         expect(choices?.getAttribute("aria-label")).toBe("Playing level");
         group.formDisabledCallback(true);
         expect(group.hasAttribute("disabled")).toBe(true);

@@ -1,35 +1,30 @@
 import { Editor, registerEditor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 export class BasicBadgeEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
             {
                 kind: "self",
-                label: "Appearance",
+                label: "Style",
                 settings: [
                     {
                         type: "select",
-                        label: "Color",
-                        attribute: "color",
+                        label: "Tone",
+                        attribute: "tone",
                         defaultValue: "neutral",
-                        options: [
-                            { label: "Neutral", value: "neutral" },
-                            { label: "Primary", value: "primary" },
-                            { label: "Information", value: "info" },
-                            { label: "Success", value: "success" },
-                            { label: "Warning", value: "warning" },
-                            { label: "Danger", value: "danger" },
-                        ],
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
                     },
                     {
                         type: "segmented",
-                        label: "Variant",
-                        attribute: "variant",
+                        label: "Appearance",
+                        attribute: "appearance",
                         defaultValue: "soft",
                         options: [
                             { label: "Soft", value: "soft" },
                             { label: "Filled", value: "filled" },
                             { label: "Outlined", value: "outlined" },
+                            { label: "Ghost", value: "ghost" },
                         ],
                     },
                     {

@@ -1,8 +1,8 @@
 :host {
-    --basic-alert-background: var(--info-muted, #edf6fb);
-    --basic-alert-color: var(--info-contrasted, var(--text-main, #26261f));
-    --basic-alert-accent: var(--info-base, #2f6f98);
-    --basic-alert-border: var(--basic-alert-accent);
+    --basic-alert-background: var(--_tone-muted);
+    --basic-alert-color: var(--_tone-contrasted);
+    --basic-alert-accent: var(--_tone-base);
+    --basic-alert-border: var(--_tone-border);
 
     display: block;
     color: var(--basic-alert-color);
@@ -15,23 +15,19 @@
 
 :host([hidden]) { display: none !important; }
 
-:host([type="success"]) {
-    --basic-alert-background: var(--success-muted, #e8f4ef);
-    --basic-alert-color: var(--success-contrasted, var(--text-main, #26261f));
-    --basic-alert-accent: var(--success-base, #21865f);
+:host([appearance="filled"]) {
+    --basic-alert-background: var(--_tone-base);
+    --basic-alert-color: var(--_tone-foreground);
+    --basic-alert-accent: var(--_tone-foreground);
 }
 
-:host([type="warning"]) {
-    --basic-alert-background: var(--warning-muted, #f8f0df);
-    --basic-alert-color: var(--warning-contrasted, #6b470c);
-    --basic-alert-accent: var(--warning-base, #b7791f);
+:host([appearance="outlined"]) {
+    --basic-alert-background: transparent;
 }
 
-:host([type="danger"]),
-:host([type="error"]) {
-    --basic-alert-background: var(--danger-muted, #f9e9e7);
-    --basic-alert-color: var(--danger-contrasted, #7b2923);
-    --basic-alert-accent: var(--danger-base, #c4473d);
+:host([appearance="ghost"]) {
+    --basic-alert-background: transparent;
+    --basic-alert-border: transparent;
 }
 
 .alert {

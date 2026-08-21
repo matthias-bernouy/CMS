@@ -1,10 +1,9 @@
+import { basicColorSchemeCss } from "./colorSchemes";
+
 class BasicInput extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
         "autocomplete",
-        "accent-color",
-        "background-color",
-        "border-color",
         "date-format",
         "disabled",
         "hint",
@@ -20,7 +19,6 @@ class BasicInput extends HTMLElement {
         "readonly",
         "required",
         "step",
-        "text-color",
         "type",
         "value",
     ];
@@ -37,12 +35,44 @@ class BasicInput extends HTMLElement {
         // date/time controls on iOS Safari (WebKit bug 301648).
         this.root.innerHTML = `
             <style>
-                :host { display: block; box-sizing: border-box; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; font: inherit; color: inherit; }
+                ${basicColorSchemeCss()}
+                :host {
+                    --_field-background: var(--integration-basic-blocs-field-background, Canvas);
+                    --_field-border: var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent));
+                    --_field-color: var(--integration-basic-blocs-field-text, inherit);
+                    display: block;
+                    box-sizing: border-box;
+                    min-width: 0;
+                    min-inline-size: 0;
+                    max-width: 100%;
+                    max-inline-size: 100%;
+                    font: inherit;
+                    color: inherit;
+                }
+                :host([appearance="soft"]) {
+                    --_field-background: var(--_tone-muted);
+                    --_field-border: var(--_tone-muted);
+                    --_field-color: var(--_tone-contrasted);
+                }
+                :host([appearance="filled"]) {
+                    --_field-background: var(--_tone-base);
+                    --_field-border: var(--_tone-base);
+                    --_field-color: var(--_tone-foreground);
+                }
+                :host([appearance="outlined"]) {
+                    --_field-border: var(--_tone-border);
+                    --_field-color: var(--_tone-contrasted);
+                }
+                :host([appearance="ghost"]) {
+                    --_field-background: transparent;
+                    --_field-border: transparent;
+                    --_field-color: var(--_tone-contrasted);
+                }
                 :host([hidden]) { display: none !important; }
                 .field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0; gap: var(--cms-field-gap, .375rem); }
                 label { font: inherit; font-weight: var(--cms-label-weight, 650); }
-                input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch; min-height: var(--cms-input-height, 2.75rem); padding: var(--cms-input-padding, .65rem .75rem); border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent)))); border-radius: var(--cms-input-radius, var(--integration-basic-blocs-field-radius, .5rem)); background: var(--cms-input-background, var(--integration-basic-blocs-field-background, Canvas)); color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit)); font: inherit; }
-                input:focus-visible { outline: 2px solid var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--primary-base, currentColor))); outline-offset: 2px; }
+                input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch; min-height: var(--cms-input-height, 2.75rem); padding: var(--cms-input-padding, .65rem .75rem); border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--_field-border))); border-radius: var(--cms-input-radius, var(--integration-basic-blocs-field-radius, .5rem)); background: var(--cms-input-background, var(--_field-background)); color: var(--cms-input-color, var(--_field-color)); font: inherit; }
+                input:focus-visible { outline: 2px solid var(--cms-focus-color, var(--_tone-focus)); outline-offset: 2px; }
                 :host([disabled]) { opacity: .6; }
                 .hint { color: var(--cms-muted-color, var(--integration-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
                 .error { color: var(--cms-error-color, var(--integration-basic-blocs-error-text, #b42318)); }
@@ -55,7 +85,6 @@ class BasicInput extends HTMLElement {
                 <small class="error" part="error" aria-live="polite"></small>
             </div>`;
         this.input = this.root.querySelector("input");
-        this.fieldElement = this.root.querySelector(".field");
         this.labelElement = this.root.querySelector("label");
         this.hintElement = this.root.querySelector(".hint");
         this.errorElement = this.root.querySelector(".error");
@@ -125,7 +154,6 @@ class BasicInput extends HTMLElement {
     }
 
     sync() {
-        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         this.hintElement.textContent = this.getAttribute("hint") || "";
@@ -156,22 +184,6 @@ class BasicInput extends HTMLElement {
         }
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
-    }
-
-    syncColors() {
-        for (const [attribute, property] of [
-            ["accent-color", "--cms-focus-color"],
-            ["background-color", "--cms-input-background"],
-            ["border-color", "--cms-input-border-color"],
-            ["text-color", "--cms-input-color"],
-        ]) {
-            const value = this.getAttribute(attribute)?.trim();
-            if (value) {
-                this.fieldElement.style.setProperty(property, value);
-            } else {
-                this.fieldElement.style.removeProperty(property);
-            }
-        }
     }
 
     syncValidity() {

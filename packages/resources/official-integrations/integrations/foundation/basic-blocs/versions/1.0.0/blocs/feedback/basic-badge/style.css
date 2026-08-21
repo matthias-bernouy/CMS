@@ -1,10 +1,6 @@
 :host {
-    --basic-badge-tone-base: var(--secondary-base, #e7eee9);
-    --basic-badge-tone-muted: var(--secondary-muted, var(--secondary-base, #e7eee9));
-    --basic-badge-tone-contrasted: var(--secondary-contrasted, var(--text-main, #26261f));
-    --basic-badge-tone-foreground: var(--secondary-foreground, var(--secondary-contrasted, #17362c));
-    --basic-badge-background: var(--basic-badge-tone-muted);
-    --basic-badge-color: var(--basic-badge-tone-contrasted);
+    --basic-badge-background: var(--_tone-muted);
+    --basic-badge-color: var(--_tone-contrasted);
     --basic-badge-border: transparent;
     --basic-badge-font-size: .75rem;
     --basic-badge-padding: .15rem .5rem;
@@ -20,50 +16,20 @@
 
 :host([hidden]) { display: none !important; }
 
-:host([color="primary"]) {
-    --basic-badge-tone-base: var(--primary-base, #16634d);
-    --basic-badge-tone-muted: var(--primary-muted, #e2f0ea);
-    --basic-badge-tone-contrasted: var(--primary-contrasted, #164534);
-    --basic-badge-tone-foreground: var(--primary-foreground, var(--primary-contrasted, #fff));
+:host([appearance="filled"]) {
+    --basic-badge-background: var(--_tone-base);
+    --basic-badge-color: var(--_tone-foreground);
 }
 
-:host([color="info"]) {
-    --basic-badge-tone-base: var(--info-base, #2f6f98);
-    --basic-badge-tone-muted: var(--info-muted, #edf6fb);
-    --basic-badge-tone-contrasted: var(--info-contrasted, #17324d);
-    --basic-badge-tone-foreground: var(--info-foreground, #fff);
-}
-
-:host([color="success"]) {
-    --basic-badge-tone-base: var(--success-base, #21865f);
-    --basic-badge-tone-muted: var(--success-muted, #e8f4ef);
-    --basic-badge-tone-contrasted: var(--success-contrasted, #185b43);
-    --basic-badge-tone-foreground: var(--success-foreground, #fff);
-}
-
-:host([color="warning"]) {
-    --basic-badge-tone-base: var(--warning-base, #b7791f);
-    --basic-badge-tone-muted: var(--warning-muted, #f8f0df);
-    --basic-badge-tone-contrasted: var(--warning-contrasted, #6b470c);
-    --basic-badge-tone-foreground: var(--warning-foreground, #1f1f1b);
-}
-
-:host([color="danger"]) {
-    --basic-badge-tone-base: var(--danger-base, #c4473d);
-    --basic-badge-tone-muted: var(--danger-muted, #f9e9e7);
-    --basic-badge-tone-contrasted: var(--danger-contrasted, #7b2923);
-    --basic-badge-tone-foreground: var(--danger-foreground, #fff);
-}
-
-:host([variant="filled"]) {
-    --basic-badge-background: var(--basic-badge-tone-base);
-    --basic-badge-color: var(--basic-badge-tone-foreground);
-}
-
-:host([variant="outlined"]) {
+:host([appearance="outlined"]) {
     --basic-badge-background: transparent;
-    --basic-badge-color: var(--basic-badge-tone-base);
-    --basic-badge-border: var(--basic-badge-tone-base);
+    --basic-badge-color: var(--_tone-contrasted);
+    --basic-badge-border: var(--_tone-border);
+}
+
+:host([appearance="ghost"]) {
+    --basic-badge-background: transparent;
+    --basic-badge-color: var(--_tone-contrasted);
 }
 
 :host([size="sm"]) {

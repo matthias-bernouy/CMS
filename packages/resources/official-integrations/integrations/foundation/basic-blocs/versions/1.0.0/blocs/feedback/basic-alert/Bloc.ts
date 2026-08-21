@@ -1,5 +1,6 @@
 import { Component } from "@bernouy/components/base";
 
+import { basicColorSchemeCss } from "./colorSchemes";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
@@ -7,7 +8,7 @@ export class BasicAlert extends Component {
     static observedAttributes = ["close-label", "dismissible"];
 
     constructor() {
-        super({ css, template });
+        super({ css: `${basicColorSchemeCss("info")}\n${css}`, template });
         this.closeButton = this.shadowRoot.querySelector("button");
         this.iconElement = this.shadowRoot.querySelector(".icon");
         this.iconSlot = this.shadowRoot.querySelector('slot[name="icon"]');

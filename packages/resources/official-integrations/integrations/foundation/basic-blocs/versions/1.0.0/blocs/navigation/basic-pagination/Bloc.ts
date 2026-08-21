@@ -5,10 +5,7 @@ import css from "./style.css" with { type: "text" };
 
 export class BasicPagination extends Component {
     static observedAttributes = [
-        "accent-color",
-        "button-background-color",
-        "button-border-color",
-        "button-text-color",
+        "appearance",
         "justify",
         "next-label",
         "page",
@@ -16,7 +13,7 @@ export class BasicPagination extends Component {
         "previous-label",
         "summary",
         "summary-template",
-        "text-color",
+        "tone",
         "total",
     ];
 
@@ -76,17 +73,9 @@ export class BasicPagination extends Component {
             .replaceAll("{pages}", String(this.pageCount))
             .replaceAll("{total}", String(this.total));
         this.style.setProperty("--basic-pagination-justify", justifyValue(this.getAttribute("justify")));
-        const textColor = this.getAttribute("text-color")?.trim();
-        if (textColor) {
-            this.style.setProperty("--basic-pagination-color", textColor);
-        } else {
-            this.style.removeProperty("--basic-pagination-color");
-        }
         for (const button of [this.previousButton, this.nextButton]) {
-            copyAttribute(this, button, "accent-color");
-            copyAttribute(this, button, "button-background-color", "background-color");
-            copyAttribute(this, button, "button-border-color", "border-color");
-            copyAttribute(this, button, "button-text-color", "text-color");
+            copyAttribute(this, button, "appearance", "outlined");
+            copyAttribute(this, button, "tone", "primary");
         }
     }
 
@@ -146,13 +135,8 @@ function justifyValue(value) {
     return "space-between";
 }
 
-function copyAttribute(source, target, sourceName, targetName = sourceName) {
-    const value = source.getAttribute(sourceName)?.trim();
-    if (value) {
-        target.setAttribute(targetName, value);
-    } else {
-        target.removeAttribute(targetName);
-    }
+function copyAttribute(source, target, name, fallback) {
+    target.setAttribute(name, source.getAttribute(name)?.trim() || fallback);
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", BasicPagination);

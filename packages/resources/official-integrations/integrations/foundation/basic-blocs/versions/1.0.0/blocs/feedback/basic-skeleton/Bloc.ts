@@ -1,15 +1,7 @@
+import { basicColorSchemeCss } from "./colorSchemes";
+
 export class BasicSkeleton extends HTMLElement {
-    static observedAttributes = [
-        "animation",
-        "aria-hidden",
-        "base-color",
-        "height",
-        "highlight-color",
-        "label",
-        "radius",
-        "shape",
-        "width",
-    ];
+    static observedAttributes = ["animation", "aria-hidden", "height", "label", "radius", "shape", "width"];
 
     constructor() {
         super();
@@ -30,9 +22,11 @@ export class BasicSkeleton extends HTMLElement {
     render() {
         this.root.innerHTML = `
             <style>
+                ${basicColorSchemeCss("neutral")}
+
                 :host {
-                    --cms-skeleton-base: color-mix(in srgb, currentColor 10%, transparent);
-                    --cms-skeleton-highlight: color-mix(in srgb, currentColor 5%, transparent);
+                    --cms-skeleton-base: var(--_tone-muted);
+                    --cms-skeleton-highlight: color-mix(in srgb, var(--_tone-contrasted) 10%, var(--_tone-muted));
                     --cms-skeleton-height: 1rem;
                     --cms-skeleton-radius: var(--radius-sm, .4rem);
                     --cms-skeleton-width: 100%;
@@ -57,6 +51,11 @@ export class BasicSkeleton extends HTMLElement {
                     );
                     background-size: 220% 100%;
                     animation: cms-skeleton-wave 1.45s ease-in-out infinite;
+                }
+
+                :host([appearance="filled"]) {
+                    --cms-skeleton-base: var(--_tone-base);
+                    --cms-skeleton-highlight: color-mix(in srgb, var(--_tone-foreground) 22%, var(--_tone-base));
                 }
 
                 :host([animation="pulse"]) [part="surface"] {
@@ -91,9 +90,7 @@ export class BasicSkeleton extends HTMLElement {
 
     syncPresentation() {
         for (const [attribute, property] of [
-            ["base-color", "--cms-skeleton-base"],
             ["height", "--cms-skeleton-height"],
-            ["highlight-color", "--cms-skeleton-highlight"],
             ["radius", "--cms-skeleton-radius"],
             ["width", "--cms-skeleton-width"],
         ]) {

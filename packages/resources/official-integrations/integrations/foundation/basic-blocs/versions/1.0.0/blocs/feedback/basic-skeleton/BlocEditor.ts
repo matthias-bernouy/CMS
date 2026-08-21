@@ -1,10 +1,5 @@
-import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
-
-const color = (label: string, attribute: string): ColorSetting => ({
-    type: "color",
-    label,
-    attribute,
-});
+import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 export class BasicSkeletonEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -47,8 +42,26 @@ export class BasicSkeletonEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Colors",
-                settings: [color("Base", "base-color"), color("Highlight", "highlight-color")],
+                label: "Style",
+                settings: [
+                    {
+                        type: "select",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "neutral",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "segmented",
+                        label: "Appearance",
+                        attribute: "appearance",
+                        defaultValue: "soft",
+                        options: [
+                            { label: "Soft", value: "soft" },
+                            { label: "Filled", value: "filled" },
+                        ],
+                    },
+                ],
             },
             {
                 kind: "self",

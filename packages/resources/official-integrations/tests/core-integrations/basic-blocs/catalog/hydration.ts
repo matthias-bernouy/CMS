@@ -37,17 +37,20 @@ export function registerHydrationTest(): void {
         expect(card.bloc.editorJS).toContain("BasicCardEditor");
         expect(card.bloc.viewJS).toContain('slot name="media"');
         expect(card.bloc.viewJS).toContain('slot name="actions"');
+        expect(card.bloc.editorJS).toContain('attribute: "tone"');
         expect(card.bloc.editorJS).toContain('attribute: "appearance"');
-        expect(card.bloc.editorJS).toContain('color("Background", "background-color")');
+        expect(card.bloc.editorJS).not.toContain("ColorSetting");
         expect(card.bloc.source?.["BlocEditor.ts"]).toBeTruthy();
         expect(grid?.type === "bloc" ? grid.bloc.source?.["template.html"] : undefined).toBeTruthy();
         expect(grid?.type === "bloc" ? grid.bloc.source?.["style.css"] : undefined).toBeTruthy();
         expect(grid?.type === "bloc" ? grid.bloc.editorJS : "").toContain('attribute: "min"');
         expect(grid?.type === "bloc" ? grid.bloc.editorJS : "").toContain('attribute: "max"');
-        expect(grid?.type === "bloc" ? grid.bloc.editorJS : "").toContain('color("Background", "background-color")');
+        expect(grid?.type === "bloc" ? grid.bloc.editorJS : "").toContain('attribute: "tone"');
+        expect(grid?.type === "bloc" ? grid.bloc.editorJS : "").toContain('attribute: "appearance"');
         expect(grid?.type === "bloc" ? grid.bloc.editorJS : "").not.toContain("Column count");
         expect(stack?.type === "bloc" ? stack.bloc.source?.["style.css"] : undefined).toBeTruthy();
-        expect(stack?.type === "bloc" ? stack.bloc.editorJS : "").toContain('color("Text", "text-color")');
+        expect(stack?.type === "bloc" ? stack.bloc.editorJS : "").toContain('attribute: "tone"');
+        expect(stack?.type === "bloc" ? stack.bloc.editorJS : "").toContain('attribute: "appearance"');
         expect(stack?.type === "bloc" ? decodeSource(stack.bloc.source?.["style.css"]) : "").toContain(
             ':host([justify-content="space-between"])',
         );
@@ -59,14 +62,16 @@ export function registerHydrationTest(): void {
         expect(toast?.type === "bloc" ? toast.bloc.viewJS : "").not.toContain('setAttribute("aria-live"');
         expect(toast?.type === "bloc" ? toast.bloc.viewJS : "").not.toContain('getAttribute("type")');
         expect(toast?.type === "bloc" ? toast.bloc.viewJS : "").toContain('CustomEvent("basic-toast:dismissed"');
-        expect(toast?.type === "bloc" ? toast.bloc.editorJS : "").toContain('color("Close button", "close-color")');
+        expect(toast?.type === "bloc" ? toast.bloc.editorJS : "").toContain('attribute: "tone"');
+        expect(toast?.type === "bloc" ? toast.bloc.editorJS : "").toContain('attribute: "appearance"');
         expect(toast?.type === "bloc" ? toast.bloc.editorJS : "").toContain('attribute: "position"');
         expect(toast?.type === "bloc" ? toast.bloc.editorJS : "").toContain('attribute: "shadow"');
         expect(toast?.type === "bloc" ? toast.bloc.editorJS : "").toContain('slot: "icon"');
         expect(skeleton?.type === "bloc" ? skeleton.bloc.viewJS : "").toContain("prefers-reduced-motion");
         expect(skeleton?.type === "bloc" ? skeleton.bloc.viewJS : "").toContain('part="surface"');
         expect(skeleton?.type === "bloc" ? skeleton.bloc.editorJS : "").toContain('attribute: "animation"');
-        expect(skeleton?.type === "bloc" ? skeleton.bloc.editorJS : "").toContain('color("Base", "base-color")');
+        expect(skeleton?.type === "bloc" ? skeleton.bloc.editorJS : "").toContain('attribute: "tone"');
+        expect(skeleton?.type === "bloc" ? skeleton.bloc.editorJS : "").toContain('attribute: "appearance"');
         expect(image?.type === "bloc" ? decodeSource(image.bloc.source?.["manifest.json"]) : "").toContain(
             '"runtime": "native"',
         );
@@ -83,6 +88,8 @@ export function registerHydrationTest(): void {
         expect(pagination?.type === "bloc" ? pagination.bloc.viewJS : "").toContain(
             'CustomEvent("basic-pagination:change"',
         );
+        expect(pagination?.type === "bloc" ? pagination.bloc.editorJS : "").toContain('attribute: "tone"');
+        expect(pagination?.type === "bloc" ? pagination.bloc.editorJS : "").toContain('attribute: "appearance"');
 
         const input = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-input");
         const textarea = artifacts.find(
@@ -105,9 +112,7 @@ export function registerHydrationTest(): void {
         expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(
             ":host([hidden]) { display: none !important; }",
         );
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(
-            ":host { display: block; box-sizing: border-box; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%;",
-        );
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("--_field-background");
         expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(
             ".field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0;",
         );
@@ -116,8 +121,12 @@ export function registerHydrationTest(): void {
         );
         expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain("visibleWhen");
         expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain('attribute: "autocomplete"');
-        expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain('type: "color"');
+        expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain('attribute: "tone"');
+        expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain('attribute: "appearance"');
+        expect(input?.type === "bloc" ? input.bloc.editorJS : "").not.toContain('type: "color"');
         expect(textarea?.type === "bloc" ? textarea.bloc.viewJS : "").toContain("formDisabledCallback(disabled)");
+        expect(textarea?.type === "bloc" ? textarea.bloc.viewJS : "").toContain(':host([appearance="outlined"])');
+        expect(textarea?.type === "bloc" ? textarea.bloc.viewJS : "").toContain("--_field-border: var(--_tone-border)");
         expect(select?.type === "bloc" ? select.bloc.viewJS : "").toContain("formDisabledCallback(disabled)");
         expect(select?.type === "bloc" ? select.bloc.viewJS : "").toContain('part="error"');
         expect(select?.type === "bloc" ? select.bloc.viewJS : "").toContain('role="listbox"');
@@ -127,7 +136,7 @@ export function registerHydrationTest(): void {
         expect(select?.type === "bloc" ? select.bloc.editorJS : "").toContain('attribute: "accessible-label"');
         expect(select?.type === "bloc" ? select.bloc.editorJS : "").toContain('attribute: "placeholder"');
         expect(select?.type === "bloc" ? select.bloc.editorJS : "").toContain('attribute: "presentation"');
-        expect(checkbox?.type === "bloc" ? checkbox.bloc.viewJS : "").toContain(':host([appearance="switch"])');
+        expect(checkbox?.type === "bloc" ? checkbox.bloc.viewJS : "").toContain(':host([presentation="switch"])');
         expect(checkbox?.type === "bloc" ? checkbox.bloc.viewJS : "").toContain("formDisabledCallback(disabled)");
         expect(checkbox?.type === "bloc" ? checkbox.bloc.viewJS : "").toContain(
             "this.checked ? this.value : this.uncheckedValue",
@@ -147,13 +156,19 @@ export function registerHydrationTest(): void {
         expect(form?.type === "bloc" ? form.bloc.editorJS : "").toContain("BasicFormEditor");
         expect(form?.type === "bloc" ? form.bloc.editorJS : "").toContain("cms-source-success-redirect");
         expect(form?.type === "bloc" ? form.bloc.editorJS : "").not.toContain('label: "Method"');
+        expect(form?.type === "bloc" ? decodeSource(form.bloc.source?.["default.html"]) : "").toContain(
+            '<basic-button action="submit">',
+        );
         expect(redirect?.type === "bloc" ? redirect.bloc.editorJS : "").toContain('type: "page-link"');
         expect(redirect?.type === "bloc" ? redirect.bloc.viewJS : "").toContain("anchor.click()");
         expect(button.bloc.editorJS).toContain("visibleWhen");
+        expect(button.bloc.editorJS).toContain('type: "page-link"');
+        expect(button.bloc.editorJS).toContain('{ label: "Submit", value: "submit" }');
+        expect(button.bloc.editorJS).toContain('attribute: "tone"');
         expect(button.bloc.editorJS).toContain('attribute: "appearance"');
         expect(button.bloc.editorJS).toContain('slot: "icon-left"');
-        expect(button.bloc.viewJS).toContain("var(--primary-base, CanvasText)");
-        expect(button.bloc.viewJS).toContain("var(--primary-foreground, var(--primary-contrasted, Canvas))");
+        expect(decodeSource(button.bloc.source?.["colorSchemes.ts"])).toContain('role("action-background"');
+        expect(decodeSource(button.bloc.source?.["style.css"])).toContain("--_button-background: var(--_tone-base)");
         expect(button.bloc.viewJS).toContain("requestFormSubmit");
 
         const chip = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-chip");
@@ -167,5 +182,7 @@ export function registerHydrationTest(): void {
         expect(chipGroup?.type === "bloc" ? chipGroup.bloc.viewJS : "").toContain("formDisabledCallback(disabled)");
         expect(chipGroup?.type === "bloc" ? chipGroup.bloc.viewJS : "").toContain('part="error"');
         expect(chipGroup?.type === "bloc" ? chipGroup.bloc.editorJS : "").toContain('attribute: "accessible-label"');
+        expect(chipGroup?.type === "bloc" ? chipGroup.bloc.editorJS : "").toContain('attribute: "tone"');
+        expect(chipGroup?.type === "bloc" ? chipGroup.bloc.editorJS : "").toContain('attribute: "appearance"');
     });
 }

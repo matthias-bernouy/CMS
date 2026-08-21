@@ -1,35 +1,48 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type ContentSlot,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
-
-const color = (label: string, attribute: string): ColorSetting => ({
-    type: "color",
-    label,
-    attribute,
-});
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 export class BasicCardEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
             {
                 kind: "self",
-                label: "Layout",
+                label: "Style",
                 settings: [
                     {
-                        type: "segmented",
+                        type: "select",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "neutral",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "select",
                         label: "Appearance",
                         attribute: "appearance",
                         defaultValue: "outlined",
                         options: [
-                            { label: "Plain", value: "plain" },
+                            { label: "Filled", value: "filled" },
+                            { label: "Soft", value: "soft" },
                             { label: "Outlined", value: "outlined" },
+                            { label: "Ghost", value: "ghost" },
+                        ],
+                    },
+                    {
+                        type: "segmented",
+                        label: "Elevation",
+                        attribute: "elevation",
+                        defaultValue: "flat",
+                        options: [
+                            { label: "Flat", value: "flat" },
                             { label: "Elevated", value: "elevated" },
                         ],
                     },
+                ],
+            },
+            {
+                kind: "self",
+                label: "Layout",
+                settings: [
                     {
                         type: "segmented",
                         label: "Density",
@@ -51,16 +64,6 @@ export class BasicCardEditor extends Editor {
                             { label: "Stretch", value: "true" },
                         ],
                     },
-                ],
-            },
-            {
-                kind: "self",
-                label: "Colors",
-                settings: [
-                    color("Text", "text-color"),
-                    color("Muted text", "muted-text-color"),
-                    color("Background", "background-color"),
-                    color("Border", "border-color"),
                 ],
             },
         ];

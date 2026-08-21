@@ -44,19 +44,22 @@ export function registerBadgeTest(): void {
         expect(built.viewJS).not.toContain("addEventListener");
 
         const styles = decodeSource(bloc.source?.["style.css"]);
-        for (const color of ["primary", "info", "success", "warning", "danger"]) {
-            expect(styles).toContain(`:host([color="${color}"])`);
+        const colorSchemes = decodeSource(bloc.source?.["colorSchemes.ts"]);
+        expect(colorSchemes).toContain('value: "primary"');
+        expect(colorSchemes).toContain('value: "neutral"');
+        for (const tone of ["secondary", "info", "success", "warning", "danger"]) {
+            expect(colorSchemes).toContain(`scheme("${tone}"`);
         }
-        for (const variant of ["filled", "outlined"]) {
-            expect(styles).toContain(`:host([variant="${variant}"])`);
+        for (const appearance of ["filled", "outlined", "ghost"]) {
+            expect(styles).toContain(`:host([appearance="${appearance}"])`);
         }
         expect(styles).toContain(':host([dot]:not([dot="false"]))');
 
         const registration = executeEditorBundle(built.editorJS);
         const editor = new registration.editor!(badge);
         expect(editor.getSettings()[0]?.settings.map((setting) => setting.attribute)).toEqual([
-            "color",
-            "variant",
+            "tone",
+            "appearance",
             "size",
             "dot",
         ]);

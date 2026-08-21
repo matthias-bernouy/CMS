@@ -1,6 +1,5 @@
-import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
-
-const color = (label: string, attribute: string): ColorSetting => ({ type: "color", label, attribute });
+import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 export class BasicPaginationEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -46,13 +45,27 @@ export class BasicPaginationEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Colors",
+                label: "Style",
                 settings: [
-                    color("Text", "text-color"),
-                    color("Button text", "button-text-color"),
-                    color("Button background", "button-background-color"),
-                    color("Button border", "button-border-color"),
-                    color("Focus", "accent-color"),
+                    {
+                        type: "select",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "primary",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "select",
+                        label: "Appearance",
+                        attribute: "appearance",
+                        defaultValue: "outlined",
+                        options: [
+                            { label: "Filled", value: "filled" },
+                            { label: "Soft", value: "soft" },
+                            { label: "Outlined", value: "outlined" },
+                            { label: "Ghost", value: "ghost" },
+                        ],
+                    },
                 ],
             },
         ];

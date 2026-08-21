@@ -97,9 +97,61 @@ describe("official integration Theme contracts", () => {
         const input = artifacts.find((item) => item.type === "bloc" && item.bloc.tag === "basic-input");
         const alert = artifacts.find((item) => item.type === "bloc" && item.bloc.tag === "basic-alert");
         const toast = artifacts.find((item) => item.type === "bloc" && item.bloc.tag === "basic-toast");
+        const semanticBlocTags = [
+            "basic-alert",
+            "basic-badge",
+            "basic-button",
+            "basic-card",
+            "basic-checkbox",
+            "basic-chip-group",
+            "basic-file-input",
+            "basic-grid",
+            "basic-input",
+            "basic-pagination",
+            "basic-select",
+            "basic-skeleton",
+            "basic-stack",
+            "basic-table-cell",
+            "basic-textarea",
+            "basic-toast",
+        ];
+        const themeTokenIds = new Set(
+            definition?.theme?.categories.flatMap((category) => category.tokens.map((token) => token.id)) ?? [],
+        );
 
-        expect(blocView(button)).toContain("--integration-basic-blocs-action-background");
-        expect(blocView(card)).toContain("--integration-basic-blocs-surface-background");
+        const buttonSchemes = blocSource(button, "colorSchemes.ts");
+        expect(buttonSchemes).toContain('role("action-background"');
+        expect(buttonSchemes).toContain('scheme("danger"');
+        expect(
+            [
+                "action-background",
+                "action-text",
+                "action-muted-background",
+                "action-muted-text",
+                "action-border",
+                "focus-color",
+                "surface-text",
+                "surface-background",
+                "subtle-background",
+                "surface-border",
+                ...["secondary", "info", "success", "warning", "danger"].flatMap((tone) => [
+                    `${tone}-base`,
+                    `${tone}-foreground`,
+                    `${tone}-muted`,
+                    `${tone}-contrasted`,
+                ]),
+            ].filter((id) => !themeTokenIds.has(id)),
+        ).toEqual([]);
+        expect(blocSource(button, "style.css")).toContain("--_button-background: var(--_tone-base)");
+        for (const tag of semanticBlocTags) {
+            const artifact = artifacts.find((item) => item.type === "bloc" && item.bloc.tag === tag);
+            expect(blocSource(artifact, "colorSchemes.ts")).toBe(buttonSchemes);
+            expect(blocSource(artifact, "BlocEditor.ts")).toContain('attribute: "tone"');
+            expect(blocSource(artifact, "BlocEditor.ts")).toContain('attribute: "appearance"');
+            expect(blocSource(artifact, "BlocEditor.ts")).not.toContain("ColorSetting");
+            expect(blocSource(artifact, "BlocEditor.ts")).not.toContain('type: "color"');
+        }
+        expect(blocSource(card, "colorSchemes.ts")).toContain('role("surface-background"');
         expect(blocView(input)).toContain("--integration-basic-blocs-field-background");
         expect(blocSource(alert, "style.css")).toContain("--integration-basic-blocs-surface-radius");
         expect(blocSource(toast, "style.css")).toContain("--integration-basic-blocs-elevated-shadow");

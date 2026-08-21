@@ -61,7 +61,11 @@ export function registerSelectStateTest(): void {
         const optionButtons = () => Array.from(select.shadowRoot?.querySelectorAll<HTMLButtonElement>(".option") ?? []);
         const error = select.shadowRoot?.querySelector(".error");
         const nativeControl = select.shadowRoot?.querySelector<HTMLSelectElement>(".native-control");
+        const styles = select.shadowRoot?.querySelector("style")?.textContent;
         expect(nativeControl?.tagName).toBe("SELECT");
+        expect(styles).toContain(':host([appearance="outlined"])');
+        expect(styles).toContain("--_field-border: var(--_tone-border)");
+        expect(styles).toContain("--_field-color: var(--_tone-contrasted)");
         expect(select.getAttribute("data-resolved-presentation")).toBe("custom");
         expect(select.shadowRoot?.querySelector<HTMLElement>(".custom-shell")?.hidden).toBe(false);
         expect(select.shadowRoot?.querySelector<HTMLElement>(".native-shell")?.hidden).toBe(true);

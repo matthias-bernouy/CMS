@@ -1,20 +1,8 @@
+import { basicColorSchemeCss } from "./colorSchemes";
+
 class BasicChipGroup extends HTMLElement {
     static formAssociated = true;
-    static observedAttributes = [
-        "accessible-label",
-        "accent-color",
-        "background-color",
-        "border-color",
-        "disabled",
-        "label",
-        "mode",
-        "name",
-        "required",
-        "selected-background-color",
-        "selected-text-color",
-        "text-color",
-        "value",
-    ];
+    static observedAttributes = ["accessible-label", "disabled", "label", "mode", "name", "required", "value"];
 
     constructor() {
         super();
@@ -24,11 +12,32 @@ class BasicChipGroup extends HTMLElement {
         this.showValidation = false;
         this.root.innerHTML = `
             <style>
+                ${basicColorSchemeCss()}
+
                 :host {
+                    --cms-chip-background: var(--integration-basic-blocs-field-background, Canvas);
+                    --cms-chip-border-color: var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent));
+                    --cms-chip-color: var(--integration-basic-blocs-field-text, inherit);
+                    --cms-chip-selected-background: var(--_tone-base);
+                    --cms-chip-selected-border: var(--_tone-border);
+                    --cms-chip-selected-color: var(--_tone-foreground);
+                    --cms-focus-color: var(--_tone-focus);
                     display: grid;
                     gap: var(--cms-field-gap, .375rem);
                     color: inherit;
                     font: inherit;
+                }
+
+                :host([appearance="soft"]) {
+                    --cms-chip-selected-background: var(--_tone-muted);
+                    --cms-chip-selected-border: var(--_tone-muted);
+                    --cms-chip-selected-color: var(--_tone-contrasted);
+                }
+
+                :host([appearance="outlined"]) {
+                    --cms-chip-selected-background: transparent;
+                    --cms-chip-selected-border: var(--_tone-border);
+                    --cms-chip-selected-color: var(--_tone-contrasted);
                 }
 
                 .label {
@@ -126,7 +135,6 @@ class BasicChipGroup extends HTMLElement {
     }
 
     sync = () => {
-        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         const accessibleLabel = this.getAttribute("accessible-label") || "";
@@ -140,29 +148,6 @@ class BasicChipGroup extends HTMLElement {
         this.syncDisabled();
         this.updateFormValue();
     };
-
-    syncColors() {
-        const values = [
-            ["background-color", ["--cms-chip-background"]],
-            ["border-color", ["--cms-chip-border-color"]],
-            ["text-color", ["--cms-chip-color"]],
-            ["accent-color", ["--cms-chip-selected-background", "--cms-chip-selected-border", "--cms-focus-color"]],
-            ["selected-background-color", ["--cms-chip-selected-background", "--cms-chip-selected-border"]],
-            ["selected-text-color", ["--cms-chip-selected-color"]],
-        ];
-        for (const [attribute, properties] of values) {
-            const value = this.getAttribute(attribute)?.trim();
-            for (const property of properties) {
-                if (value) {
-                    this.style.setProperty(property, value);
-                    this.choicesElement.style.setProperty(property, value);
-                } else {
-                    this.style.removeProperty(property);
-                    this.choicesElement.style.removeProperty(property);
-                }
-            }
-        }
-    }
 
     initialValues() {
         const explicitValue = this.getAttribute("value");

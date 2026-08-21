@@ -1,9 +1,8 @@
+import { basicColorSchemeCss } from "./colorSchemes";
+
 class BasicTextarea extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
-        "accent-color",
-        "background-color",
-        "border-color",
         "disabled",
         "hint",
         "label",
@@ -14,7 +13,6 @@ class BasicTextarea extends HTMLElement {
         "readonly",
         "required",
         "rows",
-        "text-color",
         "value",
     ];
 
@@ -26,10 +24,38 @@ class BasicTextarea extends HTMLElement {
         this.showValidation = false;
         this.root.innerHTML = `
             <style>
+                ${basicColorSchemeCss()}
+
                 :host {
+                    --_field-background: var(--integration-basic-blocs-field-background, Canvas);
+                    --_field-border: var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent));
+                    --_field-color: var(--integration-basic-blocs-field-text, inherit);
                     display: block;
                     color: inherit;
                     font: inherit;
+                }
+
+                :host([appearance="soft"]) {
+                    --_field-background: var(--_tone-muted);
+                    --_field-border: var(--_tone-muted);
+                    --_field-color: var(--_tone-contrasted);
+                }
+
+                :host([appearance="filled"]) {
+                    --_field-background: var(--_tone-base);
+                    --_field-border: var(--_tone-base);
+                    --_field-color: var(--_tone-foreground);
+                }
+
+                :host([appearance="outlined"]) {
+                    --_field-border: var(--_tone-border);
+                    --_field-color: var(--_tone-contrasted);
+                }
+
+                :host([appearance="ghost"]) {
+                    --_field-background: transparent;
+                    --_field-border: transparent;
+                    --_field-color: var(--_tone-contrasted);
                 }
 
                 .field {
@@ -45,16 +71,16 @@ class BasicTextarea extends HTMLElement {
                     box-sizing: border-box;
                     width: 100%;
                     padding: var(--cms-input-padding, .65rem .75rem);
-                    border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--integration-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent))));
+                    border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--_field-border)));
                     border-radius: var(--cms-input-radius, var(--integration-basic-blocs-field-radius, .5rem));
-                    background: var(--cms-input-background, var(--integration-basic-blocs-field-background, Canvas));
-                    color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit));
+                    background: var(--cms-input-background, var(--_field-background));
+                    color: var(--cms-input-color, var(--_field-color));
                     font: inherit;
                     resize: vertical;
                 }
 
                 textarea:focus-visible {
-                    outline: 2px solid var(--cms-focus-color, var(--integration-basic-blocs-focus-color, var(--primary-base, currentColor)));
+                    outline: 2px solid var(--cms-focus-color, var(--_tone-focus));
                     outline-offset: 2px;
                 }
 
@@ -71,7 +97,6 @@ class BasicTextarea extends HTMLElement {
             </div>
         `;
         this.control = this.root.querySelector("textarea");
-        this.fieldElement = this.root.querySelector(".field");
         this.labelElement = this.root.querySelector("label");
         this.hintElement = this.root.querySelector(".hint");
         this.errorElement = this.root.querySelector(".error");
@@ -122,7 +147,6 @@ class BasicTextarea extends HTMLElement {
     }
 
     sync() {
-        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         this.hintElement.textContent = this.getAttribute("hint") || "";
@@ -139,21 +163,6 @@ class BasicTextarea extends HTMLElement {
             this.control.value = value;
         }
         this.updateFormValue();
-    }
-    syncColors() {
-        for (const [attribute, property] of [
-            ["accent-color", "--cms-focus-color"],
-            ["background-color", "--cms-input-background"],
-            ["border-color", "--cms-input-border-color"],
-            ["text-color", "--cms-input-color"],
-        ]) {
-            const value = this.getAttribute(attribute)?.trim();
-            if (value) {
-                this.fieldElement.style.setProperty(property, value);
-            } else {
-                this.fieldElement.style.removeProperty(property);
-            }
-        }
     }
     updateFormValue() {
         this.internals.setFormValue(this.disabled ? null : this.control.value);

@@ -1,10 +1,5 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type ContentSlot,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
+import { BASIC_COLOR_SCHEME_OPTIONS } from "./colorSchemes";
 
 const gaps = [
     { label: "None", value: "none" },
@@ -14,12 +9,6 @@ const gaps = [
     { label: "L", value: "lg" },
     { label: "XL", value: "xl" },
 ];
-
-const color = (label: string, attribute: string): ColorSetting => ({
-    type: "color",
-    label,
-    attribute,
-});
 
 export class BasicGridEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -86,8 +75,27 @@ export class BasicGridEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Colors",
-                settings: [color("Text", "text-color"), color("Background", "background-color")],
+                label: "Style",
+                settings: [
+                    {
+                        type: "select",
+                        label: "Tone",
+                        attribute: "tone",
+                        defaultValue: "neutral",
+                        options: BASIC_COLOR_SCHEME_OPTIONS,
+                    },
+                    {
+                        type: "segmented",
+                        label: "Appearance",
+                        attribute: "appearance",
+                        defaultValue: "plain",
+                        options: [
+                            { label: "Plain", value: "plain" },
+                            { label: "Soft", value: "soft" },
+                            { label: "Filled", value: "filled" },
+                        ],
+                    },
+                ],
             },
         ];
     }

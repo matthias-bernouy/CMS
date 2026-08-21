@@ -3,6 +3,12 @@
     --basic-grid-max: none;
     --basic-grid-gap: var(--p9r-space-md, 1rem);
     --basic-grid-justify: stretch;
+    --basic-grid-background: transparent;
+    --basic-grid-color: inherit;
+    --ctx-bg: var(--basic-grid-background);
+    --ctx-fg: var(--basic-grid-color);
+    --ctx-fg-muted: color-mix(in srgb, var(--basic-grid-color) 68%, transparent);
+    --ctx-border: var(--_tone-border);
 
     display: grid;
     box-sizing: border-box;
@@ -12,6 +18,20 @@
     justify-items: var(--basic-grid-justify);
     background: var(--basic-grid-background, transparent);
     color: var(--basic-grid-color, inherit);
+}
+
+:host([appearance="soft"]) {
+    --basic-grid-background: var(--_tone-muted);
+    --basic-grid-color: var(--_tone-contrasted);
+}
+
+:host([appearance="plain"]) {
+    --basic-grid-color: var(--_tone-contrasted);
+}
+
+:host([appearance="filled"]) {
+    --basic-grid-background: var(--_tone-base);
+    --basic-grid-color: var(--_tone-foreground);
 }
 
 :host([packing="fit"]) {

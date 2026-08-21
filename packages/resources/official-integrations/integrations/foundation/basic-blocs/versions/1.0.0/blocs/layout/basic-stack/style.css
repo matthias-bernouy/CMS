@@ -3,6 +3,12 @@
     --basic-stack-direction: column;
     --basic-stack-justify: flex-start;
     --basic-stack-wrap: nowrap;
+    --basic-stack-background: transparent;
+    --basic-stack-color: inherit;
+    --ctx-bg: var(--basic-stack-background);
+    --ctx-fg: var(--basic-stack-color);
+    --ctx-fg-muted: color-mix(in srgb, var(--basic-stack-color) 68%, transparent);
+    --ctx-border: var(--_tone-border);
 
     display: flex;
     box-sizing: border-box;
@@ -13,6 +19,20 @@
     gap: var(--basic-stack-gap);
     background: var(--basic-stack-background, transparent);
     color: var(--basic-stack-color, inherit);
+}
+
+:host([appearance="soft"]) {
+    --basic-stack-background: var(--_tone-muted);
+    --basic-stack-color: var(--_tone-contrasted);
+}
+
+:host([appearance="plain"]) {
+    --basic-stack-color: var(--_tone-contrasted);
+}
+
+:host([appearance="filled"]) {
+    --basic-stack-background: var(--_tone-base);
+    --basic-stack-color: var(--_tone-foreground);
 }
 
 :host([direction="row"]) { --basic-stack-direction: row; }

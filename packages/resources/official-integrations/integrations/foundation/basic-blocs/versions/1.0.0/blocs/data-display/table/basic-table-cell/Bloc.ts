@@ -1,11 +1,12 @@
 import { Component } from "@bernouy/components/base";
 
+import { basicColorSchemeCss } from "./colorSchemes";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
 export class BasicTableCell extends Component {
     constructor() {
-        super({ css, template });
+        super({ css: `${basicColorSchemeCss("neutral")}\n${css}`, template });
     }
 
     connectedCallback() {

@@ -1,20 +1,14 @@
 import { Component } from "@bernouy/components/base";
 
+import { basicColorSchemeCss } from "./colorSchemes";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
 export class BasicToast extends Component {
-    static observedAttributes = [
-        "background-color",
-        "border-color",
-        "close-color",
-        "dismissible",
-        "duration",
-        "text-color",
-    ];
+    static observedAttributes = ["dismissible", "duration"];
 
     constructor() {
-        super({ css, template });
+        super({ css: `${basicColorSchemeCss("neutral")}\n${css}`, template });
         this.timer = null;
         this.closeButton = this.shadowRoot.querySelector("button");
     }
@@ -45,20 +39,6 @@ export class BasicToast extends Component {
 
     sync() {
         this.closeButton.hidden = this.getAttribute("dismissible") === "false";
-
-        for (const [attribute, property] of [
-            ["background-color", "--basic-toast-background"],
-            ["border-color", "--basic-toast-border"],
-            ["close-color", "--basic-toast-close-color"],
-            ["text-color", "--basic-toast-color"],
-        ]) {
-            const value = this.getAttribute(attribute)?.trim();
-            if (value) {
-                this.style.setProperty(property, value);
-            } else {
-                this.style.removeProperty(property);
-            }
-        }
         this.scheduleDismiss();
     }
 

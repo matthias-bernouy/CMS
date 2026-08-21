@@ -14,14 +14,14 @@ alignment, distribution, and wrapping. Grid capacity is derived from minimum
 and maximum item widths; authors never select a fixed column count.
 
 `basic-toast` displays transient feedback without changing the surrounding
-layout. It does not infer semantics or colors from a type: authors set ARIA
-semantics, colors, placement, dimensions, density, radius, shadow, duration,
-and optional icon content explicitly.
+layout. Authors select a semantic tone and appearance independently from ARIA
+semantics, placement, dimensions, density, radius, shadow, duration, and
+optional icon content.
 
 `basic-skeleton` provides a neutral loading placeholder. Authors can configure
-its dimensions, shape, radius, colors, accessible label, and wave, pulse, or
-static presentation. Motion is automatically disabled when the visitor prefers
-reduced motion.
+its dimensions, shape, radius, semantic tone, appearance, accessible label, and
+wave, pulse, or static presentation. Motion is automatically disabled when the
+visitor prefers reduced motion.
 
 The native `img` bloc keeps browser image semantics while exposing source,
 alternative text, intrinsic dimensions, loading, decoding, and fetch priority

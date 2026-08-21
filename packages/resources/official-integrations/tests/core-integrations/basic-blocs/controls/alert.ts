@@ -68,8 +68,8 @@ export function registerAlertTest(): void {
 
         const registration = executeEditorBundle(built.editorJS);
         const editor = new registration.editor!(document.createElement("basic-alert"));
-        expect(editor.getSettings()[0]?.settings.map((setting) => setting.attribute)).toEqual([
-            "type",
+        expect(editor.getSettings()[0]?.settings.map((setting) => setting.attribute)).toEqual(["tone", "appearance"]);
+        expect(editor.getSettings()[1]?.settings.map((setting) => setting.attribute)).toEqual([
             "role",
             "dismissible",
             "close-label",
