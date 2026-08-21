@@ -12,7 +12,7 @@ tags: ["privacy", "legal", "information"]
         <p slot="summary">Version du 25 juillet 2026 · À adapter aux traitements réellement mis en œuvre.</p>
     </photo-hero>
     <photo-section spacing="compact">
-        <basic-alert type="warning" role="note">
+        <basic-alert tone="warning" appearance="soft" role="note">
             <h2 slot="title">Inventaire de démonstration.</h2>
             <p>Ne publiez pas cette page sans vérifier les données, destinataires, durées, sous-traitants et transferts propres au site final.</p>
         </basic-alert>
@@ -32,11 +32,11 @@ tags: ["privacy", "legal", "information"]
             </nav>
         </basic-stack>
         <basic-stack gap="xl">
-            <basic-card id="responsable" appearance="plain" density="spacious">
+            <basic-card id="responsable" appearance="ghost" density="spacious">
                 <h2 slot="title">01 · Responsable du traitement</h2>
                 <p>Le responsable du traitement est <span data-template-placeholder="">[À compléter : identité ou raison sociale]</span>. Vous pouvez le contacter à <span data-template-placeholder="">[À compléter : adresse postale et e-mail vie privée]</span>.</p>
             </basic-card>
-            <basic-card id="traitements" appearance="plain" density="spacious">
+            <basic-card id="traitements" appearance="ghost" density="spacious">
                 <h2 slot="title">02 · Pourquoi et comment les données sont utilisées</h2>
                 <basic-table accessible-label="Inventaire des traitements">
                     <basic-table-row slot="header">
@@ -62,26 +62,26 @@ tags: ["privacy", "legal", "information"]
                 </basic-table>
                 <p>Le template ne contient pas de formulaire de contact : cliquer sur une adresse ouvre votre propre logiciel de messagerie. Tout formulaire ajouté ultérieurement doit être documenté ici avant sa mise en ligne.</p>
             </basic-card>
-            <basic-card id="destinataires" appearance="plain" density="spacious">
+            <basic-card id="destinataires" appearance="ghost" density="spacious">
                 <h2 slot="title">03 · Destinataires et sous-traitants</h2>
                 <p data-template-placeholder="">[À compléter : personnes habilitées, hébergeur, messagerie, prestataires techniques et éventuels destinataires distincts.]</p>
                 <p data-template-placeholder="">[À compléter : localisation des traitements et garanties encadrant les éventuels transferts hors Espace économique européen.]</p>
             </basic-card>
-            <basic-card id="conservation" appearance="plain" density="spacious">
+            <basic-card id="conservation" appearance="ghost" density="spacious">
                 <h2 slot="title">04 · Durées de conservation</h2>
                 <p data-template-placeholder="">[À compléter pour chaque finalité : durée précise ou critères permettant de la déterminer.]</p>
             </basic-card>
-            <basic-card id="droits" appearance="plain" density="spacious">
+            <basic-card id="droits" appearance="ghost" density="spacious">
                 <h2 slot="title">05 · Vos droits</h2>
                 <p>Selon le traitement et sa base juridique, vous pouvez demander l’accès, la rectification, l’effacement ou la portabilité de vos données, la limitation du traitement, ou vous y opposer. Lorsqu’un traitement repose sur votre consentement, vous pouvez le retirer à tout moment pour l’avenir.</p>
                 <p>Adressez votre demande à <span data-template-placeholder="">[À compléter : e-mail vie privée]</span>. Une preuve d’identité ne sera demandée que si elle est nécessaire pour éviter une divulgation à la mauvaise personne.</p>
                 <p>Vous pouvez également introduire une réclamation auprès de la <a href="https://www.cnil.fr/" rel="noreferrer" target="_blank">CNIL</a>.</p>
             </basic-card>
-            <basic-card id="securite" appearance="plain" density="spacious">
+            <basic-card id="securite" appearance="ghost" density="spacious">
                 <h2 slot="title">06 · Sécurité et mise à jour</h2>
                 <p>Des mesures proportionnées doivent protéger les données contre l’accès non autorisé, la perte et l’altération. Cette politique doit être revue à chaque ajout de formulaire, outil de mesure, service externe ou nouveau traitement.</p>
             </basic-card>
-            <basic-alert type="info" role="note">
+            <basic-alert tone="info" appearance="soft" role="note">
                 <h2 slot="title">Principe de transparence</h2>
                 <p>L’information doit rester concise, compréhensible et facilement accessible. Les exemples ci-dessus doivent donc être simplifiés ou complétés selon le fonctionnement réel du site.</p>
                 <basic-button slot="actions" action="link" href="https://www.cnil.fr/fr/respecter-les-droits-des-personnes" target="_blank" appearance="ghost">Consulter les recommandations de la CNIL</basic-button>

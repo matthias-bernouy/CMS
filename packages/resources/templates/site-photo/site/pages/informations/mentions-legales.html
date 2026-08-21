@@ -12,7 +12,7 @@ tags: ["legal", "information"]
         <p slot="summary">Version du 25 juillet 2026 · Modèle destiné à un éditeur établi en France.</p>
     </photo-hero>
     <photo-section spacing="compact">
-        <basic-alert type="warning" role="note">
+        <basic-alert tone="warning" appearance="soft" role="note">
             <h2 slot="title">Template à personnaliser avant publication.</h2>
             <p>Les champs encadrés sont volontairement incomplets. Leur contenu dépend du statut juridique, de l’activité et de l’hébergeur réels du site.</p>
         </basic-alert>
@@ -32,7 +32,7 @@ tags: ["legal", "information"]
             </nav>
         </basic-stack>
         <basic-stack gap="xl">
-            <basic-card id="editeur" appearance="plain" density="spacious">
+            <basic-card id="editeur" appearance="ghost" density="spacious">
                 <h2 slot="title">01 · Éditeur du site</h2>
                 <basic-grid min="sm" max="none" gap="md">
                     <basic-card appearance="outlined"><h3 slot="title">Identité ou raison sociale</h3><p data-template-placeholder="">[À compléter : nom, prénom ou dénomination sociale]</p></basic-card>
@@ -42,33 +42,33 @@ tags: ["legal", "information"]
                     <basic-card appearance="outlined"><h3 slot="title">Contact</h3><p data-template-placeholder="">[À compléter : adresse e-mail et numéro de téléphone]</p></basic-card>
                 </basic-grid>
             </basic-card>
-            <basic-card id="publication" appearance="plain" density="spacious">
+            <basic-card id="publication" appearance="ghost" density="spacious">
                 <h2 slot="title">02 · Direction de la publication</h2>
                 <p data-template-placeholder="">[À compléter : identité de la personne responsable de la publication.]</p>
             </basic-card>
-            <basic-card id="hebergement" appearance="plain" density="spacious">
+            <basic-card id="hebergement" appearance="ghost" density="spacious">
                 <h2 slot="title">03 · Hébergement</h2>
                 <p>Le site est hébergé par <span data-template-placeholder="">[nom ou raison sociale de l’hébergeur]</span>, <span data-template-placeholder="">[adresse complète]</span>, <span data-template-placeholder="">[numéro de téléphone]</span>.</p>
             </basic-card>
-            <basic-card id="propriete" appearance="plain" density="spacious">
+            <basic-card id="propriete" appearance="ghost" density="spacious">
                 <h2 slot="title">04 · Propriété intellectuelle et crédits</h2>
                 <p>Sauf indication contraire, les textes, photographies, séquences et éléments graphiques présentés sur ce site sont protégés. Toute reproduction, adaptation, diffusion ou exploitation doit faire l’objet d’une autorisation préalable du titulaire des droits, hors exceptions prévues par la loi.</p>
                 <p data-template-placeholder="">[À compléter : titulaire des droits, crédits globaux et licences éventuelles des contenus tiers.]</p>
             </basic-card>
-            <basic-card id="image" appearance="plain" density="spacious">
+            <basic-card id="image" appearance="ghost" density="spacious">
                 <h2 slot="title">05 · Droit à l’image</h2>
                 <p>Les personnes reconnaissables peuvent demander des informations sur le contexte de diffusion d’une photographie et, selon leur situation, en demander le retrait. Chaque demande est examinée au regard des autorisations obtenues et des règles applicables.</p>
                 <basic-button slot="actions" action="link" href="/contact#retrait-image" appearance="outlined">Faire une demande liée à une image</basic-button>
             </basic-card>
-            <basic-card id="responsabilite" appearance="plain" density="spacious">
+            <basic-card id="responsabilite" appearance="ghost" density="spacious">
                 <h2 slot="title">06 · Responsabilité</h2>
                 <p>L’éditeur veille à l’exactitude des informations publiées, sans pouvoir garantir l’absence permanente d’erreur ou d’interruption. Les liens externes renvoient vers des services dont l’éditeur ne maîtrise pas le contenu.</p>
             </basic-card>
-            <basic-card id="contact-legal" appearance="plain" density="spacious">
+            <basic-card id="contact-legal" appearance="ghost" density="spacious">
                 <h2 slot="title">07 · Contact</h2>
                 <p data-template-placeholder="">[À compléter : adresse de contact dédiée aux questions juridiques.]</p>
             </basic-card>
-            <basic-alert type="info" role="note">
+            <basic-alert tone="info" appearance="soft" role="note">
                 <h2 slot="title">Référence de préparation</h2>
                 <p>Ce modèle s’appuie sur la synthèse officielle des obligations publiée par le ministère de l’Économie. Il ne remplace pas un conseil adapté à votre statut et à votre activité.</p>
                 <basic-button slot="actions" action="link" href="https://www.economie.gouv.fr/entreprises/developper-son-entreprise/innover-et-numeriser-son-entreprise/mentions-sur-votre-site-internet-les-obligations-respecter" target="_blank" appearance="ghost">Consulter la ressource officielle</basic-button>

@@ -24,7 +24,7 @@ tags: [repository, integrations, catalog]
                     <basic-skeleton width="100%" height="8rem" animation="wave" label="Loading integrations"></basic-skeleton>
                     </basic-stack>
 
-                    <basic-alert type="error" role="alert" cms-condition="$source.error">
+                    <basic-alert tone="danger" appearance="soft" role="alert" cms-condition="$source.error">
                         <h2 slot="title">The integration repository is unavailable</h2>
                         <p>Try again shortly. Published sites remain available while the catalog recovers.</p>
                     </basic-alert>
@@ -85,7 +85,7 @@ tags: [repository, integrations, catalog]
                         Showing <strong>{{ catalog.count }}</strong> of {{ catalog.total }} integrations
                     </p>
 
-                    <basic-alert type="info" role="status" cms-condition="catalog.count == 0">
+                    <basic-alert tone="info" appearance="soft" role="status" cms-condition="catalog.count == 0">
                         <h2 slot="title">No matching integrations</h2>
                         <p>Change or clear the filters to browse the complete catalog.</p>
                     </basic-alert>
@@ -107,11 +107,11 @@ tags: [repository, integrations, catalog]
                             </h2>
                             <p slot="description">{{ integration.description }}</p>
                             <basic-stack direction="row" gap="sm" wrap="true" align-items="center">
-                                <basic-badge color="neutral" variant="soft">{{ integration.category }}</basic-badge>
-                                <basic-badge color="neutral" variant="outline">
+                                <basic-badge tone="neutral" appearance="soft">{{ integration.category }}</basic-badge>
+                                <basic-badge tone="neutral" appearance="outlined">
                                     {{ integration.compatibilityLabel }}
                                 </basic-badge>
-                                <basic-badge color="warning" variant="soft" cms-condition="integration.compatibilityWarning">
+                                <basic-badge tone="warning" appearance="soft" cms-condition="integration.compatibilityWarning">
                                     Review advised
                                 </basic-badge>
                             </basic-stack>
@@ -148,9 +148,9 @@ tags: [repository, integrations, catalog]
                         <h1>{{ catalog.label }}</h1>
                         <p>{{ catalog.description }}</p>
                         <basic-stack direction="row" gap="sm" wrap="true" align-items="center">
-                            <basic-badge color="neutral" variant="soft">{{ catalog.category }}</basic-badge>
-                            <basic-badge color="neutral" variant="outline">{{ catalog.compatibilityLabel }}</basic-badge>
-                            <basic-badge color="warning" variant="soft" cms-condition="catalog.compatibilityWarning">
+                            <basic-badge tone="neutral" appearance="soft">{{ catalog.category }}</basic-badge>
+                            <basic-badge tone="neutral" appearance="outlined">{{ catalog.compatibilityLabel }}</basic-badge>
+                            <basic-badge tone="warning" appearance="soft" cms-condition="catalog.compatibilityWarning">
                                 Compatibility warning
                             </basic-badge>
                         </basic-stack>
@@ -175,10 +175,10 @@ tags: [repository, integrations, catalog]
                             >
                                 <h3 slot="title"><a href="{{ item.detailsUrl }}">{{ item.version }}</a></h3>
                                 <basic-stack direction="row" gap="sm" wrap="true" align-items="center">
-                                    <basic-badge color="success" variant="soft" cms-condition="item.isStable">Stable</basic-badge>
-                                    <basic-badge color="primary" variant="soft" cms-condition="item.isLatest">Latest</basic-badge>
-                                    <basic-badge color="neutral" variant="outline">{{ item.compatibilityLabel }}</basic-badge>
-                                    <basic-badge color="warning" variant="soft" cms-condition="item.compatibilityWarning">
+                                    <basic-badge tone="success" appearance="soft" cms-condition="item.isStable">Stable</basic-badge>
+                                    <basic-badge tone="primary" appearance="soft" cms-condition="item.isLatest">Latest</basic-badge>
+                                    <basic-badge tone="neutral" appearance="outlined">{{ item.compatibilityLabel }}</basic-badge>
+                                    <basic-badge tone="warning" appearance="soft" cms-condition="item.compatibilityWarning">
                                         Review advised
                                     </basic-badge>
                                 </basic-stack>
@@ -199,7 +199,7 @@ tags: [repository, integrations, catalog]
 
                     <section cms-condition="catalog.featuredVersion">
                         <h2>Featured release</h2>
-                        <basic-card appearance="elevated" density="regular">
+                        <basic-card appearance="outlined" elevation="elevated" density="regular">
                             <h3 slot="title">{{ catalog.featuredVersion.version }}</h3>
                             <p>Package size: {{ catalog.featuredVersion.packageSize }}</p>
                             <p>Compatibility: {{ catalog.featuredVersion.compatibilityLabel }}</p>
@@ -232,9 +232,9 @@ tags: [repository, integrations, catalog]
                         <p>{{ catalog.kind }}</p>
                         <h1>{{ catalog.label }} {{ catalog.version }}</h1>
                         <basic-stack direction="row" gap="sm" wrap="true" align-items="center">
-                            <basic-badge color="success" variant="soft" cms-condition="catalog.isStable">Stable</basic-badge>
-                            <basic-badge color="primary" variant="soft" cms-condition="catalog.isLatest">Latest</basic-badge>
-                            <basic-badge color="neutral" variant="outline" cms-condition="catalog.release">
+                            <basic-badge tone="success" appearance="soft" cms-condition="catalog.isStable">Stable</basic-badge>
+                            <basic-badge tone="primary" appearance="soft" cms-condition="catalog.isLatest">Latest</basic-badge>
+                            <basic-badge tone="neutral" appearance="outlined" cms-condition="catalog.release">
                                 {{ catalog.release.status }}
                             </basic-badge>
                         </basic-stack>
@@ -292,7 +292,7 @@ tags: [repository, integrations, catalog]
                             <h3 slot="title">{{ catalog.compatibilityLabel }}</h3>
                             <p>Current report: <code>{{ catalog.compatibility.currentReportId }}</code></p>
                             <p>Required release level: {{ catalog.compatibility.current.requiredReleaseLevel }}</p>
-                            <basic-alert type="warning" role="status" cms-condition="catalog.compatibility.warning">
+                            <basic-alert tone="warning" appearance="soft" role="status" cms-condition="catalog.compatibility.warning">
                                 A newer compatibility revision changes the original report.
                             </basic-alert>
                             <ul>

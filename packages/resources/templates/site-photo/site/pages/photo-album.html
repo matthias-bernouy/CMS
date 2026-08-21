@@ -15,7 +15,7 @@ tags: ["portfolio", "photography", "album-detail"]
                 <basic-skeleton height="5rem" animation="wave" label="Chargement de l’album"></basic-skeleton>
                 <basic-skeleton height="28rem" animation="wave" aria-hidden="true"></basic-skeleton>
             </basic-stack>
-            <basic-alert slot="error" type="danger" role="alert" cms-condition="$source.error">
+            <basic-alert slot="error" tone="danger" appearance="soft" role="alert" cms-condition="$source.error">
                 <h2 slot="title">Album introuvable.</h2>
                 <p>Son adresse a peut-être changé ou il n’est plus publié.</p>
                 <basic-button slot="actions" action="link" href="/albums" appearance="outlined">Voir tous les albums</basic-button>
@@ -26,11 +26,11 @@ tags: ["portfolio", "photography", "album-detail"]
                     <h1 slot="title">{{ data.title }}</h1>
                     <p slot="summary" cms-condition="data.description">{{ data.description }}</p>
                     <basic-stack slot="actions" direction="row" gap="sm" wrap="true">
-                        <basic-badge color="neutral" variant="soft" cms-condition="data.photoCount == 1">1 photo</basic-badge>
-                        <basic-badge color="neutral" variant="soft" cms-condition="data.photoCount != 1">{{ data.photoCount }} photos</basic-badge>
+                        <basic-badge tone="neutral" appearance="soft" cms-condition="data.photoCount == 1">1 photo</basic-badge>
+                        <basic-badge tone="neutral" appearance="soft" cms-condition="data.photoCount != 1">{{ data.photoCount }} photos</basic-badge>
                     </basic-stack>
                 </photo-hero>
-                <basic-alert type="info" role="status" cms-condition="data.photoCount == 0">
+                <basic-alert tone="info" appearance="soft" role="status" cms-condition="data.photoCount == 0">
                     <h2 slot="title">Cet album ne contient pas encore de photos.</h2>
                 </basic-alert>
                 <basic-grid min="sm" max="none" gap="lg" data-photo-grid="" cms-condition="data.photoCount > 0">
