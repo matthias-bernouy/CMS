@@ -36,6 +36,15 @@ export function validateItemPath(
     }
 }
 
+export function responseScalarType(endpoint: SourceEndpoint, value: string): "string" | "number" | undefined {
+    const types = new Set(
+        successShapes(endpoint)
+            .map((shape) => dataShapeAtPath(shape, value)?.type)
+            .filter((type): type is "string" | "number" => type === "string" || type === "number"),
+    );
+    return types.size === 1 ? types.values().next().value : undefined;
+}
+
 export function discoveryItems(endpoint: SourceEndpoint, path: string): DataShape[] {
     return successShapes(endpoint)
         .map((shape) => dataShapeAtPath(shape, path))

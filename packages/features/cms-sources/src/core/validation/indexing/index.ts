@@ -2,7 +2,7 @@ import type { Source, SourceEndpoint } from "cms-sources/interfaces/Source";
 import { SOURCE_INDEXING_VARIABLE_TYPES, type SourceIndexingEntity } from "cms-sources/interfaces/SourceIndexing";
 import { sourceEndpointAccessMode } from "../../execution/access";
 import { validateIndexingPagination } from "./pagination";
-import { discoveryItems, validateItemPath, validateResponsePath } from "./paths";
+import { discoveryItems, responseScalarType, validateItemPath, validateResponsePath } from "./paths";
 
 export function validateSourceIndexing(source: Source, errors: string[]): void {
     if (!source.indexing) {
@@ -36,20 +36,14 @@ function validateEntity(source: Source, entity: SourceIndexingEntity, prefix: st
     if (
         !identityParam ||
         identityParam.source?.from === "computed" ||
-        !identityParam.required ||
         (identityParam.schema.type !== "string" && identityParam.schema.type !== "number")
     ) {
-        errors.push(`${prefix}.resolve.identity.inputParam must name a required request string or number parameter`);
+        errors.push(`${prefix}.resolve.identity.inputParam must name a request string or number parameter`);
     }
+    const identityType = resolution ? responseScalarType(resolution, identity.outputPath) : undefined;
     if (resolution) {
-        if (identityParam) {
-            validateResponsePath(
-                resolution,
-                identity.outputPath,
-                identityParam.schema.type,
-                `${prefix}.resolve.identity.outputPath`,
-                errors,
-            );
+        if (!identityType) {
+            errors.push(`${prefix}.resolve.identity.outputPath must reference a declared scalar response value`);
         }
         validateRequiredParams(resolution, new Set([identity.inputParam]), `${prefix}.resolve`, errors);
         validateVariables(resolution, entity, prefix, errors);
@@ -62,7 +56,7 @@ function validateEntity(source: Source, entity: SourceIndexingEntity, prefix: st
             validateItemPath(
                 itemShapes,
                 entity.discover.identityPath,
-                identityParam?.schema.type ?? "scalar",
+                identityType ?? "scalar",
                 `${prefix}.discover.identityPath`,
                 errors,
             );

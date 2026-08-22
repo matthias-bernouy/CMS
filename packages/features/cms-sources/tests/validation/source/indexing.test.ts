@@ -6,6 +6,32 @@ describe("source indexing validation", () => {
         expect(validateSource(indexedSource())).toEqual([]);
     });
 
+    test("accepts a numeric identity supplied through a string request parameter", () => {
+        const source = indexedSource();
+        source.endpoints[0]!.output![0]!.body = {
+            type: "object",
+            properties: { id: { type: "number" }, name: { type: "string" } },
+        };
+        source.endpoints[1]!.output![0]!.body = {
+            type: "object",
+            properties: {
+                items: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: { id: { type: "number" }, updatedAt: { type: "string" } },
+                    },
+                },
+                total: { type: "number" },
+            },
+        };
+        const entity = source.indexing!.entities[0]!;
+        entity.resolve.identity.outputPath = "id";
+        entity.discover.identityPath = "id";
+
+        expect(validateSource(source)).toEqual([]);
+    });
+
     test("rejects unusable endpoints and response paths", () => {
         const inaccessible = indexedSource();
         inaccessible.endpoints[0]!.access = { mode: "admin" };
@@ -51,7 +77,7 @@ function indexedSource(): Source {
                 targetUrl: "https://api.example.test/products/{slug}",
                 access: { mode: "public" },
                 input: {
-                    params: [{ name: "slug", in: "path", required: true, schema: { type: "string" } }],
+                    params: [{ name: "slug", in: "query", schema: { type: "string" } }],
                 },
                 output: [{ status: "200", body: item }],
             },
