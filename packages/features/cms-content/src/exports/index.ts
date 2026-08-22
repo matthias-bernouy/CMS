@@ -19,7 +19,7 @@ export type {
     TBloc,
     TBlocWrite,
 } from "cms-content/interfaces/blocs";
-export type { TPage, TPageRef } from "cms-content/interfaces/pages";
+export type { PageIndexingConfiguration, TPage, TPageRef } from "cms-content/interfaces/pages";
 export type { TTemplate } from "cms-content/interfaces/templates";
 export type { TSystem } from "cms-content/interfaces/settings";
 export type {
@@ -127,6 +127,7 @@ export {
 } from "cms-content/core/validation/documents/assertContentRefsExist";
 export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
 export {
+    validatePageIndexingConfiguration,
     validatePagePath,
     validatePageTitle,
     validatePagePatch,

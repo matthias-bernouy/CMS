@@ -1,6 +1,8 @@
-import type { TPage } from "cms-content/interfaces/pages";
+import { isSourceUrn } from "@bernouy/cms-sources";
+import type { PageIndexingConfiguration, TPage } from "cms-content/interfaces/pages";
 import { ContentValidationError } from "cms-content/core/validation/errors";
 import { isValidPathFormat } from "cms-content/core/validation/predicates";
+import { isCmsQueryParamName } from "cms-content/interfaces/Editor/BindingSyntax";
 import {
     validateLabel,
     validateOptionalText,
@@ -8,6 +10,9 @@ import {
     validateTags,
     validateId,
 } from "cms-content/core/validation/fields";
+
+const MAX_INDEXING_REFERENCE_LENGTH = 512;
+const MAX_INDEXING_TEMPLATE_LENGTH = 10_000;
 
 /** Page path: `/seg/seg` shape (see `isValidPathFormat`). */
 export function validatePagePath(value: string): string {
@@ -20,6 +25,39 @@ export function validatePagePath(value: string): string {
 /** Page title: required, ≤70, no control chars. */
 export function validatePageTitle(value: string): string {
     return validateLabel("title", value, 70);
+}
+
+export function validatePageIndexingConfiguration(value: unknown): PageIndexingConfiguration {
+    if (!isRecord(value)) {
+        throw new ContentValidationError("indexing", "object expected");
+    }
+    if (value.mode === "disabled") {
+        return { mode: "disabled" };
+    }
+    if (value.mode !== "entity") {
+        throw new ContentValidationError("indexing.mode", "must be disabled or entity");
+    }
+
+    const sourceUrn = requiredIndexingText(value.sourceUrn, "indexing.sourceUrn");
+    if (!isSourceUrn(sourceUrn)) {
+        throw new ContentValidationError("indexing.sourceUrn", "source URN expected");
+    }
+    const entityId = requiredIndexingText(value.entityId, "indexing.entityId");
+    const pageQueryParam = requiredIndexingText(value.pageQueryParam, "indexing.pageQueryParam");
+    if (!isCmsQueryParamName(pageQueryParam)) {
+        throw new ContentValidationError("indexing.pageQueryParam", "invalid CMS query parameter name");
+    }
+
+    const titleTemplate = optionalIndexingTemplate(value.titleTemplate, "indexing.titleTemplate");
+    const descriptionTemplate = optionalIndexingTemplate(value.descriptionTemplate, "indexing.descriptionTemplate");
+    return {
+        mode: "entity",
+        sourceUrn,
+        entityId,
+        pageQueryParam,
+        ...(titleTemplate ? { titleTemplate } : {}),
+        ...(descriptionTemplate ? { descriptionTemplate } : {}),
+    };
 }
 
 /**
@@ -53,5 +91,29 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
         }
         out.visible = page.visible;
     }
+    if (page.indexing !== undefined) {
+        out.indexing = validatePageIndexingConfiguration(page.indexing);
+    }
     return out;
+}
+
+function requiredIndexingText(value: unknown, field: string): string {
+    if (typeof value !== "string") {
+        throw new ContentValidationError(field, "string expected");
+    }
+    return validateLabel(field, value, MAX_INDEXING_REFERENCE_LENGTH);
+}
+
+function optionalIndexingTemplate(value: unknown, field: string): string | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (typeof value !== "string") {
+        throw new ContentValidationError(field, "string expected");
+    }
+    return validateOptionalText(field, value, MAX_INDEXING_TEMPLATE_LENGTH) || undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
