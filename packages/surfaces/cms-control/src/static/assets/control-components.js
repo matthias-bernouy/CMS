@@ -4015,6 +4015,172 @@ input:disabled {
     _onSlotChange = () => ve(this, this._slot);
     _onKey = (t) => qo(this, this._slot, t);
   }
+  var No = `<label class="switch" part="container">
+    <input type="checkbox" id="native-input" part="input" />
+    <span class="track" part="track">
+        <span class="thumb" part="thumb"></span>
+    </span>
+    <span class="label" part="label"><slot></slot></span>
+</label>
+`;
+  var Vo = `:host {
+  display: inline-block;
+
+  --_track-w: 36px;
+  --_track-h: 20px;
+  --_thumb: 14px;
+  --_gap: 3px;
+  --_off-bg: var(--border-default, #d1d5db);
+  --_on-bg: var(--primary-base, #4361ee);
+  --_thumb-bg: var(--bg-surface, #fff);
+  --_text: var(--text-main, #1f2937);
+  --_focus-ring: color-mix(in oklab, var(--_on-bg) 20%, transparent);
+}
+
+:host([size="sm"]) {
+  --_track-w: 28px;
+  --_track-h: 16px;
+  --_thumb: 11px;
+}
+
+:host([size="lg"]) {
+  --_track-w: 48px;
+  --_track-h: 26px;
+  --_thumb: 20px;
+}
+
+:host([color="danger"])  { --_on-bg: var(--danger-base); }
+:host([color="success"]) { --_on-bg: var(--success-base); }
+:host([color="info"])    { --_on-bg: var(--info-base); }
+:host([color="warning"]) { --_on-bg: var(--warning-base); }
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+}
+
+input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  pointer-events: none;
+}
+
+.track {
+  position: relative;
+  width: var(--_track-w);
+  height: var(--_track-h);
+  background: var(--_off-bg);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.thumb {
+  position: absolute;
+  top: var(--_gap);
+  left: var(--_gap);
+  width: var(--_thumb);
+  height: var(--_thumb);
+  background: var(--_thumb-bg);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+input:checked ~ .track {
+  background: var(--_on-bg);
+}
+
+input:checked ~ .track .thumb {
+  left: calc(100% - var(--_thumb) - var(--_gap));
+}
+
+input:focus-visible ~ .track {
+  box-shadow: 0 0 0 3px var(--_focus-ring);
+}
+
+.label {
+  font-size: 14px;
+  color: var(--_text);
+}
+
+.label:has(slot:not(:has(*))) { display: none; }
+
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .track, .thumb {
+    transition: background-color 0.18s ease, left 0.18s ease, box-shadow 0.18s ease;
+  }
+}
+`;
+  var N = (t, e, r) => {
+    let i = e?.checked ?? t.hasAttribute("checked");
+    r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
+  };
+  var $o = (t, e, r) => {
+    if (e?.checked ?? false)
+      t.setAttribute("checked", "");
+    else
+      t.removeAttribute("checked");
+    N(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  var jo = (t, e) => {
+    if (t.hasAttribute("disabled"))
+      e.preventDefault(), e.stopImmediatePropagation();
+  };
+
+  class Uo extends W {
+    _input;
+    static get observedAttributes() {
+      return ["checked", "disabled", "name", "value"];
+    }
+    constructor() {
+      super({ css: Vo, template: No });
+      this._input = this.shadowRoot?.querySelector("input") ?? null;
+    }
+    connectedCallback() {
+      this._captureDefaults();
+      for (let t of ["checked", "disabled", "name", "value"])
+        c(this, t);
+      if (this._input) {
+        if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this.hasAttribute("name"))
+          this._input.name = this.getAttribute("name") ?? "";
+        if (this.hasAttribute("value"))
+          this._input.value = this.getAttribute("value") ?? "";
+        this._input.addEventListener("change", this._onChange), this._input.addEventListener("click", this._onClick);
+      }
+      this.setAttribute("role", "switch"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), N(this, this._input, this._internals);
+    }
+    disconnectedCallback() {
+      this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._input)
+        return;
+      if (t === "checked")
+        this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null)), N(this, this._input, this._internals);
+      else if (t === "disabled")
+        this._input.disabled = r !== null;
+      else if (t === "name")
+        this._input.name = r ?? "";
+      else if (t === "value")
+        this._input.value = r ?? "", N(this, this._input, this._internals);
+    }
+    _onChange = () => $o(this, this._input, this._internals);
+    _onClick = (t) => jo(this, t);
+    click() {
+      this._input?.click();
+    }
+  }
   var Ko = `<div class="container" part="container">
     <label for="main-input" part="label">
         <slot name="label">Tags</slot>
@@ -10872,7 +11038,7 @@ p {
     connectedCallback() {}
   }
   var O = "data-p9r-composition";
-  var N = "data-p9r-composition-input";
+  var N2 = "data-p9r-composition-input";
   var _2 = "data-p9r-composition-output";
   function c2(T2) {
     while (true) {
@@ -10935,7 +11101,7 @@ p {
     }
     captureInput() {
       let T2 = this.ownerDocument.createElement("template");
-      return T2.setAttribute(N, ""), T2.content.append(...Array.from(this.childNodes)), c2(T2.content), this.append(T2), T2;
+      return T2.setAttribute(N2, ""), T2.content.append(...Array.from(this.childNodes)), c2(T2.content), this.append(T2), T2;
     }
     renderTemplate() {
       let T2 = this.ownerDocument.createElement("template");
@@ -14010,6 +14176,241 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     }
   }
   customElements.define("cms-role-select", CmsRoleSelect);
+
+  // src/components/admin/Common/PageIndexingSettings/PageIndexingVariables.ts
+  class PageIndexingVariables extends HTMLElement {
+    text;
+    constructor() {
+      super();
+      const root = this.attachShadow({ mode: "open" });
+      root.innerHTML = `
+            <style>
+                :host { color: var(--text-muted); display: block; font-size: .875rem; line-height: 1.4; }
+                :host([hidden]) { display: none; }
+            </style>
+            <span></span>
+        `;
+      this.text = root.querySelector("span");
+    }
+    set value(value) {
+      this.text.textContent = value;
+    }
+    get value() {
+      return this.text.textContent ?? "";
+    }
+  }
+  if (!customElements.get("cms-page-indexing-variables")) {
+    customElements.define("cms-page-indexing-variables", PageIndexingVariables);
+  }
+
+  // src/components/admin/Common/PageIndexingSettings/view.ts
+  function pageIndexingSettingsView(model) {
+    const notice = editorNotice(model, model.selection);
+    return `
+        <style>
+            :host { display: block; }
+            :host([data-disabled]) .binding,
+            :host([data-disabled]) .notice { display: none; }
+            .binding { display: grid; gap: .375rem; }
+            .label { color: var(--text-muted); font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+            .value { color: var(--text-main); font-size: .875rem; }
+            .notice { color: var(--color-text-muted, #5f6875); font-size: .875rem; margin: .75rem 0 0; }
+            .notice[hidden] { display: none; }
+        </style>
+        ${bindingView(model)}
+        <p class="notice" data-notice${notice ? "" : " hidden"}>${escapeHtml2(notice)}</p>
+    `;
+  }
+  function editorNotice(model, selection) {
+    if (!model.selectionValid && !selection) {
+      return "The saved dynamic content is no longer present on this page. Select another content type or turn indexing off.";
+    }
+    if (!selection && model.detectionStatus === "ambiguous") {
+      return "Several dynamic content types were detected. Select the one that defines this page.";
+    }
+    return "";
+  }
+  function selectedCandidate(candidates, selection) {
+    return candidates.find(({ value }) => value === selection);
+  }
+  function variableText(availableVariables, candidate) {
+    const variables = [...candidate?.variables ?? [], ...availableVariables];
+    if (!variables.length) {
+      return "";
+    }
+    return `Available variables: ${variables.map((name) => `\${${name}}`).join(", ")}`;
+  }
+  function bindingView(model) {
+    if (model.candidates.length === 0) {
+      return "";
+    }
+    if (model.candidates.length === 1) {
+      return `
+            <div class="binding">
+                <span class="label">Dynamic content</span>
+                <span class="value">${escapeHtml2(model.candidates[0]?.label ?? "")}</span>
+            </div>
+        `;
+    }
+    return `
+        <div class="binding">
+            <p9r-select data-candidate label="Dynamic content" value="${escapeHtml2(model.selection)}">
+                <option value="">Select dynamic content</option>
+                ${model.candidates.map((candidate) => `<option value="${escapeHtml2(candidate.value)}">${escapeHtml2(candidate.label)}</option>`).join("")}
+            </p9r-select>
+        </div>
+    `;
+  }
+
+  // src/components/admin/Common/PageIndexingSettings/PageIndexingSettings.ts
+  var EMPTY_MODEL = {
+    configured: false,
+    suggested: false,
+    detectionStatus: "none",
+    enabled: true,
+    selection: "",
+    selectionValid: true,
+    availableVariables: [],
+    candidates: []
+  };
+
+  class PageIndexingSettings extends HTMLElement {
+    static observedAttributes = ["value"];
+    model = EMPTY_MODEL;
+    enabled = true;
+    selection = "";
+    dirty = false;
+    toggle = null;
+    connectedCallback() {
+      this.render();
+    }
+    disconnectedCallback() {
+      this.toggle?.removeEventListener("change", this.onToggle);
+    }
+    attributeChangedCallback() {
+      if (this.isConnected) {
+        this.render();
+      }
+    }
+    render() {
+      this.toggle?.removeEventListener("change", this.onToggle);
+      this.model = parseModel(this.getAttribute("value"));
+      this.enabled = this.model.enabled;
+      this.selection = this.model.selection;
+      this.dirty = false;
+      const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
+      root.innerHTML = pageIndexingSettingsView(this.model);
+      this.toggle = this.closest("cms-detail-section")?.querySelector("[data-page-indexing-toggle]") ?? null;
+      if (this.toggle) {
+        this.toggle.checked = this.enabled;
+        this.toggle.addEventListener("change", this.onToggle);
+      }
+      this.control("[data-candidate]")?.addEventListener("change", (event) => {
+        this.selection = event.currentTarget.value;
+        this.dirty = true;
+        this.applySuggestedMetadata(selectedCandidate(this.model.candidates, this.selection));
+        this.sync();
+      });
+      if (this.model.suggested) {
+        this.applySuggestedMetadata(selectedCandidate(this.model.candidates, this.selection));
+      }
+      this.sync();
+    }
+    onToggle = () => {
+      this.enabled = this.toggle?.checked ?? false;
+      this.dirty = true;
+      this.syncVisibility();
+      this.syncFields();
+    };
+    sync() {
+      const candidate = selectedCandidate(this.model.candidates, this.selection);
+      const variables = this.closest("form")?.querySelector("[data-indexing-variables]");
+      if (variables) {
+        const text = variableText(this.model.availableVariables, candidate);
+        variables.value = text;
+        variables.hidden = !text;
+      }
+      const notice = this.shadowRoot?.querySelector("[data-notice]");
+      if (notice) {
+        const text = editorNotice(this.model, this.selection);
+        notice.textContent = text;
+        notice.hidden = !text;
+      }
+      this.syncVisibility();
+      this.syncFields();
+    }
+    syncVisibility() {
+      this.toggleAttribute("data-disabled", !this.enabled);
+    }
+    syncFields() {
+      const validConfigured = this.model.configured && this.model.selectionValid;
+      const submit = validConfigured || this.model.candidates.length === 0 || this.model.suggested || this.dirty;
+      this.field("indexingEnabled", String(this.enabled), !submit);
+      this.field("indexingCandidate", this.selection, !submit || !this.selection);
+    }
+    applySuggestedMetadata(candidate) {
+      const form = this.closest("form");
+      if (!form || !candidate) {
+        return;
+      }
+      if (candidate.suggestedTitle) {
+        const title = form.querySelector('p9r-input[name="title"]');
+        if (title) {
+          title.value = candidate.suggestedTitle;
+        }
+      }
+      if (candidate.suggestedDescription) {
+        const description = form.querySelector('p9r-textarea[name="description"]');
+        if (description) {
+          description.value = candidate.suggestedDescription;
+        }
+      }
+    }
+    field(name, value, disabled) {
+      let input = Array.from(this.children).find((child) => child instanceof HTMLInputElement && child.dataset.indexingField === name);
+      if (!input) {
+        input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.dataset.indexingField = name;
+        this.append(input);
+      }
+      input.value = value;
+      input.setAttribute("value", value);
+      input.disabled = disabled;
+    }
+    control(selector) {
+      return this.shadowRoot?.querySelector(selector) ?? null;
+    }
+  }
+  function parseModel(value) {
+    try {
+      const parsed = JSON.parse(value ?? "");
+      return normalizeModel(parsed);
+    } catch {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(value ?? ""));
+        return normalizeModel(parsed);
+      } catch {
+        return EMPTY_MODEL;
+      }
+    }
+  }
+  function normalizeModel(value) {
+    if (!value || typeof value !== "object") {
+      return EMPTY_MODEL;
+    }
+    const model = value;
+    return {
+      ...EMPTY_MODEL,
+      ...model,
+      availableVariables: Array.isArray(model.availableVariables) ? model.availableVariables : [],
+      candidates: Array.isArray(model.candidates) ? model.candidates : []
+    };
+  }
+  if (!customElements.get("cms-page-indexing-settings")) {
+    customElements.define("cms-page-indexing-settings", PageIndexingSettings);
+  }
 
   // src/components/admin/RoleEditor/RoleEditor.ts
   class CmsRoleEditor extends HTMLElement {
@@ -52985,7 +53386,8 @@ dialog::backdrop {
   }
   define(CMS_BINDING_CORE_TAG, Vl);
   yh({
-    json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3)
+    json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3),
+    jsonurl: (value3) => value3 === undefined ? undefined : encodeURIComponent(JSON.stringify(value3))
   });
   define("p9r-accordion", xr);
   define("p9r-accordion-item", wr);
@@ -53026,6 +53428,7 @@ dialog::backdrop {
   define("p9r-toast", xs);
   define("p9r-toast-stack", ws);
   define("p9r-stat", Is);
+  define("w13c-switch", Uo);
   define("p9r-line-chart", Fs);
   define("p9r-bar-list", qs);
   define("p9r-range-tabs", Vs);

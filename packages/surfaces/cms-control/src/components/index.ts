@@ -39,6 +39,7 @@ import {
     Toast,
     ToastStack,
     Stat,
+    Switch,
     LineChart,
     BarList,
     RangeTabs,
@@ -55,6 +56,7 @@ function define(tag: string, constructor: CustomElementConstructor) {
 define(CMS_BINDING_CORE_TAG, BindingCore);
 setBindingFilters({
     json: (value) => (value === undefined ? undefined : JSON.stringify(value)),
+    jsonurl: (value) => (value === undefined ? undefined : encodeURIComponent(JSON.stringify(value))),
 });
 define("p9r-accordion", Accordion);
 define("p9r-accordion-item", AccordionItem);
@@ -95,6 +97,7 @@ define("p9r-token-input", TokenInput);
 define("p9r-toast", Toast);
 define("p9r-toast-stack", ToastStack);
 define("p9r-stat", Stat);
+define("w13c-switch", Switch);
 define("p9r-line-chart", LineChart);
 define("p9r-bar-list", BarList);
 define("p9r-range-tabs", RangeTabs);
@@ -111,6 +114,7 @@ import "./admin/Common/EventToast/EventToast";
 import "./admin/Resources/Auth/LoginMethods/LoginMethods";
 import "./admin/Actions/ProviderActions/ProviderActions";
 import "./admin/Common/RoleSelect/RoleSelect";
+import "./admin/Common/PageIndexingSettings/PageIndexingSettings";
 import "./admin/RoleEditor/RoleEditor";
 import "./admin/Actions/UserActions/UserActions";
 import "./admin/Common/Tokens/TokenCreate";

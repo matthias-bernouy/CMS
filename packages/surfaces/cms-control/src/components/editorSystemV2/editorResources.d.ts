@@ -1,4 +1,5 @@
 import type { PageIndexingConfiguration } from "@bernouy/cms-content";
+import type { PageIndexingEditorModel } from "cms-control/core/content/page/pageIndexingEditor";
 
 export type PageConfigDetailResponse = {
     id: string;
@@ -8,6 +9,7 @@ export type PageConfigDetailResponse = {
     tags: string[];
     published: boolean;
     indexing?: PageIndexingConfiguration;
+    indexingEditor: PageIndexingEditorModel;
     defaultTemplateCategory?: string;
 };
 
