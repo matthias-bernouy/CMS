@@ -1,11 +1,13 @@
 import { isDeepStrictEqual } from "node:util";
 import type { DeclarativeArtifactTemplate } from "@bernouy/cms-integrations";
 import type { CompatibilityChangeSink } from "../changes";
+import { compareSourceIndexing } from "./sourceIndexing";
 
 type Source = Extract<DeclarativeArtifactTemplate, { type: "source" }>["source"];
 type SourceEndpoint = Source["endpoints"][number];
 
 export function compareSource(baseline: Source, candidate: Source, path: string, add: CompatibilityChangeSink): void {
+    compareSourceIndexing(baseline.indexing, candidate.indexing, `${path}.indexing`, add);
     const previous = new Map(baseline.endpoints.map((endpoint) => [endpoint.endpointId, endpoint]));
     const next = new Map(candidate.endpoints.map((endpoint) => [endpoint.endpointId, endpoint]));
     for (const [id, endpoint] of previous) {

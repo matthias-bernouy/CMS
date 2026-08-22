@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { BASELINE_DIGEST, connector, evaluator, packageState, schemaContract } from "./fixtures";
+import { BASELINE_DIGEST, connector, evaluator, packageState, schemaContract } from "../fixtures";
 
 describe("integration definition compatibility", () => {
     test("treats a newly declared input enum as narrowing", () => {
@@ -78,57 +78,6 @@ describe("integration definition compatibility", () => {
         }
     });
 
-    test("rejects removed or renamed artifacts", () => {
-        const baseline = packageState("1.0.0", { artifacts: [sourceArtifact([sourceEndpoint()])] });
-        const candidate = packageState("1.0.1", { artifacts: [sourceArtifact([sourceEndpoint()], "renamed")] });
-
-        const decision = evaluator().evaluate({ baseline, candidate });
-        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
-        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "artifact-removed" }));
-    });
-
-    test("compares source endpoint identities, required parameters, and access permissions", () => {
-        const baseline = packageState("1.0.0", { artifacts: [sourceArtifact([sourceEndpoint()])] });
-        const removed = evaluator().evaluate({
-            baseline,
-            candidate: packageState("1.0.1", { artifacts: [sourceArtifact([])] }),
-        });
-        const narrowed = evaluator().evaluate({
-            baseline,
-            candidate: packageState("1.0.1", {
-                artifacts: [
-                    sourceArtifact([
-                        sourceEndpoint({
-                            access: "admin",
-                            params: [{ name: "account", in: "query", type: "string", required: true }],
-                        }),
-                    ]),
-                ],
-            }),
-        });
-
-        expect(removed.evidence).toContainEqual(expect.objectContaining({ code: "source-endpoint-removed" }));
-        expect(narrowed.evidence.map((entry) => entry.code)).toEqual(
-            expect.arrayContaining(["endpoint-access-tightened", "required-endpoint-parameter-added"]),
-        );
-        expect(narrowed.contractAdmissible).toBeFalse();
-    });
-
-    test("marks unstructured public endpoint contract changes unknown", () => {
-        const baseline = packageState("1.0.0", { artifacts: [sourceArtifact([sourceEndpoint()])] });
-        const candidate = packageState("1.0.1", {
-            artifacts: [
-                sourceArtifact([
-                    sourceEndpoint({ headers: [{ name: "x-role", source: { from: "computed", ref: "userRole" } }] }),
-                ]),
-            ],
-        });
-
-        const decision = evaluator().evaluate({ baseline, candidate });
-        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "unknown" });
-        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "endpoint-contract-unproven" }));
-    });
-
     test("ignores implementation-only workflow steps when the declared function contract is stable", () => {
         const baseline = packageState("1.0.0", {
             artifacts: [functionArtifact([{ assert: { condition: { exists: true } } }])],
@@ -167,20 +116,6 @@ function reviewedLegacyDependencyPackage(versions: readonly (readonly string[])[
                 reviewedAt: "2026-07-27T00:00:00.000Z",
             },
         })),
-    };
-}
-
-function sourceArtifact(endpoints: unknown[], id = "primary") {
-    return { type: "source", source: { id, meta: { name: "Primary" }, endpoints } };
-}
-
-function sourceEndpoint(overrides: Record<string, unknown> = {}) {
-    return {
-        endpointId: "list",
-        method: "GET",
-        targetUrl: "https://api.example.test/items",
-        params: [],
-        ...overrides,
     };
 }
 
