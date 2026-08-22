@@ -82,4 +82,6 @@ export type DeliveryCmsConfig = {
     filesBlob?: CmsFilesBlobStore;
     /** Shared storage for derived responsive image variants. */
     variantStore?: CmsFilesBlobStore;
+    /** Dedicated immutable chunk and atomic-manifest storage for generated sitemaps. */
+    sitemapStore?: CmsFilesBlobStore;
 };

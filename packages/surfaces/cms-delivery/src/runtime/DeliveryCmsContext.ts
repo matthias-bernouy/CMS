@@ -171,6 +171,17 @@ export class DeliveryCmsContext {
         return this.config.variantStore ?? null;
     }
 
+    get sitemapStore(): CmsFilesBlobStore {
+        if (!this.config.sitemapStore) {
+            throw new Error("sitemap storage backend not configured");
+        }
+        return this.config.sitemapStore;
+    }
+
+    get sitemapStoreOrNull(): CmsFilesBlobStore | null {
+        return this.config.sitemapStore ?? null;
+    }
+
     optimizePage(path: string, imageIds: string[]): void {
         this.pageOptimizer?.optimize(path, imageIds);
     }

@@ -1,5 +1,6 @@
 import type { PublicPageProvider } from "cms-delivery/interfaces/PublicPageProvider";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
+import { SITEMAP_CHUNKS_ROUTE } from "cms-delivery/core/seo/sitemap/manifest";
 
 const MAX_PUBLIC_PAGE_PATH_LENGTH = 2048;
 const MAX_PUBLIC_SITEMAP_PATHS = 10_000;
@@ -29,6 +30,9 @@ export function assertPublicPagePath(path: unknown): asserts path is string {
 
 export function isDeliveryReservedPath(path: string, cmsPathPrefix: string): boolean {
     if (path === "/robots.txt" || path === "/sitemap.xml" || path === FAVICON_ROUTE) {
+        return true;
+    }
+    if (path === SITEMAP_CHUNKS_ROUTE || path.startsWith(`${SITEMAP_CHUNKS_ROUTE}/`)) {
         return true;
     }
     return path === cmsPathPrefix || path.startsWith(cmsPathPrefix + "/");

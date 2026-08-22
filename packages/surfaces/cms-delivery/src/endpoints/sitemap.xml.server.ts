@@ -1,58 +1,53 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { compress, sendCompressed } from "@bernouy/http-runner";
-import { collectPublicPageProviderPaths, isDeliveryReservedPath } from "cms-delivery/core/pages/publicPagePaths";
+import { isDeliveryReservedPath } from "cms-delivery/core/pages/publicPagePaths";
+import { storedSitemapLocations } from "cms-delivery/core/seo/sitemap/materialize";
+import { readSitemapManifest } from "cms-delivery/core/seo/sitemap/manifest";
+import { MAX_SITEMAP_URLS_PER_CHUNK, sitemapIndexXml, staticSitemapXml } from "cms-delivery/core/seo/sitemap/xml";
 
-const XML_ESCAPE: Record<string, string> = {
-    "<": "&lt;",
-    ">": "&gt;",
-    "&": "&amp;",
-    "'": "&apos;",
-    '"': "&quot;",
-};
-
-function escapeXml(s: string): string {
-    return s.replace(/[<>&'"]/g, (c) => XML_ESCAPE[c]!);
-}
-
-export default async function SitemapServer(req: Request, delivery: DeliveryCms) {
+export default async function SitemapServer(request: Request, delivery: DeliveryCms): Promise<Response> {
     try {
-        return await buildSitemapResponse(req, delivery);
-    } catch (err) {
+        const current = delivery.sitemapStoreOrNull
+            ? (await readSitemapManifest(delivery.sitemapStoreOrNull))?.snapshots[0]
+            : undefined;
+        if (current) {
+            return sendCompressed(
+                request,
+                compress(sitemapIndexXml(current), "application/xml; charset=utf-8"),
+                "public, no-cache",
+            );
+        }
+        return await buildStaticFallback(request, delivery);
+    } catch (error) {
         console.error("Delivery sitemap failure", {
-            errorType: err instanceof Error ? err.name : "UnknownError",
+            errorType: error instanceof Error ? error.name : "UnknownError",
         });
-        return new Response("Internal Server Error", { status: 500 });
+        return new Response("Internal Server Error", {
+            status: 500,
+            headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },
+        });
     }
 }
 
-async function buildSitemapResponse(req: Request, delivery: DeliveryCms): Promise<Response> {
-    const origin = new URL(req.url).origin;
-    const prefix = delivery.cmsPathPrefix;
-    const [pages, providerPaths] = await Promise.all([
-        delivery.repository.getPublishedPages(),
-        collectPublicPageProviderPaths(delivery.publicPageProviders, prefix),
-    ]);
-
-    const urls: string[] = [];
+async function buildStaticFallback(request: Request, delivery: DeliveryCms): Promise<Response> {
+    const pages = await delivery.repository.getPublishedPages();
+    const candidates = await storedSitemapLocations(delivery, pages);
+    const entries = [];
     const seen = new Set<string>();
-    for (const path of [...pages.map((page) => page.path), ...providerPaths]) {
-        if (isDeliveryReservedPath(path, prefix)) {
+    for (const entry of candidates) {
+        if (seen.has(entry.location) || isDeliveryReservedPath(entry.location, delivery.cmsPathPrefix)) {
             continue;
         }
-        if (seen.has(path)) {
-            continue;
+        if (entries.length >= MAX_SITEMAP_URLS_PER_CHUNK) {
+            throw new RangeError("static sitemap fallback URL limit exceeded");
         }
-        seen.add(path);
-        urls.push(`  <url><loc>${escapeXml(origin + path)}</loc></url>`);
+        seen.add(entry.location);
+        entries.push(entry);
     }
-
-    const xml = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        ...urls,
-        "</urlset>",
-        "",
-    ].join("\n");
-
-    return sendCompressed(req, compress(xml, "application/xml; charset=utf-8"));
+    const publicBaseUrl = `${new URL(request.url).origin}${delivery.basePath}`;
+    return sendCompressed(
+        request,
+        compress(staticSitemapXml(publicBaseUrl, entries), "application/xml; charset=utf-8"),
+        "public, no-cache",
+    );
 }

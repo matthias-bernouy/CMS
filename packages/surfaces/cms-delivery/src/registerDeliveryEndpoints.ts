@@ -3,6 +3,7 @@ import BlocServer from "cms-delivery/endpoints/bloc.server";
 import BlocSetServer from "cms-delivery/endpoints/blocset.server";
 import RobotsServer from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
+import SitemapChunkServer from "cms-delivery/endpoints/sitemap-chunk.server";
 import FaviconServer from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
@@ -45,6 +46,7 @@ import {
 } from "cms-delivery/core/analytics/privacyAnalyticsEndpoints";
 import { getDeliveryIntegrationThemeContributions } from "cms-delivery/core/assets/resolveAssets";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
+import { SITEMAP_CHUNKS_ROUTE } from "cms-delivery/core/seo/sitemap/manifest";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -103,6 +105,9 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
 
     runner.addEndpoint("GET", "/robots.txt", (req) => RobotsServer(req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
+    runner.group(SITEMAP_CHUNKS_ROUTE, (sitemapRunner) => {
+        sitemapRunner.setDefaultEndpoint("GET", (req) => SitemapChunkServer(req, delivery));
+    });
     runner.addEndpoint("GET", FAVICON_ROUTE, (req) => FaviconServer(req, delivery));
     runner.addEndpoint("HEAD", FAVICON_ROUTE, (req) => FaviconServer(req, delivery));
 

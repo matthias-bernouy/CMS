@@ -15,6 +15,16 @@ export type { DeliveryCmsConfig } from "cms-delivery/interfaces/DeliveryCmsConfi
 export type { ContentReader } from "@bernouy/cms-content";
 export type { HeadInjector, HeadInjectorContext } from "cms-delivery/interfaces/HeadInjector";
 export type { ResolvedPageMetadata } from "cms-delivery/core/seo/pageMetadata";
+export {
+    DEFAULT_SITEMAP_REFRESH_INTERVAL_MS,
+    DEFAULT_SITEMAP_RETRY_INTERVAL_MS,
+    startSitemapSnapshotRefresh,
+    type SitemapRefreshRunner,
+} from "cms-delivery/core/seo/sitemap/refresh";
+export {
+    materializeSitemapSnapshot,
+    type SitemapMaterializationResult,
+} from "cms-delivery/core/seo/sitemap/materialize";
 export type {
     PublicPageProvider,
     PublicPageRequestContext,

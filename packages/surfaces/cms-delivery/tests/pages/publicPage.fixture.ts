@@ -1,6 +1,7 @@
 import type { AnalyticsEvent } from "@bernouy/cms-analytics";
 import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
+import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { SourceEndpointInterceptor, SourceRepository } from "@bernouy/cms-sources";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
@@ -27,6 +28,7 @@ type HarnessOptions = Readonly<{
     sources?: SourceRepository;
     sourceInterceptor?: SourceEndpointInterceptor;
     roles?: RolesRepository;
+    sitemapStore?: CmsFilesBlobStore;
 }>;
 
 export function mountPublicPages(options: HarnessOptions = {}) {
@@ -65,6 +67,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         sources: options.sources,
         sourceImageInterceptor: options.sourceInterceptor,
         roles: options.roles,
+        sitemapStore: options.sitemapStore,
         analytics: options.analytics
             ? ({
                   getSettings: async () => ({
