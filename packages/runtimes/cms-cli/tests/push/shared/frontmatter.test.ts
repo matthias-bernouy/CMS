@@ -13,7 +13,7 @@ describe("parseFrontmatter", () => {
 title: "About"
 description: 'Our story'
 visible: false
-indexing: {"mode":"entity","sourceUrn":"urn:commerce","entityId":"product-by-slug","pageQueryParam":"product"}
+indexing: {"enabled":true,"entity":{"sourceUrn":"urn:commerce","entityId":"product-by-slug","pageQueryParam":"product"}}
 tags: [public, "marketing", 'top']
 ---
 <bloc-card></bloc-card>`;
@@ -23,10 +23,12 @@ tags: [public, "marketing", 'top']
             description: "Our story",
             visible: false,
             indexing: {
-                mode: "entity",
-                sourceUrn: "urn:commerce",
-                entityId: "product-by-slug",
-                pageQueryParam: "product",
+                enabled: true,
+                entity: {
+                    sourceUrn: "urn:commerce",
+                    entityId: "product-by-slug",
+                    pageQueryParam: "product",
+                },
             },
             tags: ["public", "marketing", "top"],
         });
@@ -75,6 +77,6 @@ body`;
 
     test("rejects malformed indexing JSON and invalid indexing contracts", () => {
         expect(() => parseFrontmatter(`---\nindexing: nope\n---\n`)).toThrow(/indexing.*invalid/);
-        expect(() => parseFrontmatter(`---\nindexing: {"mode":"entity"}\n---\n`)).toThrow(/indexing.*invalid/);
+        expect(() => parseFrontmatter(`---\nindexing: {"enabled":"yes"}\n---\n`)).toThrow(/indexing.*invalid/);
     });
 });

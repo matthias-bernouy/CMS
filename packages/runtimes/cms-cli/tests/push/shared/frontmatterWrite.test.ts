@@ -8,14 +8,14 @@ describe("serializeFrontmatter", () => {
             visible: false,
             description: "A \\ path",
             title: 'A "quoted" title',
-            indexing: { mode: "disabled" },
+            indexing: { enabled: false },
         });
 
         expect(serialized).toBe(`---
 title: "A \\"quoted\\" title"
 description: "A \\\\ path"
 visible: false
-indexing: {"mode":"disabled"}
+indexing: {"enabled":false}
 tags: ["featured", "say \\"hello\\""]
 ---
 `);

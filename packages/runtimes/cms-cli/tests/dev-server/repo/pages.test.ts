@@ -21,11 +21,12 @@ describe("LocalFsCmsRepository pages", () => {
             tags: ["featured"],
             visible: false,
             indexing: {
-                mode: "entity",
-                sourceUrn: "urn:commerce",
-                entityId: "product-by-slug",
-                pageQueryParam: "product",
-                titleTemplate: "{{ title }}",
+                enabled: true,
+                entity: {
+                    sourceUrn: "urn:commerce",
+                    entityId: "product-by-slug",
+                    pageQueryParam: "product",
+                },
             },
         });
 
@@ -38,11 +39,12 @@ describe("LocalFsCmsRepository pages", () => {
             tags: ["featured"],
             visible: false,
             indexing: {
-                mode: "entity",
-                sourceUrn: "urn:commerce",
-                entityId: "product-by-slug",
-                pageQueryParam: "product",
-                titleTemplate: "{{ title }}",
+                enabled: true,
+                entity: {
+                    sourceUrn: "urn:commerce",
+                    entityId: "product-by-slug",
+                    pageQueryParam: "product",
+                },
             },
         });
         expect(existsSync(join(siteDir, "pages", "pricing.html"))).toBe(false);

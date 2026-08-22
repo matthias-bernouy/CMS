@@ -1,17 +1,14 @@
-export type PageIndexingConfiguration =
-    | {
-          mode: "disabled";
-      }
-    | {
-          mode: "entity";
-          /** Stable source and capability references; endpoint details remain owned by the source. */
-          sourceUrn: string;
-          entityId: string;
-          /** Public page query parameter bound to the entity identity. */
-          pageQueryParam: string;
-          titleTemplate?: string;
-          descriptionTemplate?: string;
-      };
+export type PageIndexingConfiguration = {
+    /** Whether search engines may index this page or its discovered entity URLs. */
+    enabled: boolean;
+    /** Optional dynamic entity exposed by the page. Endpoint details remain owned by the source. */
+    entity?: {
+        sourceUrn: string;
+        entityId: string;
+        /** Public page query parameter bound to the entity identity. */
+        pageQueryParam: string;
+    };
+};
 
 export type TPage = {
     id: string;

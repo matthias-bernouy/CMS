@@ -3,37 +3,42 @@ import { ContentValidationError, validatePageIndexingConfiguration, validatePage
 
 describe("page indexing configuration", () => {
     test("preserves an explicit disabled choice", () => {
-        expect(validatePageIndexingConfiguration({ mode: "disabled", sourceUrn: "ignored" })).toEqual({
-            mode: "disabled",
+        expect(validatePageIndexingConfiguration({ enabled: false, ignored: true })).toEqual({
+            enabled: false,
         });
     });
 
-    test("normalizes an entity selection and its SEO templates", () => {
+    test("normalizes an optional entity selection", () => {
         expect(
             validatePageIndexingConfiguration({
-                mode: "entity",
-                sourceUrn: "  urn:commerce  ",
-                entityId: "  product-by-slug  ",
-                pageQueryParam: "  product  ",
-                titleTemplate: "  Buy {{ title }}  ",
-                descriptionTemplate: "   ",
+                enabled: true,
+                entity: {
+                    sourceUrn: "  urn:commerce  ",
+                    entityId: "  product-by-slug  ",
+                    pageQueryParam: "  product  ",
+                },
             }),
         ).toEqual({
-            mode: "entity",
-            sourceUrn: "urn:commerce",
-            entityId: "product-by-slug",
-            pageQueryParam: "product",
-            titleTemplate: "Buy {{ title }}",
+            enabled: true,
+            entity: {
+                sourceUrn: "urn:commerce",
+                entityId: "product-by-slug",
+                pageQueryParam: "product",
+            },
         });
     });
 
     test.each([
         null,
         {},
-        { mode: "automatic" },
-        { mode: "entity", sourceUrn: "commerce", entityId: "product", pageQueryParam: "product" },
-        { mode: "entity", sourceUrn: "urn:commerce", entityId: "", pageQueryParam: "product" },
-        { mode: "entity", sourceUrn: "urn:commerce", entityId: "product", pageQueryParam: "bad param" },
+        { enabled: "yes" },
+        { enabled: true, entity: "product" },
+        { enabled: true, entity: { sourceUrn: "commerce", entityId: "product", pageQueryParam: "product" } },
+        { enabled: true, entity: { sourceUrn: "urn:commerce", entityId: "", pageQueryParam: "product" } },
+        {
+            enabled: true,
+            entity: { sourceUrn: "urn:commerce", entityId: "product", pageQueryParam: "bad param" },
+        },
     ])("rejects an invalid configuration: %p", (configuration) => {
         expect(() => validatePageIndexingConfiguration(configuration)).toThrow(ContentValidationError);
     });
@@ -42,18 +47,22 @@ describe("page indexing configuration", () => {
         expect(
             validatePagePatch({
                 indexing: {
-                    mode: "entity",
-                    sourceUrn: "urn:commerce",
-                    entityId: " product-by-id ",
-                    pageQueryParam: "product",
+                    enabled: true,
+                    entity: {
+                        sourceUrn: "urn:commerce",
+                        entityId: " product-by-id ",
+                        pageQueryParam: "product",
+                    },
                 },
             }),
         ).toEqual({
             indexing: {
-                mode: "entity",
-                sourceUrn: "urn:commerce",
-                entityId: "product-by-id",
-                pageQueryParam: "product",
+                enabled: true,
+                entity: {
+                    sourceUrn: "urn:commerce",
+                    entityId: "product-by-id",
+                    pageQueryParam: "product",
+                },
             },
         });
     });

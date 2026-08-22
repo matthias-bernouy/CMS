@@ -37,7 +37,7 @@ const existingPage: TPage = {
     content: "<p>draft</p>",
     visible: false,
     tags: ["existing"],
-    indexing: { mode: "disabled" },
+    indexing: { enabled: false },
 };
 
 describe("PUT /api/page (update)", () => {
@@ -76,10 +76,12 @@ describe("PUT /api/page (update)", () => {
                 visible: true,
                 tags: ["a", "b"],
                 indexing: {
-                    mode: "entity",
-                    sourceUrn: "urn:commerce",
-                    entityId: "product-by-id",
-                    pageQueryParam: "product",
+                    enabled: true,
+                    entity: {
+                        sourceUrn: "urn:commerce",
+                        entityId: "product-by-id",
+                        pageQueryParam: "product",
+                    },
                 },
             }),
             cms,
@@ -95,10 +97,12 @@ describe("PUT /api/page (update)", () => {
         expect(updated.visible).toBe(true);
         expect(updated.tags).toEqual(["a", "b"]);
         expect(updated.indexing).toEqual({
-            mode: "entity",
-            sourceUrn: "urn:commerce",
-            entityId: "product-by-id",
-            pageQueryParam: "product",
+            enabled: true,
+            entity: {
+                sourceUrn: "urn:commerce",
+                entityId: "product-by-id",
+                pageQueryParam: "product",
+            },
         });
         expect(deleteSpy).toEqual([P9R_CACHE.page("/draft"), P9R_CACHE.page("/published")]);
     });
@@ -116,7 +120,7 @@ describe("PUT /api/page (update)", () => {
         );
 
         expect(res.ok).toBe(true);
-        expect(updateCalls[0]?.indexing).toEqual({ mode: "disabled" });
+        expect(updateCalls[0]?.indexing).toEqual({ enabled: false });
         expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);
     });
 });
