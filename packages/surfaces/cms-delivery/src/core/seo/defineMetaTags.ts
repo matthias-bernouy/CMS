@@ -1,5 +1,12 @@
 import type { TPage, TSystem } from "@bernouy/cms-content";
 
+export type PageMetaTagOverrides = {
+    title?: string;
+    description?: string;
+    canonicalUrl?: string | null;
+    robots?: string;
+};
+
 /**
  * Emit the head tags carrying SEO / browser-metadata weight: title,
  * description, favicon, canonical. Charset / viewport / language are HTML
@@ -11,14 +18,15 @@ export function defineMetaTags(
     page: TPage,
     settings: TSystem,
     faviconUrl: string,
+    overrides: PageMetaTagOverrides = {},
 ): void {
     const title = document.createElement("title");
-    title.textContent = page.title;
+    title.textContent = overrides.title ?? page.title;
     head.appendChild(title);
 
     const metaDescription = document.createElement("meta");
     metaDescription.setAttribute("name", "description");
-    metaDescription.setAttribute("content", page.description);
+    metaDescription.setAttribute("content", overrides.description ?? page.description);
     head.appendChild(metaDescription);
 
     const favicon = document.createElement("link");
@@ -29,10 +37,19 @@ export function defineMetaTags(
     // Canonical link when a host is configured. Trailing slash of the host
     // is stripped so we don't emit `https://site.com//about`.
     const host = settings.site?.host?.trim().replace(/\/+$/, "") ?? "";
-    if (host) {
+    const canonicalUrl =
+        overrides.canonicalUrl === undefined ? (host ? `${host}${page.path}` : "") : overrides.canonicalUrl;
+    if (canonicalUrl) {
         const canonical = document.createElement("link");
         canonical.setAttribute("rel", "canonical");
-        canonical.setAttribute("href", `${host}${page.path}`);
+        canonical.setAttribute("href", canonicalUrl);
         head.appendChild(canonical);
+    }
+
+    if (overrides.robots) {
+        const robots = document.createElement("meta");
+        robots.setAttribute("name", "robots");
+        robots.setAttribute("content", overrides.robots);
+        head.appendChild(robots);
     }
 }

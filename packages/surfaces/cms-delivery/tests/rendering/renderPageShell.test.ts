@@ -148,4 +148,29 @@ describe("renderPage — binding core wrapper", () => {
         expect(staticImage?.getAttribute("src")).toBe("/media/static.jpg");
         expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
     });
+
+    test("resolves platform metadata variables and an explicit noindex state", async () => {
+        let injectedTitle = "";
+        const ctx = makeCtx();
+        ctx.headInjectors = [
+            ({ metadata }) => {
+                injectedTitle = metadata.title;
+            },
+        ];
+        const entry = await renderPage(
+            {
+                ...page,
+                title: "${site.name} — ${page.path}",
+                description: "Hosted by ${site.host}",
+            },
+            ctx,
+            { indexable: false },
+        );
+        const { document } = parseHTML(new TextDecoder().decode(entry.raw));
+
+        expect(document.title).toBe("Site — /p");
+        expect(document.querySelector('meta[name="description"]')?.getAttribute("content")).toBe("");
+        expect(document.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex,follow");
+        expect(injectedTitle).toBe("Site — /p");
+    });
 });

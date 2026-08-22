@@ -9,13 +9,15 @@
  * be in <head> but isn't part of Delivery's own render pipeline.
  *
  * Injectors mutate the linkedom document in place. They receive the page's
- * bloc tag list because most extensions need it (analytics: which blocs
- * appear on which pages; A/B: gate experiments by bloc presence).
+ * bloc tag list and resolved metadata context. Structured-data injectors can
+ * therefore reuse the exact content/page/site values used by SEO templates.
  */
 export type HeadInjectorContext = {
     document: Document;
     head: HTMLElement;
     usedTags: readonly string[];
+    metadata: ResolvedPageMetadata;
 };
 
 export type HeadInjector = (ctx: HeadInjectorContext) => void;
+import type { ResolvedPageMetadata } from "cms-delivery/core/seo/pageMetadata";

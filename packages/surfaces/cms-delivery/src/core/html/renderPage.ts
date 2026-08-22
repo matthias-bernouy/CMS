@@ -20,6 +20,7 @@ import { buildPreconnect } from "cms-delivery/core/head/buildPreconnect";
 import { buildScriptTags } from "cms-delivery/core/head/buildScriptTags";
 import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
 import type { RenderContext } from "cms-delivery/core/html/RenderContext";
+import { resolvePageMetadata, type PageRenderMetadata } from "cms-delivery/core/seo/pageMetadata";
 
 /**
  * Render a page to a compressed CacheEntry. Thin orchestrator — every piece
@@ -35,11 +36,16 @@ import type { RenderContext } from "cms-delivery/core/html/RenderContext";
  * `ctx.resolveAssets` is the strategy seam — runtime serves through the
  * cache, build pre-uploads to the CDN. The renderer doesn't care.
  */
-export async function renderPage(page: TPage, ctx: RenderContext): Promise<CacheEntry> {
+export async function renderPage(
+    page: TPage,
+    ctx: RenderContext,
+    runtimeMetadata: PageRenderMetadata = {},
+): Promise<CacheEntry> {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     const head = document.head;
 
     const settings = await ctx.repository.getSystem();
+    const metadata = resolvePageMetadata(page, settings, runtimeMetadata);
 
     const composed = wrapBindingCore(page.content);
 
@@ -90,13 +96,13 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     buildHtmlBasics(document, head, settings);
     buildMetaCsp(document, head, cspExtras);
     for (const inject of ctx.headInjectors) {
-        inject({ document, head, usedTags });
+        inject({ document, head, metadata, usedTags });
     }
     buildPreconnect(document, head);
     buildAssetPreloads(document, head, assets, { includeBindingCore: hasBindingCore });
     buildBindingCloak(document, head, hasBindingCore);
     buildFoucShell(document, head, usedTags);
-    defineMetaTags(document, head, page, settings, ctx.faviconUrl);
+    defineMetaTags(document, head, page, settings, ctx.faviconUrl, metadata);
     buildStylesheetLink(document, head, assets);
     buildScriptTags(document, head, assets);
 
