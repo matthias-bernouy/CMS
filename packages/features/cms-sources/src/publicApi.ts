@@ -47,6 +47,10 @@ export {
     SOURCE_INDEXING_VARIABLE_TYPES,
 } from "./interfaces/SourceIndexing";
 export {
+    projectResolvedIndexingEntity,
+    type ProjectedIndexingEntity,
+} from "./core/model/projectResolvedIndexingEntity";
+export {
     SOURCE_TIMING_STAGES,
     UNRESOLVED_SOURCE_ENDPOINT,
     type SourceDiagnosticCohort,
