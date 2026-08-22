@@ -68,13 +68,7 @@ function validateCursorPagination(
     allowed: Set<string>,
     errors: string[],
 ): void {
-    validateRequestParam(
-        endpoint,
-        pagination.cursorParam,
-        "string",
-        `${prefix}.discover.pagination.cursorParam`,
-        errors,
-    );
+    validateCursorRequestParam(endpoint, pagination.cursorParam, `${prefix}.discover.pagination.cursorParam`, errors);
     validateResponsePath(
         endpoint,
         pagination.nextCursorPath,
@@ -95,6 +89,13 @@ function validateCursorPagination(
     }
     if ((pagination.limitParam === undefined) !== (pagination.pageSize === undefined)) {
         errors.push(`${prefix}.discover.pagination limitParam and pageSize must be declared together`);
+    }
+}
+
+function validateCursorRequestParam(endpoint: SourceEndpoint, name: string, path: string, errors: string[]): void {
+    const param = endpoint.input?.params?.find((candidate) => candidate.name === name);
+    if (param?.required || param?.source?.from === "computed" || param?.schema.type !== "string") {
+        errors.push(`${path} must name an optional request string parameter`);
     }
 }
 

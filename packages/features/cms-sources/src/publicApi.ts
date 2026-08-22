@@ -51,6 +51,11 @@ export {
     type ProjectedIndexingEntity,
 } from "./core/model/projectResolvedIndexingEntity";
 export {
+    projectIndexingDiscoveryPage,
+    type ProjectedIndexingDiscoveryItem,
+    type ProjectedIndexingDiscoveryPage,
+} from "./core/model/projectIndexingDiscoveryPage";
+export {
     SOURCE_TIMING_STAGES,
     UNRESOLVED_SOURCE_ENDPOINT,
     type SourceDiagnosticCohort,

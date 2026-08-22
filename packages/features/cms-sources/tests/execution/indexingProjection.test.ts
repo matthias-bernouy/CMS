@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { projectResolvedIndexingEntity, type SourceIndexingEntity } from "@bernouy/cms-sources";
+import {
+    projectIndexingDiscoveryPage,
+    projectResolvedIndexingEntity,
+    type SourceIndexingEntity,
+} from "@bernouy/cms-sources";
 
 const entity: SourceIndexingEntity = {
     id: "product-by-slug",
@@ -62,5 +66,62 @@ describe("projectResolvedIndexingEntity", () => {
             identity: "oak-chair",
             variables: { title: "Oak chair" },
         });
+    });
+});
+
+describe("projectIndexingDiscoveryPage", () => {
+    test("projects identities, last modification dates, and offset totals", () => {
+        const offsetEntity: SourceIndexingEntity = {
+            ...entity,
+            discover: {
+                ...entity.discover,
+                lastModifiedPath: "updatedAt",
+                pagination: {
+                    type: "offset",
+                    limitParam: "limit",
+                    offsetParam: "offset",
+                    pageSize: 100,
+                    totalPath: "total",
+                },
+            },
+        };
+
+        expect(
+            projectIndexingDiscoveryPage(offsetEntity, {
+                items: [
+                    { slug: "oak-chair", updatedAt: "2026-08-22T10:00:00Z" },
+                    { slug: "", updatedAt: "ignored" },
+                    { slug: "table" },
+                ],
+                total: 2,
+            }),
+        ).toEqual({
+            itemCount: 3,
+            items: [{ identity: "oak-chair", lastModified: "2026-08-22T10:00:00Z" }, { identity: "table" }],
+            total: 2,
+        });
+    });
+
+    test("projects cursor continuation and rejects malformed pagination metadata", () => {
+        const cursorEntity: SourceIndexingEntity = {
+            ...entity,
+            discover: {
+                ...entity.discover,
+                pagination: { type: "cursor", cursorParam: "cursor", nextCursorPath: "page.next" },
+            },
+        };
+
+        expect(
+            projectIndexingDiscoveryPage(cursorEntity, { items: [{ slug: "chair" }], page: { next: "two" } }),
+        ).toEqual({
+            itemCount: 1,
+            items: [{ identity: "chair" }],
+            nextCursor: "two",
+        });
+        expect(projectIndexingDiscoveryPage(cursorEntity, { items: [], page: { next: null } })).toEqual({
+            itemCount: 0,
+            items: [],
+        });
+        expect(projectIndexingDiscoveryPage(cursorEntity, { items: [], page: { next: 2 } })).toBeNull();
     });
 });

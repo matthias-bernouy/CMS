@@ -71,6 +71,39 @@ describe("source indexing validation", () => {
             true,
         );
     });
+
+    test("requires an optional initial cursor parameter", () => {
+        const source = indexedSource();
+        const endpoint = source.endpoints[1]!;
+        endpoint.input!.params = [{ name: "cursor", in: "query", required: true, schema: { type: "string" } }];
+        endpoint.output![0]!.body = {
+            type: "object",
+            properties: {
+                items: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            slug: { type: "string" },
+                            updatedAt: { type: "string" },
+                        },
+                    },
+                },
+                nextCursor: { type: "string", nullable: true },
+            },
+        };
+        source.indexing!.entities[0]!.discover.pagination = {
+            type: "cursor",
+            cursorParam: "cursor",
+            nextCursorPath: "nextCursor",
+        };
+
+        expect(validateSource(source)).toContain(
+            'invalid indexing entity "product".discover.pagination.cursorParam must name an optional request string parameter',
+        );
+        endpoint.input.params[0]!.required = false;
+        expect(validateSource(source)).toEqual([]);
+    });
 });
 
 function indexedSource(): Source {
