@@ -14,6 +14,8 @@ const EDITABLE_TAGS = new Set([
     "basic-card",
     "basic-container",
     "basic-grid",
+    "basic-hero",
+    "basic-site-footer",
     "basic-stack",
     "blockquote",
     "footer",
@@ -42,7 +44,7 @@ for (const name of pageNames) {
     if (!body.startsWith("---\n") || !body.includes("\n---\n")) {
         errors.push(`${name}: missing frontmatter`);
     }
-    for (const marker of ["<header", 'role="main"', "<footer", "<h1"]) {
+    for (const marker of ["<header", 'role="main"', "<basic-hero", "<basic-site-footer", "<h1"]) {
         if (!body.includes(marker)) {
             errors.push(`${name}: missing page-shell marker ${marker}`);
         }

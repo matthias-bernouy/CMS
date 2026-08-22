@@ -17,23 +17,13 @@ tags: [contact, studio]
     </header>
 
     <basic-stack id="main-content" role="main" gap="none">
-        <section aria-label="Contact introduction">
-            <basic-container width="wide" gutter="md">
-                <basic-card tone="neutral" appearance="filled" density="spacious">
-                    <basic-grid min="xl" max="none" packing="fit" gap="xl">
-                        <basic-stack gap="lg" align-items="start">
-                            <basic-badge tone="secondary" appearance="filled" dot="true">Now booking</basic-badge>
-                            <h1>Let’s make something unmistakable.</h1>
-                        </basic-stack>
-                        <basic-stack gap="lg" align-items="start" justify-content="end">
-                            <p>Share the ambition, the challenge, and where you are today. A rough brief is more than enough to begin.</p>
-                            <basic-button action="link" href="mailto:hello@morrow.studio" tone="primary" appearance="filled" size="xl">hello@morrow.studio</basic-button>
-                            <p>We usually reply within two working days.</p>
-                        </basic-stack>
-                    </basic-grid>
-                </basic-card>
-            </basic-container>
-        </section>
+        <basic-hero tone="neutral" appearance="filled" width="wide" media-position="end" align="start" density="spacious">
+            <basic-badge slot="eyebrow" tone="secondary" appearance="filled" dot="true">Now booking</basic-badge>
+            <h1 slot="title">Let’s make something unmistakable.</h1>
+            <p slot="description">Share the ambition, the challenge, and where you are today. A rough brief is more than enough to begin.</p>
+            <p>We usually reply within two working days.</p>
+            <basic-button slot="actions" action="link" href="mailto:hello@morrow.studio" tone="primary" appearance="filled" size="xl">hello@morrow.studio</basic-button>
+        </basic-hero>
 
         <section aria-label="Project details">
             <basic-container width="content" gutter="md">
@@ -67,7 +57,12 @@ tags: [contact, studio]
         </section>
     </basic-stack>
 
-    <footer aria-label="Site footer">
-        <basic-container width="wide" gutter="md"><basic-card appearance="ghost" density="spacious"><basic-stack direction="row" gap="lg" align-items="end" justify-content="space-between" wrap="true"><basic-stack gap="sm"><h3>Morrow®</h3><p>Independent creative studio · Paris / Worldwide</p></basic-stack><nav aria-label="Footer navigation"><basic-stack direction="row" gap="lg" wrap="true"><a href="/">Home</a><a href="/about">About</a><a href="/contact">Contact</a></basic-stack></nav></basic-stack></basic-card></basic-container>
-    </footer>
+    <basic-site-footer tone="neutral" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
+        <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
+        <p slot="description">Independent creative studio · Paris / Worldwide</p>
+        <a slot="navigation" href="/">Home</a>
+        <a slot="navigation" href="/about">About</a>
+        <a slot="navigation" href="/contact">Contact</a>
+        <p slot="legal">© Morrow. All rights reserved.</p>
+    </basic-site-footer>
 </basic-stack>

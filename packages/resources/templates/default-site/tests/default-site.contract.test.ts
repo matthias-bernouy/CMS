@@ -61,8 +61,9 @@ describe("default-site template contract", () => {
             expect(body).toStartWith("---\n");
             expect(body).toContain("<header");
             expect(body).toContain('role="main"');
-            expect(body).toContain("<h1");
-            expect(body).toContain("<footer");
+            expect(body.match(/<h1\b/gu)).toHaveLength(1);
+            expect(body).toContain("<basic-hero");
+            expect(body).toContain("<basic-site-footer");
         }
     });
 

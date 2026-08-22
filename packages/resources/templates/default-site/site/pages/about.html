@@ -17,20 +17,12 @@ tags: [about, studio]
     </header>
 
     <basic-stack id="main-content" role="main" gap="none">
-        <section aria-label="About introduction">
-            <basic-container width="wide" gutter="md">
-                <basic-card tone="primary" appearance="soft" density="spacious">
-                    <basic-grid min="xl" max="none" packing="fit" gap="xl">
-                        <basic-stack gap="lg" align-items="start" justify-content="center">
-                            <basic-badge tone="primary" appearance="filled">About Morrow</basic-badge>
-                            <h1>Small team. Wide perspective.</h1>
-                            <p>We are an independent creative studio for organisations navigating change, growth, and meaningful new beginnings.</p>
-                        </basic-stack>
-                        <img src="/.cms/files/by-id/019fadc7-6f5b-7003-ab85-bf8c7315d09c" width="1448" height="1086" loading="eager" decoding="async" fetchpriority="high" alt="Sculptural blue furniture, red lighting, linen, and brushed metal">
-                    </basic-grid>
-                </basic-card>
-            </basic-container>
-        </section>
+        <basic-hero tone="primary" appearance="soft" width="wide" media-position="end" align="start" density="spacious">
+            <basic-badge slot="eyebrow" tone="primary" appearance="filled">About Morrow</basic-badge>
+            <h1 slot="title">Small team. Wide perspective.</h1>
+            <p slot="description">We are an independent creative studio for organisations navigating change, growth, and meaningful new beginnings.</p>
+            <img slot="media" src="/.cms/files/by-id/019fadc7-6f5b-7003-ab85-bf8c7315d09c" width="1448" height="1086" loading="eager" decoding="async" fetchpriority="high" alt="Sculptural blue furniture, red lighting, linen, and brushed metal">
+        </basic-hero>
 
         <section aria-label="Studio story">
             <basic-container width="content" gutter="md">
@@ -73,7 +65,12 @@ tags: [about, studio]
         </section>
     </basic-stack>
 
-    <footer aria-label="Site footer">
-        <basic-container width="wide" gutter="md"><basic-card appearance="ghost" density="spacious"><basic-stack direction="row" gap="lg" align-items="end" justify-content="space-between" wrap="true"><basic-stack gap="sm"><h3>Morrow®</h3><p>Independent creative studio · Paris / Worldwide</p></basic-stack><nav aria-label="Footer navigation"><basic-stack direction="row" gap="lg" wrap="true"><a href="/">Home</a><a href="/about">About</a><a href="/contact">Contact</a></basic-stack></nav></basic-stack></basic-card></basic-container>
-    </footer>
+    <basic-site-footer tone="neutral" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
+        <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
+        <p slot="description">Independent creative studio · Paris / Worldwide</p>
+        <a slot="navigation" href="/">Home</a>
+        <a slot="navigation" href="/about">About</a>
+        <a slot="navigation" href="/contact">Contact</a>
+        <p slot="legal">© Morrow. All rights reserved.</p>
+    </basic-site-footer>
 </basic-stack>

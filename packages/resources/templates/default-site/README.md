@@ -4,12 +4,14 @@ This is a polished P9R site starter for a studio, agency, or independent
 business. It provides a complete landing page, an about page, a contact page,
 and a not-found page without choosing a data source or runtime adapter.
 
-Every authored element is supplied by `basic-blocs@1.0.0`. Native elements such
-as headings, paragraphs, links, sections, navigation, headers, and footers are
-installed Blocs too, so their content and relevant settings remain available in
-the visual editor. The pages deliberately contain no classes, inline styles,
-raw layout wrappers, local Blocs, scripts, or remote assets. Three local WebP
-images are registered as CMS files and use the editable native image Bloc.
+Every authored element is supplied by `basic-blocs@1.0.0`. The page
+introductions use the SEO-focused Hero, and each page shares the same editable
+Site footer recipe. Native elements such as headings, paragraphs, links,
+sections, navigation, headers, and footers are installed Blocs too, so their
+content and relevant settings remain available in the visual editor. The pages
+deliberately contain no classes, inline styles, raw layout wrappers, local Blocs,
+scripts, or remote assets. Three local WebP images are registered as CMS files
+and use the editable native image Bloc.
 
 The template deliberately ships no `site/theme.css` and no implicit global
 tokens. Basic Blocs owns its complete design system, while the theme editor

@@ -16,24 +16,19 @@ tags: [system, error]
         </basic-container>
     </header>
 
-    <section role="main" aria-label="Page not found">
-        <basic-container width="wide" gutter="md">
-            <basic-card tone="primary" appearance="filled" density="spacious">
-                <basic-grid min="xl" max="none" packing="fit" gap="xl">
-                    <basic-stack gap="lg" align-items="start">
-                        <basic-badge tone="secondary" appearance="filled">Error 404</basic-badge>
-                        <h1>Wrong turn. Good taste.</h1>
-                    </basic-stack>
-                    <basic-stack gap="lg" align-items="start" justify-content="end">
-                        <p>This page has moved, disappeared, or never made it past the sketchbook.</p>
-                        <basic-button action="link" href="/" tone="neutral" appearance="filled" size="xl">Back to the good stuff →</basic-button>
-                    </basic-stack>
-                </basic-grid>
-            </basic-card>
-        </basic-container>
-    </section>
+    <basic-hero role="main" tone="primary" appearance="filled" width="wide" media-position="end" align="start" density="spacious">
+        <basic-badge slot="eyebrow" tone="secondary" appearance="filled">Error 404</basic-badge>
+        <h1 slot="title">Wrong turn. Good taste.</h1>
+        <p slot="description">This page has moved, disappeared, or never made it past the sketchbook.</p>
+        <basic-button slot="actions" action="link" href="/" tone="neutral" appearance="filled" size="xl">Back to the good stuff →</basic-button>
+    </basic-hero>
 
-    <footer aria-label="Site footer">
-        <basic-container width="wide" gutter="md"><basic-card appearance="ghost" density="spacious"><basic-stack direction="row" gap="lg" align-items="end" justify-content="space-between" wrap="true"><basic-stack gap="sm"><h3>Morrow®</h3><p>Independent creative studio · Paris / Worldwide</p></basic-stack><nav aria-label="Footer navigation"><basic-stack direction="row" gap="lg" wrap="true"><a href="/">Home</a><a href="/about">About</a><a href="/contact">Contact</a></basic-stack></nav></basic-stack></basic-card></basic-container>
-    </footer>
+    <basic-site-footer tone="neutral" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
+        <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
+        <p slot="description">Independent creative studio · Paris / Worldwide</p>
+        <a slot="navigation" href="/">Home</a>
+        <a slot="navigation" href="/about">About</a>
+        <a slot="navigation" href="/contact">Contact</a>
+        <p slot="legal">© Morrow. All rights reserved.</p>
+    </basic-site-footer>
 </basic-stack>
