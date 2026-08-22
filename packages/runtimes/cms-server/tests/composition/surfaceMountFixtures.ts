@@ -33,10 +33,22 @@ export function surfaceMountFixtures() {
             filesMetadata: token("files-metadata"),
             filesBlob: token("files-blob"),
             variantStore: token("variant-store"),
+            sitemapStore: token("sitemap-store"),
             sourceImageCache: {
                 name: "source-image-cache",
                 async dispose() {},
             } as { name: string; dispose: () => Promise<void> } | null,
+            sourceImageJobs: {
+                enqueue: async () => "accepted",
+                claim: async () => null,
+                renew: async () => true,
+                complete: async () => true,
+                retry: async () => true,
+                waitForAvailable: async () => {
+                    await Bun.sleep(1);
+                },
+            },
+            sourceMediaIndex: token("source-media-index"),
             users: token("users"),
             identityProviders: token("identity-providers"),
             pats: token("pats"),

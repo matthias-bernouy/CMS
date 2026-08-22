@@ -195,7 +195,7 @@ export async function mountProductionSurfaces(
             });
         });
     }
-    new runtime.Delivery({
+    const deliveryCms = new runtime.Delivery({
         runner: deliveryRunner,
         repository: core.repo,
         cache: core.cache,
@@ -221,6 +221,7 @@ export async function mountProductionSurfaces(
         filesMetadata: core.filesMetadata,
         filesBlob: core.filesBlob,
         variantStore: core.variantStore,
+        sitemapStore: core.sitemapStore,
         auth: {
             ...authentication.publicAuthBase,
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,
@@ -237,6 +238,10 @@ export async function mountProductionSurfaces(
 
     controlRunner.start(env.CONTROL_PORT);
     deliveryRunner.start(env.DELIVERY_PORT);
+    const sitemapRefresh = runtime.startSitemapRefresh?.(deliveryCms, {
+        publicBaseUrl: env.DELIVERY_PUBLIC_URL,
+        reportError: (error) => runtime.reportError("Sitemap refresh failed", error),
+    });
     runtime.log("🚀 CMS listening");
     runtime.log(`   admin:        ${env.CONTROL_PUBLIC_URL}/admin/`);
     runtime.log(`   sign in:      ${env.CONTROL_PUBLIC_URL}/login`);
@@ -247,7 +252,11 @@ export async function mountProductionSurfaces(
         runNow: scheduledTriggers.runNow,
         async stop() {
             endpointPerformanceFlusher.stop();
-            await Promise.all([controlRunner.stopGracefully(), deliveryRunner.stopGracefully()]);
+            await Promise.all([
+                sitemapRefresh?.stop(),
+                controlRunner.stopGracefully(),
+                deliveryRunner.stopGracefully(),
+            ]);
             await endpointPerformanceFlusher.run();
             await scheduledTriggers.stop();
             await sourceImageWorkers?.stop();

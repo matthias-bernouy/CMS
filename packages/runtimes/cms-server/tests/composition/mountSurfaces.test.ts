@@ -17,6 +17,8 @@ describe("production surface mounting", () => {
         let flusherRecorder: unknown;
         let flushes = 0;
         let flusherStopped = false;
+        let sitemapRefreshOptions: Record<string, unknown> | undefined;
+        let sitemapRefreshStopped = false;
         const runNow = async () => ({ status: "succeeded" });
         let releaseControl!: () => void;
         const controlReady = new Promise<void>((resolve) => {
@@ -91,6 +93,16 @@ describe("production surface mounting", () => {
                     },
                 };
             },
+            startSitemapRefresh(_delivery: unknown, options: Record<string, unknown>) {
+                sitemapRefreshOptions = options;
+                return {
+                    ready: Promise.resolve(null),
+                    refresh: async () => null,
+                    stop: async () => {
+                        sitemapRefreshStopped = true;
+                    },
+                };
+            },
             log(message: string) {
                 logs.push(message);
             },
@@ -143,6 +155,7 @@ describe("production surface mounting", () => {
             analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,
             analyticsTrustProxy: false,
             analyticsTrustedProxyVerified: false,
+            sitemapStore: options.core.sitemapStore,
             auth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_AUTH_EMAIL_VERIFICATION_URL,
@@ -163,6 +176,7 @@ describe("production surface mounting", () => {
         });
         expect(finalizerStore).toBe(options.features.analytics);
         expect(flusherRecorder).toBe(options.features.endpointPerformanceRecorder);
+        expect(sitemapRefreshOptions).toMatchObject({ publicBaseUrl: options.env.DELIVERY_PUBLIC_URL });
         expect(starts).toEqual([
             ["control", 3100],
             ["delivery", 3101],
@@ -178,6 +192,7 @@ describe("production surface mounting", () => {
 
         await mounted.stop();
         expect(flusherStopped).toBe(true);
+        expect(sitemapRefreshStopped).toBe(true);
         expect(flushes).toBe(1);
         expect(events.slice(-2)).toEqual(["stop:control", "stop:delivery"]);
     });

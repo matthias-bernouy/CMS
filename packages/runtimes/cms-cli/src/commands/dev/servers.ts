@@ -1,7 +1,7 @@
 import { InMemoryAnalyticsStore, ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { ControlCms } from "@bernouy/cms-control";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import { DeliveryCms } from "@bernouy/cms-delivery";
+import { DeliveryCms, startSitemapSnapshotRefresh } from "@bernouy/cms-delivery";
 import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { BunRunner } from "@bernouy/http-runner";
 import { startDevScheduledTriggers } from "../../dev-server/runtime/scheduledTriggers";
@@ -121,12 +121,14 @@ export async function startLocalServers(options: ServerOptions) {
 
     const deliveryRunner = new BunRunner();
     const variantStore = new LocalFsCmsFilesBlob(`${options.siteDir}/.cms-variants`);
-    new DeliveryCms({
+    const sitemapStore = new LocalFsCmsFilesBlob(`${options.siteDir}/.cms-sitemaps`);
+    const deliveryCms = new DeliveryCms({
         runner: deliveryRunner,
         repository: services.repo,
         filesMetadata: services.filesMetadata,
         filesBlob: services.files,
         variantStore,
+        sitemapStore,
         sources: services.sources,
         sourceOverlays: services.sourceOverlays,
         sourceTelemetry: endpointPerformance.deliveryTelemetry,
@@ -147,6 +149,10 @@ export async function startLocalServers(options: ServerOptions) {
         auth: services.publicAuth,
     });
     deliveryRunner.start(flags.deliveryPort);
+    const sitemapRefresh = startSitemapSnapshotRefresh(deliveryCms, {
+        publicBaseUrl: `http://${flags.publicHost}:${flags.deliveryPort}`,
+        reportError: (error) => console.error(`[sitemap] Refresh failed: ${String(error)}`),
+    });
     let stopping: Promise<void> | null = null;
     return {
         registry,
@@ -154,7 +160,7 @@ export async function startLocalServers(options: ServerOptions) {
         stop() {
             stopping ??= (async () => {
                 endpointPerformance.stopFlusher();
-                await Promise.all([runner.stopGracefully(), deliveryRunner.stopGracefully()]);
+                await Promise.all([sitemapRefresh.stop(), runner.stopGracefully(), deliveryRunner.stopGracefully()]);
                 await endpointPerformance.flush();
                 await scheduledTriggers?.stop();
                 await sourceImages.dispose();

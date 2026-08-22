@@ -45,6 +45,7 @@ export async function createCoreStores(env: RuntimeEnv) {
     const filesMetadata = new ValidatingCmsFilesMetadata(mongoFilesMetadata);
     const filesBlob = new LocalFsCmsFilesBlob(env.CMS_FILES_DIR);
     const variantStore = new LocalFsCmsFilesBlob(`${env.CMS_FILES_DIR}/.variants`);
+    const sitemapStore = new LocalFsCmsFilesBlob(`${env.CMS_FILES_DIR}/.sitemaps`);
     const sourceImageCache = await createRuntimeSourceImageCache(env);
     const sourceImageJobs = new MongoSourceImageJobQueue(db);
     const sourceMediaIndex = new MongoSourceMediaIndex(db);
@@ -89,6 +90,7 @@ export async function createCoreStores(env: RuntimeEnv) {
         filesMetadata,
         filesBlob,
         variantStore,
+        sitemapStore,
         sourceImageCache,
         sourceImageJobs,
         sourceMediaIndex,
