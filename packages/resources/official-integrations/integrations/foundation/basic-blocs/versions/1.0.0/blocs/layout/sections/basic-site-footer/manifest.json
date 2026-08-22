@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-site-footer",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Site footer",
+        "description": "Complete site footer with identity, literal navigation links, actions, and legal content."
+    }
+}

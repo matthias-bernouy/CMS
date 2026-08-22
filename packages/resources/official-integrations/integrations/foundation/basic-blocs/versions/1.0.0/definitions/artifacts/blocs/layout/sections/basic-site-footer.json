@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-site-footer",
+        "name": "Site footer",
+        "group": "Sections",
+        "description": "Complete site footer with identity, literal navigation links, actions, and legal content.",
+        "path": "blocs/layout/sections/basic-site-footer"
+    }
+}

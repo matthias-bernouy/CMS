@@ -32,6 +32,11 @@ and emits page, limit, and offset without owning URL navigation.
 content remains literal HTML links for crawlers, while the component adds an
 accessible dropdown menu automatically when its authored content no longer fits.
 
+`basic-hero` provides a page introduction with a required editable `h1`, optional
+media, and action regions. `basic-site-footer` combines identity, literal footer
+links, optional actions, and legal content while preserving the native `footer`
+primitive for authors who only need a structural element.
+
 The current form set contains:
 
 - the native `form` editor;

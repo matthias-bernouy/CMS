@@ -41,6 +41,7 @@
         "Install intrinsic layout blocs",
         "Install inline feedback blocs",
         "Install responsive navigation",
+        "Install editable site sections",
         "Install basic-redirect",
         "Install native form editor",
         "Install form controls including file uploads",

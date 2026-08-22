@@ -49,6 +49,8 @@
             "artifacts/blocs/layout/structure/basic-header.json",
             "artifacts/blocs/layout/structure/basic-navigation.json",
             "artifacts/blocs/layout/structure/basic-section.json",
+            "artifacts/blocs/layout/sections/basic-hero.json",
+            "artifacts/blocs/layout/sections/basic-site-footer.json",
             "artifacts/blocs/media/basic-image.json",
             "artifacts/blocs/navigation/basic-navbar.json",
             "artifacts/blocs/navigation/basic-pagination.json",
