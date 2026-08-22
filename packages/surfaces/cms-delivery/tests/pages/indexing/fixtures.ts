@@ -19,6 +19,12 @@ export const COMMERCE_SOURCE: Source = {
             method: "GET",
             access: { mode: "public" },
             targetUrl: "https://commerce.test/products",
+            input: {
+                params: [
+                    { name: "limit", in: "query", schema: { type: "number" } },
+                    { name: "offset", in: "query", schema: { type: "number" } },
+                ],
+            },
         },
     ],
     indexing: {
@@ -34,6 +40,14 @@ export const COMMERCE_SOURCE: Source = {
                     endpointUrn: "urn:commerce:products",
                     itemsPath: "items",
                     identityPath: "slug",
+                    lastModifiedPath: "updatedAt",
+                    pagination: {
+                        type: "offset",
+                        limitParam: "limit",
+                        offsetParam: "offset",
+                        pageSize: 2,
+                        totalPath: "total",
+                    },
                 },
                 variables: {
                     description: { path: "description", type: "text" },
@@ -68,7 +82,7 @@ export async function commercePublicRoles(): Promise<InMemoryRolesRepository> {
         id: PUBLIC_ROLE,
         label: "Public",
         builtin: true,
-        grants: [{ permission: "urn:commerce:product" }],
+        grants: [{ permission: "urn:commerce:product" }, { permission: "urn:commerce:products" }],
     });
     return roles;
 }
