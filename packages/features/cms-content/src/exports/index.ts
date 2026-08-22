@@ -111,6 +111,13 @@ export { createBlocUsageResolver } from "cms-content/core/blocs/resolveUsedBlocT
 export { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/core/blocs/buildBlocEntries";
 export { collectCmsSourceBindings, type CmsSourceBindingReference } from "cms-content/core/editor/sourceBindings";
+export {
+    detectPageIndexingCandidates,
+    type PageIndexingCandidate,
+    type PageIndexingDetection,
+    type PageIndexingDetectionOptions,
+    type PageIndexingDetectionStatus,
+} from "cms-content/core/editor/pageIndexingDetection";
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
 export { ValidatingCmsRepository } from "cms-content/core/validation/ValidatingCmsRepository";

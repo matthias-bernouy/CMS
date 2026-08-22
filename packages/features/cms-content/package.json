@@ -11,6 +11,7 @@
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.12",
         "markdown-it": "^14.3.0"

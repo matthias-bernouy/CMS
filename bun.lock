@@ -87,6 +87,7 @@
       "name": "@bernouy/cms-content",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.12",
         "markdown-it": "^14.3.0",
