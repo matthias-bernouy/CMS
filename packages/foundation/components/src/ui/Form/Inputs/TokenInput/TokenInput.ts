@@ -6,22 +6,26 @@ import css from "./style.css" with { type: "text" };
 import { comboOptionsFrom, createPromptItem, emptyItem } from "../../Selection/Combobox/list";
 import type { ComboItem, ComboOption } from "../../Selection/Combobox/types";
 import { dispatchTokenChange } from "./tokenEvents";
+import { RemoteTokenOptions } from "./remoteOptions";
 import { parseTokens, tokenItemsFor, tokenValue } from "./tokens";
 import { TokenInputView, type TokenInputHandlers } from "./TokenInputView";
 
 export class TokenInput extends Component {
     static formAssociated = true;
-    static readonly observedAttributes = ["value", "label", "placeholder", "disabled", "creatable"];
+    static readonly observedAttributes = ["value", "label", "placeholder", "disabled", "creatable", "api", "resource"];
 
     private readonly view: TokenInputView;
+    private readonly remoteOptions: RemoteTokenOptions;
     private options: ComboOption[] = [];
     private items: ComboItem[] = [];
     private selected: string[] = [];
     private activeIndex = -1;
+    private inputFocused = false;
 
     constructor() {
         super({ css: baseCss + listCss + css, template: template as unknown as string });
         this.view = new TokenInputView(this.shadowRoot, this.attachInternals());
+        this.remoteOptions = new RemoteTokenOptions(this, () => this.syncOptions());
     }
 
     override connectedCallback(): void {
@@ -31,9 +35,11 @@ export class TokenInput extends Component {
         this.view.connect(this.handlers);
         this.syncOptions();
         this.syncAttributes();
+        this.remoteOptions.connect();
     }
 
     disconnectedCallback(): void {
+        this.remoteOptions.disconnect();
         this.view.disconnect(this.handlers);
     }
 
@@ -42,6 +48,9 @@ export class TokenInput extends Component {
             this.value = value ?? "";
         } else {
             this.syncAttributes();
+            if ((name === "api" || name === "resource") && this.isConnected) {
+                this.remoteOptions.reload();
+            }
         }
     }
 
@@ -66,13 +75,19 @@ export class TokenInput extends Component {
     }
 
     private readonly handlers: TokenInputHandlers = {
-        focus: () => this.renderList(this.query),
+        focus: () => {
+            this.inputFocused = true;
+            this.renderList(this.query);
+        },
         input: () => {
             this.activeIndex = -1;
             this.renderList(this.query);
         },
         keydown: (event) => this.onKeydown(event),
-        blur: () => window.setTimeout(() => this.hideList(), 120),
+        blur: () => {
+            this.inputFocused = false;
+            window.setTimeout(() => this.hideList(), 120);
+        },
         create: (event) => this.onCreate(event),
         options: () => this.syncOptions(),
     };
@@ -83,8 +98,11 @@ export class TokenInput extends Component {
     }
 
     private syncOptions(): void {
-        this.options = comboOptionsFrom(this);
+        this.options = this.remoteOptions.merge(comboOptionsFrom(this));
         this.value = this.getAttribute("value") ?? this.value;
+        if (this.inputFocused) {
+            this.renderList(this.query);
+        }
     }
 
     private syncDisplay(): void {

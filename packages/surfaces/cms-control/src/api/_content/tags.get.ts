@@ -3,7 +3,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 /**
  * Returns the list of tags (pages) or categories (templates)
  * currently in use, along with the count of how many times each appears.
- * Used by the <p9r-tag-suggest> autocomplete to surface existing values.
+ * Used by tag and token autocomplete controls to surface existing values.
  *
  * Query: `?resource=pages|templates`
  * Response: `[{ value: string, count: number }]` sorted by count desc.

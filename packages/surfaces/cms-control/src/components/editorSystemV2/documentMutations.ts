@@ -23,18 +23,13 @@ export async function deleteDocument(resource: EditorResource, id: string): Prom
 }
 
 async function savePage(page: EditorV2PageConfig, content: string): Promise<void> {
-    const response = await fetch(`${getMetaBasePath()}/api/page`, {
+    const response = await fetch(`${getMetaBasePath()}/api/page/content`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
             id: page.id,
-            title: page.title,
-            path: page.path,
-            description: page.description,
-            visible: page.published,
-            tags: page.tags,
             content,
         }),
     });

@@ -31,7 +31,7 @@ describe("CompiledTemplate — boundaries", () => {
     test("descends into submit sources for parent data while keeping submit result bindings inert", () => {
         const { host, region } = mount(
             `
-            <form cms-source="/api/save as result" cms-source-trigger="submit" data-id="{{ id }}">
+            <form cms-source="/api/save as result" cms-source-trigger="submit" data-id="{{ id }}" cms-source-success-redirect="/saved?id={{ result.body.id }}">
                 <input name="site.name" value="{{ site.name }}">
                 <select name="site.notFound">
                     <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
@@ -51,6 +51,7 @@ describe("CompiledTemplate — boundaries", () => {
         const form = host.querySelector("form")!;
 
         expect(form.getAttribute("data-id")).toBe("settings");
+        expect(form.getAttribute("cms-source-success-redirect")).toBe("/saved?id={{ result.body.id }}");
         expect(form.querySelector("input")!.getAttribute("value")).toBe("Demo");
         expect(form.querySelector("option")!.getAttribute("value")).toBe("/404");
         expect(text(form.querySelector("option"))).toBe("Not found");
@@ -70,6 +71,7 @@ describe("CompiledTemplate — boundaries", () => {
         });
 
         expect(form.getAttribute("data-id")).toBe("settings-2");
+        expect(form.getAttribute("cms-source-success-redirect")).toBe("/saved?id={{ result.body.id }}");
         expect(form.querySelector("input")!.getAttribute("value")).toBe("Updated");
         expect(form.querySelector("option")!.getAttribute("value")).toBe("/500");
         expect(text(form.querySelector("option"))).toBe("Server error");

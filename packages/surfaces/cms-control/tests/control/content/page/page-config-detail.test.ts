@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import getConfigDetail from "cms-control/api/_content/page/configDetail.get";
+import getConfigDetail from "cms-control/api/_content/page/_editing/configDetail.get";
 import type { TPage } from "@bernouy/cms-content";
 
 const page: TPage = {
@@ -12,7 +12,7 @@ const page: TPage = {
     tags: ["pricing", "landing"],
 };
 
-function cmsWithPage(existing: TPage | null) {
+function cmsWithPage(existing: TPage | null, deliveryUrl?: string) {
     const requestedIds: string[] = [];
     const cms = {
         repository: {
@@ -21,6 +21,7 @@ function cmsWithPage(existing: TPage | null) {
                 return existing?.id === id ? existing : null;
             },
         },
+        config: { deliveryUrl },
     };
 
     return { cms, requestedIds };
@@ -28,7 +29,7 @@ function cmsWithPage(existing: TPage | null) {
 
 describe("GET /api/page/configDetail", () => {
     test("returns page metadata by id", async () => {
-        const { cms, requestedIds } = cmsWithPage(page);
+        const { cms, requestedIds } = cmsWithPage(page, "https://site.test");
 
         const response = await getConfigDetail(
             new Request("http://localhost/cms/api/page/configDetail?id=page-1"),
@@ -42,6 +43,7 @@ describe("GET /api/page/configDetail", () => {
             title: "Pricing",
             description: "Pricing page",
             path: "/pricing",
+            publicUrl: "https://site.test/pricing",
             tags: ["pricing", "landing"],
             published: true,
         });

@@ -83,6 +83,10 @@ export class TopBar extends HTMLElement {
         this.shadowRoot!.querySelector(".settings-label")!.textContent = input.settingsLabel;
     }
 
+    setDeleteVisible(visible: boolean): void {
+        this.shadowRoot!.querySelector<HTMLElement>('[data-action="delete"]')!.hidden = !visible;
+    }
+
     private readonly _onClick = (event: Event): void => {
         handleTopBarClick(this, event, {
             setViewport: (viewport) => this._setViewport(viewport, true),

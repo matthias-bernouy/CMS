@@ -68,6 +68,19 @@ describe("Shell", () => {
         expect(shell.shadowRoot!.querySelector('[data-page-field="published"]')!.closest("label")!.hidden).toBe(true);
     });
 
+    test("resolves an external page settings destination against the editor URL", async () => {
+        const { resolveExternalSettingsHref } = await import(
+            "../../../../src/components/Layout/Shell/Controller/Events/shellEvents"
+        );
+
+        expect(
+            resolveExternalSettingsHref(
+                "/cms/admin/pages/detail?id=page-1",
+                "https://cms.test/cms/editor/page?id=page-1",
+            ),
+        ).toBe("https://cms.test/cms/admin/pages/detail?id=page-1");
+    });
+
     test("shell treats an empty paragraph as empty page content", async () => {
         installDom();
 

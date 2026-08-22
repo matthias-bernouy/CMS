@@ -3,6 +3,8 @@ export const SHELL_OBSERVED_ATTRIBUTES = [
     "back-href",
     "back-label",
     "settings-label",
+    "settings-href",
+    "hide-delete",
     "settings-title",
     "settings-description",
     "settings-path-label",

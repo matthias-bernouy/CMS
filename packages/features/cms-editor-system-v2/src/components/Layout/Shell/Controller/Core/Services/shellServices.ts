@@ -68,6 +68,7 @@ export function createShellControllerServices(
         deleteEventName: "editor-v2:delete-document",
     });
     events = new ShellEvents({
+        host,
         state,
         refs,
         mutations,

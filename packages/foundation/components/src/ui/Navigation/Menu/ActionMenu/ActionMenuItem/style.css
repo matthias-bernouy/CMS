@@ -21,6 +21,7 @@
     line-height: 1.2;
     padding: 7px 8px;
     text-align: left;
+    text-decoration: none;
 }
 
 :host(:not([has-icon])) .item {
@@ -36,7 +37,8 @@
     color: var(--text-main);
 }
 
-.item:disabled {
+.item:disabled,
+.item[aria-disabled] {
     cursor: default;
     opacity: .5;
 }

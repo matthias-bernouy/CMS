@@ -39,6 +39,10 @@ export class PagesStore {
             throw new Error("updatePage requires `path`");
         }
         const file = this._fileForPath(page.path);
+        const previousFile = page.id && page.id !== page.path ? this._fileForPath(page.id) : null;
+        if (previousFile && existsSync(file)) {
+            throw new Error(`Page already exists at ${page.path}`);
+        }
         await this._write(
             file,
             {
@@ -49,6 +53,9 @@ export class PagesStore {
             },
             page.content ?? "",
         );
+        if (previousFile && existsSync(previousFile)) {
+            await unlink(previousFile);
+        }
     }
 
     async links(): Promise<{ path: string; title: string }[]> {

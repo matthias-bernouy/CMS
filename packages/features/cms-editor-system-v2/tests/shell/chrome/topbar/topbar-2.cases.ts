@@ -44,4 +44,19 @@ describe("Shell", () => {
 
         expect(count).toBe(1);
     });
+
+    test("topbar can hide document deletion for externally managed pages", async () => {
+        installDom();
+
+        const { TopBar } = await import("../../../../src/components/Layout/TopBar/TopBar");
+
+        const topbar = new TopBar();
+        document.body.append(topbar);
+        topbar.setDeleteVisible(false);
+
+        expect(topbar.shadowRoot!.querySelector<HTMLElement>('[data-action="delete"]')!.hidden).toBe(true);
+
+        topbar.setDeleteVisible(true);
+        expect(topbar.shadowRoot!.querySelector<HTMLElement>('[data-action="delete"]')!.hidden).toBe(false);
+    });
 });

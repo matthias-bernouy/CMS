@@ -25,9 +25,12 @@ describe("file-backed route paths", () => {
         expect(deriveRoute("_content/page/page")).toBe("page");
         expect(deriveRoute("_access/roles/roles")).toBe("roles");
         expect(publicStaticPath("admin/_content/pages.html")).toBe("admin/pages.html");
+        expect(publicStaticPath("admin/_content/pages/detail.html")).toBe("admin/pages/detail.html");
         expect(publicStaticPath("admin/_access/users.html")).toBe("admin/users.html");
         expect(publicStaticPath("admin/_operations/analytics/health.html")).toBe("admin/analytics/health.html");
         expect(publicStaticPath("admin/_operations/analytics/endpoints.html")).toBe("admin/analytics/endpoints.html");
+        expect(deriveRoute("_content/page/_editing/configDetail")).toBe("page/configDetail");
+        expect(deriveRoute("_content/page/_editing/content")).toBe("page/content");
     });
 
     test("replaces static base-path placeholders for root and mounted runners", () => {

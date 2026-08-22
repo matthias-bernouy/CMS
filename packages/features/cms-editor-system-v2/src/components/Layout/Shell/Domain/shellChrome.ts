@@ -49,6 +49,7 @@ export function applyShellChromeLabels(
         backLabel: host.getAttribute("back-label") ?? defaults.backLabel,
         settingsLabel: host.getAttribute("settings-label") ?? defaults.settingsLabel,
     });
+    topBar.setDeleteVisible(!host.hasAttribute("hide-delete"));
 
     host.shadowRoot!.querySelector("#page-settings-title")!.textContent =
         host.getAttribute("settings-title") ?? defaults.settingsTitle;

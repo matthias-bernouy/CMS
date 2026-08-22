@@ -1,0 +1,66 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Pages</span>
+
+    <p9r-container size="lg">
+        <div cms-source="{{BASE_PATH}}/api/page/configDetail?id=#{id}">
+            <template>
+                <cms-shell-detail cms-condition="$source.loaded">
+                    <a slot="back" href="{{BASE_PATH}}/admin/pages" aria-label="Back to pages">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+                            <path d="M8 9h8"></path>
+                            <path d="M8 13h5"></path>
+                        </svg>
+                    </a>
+                    <span slot="title">{{ title }}</span>
+                    <p9r-button slot="actions" form="page-settings-form" type="submit" color="primary">Save settings</p9r-button>
+                    <form slot="actions" action="{{BASE_PATH}}/editor/page" method="get">
+                        <input type="hidden" name="id" value="{{ id }}">
+                        <p9r-button type="submit" variant="outlined">Edit content</p9r-button>
+                    </form>
+                    <cms-confirm-form slot="actions" trigger-selector="[data-action=delete]" target="{{BASE_PATH}}/api/page?id={{ id }}" method="DELETE" redirect="{{BASE_PATH}}/admin/pages" message="Delete this page? This cannot be undone.">
+                        <p9r-action-menu label="More actions">
+                            <p9r-action-menu-item data-action="view-public" href="{{ publicUrl }}" target="_blank">
+                                <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+                                    <circle cx="12" cy="12" r="2.5"></circle>
+                                </svg>
+                                View public page
+                            </p9r-action-menu-item>
+                            <p9r-action-menu-item color="danger" data-action="delete">
+                                <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M8 6V4h8v2"></path>
+                                    <path d="m19 6-1 14H6L5 6"></path>
+                                    <path d="M10 11v5"></path>
+                                    <path d="M14 11v5"></path>
+                                </svg>
+                                Delete page
+                            </p9r-action-menu-item>
+                        </p9r-action-menu>
+                    </cms-confirm-form>
+
+                    <cms-detail-section slot="main" heading="Page settings" description="Configure the page title and SEO metadata.">
+                        <form id="page-settings-form" cms-source="{{BASE_PATH}}/api/page/configDetail as result" cms-source-trigger="submit" cms-source-method="PUT" cms-source-success-reset="false" cms-source-success-redirect="{{BASE_PATH}}/admin/pages/detail?id={{ result.body.id }}">
+                            <p9r-stack gap="md">
+                                <p9r-input name="title" label="Title" value="{{ title }}" required></p9r-input>
+                                <p9r-textarea name="description" label="SEO description" rows="4" autosize value="{{ description }}"></p9r-textarea>
+                            </p9r-stack>
+                        </form>
+                    </cms-detail-section>
+
+                    <cms-detail-section slot="aside" heading="Page configuration">
+                        <p9r-stack gap="md">
+                            <p9r-input form="page-settings-form" name="path" label="Path" value="{{ path }}" required></p9r-input>
+                            <p9r-select form="page-settings-form" name="published" label="Status" value="{{ published }}">
+                                <option value="false">Draft</option>
+                                <option value="true">Published</option>
+                            </p9r-select>
+                            <p9r-token-input form="page-settings-form" name="tags" label="Tags" resource="pages" api="{{BASE_PATH}}/api/tags" value="{{ tags }}" placeholder="Add a tag" creatable></p9r-token-input>
+                        </p9r-stack>
+                    </cms-detail-section>
+                </cms-shell-detail>
+            </template>
+        </div>
+    </p9r-container>
+</w13c-fixed-admin-layout>

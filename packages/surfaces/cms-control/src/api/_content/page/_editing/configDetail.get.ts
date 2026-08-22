@@ -5,6 +5,7 @@ export type PageConfigDetailResponse = {
     title: string;
     description: string;
     path: string;
+    publicUrl: string;
     tags: string[];
     published: boolean;
 };
@@ -28,6 +29,7 @@ export default async function getConfigDetail(req: Request, cms: ControlCms): Pr
         title: page.title,
         description: page.description,
         path: page.path,
+        publicUrl: pagePublicUrl(page.path, cms.config.deliveryUrl),
         tags: page.tags,
         published: page.visible,
     };
@@ -35,6 +37,17 @@ export default async function getConfigDetail(req: Request, cms: ControlCms): Pr
     return new Response(JSON.stringify(response), {
         headers: { "Content-Type": "application/json" },
     });
+}
+
+function pagePublicUrl(path: string, deliveryUrl?: string): string {
+    if (!deliveryUrl) {
+        return path;
+    }
+    try {
+        return new URL(path, deliveryUrl).href;
+    } catch {
+        return path;
+    }
 }
 
 function redirectToPages(url: URL): Response {

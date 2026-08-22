@@ -57,10 +57,11 @@ function compileNode(
     }
 
     if (element.hasAttribute(SOURCE_ATTR)) {
-        compileAttributes(element, path, plan, options.submitBoundary);
         const trigger = element.getAttribute(SOURCE_TRIGGER_ATTR)?.trim().toLowerCase();
+        const boundary = trigger === "submit" || trigger === "change" ? submitBoundary(element) : null;
+        compileAttributes(element, path, plan, boundary ?? options.submitBoundary);
         if (trigger === "submit" || trigger === "change") {
-            compileChildren(element, path, plan, filters, createTemplate, submitBoundary(element));
+            compileChildren(element, path, plan, filters, createTemplate, boundary);
         }
         return;
     }

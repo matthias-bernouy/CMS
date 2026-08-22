@@ -1,6 +1,10 @@
 import { describe, test, expect, beforeAll } from "bun:test";
+import { ActionMenuItem } from "../../src/ui/Navigation/Menu/ActionMenu/ActionMenuItem/ActionMenuItem";
+import { TokenInput } from "../../src/ui/Form/Inputs/TokenInput/TokenInput";
 import { Checkbox } from "../../src/ui/Form/Toggles/Checkbox/Checkbox";
 import { Switch } from "../../src/ui/Form/Toggles/Switch/Switch";
+
+class RemoteTokenInputTest extends TokenInput {}
 
 // These tests CHARACTERIZE the current toggle-control behaviour so the
 // FormControlElement extraction can be proven behaviour-preserving. happy-dom
@@ -16,6 +20,12 @@ beforeAll(() => {
     }
     if (!customElements.get("w13c-switch")) {
         customElements.define("w13c-switch", Switch);
+    }
+    if (!customElements.get("p9r-action-menu-item-test")) {
+        customElements.define("p9r-action-menu-item-test", ActionMenuItem);
+    }
+    if (!customElements.get("p9r-token-input-remote-test")) {
+        customElements.define("p9r-token-input-remote-test", RemoteTokenInputTest);
     }
 });
 
@@ -110,5 +120,53 @@ describe("switch-specific behaviour (must survive the refactor)", () => {
         const el = mount("w13c-switch", { checked: "" });
         expect(el.getAttribute("role")).toBe("switch");
         expect(el.getAttribute("aria-checked")).toBe("true");
+    });
+});
+
+describe("action menu item navigation", () => {
+    test("renders an href as a protected native link", () => {
+        const item = mount("p9r-action-menu-item-test", { href: "/pricing", target: "_blank" });
+        const link = item.shadowRoot!.querySelector("a");
+
+        expect(link?.getAttribute("href")).toBe("/pricing");
+        expect(link?.getAttribute("target")).toBe("_blank");
+        expect(link?.getAttribute("rel")).toBe("noopener noreferrer");
+        expect(item.shadowRoot!.querySelector("button")).toBeNull();
+
+        item.removeAttribute("href");
+        expect(item.shadowRoot!.querySelector("button")).not.toBeNull();
+    });
+});
+
+describe("token input remote suggestions", () => {
+    test("loads existing values without exposing their counters and stays creatable", async () => {
+        const originalFetch = globalThis.fetch;
+        let requestedUrl = "";
+        globalThis.fetch = (async (input: string | URL | Request) => {
+            requestedUrl = String(input instanceof Request ? input.url : input);
+            return Response.json([
+                { value: "pricing", count: 4 },
+                { value: "landing", count: 2 },
+            ]);
+        }) as typeof fetch;
+        try {
+            const control = mount("p9r-token-input-remote-test", {
+                api: "/api/tags",
+                resource: "pages",
+                creatable: "",
+            });
+            const input = control.shadowRoot!.querySelector("input") as HTMLInputElement;
+            input.focus();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            const labels = [...control.shadowRoot!.querySelectorAll(".option-label")].map((item) => item.textContent);
+
+            expect(new URL(requestedUrl).searchParams.get("resource")).toBe("pages");
+            expect(labels).toEqual(["pricing", "landing"]);
+            input.value = "campaign";
+            input.dispatchEvent(new Event("input"));
+            expect(control.shadowRoot!.querySelector(".option-label")?.textContent).toBe('Add "campaign"');
+        } finally {
+            globalThis.fetch = originalFetch;
+        }
     });
 });

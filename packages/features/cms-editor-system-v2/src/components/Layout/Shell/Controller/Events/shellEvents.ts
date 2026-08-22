@@ -53,10 +53,20 @@ export class ShellEvents {
     };
 
     readonly onViewReload = (): void => this.context.refs.canvas.reloadViewFrame();
-    readonly onPageSettings = (): void => this.context.renderSync.openPageSettings();
+    readonly onPageSettings = (): void => {
+        const href = this.context.host.getAttribute("settings-href")?.trim();
+        const view = this.context.host.ownerDocument.defaultView;
+        if (href && view) {
+            view.location.href = resolveExternalSettingsHref(href, view.location.href);
+            return;
+        }
+        this.context.renderSync.openPageSettings();
+    };
 
     readonly onSave = (): void => {
-        this.context.renderSync.applyPageSettingsForm();
+        if (!this.context.host.hasAttribute("settings-href")) {
+            this.context.renderSync.applyPageSettingsForm();
+        }
         this.context.commands.saveDocument();
     };
 
@@ -150,4 +160,8 @@ export class ShellEvents {
             this.context.commands.select(null, { scrollStructureIntoView: false });
         }
     };
+}
+
+export function resolveExternalSettingsHref(href: string, currentHref: string): string {
+    return new URL(href, currentHref).href;
 }

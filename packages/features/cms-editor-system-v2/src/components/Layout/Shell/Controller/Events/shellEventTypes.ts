@@ -6,6 +6,7 @@ import type { ShellMutations } from "../../Domain/Mutations/shellMutations";
 import type { ShellState } from "../Core/Services/shellState";
 
 export type ShellEventsContext = {
+    host: HTMLElement;
     state: ShellState;
     refs: ShellDomRefs;
     mutations: ShellMutations;

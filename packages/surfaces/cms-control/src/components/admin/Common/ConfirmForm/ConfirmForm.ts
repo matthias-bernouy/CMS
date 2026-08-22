@@ -19,7 +19,8 @@ export class CmsConfirmForm extends HTMLElement {
     private _busy = false;
 
     private _onClick = async (e: Event) => {
-        const trigger = (e.target as HTMLElement).closest("p9r-button, button");
+        const triggerSelector = this.getAttribute("trigger-selector") || "p9r-button, p9r-action-menu-item, button";
+        const trigger = (e.target as HTMLElement).closest(triggerSelector);
         if (!trigger || !this.contains(trigger)) {
             return;
         }

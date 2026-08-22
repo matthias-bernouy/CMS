@@ -4,6 +4,7 @@ import {
     Shell,
     type EditorV2SaveDocumentDetail,
 } from "@bernouy/cms-editor-system-v2";
+import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import { loadDocumentConfig } from "./documentLoad";
 import { deleteDocument, saveDocument } from "./documentMutations";
 import { currentPageIdentifier, listUrl, resourceLabel, shellResource } from "./resource";
@@ -24,13 +25,27 @@ function configureShell(shell: Element): void {
 
     configuredShells.add(shell);
     shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, saveDocumentListener);
-    shell.addEventListener(EDITOR_V2_DELETE_DOCUMENT_EVENT, deleteDocumentListener);
+    if (shellResource(shell) !== "page") {
+        shell.addEventListener(EDITOR_V2_DELETE_DOCUMENT_EVENT, deleteDocumentListener);
+    }
 
     void configureShellCatalogAndFrame(shell);
     const documentId = currentPageIdentifier();
     if (documentId) {
+        configurePageManagement(shell, documentId);
         void loadDocumentConfig(shell, shellResource(shell), documentId);
     }
+}
+
+function configurePageManagement(shell: Shell, documentId: string): void {
+    if (shellResource(shell) !== "page") {
+        return;
+    }
+    const detailUrl = `${getMetaBasePath()}/admin/pages/detail?id=${encodeURIComponent(documentId)}`;
+    shell.setAttribute("back-href", detailUrl);
+    shell.setAttribute("settings-href", detailUrl);
+    shell.setAttribute("settings-label", "Page details");
+    shell.setAttribute("hide-delete", "");
 }
 
 export function isDocumentEditorShell(shell: Element): boolean {
