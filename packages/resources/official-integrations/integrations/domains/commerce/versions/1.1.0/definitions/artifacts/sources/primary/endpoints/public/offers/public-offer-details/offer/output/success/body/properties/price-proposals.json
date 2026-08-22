@@ -1,0 +1,38 @@
+{
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "offerId": {
+                "type": "number"
+            },
+            "amount": {
+                "type": "number"
+            },
+            "currency": {
+                "type": "string"
+            },
+            "status": {
+                "type": "string"
+            },
+            "proposedBy": {
+                "type": "string"
+            },
+            "decidedBy": {
+                "type": "string"
+            },
+            "decisionReason": {
+                "type": "string"
+            },
+            "decidedAt": {
+                "type": "string"
+            },
+            "createdAt": {
+                "type": "string"
+            }
+        }
+    }
+}

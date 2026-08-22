@@ -1,0 +1,31 @@
+{
+    "endpointId": "product",
+    "method": "GET",
+    "access": "public",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/product",
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "slug",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "output": {
+        "$include": "output/root.json"
+    }
+}

@@ -1,0 +1,58 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "number"
+        },
+        "policyKey": {
+            "type": "string"
+        },
+        "version": {
+            "type": "number"
+        },
+        "name": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "currency": {
+            "type": "string"
+        },
+        "shippingBeneficiary": {
+            "type": "string"
+        },
+        "estimatedStripeCostAmount": {
+            "type": "number"
+        },
+        "estimatedCarrierCostAmount": {
+            "type": "number"
+        },
+        "platformRiskReserveContributionAmount": {
+            "type": "number"
+        },
+        "configuredMinimumMarginAmount": {
+            "type": "number"
+        },
+        "costEstimatesConfigured": {
+            "type": "boolean"
+        },
+        "subsidyOverride": {
+            "type": "boolean"
+        },
+        "subsidyReason": {
+            "type": "string",
+            "nullable": true
+        },
+        "publishedAt": {
+            "type": "string",
+            "nullable": true
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "createdAt": {
+            "type": "string"
+        }
+    }
+}

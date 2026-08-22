@@ -1,0 +1,84 @@
+[
+    {
+        "id": "saveOffer",
+        "label": "Save offer",
+        "tone": "primary",
+        "placement": "primary",
+        "endpoint": {
+            "endpoint": "upsertOffer",
+            "params": {
+                "id": "$resource.id"
+            },
+            "body": {
+                "expectedVersion": "$resource.version",
+                "sellerId": "$field.sellerId",
+                "productId": "$field.productId",
+                "variantId": "$field.variantId",
+                "slug": "$field.slug",
+                "title": "$field.title",
+                "description": "$field.description",
+                "conditionCode": "$field.conditionCode",
+                "publicationStatus": "$field.publicationStatus",
+                "workflowState": "$field.workflowState",
+                "acceptedPriceAmount": "$field.acceptedPriceAmount",
+                "currency": "$field.currency",
+                "availability": "$field.availability",
+                "quantityAvailable": "$field.quantityAvailable"
+            }
+        }
+    },
+    {
+        "id": "requestPrice",
+        "label": "Request seller price",
+        "tone": "primary",
+        "placement": "more",
+        "endpoint": {
+            "endpoint": "reviewOffer",
+            "params": {
+                "id": "$resource.id"
+            },
+            "body": {
+                "action": "request_price",
+                "expectedVersion": "$resource.version",
+                "minimumAmount": "$field.minimumAmount",
+                "maximumAmount": "$field.maximumAmount",
+                "reason": "$field.reviewReason"
+            }
+        }
+    },
+    {
+        "id": "approveOffer",
+        "label": "Approve offer",
+        "tone": "primary",
+        "placement": "more",
+        "endpoint": {
+            "endpoint": "reviewOffer",
+            "params": {
+                "id": "$resource.id"
+            },
+            "body": {
+                "action": "approve",
+                "expectedVersion": "$resource.version",
+                "reason": "$field.reviewReason"
+            }
+        }
+    },
+    {
+        "id": "rejectOffer",
+        "label": "Reject offer",
+        "tone": "danger",
+        "placement": "more",
+        "confirm": "Reject this offer?",
+        "endpoint": {
+            "endpoint": "reviewOffer",
+            "params": {
+                "id": "$resource.id"
+            },
+            "body": {
+                "action": "reject",
+                "expectedVersion": "$resource.version",
+                "reason": "$field.reviewReason"
+            }
+        }
+    }
+]

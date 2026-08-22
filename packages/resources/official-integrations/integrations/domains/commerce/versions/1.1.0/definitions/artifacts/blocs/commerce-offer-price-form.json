@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-offer-price-form",
+        "name": "Offer price form",
+        "group": "Commerce",
+        "description": "Authenticated seller form for choosing a price within an administrator-defined range.",
+        "path": "blocs/commerce-offer-price-form"
+    }
+}

@@ -1,0 +1,11 @@
+[
+    {
+        "$include": "claim.json"
+    },
+    {
+        "$include": "complete.json"
+    },
+    {
+        "$include": "fail.json"
+    }
+]

@@ -1,0 +1,90 @@
+{
+    "endpointId": "claimEvidenceItem",
+    "method": "GET",
+    "access": {
+        "mode": "admin"
+    },
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim/evidence-item",
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "type": "number",
+            "required": true
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        },
+        {
+            "name": "x-cms-user-role",
+            "source": {
+                "from": "computed",
+                "ref": "userRole"
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "claimId": {
+                        "type": "number"
+                    },
+                    "submittedByKind": {
+                        "type": "string"
+                    },
+                    "mimeType": {
+                        "type": "string"
+                    },
+                    "fileSize": {
+                        "type": "number"
+                    },
+                    "originalFilename": {
+                        "type": "string"
+                    },
+                    "sha256": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "metadata": {
+                        "type": "object"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "claimId",
+                    "submittedByKind",
+                    "mimeType",
+                    "fileSize",
+                    "sha256",
+                    "createdAt"
+                ]
+            }
+        }
+    ]
+}

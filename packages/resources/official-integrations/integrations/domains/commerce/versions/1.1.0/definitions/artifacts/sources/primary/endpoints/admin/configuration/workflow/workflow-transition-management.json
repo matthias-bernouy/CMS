@@ -1,0 +1,141 @@
+[
+    {
+        "endpointId": "workflowTransition",
+        "method": "GET",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-transition",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "fromState",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "action",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "actorKind",
+                "in": "query",
+                "type": "string"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "fromState": {
+                            "type": "string"
+                        },
+                        "action": {
+                            "type": "string"
+                        },
+                        "actorKind": {
+                            "type": "string"
+                        },
+                        "toState": {
+                            "type": "string"
+                        },
+                        "createdAt": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "upsertWorkflowTransition",
+        "method": "POST",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-transition",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "fromState": {
+                    "type": "string"
+                },
+                "action": {
+                    "type": "string"
+                },
+                "actorKind": {
+                    "type": "string"
+                },
+                "toState": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "fromState",
+                "action",
+                "actorKind",
+                "toState"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "fromState": {
+                            "type": "string"
+                        },
+                        "action": {
+                            "type": "string"
+                        },
+                        "actorKind": {
+                            "type": "string"
+                        },
+                        "toState": {
+                            "type": "string"
+                        },
+                        "createdAt": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

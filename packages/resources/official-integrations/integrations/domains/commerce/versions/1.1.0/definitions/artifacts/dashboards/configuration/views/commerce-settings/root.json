@@ -1,0 +1,5 @@
+[
+    {
+        "$include": "commerce-settings/root.json"
+    }
+]

@@ -1,0 +1,9 @@
+{
+    "default-tag": "commerce-notification-preferences",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Commerce notification preferences",
+        "description": "Authenticated user preferences for optional Commerce emails."
+    }
+}

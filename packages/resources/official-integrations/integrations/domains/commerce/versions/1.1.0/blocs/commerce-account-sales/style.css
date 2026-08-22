@@ -1,0 +1,41 @@
+:host {
+    display: block;
+    color: var(--commerce-sales-text, var(--text-main));
+}
+
+.sale-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.sale-identity { display: grid; gap: .25rem; min-width: 0; }
+.sale-number { overflow-wrap: anywhere; }
+.sale-date { color: var(--commerce-sales-muted, var(--text-muted)); }
+.sale-total { white-space: nowrap; font-size: 1.05rem; }
+.sale-status {
+    padding: .35rem .65rem;
+    border-radius: 999px;
+    color: var(--commerce-sales-status-text, var(--secondary-contrasted));
+    background: var(--commerce-sales-status-background, var(--secondary-base));
+    font-size: .82rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.sale-status[data-status="completed"] { background: var(--commerce-sales-success, var(--success-base, #287a4d)); }
+.sale-status[data-status="cancelled"],
+.sale-status[data-status="expired"] { background: var(--commerce-sales-danger, var(--danger-base, #b42318)); }
+
+[hidden] { display: none !important; }
+
+@media (max-width: 44rem) {
+    .sale-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .sale-total { justify-self: start; }
+    .sale-row basic-button { justify-self: end; }
+}
+
+@media (max-width: 30rem) {
+    .sale-row { grid-template-columns: 1fr; align-items: start; }
+    .sale-status, .sale-row basic-button { justify-self: start; }
+}

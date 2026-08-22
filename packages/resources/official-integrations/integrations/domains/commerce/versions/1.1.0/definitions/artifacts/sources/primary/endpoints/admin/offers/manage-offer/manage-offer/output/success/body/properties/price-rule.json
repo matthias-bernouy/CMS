@@ -1,0 +1,30 @@
+{
+    "type": "object",
+    "properties": {
+        "offerId": {
+            "type": "number"
+        },
+        "minimumAmount": {
+            "type": "number"
+        },
+        "maximumAmount": {
+            "type": "number"
+        },
+        "currency": {
+            "type": "string"
+        },
+        "configuredBy": {
+            "type": "string"
+        },
+        "version": {
+            "type": "number"
+        },
+        "createdAt": {
+            "type": "string"
+        },
+        "updatedAt": {
+            "type": "string"
+        }
+    },
+    "nullable": true
+}

@@ -1,0 +1,95 @@
+[
+    {
+        "$include": "authorize-order-release.json"
+    },
+    {
+        "endpointId": "reviewOrderCancellation",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/cancellation/review",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "cancellationRequestId": {
+                    "type": "number"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "cancellationRequestId",
+                "decision",
+                "reason"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "actorKind": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "reason": {
+                            "type": "string"
+                        },
+                        "decisionReason": {
+                            "type": "string"
+                        },
+                        "reviewedAt": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "refundAuthorization": {
+                            "type": "object",
+                            "nullable": true
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

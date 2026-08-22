@@ -1,0 +1,96 @@
+[
+    {
+        "widget": "w-detail",
+        "id": "workflowTransitionDetail",
+        "source": {
+            "endpoint": "workflowTransition",
+            "params": {
+                "id": "$selection.id"
+            }
+        },
+        "title": {
+            "path": "action",
+            "fallback": "New workflow transition"
+        },
+        "actions": [
+            {
+                "id": "saveWorkflowTransition",
+                "label": "Save transition",
+                "tone": "primary",
+                "placement": "primary",
+                "endpoint": {
+                    "endpoint": "upsertWorkflowTransition",
+                    "body": {
+                        "fromState": "$field.fromState",
+                        "action": "$field.action",
+                        "actorKind": "$field.actorKind",
+                        "toState": "$field.toState"
+                    }
+                },
+                "after": {
+                    "resource": "$result"
+                }
+            }
+        ],
+        "main": [
+            {
+                "id": "workflowTransitionFields",
+                "title": "Transition",
+                "fields": [
+                    {
+                        "id": "fromState",
+                        "label": "From state",
+                        "path": "fromState",
+                        "type": "combobox",
+                        "required": true,
+                        "lookup": {
+                            "endpoint": "workflowStates",
+                            "itemsPath": "items",
+                            "valuePath": "code",
+                            "labelPath": "label",
+                            "subtitlePath": "phase"
+                        }
+                    },
+                    {
+                        "id": "action",
+                        "label": "Action",
+                        "path": "action",
+                        "type": "text",
+                        "required": true
+                    },
+                    {
+                        "id": "actorKind",
+                        "label": "Actor",
+                        "path": "actorKind",
+                        "type": "select",
+                        "required": true,
+                        "options": [
+                            {
+                                "value": "admin",
+                                "label": "Administrator"
+                            },
+                            {
+                                "value": "seller",
+                                "label": "Seller (core actions only)"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "toState",
+                        "label": "To state",
+                        "path": "toState",
+                        "type": "combobox",
+                        "required": true,
+                        "lookup": {
+                            "endpoint": "workflowStates",
+                            "itemsPath": "items",
+                            "valuePath": "code",
+                            "labelPath": "label",
+                            "subtitlePath": "phase"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]

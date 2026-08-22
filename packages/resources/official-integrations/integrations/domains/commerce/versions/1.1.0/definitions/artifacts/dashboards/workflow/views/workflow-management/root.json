@@ -1,0 +1,104 @@
+[
+    {
+        "widget": "w-table",
+        "id": "workflowStatesTable",
+        "title": "Offer workflow states",
+        "source": {
+            "endpoint": "workflowStates",
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "code",
+        "columns": [
+            {
+                "id": "label",
+                "label": "State",
+                "path": "label",
+                "primary": true
+            },
+            {
+                "id": "code",
+                "label": "Code",
+                "path": "code"
+            },
+            {
+                "id": "phase",
+                "label": "Phase",
+                "path": "phase",
+                "format": "badge"
+            },
+            {
+                "id": "enabled",
+                "label": "Enabled",
+                "path": "enabled",
+                "format": "badge"
+            }
+        ],
+        "actions": [
+            {
+                "id": "createWorkflowState",
+                "label": "Create state",
+                "tone": "primary",
+                "placement": "primary",
+                "selection": {
+                    "opens": "workflowStateDetail"
+                }
+            }
+        ],
+        "selection": {
+            "opens": "workflowStateDetail"
+        }
+    },
+    {
+        "widget": "w-table",
+        "id": "workflowTransitionsTable",
+        "title": "Offer workflow transitions",
+        "source": {
+            "endpoint": "workflowTransitions",
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "id",
+        "columns": [
+            {
+                "id": "action",
+                "label": "Action",
+                "path": "action",
+                "primary": true
+            },
+            {
+                "id": "fromState",
+                "label": "From",
+                "path": "fromState"
+            },
+            {
+                "id": "toState",
+                "label": "To",
+                "path": "toState"
+            },
+            {
+                "id": "actorKind",
+                "label": "Actor",
+                "path": "actorKind",
+                "format": "badge"
+            }
+        ],
+        "actions": [
+            {
+                "id": "createWorkflowTransition",
+                "label": "Create transition",
+                "tone": "primary",
+                "placement": "primary",
+                "selection": {
+                    "opens": "workflowTransitionDetail"
+                }
+            }
+        ],
+        "selection": {
+            "opens": "workflowTransitionDetail"
+        }
+    },
+    {
+        "$include": "workflow-state-detail.json"
+    }
+]

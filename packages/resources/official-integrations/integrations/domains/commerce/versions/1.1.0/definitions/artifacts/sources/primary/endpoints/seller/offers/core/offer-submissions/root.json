@@ -1,0 +1,118 @@
+[
+    {
+        "endpointId": "submitMyOffer",
+        "method": "POST",
+        "access": "auth",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offer/submit",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "expectedVersion": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "expectedVersion"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "sellerId": {
+                            "type": "number"
+                        },
+                        "productId": {
+                            "type": "number"
+                        },
+                        "variantId": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "slug": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        },
+                        "description": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "conditionCode": {
+                            "type": "string"
+                        },
+                        "publicationStatus": {
+                            "type": "string"
+                        },
+                        "workflowState": {
+                            "type": "string"
+                        },
+                        "acceptedPriceAmount": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "availability": {
+                            "type": "string"
+                        },
+                        "quantityAvailable": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "inventoryRevision": {
+                            "type": "number"
+                        },
+                        "metadata": {
+                            "type": "object"
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "createdAt": {
+                            "type": "string"
+                        },
+                        "updatedAt": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "$include": "submit-my-offer-price/root.json"
+    }
+]

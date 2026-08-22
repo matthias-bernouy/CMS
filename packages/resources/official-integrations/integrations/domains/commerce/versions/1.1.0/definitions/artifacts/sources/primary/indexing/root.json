@@ -1,0 +1,10 @@
+{
+    "entities": {
+        "$files": [
+            "product-by-id.json",
+            "product-by-slug.json",
+            "offer-by-id.json",
+            "offer-by-slug.json"
+        ]
+    }
+}

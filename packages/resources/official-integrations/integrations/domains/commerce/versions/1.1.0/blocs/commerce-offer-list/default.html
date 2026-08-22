@@ -1,0 +1,23 @@
+<commerce-offer-list source-id="commerce" page-size="12" grid-min="md" grid-max="lg" grid-gap="md" grid-packing="fill" card-stretch="true">
+    <basic-grid min="md" max="lg" gap="md" packing="fill" justify-items="stretch" data-offers-grid cms-condition="$source.loading">
+        <basic-skeleton height="20rem" animation="wave" label="Chargement des annonces"></basic-skeleton>
+        <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
+        <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
+    </basic-grid>
+
+    <basic-toast role="alert" cms-condition="$source.error">Impossible de charger les annonces.</basic-toast>
+
+    <basic-card appearance="outlined" cms-condition="$source.loaded && data.total == 0">
+        <strong slot="title">Aucune annonce disponible</strong>
+    </basic-card>
+
+    <basic-grid min="md" max="lg" gap="md" packing="fill" justify-items="stretch" data-offers-grid cms-condition="$source.loaded && data.total > 0">
+        <commerce-offer-preview href="/offer?slug={{ offer.slug }}" amount="{{ offer.acceptedPriceAmount }}" currency="{{ offer.currency }}" whole-unit-prices="{{ data.wholeUnitPrices }}" stretch data-offer-card cms-repeat="data.items as offer">
+            <img slot="media" src="/.cms/sources/commerce/publicOfferImage?id={{ offer.mainImageMediaId }}" data-source-image-access="public" data-source-width="{{ offer.mainImageWidth }}" data-source-height="{{ offer.mainImageHeight }}" alt="{{ offer.title }}" loading="lazy" decoding="async" cms-condition="offer.mainImageMediaId">
+            <span slot="title">{{ offer.title }}</span>
+            <span slot="description">{{ offer.description }}</span>
+        </commerce-offer-preview>
+    </basic-grid>
+
+    <basic-pagination page="1" page-size="12" total="{{ data.total }}" cms-condition="$source.loaded && data.total > data.limit"></basic-pagination>
+</commerce-offer-list>

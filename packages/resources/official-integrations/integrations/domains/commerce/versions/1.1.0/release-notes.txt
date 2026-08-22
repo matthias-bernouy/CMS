@@ -1,0 +1,11 @@
+Commerce 1.1.0
+
+This minor release declares indexable product and offer capabilities without
+changing the Commerce database schema, Edge Function behavior, or existing
+source endpoint contracts.
+
+Pages may bind either the numeric ID or the slug accepted by the existing
+public detail endpoints. Matching discovery strategies enumerate the same
+identity through the existing offset-paginated product and offer collections,
+with updated timestamps and SEO template variables exposed to future page
+indexing configuration.

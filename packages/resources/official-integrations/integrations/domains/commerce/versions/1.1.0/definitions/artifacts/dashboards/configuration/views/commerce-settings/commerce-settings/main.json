@@ -1,0 +1,11 @@
+[
+    {
+        "$include": "sections/marketplace.json"
+    },
+    {
+        "$include": "sections/media.json"
+    },
+    {
+        "$include": "sections/pricing.json"
+    }
+]

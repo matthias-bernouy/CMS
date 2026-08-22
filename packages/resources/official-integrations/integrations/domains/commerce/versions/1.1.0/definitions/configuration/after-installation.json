@@ -1,0 +1,42 @@
+[
+    {
+        "id": "sync-buyer-legal-documents",
+        "steps": [
+            {
+                "id": "configuration",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "syncBuyerLegalDocuments",
+                    "body": {
+                        "configuration": "{\"enabled\":{{answers.buyerLegalEnabled}},\"documents\":{{json resolved.buyerLegalDocuments}}}"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "install-notification-templates",
+        "requires": [
+            "emailer"
+        ],
+        "steps": [
+            {
+                "id": "templates",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "listDefaultNotificationTemplates"
+                }
+            },
+            {
+                "id": "installation",
+                "call": {
+                    "source": "{{dependencies.emailer.answers.id}}",
+                    "endpoint": "installTemplates",
+                    "body": {
+                        "templates": "$steps.templates.items"
+                    }
+                }
+            }
+        ]
+    }
+]

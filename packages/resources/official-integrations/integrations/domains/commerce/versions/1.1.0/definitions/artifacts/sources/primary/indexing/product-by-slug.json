@@ -1,0 +1,50 @@
+{
+    "id": "product-by-slug",
+    "resolve": {
+        "endpointId": "product",
+        "identity": {
+            "key": "slug",
+            "inputParam": "slug",
+            "outputPath": "slug"
+        }
+    },
+    "discover": {
+        "endpointId": "products",
+        "itemsPath": "items",
+        "identityPath": "slug",
+        "lastModifiedPath": "updatedAt",
+        "pagination": {
+            "type": "offset",
+            "limitParam": "limit",
+            "offsetParam": "offset",
+            "pageSize": 100,
+            "totalPath": "total"
+        }
+    },
+    "variables": {
+        "id": {
+            "path": "id",
+            "type": "number"
+        },
+        "slug": {
+            "path": "slug",
+            "type": "text"
+        },
+        "title": {
+            "path": "title",
+            "type": "text"
+        },
+        "description": {
+            "path": "description",
+            "type": "text"
+        },
+        "updatedAt": {
+            "path": "updatedAt",
+            "type": "date"
+        }
+    },
+    "defaults": {
+        "titleTemplate": "{{ title }}",
+        "descriptionTemplate": "{{ description }}"
+    }
+}

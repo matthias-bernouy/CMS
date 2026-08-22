@@ -1,0 +1,76 @@
+[
+    {
+        "endpointId": "respondToMySaleClaim",
+        "method": "POST",
+        "access": "auth",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/sale/claim/respond",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "claimId": {
+                    "type": "number"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "expectedVersion": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "claimId",
+                "message",
+                "expectedVersion"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "publicId": {
+                            "type": "string"
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "reason": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "updatedAt": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

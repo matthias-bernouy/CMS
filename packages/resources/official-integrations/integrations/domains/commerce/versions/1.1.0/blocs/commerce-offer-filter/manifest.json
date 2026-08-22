@@ -1,0 +1,10 @@
+{
+    "default-tag": "commerce-offer-filter",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Offer filter",
+        "description": "Maps one control to a Product field or renders every public filter declared by the selected category schema."
+    }
+}

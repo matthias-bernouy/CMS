@@ -1,0 +1,50 @@
+{
+    "endpointId": "updateNotificationConfiguration",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/notifications/admin/configuration",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        },
+        {
+            "name": "x-cms-user-role",
+            "source": {
+                "from": "computed",
+                "ref": "userRole"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "mode": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "mode"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "$include": "../outputs/configuration.json"
+            }
+        }
+    ]
+}

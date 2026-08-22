@@ -1,0 +1,18 @@
+{
+    "type": "object",
+    "properties": {
+        "contractVersion": {
+            "type": "number"
+        },
+        "items": {
+            "type": "array",
+            "items": {
+                "$include": "item.json"
+            }
+        }
+    },
+    "required": [
+        "contractVersion",
+        "items"
+    ]
+}

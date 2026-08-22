@@ -1,0 +1,39 @@
+[
+    {
+        "$include": "offer/root.json"
+    },
+    {
+        "endpointId": "publicOfferImage",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/offer/image",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "responseKind": "file",
+        "mediaType": "image/*",
+        "output": [
+            {
+                "status": "200"
+            },
+            {
+                "status": "206"
+            }
+        ]
+    }
+]

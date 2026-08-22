@@ -1,0 +1,68 @@
+{
+    "id": "productVariants",
+    "title": "Variants",
+    "fields": [
+        {
+            "id": "variantAxes",
+            "label": "Axes",
+            "path": "variantAxes",
+            "type": "table",
+            "editable": true,
+            "addLabel": "Add axis",
+            "columns": [
+                {
+                    "id": "fieldKey",
+                    "label": "Product metadata",
+                    "path": "fieldKey",
+                    "width": "minmax(10rem, 1fr)",
+                    "editable": true,
+                    "type": "combobox",
+                    "lookup": {
+                        "endpoint": "categoryProductFields",
+                        "params": {
+                            "categoryId": "$field.primaryCategoryId"
+                        },
+                        "itemsPath": "fields",
+                        "valuePath": "fieldKey",
+                        "labelPath": "label",
+                        "subtitlePath": "fieldType"
+                    }
+                },
+                {
+                    "id": "values",
+                    "label": "Values",
+                    "path": "values",
+                    "width": "minmax(10rem, 1.2fr)",
+                    "editable": true,
+                    "type": "tokens"
+                }
+            ]
+        },
+        {
+            "id": "variantMatrix",
+            "label": "Generated matrix",
+            "path": "variantMatrix",
+            "type": "table",
+            "derive": {
+                "type": "cartesian",
+                "sourceField": "variantAxes",
+                "labelPath": "fieldKey",
+                "valuesPath": "values"
+            },
+            "columns": [
+                {
+                    "id": "options",
+                    "label": "Options",
+                    "path": "options",
+                    "width": "minmax(12rem, 1fr)"
+                },
+                {
+                    "id": "title",
+                    "label": "Variant",
+                    "path": "title",
+                    "width": "minmax(14rem, 1.2fr)"
+                }
+            ]
+        }
+    ]
+}

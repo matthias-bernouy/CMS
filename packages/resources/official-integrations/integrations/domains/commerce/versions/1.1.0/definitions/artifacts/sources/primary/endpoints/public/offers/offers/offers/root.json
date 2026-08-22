@@ -1,0 +1,86 @@
+{
+    "endpointId": "offers",
+    "method": "GET",
+    "access": "public",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/offers",
+    "params": [
+        {
+            "name": "q",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "productId",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "variantId",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "sellerId",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "conditionCode",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "category",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "brand",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "filters",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "priceMin",
+            "in": "query",
+            "type": "number"
+        },
+        {
+            "name": "priceMax",
+            "in": "query",
+            "type": "number"
+        },
+        {
+            "name": "sort",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "limit",
+            "in": "query",
+            "type": "number"
+        },
+        {
+            "name": "offset",
+            "in": "query",
+            "type": "number"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "output": {
+        "$include": "output/root.json"
+    }
+}

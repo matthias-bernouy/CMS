@@ -1,0 +1,112 @@
+[
+    {
+        "endpointId": "verifyPendingSellerPayoutEligibility",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/seller/payout-eligibility",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "sellerId": {
+                    "type": "number"
+                },
+                "expectedVersion": {
+                    "type": "number"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "providerAccountId": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "sellerId",
+                "expectedVersion",
+                "provider",
+                "providerAccountId"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "seller": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "number",
+                                    "semantic": "user-id"
+                                },
+                                "kind": {
+                                    "type": "string"
+                                },
+                                "cmsUserId": {
+                                    "type": "string"
+                                },
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "displayName": {
+                                    "type": "string"
+                                },
+                                "verificationStatus": {
+                                    "type": "string"
+                                },
+                                "verifiedAt": {
+                                    "type": "string"
+                                },
+                                "verifiedBy": {
+                                    "type": "string"
+                                },
+                                "metadata": {
+                                    "type": "object"
+                                },
+                                "version": {
+                                    "type": "number"
+                                },
+                                "createdAt": {
+                                    "type": "string"
+                                },
+                                "updatedAt": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "transitioned": {
+                            "type": "boolean"
+                        },
+                        "idempotentReplay": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "seller",
+                        "transitioned",
+                        "idempotentReplay"
+                    ]
+                }
+            }
+        ]
+    }
+]

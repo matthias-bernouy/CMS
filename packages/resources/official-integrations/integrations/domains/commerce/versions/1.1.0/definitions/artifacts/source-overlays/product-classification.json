@@ -1,0 +1,79 @@
+{
+    "type": "sourceOverlay",
+    "overlay": {
+        "id": "{{answers.id}}-product-classification",
+        "sourceId": "{{answers.id}}",
+        "label": "Product classification",
+        "output": [
+            {
+                "endpointId": "product"
+            },
+            {
+                "endpointId": "manageProduct"
+            },
+            {
+                "endpointId": "upsertProduct"
+            },
+            {
+                "endpointId": "offer",
+                "path": "product"
+            },
+            {
+                "endpointId": "offers",
+                "path": "items[].product"
+            },
+            {
+                "endpointId": "manageOffer",
+                "path": "product"
+            },
+            {
+                "endpointId": "myOffer",
+                "path": "product"
+            }
+        ],
+        "fields": [
+            {
+                "id": "brandId",
+                "label": "Brand id",
+                "type": "number",
+                "path": "brandId",
+                "nullable": true
+            },
+            {
+                "id": "brandName",
+                "label": "Brand",
+                "type": "string",
+                "path": "brand.name",
+                "nullable": true
+            },
+            {
+                "id": "brandSlug",
+                "label": "Brand slug",
+                "type": "string",
+                "path": "brand.slug",
+                "nullable": true
+            },
+            {
+                "id": "primaryCategoryId",
+                "label": "Primary category id",
+                "type": "number",
+                "path": "primaryCategoryId",
+                "nullable": true
+            },
+            {
+                "id": "primaryCategoryLabel",
+                "label": "Primary category",
+                "type": "string",
+                "path": "primaryCategory.label",
+                "nullable": true
+            },
+            {
+                "id": "primaryCategoryFullSlug",
+                "label": "Primary category path",
+                "type": "string",
+                "path": "primaryCategory.fullSlug",
+                "nullable": true
+            }
+        ]
+    }
+}

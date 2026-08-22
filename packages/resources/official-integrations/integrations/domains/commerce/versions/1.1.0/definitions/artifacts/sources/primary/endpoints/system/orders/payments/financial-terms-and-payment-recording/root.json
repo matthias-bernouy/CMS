@@ -1,0 +1,99 @@
+[
+    {
+        "endpointId": "lockOrderFinancialTerms",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/financial-terms/lock",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "orderPublicId": {
+                    "type": "string"
+                },
+                "deliveryQuoteId": {
+                    "type": "string"
+                },
+                "shippingAmount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "expectedVersion": {
+                    "type": "number"
+                },
+                "actorId": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "orderPublicId",
+                "deliveryQuoteId",
+                "shippingAmount",
+                "currency",
+                "expectedVersion"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "deliveryQuoteId": {
+                            "type": "string"
+                        },
+                        "merchandiseSubtotalAmount": {
+                            "type": "number"
+                        },
+                        "shippingAmount": {
+                            "type": "number"
+                        },
+                        "buyerProtectionFeeAmount": {
+                            "type": "number"
+                        },
+                        "buyerTotalAmount": {
+                            "type": "number"
+                        },
+                        "sellerTransferReleaseAmount": {
+                            "type": "number"
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "financialTermsHash": {
+                            "type": "string"
+                        },
+                        "financialRevision": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "$include": "record-order-payment.json"
+    }
+]

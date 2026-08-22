@@ -1,0 +1,101 @@
+[
+    {
+        "$include": "record-order-fulfillment.json"
+    },
+    {
+        "endpointId": "getOrderFulfillmentAuthorization",
+        "method": "GET",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/fulfillment/authorization",
+        "params": [
+            {
+                "name": "orderPublicId",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "allowed": {
+                            "type": "boolean"
+                        },
+                        "reason": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "orderPublicId": {
+                            "type": "string"
+                        },
+                        "sellerId": {
+                            "type": "string",
+                            "semantic": {
+                                "kind": "user-id",
+                                "authority": "cms"
+                            }
+                        },
+                        "buyerCmsUserId": {
+                            "type": "string",
+                            "semantic": {
+                                "kind": "user-id",
+                                "authority": "cms"
+                            }
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "deliveryQuoteId": {
+                            "type": "string"
+                        },
+                        "merchandiseSubtotalMinorAmount": {
+                            "type": "number"
+                        },
+                        "shippingAmount": {
+                            "type": "number"
+                        },
+                        "buyerTotalAmount": {
+                            "type": "number"
+                        },
+                        "financialTermsHash": {
+                            "type": "string"
+                        },
+                        "paymentStatus": {
+                            "type": "string"
+                        },
+                        "fulfillmentStatus": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "allowed",
+                        "orderId",
+                        "orderPublicId",
+                        "sellerId",
+                        "currency",
+                        "deliveryQuoteId",
+                        "merchandiseSubtotalMinorAmount",
+                        "paymentStatus",
+                        "fulfillmentStatus"
+                    ]
+                }
+            }
+        ]
+    }
+]

@@ -1,0 +1,11 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "assertions.sql" },
+        { "file": "requirement-configuration.sql" },
+        { "file": "seller-capability-recording.sql" },
+        { "file": "requirement-activation.sql" },
+        { "file": "execution-privileges.sql" }
+    ]
+}

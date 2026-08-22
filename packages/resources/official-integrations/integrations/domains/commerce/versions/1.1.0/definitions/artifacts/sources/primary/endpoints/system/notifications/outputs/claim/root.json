@@ -1,0 +1,42 @@
+{
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "deliveryId": {
+                        "type": "string"
+                    },
+                    "recipientCmsUserId": {
+                        "type": "string",
+                        "semantic": {
+                            "kind": "user-id",
+                            "authority": "cms"
+                        }
+                    },
+                    "templateKey": {
+                        "type": "string"
+                    },
+                    "idempotencyKey": {
+                        "type": "string"
+                    },
+                    "context": {
+                        "$include": "context.json"
+                    }
+                },
+                "required": [
+                    "deliveryId",
+                    "recipientCmsUserId",
+                    "templateKey",
+                    "idempotencyKey",
+                    "context"
+                ]
+            }
+        }
+    },
+    "required": [
+        "items"
+    ]
+}

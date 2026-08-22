@@ -1,0 +1,72 @@
+{
+    "type": "sourceOverlay",
+    "overlay": {
+        "id": "{{answers.id}}-offer-custom-fields",
+        "sourceId": "{{answers.id}}",
+        "label": "Offer custom fields",
+        "sections": [
+            {
+                "id": "offerCustomFields",
+                "label": "Custom fields",
+                "description": "Validated descriptive information configured for Commerce offers."
+            }
+        ],
+        "input": [
+            {
+                "endpointId": "createMyOffer",
+                "editable": "self"
+            },
+            {
+                "endpointId": "updateMyOffer",
+                "editable": "self"
+            },
+            {
+                "endpointId": "upsertOffer",
+                "editable": "admin"
+            }
+        ],
+        "output": [
+            {
+                "endpointId": "offer"
+            },
+            {
+                "endpointId": "manageOffer"
+            },
+            {
+                "endpointId": "myOffer"
+            },
+            {
+                "endpointId": "offers",
+                "path": "items[]"
+            },
+            {
+                "endpointId": "manageOffers",
+                "path": "items[]"
+            },
+            {
+                "endpointId": "listMyOffers",
+                "path": "items[]"
+            }
+        ],
+        "fieldSource": {
+            "endpointId": "entityCustomFields",
+            "params": {
+                "entityType": "offer"
+            },
+            "path": "fields",
+            "map": {
+                "id": "id",
+                "label": "label",
+                "type": "type",
+                "section": "section",
+                "required": "required",
+                "selfEditable": "selfEditable",
+                "adminEditable": "adminEditable",
+                "showInDashboardTable": "showInDashboardTable",
+                "exposeToEditorSources": "exposeToEditorSources",
+                "options": "options"
+            }
+        },
+        "fields": []
+    }
+}

@@ -1,0 +1,138 @@
+:host {
+    display: block;
+    color: inherit;
+    font: inherit;
+}
+
+:host([stretch]:not([stretch="false"])) {
+    height: 100%;
+}
+
+[part="card"] {
+    position: relative;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    border: 1px solid var(--commerce-offer-border, var(--integration-commerce-offer-border, var(--border-default, color-mix(in srgb, currentColor 16%, transparent))));
+    border-radius: var(--commerce-offer-radius, var(--integration-commerce-offer-radius, var(--radius-card, 1rem)));
+    background: var(--commerce-offer-background, var(--integration-commerce-offer-background, var(--bg-surface, Canvas)));
+    color: var(--commerce-offer-color, var(--integration-commerce-offer-text, var(--text-main, inherit)));
+}
+
+:host([stretch]:not([stretch="false"])) [part="card"] {
+    min-height: 100%;
+}
+
+[part="navigation"] {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+}
+
+[part="media"] {
+    aspect-ratio: var(--commerce-offer-media-ratio, 4 / 3);
+    min-width: 0;
+    overflow: hidden;
+    background: var(--commerce-offer-media-background, var(--bg-subtle, color-mix(in srgb, currentColor 5%, transparent)));
+}
+
+::slotted([slot="media"]) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+[part="content"] {
+    display: flex;
+    flex-direction: column;
+    gap: .65rem;
+    min-width: 0;
+    padding: var(--commerce-offer-padding, 1.25rem);
+}
+
+[part="badges"] {
+    position: absolute;
+    z-index: 2;
+    top: .75rem;
+    left: .75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+[part="eyebrow"],
+[part="title"],
+[part="description"],
+[part="price"] {
+    margin: 0;
+}
+
+[part="eyebrow"] {
+    color: var(--commerce-offer-accent, var(--integration-commerce-offer-accent, var(--primary-base, currentColor)));
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+[part="title"] {
+    font-family: var(--integration-commerce-offer-heading-font, var(--font-heading, inherit));
+    font-size: var(--commerce-offer-title-size, 1.25rem);
+    line-height: 1.2;
+}
+
+[part="description"] {
+    color: var(--commerce-offer-muted-color, var(--integration-commerce-offer-muted-text, var(--text-muted, color-mix(in srgb, currentColor 68%, transparent))));
+    line-height: 1.45;
+}
+
+[part="details"] {
+    min-width: 0;
+}
+
+[part="price"] {
+    margin-top: auto;
+    color: var(--commerce-offer-price-color, var(--integration-commerce-offer-price, var(--secondary-base, currentColor)));
+    font-family: var(--integration-commerce-offer-heading-font, var(--font-heading, inherit));
+    font-size: var(--commerce-offer-price-size, 1.35rem);
+    font-weight: 700;
+}
+
+[part="actions"] {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+:host(:not(:has([slot="media"]))) [part="media"],
+:host(:not(:has([slot="badge"]))) [part="badges"],
+:host(:not(:has([slot="eyebrow"]))) [part="eyebrow"],
+:host(:not(:has([slot="title"]))) [part="title"],
+:host(:not(:has([slot="description"]))) [part="description"],
+:host(:not(:has(:not([slot])))) [part="details"],
+:host(:not(:has([slot="action"]))) [part="actions"],
+:host(:not(:has([slot="price"]))[data-empty-price]) [part="price"] {
+    display: none;
+}
+
+:host([appearance="plain"]) [part="card"] {
+    border-color: transparent;
+    background: transparent;
+}
+
+:host([appearance="elevated"]) [part="card"] {
+    border-color: transparent;
+    box-shadow: var(--commerce-offer-shadow, var(--ctx-shadow-rest, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent)));
+}
+
+:host([density="compact"]) [part="content"] {
+    --commerce-offer-padding: 1rem;
+}
+
+:host([density="spacious"]) [part="content"] {
+    --commerce-offer-padding: 1.75rem;
+}

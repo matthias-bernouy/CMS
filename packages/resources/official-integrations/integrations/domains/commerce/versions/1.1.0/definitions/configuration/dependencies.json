@@ -1,0 +1,11 @@
+[
+    {
+        "name": "basicBlocs",
+        "kind": "basic-blocs"
+    },
+    {
+        "name": "emailer",
+        "kind": "emailer",
+        "optional": true
+    }
+]

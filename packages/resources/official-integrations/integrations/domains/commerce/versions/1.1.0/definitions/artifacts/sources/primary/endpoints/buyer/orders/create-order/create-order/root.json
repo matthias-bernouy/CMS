@@ -1,0 +1,68 @@
+{
+    "endpointId": "createOrder",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/orders",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "idempotencyKey": {
+                "type": "string"
+            },
+            "agreementId": {
+                "type": "string"
+            },
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "offerId": {
+                            "type": "string"
+                        },
+                        "quantity": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "offerId",
+                        "quantity"
+                    ]
+                }
+            },
+            "shippingAddress": {
+                "type": "object"
+            },
+            "billingAddress": {
+                "type": "object"
+            },
+            "metadata": {
+                "type": "object"
+            }
+        },
+        "required": [
+            "idempotencyKey"
+        ]
+    },
+    "output": {
+        "$include": "output/root.json"
+    }
+}

@@ -1,0 +1,127 @@
+[
+    {
+        "endpointId": "getOfferNegotiationContext",
+        "method": "GET",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/offer/negotiation-context",
+        "params": [
+            {
+                "name": "offerId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "offerId": {
+                            "type": "number"
+                        },
+                        "offerSlug": {
+                            "type": "string"
+                        },
+                        "offerTitle": {
+                            "type": "string"
+                        },
+                        "offerMainImageMediaId": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "offerMainImageWidth": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "offerMainImageHeight": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "sellerCmsUserId": {
+                            "type": "string",
+                            "nullable": true,
+                            "semantic": {
+                                "kind": "user-id",
+                                "authority": "cms"
+                            }
+                        },
+                        "sellerDisplayName": {
+                            "type": "string"
+                        },
+                        "referenceAmount": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "wholeUnitPrices": {
+                            "type": "boolean"
+                        },
+                        "publicationStatus": {
+                            "type": "string"
+                        },
+                        "availability": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "offerId",
+                        "offerSlug",
+                        "offerTitle",
+                        "offerMainImageMediaId",
+                        "offerMainImageWidth",
+                        "offerMainImageHeight",
+                        "sellerCmsUserId",
+                        "sellerDisplayName",
+                        "referenceAmount",
+                        "currency",
+                        "wholeUnitPrices",
+                        "publicationStatus",
+                        "availability"
+                    ]
+                }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "404",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        ]
+    }
+]

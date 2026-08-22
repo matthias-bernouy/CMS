@@ -1,0 +1,103 @@
+[
+    {
+        "id": "customFieldDefinition",
+        "title": "Metadata definition",
+        "fields": [
+            {
+                "id": "entityType",
+                "label": "Entity",
+                "path": "entityType",
+                "type": "select",
+                "required": true,
+                "options": [
+                    {
+                        "value": "product",
+                        "label": "Product"
+                    },
+                    {
+                        "value": "variant",
+                        "label": "Variant"
+                    },
+                    {
+                        "value": "seller",
+                        "label": "Seller"
+                    },
+                    {
+                        "value": "offer",
+                        "label": "Offer"
+                    },
+                    {
+                        "value": "order",
+                        "label": "Order"
+                    }
+                ]
+            },
+            {
+                "id": "key",
+                "label": "Key",
+                "path": "key",
+                "type": "text",
+                "required": true
+            },
+            {
+                "id": "label",
+                "label": "Label",
+                "path": "label",
+                "type": "text",
+                "required": true
+            },
+            {
+                "id": "fieldType",
+                "label": "Type",
+                "path": "fieldType",
+                "type": "select",
+                "required": true,
+                "options": [
+                    {
+                        "value": "string",
+                        "label": "Text"
+                    },
+                    {
+                        "value": "number",
+                        "label": "Number"
+                    },
+                    {
+                        "value": "boolean",
+                        "label": "Boolean"
+                    },
+                    {
+                        "value": "enum",
+                        "label": "Select"
+                    }
+                ]
+            },
+            {
+                "id": "options",
+                "label": "Select options",
+                "path": "options",
+                "type": "tokens",
+                "allowCustom": true,
+                "visibleWhen": {
+                    "value": "$field.fieldType",
+                    "equals": "enum"
+                }
+            },
+            {
+                "id": "unit",
+                "label": "Unit",
+                "path": "unit",
+                "type": "text",
+                "visibleWhen": {
+                    "value": "$field.fieldType",
+                    "equals": "number"
+                }
+            },
+            {
+                "id": "position",
+                "label": "Position",
+                "path": "position",
+                "type": "text"
+            }
+        ]
+    }
+]

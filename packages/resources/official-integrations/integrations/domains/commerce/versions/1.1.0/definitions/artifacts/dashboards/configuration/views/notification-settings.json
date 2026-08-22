@@ -1,0 +1,67 @@
+{
+    "widget": "w-detail",
+    "id": "notificationSettings",
+    "source": {
+        "endpoint": "getNotificationConfiguration"
+    },
+    "title": {
+        "path": "mode",
+        "fallback": "Notifications"
+    },
+    "status": {
+        "path": "mode"
+    },
+    "main": [
+        {
+            "id": "notificationDelivery",
+            "title": "Delivery",
+            "fields": [
+                {
+                    "id": "mode",
+                    "label": "Notification system",
+                    "type": "select",
+                    "path": "mode",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "builtin",
+                            "label": "Built-in Emailer"
+                        },
+                        {
+                            "value": "external",
+                            "label": "External consumer"
+                        },
+                        {
+                            "value": "disabled",
+                            "label": "Disabled"
+                        }
+                    ]
+                },
+                {
+                    "id": "updatedAt",
+                    "label": "Updated",
+                    "type": "readonly",
+                    "path": "updated_at",
+                    "format": "date"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "id": "saveNotificationSettings",
+            "label": "Save notification settings",
+            "tone": "primary",
+            "placement": "primary",
+            "endpoint": {
+                "endpoint": "updateNotificationConfiguration",
+                "body": {
+                    "mode": "$field.mode"
+                }
+            },
+            "after": {
+                "resource": "$result"
+            }
+        }
+    ]
+}

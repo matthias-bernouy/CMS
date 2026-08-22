@@ -1,0 +1,104 @@
+{
+    "endpointId": "pendingPlatformPayoutLiabilityAuthorizations",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/platform-payout-liability/pending",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "runKey": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "runKey"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "runKey": {
+                        "type": "string"
+                    },
+                    "control": {
+                        "type": "object",
+                        "properties": {
+                            "liabilityRevision": {
+                                "type": "number"
+                            },
+                            "requiredMinimumAmount": {
+                                "type": "number"
+                            },
+                            "lastProviderAppliedRevision": {
+                                "type": "number"
+                            },
+                            "lastProviderAppliedAmount": {
+                                "type": "number"
+                            },
+                            "changeDirection": {
+                                "type": "string"
+                            },
+                            "decreaseAuthorizationId": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "decreaseAuthorizedAt": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "calculatedAt": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "authorizations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "liabilityRevision": {
+                                    "type": "number"
+                                },
+                                "requiredMinimumAmount": {
+                                    "type": "number"
+                                },
+                                "decreaseAuthorizationId": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "changeDirection": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "liabilityRevision",
+                                "requiredMinimumAmount",
+                                "decreaseAuthorizationId",
+                                "changeDirection"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "runKey",
+                    "control",
+                    "authorizations"
+                ]
+            }
+        }
+    ]
+}

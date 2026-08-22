@@ -1,0 +1,8 @@
+{
+    "$files": [
+        "sections/active-revision/root.json",
+        "sections/platform-economics.json",
+        "sections/buyer-protection-windows.json",
+        "sections/seller-financial-risk.json"
+    ]
+}

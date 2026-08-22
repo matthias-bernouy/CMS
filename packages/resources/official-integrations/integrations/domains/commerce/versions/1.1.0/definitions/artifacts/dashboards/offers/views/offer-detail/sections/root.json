@@ -1,0 +1,107 @@
+[
+    {
+        "$include": "offer-details.json"
+    },
+    {
+        "id": "offerMedia",
+        "title": "Images",
+        "fields": [
+            {
+                "id": "media",
+                "label": "Images",
+                "path": "media",
+                "type": "media",
+                "multiple": true,
+                "item": {
+                    "idPath": "media.id",
+                    "urlPath": "media.url",
+                    "altPath": "media.alt"
+                },
+                "actions": {
+                    "upload": {
+                        "endpoint": "uploadOfferImage",
+                        "params": {
+                            "offerId": "$resource.id"
+                        }
+                    },
+                    "replace": {
+                        "endpoint": "replaceOfferImage",
+                        "params": {
+                            "offerId": "$resource.id",
+                            "mediaId": "$media.previousItem.id"
+                        }
+                    },
+                    "remove": {
+                        "endpoint": "removeOfferImage",
+                        "params": {
+                            "offerId": "$resource.id",
+                            "mediaId": "$media.item.id"
+                        }
+                    },
+                    "reorder": {
+                        "endpoint": "reorderOfferImages",
+                        "params": {
+                            "offerId": "$resource.id"
+                        },
+                        "body": {
+                            "mediaIds": "$media.valueIds"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "offerPricing",
+        "title": "Pricing and review",
+        "fields": [
+            {
+                "id": "acceptedPriceAmount",
+                "label": "Accepted price amount",
+                "path": "acceptedPriceAmount",
+                "type": "money",
+                "currencyPath": "currency",
+                "allowDecimals": {
+                    "value": "$resource.wholeUnitPrices",
+                    "equals": false
+                }
+            },
+            {
+                "id": "currency",
+                "label": "Currency",
+                "path": "currency",
+                "type": "text",
+                "required": true
+            },
+            {
+                "id": "minimumAmount",
+                "label": "Minimum price",
+                "path": "priceRule.minimumAmount",
+                "type": "money",
+                "currencyPath": "currency",
+                "allowDecimals": {
+                    "value": "$resource.wholeUnitPrices",
+                    "equals": false
+                }
+            },
+            {
+                "id": "maximumAmount",
+                "label": "Maximum price",
+                "path": "priceRule.maximumAmount",
+                "type": "money",
+                "currencyPath": "currency",
+                "allowDecimals": {
+                    "value": "$resource.wholeUnitPrices",
+                    "equals": false
+                }
+            },
+            {
+                "id": "reviewReason",
+                "label": "Review note",
+                "path": "reviewReason",
+                "type": "textarea",
+                "rows": 3
+            }
+        ]
+    }
+]
