@@ -1,4 +1,4 @@
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, rename, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { BlobInput, CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 
@@ -12,8 +12,14 @@ export class LocalFsCmsFilesBlob implements CmsFilesBlobStore {
 
     async put(key: string, data: BlobInput): Promise<{ size: number }> {
         await mkdir(this.root, { recursive: true });
-        const size = await Bun.write(this._path(key), new Response(data as BodyInit));
-        return { size };
+        const temporary = join(this.root, `.pending-${crypto.randomUUID()}`);
+        try {
+            const size = await Bun.write(temporary, new Response(data as BodyInit));
+            await rename(temporary, this._path(key));
+            return { size };
+        } finally {
+            await unlink(temporary).catch(() => {});
+        }
     }
 
     async get(key: string): Promise<ReadableStream<Uint8Array> | null> {
