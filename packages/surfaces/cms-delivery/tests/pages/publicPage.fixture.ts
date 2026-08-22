@@ -1,6 +1,8 @@
 import type { AnalyticsEvent } from "@bernouy/cms-analytics";
 import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
+import type { SourceEndpointInterceptor, SourceRepository } from "@bernouy/cms-sources";
+import type { RolesRepository } from "@bernouy/cms-permissions";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { componentJsCacheKey } from "cms-delivery/core/assets/buildComponent";
@@ -22,6 +24,9 @@ type HarnessOptions = Readonly<{
     providers?: readonly PublicPageProvider[];
     storedPages?: readonly TPage[];
     analytics?: boolean;
+    sources?: SourceRepository;
+    sourceInterceptor?: SourceEndpointInterceptor;
+    roles?: RolesRepository;
 }>;
 
 export function mountPublicPages(options: HarnessOptions = {}) {
@@ -57,6 +62,9 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         repository,
         cache,
         publicPageProviders: options.providers,
+        sources: options.sources,
+        sourceImageInterceptor: options.sourceInterceptor,
+        roles: options.roles,
         analytics: options.analytics
             ? ({
                   getSettings: async () => ({
@@ -95,7 +103,7 @@ const SYSTEM: TSystem = {
         name: "Public pages",
         favicon: "",
         visible: true,
-        host: "example.test",
+        host: "https://example.test",
         language: "en",
         theme: "",
         notFound: null,

@@ -8,6 +8,8 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import { preflightPageSourceAccess } from "cms-delivery/core/pages/preflightPageSourceAccess";
 import { publicPageCacheKey, resolvePublicPage } from "cms-delivery/core/pages/resolvePublicPage";
 import { InvalidPublicPageRequestError } from "cms-delivery/core/pages/publicPageRequest";
+import type { PageRenderMetadata } from "cms-delivery/core/seo/pageMetadata";
+import { resolveRuntimePageIndexingMetadata } from "cms-delivery/core/seo/resolveRuntimePageIndexingMetadata";
 
 /**
  * Shared entry point for every public page GET registered by Delivery.
@@ -51,7 +53,10 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
             return { response: sourceAccess, pageId: page.id };
         }
 
-        return { response: await renderWithFallbacks(req, page, pathname, delivery, null, 200), pageId: page.id };
+        return {
+            response: await renderIndexedPage(req, page, pathname, delivery, null, 200),
+            pageId: page.id,
+        };
     }
 
     let dynamicPage;
@@ -77,7 +82,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         }
         const status = dynamicPage.status ?? 200;
         return {
-            response: await renderWithFallbacks(
+            response: await renderIndexedPage(
                 req,
                 dynamicPage.page,
                 pathname,
@@ -92,7 +97,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
     return { response: await renderRef(req, delivery, "notFound", 404, "Page not found") };
 }
 
-async function renderWithFallbacks(
+async function renderIndexedPage(
     req: Request,
     page: TPage,
     cachePath: string,
@@ -100,10 +105,44 @@ async function renderWithFallbacks(
     publicCacheIdentity: string | undefined | null,
     status: number,
 ): Promise<Response> {
+    const indexing = await resolveRuntimePageIndexingMetadata(req, page, delivery);
+    if (indexing.kind === "not-found") {
+        return renderRef(req, delivery, "notFound", 404, "Page not found");
+    }
+    if (indexing.kind === "invalid-identity") {
+        return new Response(indexing.status === 422 ? "Unprocessable Entity" : "Bad Request", {
+            status: indexing.status,
+            headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },
+        });
+    }
+    if (indexing.kind === "unavailable") {
+        reportPageFailure("indexing", cachePath, new Error(indexing.reason));
+        return renderRef(req, delivery, "serverError", 503, "Service unavailable");
+    }
+    return renderWithFallbacks(
+        req,
+        page,
+        cachePath,
+        delivery,
+        indexing.dynamic ? undefined : publicCacheIdentity,
+        status,
+        indexing.metadata,
+    );
+}
+
+async function renderWithFallbacks(
+    req: Request,
+    page: TPage,
+    cachePath: string,
+    delivery: DeliveryCms,
+    publicCacheIdentity: string | undefined | null,
+    status: number,
+    metadata: PageRenderMetadata,
+): Promise<Response> {
     try {
         if (publicCacheIdentity === undefined) {
             return withStatus(
-                sendCompressed(req, await renderPage(page, makeRuntimeRenderContext(delivery)), "no-store", {
+                sendCompressed(req, await renderPage(page, makeRuntimeRenderContext(delivery), metadata), "no-store", {
                     skipCspHeader: true,
                 }),
                 status,
@@ -118,7 +157,7 @@ async function renderWithFallbacks(
                 req,
                 cacheKey,
                 delivery.cache,
-                () => renderPage(page, makeRuntimeRenderContext(delivery)),
+                () => renderPage(page, makeRuntimeRenderContext(delivery), metadata),
                 publicCacheIdentity === null ? undefined : "public, no-cache",
                 { skipCspHeader: true },
             ),
@@ -137,7 +176,7 @@ function withStatus(response: Response, status: number): Response {
     return new Response(response.body, { status, headers: response.headers });
 }
 
-function reportPageFailure(operation: "render" | "resolve", pathname: string, err: unknown): void {
+function reportPageFailure(operation: "indexing" | "render" | "resolve", pathname: string, err: unknown): void {
     console.error("Delivery public page failure", {
         operation,
         pathname,
