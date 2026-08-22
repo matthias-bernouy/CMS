@@ -142,6 +142,12 @@ export { coercePageRef, pageRefToString } from "cms-content/core/validation/docu
 export {
     PAGE_METADATA_PLATFORM_VARIABLES,
     PAGE_METADATA_RESERVED_NAMESPACES,
+    resolvePageMetadataTemplate,
+    resolvePageMetadataTemplateResult,
+    type PageMetadataContext,
+    type PageMetadataScalar,
+    type PageMetadataScope,
+    type PageMetadataTemplateResult,
 } from "cms-content/core/editor/pageMetadataVariables";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
