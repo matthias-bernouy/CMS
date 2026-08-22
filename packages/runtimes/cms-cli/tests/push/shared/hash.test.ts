@@ -25,6 +25,7 @@ describe("canonicalHash", () => {
         expect(canonicalHash({ ...base, description: "Other" })).not.toBe(original);
         expect(canonicalHash({ ...base, visible: false })).not.toBe(original);
         expect(canonicalHash({ ...base, tags: ["c"] })).not.toBe(original);
+        expect(canonicalHash({ ...base, indexing: { mode: "disabled" } })).not.toBe(original);
         expect(canonicalHash({ ...base, content: "x" })).not.toBe(original);
     });
 });

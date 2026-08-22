@@ -13,6 +13,7 @@ describe("parseFrontmatter", () => {
 title: "About"
 description: 'Our story'
 visible: false
+indexing: {"mode":"entity","sourceUrn":"urn:commerce","entityId":"product-by-slug","pageQueryParam":"product"}
 tags: [public, "marketing", 'top']
 ---
 <bloc-card></bloc-card>`;
@@ -21,6 +22,12 @@ tags: [public, "marketing", 'top']
             title: "About",
             description: "Our story",
             visible: false,
+            indexing: {
+                mode: "entity",
+                sourceUrn: "urn:commerce",
+                entityId: "product-by-slug",
+                pageQueryParam: "product",
+            },
             tags: ["public", "marketing", "top"],
         });
         expect(content).toBe("<bloc-card></bloc-card>");
@@ -64,5 +71,10 @@ body`;
     test("rejects malformed visible / tags", () => {
         expect(() => parseFrontmatter(`---\nvisible: maybe\n---\n`)).toThrow(/visible/);
         expect(() => parseFrontmatter(`---\ntags: a, b\n---\n`)).toThrow(/tags/);
+    });
+
+    test("rejects malformed indexing JSON and invalid indexing contracts", () => {
+        expect(() => parseFrontmatter(`---\nindexing: nope\n---\n`)).toThrow(/indexing.*invalid/);
+        expect(() => parseFrontmatter(`---\nindexing: {"mode":"entity"}\n---\n`)).toThrow(/indexing.*invalid/);
     });
 });

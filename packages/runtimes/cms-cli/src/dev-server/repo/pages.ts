@@ -3,7 +3,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { TPage, PageMeta, PagesQuery } from "@bernouy/cms-content";
 import { filterAndSortPages } from "@bernouy/cms-content";
-import { scanPages } from "cms-cli/push/pages/scan";
+import { scanPages, type PageFrontmatter } from "cms-cli/push/pages/scan";
 import { serializeFrontmatter } from "cms-cli/push/shared/frontmatter/frontmatterWrite";
 
 /**
@@ -50,6 +50,7 @@ export class PagesStore {
                 description: page.description ?? "",
                 visible: page.visible ?? true,
                 tags: page.tags ?? [],
+                ...(page.indexing ? { indexing: page.indexing } : {}),
             },
             page.content ?? "",
         );
@@ -73,11 +74,7 @@ export class PagesStore {
         return filterAndSortPages(all, opts);
     }
 
-    private _toTPage(
-        path: string,
-        fm: { title: string; description: string; visible: boolean; tags: string[] },
-        content: string,
-    ): TPage {
+    private _toTPage(path: string, fm: PageFrontmatter, content: string): TPage {
         return {
             id: path,
             path,
@@ -86,6 +83,7 @@ export class PagesStore {
             content,
             visible: fm.visible,
             tags: fm.tags,
+            ...(fm.indexing ? { indexing: fm.indexing } : {}),
         };
     }
 
@@ -94,11 +92,7 @@ export class PagesStore {
         return join(this.siteDir, "pages", ...rel.split("/"));
     }
 
-    private async _write(
-        file: string,
-        fm: { title: string; description: string; visible: boolean; tags: string[] },
-        content: string,
-    ): Promise<void> {
+    private async _write(file: string, fm: PageFrontmatter, content: string): Promise<void> {
         await mkdir(dirname(file), { recursive: true });
         await writeFile(file, serializeFrontmatter(fm) + content, "utf-8");
     }

@@ -20,6 +20,13 @@ describe("LocalFsCmsRepository pages", () => {
             description: "Updated description",
             tags: ["featured"],
             visible: false,
+            indexing: {
+                mode: "entity",
+                sourceUrn: "urn:commerce",
+                entityId: "product-by-slug",
+                pageQueryParam: "product",
+                titleTemplate: "{{ title }}",
+            },
         });
 
         expect(await repository.getPageById("/pricing")).toBeNull();
@@ -30,6 +37,13 @@ describe("LocalFsCmsRepository pages", () => {
             description: "Updated description",
             tags: ["featured"],
             visible: false,
+            indexing: {
+                mode: "entity",
+                sourceUrn: "urn:commerce",
+                entityId: "product-by-slug",
+                pageQueryParam: "product",
+                titleTemplate: "{{ title }}",
+            },
         });
         expect(existsSync(join(siteDir, "pages", "pricing.html"))).toBe(false);
         expect(existsSync(join(siteDir, "pages", "plans.html"))).toBe(true);

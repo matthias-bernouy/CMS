@@ -82,6 +82,7 @@ async function putPage(adminBase: URL, token: string, id: string, page: LocalPag
         description: page.frontmatter.description,
         visible: page.frontmatter.visible,
         tags: page.frontmatter.tags,
+        ...(page.frontmatter.indexing ? { indexing: page.frontmatter.indexing } : {}),
     };
     const res = await fetch(url, { method: "PUT", headers: HEADERS_JSON(token), body: JSON.stringify(body) });
     if (!res.ok) {

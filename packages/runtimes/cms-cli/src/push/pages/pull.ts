@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { serializeFrontmatter } from "../shared/frontmatter/frontmatterWrite";
 import { safeJoin } from "../shared/safeJoin";
+import type { PageIndexingConfiguration } from "@bernouy/cms-content";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -14,11 +15,12 @@ type RemotePage = {
     content: string;
     visible: string | boolean;
     tags: string | string[];
+    indexing?: PageIndexingConfiguration;
 };
 
 /**
  * Fetch every remote page and write each as `<siteDir>/pages/<…>.html`
- * with frontmatter (title/description/visible/tags). Path → file mapping
+ * with frontmatter (title/description/visible/indexing/tags). Path → file mapping
  * is the inverse of `pages/scan.ts:fileToUrlPath`: `/` → `index.html`,
  * `/blog/post-1` → `blog/post-1.html`.
  */
@@ -68,6 +70,7 @@ async function writePage(siteDir: string, urlPath: string, page: RemotePage): Pr
         description: page.description ?? "",
         visible,
         tags,
+        ...(page.indexing ? { indexing: page.indexing } : {}),
     });
 
     await writeFile(file, fm + (page.content ?? ""), "utf-8");

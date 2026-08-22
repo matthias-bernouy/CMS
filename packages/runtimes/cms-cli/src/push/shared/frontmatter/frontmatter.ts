@@ -1,6 +1,8 @@
+import { validatePageIndexingConfiguration, type PageIndexingConfiguration } from "@bernouy/cms-content";
+
 /**
  * Frontmatter shape shared by every push'able resource. Each type only uses
- * the subset it cares about (pages: title/description/visible/tags;
+ * the subset it cares about (pages: title/description/visible/indexing/tags;
  * templates: name/description) — the parser accepts the whole
  * vocabulary and the caller picks. `category` is intentionally absent: it
  * is derived from the parent folder name (see `categoryFolder.ts`).
@@ -11,6 +13,7 @@ export type Frontmatter = {
     description?: string;
     visible?: boolean;
     tags?: string[];
+    indexing?: PageIndexingConfiguration;
 };
 
 export type ParsedDoc = {
@@ -63,6 +66,9 @@ export function parseFrontmatter(raw: string): ParsedDoc {
             case "tags":
                 fm.tags = parseTags(value);
                 break;
+            case "indexing":
+                fm.indexing = parseIndexing(value);
+                break;
             case "category":
                 throw new Error(
                     `Frontmatter key "category" is no longer supported — ` +
@@ -74,6 +80,14 @@ export function parseFrontmatter(raw: string): ParsedDoc {
         }
     }
     return { frontmatter: fm, content: body };
+}
+
+function parseIndexing(value: string): PageIndexingConfiguration {
+    try {
+        return validatePageIndexingConfiguration(JSON.parse(value));
+    } catch (error) {
+        throw new Error(`Frontmatter "indexing" is invalid: ${error instanceof Error ? error.message : String(error)}`);
+    }
 }
 
 function unquote(v: string): string {

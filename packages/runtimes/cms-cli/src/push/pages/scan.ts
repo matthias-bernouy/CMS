@@ -3,12 +3,14 @@ import { existsSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
 import { parseFrontmatter } from "../shared/frontmatter/frontmatter";
+import type { PageIndexingConfiguration } from "@bernouy/cms-content";
 
 export type PageFrontmatter = {
     title: string;
     description: string;
     visible: boolean;
     tags: string[];
+    indexing?: PageIndexingConfiguration;
 };
 
 export type LocalPage = {
@@ -50,6 +52,7 @@ export async function scanPages(siteDir: string): Promise<LocalPage[]> {
             description: frontmatter.description ?? "",
             visible: frontmatter.visible ?? true,
             tags: frontmatter.tags ?? [],
+            ...(frontmatter.indexing ? { indexing: frontmatter.indexing } : {}),
         };
         pages.push({
             path,
@@ -73,6 +76,7 @@ export function canonicalHash(payload: PageFrontmatter & { content: string }): s
         description: payload.description,
         visible: payload.visible,
         tags: [...payload.tags].sort(),
+        ...(payload.indexing ? { indexing: payload.indexing } : {}),
         content: payload.content,
     });
     return createHash("sha256").update(canonical).digest("hex");

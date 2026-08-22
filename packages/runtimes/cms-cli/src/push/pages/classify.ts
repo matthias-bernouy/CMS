@@ -2,6 +2,7 @@ import type { LocalPage } from "./scan";
 import { canonicalHash } from "./scan";
 import type { PageStatus } from "../shared/recap";
 import { detectConflict, type PushState } from "../shared/state";
+import type { PageIndexingConfiguration } from "@bernouy/cms-content";
 
 export type RemoteListItem = { id: string; path: string };
 
@@ -57,6 +58,7 @@ type RemotePagePayload = {
     visible: string | boolean;
     tags: string | string[];
     content: string;
+    indexing?: PageIndexingConfiguration;
 };
 
 /** Fetch a remote page in full and return its canonical hash. */
@@ -83,6 +85,7 @@ export async function fetchRemotePageState(
             description: raw.description ?? "",
             visible,
             tags: Array.isArray(raw.tags) ? raw.tags : raw.tags ? raw.tags.split(",").filter(Boolean) : [],
+            ...(raw.indexing ? { indexing: raw.indexing } : {}),
             content: raw.content ?? "",
         }),
     };
