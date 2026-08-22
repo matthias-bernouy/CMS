@@ -42,6 +42,20 @@ function validateOrigins(field: string, origins: string[]): string[] {
 export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
     const normalized = { ...patch } as Partial<TSystem>;
 
+    if (patch.site?.host !== undefined) {
+        if (typeof patch.site.host !== "string") {
+            throw new ContentValidationError("site.host", "string expected");
+        }
+        const host = canonicalSiteBaseUrl(patch.site.host);
+        if (patch.site.host.trim() && !host) {
+            throw new ContentValidationError(
+                "site.host",
+                "must be an absolute HTTP(S) URL without credentials, query, or fragment",
+            );
+        }
+        normalized.site = { ...patch.site, host: host ?? "" };
+    }
+
     if (patch.security) {
         const security = { ...patch.security };
         if (security.connectExtras !== undefined) {
@@ -62,6 +76,33 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
     }
 
     return normalized;
+}
+
+/** Return the normalized public SEO base URL, or null when it cannot safely be published. */
+export function canonicalSiteBaseUrl(value: unknown): string | null {
+    if (typeof value !== "string") {
+        return null;
+    }
+    const candidate = value.trim();
+    if (!candidate) {
+        return null;
+    }
+    try {
+        const url = new URL(candidate);
+        if (
+            (url.protocol !== "http:" && url.protocol !== "https:") ||
+            url.username ||
+            url.password ||
+            candidate.includes("?") ||
+            candidate.includes("#")
+        ) {
+            return null;
+        }
+        url.pathname = url.pathname.replace(/\/+$/u, "") || "/";
+        return url.href.replace(/\/$/u, "");
+    } catch {
+        return null;
+    }
 }
 
 function validateEmailSettings(email: Partial<TSystem["email"]>): TSystem["email"] {

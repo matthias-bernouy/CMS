@@ -1,4 +1,4 @@
-import type { TPage } from "@bernouy/cms-content";
+import { canonicalSiteBaseUrl, type TPage } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { collectPublicPageProviderPaths } from "cms-delivery/core/pages/publicPagePaths";
@@ -25,11 +25,14 @@ export type SitemapMaterializationResult = {
 
 export async function materializeSitemapSnapshot(
     delivery: DeliveryCms,
-    publicBaseUrl: string,
     signal?: AbortSignal,
 ): Promise<SitemapMaterializationResult> {
     const store = delivery.sitemapStore;
-    const baseUrl = normalizePublicBaseUrl(publicBaseUrl, delivery.basePath);
+    const settings = await delivery.repository.getSystem();
+    const baseUrl = canonicalSiteBaseUrl(settings.site.host);
+    if (!baseUrl) {
+        throw new TypeError("canonical site host is not configured");
+    }
     const request = new Request(`${baseUrl}/sitemap.xml`, {
         headers: { accept: "application/json" },
         signal,
@@ -106,19 +109,4 @@ function sameSnapshotContent(left: SitemapSnapshotDescriptor, right: SitemapSnap
         left.chunks.length === right.chunks.length &&
         left.chunks.every((chunk, index) => chunk.hash === right.chunks[index]?.hash)
     );
-}
-
-function normalizePublicBaseUrl(value: string, basePath: string): string {
-    const url = new URL(value);
-    if (
-        (url.protocol !== "http:" && url.protocol !== "https:") ||
-        url.username ||
-        url.password ||
-        url.search ||
-        url.hash
-    ) {
-        throw new TypeError("sitemap public base URL must be an HTTP origin or path without credentials or suffixes");
-    }
-    url.pathname = url.pathname === "/" ? basePath : url.pathname.replace(/\/$/u, "");
-    return url.toString().replace(/\/$/u, "");
 }

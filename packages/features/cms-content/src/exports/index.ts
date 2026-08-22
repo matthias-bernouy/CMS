@@ -137,7 +137,7 @@ export {
     validateTemplateCreate,
     validateTemplatePatch,
 } from "cms-content/core/validation/documents/templates";
-export { validateSettingsPatch } from "cms-content/core/validation/settings";
+export { canonicalSiteBaseUrl, validateSettingsPatch } from "cms-content/core/validation/settings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/documents/pageRef";
 export {
     PAGE_METADATA_PLATFORM_VARIABLES,

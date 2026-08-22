@@ -239,7 +239,6 @@ export async function mountProductionSurfaces(
     controlRunner.start(env.CONTROL_PORT);
     deliveryRunner.start(env.DELIVERY_PORT);
     const sitemapRefresh = runtime.startSitemapRefresh?.(deliveryCms, {
-        publicBaseUrl: env.DELIVERY_PUBLIC_URL,
         reportError: (error) => runtime.reportError("Sitemap refresh failed", error),
     });
     runtime.log("🚀 CMS listening");

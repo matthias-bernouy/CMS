@@ -10,7 +10,6 @@ describe("Delivery sitemap refresh", () => {
             storedPages: [publicPage("home", "/")],
         });
         const runner = startSitemapSnapshotRefresh(mounted.delivery, {
-            publicBaseUrl: "https://example.test",
             intervalMs: 60_000,
         });
 

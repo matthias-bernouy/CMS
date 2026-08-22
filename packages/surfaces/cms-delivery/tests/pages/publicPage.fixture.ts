@@ -29,6 +29,7 @@ type HarnessOptions = Readonly<{
     sourceInterceptor?: SourceEndpointInterceptor;
     roles?: RolesRepository;
     sitemapStore?: CmsFilesBlobStore;
+    siteHost?: string;
 }>;
 
 export function mountPublicPages(options: HarnessOptions = {}) {
@@ -57,7 +58,8 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         getPublishedPages: async () => storedPages,
         getBlocsList: async () => [],
         getBlocViewJS: async () => null,
-        getSystem: async () => SYSTEM,
+        getSystem: async () =>
+            options.siteHost === undefined ? SYSTEM : { ...SYSTEM, site: { ...SYSTEM.site, host: options.siteHost } },
     };
     const delivery = new DeliveryCms({
         runner,

@@ -4,7 +4,7 @@ import type { TPage, TSystem } from "@bernouy/cms-content";
 import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
 
 const page = { title: "Home", description: "d", path: "/" } as TPage;
-const settings = (favicon?: string) => ({ site: { favicon } }) as TSystem;
+const settings = (favicon?: string) => ({ site: { favicon, host: "" } }) as TSystem;
 
 function faviconHref(rawFavicon: string | undefined, stableUrl = "/favicon.ico"): string {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");

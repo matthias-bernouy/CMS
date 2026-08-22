@@ -48,7 +48,7 @@ describe("Delivery dynamic indexing sitemap", () => {
         expect(await fallback.text()).toContain("<loc>https://example.test/static</loc>");
         expect(sourceRequests).toHaveLength(0);
 
-        const materialized = await materializeSitemapSnapshot(mounted.delivery, "https://example.test");
+        const materialized = await materializeSitemapSnapshot(mounted.delivery);
         expect(materialized.status).toBe("published");
         expect(materialized.snapshot.chunks).toHaveLength(1);
         expect(sourceRequests).toHaveLength(2);
@@ -108,10 +108,10 @@ describe("Delivery dynamic indexing sitemap", () => {
                 );
             },
         });
-        const first = await materializeSitemapSnapshot(mounted.delivery, "https://example.test");
+        const first = await materializeSitemapSnapshot(mounted.delivery);
         fail = true;
 
-        await expect(materializeSitemapSnapshot(mounted.delivery, "https://example.test")).rejects.toThrow();
+        await expect(materializeSitemapSnapshot(mounted.delivery)).rejects.toThrow();
         expect(cancelled).toBe(true);
 
         const response = await SitemapServer(new Request("https://example.test/sitemap.xml"), mounted.delivery);

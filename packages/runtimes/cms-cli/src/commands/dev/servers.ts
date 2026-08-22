@@ -150,7 +150,6 @@ export async function startLocalServers(options: ServerOptions) {
     });
     deliveryRunner.start(flags.deliveryPort);
     const sitemapRefresh = startSitemapSnapshotRefresh(deliveryCms, {
-        publicBaseUrl: `http://${flags.publicHost}:${flags.deliveryPort}`,
         reportError: (error) => console.error(`[sitemap] Refresh failed: ${String(error)}`),
     });
     let stopping: Promise<void> | null = null;

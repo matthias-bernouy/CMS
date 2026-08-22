@@ -43,6 +43,30 @@ describe("validateSettingsPatch — CSP origins", () => {
     });
 });
 
+describe("validateSettingsPatch — canonical site host", () => {
+    test("normalizes an HTTP base URL while preserving its public path", () => {
+        const out = validateSettingsPatch({ site: { host: " https://EXAMPLE.com:443/shop/ " } } as never);
+
+        expect(out.site?.host).toBe("https://example.com/shop");
+    });
+
+    test("keeps an empty host as an explicit SEO opt-out", () => {
+        const out = validateSettingsPatch({ site: { host: "  " } } as never);
+
+        expect(out.site?.host).toBe("");
+    });
+
+    test.each([
+        "example.com",
+        "ftp://example.com",
+        "https://user@example.com",
+        "https://example.com?preview=true",
+        "https://example.com#content",
+    ])("rejects an unsafe public base URL: %s", (host) => {
+        expect(() => validateSettingsPatch({ site: { host } } as never)).toThrow(ContentValidationError);
+    });
+});
+
 describe("validateSettingsPatch — email settings", () => {
     test("passes through disabled email settings without requiring SMTP credentials", () => {
         const out = validateSettingsPatch({

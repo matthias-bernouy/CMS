@@ -11,7 +11,7 @@ describe("Delivery sitemap chunks", () => {
         const pages = Array.from({ length: 50_001 }, (_, index) => publicPage(`page-${index}`, `/catalog/${index}`));
         const mounted = mountPublicPages({ sitemapStore, storedPages: pages });
 
-        const result = await materializeSitemapSnapshot(mounted.delivery, "https://example.test");
+        const result = await materializeSitemapSnapshot(mounted.delivery);
 
         expect(result.snapshot.chunks.map(({ urlCount }) => urlCount)).toEqual([50_000, 1]);
         const secondUrl = `https://example.test/sitemaps/${result.snapshot.id}/2.xml.gz`;

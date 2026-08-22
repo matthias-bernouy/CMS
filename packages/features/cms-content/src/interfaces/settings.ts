@@ -15,8 +15,8 @@ export type TSystem = {
         visible: boolean;
         /**
          * Canonical base URL of the public site (e.g. `https://example.com`).
-         * Used to build the `<link rel="canonical">` of every rendered page.
-         * Empty string means "do not emit a canonical link".
+         * Owns all public SEO URLs: canonical links, sitemap documents, and
+         * the sitemap declaration in robots.txt. Empty string disables them.
          */
         host: string;
         /**

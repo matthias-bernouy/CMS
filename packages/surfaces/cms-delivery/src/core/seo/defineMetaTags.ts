@@ -1,4 +1,4 @@
-import type { TPage, TSystem } from "@bernouy/cms-content";
+import { canonicalSiteBaseUrl, type TPage, type TSystem } from "@bernouy/cms-content";
 
 export type PageMetaTagOverrides = {
     title?: string;
@@ -34,9 +34,7 @@ export function defineMetaTags(
     favicon.setAttribute("href", faviconUrl);
     head.appendChild(favicon);
 
-    // Canonical link when a host is configured. Trailing slash of the host
-    // is stripped so we don't emit `https://site.com//about`.
-    const host = settings.site?.host?.trim().replace(/\/+$/, "") ?? "";
+    const host = canonicalSiteBaseUrl(settings.site?.host);
     const canonicalUrl =
         overrides.canonicalUrl === undefined ? (host ? `${host}${page.path}` : "") : overrides.canonicalUrl;
     if (canonicalUrl) {

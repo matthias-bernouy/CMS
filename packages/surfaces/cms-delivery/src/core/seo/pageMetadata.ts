@@ -1,4 +1,5 @@
 import {
+    canonicalSiteBaseUrl,
     resolvePageMetadataTemplateResult,
     type PageMetadataContext,
     type PageMetadataScope,
@@ -66,7 +67,7 @@ function buildCanonicalUrl(
     if (identity === null) {
         return undefined;
     }
-    const host = hostValue.trim().replace(/\/+$/u, "");
+    const host = canonicalSiteBaseUrl(hostValue);
     if (!host) {
         return undefined;
     }

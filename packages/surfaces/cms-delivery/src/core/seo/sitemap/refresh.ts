@@ -13,7 +13,6 @@ export type SitemapRefreshRunner = {
 export function startSitemapSnapshotRefresh(
     delivery: DeliveryCms,
     options: {
-        publicBaseUrl: string;
         intervalMs?: number;
         retryIntervalMs?: number;
         reportError?: (error: unknown) => void;
@@ -50,7 +49,7 @@ export function startSitemapSnapshotRefresh(
             return running;
         }
         controller = new AbortController();
-        running = materializeSitemapSnapshot(delivery, options.publicBaseUrl, controller.signal)
+        running = materializeSitemapSnapshot(delivery, controller.signal)
             .catch((error) => {
                 if (!controller?.signal.aborted) {
                     options.reportError?.(error);

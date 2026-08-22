@@ -28,12 +28,15 @@ describe("Delivery robots", () => {
                 }),
             ],
         });
-        new DeliveryCms({ runner, repository: {} as ContentReader, sources });
+        const repository = {
+            getSystem: async () => ({ site: { host: "https://canonical.test/store" } }),
+        } as ContentReader;
+        new DeliveryCms({ runner, repository, sources });
 
         const response = await runner.endpointHandler(
             "GET",
             "/site/robots.txt",
-        )(new Request("https://example.test/site/robots.txt"));
+        )(new Request("https://unexpected.test/site/robots.txt"));
         const body = await response.text();
 
         expect(body).toContain("Allow: /site/.cms/files/\n");
@@ -44,7 +47,21 @@ describe("Delivery robots", () => {
         expect(body).not.toContain("/publicJson");
         expect(body).not.toContain("/computedImage");
         expect(body).toContain("Disallow: /site/.cms/\n");
-        expect(body).toContain("Sitemap: https://example.test/site/sitemap.xml\n");
+        expect(body).toContain("Sitemap: https://canonical.test/store/sitemap.xml\n");
+        expect(body).not.toContain("unexpected.test");
+    });
+
+    test("omits the sitemap declaration when the canonical host is not configured", async () => {
+        const runner = new CaptureRunner();
+        const repository = { getSystem: async () => ({ site: { host: "" } }) } as ContentReader;
+        new DeliveryCms({ runner, repository });
+
+        const response = await runner.endpointHandler(
+            "GET",
+            "/robots.txt",
+        )(new Request("https://unexpected.test/robots.txt"));
+
+        expect(await response.text()).not.toContain("Sitemap:");
     });
 });
 

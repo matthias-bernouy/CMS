@@ -176,7 +176,7 @@ describe("production surface mounting", () => {
         });
         expect(finalizerStore).toBe(options.features.analytics);
         expect(flusherRecorder).toBe(options.features.endpointPerformanceRecorder);
-        expect(sitemapRefreshOptions).toMatchObject({ publicBaseUrl: options.env.DELIVERY_PUBLIC_URL });
+        expect(sitemapRefreshOptions).toEqual({ reportError: expect.any(Function) });
         expect(starts).toEqual([
             ["control", 3100],
             ["delivery", 3101],
