@@ -45,15 +45,8 @@ export const controlCmsAccessors = {
     publicAuth: (state: ControlCmsState) => required(state.configuration.publicAuth, "public auth not configured"),
     integrationInstallations: (state: ControlCmsState) =>
         required(state.integrationInstallations, "integration installations repository not configured"),
-    sources: (state: ControlCmsState) => {
-        const sources = required(state.sources, "sources repository not configured");
-        const overlays = state.sourceOverlays
-            ? new SourceOverlaySourceRepository(sources, state.sourceOverlays, {
-                  deps: controlCmsAccessors.sourceExecutorDeps(state),
-              })
-            : sources;
-        return state.functions ? withFunctionsSource(overlays, state.functions) : overlays;
-    },
+    optionalSources: effectiveSources,
+    sources: (state: ControlCmsState) => required(effectiveSources(state), "sources repository not configured"),
     analytics: (state: ControlCmsState) => required(state.analytics, "analytics store not configured"),
     basePath: (state: ControlCmsState) => (state.runner.basePath === "/" ? "" : state.runner.basePath),
     getCspExtras: async (state: ControlCmsState) => {
@@ -70,6 +63,18 @@ export const controlCmsAccessors = {
         };
     },
 };
+
+function effectiveSources(state: ControlCmsState) {
+    if (!state.sources) {
+        return null;
+    }
+    const overlays = state.sourceOverlays
+        ? new SourceOverlaySourceRepository(state.sources, state.sourceOverlays, {
+              deps: controlCmsAccessors.sourceExecutorDeps(state),
+          })
+        : state.sources;
+    return state.functions ? withFunctionsSource(overlays, state.functions) : overlays;
+}
 
 function required<T>(value: T, message: string): NonNullable<T> {
     if (!value) {

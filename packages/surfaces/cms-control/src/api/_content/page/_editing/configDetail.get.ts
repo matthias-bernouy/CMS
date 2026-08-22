@@ -1,5 +1,9 @@
 import type { PageIndexingConfiguration } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
+import {
+    buildPageIndexingEditor,
+    type PageIndexingEditorModel,
+} from "cms-control/core/content/page/pageIndexingEditor";
 
 export type PageConfigDetailResponse = {
     id: string;
@@ -10,6 +14,7 @@ export type PageConfigDetailResponse = {
     tags: string[];
     published: boolean;
     indexing?: PageIndexingConfiguration;
+    indexingEditor: PageIndexingEditorModel;
 };
 
 export default async function getConfigDetail(req: Request, cms: ControlCms): Promise<Response> {
@@ -35,6 +40,7 @@ export default async function getConfigDetail(req: Request, cms: ControlCms): Pr
         tags: page.tags,
         published: page.visible,
         ...(page.indexing ? { indexing: page.indexing } : {}),
+        indexingEditor: await buildPageIndexingEditor(page, cms.optionalSources),
     };
 
     return new Response(JSON.stringify(response), {

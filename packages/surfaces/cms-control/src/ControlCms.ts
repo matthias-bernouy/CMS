@@ -168,6 +168,9 @@ export class ControlCms {
     get sources() {
         return controlCmsAccessors.sources(this.state);
     }
+    get optionalSources() {
+        return controlCmsAccessors.optionalSources(this.state);
+    }
     get analytics() {
         return controlCmsAccessors.analytics(this.state);
     }

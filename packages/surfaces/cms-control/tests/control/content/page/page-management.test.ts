@@ -1,17 +1,41 @@
 import { describe, expect, test } from "bun:test";
 import { P9R_CACHE, type TPage } from "@bernouy/cms-content";
+import type { Source } from "@bernouy/cms-sources";
 import putConfigDetail from "cms-control/api/_content/page/_editing/configDetail.put";
 import putPageContent from "cms-control/api/_content/page/_editing/content.put";
+
+const commerce: Source = {
+    urn: "urn:commerce",
+    endpoints: [],
+    indexing: {
+        entities: [
+            {
+                id: "product-by-slug",
+                label: "Product",
+                resolve: {
+                    endpointUrn: "urn:commerce:product",
+                    identity: { key: "slug", inputParam: "slug", outputPath: "slug" },
+                },
+                discover: {
+                    endpointUrn: "urn:commerce:products",
+                    itemsPath: "items",
+                    identityPath: "slug",
+                },
+                variables: { title: { path: "title", type: "text" } },
+            },
+        ],
+    },
+};
 
 const existingPage: TPage = {
     id: "page-1",
     path: "/draft",
     title: "Draft",
     description: "Draft description",
-    content: "<p>Original content</p>",
+    content: '<main cms-source="/.cms/sources/commerce/product?slug=#{product}">Original content</main>',
     visible: false,
     tags: ["existing"],
-    indexing: { mode: "disabled" },
+    indexing: { enabled: false },
 };
 
 function makeCms() {
@@ -31,6 +55,9 @@ function makeCms() {
                 invalidations.push(key);
             },
         },
+        optionalSources: {
+            getAllSources: async () => [commerce],
+        },
     };
     return { cms, updates, invalidations };
 }
@@ -49,17 +76,13 @@ describe("page management writes", () => {
 
         const response = await putConfigDetail(
             jsonRequest("http://localhost/cms/api/page/configDetail?id=page-1", {
-                title: "Published",
+                title: "${content.title} | Store",
                 path: "/published",
-                description: "Published description",
+                description: "Buy ${content.title}",
                 published: "true",
                 tags: "seo, landing",
-                indexing: {
-                    mode: "entity",
-                    sourceUrn: "urn:commerce",
-                    entityId: "product-by-slug",
-                    pageQueryParam: "product",
-                },
+                indexingEnabled: "true",
+                indexingCandidate: "urn%3Acommerce|product-by-slug|product",
             }),
             cms as never,
         );
@@ -69,21 +92,43 @@ describe("page management writes", () => {
         expect(updates).toEqual([
             {
                 ...existingPage,
-                title: "Published",
+                title: "${content.title} | Store",
                 path: "/published",
-                description: "Published description",
+                description: "Buy ${content.title}",
                 visible: true,
                 tags: ["seo", " landing"],
                 indexing: {
-                    mode: "entity",
-                    sourceUrn: "urn:commerce",
-                    entityId: "product-by-slug",
-                    pageQueryParam: "product",
+                    enabled: true,
+                    entity: {
+                        sourceUrn: "urn:commerce",
+                        entityId: "product-by-slug",
+                        pageQueryParam: "product",
+                    },
                 },
             },
         ]);
         expect(updates[0]!.content).toBe(existingPage.content);
         expect(invalidations).toEqual([P9R_CACHE.page("/draft"), P9R_CACHE.page("/published")]);
+    });
+
+    test("rejects an entity binding that is no longer present in the page", async () => {
+        const { cms, updates } = makeCms();
+
+        await expect(
+            putConfigDetail(
+                jsonRequest("http://localhost/cms/api/page/configDetail?id=page-1", {
+                    title: "Published",
+                    path: "/published",
+                    description: "Published description",
+                    published: true,
+                    tags: [],
+                    indexingEnabled: "true",
+                    indexingCandidate: "urn%3Acommerce|product-by-id|product",
+                }),
+                cms as never,
+            ),
+        ).rejects.toThrow("It no longer matches an indexable binding on this page.");
+        expect(updates).toEqual([]);
     });
 
     test("updates visual content without replacing page settings", async () => {
@@ -100,7 +145,7 @@ describe("page management writes", () => {
         expect(response.status).toBe(204);
         expect(updates).toEqual([{ ...existingPage, content: "<main>Updated content</main>" }]);
         expect(updates[0]!.title).toBe(existingPage.title);
-        expect(updates[0]!.indexing).toEqual({ mode: "disabled" });
+        expect(updates[0]!.indexing).toEqual({ enabled: false });
         expect(invalidations).toEqual([P9R_CACHE.page("/draft")]);
     });
 });
