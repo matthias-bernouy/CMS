@@ -20,6 +20,17 @@ export type {
     SourceProducedMediaEffect,
     SourceRemovedMediaEffect,
 } from "./interfaces/Source";
+export type {
+    SourceFieldPath,
+    SourceIndexing,
+    SourceIndexingCursorPagination,
+    SourceIndexingEntity,
+    SourceIndexingIdentity,
+    SourceIndexingOffsetPagination,
+    SourceIndexingPagination,
+    SourceIndexingVariable,
+    SourceIndexingVariableType,
+} from "./interfaces/SourceIndexing";
 export {
     COMPUTED_PARAM_REFS,
     DEFAULT_SOURCE_ENDPOINT_TIMEOUT_MS,
@@ -30,6 +41,7 @@ export {
     SOURCE_ENDPOINT_ACCESS_MODES,
     SOURCE_MEDIA_EFFECT_VERSION,
 } from "./interfaces/Source";
+export { MAX_SOURCE_INDEXING_PAGE_SIZE, SOURCE_INDEXING_VARIABLE_TYPES } from "./interfaces/SourceIndexing";
 export {
     SOURCE_TIMING_STAGES,
     UNRESOLVED_SOURCE_ENDPOINT,

@@ -1,6 +1,13 @@
 import type { SourceEndpoint, EndpointParam, Source } from "cms-sources/interfaces/Source";
+import type { SourceIndexing } from "cms-sources/interfaces/SourceIndexing";
 import type { DataShape } from "cms-sources/interfaces/DataShape";
-import type { CanonicalSourceDto, SourceDto, SourceEndpointDto, SourceFlatDto } from "./sourceDtoTypes";
+import type {
+    CanonicalSourceDto,
+    SourceDto,
+    SourceEndpointDto,
+    SourceFlatDto,
+    SourceIndexingDto,
+} from "./sourceDtoTypes";
 import { makeEndpointUrn, makeSourceUrn, parseUrn } from "cms-sources/core/system/urn";
 import { canonicalizeSourceDto, flattenSourceDto } from "./sourceDtoViews";
 export type {
@@ -9,6 +16,8 @@ export type {
     SourceDto,
     SourceEndpointDto,
     SourceFlatDto,
+    SourceIndexingDto,
+    SourceIndexingEntityDto,
     SourceParamDto,
 } from "./sourceDtoTypes";
 
@@ -19,6 +28,7 @@ export function sourceDtoToSource(dto: SourceDto): Source {
         identityAuthority: authority,
         meta: dto.meta,
         endpoints: dto.endpoints.map((e) => endpointDtoToEndpoint(dto.id, e, authority)),
+        ...(dto.indexing ? { indexing: indexingDtoToIndexing(dto.id, dto.indexing) } : {}),
     };
 }
 
@@ -29,6 +39,35 @@ export function sourceToDto(source: Source): SourceDto {
         ...(source.identityAuthority ? { identityAuthority: source.identityAuthority } : {}),
         meta: source.meta ?? { name: id },
         endpoints: source.endpoints.map((e) => endpointToDto(e)),
+        ...(source.indexing ? { indexing: indexingToDto(source.indexing) } : {}),
+    };
+}
+
+function indexingDtoToIndexing(sourceId: string, indexing: SourceIndexingDto): SourceIndexing {
+    return {
+        entities: indexing.entities.map((entity) => {
+            const { endpointId: resolveEndpointId, ...resolve } = entity.resolve;
+            const { endpointId: discoverEndpointId, ...discover } = entity.discover;
+            return {
+                ...entity,
+                resolve: { ...resolve, endpointUrn: makeEndpointUrn(sourceId, resolveEndpointId) },
+                discover: { ...discover, endpointUrn: makeEndpointUrn(sourceId, discoverEndpointId) },
+            };
+        }),
+    };
+}
+
+function indexingToDto(indexing: SourceIndexing): SourceIndexingDto {
+    return {
+        entities: indexing.entities.map((entity) => {
+            const { endpointUrn: resolveEndpointUrn, ...resolve } = entity.resolve;
+            const { endpointUrn: discoverEndpointUrn, ...discover } = entity.discover;
+            return {
+                ...entity,
+                resolve: { ...resolve, endpointId: parseUrn(resolveEndpointUrn)?.endpoint ?? "" },
+                discover: { ...discover, endpointId: parseUrn(discoverEndpointUrn)?.endpoint ?? "" },
+            };
+        }),
     };
 }
 

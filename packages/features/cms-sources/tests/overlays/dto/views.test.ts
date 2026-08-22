@@ -7,7 +7,7 @@ import {
     type SourceDto,
 } from "@bernouy/cms-sources";
 
-describe("source DTO views", () => {
+describe("source DTO canonical views", () => {
     test("round-trips endpoint contracts and qualifies identity semantics", () => {
         const dto: SourceDto = {
             id: "accounts",
@@ -100,6 +100,7 @@ describe("source DTO views", () => {
         expect(sourceToCanonicalDto(source)).toEqual({
             id: "inventory",
             meta: { name: "Inventory", description: "", icon: "", svg: "" },
+            indexing: null,
             endpoints: [
                 {
                     endpointId: "list",

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { validateSource } from "cms-sources/core/validation/validateSource";
-import { ep, source } from "../helpers/sourceValidationFixtures";
+import { validateSource } from "@bernouy/cms-sources";
+import { ep, source } from "../../helpers/sourceValidationFixtures";
 
 describe("validateSource endpoint identity and configuration", () => {
     test("validates source and endpoint identity", () => {

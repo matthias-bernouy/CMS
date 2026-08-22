@@ -10,6 +10,12 @@ import type {
     SourceEndpointEffects,
     SourceMeta,
 } from "cms-sources/interfaces/Source";
+import type {
+    SourceIndexingCursorPagination,
+    SourceIndexingIdentity,
+    SourceIndexingOffsetPagination,
+    SourceIndexingVariable,
+} from "cms-sources/interfaces/SourceIndexing";
 
 export type SourceParamDto = {
     name: string;
@@ -37,11 +43,36 @@ export type SourceEndpointDto = {
     headers?: EndpointHeader[];
 };
 
+export type SourceIndexingEntityDto = {
+    id: string;
+    resolve: {
+        endpointId: string;
+        identity: SourceIndexingIdentity;
+    };
+    discover: {
+        endpointId: string;
+        itemsPath: string;
+        identityPath: string;
+        pagination?: SourceIndexingOffsetPagination | SourceIndexingCursorPagination;
+        lastModifiedPath?: string;
+    };
+    variables: Record<string, SourceIndexingVariable>;
+    defaults?: {
+        titleTemplate?: string;
+        descriptionTemplate?: string;
+    };
+};
+
+export type SourceIndexingDto = {
+    entities: SourceIndexingEntityDto[];
+};
+
 export type SourceDto = {
     id: string;
     identityAuthority?: string;
     meta: SourceMeta;
     endpoints: SourceEndpointDto[];
+    indexing?: SourceIndexingDto;
 };
 
 export type SourceFlatDto = Record<string, string>;
@@ -53,6 +84,7 @@ export type CanonicalSourceEndpointDto = Omit<SourceEndpointDto, "body" | "outpu
     headers: EndpointHeader[] | null;
 };
 
-export type CanonicalSourceDto = Omit<SourceDto, "endpoints"> & {
+export type CanonicalSourceDto = Omit<SourceDto, "endpoints" | "indexing"> & {
     endpoints: CanonicalSourceEndpointDto[];
+    indexing: SourceIndexingDto | null;
 };

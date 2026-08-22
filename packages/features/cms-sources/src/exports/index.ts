@@ -93,6 +93,8 @@ export {
     type SourceEndpointDto,
     type SourceParamDto,
     type SourceFlatDto,
+    type SourceIndexingDto,
+    type SourceIndexingEntityDto,
     type CanonicalSourceEndpointDto,
     type CanonicalSourceDto,
 } from "../core/overlays/sourceDto";

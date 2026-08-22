@@ -3,6 +3,7 @@ import type { CanonicalSourceDto, SourceDto, SourceEndpointDto, SourceFlatDto } 
 export function flattenSourceDto(dto: SourceDto): SourceFlatDto {
     const flat: SourceFlatDto = { id: dto.id };
     assignMeta(flat, dto);
+    assignOptional(flat, "indexing", dto.indexing, JSON.stringify);
     dto.endpoints.forEach((endpoint, index) => assignEndpoint(flat, endpoint, index));
     return flat;
 }
@@ -16,6 +17,7 @@ export function canonicalizeSourceDto(dto: SourceDto): CanonicalSourceDto {
             icon: dto.meta.icon ?? "",
             svg: dto.meta.svg ?? "",
         },
+        indexing: dto.indexing ?? null,
         endpoints: dto.endpoints.map((endpoint) => ({
             endpointId: endpoint.endpointId,
             method: endpoint.method,

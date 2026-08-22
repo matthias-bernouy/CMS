@@ -1,4 +1,5 @@
 import type { DataShape } from "./DataShape";
+import type { SourceIndexing } from "./SourceIndexing";
 
 /** The HTTP methods an endpoint may declare. Runtime list (single source of truth)
  *  so callers can validate an incoming string against it; `HTTPMethod` is derived. */
@@ -168,4 +169,6 @@ export type Source = {
     identityAuthority?: string;
     meta?: SourceMeta;
     endpoints: SourceEndpoint[];
+    /** Optional capability declaration used by pages to resolve and discover indexable entities. */
+    indexing?: SourceIndexing;
 };

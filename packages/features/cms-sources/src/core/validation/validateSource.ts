@@ -3,6 +3,7 @@ import { isEndpointUrn, isSourceUrn, sourceUrnOf } from "cms-sources/core/system
 import { isSystemSourceUrn } from "cms-sources/core/system/systemSources";
 import { isValidResponseStatus, validateEndpoint } from "./sourceEndpointValidation";
 import { validateSourceMediaEffects } from "./sourceMediaEffectValidation";
+import { validateSourceIndexing } from "./indexing";
 export {
     isAllowedSourceTargetUrl,
     validateSourceTargetUrl,
@@ -43,6 +44,7 @@ export function validateSource(source: Source): string[] {
         validateEndpointIdentity(endpoint, source.urn, seen, errors);
         validateEndpoint(endpoint, errors);
     }
+    validateSourceIndexing(source, errors);
     validateSourceMediaEffects(source, errors);
 
     return errors;
