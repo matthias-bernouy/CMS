@@ -3,6 +3,7 @@ import { IntegrationInputError, MissingIntegrationParam } from "../../../errors"
 import { parseArtifactIcon } from "../../definition/icon";
 import { isRecord, preservedText, text } from "../../definition/values";
 import { parseEndpointTemplate } from "./endpoint";
+import { parseSourceIndexing } from "./indexing";
 
 export function parseSourceTemplate(value: Record<string, unknown>, name: string): SourceDto {
     const id = text(value.id);
@@ -31,6 +32,7 @@ export function parseSourceTemplate(value: Record<string, unknown>, name: string
         endpoints: value.endpoints.map((endpoint, index) =>
             parseEndpointTemplate(endpoint, `${name}.endpoints.${index}`),
         ),
+        ...(value.indexing !== undefined ? { indexing: parseSourceIndexing(value.indexing, `${name}.indexing`) } : {}),
     };
 }
 
