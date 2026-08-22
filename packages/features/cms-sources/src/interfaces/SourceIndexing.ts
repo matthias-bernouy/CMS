@@ -2,6 +2,8 @@ export type SourceFieldPath = string;
 
 export const SOURCE_INDEXING_VARIABLE_TYPES = ["text", "url", "image", "date", "number"] as const;
 export type SourceIndexingVariableType = (typeof SOURCE_INDEXING_VARIABLE_TYPES)[number];
+/** Platform-owned namespace used for variables exposed by the selected dynamic content. */
+export const SOURCE_INDEXING_VARIABLE_NAMESPACE = "content";
 
 export const MAX_SOURCE_INDEXING_PAGE_SIZE = 1_000;
 
@@ -45,6 +47,8 @@ export type SourceIndexingIdentity = {
 export type SourceIndexingEntity = {
     /** Stable capability id selected by a page configuration. */
     id: string;
+    /** User-facing content type shared by identity strategies, for example `Product`. */
+    label: string;
     resolve: {
         endpointUrn: string;
         identity: SourceIndexingIdentity;
@@ -59,7 +63,7 @@ export type SourceIndexingEntity = {
         /** Dotted path relative to each discovered item. */
         lastModifiedPath?: SourceFieldPath;
     };
-    /** Named values available to SEO templates and future structured-data mappings. */
+    /** Named values exposed as `${content.variable}` to metadata and future structured-data mappings. */
     variables: Record<string, SourceIndexingVariable>;
     /** Suggestions copied into a page configuration; a page remains free to override them. */
     defaults?: {

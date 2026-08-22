@@ -45,6 +45,7 @@ export type SourceEndpointDto = {
 
 export type SourceIndexingEntityDto = {
     id: string;
+    label: string;
     resolve: {
         endpointId: string;
         identity: SourceIndexingIdentity;

@@ -1,7 +1,7 @@
 import { type Dashboard } from "@bernouy/cms-dashboards";
 import { type CmsFunction } from "@bernouy/cms-functions";
 import type { CmsRelation, DashboardRelationProjection } from "@bernouy/cms-relations";
-import { sourceDtoToSource, type Source, type SourceDto, type SourceOverlay } from "@bernouy/cms-sources";
+import { sourceDtoToSource, type Source, type SourceOverlay } from "@bernouy/cms-sources";
 import type { TriggerDefinition } from "@bernouy/cms-triggers";
 import { IntegrationInputError } from "../../../errors";
 import { resolveTemplate, resolveTemplates, type TemplateContext } from "../../../definitions/templating/templates";
@@ -14,36 +14,11 @@ export function buildSourceArtifacts(definition: IntegrationDefinition, context:
             .filter((artifact) => artifact.type === "source")
             .map((artifact) =>
                 sourceDtoToSource({
-                    ...resolveSourceTemplate(artifact.source, context),
+                    ...resolveTemplates(artifact.source, context),
                     identityAuthority: definition.kind,
                 }),
             ),
     );
-}
-
-function resolveSourceTemplate(source: SourceDto, context: TemplateContext): SourceDto {
-    if (!source.indexing) {
-        return resolveTemplates(source, context);
-    }
-    const defaults = source.indexing.entities.map((entity) => entity.defaults);
-    const resolved = resolveTemplates(
-        {
-            ...source,
-            indexing: {
-                entities: source.indexing.entities.map(({ defaults: _defaults, ...entity }) => entity),
-            },
-        },
-        context,
-    );
-    return {
-        ...resolved,
-        indexing: {
-            entities: resolved.indexing.entities.map((entity, index) => ({
-                ...entity,
-                ...(defaults[index] ? { defaults: structuredClone(defaults[index]) } : {}),
-            })),
-        },
-    };
 }
 
 export function buildFunctionArtifacts(definition: IntegrationDefinition, context: TemplateContext): CmsFunction[] {

@@ -26,13 +26,14 @@ describe("reconstructSource (pull)", () => {
                 entities: [
                     {
                         id: "item",
+                        label: "Item",
                         resolve: {
                             endpointId: "list",
                             identity: { key: "id", inputParam: "q", outputPath: "id" },
                         },
                         discover: { endpointId: "list", itemsPath: "items", identityPath: "id" },
                         variables: { title: { path: "title", type: "text" } },
-                        defaults: { titleTemplate: "{{ title }}" },
+                        defaults: { titleTemplate: "${content.title}" },
                     },
                 ],
             },
@@ -63,7 +64,7 @@ describe("reconstructSource (pull)", () => {
         expect(source.indexing?.entities[0]).toMatchObject({
             resolve: { endpointUrn: "urn:test:list" },
             discover: { endpointUrn: "urn:test:list" },
-            defaults: { titleTemplate: "{{ title }}" },
+            defaults: { titleTemplate: "${content.title}" },
         });
     });
 });

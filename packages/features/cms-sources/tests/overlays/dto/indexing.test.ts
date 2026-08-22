@@ -13,6 +13,7 @@ describe("source indexing DTO conversions", () => {
             entities: [
                 {
                     id: "product",
+                    label: "Product",
                     resolve: {
                         endpointId: "getProduct",
                         identity: { key: "slug", inputParam: "slug", outputPath: "slug" },
@@ -35,8 +36,8 @@ describe("source indexing DTO conversions", () => {
                         image: { path: "image.url", type: "image" },
                     },
                     defaults: {
-                        titleTemplate: "{{ name }}",
-                        descriptionTemplate: "Discover {{ name }}.",
+                        titleTemplate: "${content.name}",
+                        descriptionTemplate: "Discover ${content.name}.",
                     },
                 },
             ],

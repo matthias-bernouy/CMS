@@ -8,6 +8,7 @@ describe("@bernouy/cms-integrations source indexing parsing", () => {
                 entities: [
                     {
                         id: "product",
+                        label: "Product",
                         resolve: {
                             endpointId: "getProduct",
                             identity: { key: "slug", inputParam: "slug", outputPath: "slug" },
@@ -25,7 +26,7 @@ describe("@bernouy/cms-integrations source indexing parsing", () => {
                             },
                         },
                         variables: { name: { path: "name", type: "text" } },
-                        defaults: { titleTemplate: "{{ name }}" },
+                        defaults: { titleTemplate: "${content.name}" },
                     },
                 ],
             }),
@@ -37,6 +38,7 @@ describe("@bernouy/cms-integrations source indexing parsing", () => {
         if (source?.type === "source") {
             expect(source.source.indexing?.entities[0]).toMatchObject({
                 id: "product",
+                label: "Product",
                 resolve: { endpointId: "getProduct" },
                 discover: { endpointId: "listProducts", identityPath: "slug" },
                 variables: { name: { path: "name", type: "text" } },
@@ -49,6 +51,7 @@ describe("@bernouy/cms-integrations source indexing parsing", () => {
             entities: [
                 {
                     id: "product",
+                    label: "Product",
                     resolve: {
                         endpointId: "getProduct",
                         identity: { key: "slug", inputParam: "slug", outputPath: "slug" },

@@ -57,6 +57,20 @@ describe("source indexing validation", () => {
         expect(discoveryErrors.some((error) => error.includes("pagination.cursorParam"))).toBeTrue();
         expect(discoveryErrors.some((error) => error.includes("pagination.nextCursorPath"))).toBeTrue();
     });
+
+    test("keeps variable namespaces under platform control", () => {
+        const source = indexedSource();
+        const entity = source.indexing!.entities[0]!;
+        entity.label = "";
+        entity.variables["site.name"] = { path: "name", type: "text" };
+
+        const errors = validateSource(source);
+
+        expect(errors).toContain('invalid indexing entity "product".label must not be empty');
+        expect(errors.some((error) => error.includes("variables.site.name must start with a lowercase letter"))).toBe(
+            true,
+        );
+    });
 });
 
 function indexedSource(): Source {
@@ -110,6 +124,7 @@ function indexedSource(): Source {
             entities: [
                 {
                     id: "product",
+                    label: "Product",
                     resolve: {
                         endpointUrn: "urn:catalog:getProduct",
                         identity: { key: "slug", inputParam: "slug", outputPath: "slug" },
@@ -128,7 +143,7 @@ function indexedSource(): Source {
                         },
                     },
                     variables: { name: { path: "name", type: "text" } },
-                    defaults: { titleTemplate: "{{ name }}" },
+                    defaults: { titleTemplate: "${content.name}" },
                 },
             ],
         },

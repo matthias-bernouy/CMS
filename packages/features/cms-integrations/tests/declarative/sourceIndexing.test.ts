@@ -5,7 +5,7 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 
 describe("declarative source indexing", () => {
-    test("keeps page placeholders while resolving the surrounding source artifact", async () => {
+    test("keeps metadata variables while resolving integration templates", async () => {
         const sources = new InMemorySourceRepository();
 
         await importIntegration(
@@ -19,8 +19,8 @@ describe("declarative source indexing", () => {
             resolve: { endpointUrn: "urn:catalog:getProduct" },
             discover: { endpointUrn: "urn:catalog:listProducts" },
             defaults: {
-                titleTemplate: "{{ name }}",
-                descriptionTemplate: "Discover {{ name }} from {{ category }}.",
+                titleTemplate: "${content.name}",
+                descriptionTemplate: "Discover ${content.name} from ${content.category}.",
             },
         });
     });
@@ -42,6 +42,7 @@ function definition(): IntegrationDefinition {
                         entities: [
                             {
                                 id: "product",
+                                label: "Product",
                                 resolve: {
                                     endpointId: "getProduct",
                                     identity: { key: "slug", inputParam: "slug", outputPath: "slug" },
@@ -56,8 +57,8 @@ function definition(): IntegrationDefinition {
                                     category: { path: "category.name", type: "text" },
                                 },
                                 defaults: {
-                                    titleTemplate: "{{ name }}",
-                                    descriptionTemplate: "Discover {{ name }} from {{ category }}.",
+                                    titleTemplate: "${content.name}",
+                                    descriptionTemplate: "Discover ${content.name} from ${content.category}.",
                                 },
                             },
                         ],

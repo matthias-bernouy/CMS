@@ -1,5 +1,6 @@
 {
     "id": "product-by-slug",
+    "label": "Product",
     "resolve": {
         "endpointId": "product",
         "identity": {
@@ -44,7 +45,7 @@
         }
     },
     "defaults": {
-        "titleTemplate": "{{ title }}",
-        "descriptionTemplate": "{{ description }}"
+        "titleTemplate": "${content.title}",
+        "descriptionTemplate": "${content.description}"
     }
 }

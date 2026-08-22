@@ -109,6 +109,7 @@ function sourceIndexing(variables: Record<string, unknown>) {
         entities: [
             {
                 id: "item",
+                label: "Item",
                 resolve: {
                     endpointId: "list",
                     identity: { key: "id", inputParam: "id", outputPath: "id" },

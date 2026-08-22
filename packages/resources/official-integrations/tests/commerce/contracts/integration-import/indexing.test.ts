@@ -54,6 +54,7 @@ describe("commerce 1.1.0 indexing contract", () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     id: "product-by-id",
+                    label: "Product",
                     resolve: {
                         endpointUrn: "urn:commerce:product",
                         identity: { key: "id", inputParam: "id", outputPath: "id" },
@@ -65,6 +66,7 @@ describe("commerce 1.1.0 indexing contract", () => {
                 }),
                 expect.objectContaining({
                     id: "offer-by-slug",
+                    label: "Offer",
                     resolve: {
                         endpointUrn: "urn:commerce:offer",
                         identity: { key: "slug", inputParam: "slug", outputPath: "slug" },
@@ -78,8 +80,8 @@ describe("commerce 1.1.0 indexing contract", () => {
                         productTitle: { path: "product.title", type: "text" },
                     }),
                     defaults: {
-                        titleTemplate: "{{ title }}",
-                        descriptionTemplate: "{{ description }}",
+                        titleTemplate: "${content.title}",
+                        descriptionTemplate: "${content.description}",
                     },
                 }),
             ]),

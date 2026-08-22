@@ -26,6 +26,9 @@ export function validateSourceIndexing(source: Source, errors: string[]): void {
 }
 
 function validateEntity(source: Source, entity: SourceIndexingEntity, prefix: string, errors: string[]): void {
+    if (typeof entity.label !== "string" || !entity.label.trim()) {
+        errors.push(`${prefix}.label must not be empty`);
+    }
     const resolution = indexingEndpoint(source, entity.resolve.endpointUrn, `${prefix}.resolve`, errors);
     const discovery = indexingEndpoint(source, entity.discover.endpointUrn, `${prefix}.discover`, errors);
     const identity = entity.resolve.identity;
@@ -82,8 +85,10 @@ function validateVariables(
     errors: string[],
 ): void {
     for (const [name, variable] of Object.entries(entity.variables)) {
-        if (!name.trim()) {
-            errors.push(`${prefix}.variables contains an empty variable name`);
+        if (!/^[a-z][a-zA-Z0-9_-]*$/u.test(name)) {
+            errors.push(
+                `${prefix}.variables.${name || "<empty>"} must start with a lowercase letter and contain only letters, numbers, _ or -`,
+            );
         }
         if (!(SOURCE_INDEXING_VARIABLE_TYPES as readonly string[]).includes(variable.type)) {
             errors.push(`${prefix}.variables.${name}.type is invalid`);

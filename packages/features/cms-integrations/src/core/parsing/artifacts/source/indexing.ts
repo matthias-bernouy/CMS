@@ -30,6 +30,7 @@ function parseEntity(value: unknown, name: string): SourceIndexingEntityDto {
     const discover = record(entity.discover, `${name}.discover`);
     return {
         id: requiredText(entity.id, `${name}.id`),
+        label: requiredText(entity.label, `${name}.label`),
         resolve: {
             endpointId: requiredText(resolve.endpointId, `${name}.resolve.endpointId`),
             identity: {
