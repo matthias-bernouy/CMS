@@ -139,6 +139,10 @@ export {
 } from "cms-content/core/validation/documents/templates";
 export { validateSettingsPatch } from "cms-content/core/validation/settings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/documents/pageRef";
+export {
+    PAGE_METADATA_PLATFORM_VARIABLES,
+    PAGE_METADATA_RESERVED_NAMESPACES,
+} from "cms-content/core/editor/pageMetadataVariables";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { generateStyleEntry } from "cms-content/http/generateStyleEntry";

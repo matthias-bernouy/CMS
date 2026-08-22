@@ -1,10 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { detectPageIndexingCandidates } from "@bernouy/cms-content";
+import {
+    detectPageIndexingCandidates,
+    PAGE_METADATA_PLATFORM_VARIABLES,
+    PAGE_METADATA_RESERVED_NAMESPACES,
+} from "@bernouy/cms-content";
 import type { Source, SourceIndexingEntity } from "@bernouy/cms-sources";
 
 function indexingEntity(id: string, sourceId: string, endpointId: string, identity: string): SourceIndexingEntity {
     return {
         id,
+        label: id.startsWith("event") ? "Event" : "Product",
         resolve: {
             endpointUrn: `urn:${sourceId}:${endpointId}`,
             identity: {
@@ -38,6 +43,11 @@ const commerce = indexedSource("commerce", [
 ]);
 
 describe("detectPageIndexingCandidates", () => {
+    test("reserves platform scopes separately from integration variables", () => {
+        expect(PAGE_METADATA_RESERVED_NAMESPACES).toEqual(["content", "page", "site"]);
+        expect(PAGE_METADATA_PLATFORM_VARIABLES).toEqual(["page.path", "site.host", "site.language", "site.name"]);
+    });
+
     test("detects the identity strategy bound to a public page query parameter", () => {
         expect(
             detectPageIndexingCandidates(
