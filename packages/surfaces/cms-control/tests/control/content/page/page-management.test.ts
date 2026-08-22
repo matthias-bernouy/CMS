@@ -11,6 +11,7 @@ const existingPage: TPage = {
     content: "<p>Original content</p>",
     visible: false,
     tags: ["existing"],
+    indexing: { mode: "disabled" },
 };
 
 function makeCms() {
@@ -53,6 +54,12 @@ describe("page management writes", () => {
                 description: "Published description",
                 published: "true",
                 tags: "seo, landing",
+                indexing: {
+                    mode: "entity",
+                    sourceUrn: "urn:commerce",
+                    entityId: "product-by-slug",
+                    pageQueryParam: "product",
+                },
             }),
             cms as never,
         );
@@ -67,6 +74,12 @@ describe("page management writes", () => {
                 description: "Published description",
                 visible: true,
                 tags: ["seo", " landing"],
+                indexing: {
+                    mode: "entity",
+                    sourceUrn: "urn:commerce",
+                    entityId: "product-by-slug",
+                    pageQueryParam: "product",
+                },
             },
         ]);
         expect(updates[0]!.content).toBe(existingPage.content);
@@ -87,6 +100,7 @@ describe("page management writes", () => {
         expect(response.status).toBe(204);
         expect(updates).toEqual([{ ...existingPage, content: "<main>Updated content</main>" }]);
         expect(updates[0]!.title).toBe(existingPage.title);
+        expect(updates[0]!.indexing).toEqual({ mode: "disabled" });
         expect(invalidations).toEqual([P9R_CACHE.page("/draft")]);
     });
 });

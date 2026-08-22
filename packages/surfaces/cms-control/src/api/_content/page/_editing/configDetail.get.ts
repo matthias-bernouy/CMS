@@ -1,3 +1,4 @@
+import type { PageIndexingConfiguration } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
 
 export type PageConfigDetailResponse = {
@@ -8,6 +9,7 @@ export type PageConfigDetailResponse = {
     publicUrl: string;
     tags: string[];
     published: boolean;
+    indexing?: PageIndexingConfiguration;
 };
 
 export default async function getConfigDetail(req: Request, cms: ControlCms): Promise<Response> {
@@ -32,6 +34,7 @@ export default async function getConfigDetail(req: Request, cms: ControlCms): Pr
         publicUrl: pagePublicUrl(page.path, cms.config.deliveryUrl),
         tags: page.tags,
         published: page.visible,
+        ...(page.indexing ? { indexing: page.indexing } : {}),
     };
 
     return new Response(JSON.stringify(response), {

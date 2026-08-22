@@ -10,6 +10,12 @@ const page: TPage = {
     content: "<p>Hello</p>",
     visible: true,
     tags: ["pricing", "landing"],
+    indexing: {
+        mode: "entity",
+        sourceUrn: "urn:commerce",
+        entityId: "product-by-slug",
+        pageQueryParam: "product",
+    },
 };
 
 function cmsWithPage(existing: TPage | null, deliveryUrl?: string) {
@@ -46,6 +52,7 @@ describe("GET /api/page/configDetail", () => {
             publicUrl: "https://site.test/pricing",
             tags: ["pricing", "landing"],
             published: true,
+            indexing: page.indexing,
         });
     });
 

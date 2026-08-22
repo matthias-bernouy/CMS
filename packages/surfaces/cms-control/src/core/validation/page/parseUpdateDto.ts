@@ -1,3 +1,4 @@
+import type { PageIndexingConfiguration } from "@bernouy/cms-content";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import { coerceVisible } from "./visible";
 import { coerceTags } from "./tags";
@@ -10,6 +11,7 @@ export type PageUpdateDto = {
     description: string;
     visible: boolean;
     tags: string[];
+    indexing?: PageIndexingConfiguration;
 };
 
 /**
@@ -36,5 +38,6 @@ export function parsePageUpdateDto(body: Record<string, unknown>): PageUpdateDto
         description: body.description == null ? "" : String(body.description),
         visible: coerceVisible(body.visible),
         tags: coerceTags(body.tags),
+        ...(body.indexing !== undefined ? { indexing: body.indexing as PageIndexingConfiguration } : {}),
     };
 }

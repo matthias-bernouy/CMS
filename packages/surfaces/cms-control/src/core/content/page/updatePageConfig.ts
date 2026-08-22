@@ -16,6 +16,7 @@ export async function updatePageConfig(cms: ControlCms, dto: PageConfigUpdateDto
         description: dto.description,
         visible: dto.visible,
         tags: dto.tags,
+        ...(dto.indexing !== undefined ? { indexing: dto.indexing } : {}),
     });
 
     invalidateUpdatedPage(cms, existing.path, dto.path);

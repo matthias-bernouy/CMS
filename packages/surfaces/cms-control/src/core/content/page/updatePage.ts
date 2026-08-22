@@ -20,6 +20,7 @@ export async function updatePage(cms: ControlCms, dto: PageUpdateDto): Promise<v
         description: dto.description,
         visible: dto.visible,
         tags: dto.tags,
+        ...(dto.indexing !== undefined ? { indexing: dto.indexing } : {}),
     });
 
     invalidateUpdatedPage(cms, existing.path, dto.path);

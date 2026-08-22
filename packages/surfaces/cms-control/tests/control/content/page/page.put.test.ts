@@ -37,6 +37,7 @@ const existingPage: TPage = {
     content: "<p>draft</p>",
     visible: false,
     tags: ["existing"],
+    indexing: { mode: "disabled" },
 };
 
 describe("PUT /api/page (update)", () => {
@@ -74,6 +75,12 @@ describe("PUT /api/page (update)", () => {
                 description: "published desc",
                 visible: true,
                 tags: ["a", "b"],
+                indexing: {
+                    mode: "entity",
+                    sourceUrn: "urn:commerce",
+                    entityId: "product-by-id",
+                    pageQueryParam: "product",
+                },
             }),
             cms,
         );
@@ -87,11 +94,17 @@ describe("PUT /api/page (update)", () => {
         expect(updated.description).toBe("published desc");
         expect(updated.visible).toBe(true);
         expect(updated.tags).toEqual(["a", "b"]);
+        expect(updated.indexing).toEqual({
+            mode: "entity",
+            sourceUrn: "urn:commerce",
+            entityId: "product-by-id",
+            pageQueryParam: "product",
+        });
         expect(deleteSpy).toEqual([P9R_CACHE.page("/draft"), P9R_CACHE.page("/published")]);
     });
 
     test("invalidates the page once when path stays the same", async () => {
-        const { cms, deleteSpy } = makeSystem({ existing: existingPage });
+        const { cms, updateCalls, deleteSpy } = makeSystem({ existing: existingPage });
         const res = await putPage(
             makeRequest({
                 id: "page-1",
@@ -103,6 +116,7 @@ describe("PUT /api/page (update)", () => {
         );
 
         expect(res.ok).toBe(true);
+        expect(updateCalls[0]?.indexing).toEqual({ mode: "disabled" });
         expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);
     });
 });

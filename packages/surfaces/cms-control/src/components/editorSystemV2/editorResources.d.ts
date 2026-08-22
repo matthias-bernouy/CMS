@@ -1,3 +1,5 @@
+import type { PageIndexingConfiguration } from "@bernouy/cms-content";
+
 export type PageConfigDetailResponse = {
     id: string;
     title: string;
@@ -5,6 +7,7 @@ export type PageConfigDetailResponse = {
     path: string;
     tags: string[];
     published: boolean;
+    indexing?: PageIndexingConfiguration;
     defaultTemplateCategory?: string;
 };
 
