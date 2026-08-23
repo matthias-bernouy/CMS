@@ -48,6 +48,10 @@ export function serializeSiteBlocDefault(tag: string, content: string): string {
 }
 
 function serializeNode(node: SiteBlocNode, slots: Map<string, SiteBlocSlot>, usedSlots: Set<string>): string {
+    if (node.kind === "text") {
+        assertStaticValue(node.value, "text");
+        return escapeText(node.value);
+    }
     if (node.kind === "slot") {
         const slot = slots.get(node.slotId);
         if (!slot) {

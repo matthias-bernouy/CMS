@@ -1,6 +1,9 @@
 import { ContentValidationError } from "cms-content/core/validation/errors";
 import type { SiteBlocNode, SiteBlocSlot, SiteBlocSnapshot } from "cms-content/interfaces/blocs";
 
+const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
+const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
+
 export function validateSiteBlocSnapshot(value: SiteBlocSnapshot, ownerTag?: string): SiteBlocSnapshot {
     if (!isRecord(value)) {
         throw new ContentValidationError("draft", "object expected");
@@ -92,6 +95,15 @@ function validateNode(node: SiteBlocNode, field: string, slotIds: Set<string>, d
     if (!isRecord(node)) {
         throw new ContentValidationError(field, "node object expected");
     }
+    if (node.kind === "text") {
+        if (typeof node.value !== "string") {
+            throw new ContentValidationError(field, "text value must be a string");
+        }
+        if (DYNAMIC_TOKEN.test(node.value) || CONTROL_CHARACTER.test(node.value)) {
+            throw new ContentValidationError(field, "text must be static and free of control characters");
+        }
+        return;
+    }
     if (node.kind === "slot") {
         if (!slotIds.has(node.slotId)) {
             throw new ContentValidationError(field, `unknown slot id "${node.slotId}"`);
@@ -99,7 +111,7 @@ function validateNode(node: SiteBlocNode, field: string, slotIds: Set<string>, d
         return;
     }
     if (node.kind !== "bloc") {
-        throw new ContentValidationError(field, 'expected node kind "bloc" or "slot"');
+        throw new ContentValidationError(field, 'expected node kind "bloc", "slot" or "text"');
     }
     if (!isRegisteredBlocTag(node.tag)) {
         throw new ContentValidationError(field, `invalid bloc tag "${node.tag}"`);

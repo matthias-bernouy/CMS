@@ -32,7 +32,7 @@ describe("site bloc authoring endpoints", () => {
         });
         expect(await repository.getBlocViewJS("site-feature")).toBeNull();
 
-        const structureHtml = `<basic-section tone="soft">
+        const structureHtml = `<basic-section tone="soft">Shared &amp; reusable
             <cms-site-slot-placeholder
                 data-slot-id="cards"
                 data-slot-label="Cards"
@@ -64,7 +64,10 @@ describe("site bloc authoring endpoints", () => {
                     kind: "bloc",
                     tag: "basic-section",
                     attributes: { tone: "soft" },
-                    children: [{ kind: "slot", slotId: "cards" }],
+                    children: [
+                        { kind: "text", value: "Shared & reusable\n            " },
+                        { kind: "slot", slotId: "cards" },
+                    ],
                 },
             ],
             slots: [

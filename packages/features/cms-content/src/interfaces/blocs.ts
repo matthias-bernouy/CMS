@@ -34,6 +34,7 @@ export type TBloc = {
 export type TBlocWrite = Omit<TBloc, "ownership"> & { ownership?: BlocOwnership };
 
 export type SiteBlocNode =
+    | { kind: "text"; value: string }
     | {
           kind: "bloc";
           tag: string;

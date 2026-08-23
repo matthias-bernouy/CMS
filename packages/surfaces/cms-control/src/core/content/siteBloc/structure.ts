@@ -36,8 +36,9 @@ function parseChildren(parent: Element, slots: SiteBlocSlot[], slotIds: Set<stri
     const nodes: SiteBlocNode[] = [];
     for (const [index, child] of Array.from(parent.childNodes).entries()) {
         if (child.nodeType === child.TEXT_NODE) {
-            if ((child.textContent ?? "").trim()) {
-                throw new ContentValidationError(`${path}.${index}`, "text is not allowed in a private structure");
+            const value = child.textContent ?? "";
+            if (value.trim()) {
+                appendText(nodes, value);
             }
             continue;
         }
@@ -59,6 +60,15 @@ function parseChildren(parent: Element, slots: SiteBlocSlot[], slotIds: Set<stri
         });
     }
     return nodes;
+}
+
+function appendText(nodes: SiteBlocNode[], value: string): void {
+    const previous = nodes.at(-1);
+    if (previous?.kind === "text") {
+        previous.value += value;
+        return;
+    }
+    nodes.push({ kind: "text", value });
 }
 
 function parseSlot(element: Element, ids: Set<string>): SiteBlocSlot {
@@ -125,6 +135,9 @@ function csv(element: Element, attribute: string): string[] {
 }
 
 function serializeEditorNode(node: SiteBlocNode, slots: Map<string, SiteBlocSlot>, publishedIds: Set<string>): string {
+    if (node.kind === "text") {
+        return escapeText(node.value);
+    }
     if (node.kind === "slot") {
         const slot = slots.get(node.slotId);
         if (!slot) {
@@ -162,4 +175,8 @@ function serializeSlot(slot: SiteBlocSlot, published: boolean): string {
 
 function escapeAttribute(value: string): string {
     return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+}
+
+function escapeText(value: string): string {
+    return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }

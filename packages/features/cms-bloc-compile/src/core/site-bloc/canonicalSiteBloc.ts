@@ -41,6 +41,9 @@ export function normalizeLineEndings(value: string): string {
 }
 
 function normalizeNode(node: SiteBlocNode): SiteBlocNode {
+    if (node.kind === "text") {
+        return { kind: "text", value: normalizeLineEndings(node.value) };
+    }
     if (node.kind === "slot") {
         return { kind: "slot", slotId: normalizeLineEndings(node.slotId) };
     }

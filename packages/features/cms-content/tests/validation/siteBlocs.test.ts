@@ -38,10 +38,11 @@ describe("site bloc validation", () => {
         ).toThrow(ContentValidationError);
     });
 
-    test("derives sorted dependencies and accepts only bloc and slot nodes", () => {
+    test("derives sorted dependencies and accepts static private text", () => {
         const valid = validateSiteBlocSnapshot(
             siteBlocSnapshot({
                 structure: [
+                    { kind: "text", value: "Shared navigation" },
                     { kind: "bloc", tag: "z-card", attributes: {}, children: [] },
                     { kind: "bloc", tag: "a-card", attributes: {}, children: [] },
                     { kind: "bloc", tag: "z-card", attributes: {}, children: [] },
@@ -51,10 +52,9 @@ describe("site bloc validation", () => {
             "site-feature-panel",
         );
         expect(valid.dependencies).toEqual(["a-card", "z-card"]);
+        expect(valid.structure[0]).toEqual({ kind: "text", value: "Shared navigation" });
         expect(() =>
-            validateSiteBlocSnapshot(
-                siteBlocSnapshot({ structure: [{ kind: "text", value: "unsupported" } as never] }),
-            ),
+            validateSiteBlocSnapshot(siteBlocSnapshot({ structure: [{ kind: "text", value: "{{ private.value }}" }] })),
         ).toThrow(ContentValidationError);
     });
 

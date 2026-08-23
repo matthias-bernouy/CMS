@@ -119,5 +119,29 @@ describe("generated site bloc compilation", () => {
                 ],
             }),
         ).toThrow('Binding runtime tag "cms-binding-core" is forbidden');
+
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [{ kind: "text", value: "{{ private.value }}" }, ...base.draft.structure],
+            }),
+        ).toThrow("Dynamic expression is forbidden in site bloc text");
+    });
+
+    test("serializes escaped static text in private composition", () => {
+        const base = definition();
+        const source = generateSiteBlocSourceBundle(base, {
+            ...base.draft,
+            structure: [
+                {
+                    kind: "bloc",
+                    tag: "basic-container",
+                    attributes: {},
+                    children: [{ kind: "text", value: "Morrow & <Co>" }, ...base.draft.structure[0]!.children],
+                },
+            ],
+        });
+
+        expect(source["template.html"]).toContain("Morrow &amp; &lt;Co&gt;");
     });
 });
