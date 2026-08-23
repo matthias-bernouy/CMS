@@ -1,6 +1,13 @@
 import type { DataShape } from "cms-sources/interfaces/DataShape";
 import type { Source } from "cms-sources/interfaces/Source";
 import { makeEndpointUrn, makeSourceUrn, parseUrn } from "./urn";
+export {
+    SYSTEM_SITE_ORGANIZATION_ENDPOINT_URN,
+    SYSTEM_SITE_SOURCE,
+    SYSTEM_SITE_SOURCE_ID,
+    SYSTEM_SITE_SOURCE_URN,
+} from "./siteSource";
+import { SYSTEM_SITE_SOURCE } from "./siteSource";
 
 export const SYSTEM_SOURCE_ID_PREFIX = "system-";
 export const SYSTEM_AUTH_SOURCE_ID = "system-auth";
@@ -125,7 +132,7 @@ export const SYSTEM_AUTH_SOURCE: Source = {
     ],
 };
 
-export const SYSTEM_SOURCES: readonly Source[] = [SYSTEM_AUTH_SOURCE];
+export const SYSTEM_SOURCES: readonly Source[] = [SYSTEM_AUTH_SOURCE, SYSTEM_SITE_SOURCE];
 
 export function isSystemSourceId(sourceId: string): boolean {
     return sourceId.startsWith(SYSTEM_SOURCE_ID_PREFIX);

@@ -69,6 +69,7 @@ export {
     validateThemeSettings,
 } from "cms-content/core/theme";
 export { countValues, normalizeTags } from "cms-content/core/queries/counts";
+export { projectPublicSiteOrganization } from "cms-content/core/queries/publicOrganization";
 export {
     isPublishedPage,
     publishedPageSnapshot,
@@ -152,6 +153,7 @@ export {
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { generateStyleEntry } from "cms-content/http/generateStyleEntry";
+export { executeSiteSystemSourceEndpoint } from "cms-content/http/systemSiteSource";
 export {
     PUBLISHED_PAGE_SNAPSHOT_ROUTE,
     PUBLISHED_PAGE_SNAPSHOT_SCHEMA,
