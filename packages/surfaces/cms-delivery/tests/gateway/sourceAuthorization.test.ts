@@ -1,10 +1,41 @@
 import { describe, expect, test } from "bun:test";
+import { defaultSystem } from "@bernouy/cms-content";
 import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
-import type { SourceEndpoint } from "@bernouy/cms-sources";
-import type DeliveryCms from "cms-delivery/DeliveryCms";
+import { InMemorySourceRepository, SYSTEM_SITE_SOURCE, type SourceEndpoint } from "@bernouy/cms-sources";
+import DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";
+import { CaptureRunner } from "./support/CaptureRunner";
 
 describe("authorizeDeliverySourceEndpoint", () => {
+    test("always exposes the public site organization system endpoint", async () => {
+        const result = await authorizeDeliverySourceEndpoint(
+            { roles: undefined } as unknown as DeliveryCms,
+            SYSTEM_SITE_SOURCE.endpoints[0]!,
+            new Request("http://site/.cms/sources/system-site/organization"),
+        );
+
+        expect(result).toBe(true);
+    });
+
+    test("serves the organization without auth or role configuration", async () => {
+        const settings = defaultSystem();
+        settings.site.organization.name = "Public organization";
+        const runner = new CaptureRunner();
+        new DeliveryCms({
+            runner,
+            repository: { getSystem: async () => settings } as never,
+            sources: new InMemorySourceRepository(),
+        });
+
+        const response = await runner.defaultHandler(
+            "GET",
+            "/.cms/sources",
+        )(new Request("http://site/.cms/sources/system-site/organization"));
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({ name: "Public organization" });
+    });
+
     test("ignores stale grants above the caller access mode", async () => {
         const roles = new InMemoryRolesRepository();
         await roles.upsert({

@@ -13031,12 +13031,47 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     return `urn:${sourceId}:${endpointId}`;
   }
 
+  // ../../features/cms-sources/src/core/system/siteSource.ts
+  var SYSTEM_SITE_SOURCE_ID = "system-site";
+  var SYSTEM_SITE_SOURCE_URN = makeSourceUrn(SYSTEM_SITE_SOURCE_ID);
+  var SYSTEM_SITE_ORGANIZATION_ENDPOINT_URN = makeEndpointUrn(SYSTEM_SITE_SOURCE_ID, "organization");
+  var stringShape = (title) => ({ type: "string", title });
+  var addressShape = {
+    type: "object",
+    title: "Address",
+    properties: {
+      streetAddress: stringShape("Street address"),
+      postalCode: stringShape("Postal code"),
+      addressLocality: stringShape("City"),
+      addressRegion: stringShape("Region"),
+      addressCountry: stringShape("Country code")
+    },
+    required: ["streetAddress", "postalCode", "addressLocality", "addressRegion", "addressCountry"]
+  };
+  var organizationShape = {
+    type: "object",
+    properties: {
+      name: stringShape("Name"),
+      legalName: stringShape("Legal name"),
+      description: stringShape("Description"),
+      logo: stringShape("Logo"),
+      email: stringShape("Email"),
+      telephone: stringShape("Telephone"),
+      address: addressShape,
+      sameAs: {
+        type: "array",
+        title: "Public profiles",
+        items: { type: "string" }
+      }
+    },
+    required: ["name", "legalName", "description", "logo", "email", "telephone", "address", "sameAs"]
+  };
   // ../../features/cms-sources/src/core/system/systemSources.ts
   var SYSTEM_SOURCE_ID_PREFIX = "system-";
   var SYSTEM_AUTH_SOURCE_ID = "system-auth";
   var SYSTEM_AUTH_SOURCE_URN = makeSourceUrn(SYSTEM_AUTH_SOURCE_ID);
   var SYSTEM_TARGET_SCHEME = "cms-system://";
-  var stringShape = () => ({ type: "string" });
+  var stringShape2 = () => ({ type: "string" });
   var booleanShape = () => ({ type: "boolean" });
   var objectShape = (properties, required = []) => ({
     type: "object",
@@ -13044,13 +13079,13 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
     ...required.length ? { required } : {}
   });
   var subjectShape = objectShape({
-    identifier: stringShape(),
-    email: stringShape(),
-    role: stringShape()
+    identifier: stringShape2(),
+    email: stringShape2(),
+    role: stringShape2()
   });
   var okShape = objectShape({ ok: booleanShape() });
-  var emailBody = objectShape({ email: stringShape() }, ["email"]);
-  var tokenBody = objectShape({ token: stringShape() }, ["token"]);
+  var emailBody = objectShape({ email: stringShape2() }, ["email"]);
+  var tokenBody = objectShape({ token: stringShape2() }, ["token"]);
   var SYSTEM_AUTH_SOURCE = {
     urn: SYSTEM_AUTH_SOURCE_URN,
     meta: {
@@ -13073,7 +13108,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/login`,
         meta: { name: "Log in" },
         input: {
-          body: objectShape({ email: stringShape(), password: stringShape(), returnTo: stringShape() }, [
+          body: objectShape({ email: stringShape2(), password: stringShape2(), returnTo: stringShape2() }, [
             "email",
             "password"
           ])
@@ -13096,15 +13131,15 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         meta: { name: "Sign up" },
         input: {
           body: objectShape({
-            email: stringShape(),
-            password: stringShape()
+            email: stringShape2(),
+            password: stringShape2()
           }, ["email", "password"])
         },
         output: [
           {
             status: "200",
             body: okShape,
-            triggerBody: objectShape({ cmsUserId: { ...stringShape(), nullable: true } }, ["cmsUserId"])
+            triggerBody: objectShape({ cmsUserId: { ...stringShape2(), nullable: true } }, ["cmsUserId"])
           }
         ]
       },
@@ -13141,7 +13176,7 @@ cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); 
         access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/confirm`,
         meta: { name: "Confirm password reset" },
-        input: { body: objectShape({ token: stringShape(), password: stringShape() }, ["token", "password"]) },
+        input: { body: objectShape({ token: stringShape2(), password: stringShape2() }, ["token", "password"]) },
         output: [{ status: "200", body: okShape }]
       }
     ]

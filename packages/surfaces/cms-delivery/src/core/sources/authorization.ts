@@ -4,6 +4,7 @@ import { ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE, canRole } from "@bernouy/cms-permis
 import { resolveRequestRoleDefinitions } from "@bernouy/cms-permissions/requestScope";
 import {
     SYSTEM_AUTH_SOURCE_URN,
+    SYSTEM_SITE_SOURCE_URN,
     sourceEndpointAccessAllows,
     sourceEndpointAccessMode,
     sourceUrnOf,
@@ -35,7 +36,8 @@ export async function authorizeDeliverySourceEndpoint(
     req: Request,
     options: { subject?: Subject<string> | null } = {},
 ): Promise<SourceAuthorizationResult> {
-    if (delivery.auth && sourceUrnOf(endpoint.urn) === SYSTEM_AUTH_SOURCE_URN) {
+    const sourceUrn = sourceUrnOf(endpoint.urn);
+    if ((delivery.auth && sourceUrn === SYSTEM_AUTH_SOURCE_URN) || sourceUrn === SYSTEM_SITE_SOURCE_URN) {
         return true;
     }
 

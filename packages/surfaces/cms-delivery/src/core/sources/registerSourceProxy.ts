@@ -6,9 +6,11 @@ import {
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     sourcesPrefix,
+    SYSTEM_SITE_SOURCE_URN,
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
 import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth";
+import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
 import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN } from "@bernouy/cms-functions";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint, resolveDeliverySubject } from "cms-delivery/core/sources/authorization";
@@ -82,6 +84,9 @@ async function executeSystemEndpoint(
             deps: scope.deps,
             resolveUser: async () => (subject ? { id: subject.identifier, role: subject.role } : {}),
         });
+    }
+    if (endpoint.urn.startsWith(`${SYSTEM_SITE_SOURCE_URN}:`)) {
+        return executeSiteSystemSourceEndpoint(delivery.repository, endpoint);
     }
     if (delivery.auth) {
         return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request, {

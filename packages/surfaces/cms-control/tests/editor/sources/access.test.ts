@@ -5,6 +5,8 @@ import {
     InMemorySourceRepository,
     seedSources,
     SYSTEM_AUTH_SOURCE,
+    SYSTEM_SITE_ORGANIZATION_ENDPOINT_URN,
+    SYSTEM_SITE_SOURCE,
     SYSTEM_SOURCES,
     type Source,
     type SourceEndpointAccessMode,
@@ -24,7 +26,7 @@ describe("GET /api/editor/sources access", () => {
     });
 
     test("keeps the public system authentication actions authorable", async () => {
-        const sources = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
+        const sources = new CompositeSourceRepository(new InMemorySourceRepository(), [SYSTEM_AUTH_SOURCE]);
 
         const body = await listEditorSources(sources);
 
@@ -44,6 +46,33 @@ describe("GET /api/editor/sources access", () => {
             { path: "email", type: "string", required: true },
             { path: "password", type: "string", required: true },
             { path: "returnTo", type: "string" },
+        ]);
+    });
+
+    test("exposes the site organization as a public editor source", async () => {
+        const sources = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
+
+        const body = await listEditorSources(sources);
+        const organization = body.find((source) => source.endpointUrn === SYSTEM_SITE_ORGANIZATION_ENDPOINT_URN);
+
+        expect(SYSTEM_SITE_SOURCE.endpoints[0]?.access?.mode).toBe("public");
+        expect(organization).toMatchObject({
+            provider: "system-site",
+            providerUrn: "urn:system-site",
+            providerLabel: "Site",
+            label: "Organization",
+            method: "GET",
+            url: "/cms/.cms/sources/system-site/organization",
+        });
+        expect(organization?.fields.map((field) => field.path)).toEqual([
+            "name",
+            "legalName",
+            "description",
+            "logo",
+            "email",
+            "telephone",
+            "address",
+            "sameAs",
         ]);
     });
 

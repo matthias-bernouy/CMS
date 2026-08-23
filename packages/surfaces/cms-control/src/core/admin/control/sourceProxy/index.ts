@@ -4,6 +4,7 @@ import {
     type PublicAuthRoutesConfig,
     type Subject,
 } from "@bernouy/cms-auth";
+import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
 import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN } from "@bernouy/cms-functions";
 import { ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE, can, effectiveGrantsFor } from "@bernouy/cms-permissions";
 import { resolveRequestRoleDefinitions } from "@bernouy/cms-permissions/requestScope";
@@ -19,6 +20,7 @@ import {
     sourceEndpointAccessAllows,
     sourceEndpointAccessMode,
     sourcesPrefix,
+    SYSTEM_SITE_SOURCE_URN,
     type SourceEndpoint,
     type SourceEndpointAccessMode,
 } from "@bernouy/cms-sources";
@@ -83,6 +85,9 @@ export function mountControlSourceProxy(
                                 resolveUser: async () =>
                                     subject ? { id: subject.identifier, role: subject.role } : {},
                             });
+                        }
+                        if (endpoint.urn.startsWith(`${SYSTEM_SITE_SOURCE_URN}:`)) {
+                            return executeSiteSystemSourceEndpoint(state.repository, endpoint);
                         }
                         if (controlPublicAuth) {
                             return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request, {
