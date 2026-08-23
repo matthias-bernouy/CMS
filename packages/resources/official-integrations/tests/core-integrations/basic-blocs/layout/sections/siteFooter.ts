@@ -38,7 +38,10 @@ export function registerSiteFooterTest(): void {
         expect(footer.shadowRoot?.querySelector("nav")?.getAttribute("aria-label")).toBe("Company links");
         const styles = footer.shadowRoot?.querySelector("style")?.textContent ?? "";
         expect(styles).toContain("repeat(auto-fit");
-        expect(styles).not.toContain("@media");
+        expect(styles).toContain('a[slot="navigation"]:hover');
+        expect(styles).toContain("--cms-link-color: var(--_footer-color)");
+        expect(styles).toContain("min-height: 2rem");
+        expect(styles).toContain("prefers-reduced-motion: reduce");
         footer.remove();
     });
 }

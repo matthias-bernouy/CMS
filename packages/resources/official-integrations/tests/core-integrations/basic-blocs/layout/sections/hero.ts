@@ -36,6 +36,8 @@ export function registerHeroTest(): void {
         expect(hero.shadowRoot?.querySelector("section")).not.toBeNull();
         const styles = hero.shadowRoot?.querySelector("style")?.textContent ?? "";
         expect(styles).toContain("repeat(auto-fit");
+        expect(styles).toContain("grid-template-columns: minmax(0, 1fr)");
+        expect(styles).toContain("overflow-wrap: anywhere");
         expect(styles).toContain(':host([media-position="start"])');
         for (const appearance of ["soft", "filled", "outlined"]) {
             expect(styles).toContain(`:host([appearance="${appearance}"])`);

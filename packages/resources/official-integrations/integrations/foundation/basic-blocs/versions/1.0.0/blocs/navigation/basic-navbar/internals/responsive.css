@@ -10,6 +10,11 @@
     background: transparent;
     color: inherit;
     cursor: pointer;
+    transition: background-color 120ms ease;
+}
+
+:host([collapsed]) [part="toggle"]:hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
 }
 
 :host([collapsed]) [part="toggle"]:focus-visible {
@@ -74,5 +79,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    [part="toggle-icon"] i { transition: none; }
+    :host([collapsed]) [part="toggle"],
+    :host([collapsed]) [part="toggle-icon"] i { transition: none; }
 }

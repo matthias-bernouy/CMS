@@ -26,7 +26,7 @@ const THEME_SEMANTIC_BASELINE = `@layer cms-theme-base {
   }
 
   :where(a) {
-    color: var(--integration-basic-blocs-primary-base, LinkText);
+    color: var(--cms-link-color, var(--integration-basic-blocs-primary-base, LinkText));
   }
 
   :where(button, input, select, textarea) {

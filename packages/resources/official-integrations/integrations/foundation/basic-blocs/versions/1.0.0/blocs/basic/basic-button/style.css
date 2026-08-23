@@ -92,3 +92,7 @@
 [part^="icon-"][hidden] { display: none; }
 slot[name="icon-left"]::slotted(svg),
 slot[name="icon-right"]::slotted(svg) { width: 1em; height: 1em; }
+
+@media (prefers-reduced-motion: reduce) {
+    [part="button"] { transition: none; }
+}

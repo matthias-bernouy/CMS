@@ -57,6 +57,7 @@
 
 [part="content"] {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
     max-width: 48rem;
     gap: var(--integration-basic-blocs-space-lg, 1.5rem);
@@ -91,6 +92,7 @@
     font-weight: 750;
     letter-spacing: -.04em;
     line-height: .98;
+    overflow-wrap: anywhere;
 }
 
 ::slotted(p[slot="description"]) {

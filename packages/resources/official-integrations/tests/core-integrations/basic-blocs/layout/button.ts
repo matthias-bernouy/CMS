@@ -100,6 +100,7 @@ export function registerButtonTest(): void {
         expect(styles).toContain("--_tone-base: var(--integration-basic-blocs-danger-base, CanvasText)");
         expect(styles).toContain(':host([appearance="soft"])');
         expect(styles).toContain("--_button-background: var(--_tone-muted)");
+        expect(styles).toContain("prefers-reduced-motion: reduce");
         expect(styles).not.toContain("--primary-base");
         form.remove();
     });

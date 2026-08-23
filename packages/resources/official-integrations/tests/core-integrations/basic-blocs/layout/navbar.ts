@@ -135,6 +135,11 @@ export function registerNavbarTest(): void {
             expect(styles).toContain(`:host([appearance="${appearance}"])`);
         }
         expect(styles).toContain(':host([collapsed]) [part="panel"]');
+        expect(styles).toContain('[part="toggle"]:hover');
+        expect(styles).toContain('a[slot="actions"]:hover');
+        expect(styles).toContain("--cms-link-color: var(--_navbar-action-color)");
+        expect(styles).toContain("translateY(-1px)");
+        expect(styles).toContain("prefers-reduced-motion: reduce");
         expect(styles).not.toContain("48rem");
         navbar.remove();
     });

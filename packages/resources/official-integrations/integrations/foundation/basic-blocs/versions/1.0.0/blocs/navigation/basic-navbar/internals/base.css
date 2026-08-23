@@ -5,6 +5,7 @@
     --_navbar-panel-background: var(--integration-basic-blocs-surface-background, Canvas);
     --_navbar-action-background: var(--_tone-base);
     --_navbar-action-color: var(--_tone-foreground);
+    --_navbar-action-hover-background: color-mix(in srgb, var(--_navbar-action-background) 86%, var(--_navbar-action-color));
     --_navbar-padding-block: var(--integration-basic-blocs-space-sm, .5rem);
     --_navbar-padding-inline: var(--integration-basic-blocs-space-md, 1rem);
     --_navbar-link-padding: .5rem .625rem;
@@ -108,16 +109,21 @@
 
 ::slotted(a[slot="navigation"]),
 ::slotted(a[slot="actions"]) {
+    --cms-link-color: var(--_navbar-color);
+
     display: inline-flex;
     align-items: center;
     border-radius: var(--integration-basic-blocs-action-radius, .5rem);
     color: inherit;
     font: inherit;
     text-decoration: none;
+    transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
     white-space: nowrap;
 }
 
 ::slotted(a[slot="brand"]) {
+    --cms-link-color: var(--_navbar-color);
+
     display: inline-flex;
     align-items: center;
     border-radius: var(--integration-basic-blocs-action-radius, .5rem);
@@ -126,8 +132,11 @@
     font-size: 1.125rem;
     font-weight: 700;
     text-decoration: none;
+    transition: opacity 120ms ease;
     white-space: nowrap;
 }
+
+::slotted(a[slot="brand"]:hover) { opacity: .72; }
 
 ::slotted(a[slot="navigation"]) { padding: var(--_navbar-link-padding); }
 ::slotted(a[slot="navigation"]:hover),
@@ -136,11 +145,26 @@
 }
 
 ::slotted(a[slot="actions"]) {
+    --cms-link-color: var(--_navbar-action-color);
+
     padding: var(--_navbar-link-padding);
     background: var(--_navbar-action-background);
     color: var(--_navbar-action-color);
     font-weight: 650;
 }
 
+::slotted(a[slot="actions"]:hover) {
+    background: var(--_navbar-action-hover-background);
+    transform: translateY(-1px);
+}
+
+::slotted(a[slot="actions"]:active) { transform: translateY(0); }
+
 :host(:not(:has([slot="brand"]))) [part="brand"],
 :host(:not(:has([slot="actions"]))) [part="actions"] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    ::slotted(a[slot="brand"]),
+    ::slotted(a[slot="navigation"]),
+    ::slotted(a[slot="actions"]) { transition: none; }
+}
