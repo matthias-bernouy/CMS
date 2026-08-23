@@ -1,0 +1,10 @@
+{
+    "default-tag": "site-layout",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Site layout",
+        "description": "Shared site shell with navigation, page content, and footer."
+    }
+}

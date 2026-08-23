@@ -2,22 +2,9 @@
 title: "Contact — Morrow"
 description: "Start a project with Morrow or simply say hello."
 visible: true
-tags: [contact, studio]
+tags: ["contact", "studio"]
 ---
-<basic-stack gap="none">
-    <header aria-label="Site header">
-        <basic-container width="wide" gutter="md">
-            <basic-navbar tone="primary" appearance="plain" density="regular" navigation-label="Primary navigation" open-label="Open navigation" close-label="Close navigation">
-                <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
-                <a slot="navigation" href="/#work">Work</a>
-                <a slot="navigation" href="/#services">Services</a>
-                <a slot="navigation" href="/about">About</a>
-                <a slot="actions" href="/contact" aria-current="page">Start a project</a>
-            </basic-navbar>
-        </basic-container>
-    </header>
-
-    <basic-stack id="main-content" role="main" gap="none">
+<site-layout><basic-stack id="main-content" role="main" gap="none" slot="content">
         <basic-hero tone="neutral" appearance="filled" width="wide" media-position="end" align="start" density="spacious">
             <basic-badge slot="eyebrow" tone="secondary" appearance="filled" dot="true">Now booking</basic-badge>
             <h1 slot="title">Let’s make something unmistakable.</h1>
@@ -60,13 +47,4 @@ tags: [contact, studio]
             <img slot="media" src="/.cms/files/by-id/019fadc7-6f5b-7002-b474-1dd916562b7b" width="1448" height="1086" loading="lazy" decoding="async" alt="Terracotta architecture and a cobalt stair overlooking the sea">
         </basic-media-section>
     </basic-stack>
-
-    <basic-site-footer tone="primary" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
-        <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
-        <p slot="description">Independent creative studio · Paris / Worldwide</p>
-        <a slot="navigation" href="/">Home</a>
-        <a slot="navigation" href="/about">About</a>
-        <a slot="navigation" href="/contact">Contact</a>
-        <p slot="legal">© Morrow. All rights reserved.</p>
-    </basic-site-footer>
-</basic-stack>
+</site-layout>

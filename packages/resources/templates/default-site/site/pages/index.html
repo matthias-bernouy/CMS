@@ -2,22 +2,9 @@
 title: "Morrow — Independent creative studio"
 description: "A bold, fully editable website starter for a modern studio, agency, or independent business."
 visible: true
-tags: [home, studio, starter]
+tags: ["home", "studio", "starter"]
 ---
-<basic-stack gap="none">
-    <header aria-label="Site header">
-        <basic-container width="wide" gutter="md">
-            <basic-navbar tone="primary" appearance="plain" density="regular" navigation-label="Primary navigation" open-label="Open navigation" close-label="Close navigation">
-                <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
-                <a slot="navigation" href="#work">Work</a>
-                <a slot="navigation" href="#services">Services</a>
-                <a slot="navigation" href="/about">About</a>
-                <a slot="actions" href="/contact">Start a project</a>
-            </basic-navbar>
-        </basic-container>
-    </header>
-
-    <basic-stack id="main-content" role="main" gap="none">
+<site-layout><basic-stack id="main-content" role="main" gap="none" slot="content">
         <basic-hero tone="primary" appearance="soft" width="wide" media-position="end" align="start" density="spacious">
             <basic-badge slot="eyebrow" tone="primary" appearance="filled" size="md">Independent creative partner</basic-badge>
             <h1 slot="title">Ideas that move brands forward.</h1>
@@ -101,13 +88,4 @@ tags: [home, studio, starter]
             <basic-button slot="actions" action="link" href="/contact" tone="neutral" appearance="filled" size="xl">Start a project →</basic-button>
         </basic-cta>
     </basic-stack>
-
-    <basic-site-footer tone="primary" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
-        <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
-        <p slot="description">Independent creative studio · Paris / Worldwide</p>
-        <a slot="navigation" href="/">Home</a>
-        <a slot="navigation" href="/about">About</a>
-        <a slot="navigation" href="/contact">Contact</a>
-        <p slot="legal">© Morrow. All rights reserved.</p>
-    </basic-site-footer>
-</basic-stack>
+</site-layout>

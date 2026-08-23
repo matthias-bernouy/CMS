@@ -1,0 +1,378 @@
+{
+    "createdAt": "2026-08-23T16:41:19.396Z",
+    "draft": {
+        "defaultContent": "",
+        "dependencies": [
+            "a",
+            "basic-navbar",
+            "basic-site-footer",
+            "p"
+        ],
+        "description": "Shared site shell with navigation, page content, and footer.",
+        "group": "Layout",
+        "name": "Site layout",
+        "slots": [
+            {
+                "accepts": [
+                    {
+                        "kind": "any-component"
+                    }
+                ],
+                "id": "01a02f84-b90e-7000-92ff-2ab4f3b00bd4",
+                "label": "Content",
+                "slot": "content"
+            }
+        ],
+        "structure": [
+            {
+                "attributes": {},
+                "children": [
+                    {
+                        "attributes": {
+                            "href": "/",
+                            "slot": "brand"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Morrow"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Home"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/about",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "About"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/contact",
+                            "slot": "actions"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Contact"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    }
+                ],
+                "kind": "bloc",
+                "tag": "basic-navbar"
+            },
+            {
+                "kind": "slot",
+                "slotId": "01a02f84-b90e-7000-92ff-2ab4f3b00bd4"
+            },
+            {
+                "attributes": {},
+                "children": [
+                    {
+                        "attributes": {
+                            "href": "/",
+                            "slot": "brand"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Morrow"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "slot": "description"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Independent creative studio turning ambitious ideas into clear, memorable experiences."
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "p"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Home"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/about",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "About"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/contact",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Contact"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "slot": "legal"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "© 2026 Morrow. All rights reserved."
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "p"
+                    }
+                ],
+                "kind": "bloc",
+                "tag": "basic-site-footer"
+            }
+        ]
+    },
+    "draftRevision": 10,
+    "id": "01a02f7f-7d24-7000-86a9-7738ca53beb1",
+    "lifecycle": "active",
+    "ownership": {
+        "definitionId": "01a02f7f-7d24-7000-86a9-7738ca53beb1",
+        "kind": "site-builder"
+    },
+    "published": {
+        "defaultContent": "",
+        "dependencies": [
+            "a",
+            "basic-navbar",
+            "basic-site-footer",
+            "p"
+        ],
+        "description": "Shared site shell with navigation, page content, and footer.",
+        "group": "Layout",
+        "name": "Site layout",
+        "slots": [
+            {
+                "accepts": [
+                    {
+                        "kind": "any-component"
+                    }
+                ],
+                "id": "01a02f84-b90e-7000-92ff-2ab4f3b00bd4",
+                "label": "Content",
+                "slot": "content"
+            }
+        ],
+        "structure": [
+            {
+                "attributes": {},
+                "children": [
+                    {
+                        "attributes": {
+                            "href": "/",
+                            "slot": "brand"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Morrow"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Home"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/about",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "About"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/contact",
+                            "slot": "actions"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Contact"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    }
+                ],
+                "kind": "bloc",
+                "tag": "basic-navbar"
+            },
+            {
+                "kind": "slot",
+                "slotId": "01a02f84-b90e-7000-92ff-2ab4f3b00bd4"
+            },
+            {
+                "attributes": {},
+                "children": [
+                    {
+                        "attributes": {
+                            "href": "/",
+                            "slot": "brand"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Morrow"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "slot": "description"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Independent creative studio turning ambitious ideas into clear, memorable experiences."
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "p"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Home"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/about",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "About"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "href": "/contact",
+                            "slot": "navigation"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "Contact"
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "a"
+                    },
+                    {
+                        "attributes": {
+                            "slot": "legal"
+                        },
+                        "children": [
+                            {
+                                "kind": "text",
+                                "value": "© 2026 Morrow. All rights reserved."
+                            }
+                        ],
+                        "kind": "bloc",
+                        "tag": "p"
+                    }
+                ],
+                "kind": "bloc",
+                "tag": "basic-site-footer"
+            }
+        ]
+    },
+    "publishedRevision": 8,
+    "schema": "cms.site-bloc.v1",
+    "tag": "site-layout",
+    "updatedAt": "2026-08-23T17:35:11.526Z"
+}
