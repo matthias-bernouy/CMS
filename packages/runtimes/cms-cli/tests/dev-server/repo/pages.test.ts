@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdtempSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalFsCmsRepository } from "cms-cli/dev-server/repo/LocalFsCmsRepository";
@@ -49,5 +49,21 @@ describe("LocalFsCmsRepository pages", () => {
         });
         expect(existsSync(join(siteDir, "pages", "pricing.html"))).toBe(false);
         expect(existsSync(join(siteDir, "pages", "plans.html"))).toBe(true);
+    });
+
+    test("keeps one final newline across editor saves", async () => {
+        const siteDir = mkdtempSync(join(tmpdir(), "p9r-dev-pages-"));
+        const repository = new LocalFsCmsRepository(siteDir, new Map());
+        await repository.insertPage("/about", "About");
+        const page = await repository.getPageById("/about");
+
+        await repository.updatePage({ ...page!, content: "<main>About</main>\n\n" });
+        const file = join(siteDir, "pages", "about.html");
+        const firstSave = readFileSync(file, "utf8");
+        expect(firstSave).toEndWith("<main>About</main>\n");
+        expect(firstSave).not.toEndWith("\n\n");
+
+        await repository.updatePage((await repository.getPageById("/about"))!);
+        expect(readFileSync(file, "utf8")).toBe(firstSave);
     });
 });

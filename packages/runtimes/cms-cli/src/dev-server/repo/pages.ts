@@ -94,7 +94,7 @@ export class PagesStore {
 
     private async _write(file: string, fm: PageFrontmatter, content: string): Promise<void> {
         await mkdir(dirname(file), { recursive: true });
-        await writeFile(file, serializeFrontmatter(fm) + content, "utf-8");
+        await writeFile(file, serializeFrontmatter(fm) + normalizePageContent(content), "utf-8");
     }
 
     async delete(path: string): Promise<void> {
@@ -103,4 +103,9 @@ export class PagesStore {
             await unlink(file);
         }
     }
+}
+
+function normalizePageContent(content: string): string {
+    const trimmed = content.trimEnd();
+    return trimmed ? `${trimmed}\n` : "";
 }
