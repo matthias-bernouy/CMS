@@ -52,6 +52,15 @@ describe("LeftMenuLayout mobile navigation", () => {
         expect(styles).toContain("min-width: 0;");
     });
 
+    test("moves focus to content through the skip link", () => {
+        const layout = document.createElement("w13c-left-menu-layout-test");
+        document.body.append(layout);
+
+        layout.shadowRoot!.querySelector<HTMLAnchorElement>(".skip-link")!.click();
+
+        expect(layout.shadowRoot!.activeElement).toBe(layout.shadowRoot!.querySelector(".app-content"));
+    });
+
     test("exposes one drawer at a time and keeps closed navigation inert", async () => {
         const layout = document.createElement("w13c-left-menu-layout-test");
         const primaryNavigation = document.createElement("div");

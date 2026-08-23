@@ -13,6 +13,7 @@ export class LeftMenuLayout extends Component {
     private _primaryMobileToggle: HTMLButtonElement | null;
     private _secondaryMobileToggle: HTMLButtonElement | null;
     private _mobileBackdrop: HTMLButtonElement | null;
+    private _skipLink: HTMLAnchorElement | null;
     private _mobileMedia: MediaQueryList | null = null;
 
     constructor() {
@@ -24,6 +25,7 @@ export class LeftMenuLayout extends Component {
         this._primaryMobileToggle = this.shadowRoot?.querySelector('[data-mobile-nav="primary"]') ?? null;
         this._secondaryMobileToggle = this.shadowRoot?.querySelector('[data-mobile-nav="secondary"]') ?? null;
         this._mobileBackdrop = this.shadowRoot?.querySelector("[data-mobile-nav-close]") ?? null;
+        this._skipLink = this.shadowRoot?.querySelector(".skip-link") ?? null;
     }
 
     static get observedAttributes() {
@@ -43,6 +45,7 @@ export class LeftMenuLayout extends Component {
         this._primaryMobileToggle?.addEventListener("click", this._onPrimaryMobileToggle);
         this._secondaryMobileToggle?.addEventListener("click", this._onSecondaryMobileToggle);
         this._mobileBackdrop?.addEventListener("click", this._onMobileBackdropClick);
+        this._skipLink?.addEventListener("click", this._onSkipLinkClick);
         this.addEventListener("click", this._onNavigationClick);
         this.shadowRoot?.addEventListener("keydown", this._onKeyDown);
         this._mobileMedia.addEventListener("change", this._onMobileMediaChange);
@@ -53,6 +56,7 @@ export class LeftMenuLayout extends Component {
         this._primaryMobileToggle?.removeEventListener("click", this._onPrimaryMobileToggle);
         this._secondaryMobileToggle?.removeEventListener("click", this._onSecondaryMobileToggle);
         this._mobileBackdrop?.removeEventListener("click", this._onMobileBackdropClick);
+        this._skipLink?.removeEventListener("click", this._onSkipLinkClick);
         this.removeEventListener("click", this._onNavigationClick);
         this.shadowRoot?.removeEventListener("keydown", this._onKeyDown);
         this._mobileMedia?.removeEventListener("change", this._onMobileMediaChange);
@@ -122,6 +126,11 @@ export class LeftMenuLayout extends Component {
     };
 
     private _onMobileBackdropClick = (): void => this._closeMobileNavigation(true);
+
+    private _onSkipLinkClick = (event: Event): void => {
+        event.preventDefault();
+        this.focusContent();
+    };
 
     private _onNavigationClick = (event: Event): void => {
         const path = event.composedPath();

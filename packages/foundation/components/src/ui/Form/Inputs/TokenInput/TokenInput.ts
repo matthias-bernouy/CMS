@@ -12,7 +12,16 @@ import { TokenInputView, type TokenInputHandlers } from "./TokenInputView";
 
 export class TokenInput extends Component {
     static formAssociated = true;
-    static readonly observedAttributes = ["value", "label", "placeholder", "disabled", "creatable", "api", "resource"];
+    static readonly observedAttributes = [
+        "value",
+        "label",
+        "placeholder",
+        "hint",
+        "disabled",
+        "creatable",
+        "api",
+        "resource",
+    ];
 
     private readonly view: TokenInputView;
     private readonly remoteOptions: RemoteTokenOptions;
@@ -85,6 +94,7 @@ export class TokenInput extends Component {
         },
         keydown: (event) => this.onKeydown(event),
         blur: () => {
+            this.commitPendingValue();
             this.inputFocused = false;
             window.setTimeout(() => this.hideList(), 120);
         },
@@ -158,6 +168,26 @@ export class TokenInput extends Component {
             this.view.input?.focus();
             this.renderList("");
         }
+    }
+
+    private commitPendingValue(): void {
+        const query = this.query;
+        if (!query || !this.hasAttribute("creatable")) {
+            return;
+        }
+        if (this.selected.includes(query)) {
+            if (this.view.input) {
+                this.view.input.value = "";
+            }
+            return;
+        }
+        const normalized = query.toLowerCase();
+        const option = this.options.find(
+            (item) => !item.disabled && (item.value === query || item.label.toLowerCase() === normalized),
+        );
+        this.selectItem(
+            option ? { ...option, kind: "option" } : { kind: "create", value: query, label: query, disabled: false },
+        );
     }
 
     private onKeydown(event: KeyboardEvent): void {

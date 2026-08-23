@@ -59,10 +59,12 @@ describe("TokenInput", () => {
             placeholder: "Choose tags",
             disabled: "",
             creatable: "",
+            hint: "Press Enter to add a value",
         });
         const input = shadowElement<HTMLInputElement>(control, "input");
         const label = shadowElement<HTMLElement>(control, ".label");
         const createButton = shadowElement<HTMLButtonElement>(control, "[data-create]");
+        const hint = shadowElement<HTMLElement>(control, ".hint");
 
         expect({ value: control.value, values: control.values, labels: tokenLabels(control) }).toEqual({
             value: "alpha,missing",
@@ -73,6 +75,10 @@ describe("TokenInput", () => {
             label: "Tags",
             disabled: true,
             createHidden: false,
+        });
+        expect({ hint: hint.textContent, hidden: hint.hidden }).toEqual({
+            hint: "Press Enter to add a value",
+            hidden: false,
         });
 
         const values = control.values;
@@ -156,6 +162,23 @@ describe("TokenInput", () => {
                 { value: "Gamma,Delta", values: ["Gamma", "Delta"], created: true },
             ],
         });
+    });
+
+    test("commits pending creatable text when the input loses focus", () => {
+        const control = mountTokenInput({ creatable: "" });
+        const input = shadowElement<HTMLInputElement>(control, "input");
+        const changes: unknown[] = [];
+        control.addEventListener("change", (event) => changes.push((event as CustomEvent).detail));
+
+        write(input, "alp");
+        input.dispatchEvent(new FocusEvent("blur"));
+        expect(control.value).toBe("alp");
+        expect(changes.at(-1)).toEqual({ value: "alp", values: ["alp"], created: true });
+
+        write(input, "Beta");
+        input.dispatchEvent(new FocusEvent("blur"));
+        expect(control.value).toBe("alp,beta");
+        expect(changes.at(-1)).toEqual({ value: "alp,beta", values: ["alp", "beta"], created: false });
     });
 
     test("renders an empty state when values must come from options", () => {

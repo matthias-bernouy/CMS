@@ -6,6 +6,7 @@ import responsiveCss from "./ui/styles/responsive.css" with { type: "text" };
 import { upgradeProperty, updateCounter, nextLabelId } from "./compute";
 import { syncLabel, syncMaxCount, syncAll } from "./sync";
 import { handleInput, handleChange } from "./listener";
+import { syncInputValidity } from "./validity";
 
 const css = baseCss + variantCss + responsiveCss;
 
@@ -40,6 +41,7 @@ export class P9rInput extends Component {
     private _maxEl: HTMLElement | null;
     private _defaultValue = "";
     private _defaultsCaptured = false;
+    private _showValidationMessage = false;
 
     constructor() {
         super({ css, template: template as unknown as string });
@@ -67,6 +69,7 @@ export class P9rInput extends Component {
         ["value", "disabled", "required"].forEach((p) => upgradeProperty(this, p));
         this._input?.addEventListener("input", this._onInput);
         this._input?.addEventListener("change", this._onChange);
+        this.addEventListener("invalid", this._onInvalid);
         syncAll(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
         const initial = this.getAttribute("value");
         if (initial !== null) {
@@ -74,14 +77,17 @@ export class P9rInput extends Component {
         } else {
             updateCounter(this, this._input, this._counterEl, this._countEl);
         }
+        this._syncValidity();
     }
 
     disconnectedCallback() {
         this._input?.removeEventListener("input", this._onInput);
         this._input?.removeEventListener("change", this._onChange);
+        this.removeEventListener("invalid", this._onInvalid);
     }
 
     formResetCallback() {
+        this._showValidationMessage = false;
         this.value = this._defaultValue;
     }
 
@@ -99,6 +105,7 @@ export class P9rInput extends Component {
         } else {
             syncAll(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
         }
+        this._syncValidity();
     }
 
     get value(): string {
@@ -111,6 +118,7 @@ export class P9rInput extends Component {
         this._input.value = v;
         this._internals.setFormValue(v);
         updateCounter(this, this._input, this._counterEl, this._countEl);
+        this._syncValidity();
     }
 
     get name(): string {
@@ -132,6 +140,31 @@ export class P9rInput extends Component {
         this._input?.focus();
     }
 
-    private _onInput = () => handleInput(this, this._input, this._internals, this._counterEl, this._countEl);
-    private _onChange = () => handleChange(this, this._input, this._internals);
+    private _onInput = () => {
+        handleInput(this, this._input, this._internals, this._counterEl, this._countEl);
+        this._syncValidity();
+    };
+    private _onChange = () => {
+        handleChange(this, this._input, this._internals);
+        this._syncValidity();
+    };
+    private _onInvalid = (event: Event) => {
+        if (event.target !== this) {
+            return;
+        }
+        this._showValidationMessage = true;
+        this._syncValidity();
+    };
+
+    private _syncValidity(): void {
+        if (this._input?.validity.valid) {
+            this._showValidationMessage = false;
+        }
+        syncInputValidity(
+            this,
+            this._internals,
+            { input: this._input, hint: this._hintEl, meta: this._metaEl, counter: this._counterEl },
+            this._showValidationMessage,
+        );
+    }
 }

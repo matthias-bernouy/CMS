@@ -16,6 +16,7 @@ export class TokenInputView {
     readonly optionSlot: HTMLSlotElement | null;
     private readonly labelRow: HTMLElement | null;
     private readonly label: HTMLElement | null;
+    private readonly hint: HTMLElement | null;
     private readonly tokens: HTMLElement | null;
     private readonly listbox: HTMLElement | null;
     private readonly createButton: HTMLButtonElement | null;
@@ -27,6 +28,7 @@ export class TokenInputView {
         this.input = root?.querySelector("input") ?? null;
         this.labelRow = root?.querySelector(".label-row") ?? null;
         this.label = root?.querySelector(".label") ?? null;
+        this.hint = root?.querySelector(".hint") ?? null;
         this.tokens = root?.querySelector("[data-tokens]") ?? null;
         this.listbox = root?.querySelector("[role='listbox']") ?? null;
         this.createButton = root?.querySelector("[data-create]") ?? null;
@@ -60,6 +62,11 @@ export class TokenInputView {
         if (this.input) {
             this.input.placeholder = selectedCount ? "" : (host.getAttribute("placeholder") ?? "");
             this.input.disabled = disabled;
+        }
+        if (this.hint) {
+            const hint = host.getAttribute("hint") ?? "";
+            this.hint.textContent = hint;
+            this.hint.hidden = hint === "";
         }
         if (this.createButton) {
             this.createButton.hidden = !showCreateAction;
