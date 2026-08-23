@@ -19,6 +19,7 @@ import {
 import { buildPreconnect } from "cms-delivery/core/head/buildPreconnect";
 import { buildScriptTags } from "cms-delivery/core/head/buildScriptTags";
 import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
+import { defineOrganizationStructuredData } from "cms-delivery/core/seo/organizationStructuredData";
 import type { RenderContext } from "cms-delivery/core/html/RenderContext";
 import { resolvePageMetadata, type PageRenderMetadata } from "cms-delivery/core/seo/pageMetadata";
 
@@ -103,6 +104,7 @@ export async function renderPage(
     buildBindingCloak(document, head, hasBindingCore);
     buildFoucShell(document, head, usedTags);
     defineMetaTags(document, head, page, settings, ctx.faviconUrl, metadata);
+    defineOrganizationStructuredData(document, head, page, settings, metadata);
     buildStylesheetLink(document, head, assets);
     buildScriptTags(document, head, assets);
 
