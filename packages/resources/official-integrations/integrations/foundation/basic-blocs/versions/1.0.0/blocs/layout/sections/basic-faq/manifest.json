@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-faq",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "FAQ",
+        "description": "Accessible frequently asked questions section with editable native disclosure items."
+    }
+}

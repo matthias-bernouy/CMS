@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-cta",
+        "name": "Call to action",
+        "group": "Sections",
+        "description": "Focused conversion section with a semantic heading and one or two actions.",
+        "path": "blocs/layout/sections/basic-cta"
+    }
+}

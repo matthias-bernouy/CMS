@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-feature-section",
+        "name": "Feature section",
+        "group": "Sections",
+        "description": "Responsive benefit or service grid with a semantic section heading and optional actions.",
+        "path": "blocs/layout/sections/basic-feature-section"
+    }
+}

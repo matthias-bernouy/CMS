@@ -37,6 +37,12 @@ media, and action regions. `basic-site-footer` combines identity, literal footer
 links, optional actions, and legal content while preserving the native `footer`
 primitive for authors who only need a structural element.
 
+The remaining site recipes keep their content semantic and editable:
+`basic-feature-section` lays out service or benefit cards,
+`basic-media-section` pairs editorial content with optional media, and
+`basic-cta` focuses one or two conversion actions. `basic-faq` contains editable
+`basic-faq-item` disclosures backed by native `details` and `summary` elements.
+
 The current form set contains:
 
 - the native `form` editor;
