@@ -1,57 +1,100 @@
 import { describe, expect, test } from "bun:test";
-import { defaultSystem, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
+import { defaultSystem } from "@bernouy/cms-content";
 import { parseHTML } from "linkedom";
-import { renderPage } from "cms-delivery/core/html/renderPage";
-import type { RenderContext } from "cms-delivery/core/html/RenderContext";
+import { completeSettings, homePage, renderedHtml } from "./fixture";
 
-describe("Organization structured data", () => {
-    test("renders the public organization on the indexable homepage", async () => {
+describe("Site structured data", () => {
+    test("renders the organization, website, and webpage graph on the indexable homepage", async () => {
         const settings = completeSettings();
         const { document } = parseHTML(await renderedHtml(homePage(), settings));
         const script = document.querySelector('script[type="application/ld+json"]');
 
         expect(JSON.parse(script?.textContent ?? "")).toEqual({
             "@context": "https://schema.org",
-            "@type": "Organization",
-            "@id": "https://example.com/site/#organization",
-            name: "Example",
-            url: "https://example.com/site/",
-            legalName: "Example SAS",
-            description: "Site publisher",
-            logo: "https://example.com/site/.cms/files/by-id/logo",
-            email: "contact@example.com",
-            telephone: "+33123456789",
-            sameAs: ["https://social.example.com/example"],
-            address: {
-                "@type": "PostalAddress",
-                streetAddress: "10 Example Street",
-                postalCode: "75001",
-                addressLocality: "Paris",
-                addressRegion: "Île-de-France",
-                addressCountry: "FR",
-            },
+            "@graph": [
+                {
+                    "@type": "Organization",
+                    "@id": "https://example.com/site/#organization",
+                    name: "Example",
+                    url: "https://example.com/site/",
+                    legalName: "Example SAS",
+                    description: "Site publisher",
+                    logo: "https://example.com/site/.cms/files/by-id/logo",
+                    email: "contact@example.com",
+                    telephone: "+33123456789",
+                    sameAs: ["https://social.example.com/example"],
+                    address: {
+                        "@type": "PostalAddress",
+                        streetAddress: "10 Example Street",
+                        postalCode: "75001",
+                        addressLocality: "Paris",
+                        addressRegion: "Île-de-France",
+                        addressCountry: "FR",
+                    },
+                },
+                {
+                    "@type": "WebSite",
+                    "@id": "https://example.com/site/#website",
+                    url: "https://example.com/site/",
+                    name: "Example website",
+                    inLanguage: "fr-FR",
+                    publisher: { "@id": "https://example.com/site/#organization" },
+                },
+                {
+                    "@type": "WebPage",
+                    "@id": "https://example.com/site/#webpage",
+                    url: "https://example.com/site/",
+                    isPartOf: { "@id": "https://example.com/site/#website" },
+                    name: "Home",
+                    description: "Homepage",
+                    inLanguage: "fr-FR",
+                },
+            ],
         });
     });
 
-    test("omits organization data away from the homepage and on a noindex homepage", async () => {
+    test("renders only webpage data away from the homepage and omits all data for noindex pages", async () => {
         const settings = completeSettings();
         const about = parseHTML(await renderedHtml({ ...homePage(), path: "/about" }, settings)).document;
+        const dynamicRoot = parseHTML(
+            await renderedHtml(homePage(), settings, { canonical: { queryParam: "item", value: "chair" } }),
+        ).document;
         const noindex = parseHTML(await renderedHtml(homePage(), settings, { indexable: false })).document;
 
-        expect(about.querySelector('script[type="application/ld+json"]')).toBeNull();
+        expect(structuredData(about)).toEqual({
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "WebPage",
+                    "@id": "https://example.com/site/about#webpage",
+                    url: "https://example.com/site/about",
+                    isPartOf: { "@id": "https://example.com/site/#website" },
+                    name: "Home",
+                    description: "Homepage",
+                    inLanguage: "fr-FR",
+                },
+            ],
+        });
+        expect(structuredData(dynamicRoot)?.["@graph"]).toEqual([
+            expect.objectContaining({ "@type": "WebPage", url: "https://example.com/site/?item=chair" }),
+        ]);
         expect(noindex.querySelector('script[type="application/ld+json"]')).toBeNull();
     });
 
-    test("requires a canonical host and organization name", async () => {
+    test("requires a canonical host but not organization settings", async () => {
         const withoutHost = completeSettings();
         withoutHost.site.host = "";
         const withoutName = completeSettings();
         withoutName.site.organization.name = "";
 
-        for (const settings of [withoutHost, withoutName]) {
-            const { document } = parseHTML(await renderedHtml(homePage(), settings));
-            expect(document.querySelector('script[type="application/ld+json"]')).toBeNull();
-        }
+        const hostless = parseHTML(await renderedHtml(homePage(), withoutHost)).document;
+        const organizationless = parseHTML(await renderedHtml(homePage(), withoutName)).document;
+
+        expect(hostless.querySelector('script[type="application/ld+json"]')).toBeNull();
+        expect(structuredData(organizationless)?.["@graph"]).toHaveLength(2);
+        expect(structuredData(organizationless)?.["@graph"]).not.toContainEqual(
+            expect.objectContaining({ "@type": "Organization" }),
+        );
     });
 
     test("omits empty fields and safely serializes script-looking content", async () => {
@@ -67,64 +110,33 @@ describe("Organization structured data", () => {
         expect(script?.textContent).toContain("\\u003c/script>");
         expect(JSON.parse(script?.textContent ?? "")).toEqual({
             "@context": "https://schema.org",
-            "@type": "Organization",
-            "@id": "https://example.com/#organization",
-            name: "Example </script><script>alert(1)</script>",
-            url: "https://example.com/",
+            "@graph": [
+                {
+                    "@type": "Organization",
+                    "@id": "https://example.com/#organization",
+                    name: "Example </script><script>alert(1)</script>",
+                    url: "https://example.com/",
+                },
+                {
+                    "@type": "WebSite",
+                    "@id": "https://example.com/#website",
+                    url: "https://example.com/",
+                    publisher: { "@id": "https://example.com/#organization" },
+                },
+                {
+                    "@type": "WebPage",
+                    "@id": "https://example.com/#webpage",
+                    url: "https://example.com/",
+                    isPartOf: { "@id": "https://example.com/#website" },
+                    name: "Home",
+                    description: "Homepage",
+                },
+            ],
         });
     });
 });
 
-function completeSettings(): TSystem {
-    const settings = defaultSystem();
-    settings.site.host = "https://example.com/site";
-    settings.site.organization = {
-        name: "Example",
-        legalName: "Example SAS",
-        description: "Site publisher",
-        logo: "/site/.cms/files/by-id/logo",
-        email: "contact@example.com",
-        telephone: "+33123456789",
-        address: {
-            streetAddress: "10 Example Street",
-            postalCode: "75001",
-            addressLocality: "Paris",
-            addressRegion: "Île-de-France",
-            addressCountry: "FR",
-        },
-        sameAs: ["https://social.example.com/example"],
-    };
-    return settings;
-}
-
-function homePage(): TPage {
-    return {
-        id: "home",
-        path: "/",
-        title: "Home",
-        description: "Homepage",
-        content: "<main>Home</main>",
-        status: "published",
-        tags: [],
-    } as TPage;
-}
-
-async function renderedHtml(page: TPage, settings: TSystem, metadata = {}): Promise<string> {
-    const context: RenderContext = {
-        repository: {
-            getSystem: async () => settings,
-            getBlocsList: async () => [],
-        } as ContentReader,
-        resolveAssets: async () => ({
-            componentUrl: "/.cms/assets/component.js",
-            bindingCoreUrl: "/.cms/assets/binding.js",
-            styleUrl: "/.cms/style",
-            blocUrls: [],
-            scriptUrls: ["/.cms/assets/component.js"],
-        }),
-        faviconUrl: "/favicon.ico",
-        headInjectors: [],
-    };
-    const entry = await renderPage(page, context, metadata);
-    return new TextDecoder().decode(entry.raw);
+function structuredData(document: Document): Record<string, unknown> | null {
+    const content = document.querySelector('script[type="application/ld+json"]')?.textContent;
+    return content ? JSON.parse(content) : null;
 }

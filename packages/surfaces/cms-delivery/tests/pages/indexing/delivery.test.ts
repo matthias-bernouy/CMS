@@ -36,6 +36,20 @@ describe("Delivery dynamic page metadata", () => {
             "https://example.test/products/detail?product=oak-chair",
         );
         expect(document.querySelector('meta[name="robots"]')).toBeNull();
+        expect(JSON.parse(document.querySelector('script[type="application/ld+json"]')?.textContent ?? "")).toEqual({
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "WebPage",
+                    "@id": "https://example.test/products/detail?product=oak-chair#webpage",
+                    url: "https://example.test/products/detail?product=oak-chair",
+                    isPartOf: { "@id": "https://example.test/#website" },
+                    name: "Oak chair — Public pages",
+                    description: "A solid oak chair",
+                    inLanguage: "en",
+                },
+            ],
+        });
         expect(sourceRequests).toHaveLength(1);
         expect(sourceRequests[0]?.searchParams.get("slug")).toBe("requested-chair");
         expect(sourceRequests[0]?.searchParams.has("utm_source")).toBe(false);
@@ -99,6 +113,7 @@ describe("Delivery dynamic page metadata", () => {
 
         expect(document.title).toBe("Private chair — Public pages");
         expect(document.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex,follow");
+        expect(document.querySelector('script[type="application/ld+json"]')).toBeNull();
     });
 
     test("makes the dynamic base URL noindex without emitting a misleading canonical", async () => {
@@ -118,6 +133,7 @@ describe("Delivery dynamic page metadata", () => {
         expect(document.title).toBe("Product");
         expect(document.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex,follow");
         expect(document.querySelector('link[rel="canonical"]')).toBeNull();
+        expect(document.querySelector('script[type="application/ld+json"]')).toBeNull();
     });
 
     test.each([
