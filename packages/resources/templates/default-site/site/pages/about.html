@@ -7,12 +7,13 @@ tags: [about, studio]
 <basic-stack gap="none">
     <header aria-label="Site header">
         <basic-container width="wide" gutter="md">
-            <basic-card appearance="ghost" density="compact">
-                <basic-stack direction="row" gap="md" align-items="center" justify-content="space-between" wrap="true">
-                    <a href="/" aria-label="Morrow home">Morrow®</a>
-                    <nav aria-label="Primary navigation"><basic-stack direction="row" gap="lg" align-items="center" wrap="true"><a href="/#work">Work</a><a href="/#services">Services</a><a href="/about">About</a><basic-button action="link" href="/contact" size="sm">Start a project</basic-button></basic-stack></nav>
-                </basic-stack>
-            </basic-card>
+            <basic-navbar tone="primary" appearance="plain" density="regular" navigation-label="Primary navigation" open-label="Open navigation" close-label="Close navigation">
+                <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
+                <a slot="navigation" href="/#work">Work</a>
+                <a slot="navigation" href="/#services">Services</a>
+                <a slot="navigation" href="/about" aria-current="page">About</a>
+                <a slot="actions" href="/contact">Start a project</a>
+            </basic-navbar>
         </basic-container>
     </header>
 
@@ -24,48 +25,33 @@ tags: [about, studio]
             <img slot="media" src="/.cms/files/by-id/019fadc7-6f5b-7003-ab85-bf8c7315d09c" width="1448" height="1086" loading="eager" decoding="async" fetchpriority="high" alt="Sculptural blue furniture, red lighting, linen, and brushed metal">
         </basic-hero>
 
-        <section aria-label="Studio story">
-            <basic-container width="content" gutter="md">
-                <basic-card appearance="ghost" density="spacious">
-                    <basic-grid min="lg" max="none" packing="fit" gap="xl">
-                        <basic-stack gap="sm"><p>Why we exist</p><h2>Make the complex feel clear — without sanding away its character.</h2></basic-stack>
-                        <basic-stack gap="lg">
-                            <p>Morrow began with a simple belief: the people shaping the strategy should stay close to the people shaping the experience.</p>
-                            <p>Our compact team works directly with founders and ambitious organisations. Together, we find the useful truth, give it a distinct form, and carry it through every touchpoint.</p>
-                            <p>No layers of account management. No fixed house style. Just open conversation, sharp thinking, and craft that earns attention.</p>
-                        </basic-stack>
-                    </basic-grid>
-                </basic-card>
-            </basic-container>
-        </section>
+        <basic-media-section tone="neutral" appearance="plain" width="wide" media-position="end" vertical-align="center" density="regular">
+            <p slot="eyebrow">Why we exist</p>
+            <h2 slot="title">Make the complex feel clear — without sanding away its character.</h2>
+            <p slot="description">Morrow began with a simple belief: the people shaping the strategy should stay close to the people shaping the experience.</p>
+            <basic-stack gap="md">
+                <p>Our compact team works directly with founders and ambitious organisations. Together, we find the useful truth, give it a distinct form, and carry it through every touchpoint.</p>
+                <p>No layers of account management. No fixed house style. Just open conversation, sharp thinking, and craft that earns attention.</p>
+            </basic-stack>
+            <img slot="media" src="/.cms/files/by-id/019fadc7-6f5b-7001-88e1-beaea806763a" width="1122" height="1402" loading="lazy" decoding="async" alt="Sculptural blue glass and a red lounge chair in a sunlit design studio">
+        </basic-media-section>
 
-        <section aria-label="Studio principles">
-            <basic-container width="wide" gutter="md">
-                <basic-card tone="neutral" appearance="filled" density="spacious">
-                    <basic-stack gap="xl">
-                        <basic-stack gap="sm"><p>How we work</p><h2>Three things we never compromise.</h2></basic-stack>
-                        <basic-grid min="md" max="none" packing="fit" gap="md">
-                            <basic-card tone="neutral" appearance="ghost" density="spacious" stretch="true"><basic-badge tone="secondary" appearance="filled">01</basic-badge><h3 slot="title">Clarity over theatre</h3><p>Every choice should make the idea easier to understand and use.</p></basic-card>
-                            <basic-card tone="neutral" appearance="ghost" density="spacious" stretch="true"><basic-badge tone="secondary" appearance="filled">02</basic-badge><h3 slot="title">Character over convention</h3><p>Distinctive work comes from what is true, not what happens to be trending.</p></basic-card>
-                            <basic-card tone="neutral" appearance="ghost" density="spacious" stretch="true"><basic-badge tone="secondary" appearance="filled">03</basic-badge><h3 slot="title">Partnership over process</h3><p>The best result is built together, with honesty and senior attention.</p></basic-card>
-                        </basic-grid>
-                    </basic-stack>
-                </basic-card>
-            </basic-container>
-        </section>
+        <basic-feature-section tone="neutral" appearance="filled" width="wide" item-width="md" align="start" density="regular">
+            <p slot="eyebrow">How we work</p>
+            <h2 slot="title">Three things we never compromise.</h2>
+            <basic-card slot="items" tone="neutral" appearance="soft" density="regular" stretch="true"><basic-badge tone="secondary" appearance="filled">01</basic-badge><h3 slot="title">Clarity over theatre</h3><p>Every choice should make the idea easier to understand and use.</p></basic-card>
+            <basic-card slot="items" tone="neutral" appearance="soft" density="regular" stretch="true"><basic-badge tone="secondary" appearance="filled">02</basic-badge><h3 slot="title">Character over convention</h3><p>Distinctive work comes from what is true, not what happens to be trending.</p></basic-card>
+            <basic-card slot="items" tone="neutral" appearance="soft" density="regular" stretch="true"><basic-badge tone="secondary" appearance="filled">03</basic-badge><h3 slot="title">Partnership over process</h3><p>The best result is built together, with honesty and senior attention.</p></basic-card>
+        </basic-feature-section>
 
-        <section aria-label="Contact call to action">
-            <basic-container width="wide" gutter="md">
-                <basic-card tone="warning" appearance="filled" density="spacious">
-                    <h2 slot="title">Bring us the ambitious version.</h2>
-                    <p slot="description">A new venture, a changing brand, or a digital experience that deserves more character.</p>
-                    <basic-button slot="actions" action="link" href="/contact" tone="neutral" appearance="filled" size="xl">Start a project →</basic-button>
-                </basic-card>
-            </basic-container>
-        </section>
+        <basic-cta tone="warning" appearance="filled" width="wide" align="center" density="spacious">
+            <h2 slot="title">Bring us the ambitious version.</h2>
+            <p slot="description">A new venture, a changing brand, or a digital experience that deserves more character.</p>
+            <basic-button slot="actions" action="link" href="/contact" tone="neutral" appearance="filled" size="xl">Start a project →</basic-button>
+        </basic-cta>
     </basic-stack>
 
-    <basic-site-footer tone="neutral" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
+    <basic-site-footer tone="primary" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
         <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
         <p slot="description">Independent creative studio · Paris / Worldwide</p>
         <a slot="navigation" href="/">Home</a>

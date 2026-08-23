@@ -7,12 +7,13 @@ tags: [contact, studio]
 <basic-stack gap="none">
     <header aria-label="Site header">
         <basic-container width="wide" gutter="md">
-            <basic-card appearance="ghost" density="compact">
-                <basic-stack direction="row" gap="md" align-items="center" justify-content="space-between" wrap="true">
-                    <a href="/" aria-label="Morrow home">Morrow®</a>
-                    <nav aria-label="Primary navigation"><basic-stack direction="row" gap="lg" align-items="center" wrap="true"><a href="/#work">Work</a><a href="/#services">Services</a><a href="/about">About</a><basic-button action="link" href="/contact" size="sm">Start a project</basic-button></basic-stack></nav>
-                </basic-stack>
-            </basic-card>
+            <basic-navbar tone="primary" appearance="plain" density="regular" navigation-label="Primary navigation" open-label="Open navigation" close-label="Close navigation">
+                <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
+                <a slot="navigation" href="/#work">Work</a>
+                <a slot="navigation" href="/#services">Services</a>
+                <a slot="navigation" href="/about">About</a>
+                <a slot="actions" href="/contact" aria-current="page">Start a project</a>
+            </basic-navbar>
         </basic-container>
     </header>
 
@@ -25,39 +26,42 @@ tags: [contact, studio]
             <basic-button slot="actions" action="link" href="mailto:hello@morrow.studio" tone="primary" appearance="filled" size="xl">hello@morrow.studio</basic-button>
         </basic-hero>
 
-        <section aria-label="Project details">
-            <basic-container width="content" gutter="md">
-                <basic-card appearance="ghost" density="spacious">
-                    <basic-stack gap="xl">
-                        <basic-stack gap="sm"><p>A useful first note</p><h2>Tell us just enough to get oriented.</h2></basic-stack>
-                        <basic-grid min="md" max="none" packing="fit" gap="md">
-                            <basic-card tone="neutral" appearance="outlined" density="spacious" stretch="true"><basic-badge tone="primary" appearance="soft">01</basic-badge><h3 slot="title">The opportunity</h3><p>What are you building, changing, or trying to make possible?</p></basic-card>
-                            <basic-card tone="neutral" appearance="outlined" density="spacious" stretch="true"><basic-badge tone="primary" appearance="soft">02</basic-badge><h3 slot="title">The timing</h3><p>Is there a launch, decision, or moment that matters?</p></basic-card>
-                            <basic-card tone="neutral" appearance="outlined" density="spacious" stretch="true"><basic-badge tone="primary" appearance="soft">03</basic-badge><h3 slot="title">The people</h3><p>Who is involved, and who does the work ultimately need to serve?</p></basic-card>
-                        </basic-grid>
-                    </basic-stack>
-                </basic-card>
-            </basic-container>
-        </section>
+        <basic-feature-section tone="neutral" appearance="plain" width="content" item-width="sm" align="start" density="regular">
+            <p slot="eyebrow">A useful first note</p>
+            <h2 slot="title">Tell us just enough to get oriented.</h2>
+            <basic-card slot="items" tone="neutral" appearance="outlined" density="spacious" stretch="true"><basic-badge tone="primary" appearance="soft">01</basic-badge><h3 slot="title">The opportunity</h3><p>What are you building, changing, or trying to make possible?</p></basic-card>
+            <basic-card slot="items" tone="neutral" appearance="outlined" density="spacious" stretch="true"><basic-badge tone="primary" appearance="soft">02</basic-badge><h3 slot="title">The timing</h3><p>Is there a launch, decision, or moment that matters?</p></basic-card>
+            <basic-card slot="items" tone="neutral" appearance="outlined" density="spacious" stretch="true"><basic-badge tone="primary" appearance="soft">03</basic-badge><h3 slot="title">The people</h3><p>Who is involved, and who does the work ultimately need to serve?</p></basic-card>
+        </basic-feature-section>
 
-        <section aria-label="Studio location">
-            <basic-container width="wide" gutter="md">
-                <basic-card tone="primary" appearance="soft" density="spacious">
-                    <basic-grid min="xl" max="none" packing="fit" gap="xl">
-                        <img src="/.cms/files/by-id/019fadc7-6f5b-7002-b474-1dd916562b7b" width="1448" height="1086" loading="lazy" decoding="async" alt="Terracotta architecture and a cobalt stair overlooking the sea">
-                        <basic-stack gap="lg" align-items="start" justify-content="center">
-                            <p>Paris · Europe · Worldwide</p>
-                            <h2>Close collaboration, wherever the work takes us.</h2>
-                            <p>We work in English and French, remotely and on site, with partners chosen around each project.</p>
-                            <basic-button action="link" href="/about" appearance="outlined">Meet the studio</basic-button>
-                        </basic-stack>
-                    </basic-grid>
-                </basic-card>
-            </basic-container>
-        </section>
+        <basic-faq tone="neutral" appearance="soft" width="content" align="start" density="regular">
+            <p slot="eyebrow">Before we begin</p>
+            <h2 slot="title">A few practical answers.</h2>
+            <p slot="description">Every collaboration is different, but these are the questions we hear most often.</p>
+            <basic-faq-item slot="items" open="true">
+                <span slot="question">What should I include in a first message?</span>
+                <p>Share the opportunity, the people involved, and any timing that matters. A rough note is enough to start.</p>
+            </basic-faq-item>
+            <basic-faq-item slot="items">
+                <span slot="question">Do you work with teams outside Paris?</span>
+                <p>Yes. We work in English and French, remotely and on site, with partners chosen around each project.</p>
+            </basic-faq-item>
+            <basic-faq-item slot="items">
+                <span slot="question">When will I hear back?</span>
+                <p>We usually reply within two working days with the most useful next step.</p>
+            </basic-faq-item>
+        </basic-faq>
+
+        <basic-media-section tone="primary" appearance="soft" width="wide" media-position="start" vertical-align="center" density="regular">
+            <p slot="eyebrow">Paris · Europe · Worldwide</p>
+            <h2 slot="title">Close collaboration, wherever the work takes us.</h2>
+            <p slot="description">We work in English and French, remotely and on site, with partners chosen around each project.</p>
+            <basic-button slot="actions" action="link" href="/about" appearance="outlined">Meet the studio</basic-button>
+            <img slot="media" src="/.cms/files/by-id/019fadc7-6f5b-7002-b474-1dd916562b7b" width="1448" height="1086" loading="lazy" decoding="async" alt="Terracotta architecture and a cobalt stair overlooking the sea">
+        </basic-media-section>
     </basic-stack>
 
-    <basic-site-footer tone="neutral" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
+    <basic-site-footer tone="primary" appearance="plain" width="wide" align="start" density="regular" navigation-label="Footer navigation">
         <a slot="brand" href="/" aria-label="Morrow home">Morrow®</a>
         <p slot="description">Independent creative studio · Paris / Worldwide</p>
         <a slot="navigation" href="/">Home</a>

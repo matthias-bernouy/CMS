@@ -13,8 +13,14 @@ const EDITABLE_TAGS = new Set([
     "basic-button",
     "basic-card",
     "basic-container",
+    "basic-cta",
+    "basic-faq",
+    "basic-faq-item",
+    "basic-feature-section",
     "basic-grid",
     "basic-hero",
+    "basic-media-section",
+    "basic-navbar",
     "basic-site-footer",
     "basic-stack",
     "blockquote",
@@ -28,6 +34,7 @@ const EDITABLE_TAGS = new Set([
     "nav",
     "p",
     "section",
+    "span",
     "ul",
 ]);
 const errors: string[] = [];
@@ -44,7 +51,7 @@ for (const name of pageNames) {
     if (!body.startsWith("---\n") || !body.includes("\n---\n")) {
         errors.push(`${name}: missing frontmatter`);
     }
-    for (const marker of ["<header", 'role="main"', "<basic-hero", "<basic-site-footer", "<h1"]) {
+    for (const marker of ["<header", 'role="main"', "<basic-navbar", "<basic-hero", "<basic-site-footer", "<h1"]) {
         if (!body.includes(marker)) {
             errors.push(`${name}: missing page-shell marker ${marker}`);
         }
@@ -60,6 +67,12 @@ for (const name of pageNames) {
         if (!EDITABLE_TAGS.has(tag)) {
             errors.push(`${name}: ${tag} is not an editable Basic Bloc`);
         }
+    }
+}
+
+for (const tag of ["basic-cta", "basic-faq", "basic-faq-item", "basic-feature-section", "basic-media-section"]) {
+    if (!pageContents.some((body) => body.includes(`<${tag}`))) {
+        errors.push(`pages: expected an editable ${tag} example`);
     }
 }
 

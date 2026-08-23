@@ -62,14 +62,38 @@ describe("default-site template contract", () => {
             expect(body).toContain("<header");
             expect(body).toContain('role="main"');
             expect(body.match(/<h1\b/gu)).toHaveLength(1);
+            expect(body).toContain("<basic-navbar");
             expect(body).toContain("<basic-hero");
             expect(body).toContain("<basic-site-footer");
         }
     });
 
+    test("publishes the configured not-found page without indexing it", () => {
+        const page = readSiteFile("pages/404.html");
+
+        expect(page).toContain("visible: true");
+        expect(page).toContain('indexing: {"enabled":false}');
+    });
+
+    test("demonstrates the editable site section recipes", () => {
+        for (const tag of [
+            "basic-cta",
+            "basic-faq",
+            "basic-faq-item",
+            "basic-feature-section",
+            "basic-media-section",
+        ]) {
+            expect(pageBodies.some((body) => body.includes(`<${tag}`))).toBeTrue();
+        }
+    });
+
     test("uses semantic component recipes instead of per-instance colors", () => {
         const styledComponents = pageBodies
-            .flatMap((body) => [...body.matchAll(/<basic-(?:badge|button|card)\b[^>]*>/gu)])
+            .flatMap((body) => [
+                ...body.matchAll(
+                    /<basic-(?:badge|button|card|cta|faq|feature-section|hero|media-section|site-footer)\b[^>]*>/gu,
+                ),
+            ])
             .map(([tag]) => tag);
         const buttons = styledComponents.filter((tag) => tag.startsWith("<basic-button"));
         const cards = styledComponents.filter((tag) => tag.startsWith("<basic-card"));
@@ -86,8 +110,8 @@ describe("default-site template contract", () => {
         expect(styledComponents.filter((tag) => /\b(?:color|variant)=/u.test(tag))).toEqual([]);
         expect(buttons).toContainEqual(expect.stringContaining('tone="primary"'));
         expect(buttons).toContainEqual(expect.stringContaining('tone="neutral"'));
-        expect(cards).toContainEqual(expect.stringContaining('appearance="filled"'));
-        expect(cards).toContainEqual(expect.stringContaining('appearance="soft"'));
+        expect(styledComponents).toContainEqual(expect.stringContaining('appearance="filled"'));
+        expect(styledComponents).toContainEqual(expect.stringContaining('appearance="soft"'));
         for (const card of cards) {
             const appearance = card.match(/\bappearance="([^"]+)"/u)?.[1] ?? "outlined";
             expect(["filled", "soft", "outlined", "ghost"]).toContain(appearance);
