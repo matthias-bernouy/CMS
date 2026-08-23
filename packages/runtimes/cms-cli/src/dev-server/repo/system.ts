@@ -2,13 +2,8 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { TSystem } from "@bernouy/cms-content";
-import {
-    coercePageRef,
-    defaultSystem,
-    mergeSystemUpdate,
-    organizeThemeSettings,
-    themeSettingsFromCss,
-} from "@bernouy/cms-content";
+import { defaultSystem, mergeSystemUpdate, organizeThemeSettings, themeSettingsFromCss } from "@bernouy/cms-content";
+import { readSiteSettings } from "./readSiteSettings";
 
 const SYSTEM_FILE = "system.json";
 const THEME_FILE = "theme.css";
@@ -28,18 +23,7 @@ export class SystemStore {
         const base = defaultSystem();
         return mergeSystemUpdate(base, {
             initializationStep: typeof json.initializationStep === "number" ? json.initializationStep : 1,
-            site: {
-                name: typeof json.site?.name === "string" ? json.site.name : base.site.name,
-                favicon: typeof json.site?.favicon === "string" ? json.site.favicon : base.site.favicon,
-                visible: typeof json.site?.visible === "boolean" ? json.site.visible : base.site.visible,
-                host: typeof json.site?.host === "string" ? json.site.host : base.site.host,
-                language: typeof json.site?.language === "string" ? json.site.language : base.site.language,
-                theme: theme,
-                notFound: coercePageRef(json.site?.notFound),
-                forbidden: coercePageRef(json.site?.forbidden),
-                serverError: coercePageRef(json.site?.serverError),
-                login: coercePageRef(json.site?.login),
-            },
+            site: readSiteSettings(json.site, base.site, theme),
             editor: {
                 layoutCategory:
                     typeof json.editor?.layoutCategory === "string"

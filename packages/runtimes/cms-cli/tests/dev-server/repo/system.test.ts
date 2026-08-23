@@ -6,6 +6,22 @@ import { join } from "node:path";
 import { LocalFsCmsRepository } from "cms-cli/dev-server/repo/LocalFsCmsRepository";
 
 describe("LocalFsCmsRepository system settings", () => {
+    test("persists site organization settings in system.json", async () => {
+        const siteDir = mkdtempSync(join(tmpdir(), "p9r-dev-repo-"));
+        const repository = new LocalFsCmsRepository(siteDir, new Map());
+        const organization = {
+            ...defaultOrganization(),
+            name: "Example",
+            address: { ...defaultOrganization().address, addressLocality: "Paris" },
+            sameAs: ["https://example.com/profile"],
+        };
+
+        await repository.updateSystem({ site: { organization } as never });
+
+        const reloaded = new LocalFsCmsRepository(siteDir, new Map());
+        expect((await reloaded.getSystem()).site.organization).toEqual(organization);
+    });
+
     test("persists runtime email settings in system.json", async () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-dev-repo-"));
         const repository = new LocalFsCmsRepository(siteDir, new Map());
@@ -47,3 +63,22 @@ describe("LocalFsCmsRepository system settings", () => {
         expect(JSON.parse(raw).email.enabled).toBe(true);
     });
 });
+
+function defaultOrganization() {
+    return {
+        name: "",
+        legalName: "",
+        description: "",
+        logo: "",
+        email: "",
+        telephone: "",
+        address: {
+            streetAddress: "",
+            postalCode: "",
+            addressLocality: "",
+            addressRegion: "",
+            addressCountry: "",
+        },
+        sameAs: [] as string[],
+    };
+}

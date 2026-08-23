@@ -21,7 +21,7 @@ export type {
 } from "cms-content/interfaces/blocs";
 export type { PageIndexingConfiguration, TPage, TPageRef } from "cms-content/interfaces/pages";
 export type { TTemplate } from "cms-content/interfaces/templates";
-export type { TSystem } from "cms-content/interfaces/settings";
+export type { SiteOrganizationAddress, SiteOrganizationSettings, TSystem } from "cms-content/interfaces/settings";
 export type {
     IntegrationThemeContribution,
     ThemeCategoryContribution,

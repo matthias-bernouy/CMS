@@ -11,6 +11,7 @@ export function defaultSystem(): TSystem {
             host: "",
             language: "",
             theme: "",
+            organization: emptySiteOrganization(),
             notFound: null,
             forbidden: null,
             serverError: null,
@@ -44,11 +45,48 @@ function emptyEmailTemplate() {
     return { subject: "", html: "" };
 }
 
+function emptySiteOrganization(): TSystem["site"]["organization"] {
+    return {
+        name: "",
+        legalName: "",
+        description: "",
+        logo: "",
+        email: "",
+        telephone: "",
+        address: {
+            streetAddress: "",
+            postalCode: "",
+            addressLocality: "",
+            addressRegion: "",
+            addressCountry: "",
+        },
+        sameAs: [],
+    };
+}
+
 export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): TSystem {
     const merged = { ...current };
     for (const [section, value] of Object.entries(update) as [keyof TSystem, unknown][]) {
         if (section === "initializationStep") {
             merged.initializationStep = value as number;
+        } else if (section === "site" && typeof value === "object" && value !== null) {
+            const site = value as Partial<TSystem["site"]>;
+            const currentOrganization = current.site.organization ?? emptySiteOrganization();
+            const organization = site.organization;
+            merged.site = {
+                ...current.site,
+                ...site,
+                organization: organization
+                    ? {
+                          ...currentOrganization,
+                          ...organization,
+                          address: {
+                              ...currentOrganization.address,
+                              ...(organization.address ?? {}),
+                          },
+                      }
+                    : currentOrganization,
+            };
         } else if (section === "email" && typeof value === "object" && value !== null) {
             const email = value as Partial<TSystem["email"]>;
             const currentEmail = current.email ?? defaultSystem().email;

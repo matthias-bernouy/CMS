@@ -6,6 +6,26 @@ export type TEmailTemplate = {
     html: string;
 };
 
+export type SiteOrganizationAddress = {
+    streetAddress: string;
+    postalCode: string;
+    addressLocality: string;
+    addressRegion: string;
+    addressCountry: string;
+};
+
+export type SiteOrganizationSettings = {
+    name: string;
+    legalName: string;
+    description: string;
+    logo: string;
+    email: string;
+    telephone: string;
+    address: SiteOrganizationAddress;
+    /** Public profiles that identify the same organization. */
+    sameAs: string[];
+};
+
 export type TSystem = {
     initializationStep: number;
 
@@ -27,6 +47,8 @@ export type TSystem = {
         language: string;
         /** Raw CSS served at `/style` and linked by every rendered public page. */
         theme: string;
+        /** Organization that owns or publishes this site. */
+        organization: SiteOrganizationSettings;
         /** Page rendered when a dynamic route matches but the page is missing. */
         notFound: TPageRef;
         /** Page rendered when an authenticated visitor cannot access a page dependency. */
