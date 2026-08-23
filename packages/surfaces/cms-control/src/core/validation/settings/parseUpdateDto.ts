@@ -5,10 +5,10 @@ import {
     asInteger,
     asPageRef,
     asString,
-    collectStringSection,
     hasSectionKey,
     parseEmailTemplate,
     parseOriginList,
+    parseTokenList,
 } from "./valueParsers";
 
 export type SettingsUpdateDto = Partial<TSystem>;
@@ -23,13 +23,7 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
     const dto: SettingsUpdateDto = {};
 
     if (hasSectionKey(body, "site")) {
-        dto.site = {
-            ...collectStringSection(body, "site", ["notFound", "forbidden", "serverError", "login"]),
-            notFound: asPageRef(body["site.notFound"]),
-            forbidden: asPageRef(body["site.forbidden"]),
-            serverError: asPageRef(body["site.serverError"]),
-            login: asPageRef(body["site.login"]),
-        } as TSystem["site"];
+        dto.site = parseSiteSettings(body);
     }
 
     if (hasSectionKey(body, "editor")) {
@@ -104,4 +98,57 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
     }
 
     return dto;
+}
+
+function parseSiteSettings(body: Record<string, unknown>): TSystem["site"] {
+    const site: Partial<TSystem["site"]> = {};
+    for (const field of ["name", "favicon", "host", "language", "theme"] as const) {
+        const key = `site.${field}`;
+        if (key in body) {
+            site[field] = asString(body[key], key);
+        }
+    }
+    if ("site.visible" in body) {
+        site.visible = asBoolean(body["site.visible"], "site.visible");
+    }
+    for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
+        const key = `site.${field}`;
+        if (key in body) {
+            site[field] = asPageRef(body[key]);
+        }
+    }
+    if (hasSectionKey(body, "site.organization")) {
+        site.organization = parseSiteOrganization(body);
+    }
+    return site as TSystem["site"];
+}
+
+function parseSiteOrganization(body: Record<string, unknown>): TSystem["site"]["organization"] {
+    const organization = {} as TSystem["site"]["organization"];
+    for (const field of ["name", "legalName", "description", "logo", "email", "telephone"] as const) {
+        const key = `site.organization.${field}`;
+        if (key in body) {
+            organization[field] = asString(body[key], key);
+        }
+    }
+
+    const address = {} as TSystem["site"]["organization"]["address"];
+    for (const field of [
+        "streetAddress",
+        "postalCode",
+        "addressLocality",
+        "addressRegion",
+        "addressCountry",
+    ] as const) {
+        const key = `site.organization.address.${field}`;
+        if (key in body) {
+            address[field] = asString(body[key], key);
+        }
+    }
+    organization.address = address;
+
+    if ("site.organization.sameAs" in body) {
+        organization.sameAs = parseTokenList(body["site.organization.sameAs"], "site.organization.sameAs");
+    }
+    return organization;
 }

@@ -13,7 +13,7 @@ describe("admin settings binding", () => {
                     site: {
                         name: "Demo",
                         host: "https://example.com",
-                        favicon: "",
+                        favicon: "/media/favicon.svg",
                         language: "",
                         notFound: { path: "" },
                         forbidden: { path: "" },
@@ -71,6 +71,12 @@ describe("admin settings binding", () => {
         expect(document.querySelector("cms-settings-nav")).not.toBeNull();
         expect(document.querySelector("cms-settings-sections")).toBeNull();
         expect(document.querySelector("p9r-input[name='site.name']")?.getAttribute("value")).toBe("Demo");
+        const favicon = document.querySelector<HTMLElement & { value: string }>(
+            "cms-media-input[name='site.favicon']",
+        )!;
+        expect(favicon.value).toBe("/media/favicon.svg");
+        expect(favicon.shadowRoot!.querySelector(".tile")?.classList.contains("has-value")).toBe(true);
+        expect(favicon.shadowRoot!.querySelector("img")?.getAttribute("src")).toBe("/media/favicon.svg");
         expect(document.querySelector("p9r-select[name='site.notFound'] option[value='/404']")).not.toBeNull();
         expect(document.querySelector("p9r-select[name='site.forbidden'] option[value='/404']")).not.toBeNull();
         expect(document.querySelector("p9r-select[name='site.serverError'] option[value='/404']")).not.toBeNull();

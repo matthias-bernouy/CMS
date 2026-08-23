@@ -57,6 +57,7 @@ define(CMS_BINDING_CORE_TAG, BindingCore);
 setBindingFilters({
     json: (value) => (value === undefined ? undefined : JSON.stringify(value)),
     jsonurl: (value) => (value === undefined ? undefined : encodeURIComponent(JSON.stringify(value))),
+    lines: (value) => (Array.isArray(value) ? value.join("\n") : value),
 });
 define("p9r-accordion", Accordion);
 define("p9r-accordion-item", AccordionItem);
@@ -106,6 +107,7 @@ import "./globals";
 
 // Admin
 import "./admin/Layout/AdminLayout/AdminLayout";
+import "./admin/Layout/FormSaveAction/FormSaveAction";
 import "./admin/Common/ConfirmForm/ConfirmForm";
 import "./admin/Common/CredentialSelect/CredentialSelect";
 import "./admin/Common/EmptyState/EmptyState";

@@ -10,6 +10,10 @@
     color: var(--text-muted, #94a3b8);
 }
 
+.label[hidden] { display: none; }
+
+.tile:disabled { cursor: not-allowed; opacity: .55; }
+
 .tile {
     position: relative;
     width: var(--tile-size, 64px);

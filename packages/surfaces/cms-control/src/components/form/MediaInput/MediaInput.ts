@@ -1,4 +1,5 @@
 import css from "./MediaInput.css" with { type: "text" };
+import { upgradeProperty } from "@bernouy/components/base";
 import type { MediaCenter } from "cms-control/components/media/MediaCenter/MediaCenter";
 
 /**
@@ -15,12 +16,15 @@ import type { MediaCenter } from "cms-control/components/media/MediaCenter/Media
  */
 export class MediaInput extends HTMLElement {
     static formAssociated = true;
+    static readonly observedAttributes = ["value", "label", "size", "disabled"];
 
     private _internals: ElementInternals;
     private _value = "";
-    private _tile!: HTMLElement;
+    private _defaultValue = "";
+    private _tile!: HTMLButtonElement;
     private _preview!: HTMLImageElement;
     private _clearBtn!: HTMLElement;
+    private _label!: HTMLElement;
 
     constructor() {
         super();
@@ -29,10 +33,32 @@ export class MediaInput extends HTMLElement {
 
     connectedCallback() {
         if (!this.shadowRoot) {
-            this._build(this.getAttribute("label"));
+            this._build();
             this._wire();
         }
-        this.value = this._value || this.getAttribute("value") || "";
+        for (const property of ["value", "disabled"]) {
+            upgradeProperty(this, property);
+        }
+        const value = this.getAttribute("value") ?? this._value;
+        this._defaultValue = value;
+        this._setValue(value);
+        this._syncAttributes();
+    }
+
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        if (name === "value") {
+            const value = newValue ?? "";
+            this._defaultValue = value;
+            this._setValue(value);
+            return;
+        }
+        if (this.shadowRoot) {
+            this._syncAttributes();
+        }
+    }
+
+    formResetCallback() {
+        this._setValue(this._defaultValue);
     }
 
     get name() {
@@ -42,11 +68,13 @@ export class MediaInput extends HTMLElement {
         return this._value;
     }
     set value(v: string) {
-        this._value = v;
-        this._internals.setFormValue(v);
-        this._preview.src = v;
-        this._tile.classList.toggle("has-value", !!v);
-        this._clearBtn.style.display = v ? "flex" : "none";
+        this._setValue(v);
+    }
+    get disabled() {
+        return this.hasAttribute("disabled");
+    }
+    set disabled(value: boolean) {
+        this.toggleAttribute("disabled", value);
     }
 
     private get _types(): string[] {
@@ -60,13 +88,12 @@ export class MediaInput extends HTMLElement {
         ];
     }
 
-    private _build(label: string | null) {
+    private _build() {
         const shadow = this.attachShadow({ mode: "open" });
-        const size = this.getAttribute("size") || "64";
         shadow.innerHTML = `
             <style>${css}</style>
-            <div class="field" style="--tile-size:${size}px">
-                ${label ? `<span class="label">${label}</span>` : ""}
+            <div class="field">
+                <span class="label"></span>
                 <button class="tile" type="button" title="Choose a file">
                     <img class="preview" alt="" />
                     <span class="placeholder">
@@ -86,9 +113,10 @@ export class MediaInput extends HTMLElement {
                     </span>
                 </button>
             </div>`;
-        this._tile = shadow.querySelector(".tile") as HTMLElement;
+        this._tile = shadow.querySelector(".tile") as HTMLButtonElement;
         this._preview = shadow.querySelector(".preview") as HTMLImageElement;
         this._clearBtn = shadow.querySelector(".clear") as HTMLElement;
+        this._label = shadow.querySelector(".label") as HTMLElement;
     }
 
     private _wire() {
@@ -96,7 +124,7 @@ export class MediaInput extends HTMLElement {
         this._clearBtn.addEventListener("click", (e) => {
             e.stopPropagation(); // don't also open the picker
             this.value = "";
-            this.dispatchEvent(new Event("change", { bubbles: true }));
+            this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         });
     }
 
@@ -108,12 +136,39 @@ export class MediaInput extends HTMLElement {
             const src = (e as CustomEvent).detail?.src as string | undefined;
             if (src) {
                 this.value = src;
-                this.dispatchEvent(new Event("change", { bubbles: true }));
+                this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
             }
             center.remove();
         };
         center.addEventListener("select-item", handler);
         center.show(this._types);
+    }
+
+    private _setValue(value: string) {
+        this._value = value;
+        this._internals.setFormValue(value);
+        if (!this._preview) {
+            return;
+        }
+        if (value) {
+            this._preview.src = value;
+        } else {
+            this._preview.removeAttribute("src");
+        }
+        this._tile.classList.toggle("has-value", value !== "");
+        this._clearBtn.style.display = value ? "flex" : "none";
+    }
+
+    private _syncAttributes() {
+        if (!this._tile) {
+            return;
+        }
+        const label = this.getAttribute("label") ?? "";
+        const size = Number.parseInt(this.getAttribute("size") ?? "64", 10);
+        this._label.textContent = label;
+        this._label.hidden = label === "";
+        this._tile.disabled = this.disabled;
+        this._tile.parentElement?.style.setProperty("--tile-size", `${size > 0 ? size : 64}px`);
     }
 }
 

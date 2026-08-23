@@ -14,6 +14,19 @@ export function parseOriginList(raw: unknown, paramName: string): string[] {
         .filter(Boolean);
 }
 
+export function parseTokenList(raw: unknown, paramName: string): string[] {
+    if (raw === undefined || raw === null || raw === "") {
+        return [];
+    }
+    if (typeof raw !== "string") {
+        throw new InvalidParam(paramName, "expected a comma- or line-separated string.");
+    }
+    return raw
+        .split(/,|\r?\n/)
+        .map((value) => value.trim())
+        .filter(Boolean);
+}
+
 export function asString(raw: unknown, paramName: string): string {
     if (raw === undefined || raw === null) {
         return "";
@@ -78,30 +91,6 @@ export function parseEmailTemplate(
 export function hasSectionKey(body: Record<string, unknown>, prefix: string): boolean {
     const head = `${prefix}.`;
     return Object.keys(body).some((key) => key.startsWith(head));
-}
-
-export function collectStringSection(
-    body: Record<string, unknown>,
-    prefix: string,
-    excludeLeaves: string[],
-): Record<string, string> {
-    const out: Record<string, string> = {};
-    const head = `${prefix}.`;
-    const exclude = new Set(excludeLeaves);
-    for (const [key, value] of Object.entries(body)) {
-        if (!key.startsWith(head)) {
-            continue;
-        }
-        const leaf = key.slice(head.length);
-        if (exclude.has(leaf)) {
-            continue;
-        }
-        if (typeof value !== "string") {
-            throw new InvalidParam(key, "expected a string.");
-        }
-        out[leaf] = value;
-    }
-    return out;
 }
 
 export function asPageRef(raw: unknown): TPageRef {

@@ -1,0 +1,72 @@
+<cms-event-toast event="settings:saved" message="Organization saved" type="success"></cms-event-toast>
+
+<w13c-fixed-admin-layout>
+    <span slot="title">Settings</span>
+    <cms-settings-nav slot="secondary-lateral-nav"></cms-settings-nav>
+
+    <p9r-container size="lg">
+        <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:saved">
+            <template>
+                <form id="organization-settings-form" cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:saved" cms-source-success-reset="false" style="margin: 0;">
+                    <cms-shell-detail>
+                        <a slot="back" href="{{BASE_PATH}}/admin/settings" aria-label="Back to settings">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 21h18"></path>
+                                <path d="M6 21V7l6-4 6 4v14"></path>
+                                <path d="M9 10h1"></path>
+                                <path d="M14 10h1"></path>
+                                <path d="M9 14h1"></path>
+                                <path d="M14 14h1"></path>
+                                <path d="M10 21v-3h4v3"></path>
+                            </svg>
+                        </a>
+                        <span slot="title">Organization</span>
+                        <cms-form-save-action slot="actions" form="organization-settings-form" label="Save organization"></cms-form-save-action>
+
+                        <p9r-alert slot="main" cms-condition="$source.error" type="error">
+                            <span slot="title">Could not save organization</span>
+                            {{ $source.message }}
+                        </p9r-alert>
+
+                        <cms-detail-section slot="main" heading="Identity" description="Describe the organization that owns or publishes this site.">
+                            <p9r-grid min="md" gap="md">
+                                <p9r-input name="site.organization.name" label="Name" value="{{ site.organization.name }}" placeholder="My organization"></p9r-input>
+                                <p9r-input name="site.organization.legalName" label="Legal name" value="{{ site.organization.legalName }}" placeholder="My Organization SAS"></p9r-input>
+                                <p9r-textarea name="site.organization.description" label="Description" rows="5" autosize value="{{ site.organization.description }}" placeholder="Describe the organization behind this site." style="grid-column: 1 / -1;"></p9r-textarea>
+                            </p9r-grid>
+                        </cms-detail-section>
+
+                        <cms-detail-section slot="main" heading="Address">
+                            <p9r-grid min="sm" gap="md">
+                                <p9r-input name="site.organization.address.streetAddress" label="Street address" value="{{ site.organization.address.streetAddress }}" placeholder="10 Example Street" style="grid-column: 1 / -1;"></p9r-input>
+                                <p9r-input name="site.organization.address.postalCode" label="Postal code" value="{{ site.organization.address.postalCode }}" placeholder="75001"></p9r-input>
+                                <p9r-input name="site.organization.address.addressLocality" label="City" value="{{ site.organization.address.addressLocality }}" placeholder="Paris"></p9r-input>
+                                <p9r-input name="site.organization.address.addressRegion" label="Region" value="{{ site.organization.address.addressRegion }}" placeholder="Île-de-France"></p9r-input>
+                                <p9r-input name="site.organization.address.addressCountry" label="Country code" value="{{ site.organization.address.addressCountry }}" placeholder="FR"></p9r-input>
+                            </p9r-grid>
+                        </cms-detail-section>
+
+                        <cms-detail-section slot="main" heading="Profiles" description="Add public profiles that identify this same organization.">
+                            <p9r-textarea name="site.organization.sameAs" label="External profiles" rows="5" value="{{ site.organization.sameAs | lines }}" placeholder="https://www.linkedin.com/company/example" hint="Enter one absolute public URL per line."></p9r-textarea>
+                        </cms-detail-section>
+
+                        <cms-detail-section slot="aside" heading="Logo">
+                            <cms-media-input name="site.organization.logo" label="Logo" value="{{ site.organization.logo }}" types="image"></cms-media-input>
+                        </cms-detail-section>
+
+                        <cms-detail-section slot="aside" heading="Contact">
+                            <p9r-stack gap="md">
+                                <p9r-input name="site.organization.email" type="email" label="Email" value="{{ site.organization.email }}" placeholder="contact@example.com"></p9r-input>
+                                <p9r-input name="site.organization.telephone" type="tel" label="Telephone" value="{{ site.organization.telephone }}" placeholder="+33 1 23 45 67 89"></p9r-input>
+                            </p9r-stack>
+                        </cms-detail-section>
+
+                        <p9r-stack slot="aside" direction="row" justify="end">
+                            <cms-form-save-action form="organization-settings-form" label="Save organization"></cms-form-save-action>
+                        </p9r-stack>
+                    </cms-shell-detail>
+                </form>
+            </template>
+        </div>
+    </p9r-container>
+</w13c-fixed-admin-layout>
