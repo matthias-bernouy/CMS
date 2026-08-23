@@ -12770,1351 +12770,6 @@ ${followMessage}`)) {
     customElements.define("cms-empty-state", EmptyState);
   }
 
-  // src/components/admin/EndpointsInput/styles/actions.css
-  var actions_default = `/* Full-width dashed "Add endpoint" button (hover handled here, not in JS) */
-cms-endpoints-input .ep-add {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.8rem;
-    border: 1.5px dashed var(--border-default, #d1d5db);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-muted, #6b7280);
-    font: inherit;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: border-color .15s ease, color .15s ease;
-}
-cms-endpoints-input .ep-add:hover {
-    border-color: var(--primary-base, #4361ee);
-    color: var(--primary-base, #4361ee);
-}
-`;
-
-  // src/components/admin/EndpointsInput/styles/base.css
-  var base_default = `/* \`<cms-endpoints-input>\` is light-DOM (its named controls must stay in the
-   parent form's tree for FormData). This sheet is injected once into the
-   document head; every rule is scoped to the tag so nothing leaks. */
-
-cms-endpoints-input {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-/* Collapsed-header summary (method tag + id + path) */
-cms-endpoints-input .ep-header {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex: 1;
-    min-width: 0;
-}
-cms-endpoints-input .ep-id {
-    flex: 0 0 auto;
-    white-space: nowrap;
-}
-cms-endpoints-input .ep-path {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--text-muted, #94a3b8);
-    font-family: ui-monospace, monospace;
-    font-size: 0.85em;
-}
-
-/* In-tab section headings + muted hints/labels */
-cms-endpoints-input .ep-heading { font-size: 13px; }
-cms-endpoints-input .ep-hint {
-    margin: 0;
-    color: var(--text-muted, #94a3b8);
-    font-size: 13px;
-}
-cms-endpoints-input .ep-meta {
-    color: var(--text-muted, #94a3b8);
-    font-size: 13px;
-    white-space: nowrap;
-}
-
-/* Query-param row controls */
-cms-endpoints-input .ep-query-row {
-    align-items: center;
-}
-cms-endpoints-input .ep-name { flex: 1; min-width: 0; }
-cms-endpoints-input .ep-type { min-width: 7rem; }
-cms-endpoints-input .ep-computed { min-width: 6.5rem; }
-cms-endpoints-input .ep-computed[hidden] { display: none; }
-cms-endpoints-input .ep-required {
-    flex: 0 0 auto;
-    align-self: center;
-    white-space: nowrap;
-}
-
-/* Compact response-status chooser (select + custom-code input) — not full-width,
-   so the remove ✕ sits next to it. */
-cms-endpoints-input .ep-status { flex: 0 0 auto; min-width: 7rem; }
-
-/* The DataShape tree wraps its head, property box and "Remove body" with vertical
-   gap (the root box has margin/padding/border:0, so without this they sit flush). */
-cms-endpoints-input .ep-tree { display: flex; flex-direction: column; gap: .5rem; }
-
-/* Out-tab response row — status line on top, body tree below; boxed so rows
-   (which each embed a DataShape tree) read as distinct entries. */
-cms-endpoints-input [data-role="response-row"] {
-    padding: 0.6rem;
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 8px;
-    background: var(--bg-subtle, #f8fafc);
-}
-
-/* Read-only path-param name chip */
-cms-endpoints-input .ep-path-name {
-    flex: 1;
-    min-width: 0;
-    padding: 7px 10px;
-    border: 1px dashed var(--border-default, #e2e8f0);
-    border-radius: 8px;
-    background: var(--bg-subtle, #f8fafc);
-    color: var(--text-main, #1e293b);
-    font-family: ui-monospace, monospace;
-    font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* "+ Add query param" text button */
-cms-endpoints-input .ep-add-param {
-    align-self: flex-start;
-    background: transparent;
-    border: 0;
-    color: var(--primary-base, #4361ee);
-    font: inherit;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0.25rem 0;
-}
-`;
-
-  // src/components/admin/EndpointsInput/styles/shape.css
-  var shape_default = `/* ── Body shape tree ──────────────────────────────────────────────── */
-/* "Root type [select]" header */
-cms-endpoints-input .ep-root-head {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-/* Inline type picker; for arrays it also holds "of <elementType>" */
-cms-endpoints-input .ep-type-cell {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex: 0 0 auto;
-}
-cms-endpoints-input .ep-of { color: var(--text-muted, #94a3b8); font-size: 12px; }
-
-/* A nested object/array element groups its rows in a shaded, indented box */
-cms-endpoints-input .ep-box {
-    margin-top: 0.4rem;
-    margin-left: 1.1rem;
-    padding: 0.6rem;
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 8px;
-    background: var(--bg-subtle, #f8fafc);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-/* The root object isn't boxed — it reads as the top level */
-cms-endpoints-input .ep-box-root {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-}
-cms-endpoints-input .ep-prop-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-/* One property: the row, plus any nested box below it */
-cms-endpoints-input .ep-prop {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-cms-endpoints-input .ep-prop-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-cms-endpoints-input .ep-prop-name { flex: 1; min-width: 0; }
-cms-endpoints-input .ep-required { flex: 0 0 auto; white-space: nowrap; }
-
-/* Bordered "+ Add property" button */
-cms-endpoints-input .ep-add-prop {
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.7rem;
-    border: 1px solid var(--border-default, #d1d5db);
-    border-radius: 8px;
-    background: var(--bg-surface, #fff);
-    color: var(--text-main, #1e293b);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-}
-cms-endpoints-input .ep-add-prop:hover { border-color: var(--primary-base, #4361ee); color: var(--primary-base, #4361ee); }
-
-cms-endpoints-input .ep-remove-body {
-    align-self: flex-start;
-    background: transparent;
-    border: 0;
-    color: var(--text-muted, #94a3b8);
-    font: inherit;
-    font-size: 12px;
-    cursor: pointer;
-    padding: 0.25rem 0;
-}
-cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); }
-`;
-
-  // ../../features/cms-sources/src/interfaces/Source.ts
-  var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"];
-  var COMPUTED_PARAM_REFS = ["userID", "userRole"];
-  // ../../features/cms-sources/src/core/upstream/headerPolicy.ts
-  var FORBIDDEN_REQUEST_HEADERS = new Set([
-    "host",
-    "connection",
-    "keep-alive",
-    "transfer-encoding",
-    "te",
-    "upgrade",
-    "proxy-connection",
-    "proxy-authorization",
-    "trailer",
-    "content-length",
-    "cookie",
-    "x-cms-correlation-id"
-  ]);
-  var HEADER_NAME_RE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
-  var isForbiddenHeaderName = (n) => FORBIDDEN_REQUEST_HEADERS.has(n.toLowerCase());
-  var isValidHeaderName = (n) => HEADER_NAME_RE.test(n);
-  // ../../features/cms-sources/src/core/system/urn.ts
-  function parseUrn(urn) {
-    const parts = urn.split(":");
-    if (parts[0] !== "urn") {
-      return null;
-    }
-    if (parts.length === 2 && parts[1]) {
-      return { source: parts[1], endpoint: null };
-    }
-    if (parts.length === 3 && parts[1] && parts[2]) {
-      return { source: parts[1], endpoint: parts[2] };
-    }
-    return null;
-  }
-  function makeSourceUrn(sourceId) {
-    return `urn:${sourceId}`;
-  }
-  function makeEndpointUrn(sourceId, endpointId) {
-    return `urn:${sourceId}:${endpointId}`;
-  }
-
-  // ../../features/cms-sources/src/core/system/siteSource.ts
-  var SYSTEM_SITE_SOURCE_ID = "system-site";
-  var SYSTEM_SITE_SOURCE_URN = makeSourceUrn(SYSTEM_SITE_SOURCE_ID);
-  var SYSTEM_SITE_ORGANIZATION_ENDPOINT_URN = makeEndpointUrn(SYSTEM_SITE_SOURCE_ID, "organization");
-  var stringShape = (title) => ({ type: "string", title });
-  var addressShape = {
-    type: "object",
-    title: "Address",
-    properties: {
-      streetAddress: stringShape("Street address"),
-      postalCode: stringShape("Postal code"),
-      addressLocality: stringShape("City"),
-      addressRegion: stringShape("Region"),
-      addressCountry: stringShape("Country code")
-    },
-    required: ["streetAddress", "postalCode", "addressLocality", "addressRegion", "addressCountry"]
-  };
-  var organizationShape = {
-    type: "object",
-    properties: {
-      name: stringShape("Name"),
-      legalName: stringShape("Legal name"),
-      description: stringShape("Description"),
-      logo: stringShape("Logo"),
-      email: stringShape("Email"),
-      telephone: stringShape("Telephone"),
-      address: addressShape,
-      sameAs: {
-        type: "array",
-        title: "Public profiles",
-        items: { type: "string" }
-      }
-    },
-    required: ["name", "legalName", "description", "logo", "email", "telephone", "address", "sameAs"]
-  };
-  // ../../features/cms-sources/src/core/system/systemSources.ts
-  var SYSTEM_SOURCE_ID_PREFIX = "system-";
-  var SYSTEM_AUTH_SOURCE_ID = "system-auth";
-  var SYSTEM_AUTH_SOURCE_URN = makeSourceUrn(SYSTEM_AUTH_SOURCE_ID);
-  var SYSTEM_TARGET_SCHEME = "cms-system://";
-  var stringShape2 = () => ({ type: "string" });
-  var booleanShape = () => ({ type: "boolean" });
-  var objectShape = (properties, required = []) => ({
-    type: "object",
-    properties,
-    ...required.length ? { required } : {}
-  });
-  var subjectShape = objectShape({
-    identifier: stringShape2(),
-    email: stringShape2(),
-    role: stringShape2()
-  });
-  var okShape = objectShape({ ok: booleanShape() });
-  var emailBody = objectShape({ email: stringShape2() }, ["email"]);
-  var tokenBody = objectShape({ token: stringShape2() }, ["token"]);
-  var SYSTEM_AUTH_SOURCE = {
-    urn: SYSTEM_AUTH_SOURCE_URN,
-    meta: {
-      name: "Authentication",
-      description: "Built-in first-party authentication actions."
-    },
-    endpoints: [
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "me"),
-        method: "GET",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/me`,
-        meta: { name: "Current user" },
-        output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "login"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/login`,
-        meta: { name: "Log in" },
-        input: {
-          body: objectShape({ email: stringShape2(), password: stringShape2(), returnTo: stringShape2() }, [
-            "email",
-            "password"
-          ])
-        },
-        output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "logout"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/logout`,
-        meta: { name: "Log out" },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
-        meta: { name: "Sign up" },
-        input: {
-          body: objectShape({
-            email: stringShape2(),
-            password: stringShape2()
-          }, ["email", "password"])
-        },
-        output: [
-          {
-            status: "200",
-            body: okShape,
-            triggerBody: objectShape({ cmsUserId: { ...stringShape2(), nullable: true } }, ["cmsUserId"])
-          }
-        ]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestEmailVerification"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/request`,
-        meta: { name: "Request email verification" },
-        input: { body: emailBody },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmEmailVerification"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/confirm`,
-        meta: { name: "Confirm email verification" },
-        input: { body: tokenBody },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestPasswordReset"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/request`,
-        meta: { name: "Request password reset" },
-        input: { body: emailBody },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmPasswordReset"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/confirm`,
-        meta: { name: "Confirm password reset" },
-        input: { body: objectShape({ token: stringShape2(), password: stringShape2() }, ["token", "password"]) },
-        output: [{ status: "200", body: okShape }]
-      }
-    ]
-  };
-  function isSystemSourceId(sourceId) {
-    return sourceId.startsWith(SYSTEM_SOURCE_ID_PREFIX);
-  }
-  function systemSourceUrnOf(urn) {
-    const parsed = parseUrn(urn);
-    if (!parsed || !isSystemSourceId(parsed.source)) {
-      return null;
-    }
-    return makeSourceUrn(parsed.source);
-  }
-
-  // ../../features/cms-sources/src/core/model/errors.ts
-  class SourceValidationError extends Error {
-    status = 400;
-    constructor(field, message) {
-      super(`Invalid ${field}: ${message}`);
-      this.name = "SourceValidationError";
-    }
-  }
-
-  class DuplicateSourceError extends Error {
-    status = 409;
-    constructor(urn) {
-      super(`Source with urn "${urn}" already exists`);
-      this.name = "DuplicateSourceError";
-    }
-  }
-
-  // ../../features/cms-sources/src/core/validation/sourceEndpointValidation.ts
-  var RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
-  function isValidResponseStatus(status) {
-    return status === "default" || RESPONSE_STATUS.test(status);
-  }
-  // ../../features/cms-sources/src/core/upstream/buildUpstreamUrl.ts
-  var PATH_PLACEHOLDER = /\{(\w+)\}/g;
-  function extractPathParamNames(targetUrl) {
-    const out = [];
-    const seen = new Set;
-    for (const m2 of targetUrl.matchAll(PATH_PLACEHOLDER)) {
-      const name = m2[1];
-      if (seen.has(name)) {
-        continue;
-      }
-      seen.add(name);
-      out.push(name);
-    }
-    return out;
-  }
-  // src/components/admin/EndpointsInput/fields/controls.ts
-  var ICON_SVG = (paths, size = 16) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
-  var ICON_PLUS = ICON_SVG('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', 18);
-  var ICON_X = ICON_SVG('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
-  var ICON_TRASH = ICON_SVG('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
-  function makeInput(name, label, placeholder, value) {
-    const input = document.createElement("p9r-input");
-    if (name) {
-      input.setAttribute("name", name);
-    }
-    if (label) {
-      input.setAttribute("label", label);
-    }
-    input.setAttribute("placeholder", placeholder);
-    if (value != null) {
-      input.setAttribute("value", value);
-    }
-    return input;
-  }
-  function makeSelect(values, value, opts = {}) {
-    const select = document.createElement("p9r-select");
-    if (opts.name) {
-      select.setAttribute("name", opts.name);
-    }
-    select.setAttribute("label", opts.label ?? "");
-    for (const v2 of values) {
-      const o = select.appendChild(document.createElement("option"));
-      o.value = v2;
-      o.textContent = v2;
-    }
-    select.setAttribute("value", value && values.includes(value) ? value : values[0]);
-    return select;
-  }
-  var makeMethodSelect = (name, value) => makeSelect(HTTP_METHODS, value, { name, label: "Method" });
-  function makeIconButton(svg, opts) {
-    const btn = document.createElement("p9r-icon-button");
-    btn.setAttribute("variant", "ghost");
-    btn.setAttribute("color", "danger");
-    btn.setAttribute("size", "sm");
-    btn.setAttribute("aria-label", opts.ariaLabel);
-    if (opts.slot) {
-      btn.setAttribute("slot", opts.slot);
-    }
-    if (opts.action) {
-      btn.dataset.action = opts.action;
-    }
-    if (opts.onClick) {
-      btn.addEventListener("click", opts.onClick);
-    }
-    btn.innerHTML = svg;
-    return btn;
-  }
-  function makeRequiredCheckbox(checked, onChange) {
-    const cb = document.createElement("w13c-checkbox");
-    cb.dataset.role = "required";
-    cb.className = "ep-required";
-    if (checked) {
-      cb.setAttribute("checked", "");
-    }
-    cb.textContent = "Required";
-    cb.addEventListener("change", onChange);
-    return cb;
-  }
-  var makeDeleteButton = () => makeIconButton(ICON_TRASH, { ariaLabel: "Delete endpoint", slot: "header-actions", action: "remove-endpoint" });
-  function makeAddButton() {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ep-add";
-    btn.dataset.action = "add-endpoint";
-    btn.innerHTML = `${ICON_PLUS} Add endpoint`;
-    return btn;
-  }
-
-  // src/components/admin/EndpointsInput/fields/pathParams.ts
-  var extractPathNames = extractPathParamNames;
-  function makePathParamRow(name) {
-    const row = document.createElement("p9r-stack");
-    row.setAttribute("direction", "row");
-    row.setAttribute("gap", "sm");
-    row.setAttribute("align", "center");
-    row.dataset.role = "path-param-row";
-    row.dataset.paramName = name;
-    const nameEl = document.createElement("code");
-    nameEl.className = "ep-path-name";
-    nameEl.textContent = name;
-    const type = document.createElement("span");
-    type.className = "ep-meta";
-    type.textContent = "string";
-    const req = document.createElement("span");
-    req.className = "ep-meta";
-    req.textContent = "required";
-    row.append(nameEl, type, req);
-    return row;
-  }
-  function renderPathParams(container, targetUrl) {
-    const names = extractPathNames(targetUrl);
-    container.replaceChildren();
-    if (!names.length) {
-      const hint = document.createElement("p");
-      hint.className = "ep-hint";
-      hint.textContent = "Add {placeholders} to the Target URL to declare path params.";
-      container.appendChild(hint);
-      return;
-    }
-    const rows = document.createElement("p9r-stack");
-    rows.setAttribute("gap", "sm");
-    names.forEach((n) => rows.appendChild(makePathParamRow(n)));
-    container.appendChild(rows);
-  }
-
-  // src/components/admin/EndpointsInput/shared.ts
-  var PARAM_TYPES = ["string", "number", "boolean"];
-  var SHAPE_TYPES = ["string", "number", "boolean", "object", "array"];
-  var readControl = (el2) => {
-    const live = el2.value;
-    return typeof live === "string" ? live : el2.getAttribute("value") ?? "";
-  };
-  function jsonField(name, role) {
-    const f2 = document.createElement("input");
-    f2.type = "hidden";
-    f2.name = name;
-    if (role) {
-      f2.dataset.role = role;
-    }
-    f2.sync = (read) => {
-      const v2 = read();
-      f2.value = v2 == null || Array.isArray(v2) && v2.length === 0 ? "" : JSON.stringify(v2);
-    };
-    return f2;
-  }
-  var METHOD_COLOR = {
-    GET: "success",
-    POST: "info",
-    PUT: "warning",
-    PATCH: "warning",
-    DELETE: "danger"
-  };
-  var methodColor = (m2) => METHOD_COLOR[m2] ?? "primary";
-
-  // src/components/admin/EndpointsInput/rows/queryRow.ts
-  function makeQueryParamRow(seed, onChange) {
-    const row = document.createElement("p9r-stack");
-    row.setAttribute("direction", "row");
-    row.setAttribute("gap", "sm");
-    row.setAttribute("align", "center");
-    row.className = "ep-query-row";
-    row.dataset.role = "query-param-row";
-    if (seed.description) {
-      row.dataset.description = seed.description;
-    }
-    const name = makeInput("", "", "param name", seed.name);
-    name.className = "ep-name";
-    name.dataset.role = "param-name";
-    name.addEventListener("input", onChange);
-    const type = makeSelect([...PARAM_TYPES, "computed"], seed.source?.from === "computed" ? "computed" : seed.type);
-    type.className = "ep-type";
-    type.dataset.role = "param-type";
-    type.addEventListener("change", () => {
-      syncComputedVisibility();
-      onChange();
-    });
-    const req = makeRequiredCheckbox(!!seed.required, onChange);
-    const computed = makeSelect([...COMPUTED_PARAM_REFS], seed.source?.from === "computed" ? seed.source.ref : "userID");
-    computed.className = "ep-computed";
-    computed.dataset.role = "param-computed";
-    const syncComputedVisibility = () => {
-      const hidden = readControl(type) !== "computed";
-      computed.toggleAttribute("hidden", hidden);
-      computed.style.display = hidden ? "none" : "";
-    };
-    computed.addEventListener("change", onChange);
-    syncComputedVisibility();
-    const remove = makeIconButton(ICON_X, {
-      ariaLabel: "Remove param",
-      onClick: () => {
-        row.remove();
-        onChange();
-      }
-    });
-    row.append(name, type, computed, req, remove);
-    return row;
-  }
-  function readQueryParamRow(row) {
-    const name = readControl(row.querySelector('[data-role="param-name"]')).trim();
-    if (!name) {
-      return null;
-    }
-    const rawType = readControl(row.querySelector('[data-role="param-type"]'));
-    const type = rawType === "computed" ? "string" : rawType;
-    const required = row.querySelector('[data-role="required"]').hasAttribute("checked");
-    const description = row.dataset.description;
-    const source2 = rawType === "computed" ? readComputedSource(row) : {};
-    return { name, in: "query", type, required, ...description ? { description } : {}, ...source2 };
-  }
-  function readComputedSource(row) {
-    const ref = readControl(row.querySelector('[data-role="param-computed"]'));
-    return {
-      source: {
-        from: "computed",
-        ref: COMPUTED_PARAM_REFS.includes(ref) ? ref : "userID"
-      }
-    };
-  }
-
-  // src/components/admin/EndpointsInput/editors/bodyNode.ts
-  function makeNode(seed, onChange, depth = 0) {
-    const nullable = seed.nullable === true;
-    const preserveNullable = (shape) => nullable ? { ...shape, nullable: true } : shape;
-    const typeSelect = makeSelect(SHAPE_TYPES, seed.type);
-    typeSelect.dataset.role = "node-type";
-    typeSelect.className = "ep-type";
-    const typeEl = document.createElement("span");
-    typeEl.className = "ep-type-cell";
-    typeEl.appendChild(typeSelect);
-    const childrenEl = document.createElement("div");
-    const props = [];
-    let itemsNode = null;
-    const makeProp = (name, shape, required) => {
-      const nameEl = makeInput("", "", "field name", name);
-      nameEl.classList.add("ep-prop-name");
-      nameEl.addEventListener("input", onChange);
-      const child = makeNode(shape, onChange, depth + 1);
-      const reqEl = makeRequiredCheckbox(required, onChange);
-      const wrapper = document.createElement("div");
-      wrapper.className = "ep-prop";
-      const row = document.createElement("div");
-      row.className = "ep-prop-row";
-      const trash = makeIconButton(ICON_X, {
-        ariaLabel: "Remove property",
-        onClick: () => {
-          const i = props.findIndex((p) => p.nameEl === nameEl);
-          if (i >= 0) {
-            props.splice(i, 1);
-          }
-          wrapper.remove();
-          onChange();
-        }
-      });
-      row.append(nameEl, child.typeEl, reqEl, trash);
-      wrapper.append(row, child.childrenEl);
-      props.push({ nameEl, reqEl, child });
-      return wrapper;
-    };
-    const rebuild = (type, s2) => {
-      props.length = 0;
-      itemsNode = null;
-      while (typeSelect.nextSibling) {
-        typeSelect.nextSibling.remove();
-      }
-      childrenEl.replaceChildren();
-      if (type === "object") {
-        const box = document.createElement("div");
-        box.className = depth > 0 ? "ep-box" : "ep-box ep-box-root";
-        const list = document.createElement("div");
-        list.className = "ep-prop-list";
-        const req = new Set(s2.required ?? []);
-        for (const [k2, v2] of Object.entries(s2.properties ?? {})) {
-          list.appendChild(makeProp(k2, v2, req.has(k2)));
-        }
-        const add = document.createElement("button");
-        add.type = "button";
-        add.className = "ep-add-prop";
-        add.dataset.role = "add-prop";
-        add.textContent = "+ Add property";
-        add.addEventListener("click", () => {
-          list.appendChild(makeProp("", { type: "string" }, false));
-          onChange();
-        });
-        box.append(list, add);
-        childrenEl.appendChild(box);
-      } else if (type === "array") {
-        itemsNode = makeNode(s2.items ?? { type: "string" }, onChange, depth + 1);
-        const of = document.createElement("span");
-        of.className = "ep-of";
-        of.textContent = "of";
-        typeEl.append(of, itemsNode.typeEl);
-        childrenEl.appendChild(itemsNode.childrenEl);
-      }
-    };
-    typeSelect.addEventListener("change", () => {
-      const t2 = readControl(typeSelect);
-      typeSelect.setAttribute("value", t2);
-      rebuild(t2, { type: t2 });
-      onChange();
-    });
-    rebuild(seed.type, seed);
-    const read = () => {
-      const type = readControl(typeSelect);
-      if (type === "object") {
-        const properties = {};
-        const required = [];
-        for (const p of props) {
-          const n = readControl(p.nameEl).trim();
-          if (!n) {
-            continue;
-          }
-          properties[n] = p.child.read();
-          if (p.reqEl.hasAttribute("checked")) {
-            required.push(n);
-          }
-        }
-        const out = { type };
-        if (Object.keys(properties).length) {
-          out.properties = properties;
-        }
-        if (required.length) {
-          out.required = required.filter((n) => Object.hasOwn(properties, n));
-        }
-        return preserveNullable(out);
-      }
-      if (type === "array") {
-        return preserveNullable(itemsNode ? { type, items: itemsNode.read() } : { type });
-      }
-      return preserveNullable({ type });
-    };
-    return { typeEl, childrenEl, read };
-  }
-
-  // src/components/admin/EndpointsInput/editors/dataShapeTree.ts
-  function makeDataShapeTree(seed, onChange, labels) {
-    const defineLabel = labels?.define ?? "+ Define request body";
-    const removeLabel = labels?.remove ?? "Remove body";
-    const rootLabel = labels?.root ?? "Root type";
-    const element = document.createElement("div");
-    element.className = "ep-tree";
-    let root = null;
-    const showEmpty = () => {
-      root = null;
-      const define = document.createElement("button");
-      define.type = "button";
-      define.className = "ep-add-param";
-      define.dataset.role = "define-body";
-      define.textContent = defineLabel;
-      define.addEventListener("click", () => {
-        showTree({ type: "object" });
-        onChange();
-      });
-      element.replaceChildren(define);
-    };
-    const showTree = (s2) => {
-      root = makeNode(s2, onChange, 0);
-      const head = document.createElement("div");
-      head.className = "ep-root-head";
-      const label = document.createElement("span");
-      label.className = "ep-meta";
-      label.textContent = rootLabel;
-      head.append(label, root.typeEl);
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "ep-remove-body";
-      remove.textContent = removeLabel;
-      remove.addEventListener("click", () => {
-        showEmpty();
-        onChange();
-      });
-      element.replaceChildren(head, root.childrenEl, remove);
-    };
-    if (seed) {
-      showTree(seed);
-    } else {
-      showEmpty();
-    }
-    return { element, read: () => root?.read() };
-  }
-
-  // src/components/admin/EndpointsInput/editors/bodyEditor.ts
-  function makeBodySection(ei2, seedBody) {
-    const container = document.createElement("div");
-    container.dataset.role = "body";
-    const field = jsonField(`endpoints.${ei2}.body`);
-    const tree = makeDataShapeTree(seedBody, () => field.sync(() => tree.read()));
-    tree.element.dataset.role = "body-slot";
-    field.sync(() => seedBody);
-    container.append(field, tree.element);
-    return container;
-  }
-
-  // src/components/admin/EndpointsInput/panels/inPanel.ts
-  function makeInPanel(endpointIdx, seed, urlInput) {
-    const seedParams = seed.params ?? [];
-    const panel = document.createElement("p9r-tab-panel");
-    panel.id = `in-${endpointIdx}`;
-    panel.setAttribute("label", "In");
-    const wrap = document.createElement("p9r-stack");
-    wrap.setAttribute("gap", "m");
-    const pathContainer = document.createElement("div");
-    pathContainer.dataset.role = "path-params";
-    const renderPath = () => {
-      const live = urlInput.value;
-      renderPathParams(pathContainer, typeof live === "string" ? live : urlInput.getAttribute("value") ?? "");
-    };
-    renderPath();
-    urlInput.addEventListener("input", renderPath);
-    urlInput.addEventListener("change", renderPath);
-    const queryParams2 = seedParams.filter((p) => (p.in ?? "query") === "query");
-    const container = document.createElement("div");
-    container.dataset.role = "query-params";
-    const paramsField = jsonField(`endpoints.${endpointIdx}.params`);
-    const rows = document.createElement("p9r-stack");
-    rows.setAttribute("gap", "sm");
-    rows.dataset.role = "query-param-rows";
-    const readRows = () => Array.from(rows.querySelectorAll('[data-role="query-param-row"]'), readQueryParamRow).filter((p) => p !== null);
-    const sync = () => paramsField.sync(readRows);
-    queryParams2.forEach((p) => rows.appendChild(makeQueryParamRow(p, sync)));
-    const add = document.createElement("button");
-    add.type = "button";
-    add.className = "ep-add-param";
-    add.dataset.role = "add-query-param";
-    add.textContent = "+ Add query param";
-    add.addEventListener("click", () => {
-      rows.appendChild(makeQueryParamRow({}, sync));
-      sync();
-    });
-    paramsField.sync(() => queryParams2);
-    container.append(paramsField, rows, add);
-    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta));
-    panel.appendChild(wrap);
-    return panel;
-  }
-  function passthrough(name, role, seed) {
-    const f2 = jsonField(name, role);
-    f2.sync(() => seed);
-    return f2;
-  }
-  function heading(text) {
-    const h2 = document.createElement("strong");
-    h2.className = "ep-heading";
-    h2.textContent = text;
-    return h2;
-  }
-
-  // src/components/admin/EndpointsInput/fields/statusField.ts
-  var COMMON = [
-    "200",
-    "201",
-    "202",
-    "204",
-    "301",
-    "302",
-    "304",
-    "400",
-    "401",
-    "403",
-    "404",
-    "409",
-    "422",
-    "429",
-    "500",
-    "502",
-    "503"
-  ];
-  var CUSTOM = "custom";
-  function buildSelect(value) {
-    const select = document.createElement("p9r-select");
-    select.dataset.role = "response-status";
-    select.className = "ep-status";
-    select.setAttribute("label", "");
-    const opt = (v2, label) => {
-      const o = select.appendChild(document.createElement("option"));
-      o.value = v2;
-      o.textContent = label;
-    };
-    opt("", "Status…");
-    for (const c2 of COMMON) {
-      opt(c2, c2);
-    }
-    opt("default", "default");
-    opt(CUSTOM, "Custom…");
-    select.setAttribute("value", value);
-    return select;
-  }
-  function makeStatusField(seed, onChange) {
-    const custom = seed != null && seed !== "" && ![...COMMON, "default"].includes(seed);
-    const select = buildSelect(custom ? CUSTOM : seed ?? "");
-    const input = document.createElement("p9r-input");
-    input.dataset.role = "response-status-custom";
-    input.className = "ep-status";
-    input.setAttribute("placeholder", "e.g. 418");
-    if (custom) {
-      input.setAttribute("value", seed);
-    }
-    input.style.display = custom ? "" : "none";
-    const validate = () => {
-      const v2 = readControl(input).trim();
-      if (readControl(select) === CUSTOM && v2 && !isValidResponseStatus(v2)) {
-        input.setAttribute("invalid", "");
-        input.setAttribute("hint", 'Code 100-599 or "default"');
-        input.setAttribute("hint-level", "error");
-      } else {
-        input.removeAttribute("invalid");
-        input.removeAttribute("hint");
-        input.removeAttribute("hint-level");
-      }
-    };
-    select.addEventListener("change", () => {
-      const v2 = readControl(select);
-      select.setAttribute("value", v2);
-      input.style.display = v2 === CUSTOM ? "" : "none";
-      validate();
-      onChange();
-    });
-    input.addEventListener("input", () => {
-      validate();
-      onChange();
-    });
-    if (custom) {
-      validate();
-    }
-    const element = document.createElement("p9r-stack");
-    element.setAttribute("direction", "row");
-    element.setAttribute("gap", "sm");
-    element.setAttribute("align", "center");
-    element.append(select, input);
-    const read = () => {
-      const sel = readControl(select);
-      if (sel === CUSTOM) {
-        const v2 = readControl(input).trim();
-        return v2 || null;
-      }
-      return sel || null;
-    };
-    return { element, read };
-  }
-
-  // src/components/admin/EndpointsInput/rows/responseRow.ts
-  function makeResponseRow(seed, onChange, onRemove) {
-    const row = document.createElement("p9r-stack");
-    row.setAttribute("gap", "sm");
-    row.dataset.role = "response-row";
-    const head = document.createElement("p9r-stack");
-    head.setAttribute("direction", "row");
-    head.setAttribute("gap", "sm");
-    head.setAttribute("align", "center");
-    const status = makeStatusField(seed.status, onChange);
-    const remove = makeIconButton(ICON_X, {
-      ariaLabel: "Remove response",
-      onClick: onRemove
-    });
-    head.append(status.element, remove);
-    const tree = makeDataShapeTree(seed.body, onChange, {
-      define: "+ Define body",
-      remove: "Remove body",
-      root: "Body type"
-    });
-    tree.element.dataset.role = "response-body";
-    row.append(head, tree.element);
-    const read = () => {
-      const s2 = status.read();
-      if (!s2) {
-        return null;
-      }
-      const body = tree.read();
-      return {
-        status: s2,
-        ...body ? { body } : {},
-        ...seed.triggerBody ? { triggerBody: seed.triggerBody } : {}
-      };
-    };
-    return { element: row, read };
-  }
-
-  // src/components/admin/EndpointsInput/panels/outPanel.ts
-  function makeOutPanel(endpointIdx, seed) {
-    const panel = document.createElement("p9r-tab-panel");
-    panel.id = `out-${endpointIdx}`;
-    panel.setAttribute("label", "Out");
-    const wrap = document.createElement("p9r-stack");
-    wrap.setAttribute("gap", "m");
-    const field = jsonField(`endpoints.${endpointIdx}.output`);
-    const rows = document.createElement("p9r-stack");
-    rows.setAttribute("gap", "sm");
-    rows.dataset.role = "response-rows";
-    const handles = [];
-    const readRows = () => handles.map((h2) => h2.read()).filter((r) => r !== null);
-    const sync = () => field.sync(readRows);
-    const addRow = (r) => {
-      const handle = makeResponseRow(r, sync, () => {
-        const i = handles.indexOf(handle);
-        if (i >= 0) {
-          handles.splice(i, 1);
-        }
-        handle.element.remove();
-        sync();
-      });
-      handles.push(handle);
-      rows.appendChild(handle.element);
-    };
-    (seed.output ?? []).forEach(addRow);
-    const add = document.createElement("button");
-    add.type = "button";
-    add.className = "ep-add-param";
-    add.dataset.role = "add-response";
-    add.textContent = "+ Add response";
-    add.addEventListener("click", () => {
-      addRow({});
-      sync();
-    });
-    field.sync(() => seed.output);
-    wrap.append(field, heading2("Responses"), rows, add);
-    panel.appendChild(wrap);
-    return panel;
-  }
-  function heading2(text) {
-    const h2 = document.createElement("strong");
-    h2.className = "ep-heading";
-    h2.textContent = text;
-    return h2;
-  }
-
-  // src/components/admin/EndpointsInput/rows/headerRow.ts
-  function makeHeaderRow(seed, onChange, onRemove, opts) {
-    const row = document.createElement("p9r-stack");
-    row.setAttribute("direction", "row");
-    row.setAttribute("gap", "sm");
-    row.setAttribute("align", "center");
-    row.dataset.role = "header-row";
-    const from = seed.source?.from ?? "static";
-    const secretPrefix = from === "secret" ? seed.source?.prefix : undefined;
-    const name = makeInput("", "", "X-Api-Version", seed.name);
-    name.className = "ep-name";
-    name.dataset.role = "header-name";
-    const validate = () => {
-      const n = readControl(name).trim();
-      if (n && (!isValidHeaderName(n) || isForbiddenHeaderName(n))) {
-        name.setAttribute("invalid", "");
-        name.setAttribute("hint", "Invalid or reserved header name");
-        name.setAttribute("hint-level", "error");
-      } else {
-        name.removeAttribute("invalid");
-        name.removeAttribute("hint");
-        name.removeAttribute("hint-level");
-      }
-    };
-    name.addEventListener("input", () => {
-      validate();
-      onChange();
-    });
-    if (seed.name) {
-      validate();
-    }
-    const fromSelect = makeSelect(["static", "secret", "computed"], from);
-    fromSelect.className = "ep-status";
-    fromSelect.dataset.role = "header-from";
-    const staticInput = makeInput("", "", "value", from === "static" ? seed.source?.value : undefined);
-    staticInput.className = "ep-name";
-    staticInput.dataset.role = "header-value-static";
-    staticInput.style.display = from === "static" ? "" : "none";
-    staticInput.addEventListener("input", onChange);
-    const credSelect = document.createElement("cms-credential-select");
-    credSelect.dataset.role = "header-value-secret";
-    credSelect.className = "ep-name";
-    credSelect.setAttribute("label", "");
-    if (opts?.api) {
-      credSelect.setAttribute("api", opts.api);
-    }
-    if (from === "secret") {
-      credSelect.setAttribute("value", seed.source.ref ?? "");
-    }
-    credSelect.style.display = from === "secret" ? "" : "none";
-    credSelect.addEventListener("change", onChange);
-    const prefixInput = makeInput("", "", "Prefix", secretPrefix);
-    prefixInput.className = "ep-status";
-    prefixInput.dataset.role = "header-value-secret-prefix";
-    prefixInput.style.display = from === "secret" ? "" : "none";
-    prefixInput.addEventListener("input", onChange);
-    const computedSelect = makeSelect(COMPUTED_PARAM_REFS, from === "computed" ? seed.source.ref : "userID");
-    computedSelect.className = "ep-status";
-    computedSelect.dataset.role = "header-value-computed";
-    computedSelect.style.display = from === "computed" ? "" : "none";
-    computedSelect.addEventListener("change", onChange);
-    fromSelect.addEventListener("change", () => {
-      const v2 = readControl(fromSelect);
-      fromSelect.setAttribute("value", v2);
-      staticInput.style.display = v2 === "static" ? "" : "none";
-      credSelect.style.display = v2 === "secret" ? "" : "none";
-      prefixInput.style.display = v2 === "secret" ? "" : "none";
-      computedSelect.style.display = v2 === "computed" ? "" : "none";
-      onChange();
-    });
-    const remove = makeIconButton(ICON_X, { ariaLabel: "Remove header", onClick: onRemove });
-    row.append(name, fromSelect, staticInput, prefixInput, credSelect, computedSelect, remove);
-    const read = () => {
-      const n = readControl(name).trim();
-      if (!n) {
-        return null;
-      }
-      if (readControl(fromSelect) === "secret") {
-        const ref = (credSelect.value || credSelect.getAttribute("value") || "").trim();
-        const prefix = readControl(prefixInput);
-        return ref ? { name: n, source: { from: "secret", ref, ...prefix ? { prefix } : {} } } : null;
-      }
-      if (readControl(fromSelect) === "computed") {
-        const ref = readControl(computedSelect);
-        return { name: n, source: { from: "computed", ref } };
-      }
-      return { name: n, source: { from: "static", value: readControl(staticInput) } };
-    };
-    return { element: row, read };
-  }
-
-  // src/components/admin/EndpointsInput/panels/headersPanel.ts
-  function makeHeadersPanel(endpointIdx, seed, opts) {
-    const panel = document.createElement("p9r-tab-panel");
-    panel.id = `headers-${endpointIdx}`;
-    panel.setAttribute("label", "Headers");
-    const wrap = document.createElement("p9r-stack");
-    wrap.setAttribute("gap", "m");
-    const field = jsonField(`endpoints.${endpointIdx}.headers`);
-    const rows = document.createElement("p9r-stack");
-    rows.setAttribute("gap", "sm");
-    rows.dataset.role = "header-rows";
-    const handles = [];
-    const readRows = () => handles.map((h2) => h2.read()).filter((r) => r !== null);
-    const sync = () => field.sync(readRows);
-    const addRow = (h2) => {
-      const handle = makeHeaderRow(h2, sync, () => {
-        const i = handles.indexOf(handle);
-        if (i >= 0) {
-          handles.splice(i, 1);
-        }
-        handle.element.remove();
-        sync();
-      }, opts);
-      handles.push(handle);
-      rows.appendChild(handle.element);
-    };
-    (seed.headers ?? []).forEach(addRow);
-    const add = document.createElement("button");
-    add.type = "button";
-    add.className = "ep-add-param";
-    add.dataset.role = "add-header";
-    add.textContent = "+ Add header";
-    add.addEventListener("click", () => {
-      addRow({});
-      sync();
-    });
-    field.sync(() => seed.headers);
-    wrap.append(field, heading3("Headers"), rows, add);
-    panel.appendChild(wrap);
-    return panel;
-  }
-  function heading3(text) {
-    const h2 = document.createElement("strong");
-    h2.className = "ep-heading";
-    h2.textContent = text;
-    return h2;
-  }
-
-  // src/components/admin/EndpointsInput/rows/rows.ts
-  function makeEndpointRow(idx, seed = {}, api) {
-    const method = seed.method && HTTP_METHODS.includes(seed.method) ? seed.method : HTTP_METHODS[0];
-    const item = document.createElement("p9r-accordion-item");
-    item.dataset.role = "endpoint-row";
-    const header = document.createElement("span");
-    header.className = "ep-header";
-    header.setAttribute("slot", "header");
-    const methodTag = document.createElement("p9r-tag");
-    methodTag.dataset.display = "method";
-    methodTag.setAttribute("color", methodColor(method));
-    methodTag.textContent = method;
-    const idEl = document.createElement("strong");
-    idEl.className = "ep-id";
-    idEl.dataset.display = "endpointId";
-    idEl.textContent = seed.endpointId || "(new endpoint)";
-    const pathEl = document.createElement("span");
-    pathEl.className = "ep-path";
-    pathEl.dataset.display = "targetUrl";
-    pathEl.textContent = seed.targetUrl || "";
-    header.append(methodTag, idEl, pathEl);
-    const tabs = document.createElement("p9r-tabs");
-    const infos = document.createElement("p9r-tab-panel");
-    infos.id = `infos-${idx}`;
-    infos.setAttribute("label", "Infos");
-    const infosBody = document.createElement("p9r-stack");
-    infosBody.setAttribute("gap", "m");
-    const idInput = makeInput(`endpoints.${idx}.endpointId`, "SourceEndpoint id", "getUser", seed.endpointId);
-    const methodSelect = makeMethodSelect(`endpoints.${idx}.method`, method);
-    const urlInput = makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
-    const access = jsonField(`endpoints.${idx}.access`, "endpoint-access");
-    access.sync(() => seed.access);
-    infosBody.append(idInput, methodSelect, urlInput, access, hiddenScalar(`endpoints.${idx}.timeoutMs`, seed.timeoutMs), hiddenScalar(`endpoints.${idx}.responseKind`, seed.responseKind), hiddenScalar(`endpoints.${idx}.mediaType`, seed.mediaType));
-    infos.appendChild(infosBody);
-    tabs.append(infos, makeInPanel(idx, seed, urlInput), makeOutPanel(idx, seed), makeHeadersPanel(idx, seed, { api }));
-    tabs.setAttribute("active", `infos-${idx}`);
-    item.append(header, makeDeleteButton(), tabs);
-    bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
-    return item;
-  }
-  function hiddenScalar(name, value) {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = name;
-    input.value = value === undefined ? "" : String(value);
-    return input;
-  }
-  function bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput) {
-    const update = () => {
-      const m2 = readControl(methodSelect) || HTTP_METHODS[0];
-      methodTag.textContent = m2;
-      methodTag.setAttribute("color", methodColor(m2));
-      idEl.textContent = readControl(idInput).trim() || "(new endpoint)";
-      pathEl.textContent = readControl(urlInput);
-    };
-    for (const el2 of [idInput, methodSelect, urlInput]) {
-      el2.addEventListener("input", update);
-      el2.addEventListener("change", update);
-    }
-  }
-
-  // src/components/admin/EndpointsInput/EndpointsInput.ts
-  class CmsEndpointsInput extends HTMLElement {
-    _rowCount = 0;
-    _initialized = false;
-    _rowsContainer = null;
-    _onClick = (e) => {
-      const target = e.target;
-      const addBtn = target.closest('[data-action="add-endpoint"]');
-      if (addBtn && this.contains(addBtn)) {
-        e.preventDefault();
-        this._addRow({})?.scrollIntoView({ block: "nearest" });
-        return;
-      }
-      const removeBtn = target.closest('[data-action="remove-endpoint"]');
-      if (removeBtn && this.contains(removeBtn)) {
-        e.preventDefault();
-        removeBtn.closest('[data-role="endpoint-row"]')?.remove();
-      }
-    };
-    connectedCallback() {
-      if (!this._initialized) {
-        this._initialized = true;
-        ensureStyles();
-        this._render();
-        const seeds = this._parseValue();
-        if (seeds.length) {
-          seeds.forEach((seed) => this._addRow(seed));
-        } else if (!this.hasAttribute("value")) {
-          this._addRow({});
-        }
-      }
-      this.addEventListener("click", this._onClick);
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this._onClick);
-    }
-    _parseValue() {
-      const raw = this.getAttribute("value");
-      if (!raw) {
-        return [];
-      }
-      try {
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    }
-    _render() {
-      this._rowsContainer = document.createElement("p9r-accordion");
-      this.append(this._rowsContainer, makeAddButton());
-    }
-    _addRow(seed = {}) {
-      if (!this._rowsContainer) {
-        return null;
-      }
-      const api = this.getAttribute("api") ?? this.getAttribute("secrets-api") ?? undefined;
-      const item = makeEndpointRow(this._rowCount++, seed, api);
-      this._rowsContainer.appendChild(item);
-      return item;
-    }
-  }
-  var stylesInjected = false;
-  function ensureStyles() {
-    if (stylesInjected || document.getElementById("cms-endpoints-input-styles")) {
-      return;
-    }
-    stylesInjected = true;
-    const style = document.createElement("style");
-    style.id = "cms-endpoints-input-styles";
-    style.textContent = [base_default, shape_default, actions_default].join(`
-`);
-    document.head.appendChild(style);
-  }
-  customElements.define("cms-endpoints-input", CmsEndpointsInput);
-
   // src/components/admin/Common/EventToast/EventToast.ts
   class CmsEventToast extends HTMLElement {
     _attached = null;
@@ -15095,7 +13750,7 @@ p9r-action-menu {
     <polyline points="7 3 7 8 15 8"/>
 </svg>
 `;
-  var ICON_TRASH2 = `
+  var ICON_TRASH = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <polyline points="3 6 5 6 21 6"/>
     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -15103,7 +13758,7 @@ p9r-action-menu {
 `;
 
   // src/components/admin/Secrets/icons.ts
-  var ICONS = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH2 };
+  var ICONS = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH };
   function injectIcons(root) {
     root.querySelectorAll("[data-icon]").forEach((el2) => {
       const name = el2.dataset.icon;
@@ -16016,15 +14671,15 @@ p {
       this.sync();
     }
     sync = () => {
-      const heading4 = this.getAttribute("heading") ?? "";
+      const heading = this.getAttribute("heading") ?? "";
       const description = this.getAttribute("description") ?? "";
       if (this.heading) {
-        this.heading.textContent = heading4;
+        this.heading.textContent = heading;
       }
       if (this.description) {
         this.description.textContent = description;
       }
-      this.toggleAttribute("has-heading", heading4.trim() !== "");
+      this.toggleAttribute("has-heading", heading.trim() !== "");
       this.toggleAttribute("has-description", description.trim() !== "");
       this.toggleAttribute("has-actions", hasAssignedContent(this.actionsSlot));
     };
@@ -21159,22 +19814,22 @@ ${ThemeNavActions_default}`;
     return button;
   }
   function siteHeading() {
-    const heading4 = document.createElement("div");
-    heading4.className = "menu-section theme-site-heading";
-    heading4.dataset.generated = "true";
-    heading4.dataset.themeGroup = "site";
-    heading4.textContent = "Site";
-    return heading4;
+    const heading = document.createElement("div");
+    heading.className = "menu-section theme-site-heading";
+    heading.dataset.generated = "true";
+    heading.dataset.themeGroup = "site";
+    heading.textContent = "Site";
+    return heading;
   }
   function integrationHeading(source2, definition) {
-    const heading4 = document.createElement("div");
-    heading4.className = "menu-section theme-source-heading";
-    heading4.dataset.generated = "true";
-    heading4.dataset.themeGroup = source2.id;
+    const heading = document.createElement("div");
+    heading.className = "menu-section theme-source-heading";
+    heading.dataset.generated = "true";
+    heading.dataset.themeGroup = source2.id;
     const label2 = document.createElement("span");
     label2.textContent = source2.label;
-    heading4.append(integrationIcon(definition), label2);
-    return heading4;
+    heading.append(integrationIcon(definition), label2);
+    return heading;
   }
 
   // src/components/admin/Theme/ThemeNav.ts
@@ -22033,6 +20688,22 @@ w13c-lateral-menu-item {
       return Array.from(this.dashboards.values(), (dashboard) => structuredClone(dashboard));
     }
   }
+  // ../../features/cms-sources/src/core/model/errors.ts
+  class SourceValidationError extends Error {
+    status = 400;
+    constructor(field2, message) {
+      super(`Invalid ${field2}: ${message}`);
+      this.name = "SourceValidationError";
+    }
+  }
+
+  class DuplicateSourceError extends Error {
+    status = 409;
+    constructor(urn) {
+      super(`Source with urn "${urn}" already exists`);
+      this.name = "DuplicateSourceError";
+    }
+  }
   // ../../features/cms-sources/src/interfaces/SourceObservability.ts
   var SOURCE_TIMING_STAGES = [
     "cms_auth",
@@ -22057,6 +20728,21 @@ w13c-lateral-menu-item {
     "cms_identity_binding",
     "cms_total"
   ];
+  // ../../features/cms-sources/src/core/upstream/headerPolicy.ts
+  var FORBIDDEN_REQUEST_HEADERS = new Set([
+    "host",
+    "connection",
+    "keep-alive",
+    "transfer-encoding",
+    "te",
+    "upgrade",
+    "proxy-connection",
+    "proxy-authorization",
+    "trailer",
+    "content-length",
+    "cookie",
+    "x-cms-correlation-id"
+  ]);
   // ../../features/cms-sources/src/default-implementation/InMemorySourceRepository.ts
   class InMemorySourceRepository {
     _sources = new Map;
@@ -22115,6 +20801,187 @@ w13c-lateral-menu-item {
     async deleteOverlay(id) {
       return this.overlays.delete(id);
     }
+  }
+  // ../../features/cms-sources/src/core/system/urn.ts
+  function parseUrn(urn) {
+    const parts = urn.split(":");
+    if (parts[0] !== "urn") {
+      return null;
+    }
+    if (parts.length === 2 && parts[1]) {
+      return { source: parts[1], endpoint: null };
+    }
+    if (parts.length === 3 && parts[1] && parts[2]) {
+      return { source: parts[1], endpoint: parts[2] };
+    }
+    return null;
+  }
+  function makeSourceUrn(sourceId) {
+    return `urn:${sourceId}`;
+  }
+  function makeEndpointUrn(sourceId, endpointId) {
+    return `urn:${sourceId}:${endpointId}`;
+  }
+
+  // ../../features/cms-sources/src/core/system/siteSource.ts
+  var SYSTEM_SITE_SOURCE_ID = "system-site";
+  var SYSTEM_SITE_SOURCE_URN = makeSourceUrn(SYSTEM_SITE_SOURCE_ID);
+  var SYSTEM_SITE_ORGANIZATION_ENDPOINT_URN = makeEndpointUrn(SYSTEM_SITE_SOURCE_ID, "organization");
+  var stringShape = (title) => ({ type: "string", title });
+  var addressShape = {
+    type: "object",
+    title: "Address",
+    properties: {
+      streetAddress: stringShape("Street address"),
+      postalCode: stringShape("Postal code"),
+      addressLocality: stringShape("City"),
+      addressRegion: stringShape("Region"),
+      addressCountry: stringShape("Country code")
+    },
+    required: ["streetAddress", "postalCode", "addressLocality", "addressRegion", "addressCountry"]
+  };
+  var organizationShape = {
+    type: "object",
+    properties: {
+      name: stringShape("Name"),
+      legalName: stringShape("Legal name"),
+      description: stringShape("Description"),
+      logo: stringShape("Logo"),
+      email: stringShape("Email"),
+      telephone: stringShape("Telephone"),
+      address: addressShape,
+      sameAs: {
+        type: "array",
+        title: "Public profiles",
+        items: { type: "string" }
+      }
+    },
+    required: ["name", "legalName", "description", "logo", "email", "telephone", "address", "sameAs"]
+  };
+  // ../../features/cms-sources/src/core/system/systemSources.ts
+  var SYSTEM_SOURCE_ID_PREFIX = "system-";
+  var SYSTEM_AUTH_SOURCE_ID = "system-auth";
+  var SYSTEM_AUTH_SOURCE_URN = makeSourceUrn(SYSTEM_AUTH_SOURCE_ID);
+  var SYSTEM_TARGET_SCHEME = "cms-system://";
+  var stringShape2 = () => ({ type: "string" });
+  var booleanShape = () => ({ type: "boolean" });
+  var objectShape = (properties, required = []) => ({
+    type: "object",
+    properties,
+    ...required.length ? { required } : {}
+  });
+  var subjectShape = objectShape({
+    identifier: stringShape2(),
+    email: stringShape2(),
+    role: stringShape2()
+  });
+  var okShape = objectShape({ ok: booleanShape() });
+  var emailBody = objectShape({ email: stringShape2() }, ["email"]);
+  var tokenBody = objectShape({ token: stringShape2() }, ["token"]);
+  var SYSTEM_AUTH_SOURCE = {
+    urn: SYSTEM_AUTH_SOURCE_URN,
+    meta: {
+      name: "Authentication",
+      description: "Built-in first-party authentication actions."
+    },
+    endpoints: [
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "me"),
+        method: "GET",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/me`,
+        meta: { name: "Current user" },
+        output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "login"),
+        method: "POST",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/login`,
+        meta: { name: "Log in" },
+        input: {
+          body: objectShape({ email: stringShape2(), password: stringShape2(), returnTo: stringShape2() }, [
+            "email",
+            "password"
+          ])
+        },
+        output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "logout"),
+        method: "POST",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/logout`,
+        meta: { name: "Log out" },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
+        method: "POST",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
+        meta: { name: "Sign up" },
+        input: {
+          body: objectShape({
+            email: stringShape2(),
+            password: stringShape2()
+          }, ["email", "password"])
+        },
+        output: [
+          {
+            status: "200",
+            body: okShape,
+            triggerBody: objectShape({ cmsUserId: { ...stringShape2(), nullable: true } }, ["cmsUserId"])
+          }
+        ]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestEmailVerification"),
+        method: "POST",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/request`,
+        meta: { name: "Request email verification" },
+        input: { body: emailBody },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmEmailVerification"),
+        method: "POST",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/confirm`,
+        meta: { name: "Confirm email verification" },
+        input: { body: tokenBody },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestPasswordReset"),
+        method: "POST",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/request`,
+        meta: { name: "Request password reset" },
+        input: { body: emailBody },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmPasswordReset"),
+        method: "POST",
+        access: { mode: "public" },
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/confirm`,
+        meta: { name: "Confirm password reset" },
+        input: { body: objectShape({ token: stringShape2(), password: stringShape2() }, ["token", "password"]) },
+        output: [{ status: "200", body: okShape }]
+      }
+    ]
+  };
+  function isSystemSourceId(sourceId) {
+    return sourceId.startsWith(SYSTEM_SOURCE_ID_PREFIX);
+  }
+  function systemSourceUrnOf(urn) {
+    const parsed = parseUrn(urn);
+    if (!parsed || !isSystemSourceId(parsed.source)) {
+      return null;
+    }
+    return makeSourceUrn(parsed.source);
   }
   // ../../features/cms-sources/src/core/repositories/CompositeSourceRepository.ts
   class CompositeSourceRepository {
@@ -25475,7 +24342,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/base.css
-  var base_default2 = `:host {
+  var base_default = `:host {
     display: block;
 }
 
@@ -26812,7 +25679,7 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/index.ts
-  var styles = [base_default2, controls_default, style_default8].join(`
+  var styles = [base_default, controls_default, style_default8].join(`
 `);
 
   class DashboardWDetail extends U2 {
@@ -29250,7 +28117,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/view/styles/base.css
-  var base_default3 = `:host {
+  var base_default2 = `:host {
     display: block;
 }
 
@@ -29475,7 +28342,7 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/view/DashboardView.ts
-  var styles2 = [base_default3, panels_default].join(`
+  var styles2 = [base_default2, panels_default].join(`
 `);
 
   class DashboardView extends DashboardViewController {
@@ -29821,10 +28688,10 @@ p {
     wrap.textContent = detail.label;
     return wrap;
   }
-  function detailSection(slot, heading4) {
+  function detailSection(slot, heading) {
     const section = document.createElement("cms-detail-section");
     section.slot = slot;
-    section.setAttribute("heading", heading4);
+    section.setAttribute("heading", heading);
     return section;
   }
   function fieldWrap(titleText, control, hint) {
@@ -30608,9 +29475,9 @@ pre {
   function mappingGroup(title2, editor) {
     const group = document.createElement("div");
     group.className = "mapping-group";
-    const heading4 = document.createElement("strong");
-    heading4.textContent = title2;
-    group.append(heading4, editor);
+    const heading = document.createElement("strong");
+    heading.textContent = title2;
+    group.append(heading, editor);
     return group;
   }
   function grid(...children) {
@@ -32823,7 +31690,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/ui/styles/base.css
-  var base_default4 = `cms-integrations-admin {
+  var base_default3 = `cms-integrations-admin {
     display: block;
 }
 
@@ -33602,7 +32469,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default5 = [base_default4, browser_default2, detail_default2, reconfigure_default, setup_default2, states_default2, responsive_default].join(`
+  var styles_default5 = [base_default3, browser_default2, detail_default2, reconfigure_default, setup_default2, states_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
@@ -35865,10 +34732,10 @@ button:hover {
     return row;
   }
   function renderBindingHeading(text5) {
-    const heading4 = document.createElement("div");
-    heading4.className = "config-heading";
-    heading4.textContent = text5;
-    return heading4;
+    const heading = document.createElement("div");
+    heading.className = "config-heading";
+    heading.textContent = text5;
+    return heading;
   }
   function bodyBindingFields(fields2) {
     const rows = [];
@@ -45387,10 +44254,10 @@ label {
       container.append(empty4);
       return;
     }
-    const heading4 = document.createElement("div");
-    heading4.className = "details-eyebrow";
-    heading4.textContent = "Response fields";
-    container.append(heading4, renderFields2(option8.fields));
+    const heading = document.createElement("div");
+    heading.className = "details-eyebrow";
+    heading.textContent = "Response fields";
+    container.append(heading, renderFields2(option8.fields));
   }
   function renderRepeatBinding(container, option8, onSelect) {
     container.replaceChildren();
@@ -45401,9 +44268,9 @@ label {
       container.append(empty4);
       return;
     }
-    const heading4 = document.createElement("div");
-    heading4.className = "details-eyebrow";
-    heading4.textContent = "Binding";
+    const heading = document.createElement("div");
+    heading.className = "details-eyebrow";
+    heading.textContent = "Binding";
     const path = document.createElement("div");
     path.className = "repeat-path";
     const pathLabel2 = document.createElement("span");
@@ -45427,7 +44294,7 @@ label {
     insert.addEventListener("click", () => onSelect(option8, alias.value));
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
-    scroll.append(heading4, path, config);
+    scroll.append(heading, path, config);
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
     footer.append(insert);

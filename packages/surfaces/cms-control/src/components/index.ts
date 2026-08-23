@@ -111,7 +111,6 @@ import "./admin/Layout/FormSaveAction/FormSaveAction";
 import "./admin/Common/ConfirmForm/ConfirmForm";
 import "./admin/Common/CredentialSelect/CredentialSelect";
 import "./admin/Common/EmptyState/EmptyState";
-import "./admin/EndpointsInput/EndpointsInput";
 import "./admin/Common/EventToast/EventToast";
 import "./admin/Resources/Auth/LoginMethods/LoginMethods";
 import "./admin/Actions/ProviderActions/ProviderActions";
