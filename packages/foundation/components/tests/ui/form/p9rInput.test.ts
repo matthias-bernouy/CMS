@@ -111,11 +111,12 @@ describe("P9rInput", () => {
         expect(input.checkValidity()).toBe(false);
         control.dispatchEvent(new Event("invalid"));
 
-        const hint = control.shadowRoot!.querySelector<HTMLElement>(".hint")!;
+        const error = control.shadowRoot!.querySelector<HTMLElement>(".error")!;
         const meta = control.shadowRoot!.querySelector<HTMLElement>(".meta")!;
         expect(input.getAttribute("aria-invalid")).toBe("true");
         expect(meta.hidden).toBe(false);
-        expect(hint.dataset.level).toBe("error");
+        expect(error.textContent).toBe("Enter a valid email address.");
+        expect(error.hidden).toBe(false);
 
         input.value = "contact@example.com";
         input.dispatchEvent(new Event("input", { bubbles: true }));

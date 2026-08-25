@@ -1,179 +1,164 @@
-import { Component } from "@bernouy/components/base";
+import { ValidatableFormControlElement } from "../../Structure/ValidatableFormControlElement";
 import template from "./ui/template.html" with { type: "text" };
 import baseCss from "./ui/styles/base.css" with { type: "text" };
+import helpCss from "./ui/styles/help.css" with { type: "text" };
 import variantCss from "./ui/styles/variant.css" with { type: "text" };
 import responsiveCss from "./ui/styles/responsive.css" with { type: "text" };
 import { upgradeProperty, updateCounter } from "./compute";
-import { syncLabel, syncMaxCount, syncAll } from "./sync";
+import { InputHelpController } from "./feedback";
 import { handleInput, handleChange, handleEnterSubmit } from "./listener";
-import { syncInputValidity } from "./validity";
+import { P9R_INPUT_ATTRIBUTES, syncAll } from "./sync";
+import { InputValidityController } from "./validity";
 
-const css = baseCss + variantCss + responsiveCss;
+const css = baseCss + helpCss + variantCss + responsiveCss;
 
-export class P9rInput extends Component {
-    static formAssociated = true;
-    static get observedAttributes() {
-        return [
-            "value",
-            "label",
-            "aria-label",
-            "placeholder",
-            "type",
-            "inputmode",
-            "enterkeyhint",
-            "autocomplete",
-            "autocapitalize",
-            "spellcheck",
-            "min",
-            "max",
-            "step",
-            "minlength",
-            "maxlength",
-            "pattern",
-            "readonly",
-            "hint",
-            "hint-level",
-            "max-count",
-            "invalid",
-            "disabled",
-            "required",
-        ];
-    }
+export class P9rInput extends ValidatableFormControlElement {
+    static readonly observedAttributes = P9R_INPUT_ATTRIBUTES;
 
-    private _internals: ElementInternals;
-    private _input: HTMLInputElement | null;
-    private _labelEl: HTMLLabelElement | null;
-    private _hintEl: HTMLElement | null;
-    private _metaEl: HTMLElement | null;
-    private _counterEl: HTMLElement | null;
-    private _countEl: HTMLElement | null;
-    private _maxEl: HTMLElement | null;
-    private _defaultValue = "";
-    private _defaultsCaptured = false;
-    private _showValidationMessage = false;
+    private readonly input: HTMLInputElement | null;
+    private readonly label: HTMLLabelElement | null;
+    private readonly counter: HTMLElement | null;
+    private readonly count: HTMLElement | null;
+    private readonly max: HTMLElement | null;
+    private readonly helpController: InputHelpController;
+    private readonly validityController: InputValidityController;
+    private defaultValue = "";
+    private defaultsCaptured = false;
 
     constructor() {
         super({ css, template: template as unknown as string });
-        this._internals = this.attachInternals();
-        const r = this.shadowRoot!;
-        this._labelEl = r.querySelector(".label");
-        this._input = r.querySelector(".input");
-        this._hintEl = r.querySelector(".hint");
-        this._metaEl = r.querySelector(".meta");
-        this._counterEl = r.querySelector(".counter");
-        this._countEl = r.querySelector(".count");
-        this._maxEl = r.querySelector(".max");
+        const root = this.shadowRoot!;
+        this.input = root.querySelector(".input");
+        this.label = root.querySelector(".label");
+        this.counter = root.querySelector(".counter");
+        this.count = root.querySelector(".count");
+        this.max = root.querySelector(".max");
+        this.helpController = new InputHelpController(this, {
+            row: root.querySelector(".label-row"),
+            button: root.querySelector(".help-button"),
+            popover: root.querySelector(".help-popover"),
+            slot: root.querySelector(".help-slot"),
+            text: root.querySelector(".help-text"),
+        });
+        this.validityController = new InputValidityController(this, this._internals, {
+            input: this.input,
+            hint: root.querySelector(".hint"),
+            error: root.querySelector(".error"),
+            meta: root.querySelector(".meta"),
+            counter: this.counter,
+        });
     }
 
-    override connectedCallback() {
-        if (!this._defaultsCaptured) {
-            this._defaultValue = this.getAttribute("value") ?? "";
-            this._defaultsCaptured = true;
+    override connectedCallback(): void {
+        if (!this.defaultsCaptured) {
+            this.defaultValue = this.getAttribute("value") ?? "";
+            this.defaultsCaptured = true;
         }
-        ["value", "disabled", "required"].forEach((p) => upgradeProperty(this, p));
-        this._input?.addEventListener("input", this._onInput);
-        this._input?.addEventListener("change", this._onChange);
-        this._input?.addEventListener("keydown", this._onKeyDown);
-        this.addEventListener("invalid", this._onInvalid);
-        syncAll(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+        ["value", "disabled", "required"].forEach((property) => upgradeProperty(this, property));
+        this.input?.addEventListener("input", this.onInput);
+        this.input?.addEventListener("change", this.onChange);
+        this.input?.addEventListener("keydown", this.onKeyDown);
+        syncAll(this, this.input, this.label, this.counter, this.max);
+        this.helpController.connect();
+        this.validityController.connect();
         const initial = this.getAttribute("value");
         if (initial !== null) {
             this.value = initial;
         } else {
-            updateCounter(this, this._input, this._counterEl, this._countEl);
+            updateCounter(this, this.input, this.counter, this.count);
         }
-        this._syncValidity();
     }
 
-    disconnectedCallback() {
-        this._input?.removeEventListener("input", this._onInput);
-        this._input?.removeEventListener("change", this._onChange);
-        this._input?.removeEventListener("keydown", this._onKeyDown);
-        this.removeEventListener("invalid", this._onInvalid);
+    disconnectedCallback(): void {
+        this.input?.removeEventListener("input", this.onInput);
+        this.input?.removeEventListener("change", this.onChange);
+        this.input?.removeEventListener("keydown", this.onKeyDown);
+        this.helpController.disconnect();
+        this.validityController.disconnect();
     }
 
-    formResetCallback() {
-        this._showValidationMessage = false;
-        this.value = this._defaultValue;
+    formResetCallback(): void {
+        this.value = this.defaultValue;
+        this.validityController.reset();
     }
 
-    attributeChangedCallback(name: string, _oldVal: string | null, newVal: string | null) {
-        if (!this._input) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null): void {
+        if (!this.input) {
             return;
         }
-        if (name === "value" && newVal !== null) {
-            this.value = newVal;
-        } else if (name === "label") {
-            syncLabel(this, this._labelEl);
-        } else if (name === "max-count") {
-            syncMaxCount(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl);
-            updateCounter(this, this._input, this._counterEl, this._countEl);
-        } else {
-            syncAll(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+        if (name === "value" && newValue !== null) {
+            this.value = newValue;
+            return;
         }
-        this._syncValidity();
+        syncAll(this, this.input, this.label, this.counter, this.max);
+        if (name === "max-count") {
+            updateCounter(this, this.input, this.counter, this.count);
+        }
+        this.helpController.sync();
+        this.validityController.sync();
     }
 
     get value(): string {
-        return this._input?.value ?? "";
+        return this.input?.value ?? "";
     }
-    set value(v: string) {
-        if (!this._input) {
+
+    set value(value: string) {
+        if (!this.input) {
             return;
         }
-        this._input.value = v;
-        this._internals.setFormValue(v);
-        updateCounter(this, this._input, this._counterEl, this._countEl);
-        this._syncValidity();
+        this.input.value = value;
+        this._internals.setFormValue(value);
+        updateCounter(this, this.input, this.counter, this.count);
+        this.validityController.sync();
     }
 
     get name(): string {
         return this.getAttribute("name") ?? "";
     }
+
     get disabled(): boolean {
-        return this._input?.disabled ?? false;
+        return this.input?.disabled ?? false;
     }
-    set disabled(v: boolean) {
-        v ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+
+    set disabled(value: boolean) {
+        value ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
+
     get required(): boolean {
         return this.hasAttribute("required");
     }
-    set required(v: boolean) {
-        v ? this.setAttribute("required", "") : this.removeAttribute("required");
-    }
-    override focus() {
-        this._input?.focus();
+
+    set required(value: boolean) {
+        value ? this.setAttribute("required", "") : this.removeAttribute("required");
     }
 
-    private _onInput = () => {
-        handleInput(this, this._input, this._internals, this._counterEl, this._countEl);
-        this._syncValidity();
-    };
-    private _onChange = () => {
-        handleChange(this, this._input, this._internals);
-        this._syncValidity();
-    };
-    private _onKeyDown = (event: KeyboardEvent) => {
-        handleEnterSubmit(this, this._input, this._internals, event);
-    };
-    private _onInvalid = (event: Event) => {
-        if (event.target !== this) {
-            return;
-        }
-        this._showValidationMessage = true;
-        this._syncValidity();
+    override focus(): void {
+        this.input?.focus();
+    }
+
+    private readonly onInput = (): void => {
+        handleInput(this, this.input, this._internals, this.counter, this.count);
+        this.validityController.sync();
     };
 
-    private _syncValidity(): void {
-        if (this._input?.validity.valid) {
-            this._showValidationMessage = false;
-        }
-        syncInputValidity(
-            this,
-            this._internals,
-            { input: this._input, hint: this._hintEl, meta: this._metaEl, counter: this._counterEl },
-            this._showValidationMessage,
-        );
+    private readonly onChange = (): void => {
+        handleChange(this, this.input, this._internals);
+        this.validityController.sync();
+    };
+
+    private readonly onKeyDown = (event: KeyboardEvent): void => {
+        handleEnterSubmit(this, this.input, this._internals, event);
+    };
+
+    protected syncValidity(): void {
+        this.validityController.sync();
+    }
+
+    protected get controlValidity(): ValidityState {
+        return this.validityController.validity;
+    }
+
+    protected get controlValidationMessage(): string {
+        return this.validityController.validationMessage;
     }
 }

@@ -1,0 +1,57 @@
+.help-button {
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    color: var(--text-muted, #94a3b8);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    background: transparent;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 50%;
+    cursor: help;
+}
+
+.help-button[hidden] {
+    display: none;
+}
+
+.help-button:focus-visible {
+    color: var(--primary-base, #4361ee);
+    border-color: var(--primary-base, #4361ee);
+    outline: 2px solid var(--primary-muted, rgb(67 97 238 / 0.15));
+    outline-offset: 1px;
+}
+
+.help-popover {
+    position: fixed;
+    inset: auto;
+    z-index: 1000;
+    display: none;
+    width: min(280px, calc(100vw - 16px));
+    max-height: min(320px, calc(100vh - 16px));
+    margin: 0;
+    padding: 9px 11px;
+    overflow: auto;
+    color: var(--text-main, #1e293b);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.45;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgb(15 23 42 / 0.16);
+    box-sizing: border-box;
+}
+
+.help-popover:popover-open,
+.help-popover[data-open="true"] {
+    display: block;
+}
+
+.help-text[hidden] {
+    display: none;
+}

@@ -29,13 +29,15 @@ export const updateCounter = (
 
 export const refreshMetaVisibility = (
     hint: HTMLElement | null,
+    error: HTMLElement | null,
     counter: HTMLElement | null,
     meta: HTMLElement | null,
 ) => {
-    if (!hint || !counter || !meta) {
+    if (!hint || !error || !counter || !meta) {
         return;
     }
-    const hasHint = (hint.textContent ?? "").length > 0;
+    const hasHint = !hint.hidden && (hint.textContent ?? "").length > 0;
+    const hasError = !error.hidden && (error.textContent ?? "").length > 0;
     const hasCounter = !counter.hidden;
-    meta.hidden = !hasHint && !hasCounter;
+    meta.hidden = !hasHint && !hasError && !hasCounter;
 };

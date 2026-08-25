@@ -9,6 +9,17 @@
     position: relative;
 }
 
+.label-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 14px;
+}
+
+.label-row[hidden] {
+    display: none;
+}
+
 .label {
     font-size: 10px;
     font-weight: 700;
@@ -51,12 +62,30 @@
     display: none;
 }
 
-.hint {
-    font-size: 11px;
-    color: var(--text-muted, #94a3b8);
-    line-height: 1.4;
+.feedback {
+    display: block;
     flex: 1;
     min-width: 0;
+}
+
+.hint,
+.error {
+    display: block;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.hint {
+    color: var(--text-muted, #94a3b8);
+}
+
+.hint[hidden],
+.error[hidden] {
+    display: none;
+}
+
+.error {
+    color: var(--danger-base, #ef4444);
 }
 
 .counter {

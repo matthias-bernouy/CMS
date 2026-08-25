@@ -1,8 +1,20 @@
 <div class="field" part="field">
-    <label class="label" part="label" for="input"></label>
+    <div class="label-row" part="label-row">
+        <label class="label" part="label" for="input"></label>
+        <button class="help-button" part="help-button" type="button" aria-controls="help-popover" aria-expanded="false" hidden>
+            <span aria-hidden="true">?</span>
+        </button>
+    </div>
+    <div id="help-popover" class="help-popover" part="help-popover" popover="auto" role="note">
+        <slot class="help-slot" name="help"></slot>
+        <span class="help-text"></span>
+    </div>
     <input id="input" class="input" part="input" type="text" />
     <div class="meta" part="meta" hidden>
-        <small id="hint" class="hint" part="hint" aria-live="polite"></small>
+        <span class="feedback" part="feedback">
+            <small id="hint" class="hint" part="hint"></small>
+            <small id="error" class="error" part="error" aria-live="polite" hidden></small>
+        </span>
         <small id="counter" class="counter" part="counter" hidden data-over="false"><span class="count">0</span>/<span class="max">0</span></small>
     </div>
 </div>

@@ -1,5 +1,32 @@
-import { parseMaxCount, refreshMetaVisibility } from "./compute";
-import { syncDescription } from "./description";
+import { parseMaxCount } from "./compute";
+
+export const P9R_INPUT_ATTRIBUTES = [
+    "value",
+    "label",
+    "aria-label",
+    "placeholder",
+    "type",
+    "inputmode",
+    "enterkeyhint",
+    "autocomplete",
+    "autocapitalize",
+    "spellcheck",
+    "min",
+    "max",
+    "step",
+    "minlength",
+    "maxlength",
+    "pattern",
+    "readonly",
+    "hint",
+    "hint-level",
+    "help",
+    "error",
+    "max-count",
+    "invalid",
+    "disabled",
+    "required",
+] as const;
 
 export const syncLabel = (host: HTMLElement, label: HTMLLabelElement | null) => {
     if (!label) {
@@ -10,19 +37,19 @@ export const syncLabel = (host: HTMLElement, label: HTMLLabelElement | null) => 
     label.hidden = text === "";
 };
 
-export const syncPlaceholder = (host: HTMLElement, input: HTMLInputElement | null) => {
+const syncPlaceholder = (host: HTMLElement, input: HTMLInputElement | null) => {
     if (!input) {
         return;
     }
-    const v = host.getAttribute("placeholder");
-    if (v === null) {
+    const value = host.getAttribute("placeholder");
+    if (value === null) {
         input.removeAttribute("placeholder");
     } else {
-        input.setAttribute("placeholder", v);
+        input.setAttribute("placeholder", value);
     }
 };
 
-export const syncTextAttributes = (host: HTMLElement, input: HTMLInputElement | null) => {
+const syncTextAttributes = (host: HTMLElement, input: HTMLInputElement | null) => {
     if (!input) {
         return;
     }
@@ -46,14 +73,11 @@ export const syncTextAttributes = (host: HTMLElement, input: HTMLInputElement | 
     input.readOnly = host.hasAttribute("readonly");
 };
 
-export const syncType = (host: HTMLElement, input: HTMLInputElement | null) => {
-    if (!input) {
-        return;
-    }
-    input.setAttribute("type", host.getAttribute("type") ?? "text");
+const syncType = (host: HTMLElement, input: HTMLInputElement | null) => {
+    input?.setAttribute("type", host.getAttribute("type") ?? "text");
 };
 
-export const syncInputMode = (host: HTMLElement, input: HTMLInputElement | null) => {
+const syncInputMode = (host: HTMLElement, input: HTMLInputElement | null) => {
     if (!input) {
         return;
     }
@@ -65,7 +89,7 @@ export const syncInputMode = (host: HTMLElement, input: HTMLInputElement | null)
     }
 };
 
-export const syncNumericConstraints = (host: HTMLElement, input: HTMLInputElement | null) => {
+const syncNumericConstraints = (host: HTMLElement, input: HTMLInputElement | null) => {
     if (!input) {
         return;
     }
@@ -79,82 +103,34 @@ export const syncNumericConstraints = (host: HTMLElement, input: HTMLInputElemen
     }
 };
 
-export const syncDisabled = (host: HTMLElement, input: HTMLInputElement | null) => {
-    if (input) {
-        input.disabled = host.hasAttribute("disabled");
-    }
-};
-
-export const syncRequired = (host: HTMLElement, input: HTMLInputElement | null) => {
+const syncState = (host: HTMLElement, input: HTMLInputElement | null) => {
     if (!input) {
         return;
     }
-    const required = host.hasAttribute("required");
-    input.required = required;
-    if (required) {
+    input.disabled = host.hasAttribute("disabled");
+    input.required = host.hasAttribute("required");
+    if (input.required) {
         input.setAttribute("aria-required", "true");
     } else {
         input.removeAttribute("aria-required");
     }
 };
 
-export const syncHint = (
-    host: HTMLElement,
-    hint: HTMLElement | null,
-    counter: HTMLElement | null,
-    meta: HTMLElement | null,
-) => {
-    if (!hint) {
-        return;
-    }
-    hint.textContent = host.getAttribute("hint") ?? "";
-    refreshMetaVisibility(hint, counter, meta);
-};
-
-export const syncHintLevel = (host: HTMLElement, hint: HTMLElement | null) => {
-    if (!hint) {
-        return;
-    }
-    hint.dataset.level = host.getAttribute("hint-level") ?? "info";
-};
-
-export const syncInvalid = (host: HTMLElement, input: HTMLInputElement | null) => {
-    if (!input) {
-        return;
-    }
-    if (host.hasAttribute("invalid")) {
-        input.setAttribute("aria-invalid", "true");
-    } else {
-        input.removeAttribute("aria-invalid");
-    }
-};
-
-export const syncMaxCount = (
-    host: HTMLElement,
-    counter: HTMLElement | null,
-    max: HTMLElement | null,
-    hint: HTMLElement | null,
-    meta: HTMLElement | null,
-) => {
+export const syncMaxCount = (host: HTMLElement, counter: HTMLElement | null, max: HTMLElement | null) => {
     if (!counter || !max) {
         return;
     }
     const value = parseMaxCount(host);
-    if (value === null) {
-        counter.hidden = true;
-    } else {
-        counter.hidden = false;
+    counter.hidden = value === null;
+    if (value !== null) {
         max.textContent = String(value);
     }
-    refreshMetaVisibility(hint, counter, meta);
 };
 
 export const syncAll = (
     host: HTMLElement,
     input: HTMLInputElement | null,
     label: HTMLLabelElement | null,
-    hint: HTMLElement | null,
-    meta: HTMLElement | null,
     counter: HTMLElement | null,
     max: HTMLElement | null,
 ) => {
@@ -164,11 +140,6 @@ export const syncAll = (
     syncType(host, input);
     syncInputMode(host, input);
     syncNumericConstraints(host, input);
-    syncDisabled(host, input);
-    syncRequired(host, input);
-    syncHint(host, hint, counter, meta);
-    syncHintLevel(host, hint);
-    syncInvalid(host, input);
-    syncMaxCount(host, counter, max, hint, meta);
-    syncDescription(input, hint, counter);
+    syncState(host, input);
+    syncMaxCount(host, counter, max);
 };
