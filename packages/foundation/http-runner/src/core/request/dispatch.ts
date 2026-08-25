@@ -34,12 +34,14 @@ export async function dispatchRequest(
         if (typeof status === "number") {
             const message = error instanceof Error ? error.message : "Error";
             const publicCode = (error as { publicCode?: unknown })?.publicCode;
+            const field = (error as { field?: unknown })?.field;
             return withRequestCorrelationHeader(
                 request,
                 new Response(
                     JSON.stringify({
                         error: message,
                         ...(typeof publicCode === "string" ? { code: publicCode } : {}),
+                        ...(typeof field === "string" ? { field } : {}),
                     }),
                     {
                         status,

@@ -84,6 +84,7 @@ export {
     ContentValidationError,
     ContentConflictError,
     DuplicateBlocTagError,
+    DuplicatePagePathError,
     SiteBlocLifecycleConflictError,
     SiteBlocNotFoundError,
     SiteBlocPublishedSlotConflictError,
@@ -166,6 +167,7 @@ export {
 export * from "cms-content/core/constants/p9r-constants";
 export * from "cms-content/core/validation/predicates";
 export * from "cms-content/core/utils/contentRefs";
+export { derivePagePath } from "cms-content/core/utils/pagePath";
 export { sanitizeDomTree } from "cms-content/core/utils/sanitizeDomTree";
 export { sanitizeSvgTree } from "cms-content/core/utils/sanitizeSvgTree";
 export { renderSafeMarkdown } from "cms-content/core/utils/renderSafeMarkdown";

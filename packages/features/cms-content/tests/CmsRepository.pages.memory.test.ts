@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { countValues, InMemoryCmsRepository, isPublishedPage } from "@bernouy/cms-content";
+import { countValues, DuplicatePagePathError, InMemoryCmsRepository, isPublishedPage } from "@bernouy/cms-content";
 
 /** Seed three pages with distinct titles/paths/tags/visibility. */
 async function seeded() {
@@ -59,5 +59,19 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
             { value: "alpha", count: 1 },
             { value: "beta", count: 1 },
         ]);
+    });
+
+    test("rejects duplicate paths without replacing either page", async () => {
+        const repo = new InMemoryCmsRepository();
+        await repo.insertPage("/about", "About");
+        await expect(repo.insertPage("/about", "Replacement")).rejects.toBeInstanceOf(DuplicatePagePathError);
+        await repo.insertPage("/contact", "Contact");
+        const contact = await repo.getPage("/contact");
+
+        await expect(repo.updatePage({ id: contact!.id, path: "/about" })).rejects.toBeInstanceOf(
+            DuplicatePagePathError,
+        );
+        expect((await repo.getPage("/about"))?.title).toBe("About");
+        expect((await repo.getPage("/contact"))?.title).toBe("Contact");
     });
 });

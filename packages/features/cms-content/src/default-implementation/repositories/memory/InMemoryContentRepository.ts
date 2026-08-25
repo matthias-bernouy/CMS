@@ -7,6 +7,7 @@ import { defaultSystem } from "cms-content/core/lifecycle/system";
 import { filterAndSortPages } from "cms-content/core/queries/pagesQuery";
 import { isPublishedPage } from "cms-content/core/lifecycle/publication";
 import { InMemoryBlocRepository } from "cms-content/default-implementation/repositories/memory/InMemoryBlocRepository";
+import { DuplicatePagePathError } from "cms-content/core/validation/errors";
 
 export class InMemoryContentRepository extends InMemoryBlocRepository {
     protected readonly pages = new Map<string, TPage>();
@@ -32,6 +33,9 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
     }
 
     async insertPage(path: string, title: string): Promise<void> {
+        if (this.pages.has(path)) {
+            throw new DuplicatePagePathError(path);
+        }
         const page: TPage = {
             id: randomUUIDv7(),
             path,
@@ -59,6 +63,10 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         }
         const [oldPath, existing] = entry;
         const merged: TPage = { ...existing, ...page } as TPage;
+        const collision = this.pages.get(merged.path);
+        if (collision && collision.id !== existing.id) {
+            throw new DuplicatePagePathError(merged.path);
+        }
         if (oldPath !== merged.path) {
             this.pages.delete(oldPath);
         }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { TBloc } from "@bernouy/cms-content";
-import { DuplicateBlocTagError } from "@bernouy/cms-content";
+import { DuplicateBlocTagError, DuplicatePagePathError } from "@bernouy/cms-content";
 import { createMongoContentRepository } from "./contentMongoFixture";
 
 const card: TBloc = {
@@ -75,6 +75,21 @@ describe("MongoCmsRepository content persistence", () => {
         await expect(repository.updatePage({ title: "Missing id" })).rejects.toThrow(/requires `id`/);
     });
 
+    test("translates page path duplicate-key errors on insert and update", async () => {
+        const { db, repository } = createMongoContentRepository();
+        const pages = db.get("pages");
+        pages.beforeInsertOne = duplicateKey;
+        await expect(repository.insertPage("/taken", "Taken")).rejects.toBeInstanceOf(DuplicatePagePathError);
+
+        delete pages.beforeInsertOne;
+        await repository.insertPage("/draft", "Draft");
+        const draft = await repository.getPage("/draft");
+        pages.beforeUpdateOne = duplicateKey;
+        await expect(repository.updatePage({ id: draft!.id, path: "/taken" })).rejects.toBeInstanceOf(
+            DuplicatePagePathError,
+        );
+    });
+
     test("round-trips template documents without exposing Mongo ids", async () => {
         const { repository } = createMongoContentRepository();
         const template = await repository.createTemplate({
@@ -101,3 +116,7 @@ describe("MongoCmsRepository content persistence", () => {
         expect(await repository.getSystem()).toEqual(updated);
     });
 });
+
+async function duplicateKey(): Promise<never> {
+    throw Object.assign(new Error("duplicate key"), { code: 11000 });
+}

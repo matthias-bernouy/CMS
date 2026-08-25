@@ -5,7 +5,10 @@
  */
 export class ContentValidationError extends Error {
     status = 400;
-    constructor(field: string, message: string) {
+    constructor(
+        readonly field: string,
+        message: string,
+    ) {
         super(`Invalid ${field}: ${message}`);
         this.name = "ContentValidationError";
     }
@@ -23,6 +26,16 @@ export class DuplicateBlocTagError extends ContentConflictError {
     constructor(tag: string) {
         super(`Bloc with tag "${tag}" already exists`);
         this.name = "DuplicateBlocTagError";
+    }
+}
+
+export class DuplicatePagePathError extends ContentConflictError {
+    readonly field = "path";
+    readonly publicCode = "page_path_taken";
+
+    constructor(readonly path: string) {
+        super("A page already uses this path.");
+        this.name = "DuplicatePagePathError";
     }
 }
 

@@ -13,6 +13,8 @@ export class FakeContentCollection {
         options: { session?: unknown; upsert?: boolean };
     }> = [];
     readonly usedSessions: unknown[] = [];
+    beforeInsertOne?: (document: StoredDocument) => Promise<void>;
+    beforeUpdateOne?: (update: { $set: Filter }) => Promise<void>;
     afterUpdateOne?: (update: { $set: Filter }) => Promise<void>;
     updateManyCalls = 0;
     private readonly documents = new Map<string, StoredDocument>();
@@ -27,6 +29,7 @@ export class FakeContentCollection {
     }
 
     async insertOne(document: StoredDocument): Promise<void> {
+        await this.beforeInsertOne?.(structuredClone(document));
         if (this.documents.has(document._id)) {
             throw Object.assign(new Error("duplicate key"), { code: 11000 });
         }
@@ -69,6 +72,7 @@ export class FakeContentCollection {
         options: { session?: unknown } = {},
     ): Promise<{ matchedCount: number }> {
         this.recordSession(options.session);
+        await this.beforeUpdateOne?.(structuredClone(update));
         const document = this.findStored(filter);
         if (document) {
             this.documents.set(document._id, { ...document, ...structuredClone(update.$set) });
