@@ -39020,6 +39020,17 @@ dd {
     font: inherit;
     font-size: 16px;
     line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.row:hover > .row-actions,
+.row:focus-within > .row-actions,
+.item.selected + .row-actions {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
 }
 
 .row-actions:hover,

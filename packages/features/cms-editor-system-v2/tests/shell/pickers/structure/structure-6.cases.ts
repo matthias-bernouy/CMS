@@ -25,6 +25,11 @@ describe("Structure tree accessibility", () => {
         expect(actionButtons).toHaveLength(2);
         expect(actionButtons[1]?.getAttribute("aria-label")).toBe("Actions for Second");
         expect(actionButtons[1]?.getAttribute("aria-haspopup")).toBe("menu");
+        const styles = tree.shadowRoot!.querySelector("style")!.textContent;
+        expect(styles).toContain(".row:hover > .row-actions");
+        expect(styles).toContain(".row:focus-within > .row-actions");
+        expect(styles).toContain(".item.selected + .row-actions");
+        expect(styles).toContain("visibility: hidden");
         actionButtons[1]?.click();
         expect(contextLabels(tree)).toContain("Move up");
         tree.controller.emitter.closeContextMenu();
