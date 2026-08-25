@@ -44,8 +44,8 @@
     "./binding": {
       "types": "./dist/binding/bindingCore.d.ts",
       "bun": "./binding.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "import": "./dist/binding.js",
+      "default": "./dist/binding.js"
     },
     "./binding-dom": {
       "types": "./dist/binding/core/networkBindings.d.ts",

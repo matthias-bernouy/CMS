@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { CMS_SOURCE_SUCCESS_EVENT, type FormSubmitResult } from "../../../../binding";
 import { BindingRuntime } from "../../../../src/binding/runtime/BindingRuntime";
-import { type FormSubmitResult } from "../../../../src/binding/submit/formSubmit";
 import { el, resetDom, settle, text, waitFor } from "../../testUtils";
 
 afterEach(resetDom);
@@ -28,9 +28,9 @@ describe("Source — submit request", () => {
         `) as HTMLFormElement;
         document.body.append(root);
         document.body.addEventListener(
-            "cms-source:success",
+            CMS_SOURCE_SUCCESS_EVENT,
             (event) => {
-                events.source = (event as CustomEvent<FormSubmitResult>).detail;
+                events.source = event.detail;
             },
             { once: true },
         );

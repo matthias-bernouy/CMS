@@ -9,6 +9,7 @@ import {
 import { interpolateString, type FilterMap } from "../core/interpolate";
 import type { Scope } from "../core/scope";
 import { resolveSourceBodyFields } from "./presentation/sourceBody";
+import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "./submissionEvents";
 import { collectFormData, normalizeFormMethod, submitForm, type FormSubmitResult } from "../submit/formSubmit";
 
 type CapturedSubmission = {
@@ -18,8 +19,6 @@ type CapturedSubmission = {
     bodyFields: ReturnType<typeof resolveSourceBodyFields>;
 };
 
-const SOURCE_SUCCESS_EVENT = "cms-source:success";
-const SOURCE_FAILED_EVENT = "cms-source:failed";
 const LEGACY_FORM_SUCCESS_EVENT = "form:success";
 const LEGACY_FORM_FAILED_EVENT = "form:failed";
 
@@ -84,7 +83,7 @@ export class SourceSubmission {
     }
 
     private dispatchResult(result: FormSubmitResult): void {
-        const canonical = result.ok ? SOURCE_SUCCESS_EVENT : SOURCE_FAILED_EVENT;
+        const canonical = result.ok ? CMS_SOURCE_SUCCESS_EVENT : CMS_SOURCE_FAILED_EVENT;
         const legacy = result.ok ? LEGACY_FORM_SUCCESS_EVENT : LEGACY_FORM_FAILED_EVENT;
         const init: CustomEventInit<FormSubmitResult> = { bubbles: true, composed: true, detail: result };
         this.element.dispatchEvent(new CustomEvent(canonical, init));

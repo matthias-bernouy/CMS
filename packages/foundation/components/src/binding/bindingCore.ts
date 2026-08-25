@@ -45,6 +45,13 @@ export {
     SOURCE_TRIGGER_ATTR,
 } from "./core/attrs";
 export { currentState, setState, STATE_CHANGE_EVENT } from "./params";
+export {
+    CMS_SOURCE_FAILED_EVENT,
+    CMS_SOURCE_SUCCESS_EVENT,
+    type CmsSourceResultEvent,
+    type CmsSourceResultEventMap,
+} from "./source/submissionEvents";
+export type { FormSubmitResult } from "./submit/formSubmit";
 
 /** Filter set passed to every source's interpolation. Empty until a host wires
  *  one in via `setBindingFilters` (the concrete filters are a later step). */
