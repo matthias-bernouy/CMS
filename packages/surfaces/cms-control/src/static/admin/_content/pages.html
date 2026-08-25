@@ -55,11 +55,12 @@
 
 <p9r-modal id="create-page-modal" aria-label="Create a new page">
     <span slot="title">Page creation</span>
-    <form cms-source="{{BASE_PATH}}/api/page as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="new:page">
+    <form id="create-page-form" cms-source="{{BASE_PATH}}/api/page as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="new:page">
         <p9r-stack gap="m">
-            <p9r-input name="title" label="Name" placeholder="My Beautiful Article"></p9r-input>
-            <p9r-input name="path" label="Path" placeholder="/article"></p9r-input>
+            <p9r-input name="title" label="Name" placeholder="My Beautiful Article" maxlength="70" required></p9r-input>
+            <p9r-input name="path" label="Path" placeholder="/my-beautiful-article" hint='Starts with "/". Use letters, numbers, hyphens and single slashes.' help="This becomes the public URL. Do not use spaces, accents, query strings or a trailing slash." required></p9r-input>
             <p9r-button color="primary" fullWidth type="submit">Create new page</p9r-button>
         </p9r-stack>
     </form>
+    <cms-page-form-controller form="create-page-form" mode="create" availability-url="{{BASE_PATH}}/api/page/exists" hidden></cms-page-form-controller>
 </p9r-modal>

@@ -11923,6 +11923,251 @@ p {
     }
   }
 
+  // ../../features/cms-content/src/core/utils/pagePath.ts
+  function derivePagePath(title) {
+    const slug = title.normalize("NFKD").replace(/œ/gi, "oe").replace(/æ/gi, "ae").replace(/ß/gi, "ss").replace(/\p{Mark}+/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    return slug ? `/${slug}` : "";
+  }
+  // ../../features/cms-content/src/core/validation/predicates.ts
+  function isValidPathFormat(path) {
+    if (!path || typeof path !== "string") {
+      return false;
+    }
+    if (path === "/") {
+      return true;
+    }
+    return /^(?:\/[a-zA-Z0-9-]+)+$/.test(path);
+  }
+  // src/components/admin/Common/PageSettings/pageFormFields.ts
+  function resolvePageForm(host) {
+    const id2 = host.getAttribute("form")?.trim();
+    const explicit = id2 ? host.ownerDocument.getElementById(id2) : null;
+    return explicit instanceof HTMLFormElement ? explicit : host.closest("form");
+  }
+  function resolvePageInput(form, name) {
+    const associated = form.elements.namedItem(name);
+    if (isPageInput(associated)) {
+      return associated;
+    }
+    for (const candidate of Array.from(form.ownerDocument.querySelectorAll(`p9r-input[name="${name}"]`))) {
+      if (!isPageInput(candidate)) {
+        continue;
+      }
+      if (candidate.closest("form") === form || candidate.getAttribute("form") === form.id) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+  function isPageInput(value) {
+    return value instanceof HTMLElement && typeof value.value === "string" && typeof value.setCustomValidity === "function";
+  }
+
+  // src/components/admin/Common/PageSettings/pagePathAvailability.ts
+  class PagePathAvailability {
+    document;
+    endpoint;
+    currentPath;
+    activeRequest = null;
+    constructor(document2, endpoint, currentPath) {
+      this.document = document2;
+      this.endpoint = endpoint;
+      this.currentPath = currentPath;
+    }
+    cancel() {
+      this.activeRequest?.abort();
+      this.activeRequest = null;
+    }
+    async check(path) {
+      const endpoint = this.endpoint();
+      if (!endpoint) {
+        return "unavailable";
+      }
+      this.cancel();
+      const request = new AbortController;
+      this.activeRequest = request;
+      const url = new URL(endpoint, this.document.baseURI);
+      url.searchParams.set("path", path);
+      const currentPath = this.currentPath();
+      if (currentPath) {
+        url.searchParams.set("current-path", currentPath);
+      }
+      try {
+        const response = await fetch(url, {
+          signal: request.signal,
+          headers: { Accept: "application/json" }
+        });
+        if (this.activeRequest !== request) {
+          return "stale";
+        }
+        if (!response.ok) {
+          return "unavailable";
+        }
+        const body = await response.json();
+        return body.exists === true ? "taken" : "available";
+      } catch (error) {
+        return error?.name === "AbortError" ? "stale" : "unavailable";
+      } finally {
+        if (this.activeRequest === request) {
+          this.activeRequest = null;
+        }
+      }
+    }
+  }
+
+  // src/components/admin/Common/PageSettings/PageFormController.ts
+  var PATH_FORMAT_ERROR = 'Start with "/". Use only letters, numbers, hyphens and single slashes.';
+  var PATH_TAKEN_ERROR = "A page already uses this path.";
+  var SOURCE_FAILED_EVENT = "cms-source:failed";
+  var SOURCE_SUCCESS_EVENT = "cms-source:success";
+
+  class PageFormController extends HTMLElement {
+    static observedAttributes = ["form", "mode", "availability-url", "current-path"];
+    form = null;
+    titleControl = null;
+    path = null;
+    availability = null;
+    availabilityTimer = null;
+    pathEditedByUser = true;
+    pathErrorKind = null;
+    connectedCallback() {
+      queueMicrotask(() => this.bind());
+    }
+    disconnectedCallback() {
+      this.unbind();
+    }
+    attributeChangedCallback() {
+      if (this.isConnected) {
+        queueMicrotask(() => this.bind());
+      }
+    }
+    bind() {
+      this.unbind();
+      const form = resolvePageForm(this);
+      const title = form ? resolvePageInput(form, "title") : null;
+      const path = form ? resolvePageInput(form, "path") : null;
+      if (!form || !title || !path) {
+        return;
+      }
+      this.form = form;
+      this.titleControl = title;
+      this.path = path;
+      this.pathEditedByUser = this.getAttribute("mode") !== "create" || path.value !== "";
+      this.availability = new PagePathAvailability(this.ownerDocument, () => this.getAttribute("availability-url")?.trim() ?? "", () => this.getAttribute("current-path")?.trim() ?? "");
+      title.addEventListener("input", this.onTitleInput);
+      path.addEventListener("input", this.onPathInput);
+      path.addEventListener("change", this.onPathChange);
+      form.addEventListener("reset", this.onReset);
+      form.addEventListener(SOURCE_SUCCESS_EVENT, this.onReset);
+      form.addEventListener(SOURCE_FAILED_EVENT, this.onFailure);
+      this.validateEditedPath();
+    }
+    unbind() {
+      this.titleControl?.removeEventListener("input", this.onTitleInput);
+      this.path?.removeEventListener("input", this.onPathInput);
+      this.path?.removeEventListener("change", this.onPathChange);
+      this.form?.removeEventListener("reset", this.onReset);
+      this.form?.removeEventListener(SOURCE_SUCCESS_EVENT, this.onReset);
+      this.form?.removeEventListener(SOURCE_FAILED_EVENT, this.onFailure);
+      this.cancelAvailability();
+      this.form = null;
+      this.titleControl = null;
+      this.path = null;
+      this.availability = null;
+    }
+    onTitleInput = () => {
+      this.titleControl?.setCustomValidity("");
+      if (!this.path || this.pathEditedByUser) {
+        return;
+      }
+      this.path.value = derivePagePath(this.titleControl?.value ?? "");
+      if (this.validateEditedPath()) {
+        this.scheduleAvailability();
+      }
+    };
+    onPathInput = () => {
+      this.pathEditedByUser = true;
+      if (this.validateEditedPath()) {
+        this.scheduleAvailability();
+      }
+    };
+    onPathChange = () => {
+      if (this.path && isValidPathFormat(this.path.value)) {
+        this.checkAvailability();
+      }
+    };
+    onFailure = (event) => {
+      const body = event.detail.body;
+      if (!body || typeof body.error !== "string") {
+        return;
+      }
+      const control = body.field === "path" ? this.path : body.field === "title" ? this.titleControl : null;
+      if (!control) {
+        return;
+      }
+      if (control === this.path) {
+        this.pathErrorKind = "server";
+      }
+      control.setCustomValidity(body.error);
+      control.reportValidity();
+      control.focus();
+    };
+    onReset = () => {
+      queueMicrotask(() => {
+        this.titleControl?.setCustomValidity("");
+        this.setPathError("", null);
+        this.pathEditedByUser = this.getAttribute("mode") !== "create";
+      });
+    };
+    validateEditedPath() {
+      this.cancelAvailability();
+      const value = this.path?.value ?? "";
+      if (!value) {
+        this.setPathError("", null);
+        return false;
+      }
+      if (!isValidPathFormat(value)) {
+        this.setPathError(PATH_FORMAT_ERROR, "format");
+        return false;
+      }
+      this.setPathError("", null);
+      return true;
+    }
+    scheduleAvailability() {
+      this.availabilityTimer = setTimeout(() => void this.checkAvailability(), 350);
+    }
+    async checkAvailability() {
+      if (this.availabilityTimer !== null) {
+        clearTimeout(this.availabilityTimer);
+        this.availabilityTimer = null;
+      }
+      const candidate = this.path?.value ?? "";
+      if (!candidate || !isValidPathFormat(candidate) || !this.availability) {
+        return;
+      }
+      const result = await this.availability.check(candidate);
+      if (!this.path || this.path.value !== candidate) {
+        return;
+      }
+      if (result === "taken") {
+        this.setPathError(PATH_TAKEN_ERROR, "availability");
+      } else if (result === "available" && this.pathErrorKind === "availability") {
+        this.setPathError("", null);
+      }
+    }
+    cancelAvailability() {
+      if (this.availabilityTimer !== null) {
+        clearTimeout(this.availabilityTimer);
+        this.availabilityTimer = null;
+      }
+      this.availability?.cancel();
+    }
+    setPathError(message, kind) {
+      this.pathErrorKind = kind;
+      this.path?.setCustomValidity(message);
+    }
+  }
+
   // ../../foundation/components/dist/base.js
   class U2 extends HTMLElement {
     _rawStyles = "";
@@ -13940,7 +14185,7 @@ ${followMessage}`)) {
   }
   customElements.define("cms-role-select", CmsRoleSelect);
 
-  // src/components/admin/Common/PageIndexingSettings/PageIndexingVariables.ts
+  // src/components/admin/Common/PageSettings/PageIndexingVariables.ts
   class PageIndexingVariables extends HTMLElement {
     text;
     constructor() {
@@ -13966,7 +14211,7 @@ ${followMessage}`)) {
     customElements.define("cms-page-indexing-variables", PageIndexingVariables);
   }
 
-  // src/components/admin/Common/PageIndexingSettings/view.ts
+  // src/components/admin/Common/PageSettings/view.ts
   function pageIndexingSettingsView(model) {
     const notice = editorNotice(model, model.selection);
     return `
@@ -14025,7 +14270,7 @@ ${followMessage}`)) {
     `;
   }
 
-  // src/components/admin/Common/PageIndexingSettings/PageIndexingSettings.ts
+  // src/components/admin/Common/PageSettings/PageIndexingSettings.ts
   var EMPTY_MODEL = {
     configured: false,
     suggested: false,
@@ -54289,6 +54534,7 @@ dialog::backdrop {
     }
   }
   define(CMS_BINDING_CORE_TAG, ud);
+  define("cms-page-form-controller", PageFormController);
   qh({
     json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3),
     jsonurl: (value3) => value3 === undefined ? undefined : encodeURIComponent(JSON.stringify(value3)),

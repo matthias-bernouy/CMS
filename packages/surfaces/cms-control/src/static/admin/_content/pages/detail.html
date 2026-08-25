@@ -44,8 +44,8 @@
                         <p9r-stack gap="md">
                             <cms-detail-section heading="Page settings" description="Configure the page title and SEO metadata.">
                                 <p9r-stack gap="md">
-                                    <p9r-input name="title" label="Title" value="{{ title }}" required></p9r-input>
-                                    <p9r-textarea name="description" label="SEO description" rows="4" autosize value="{{ description }}"></p9r-textarea>
+                                    <p9r-input name="title" label="Title" value="{{ title }}" maxlength="70" required></p9r-input>
+                                    <p9r-textarea name="description" label="SEO description" rows="4" maxlength="200" max-count="200" autosize value="{{ description }}"></p9r-textarea>
                                     <cms-page-indexing-variables data-indexing-variables hidden></cms-page-indexing-variables>
                                 </p9r-stack>
                             </cms-detail-section>
@@ -57,9 +57,11 @@
                         </p9r-stack>
                     </form>
 
+                    <cms-page-form-controller form="page-settings-form" mode="edit" current-path="{{ path }}" availability-url="{{BASE_PATH}}/api/page/exists" hidden></cms-page-form-controller>
+
                     <cms-detail-section slot="aside" heading="Page configuration">
                         <p9r-stack gap="md">
-                            <p9r-input form="page-settings-form" name="path" label="Path" value="{{ path }}" required></p9r-input>
+                            <p9r-input form="page-settings-form" name="path" label="Path" value="{{ path }}" hint='Starts with "/". Use letters, numbers, hyphens and single slashes.' help="Changing this updates the public URL and may break existing links. Do not use spaces, accents, query strings or a trailing slash." required></p9r-input>
                             <p9r-select form="page-settings-form" name="published" label="Status" value="{{ published }}">
                                 <option value="false">Draft</option>
                                 <option value="true">Published</option>

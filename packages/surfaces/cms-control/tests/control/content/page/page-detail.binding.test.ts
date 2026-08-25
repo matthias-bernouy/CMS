@@ -43,6 +43,8 @@ describe("admin page detail", () => {
             document.querySelector('p9r-action-menu[label="More actions"] [data-action="delete"]')?.textContent,
         ).toContain("Delete page");
         expect(document.querySelector('p9r-input[name="title"]')?.getAttribute("value")).toBe("Pricing");
+        expect(document.querySelector('p9r-input[name="title"]')?.getAttribute("maxlength")).toBe("70");
+        expect(document.querySelector('p9r-textarea[name="description"]')?.getAttribute("maxlength")).toBe("200");
         expect(
             document.querySelector('form#page-settings-form cms-detail-section[heading="Page settings"]'),
         ).not.toBeNull();
@@ -52,6 +54,11 @@ describe("admin page detail", () => {
                 .querySelector('cms-detail-section[heading="Page configuration"] p9r-input[name="path"]')
                 ?.getAttribute("form"),
         ).toBe("page-settings-form");
+        expect(document.querySelector('p9r-input[name="path"]')?.hasAttribute("hint")).toBe(true);
+        expect(document.querySelector('p9r-input[name="path"]')?.hasAttribute("help")).toBe(true);
+        expect(document.querySelector('cms-page-form-controller[mode="edit"]')?.getAttribute("current-path")).toBe(
+            "/pricing",
+        );
         expect(document.querySelector('p9r-select[name="published"]')?.getAttribute("form")).toBe("page-settings-form");
         expect(document.querySelector('p9r-token-input[name="tags"]')?.getAttribute("value")).toBe("pricing,landing");
         expect(document.querySelector('p9r-token-input[name="tags"]')?.getAttribute("resource")).toBe("pages");

@@ -46,6 +46,7 @@ import {
     BindingCore,
     setBindingFilters,
 } from "@bernouy/components";
+import { PageFormController } from "./admin/Common/PageSettings/PageFormController";
 
 function define(tag: string, constructor: CustomElementConstructor) {
     if (!customElements.get(tag)) {
@@ -54,6 +55,7 @@ function define(tag: string, constructor: CustomElementConstructor) {
 }
 
 define(CMS_BINDING_CORE_TAG, BindingCore);
+define("cms-page-form-controller", PageFormController);
 setBindingFilters({
     json: (value) => (value === undefined ? undefined : JSON.stringify(value)),
     jsonurl: (value) => (value === undefined ? undefined : encodeURIComponent(JSON.stringify(value))),
@@ -115,7 +117,7 @@ import "./admin/Common/EventToast/EventToast";
 import "./admin/Resources/Auth/LoginMethods/LoginMethods";
 import "./admin/Actions/ProviderActions/ProviderActions";
 import "./admin/Common/RoleSelect/RoleSelect";
-import "./admin/Common/PageIndexingSettings/PageIndexingSettings";
+import "./admin/Common/PageSettings/PageIndexingSettings";
 import "./admin/RoleEditor/RoleEditor";
 import "./admin/Actions/UserActions/UserActions";
 import "./admin/Common/Tokens/TokenCreate";

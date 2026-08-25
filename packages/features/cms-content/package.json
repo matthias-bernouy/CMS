@@ -8,6 +8,7 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./editor": "./src/exports/editor.ts",
+        "./page-path": "./src/exports/page-path.ts",
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
