@@ -15,9 +15,10 @@ export function buildShadow(host: HTMLElement, label: string | null) {
     shadow.innerHTML = `
         <style>${css}</style>
         <div class="field">
-            ${label ? `<span class="label">${label}</span>` : ""}
+            ${label ? `<label class="label" for="credential-trigger">${label}</label>` : ""}
             <div class="input-row">
-                <button class="trigger" type="button" tabindex="0">
+                <button id="credential-trigger" class="trigger" type="button" role="combobox"
+                    aria-haspopup="listbox" aria-controls="credential-listbox" aria-expanded="false">
                     ${ICON_KEY}
                     <span class="value">No credential</span>
                     <svg class="chevron" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
@@ -25,7 +26,7 @@ export function buildShadow(host: HTMLElement, label: string | null) {
                         <path d="m6 9 6 6 6-6"/>
                     </svg>
                 </button>
-                <button class="clear-btn" type="button" title="Remove credential">
+                <button class="clear-btn" type="button" title="Remove credential" aria-label="Remove credential">
                     <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -36,13 +37,19 @@ export function buildShadow(host: HTMLElement, label: string | null) {
         </div>
         <div class="panel" popover="auto">
             <button type="button" class="create-btn">+ Create new credential</button>
-            <div class="search-wrap"><input class="search" type="text" placeholder="Search credentials..." spellcheck="false"></div>
-            <ul class="list"></ul>
+            <div class="search-wrap"><input class="search" type="search" aria-label="Search credentials"
+                aria-controls="credential-listbox" placeholder="Search credentials..." spellcheck="false"></div>
+            <ul id="credential-listbox" class="list" role="listbox"></ul>
             <div class="empty">No credentials yet</div>
         </div>
     `;
+    const trigger = shadow.querySelector(".trigger") as HTMLElement;
+    const accessibleName = host.getAttribute("aria-label");
+    if (accessibleName) {
+        trigger.setAttribute("aria-label", accessibleName);
+    }
     return {
-        trigger: shadow.querySelector(".trigger") as HTMLElement,
+        trigger,
         display: shadow.querySelector(".value") as HTMLElement,
         clearBtn: shadow.querySelector(".clear-btn") as HTMLElement,
         panel: shadow.querySelector(".panel") as HTMLElement,

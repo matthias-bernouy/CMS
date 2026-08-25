@@ -62,11 +62,17 @@ export class TokenInputView {
         if (this.input) {
             this.input.placeholder = selectedCount ? "" : (host.getAttribute("placeholder") ?? "");
             this.input.disabled = disabled;
+            syncOptionalAttribute(this.input, "aria-label", host.getAttribute("aria-label"));
+            syncBooleanAria(this.input, "aria-required", host.hasAttribute("required"));
         }
         if (this.hint) {
             const hint = host.getAttribute("hint") ?? "";
             this.hint.textContent = hint;
+            this.hint.dataset.level = host.getAttribute("hint-level") ?? "info";
             this.hint.hidden = hint === "";
+            if (this.input) {
+                syncOptionalAttribute(this.input, "aria-describedby", hint ? this.hint.id : null);
+            }
         }
         if (this.createButton) {
             this.createButton.hidden = !showCreateAction;
@@ -79,6 +85,21 @@ export class TokenInputView {
     syncDisplay(value: string, selected: string[], options: ComboOption[], onRemove: (value: string) => void): void {
         this.tokens?.replaceChildren(...tokenLabels(selected, options).map((item) => tokenElement(item, onRemove)));
         this.internals.setFormValue(value);
+    }
+
+    syncValidity(host: HTMLElement, selectedCount: number, showMessage: boolean): void {
+        if (!this.input) {
+            return;
+        }
+        const valueMissing = host.hasAttribute("required") && selectedCount === 0;
+        if (valueMissing) {
+            this.internals.setValidity({ valueMissing: true }, "Please add at least one value.", this.input);
+        } else {
+            this.internals.setValidity({});
+        }
+        const invalid = host.hasAttribute("invalid") || (showMessage && valueMissing);
+        syncBooleanAria(this.input, "aria-invalid", invalid);
+        this.syncHint(host, showMessage && valueMissing);
     }
 
     renderList(
@@ -98,6 +119,11 @@ export class TokenInputView {
         }
         this.listbox.hidden = false;
         this.input?.setAttribute("aria-expanded", "true");
+        if (activeIndex >= 0) {
+            this.input?.setAttribute("aria-activedescendant", `option-${activeIndex}`);
+        } else {
+            this.input?.removeAttribute("aria-activedescendant");
+        }
     }
 
     hideList(): void {
@@ -110,5 +136,32 @@ export class TokenInputView {
 
     get listHidden(): boolean {
         return this.listbox?.hidden ?? true;
+    }
+
+    private syncHint(host: HTMLElement, showValidationMessage: boolean): void {
+        if (!this.hint || !this.input) {
+            return;
+        }
+        const hint = showValidationMessage ? "Please add at least one value." : (host.getAttribute("hint") ?? "");
+        this.hint.textContent = hint;
+        this.hint.dataset.level = showValidationMessage ? "error" : (host.getAttribute("hint-level") ?? "info");
+        this.hint.hidden = hint === "";
+        syncOptionalAttribute(this.input, "aria-describedby", hint ? this.hint.id : null);
+    }
+}
+
+function syncOptionalAttribute(element: HTMLElement, name: string, value: string | null): void {
+    if (value) {
+        element.setAttribute(name, value);
+    } else {
+        element.removeAttribute(name);
+    }
+}
+
+function syncBooleanAria(element: HTMLElement, name: "aria-invalid" | "aria-required", value: boolean): void {
+    if (value) {
+        element.setAttribute(name, "true");
+    } else {
+        element.removeAttribute(name);
     }
 }

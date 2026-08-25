@@ -5,6 +5,7 @@ import variantCss from "./variant.css" with { type: "text" };
 import { upgradeProperty, updateCounter, autosize } from "./compute";
 import { syncMaxCount, syncAll } from "./sync";
 import { handleInput, handleChange } from "./listener";
+import { syncTextareaValidity } from "./validity";
 
 const css = baseCss + variantCss;
 
@@ -14,9 +15,14 @@ export class Textarea extends Component {
         return [
             "value",
             "label",
+            "aria-label",
             "placeholder",
             "rows",
             "maxlength",
+            "minlength",
+            "autocomplete",
+            "spellcheck",
+            "readonly",
             "max-count",
             "hint",
             "hint-level",
@@ -37,6 +43,7 @@ export class Textarea extends Component {
     private _max: HTMLElement | null;
     private _defaultValue = "";
     private _defaultsCaptured = false;
+    private _showValidationMessage = false;
 
     constructor() {
         super({ css, template: template as unknown as string });
@@ -59,6 +66,7 @@ export class Textarea extends Component {
         ["value", "disabled", "required"].forEach((p) => upgradeProperty(this, p));
         this._textarea?.addEventListener("input", this._onInput);
         this._textarea?.addEventListener("change", this._onChange);
+        this.addEventListener("invalid", this._onInvalid);
         syncAll(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
         const initial = this.getAttribute("value");
         if (initial !== null) {
@@ -66,14 +74,17 @@ export class Textarea extends Component {
         } else {
             updateCounter(this, this._textarea, this._counter, this._count);
         }
+        this._syncValidity();
     }
 
     disconnectedCallback() {
         this._textarea?.removeEventListener("input", this._onInput);
         this._textarea?.removeEventListener("change", this._onChange);
+        this.removeEventListener("invalid", this._onInvalid);
     }
 
     formResetCallback() {
+        this._showValidationMessage = false;
         this.value = this._defaultValue;
     }
 
@@ -91,6 +102,7 @@ export class Textarea extends Component {
         } else {
             syncAll(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
         }
+        this._syncValidity();
     }
 
     get value(): string {
@@ -104,6 +116,7 @@ export class Textarea extends Component {
         this._internals.setFormValue(v);
         updateCounter(this, this._textarea, this._counter, this._count);
         autosize(this, this._textarea);
+        this._syncValidity();
     }
 
     get name(): string {
@@ -125,6 +138,27 @@ export class Textarea extends Component {
         this._textarea?.focus();
     }
 
-    private _onInput = () => handleInput(this, this._textarea, this._internals, this._counter, this._count);
-    private _onChange = () => handleChange(this._textarea, this._internals);
+    private _onInput = () => {
+        handleInput(this, this._textarea, this._internals, this._counter, this._count);
+        this._syncValidity();
+    };
+    private _onChange = () => {
+        handleChange(this, this._textarea, this._internals);
+        this._syncValidity();
+    };
+    private _onInvalid = (event: Event) => {
+        if (event.target === this) {
+            this._showValidationMessage = true;
+            this._syncValidity();
+        }
+    };
+
+    private _syncValidity(): void {
+        this._showValidationMessage = syncTextareaValidity(
+            this,
+            this._internals,
+            { textarea: this._textarea, hint: this._hint, meta: this._meta, counter: this._counter },
+            this._showValidationMessage,
+        );
+    }
 }

@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll } from "bun:test";
 import { ActionMenuItem } from "../../src/ui/Navigation/Menu/ActionMenu/ActionMenuItem/ActionMenuItem";
 import { TokenInput } from "../../src/ui/Form/Inputs/TokenInput/TokenInput";
+import { Button } from "../../src/ui/Form/Actions/Button/Button";
 import { Checkbox } from "../../src/ui/Form/Toggles/Checkbox/Checkbox";
 import { Switch } from "../../src/ui/Form/Toggles/Switch/Switch";
 
@@ -26,6 +27,9 @@ beforeAll(() => {
     }
     if (!customElements.get("p9r-token-input-remote-test")) {
         customElements.define("p9r-token-input-remote-test", RemoteTokenInputTest);
+    }
+    if (!customElements.get("p9r-button-accessibility-test")) {
+        customElements.define("p9r-button-accessibility-test", Button);
     }
 });
 
@@ -116,10 +120,47 @@ describe("checkbox-specific behaviour (must survive the refactor)", () => {
 });
 
 describe("switch-specific behaviour (must survive the refactor)", () => {
-    test("connect sets role=switch and aria-checked", () => {
-        const el = mount("w13c-switch", { checked: "" });
-        expect(el.getAttribute("role")).toBe("switch");
-        expect(el.getAttribute("aria-checked")).toBe("true");
+    test("exposes one named switch without nested interactive semantics", () => {
+        const el = mount("w13c-switch", { checked: "", "aria-label": "Enabled" });
+        const input = innerInput(el);
+        expect(el.getAttribute("role")).toBeNull();
+        expect(input.getAttribute("role")).toBe("switch");
+        expect(input.getAttribute("aria-label")).toBe("Enabled");
+        expect(input.checked).toBe(true);
+    });
+});
+
+describe("button accessibility", () => {
+    test("forwards its accessible state to the native button and delegates focus", () => {
+        const el = mount("p9r-button-accessibility-test", {
+            "aria-label": "Open filters",
+            "aria-expanded": "false",
+            "aria-haspopup": "dialog",
+            "aria-controls": "filters",
+            title: "Filter results",
+        }) as HTMLElement;
+        const button = el.shadowRoot!.querySelector<HTMLButtonElement>("button")!;
+
+        expect({
+            label: button.getAttribute("aria-label"),
+            expanded: button.getAttribute("aria-expanded"),
+            popup: button.getAttribute("aria-haspopup"),
+            controls: button.getAttribute("aria-controls"),
+            title: button.title,
+        }).toEqual({
+            label: "Open filters",
+            expanded: "false",
+            popup: "dialog",
+            controls: "filters",
+            title: "Filter results",
+        });
+
+        el.setAttribute("aria-expanded", "true");
+        el.removeAttribute("title");
+        el.focus();
+        expect(button.getAttribute("aria-expanded")).toBe("true");
+        expect(button.hasAttribute("title")).toBe(false);
+        expect(el.shadowRoot!.activeElement).toBe(button);
     });
 });
 

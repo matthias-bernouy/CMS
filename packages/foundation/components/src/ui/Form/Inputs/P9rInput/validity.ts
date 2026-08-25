@@ -1,4 +1,5 @@
 import { refreshMetaVisibility } from "./compute";
+import { syncDescription } from "./description";
 import { syncHint, syncHintLevel, syncInvalid } from "./sync";
 
 type InputValidityElements = {
@@ -33,10 +34,12 @@ export function syncInputValidity(
             hint.dataset.level = "error";
         }
         refreshMetaVisibility(hint, counter, meta);
+        syncDescription(input, hint, counter);
         return;
     }
 
     syncHint(host, hint, counter, meta);
     syncHintLevel(host, hint);
     syncInvalid(host, input);
+    syncDescription(input, hint, counter);
 }

@@ -21,6 +21,21 @@ export const syncPlaceholder = (host: HTMLElement, textarea: HTMLTextAreaElement
     }
 };
 
+export const syncTextAttributes = (host: HTMLElement, textarea: HTMLTextAreaElement | null) => {
+    if (!textarea) {
+        return;
+    }
+    for (const name of ["aria-label", "autocomplete", "spellcheck", "minlength"]) {
+        const value = host.getAttribute(name);
+        if (value === null) {
+            textarea.removeAttribute(name);
+        } else {
+            textarea.setAttribute(name, value);
+        }
+    }
+    textarea.readOnly = host.hasAttribute("readonly");
+};
+
 export const syncRows = (host: HTMLElement, textarea: HTMLTextAreaElement | null) => {
     if (!textarea) {
         return;
@@ -113,6 +128,24 @@ export const syncMaxCount = (
     refreshMetaVisibility(hint, counter, meta);
 };
 
+export const syncDescription = (
+    textarea: HTMLTextAreaElement | null,
+    hint: HTMLElement | null,
+    counter: HTMLElement | null,
+) => {
+    if (!textarea) {
+        return;
+    }
+    const ids = [hint && !hint.hidden && hint.textContent ? hint.id : "", counter && !counter.hidden ? counter.id : ""]
+        .filter(Boolean)
+        .join(" ");
+    if (ids) {
+        textarea.setAttribute("aria-describedby", ids);
+    } else {
+        textarea.removeAttribute("aria-describedby");
+    }
+};
+
 export const syncAll = (
     host: HTMLElement,
     textarea: HTMLTextAreaElement | null,
@@ -124,6 +157,7 @@ export const syncAll = (
 ) => {
     syncLabel(host, label);
     syncPlaceholder(host, textarea);
+    syncTextAttributes(host, textarea);
     syncRows(host, textarea);
     syncMaxLength(host, textarea);
     syncDisabled(host, textarea);
@@ -132,4 +166,5 @@ export const syncAll = (
     syncHintLevel(host, hint);
     syncInvalid(host, textarea);
     syncMaxCount(host, counter, max, hint, meta);
+    syncDescription(textarea, hint, counter);
 };

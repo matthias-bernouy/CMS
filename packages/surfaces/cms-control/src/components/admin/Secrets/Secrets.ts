@@ -63,7 +63,12 @@ export class CmsSecrets extends Component {
         const keyEl = row.querySelector('[data-role="key"]') as HTMLElement;
         keyEl.textContent = key;
         keyEl.title = key;
-        (row.querySelector('[data-role="value"]') as HTMLInputElement).value = value;
+        const input = row.querySelector('[data-role="value"]') as HTMLElement & { value: string };
+        input.setAttribute("aria-label", `Value for ${key}`);
+        input.value = value;
+        for (const action of ["reveal", "save", "delete"] as const) {
+            row.querySelector(`[data-action="${action}"]`)?.setAttribute("aria-label", `${action} ${key} secret`);
+        }
         injectIcons(row);
         row.querySelector('[data-action="reveal"]')?.addEventListener("click", () => this._toggleReveal(row));
         row.querySelector('[data-action="save"]')?.addEventListener("click", () => this._save(row));

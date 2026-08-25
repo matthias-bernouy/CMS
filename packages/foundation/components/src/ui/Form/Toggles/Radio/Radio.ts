@@ -69,7 +69,7 @@ export class Radio extends Component {
         } else {
             this.removeAttribute("checked");
         }
-        this.dispatchEvent(new Event("change", { bubbles: true }));
+        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     };
 
     private _onClick = (e: Event) => {

@@ -3,6 +3,7 @@ import {
     mappedObject,
     referencesFromShape,
     targetsFromShape,
+    valuePicker,
 } from "cms-control/components/admin/Resources/WorkflowEditor/mapping";
 
 describe("workflow mapping editor", () => {
@@ -59,5 +60,16 @@ describe("workflow mapping editor", () => {
             order: { id: "$response.body.order.id" },
             notify: true,
         });
+    });
+
+    test("names both reference and fixed-value mapping controls", () => {
+        const picker = valuePicker(
+            { mode: "literal", value: "published" },
+            [{ value: "$response.body.status", label: "Response body · status", shape: { type: "string" } }],
+            "Status source",
+        );
+
+        expect(picker.querySelector("select")?.getAttribute("aria-label")).toBe("Status source");
+        expect(picker.querySelector("input")?.getAttribute("aria-label")).toBe("Status source: fixed value");
     });
 });

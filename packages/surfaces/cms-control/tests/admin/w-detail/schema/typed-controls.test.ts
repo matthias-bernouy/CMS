@@ -203,6 +203,11 @@ describe("typed dashboard detail controls", () => {
         document.body.append(control);
 
         expect(control.querySelector<HTMLButtonElement>("[data-table-add]")?.textContent).toBe("Add variant");
+        expect(
+            Array.from(control.querySelectorAll<HTMLElement>("[data-table-column]"), (editor) =>
+                editor.getAttribute("aria-label"),
+            ),
+        ).toEqual(["Name", "Status", "Product", "Tags"]);
         expect((control.querySelector("p9r-token-input") as HTMLElement & { values: string[] }).values).toEqual([]);
         (control.querySelector("p9r-input") as HTMLElement & { value: string }).value = "Updated";
         (control.querySelector("p9r-select") as HTMLElement & { value: string }).value = "active";

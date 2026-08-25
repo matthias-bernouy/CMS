@@ -68,7 +68,6 @@ export class ComboboxView {
             this.input.disabled = disabled;
             this.input.required = host.hasAttribute("required");
             syncBooleanAria(this.input, "aria-required", host.hasAttribute("required"));
-            syncBooleanAria(this.input, "aria-invalid", host.hasAttribute("invalid"));
         }
         if (this.hint) {
             const hint = host.getAttribute("hint") ?? "";
@@ -86,7 +85,7 @@ export class ComboboxView {
     }
 
     syncDisplay(selectedValue: string, selectedLabel: string): void {
-        if (this.input && document.activeElement !== this.input) {
+        if (this.input && !this.input.matches(":focus")) {
             this.input.value = selectedLabel;
         }
         this.internals.setFormValue(selectedValue);
@@ -96,6 +95,21 @@ export class ComboboxView {
         if (this.chevron) {
             this.chevron.toggleAttribute("hidden", selectedLabel !== "");
         }
+    }
+
+    syncValidity(host: HTMLElement, selectedValue: string, showMessage: boolean): void {
+        if (!this.input) {
+            return;
+        }
+        const valueMissing = host.hasAttribute("required") && selectedValue === "";
+        if (valueMissing) {
+            this.internals.setValidity({ valueMissing: true }, "Please select a value.", this.input);
+        } else {
+            this.internals.setValidity({});
+        }
+        const invalid = host.hasAttribute("invalid") || (showMessage && valueMissing);
+        syncBooleanAria(this.input, "aria-invalid", invalid);
+        this.syncHint(host, showMessage && valueMissing);
     }
 
     syncClearButtonForInput(): void {
@@ -133,6 +147,17 @@ export class ComboboxView {
 
     get listHidden(): boolean {
         return this.listbox?.hidden ?? true;
+    }
+
+    private syncHint(host: HTMLElement, showValidationMessage: boolean): void {
+        if (!this.hint || !this.input) {
+            return;
+        }
+        const hint = showValidationMessage ? "Please select a value." : (host.getAttribute("hint") ?? "");
+        this.hint.textContent = hint;
+        this.hint.dataset.level = showValidationMessage ? "error" : (host.getAttribute("hint-level") ?? "info");
+        this.hint.hidden = hint === "";
+        syncOptionalAttribute(this.input, "aria-describedby", hint ? this.hint.id : null);
     }
 }
 

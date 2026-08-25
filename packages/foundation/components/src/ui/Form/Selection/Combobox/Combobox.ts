@@ -2,7 +2,7 @@ import { Component, upgradeProperty } from "@bernouy/components/base";
 import template from "./template.html" with { type: "text" };
 import baseCss from "./base.css" with { type: "text" };
 import listCss from "./list.css" with { type: "text" };
-import { comboItemsFor, comboOptionsFrom } from "./list";
+import { ComboboxKeyboard, comboItemsFor, comboOptionsFrom } from "./list";
 import type { ComboItem, ComboOption } from "./types";
 import { ComboboxView, type ComboboxHandlers } from "./ComboboxView";
 
@@ -21,15 +21,26 @@ export class Combobox extends Component {
         "creatable",
     ];
     private readonly view: ComboboxView;
+    private readonly keyboard: ComboboxKeyboard;
     private options: ComboOption[] = [];
     private items: ComboItem[] = [];
-    private activeIndex = -1;
     private selectedValue = "";
     private selectedLabel = "";
+    private defaultValue = "";
+    private defaultsCaptured = false;
+    private showValidationMessage = false;
 
     constructor() {
         super({ css: baseCss + listCss, template: template as unknown as string });
         this.view = new ComboboxView(this.shadowRoot, this.attachInternals());
+        this.keyboard = new ComboboxKeyboard(
+            this.view,
+            () => this.items,
+            () => this.view.input?.value.trim() ?? "",
+            (query) => this.renderList(query),
+            this.selectItem,
+            () => this.syncDisplay(),
+        );
     }
 
     override connectedCallback(): void {
@@ -38,11 +49,17 @@ export class Combobox extends Component {
         }
         this.view.connect(this.handlers);
         this.syncOptions();
+        if (!this.defaultsCaptured) {
+            this.defaultValue = this.value;
+            this.defaultsCaptured = true;
+        }
+        this.addEventListener("invalid", this.onInvalid);
         this.syncAttributes();
     }
 
     disconnectedCallback(): void {
         this.view.disconnect(this.handlers);
+        this.removeEventListener("invalid", this.onInvalid);
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, value: string | null): void {
@@ -78,6 +95,17 @@ export class Combobox extends Component {
         this.view.input?.focus();
     }
 
+    formResetCallback(): void {
+        this.showValidationMessage = false;
+        this.value = this.defaultValue;
+    }
+
+    formStateRestoreCallback(state: string | File | FormData | null): void {
+        if (typeof state === "string") {
+            this.value = state;
+        }
+    }
+
     private readonly handlers: ComboboxHandlers = {
         focus: () => {
             this.view.input?.select();
@@ -85,13 +113,13 @@ export class Combobox extends Component {
         },
         input: () => {
             this.view.syncClearButtonForInput();
-            this.activeIndex = -1;
-            this.renderList(this.query);
+            this.keyboard.reset();
+            this.renderList(this.keyboard.query);
         },
-        keydown: (event) => this.onKeydown(event),
+        keydown: (event) => this.keyboard.handle(event),
         blur: () =>
             window.setTimeout(() => {
-                this.hideList();
+                this.keyboard.hide();
                 this.syncDisplay();
             }, 120),
         clear: (event) => {
@@ -114,11 +142,15 @@ export class Combobox extends Component {
 
     private syncDisplay(): void {
         this.view.syncDisplay(this.selectedValue, this.selectedLabel);
+        if (this.selectedValue) {
+            this.showValidationMessage = false;
+        }
+        this.view.syncValidity(this, this.selectedValue, this.showValidationMessage);
     }
 
     private renderList(query: string): void {
         this.items = comboItemsFor(this.options, query, this.hasAttribute("creatable"));
-        this.view.renderList(this.items, this.activeIndex, this.selectedValue, this.selectItem);
+        this.view.renderList(this.items, this.keyboard.activeIndex, this.selectedValue, this.selectItem);
     }
 
     private readonly selectItem = (item: ComboItem): void => {
@@ -128,7 +160,7 @@ export class Combobox extends Component {
             this.view.input.value = this.selectedLabel;
         }
         this.syncDisplay();
-        this.hideList();
+        this.keyboard.hide();
         this.dispatchEvent(
             new CustomEvent("change", {
                 bubbles: true,
@@ -138,43 +170,10 @@ export class Combobox extends Component {
         );
     };
 
-    private onKeydown(event: KeyboardEvent): void {
-        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-            this.moveActive(event);
-        } else if (event.key === "Enter") {
-            const first = this.items[0];
-            const item = this.items[this.activeIndex] ?? (first?.kind === "create" ? first : undefined);
-            if (item) {
-                event.preventDefault();
-                this.selectItem(item);
-            }
-        } else if (event.key === "Escape") {
-            event.preventDefault();
-            this.hideList();
-            this.syncDisplay();
+    private readonly onInvalid = (event: Event): void => {
+        if (event.target === this) {
+            this.showValidationMessage = true;
+            this.view.syncValidity(this, this.selectedValue, true);
         }
-    }
-
-    private moveActive(event: KeyboardEvent): void {
-        event.preventDefault();
-        if (this.view.listHidden) {
-            this.renderList(this.query);
-        }
-        if (this.items.length === 0) {
-            return;
-        }
-        const step = event.key === "ArrowDown" ? 1 : -1;
-        this.activeIndex = Math.max(0, Math.min(this.items.length - 1, this.activeIndex + step));
-        this.renderList(this.query);
-        this.view.input?.setAttribute("aria-activedescendant", `option-${this.activeIndex}`);
-    }
-
-    private hideList(): void {
-        this.view.hideList();
-        this.activeIndex = -1;
-    }
-
-    private get query(): string {
-        return this.view.input?.value.trim() ?? "";
-    }
+    };
 }

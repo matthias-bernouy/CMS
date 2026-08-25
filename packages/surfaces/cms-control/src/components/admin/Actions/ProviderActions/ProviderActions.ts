@@ -63,12 +63,14 @@ class CmsProviderActions extends HTMLElement {
           .remove:hover { background: var(--danger-muted, #fee2e2); }
         </style>
         <div class="row">
-          <button type="button" class="switch ${on ? "on" : ""}" role="switch" aria-checked="${on}" title="${on ? "Disable" : "Enable"}"><span class="knob"></span></button>
+          <button type="button" class="switch ${on ? "on" : ""}" role="switch" aria-checked="${on}"><span class="knob"></span></button>
           <span class="state">${on ? "Enabled" : "Disabled"}</span>
           ${this._builtin ? "" : `<button type="button" class="btn edit">Edit</button>`}
           ${this._builtin ? "" : `<button type="button" class="btn remove">Remove</button>`}
         </div>`;
-        root.querySelector(".switch")!.addEventListener("click", () => this._toggle());
+        const switchButton = root.querySelector<HTMLElement>(".switch")!;
+        switchButton.setAttribute("aria-label", `${on ? "Disable" : "Enable"} ${this._id} provider`);
+        switchButton.addEventListener("click", () => this._toggle());
         root.querySelector(".edit")?.addEventListener("click", () =>
             document.getElementById(`edit-${this._id}`)?.setAttribute("open", ""),
         );

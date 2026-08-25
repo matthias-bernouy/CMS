@@ -3,9 +3,9 @@ import template from "./ui/template.html" with { type: "text" };
 import baseCss from "./ui/styles/base.css" with { type: "text" };
 import variantCss from "./ui/styles/variant.css" with { type: "text" };
 import responsiveCss from "./ui/styles/responsive.css" with { type: "text" };
-import { upgradeProperty, updateCounter, nextLabelId } from "./compute";
+import { upgradeProperty, updateCounter } from "./compute";
 import { syncLabel, syncMaxCount, syncAll } from "./sync";
-import { handleInput, handleChange } from "./listener";
+import { handleInput, handleChange, handleEnterSubmit } from "./listener";
 import { syncInputValidity } from "./validity";
 
 const css = baseCss + variantCss + responsiveCss;
@@ -16,12 +16,21 @@ export class P9rInput extends Component {
         return [
             "value",
             "label",
+            "aria-label",
             "placeholder",
             "type",
             "inputmode",
+            "enterkeyhint",
+            "autocomplete",
+            "autocapitalize",
+            "spellcheck",
             "min",
             "max",
             "step",
+            "minlength",
+            "maxlength",
+            "pattern",
+            "readonly",
             "hint",
             "hint-level",
             "max-count",
@@ -54,11 +63,6 @@ export class P9rInput extends Component {
         this._counterEl = r.querySelector(".counter");
         this._countEl = r.querySelector(".count");
         this._maxEl = r.querySelector(".max");
-        const labelId = nextLabelId();
-        if (this._labelEl && this._input) {
-            this._labelEl.id = labelId;
-            this._input.setAttribute("aria-labelledby", labelId);
-        }
     }
 
     override connectedCallback() {
@@ -69,6 +73,7 @@ export class P9rInput extends Component {
         ["value", "disabled", "required"].forEach((p) => upgradeProperty(this, p));
         this._input?.addEventListener("input", this._onInput);
         this._input?.addEventListener("change", this._onChange);
+        this._input?.addEventListener("keydown", this._onKeyDown);
         this.addEventListener("invalid", this._onInvalid);
         syncAll(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
         const initial = this.getAttribute("value");
@@ -83,6 +88,7 @@ export class P9rInput extends Component {
     disconnectedCallback() {
         this._input?.removeEventListener("input", this._onInput);
         this._input?.removeEventListener("change", this._onChange);
+        this._input?.removeEventListener("keydown", this._onKeyDown);
         this.removeEventListener("invalid", this._onInvalid);
     }
 
@@ -147,6 +153,9 @@ export class P9rInput extends Component {
     private _onChange = () => {
         handleChange(this, this._input, this._internals);
         this._syncValidity();
+    };
+    private _onKeyDown = (event: KeyboardEvent) => {
+        handleEnterSubmit(this, this._input, this._internals, event);
     };
     private _onInvalid = (event: Event) => {
         if (event.target !== this) {

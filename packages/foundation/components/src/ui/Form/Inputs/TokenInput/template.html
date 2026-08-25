@@ -14,11 +14,12 @@
             aria-autocomplete="list"
             aria-expanded="false"
             aria-haspopup="listbox"
+            aria-controls="listbox"
             autocomplete="off"
             spellcheck="false"
         />
-        <div class="listbox" role="listbox" hidden></div>
+        <div id="listbox" class="listbox" role="listbox" hidden></div>
     </div>
-    <small class="hint" hidden></small>
+    <small id="hint" class="hint" aria-live="polite" hidden></small>
 </div>
 <div hidden><slot></slot></div>

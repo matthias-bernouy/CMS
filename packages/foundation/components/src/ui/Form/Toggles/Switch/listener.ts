@@ -9,7 +9,7 @@ export const handleChange = (host: HTMLElement, input: HTMLInputElement | null, 
     }
 
     syncFormValue(host, input, internals);
-    host.dispatchEvent(new Event("change", { bubbles: true }));
+    host.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
 };
 
 export const handleClick = (host: HTMLElement, e: Event) => {

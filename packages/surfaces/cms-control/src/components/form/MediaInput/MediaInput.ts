@@ -1,6 +1,7 @@
 import css from "./MediaInput.css" with { type: "text" };
 import { upgradeProperty } from "@bernouy/components/base";
 import type { MediaCenter } from "cms-control/components/media/MediaCenter/MediaCenter";
+import { mediaInputTemplate } from "./template";
 
 /**
  * `<cms-media-input name label value types size>` — a form-associated file
@@ -16,15 +17,15 @@ import type { MediaCenter } from "cms-control/components/media/MediaCenter/Media
  */
 export class MediaInput extends HTMLElement {
     static formAssociated = true;
-    static readonly observedAttributes = ["value", "label", "size", "disabled"];
+    static readonly observedAttributes = ["value", "label", "aria-label", "size", "disabled"];
 
     private _internals: ElementInternals;
     private _value = "";
     private _defaultValue = "";
     private _tile!: HTMLButtonElement;
     private _preview!: HTMLImageElement;
-    private _clearBtn!: HTMLElement;
-    private _label!: HTMLElement;
+    private _clearBtn!: HTMLButtonElement;
+    private _label!: HTMLLabelElement;
 
     constructor() {
         super();
@@ -77,6 +78,10 @@ export class MediaInput extends HTMLElement {
         this.toggleAttribute("disabled", value);
     }
 
+    override focus(): void {
+        this._tile?.focus();
+    }
+
     private get _types(): string[] {
         const raw = this.getAttribute("types") || "image";
         return [
@@ -90,33 +95,11 @@ export class MediaInput extends HTMLElement {
 
     private _build() {
         const shadow = this.attachShadow({ mode: "open" });
-        shadow.innerHTML = `
-            <style>${css}</style>
-            <div class="field">
-                <span class="label"></span>
-                <button class="tile" type="button" title="Choose a file">
-                    <img class="preview" alt="" />
-                    <span class="placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <rect x="3" y="3" width="18" height="18" rx="2"/>
-                            <circle cx="9" cy="9" r="1.6"/>
-                            <path d="m21 15-4.5-4.5L5 21"/>
-                        </svg>
-                    </span>
-                    <span class="clear" title="Remove" role="button" aria-label="Remove">
-                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
-                            stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                    </span>
-                </button>
-            </div>`;
+        shadow.innerHTML = `<style>${css}</style>${mediaInputTemplate}`;
         this._tile = shadow.querySelector(".tile") as HTMLButtonElement;
         this._preview = shadow.querySelector(".preview") as HTMLImageElement;
-        this._clearBtn = shadow.querySelector(".clear") as HTMLElement;
-        this._label = shadow.querySelector(".label") as HTMLElement;
+        this._clearBtn = shadow.querySelector(".clear") as HTMLButtonElement;
+        this._label = shadow.querySelector(".label") as HTMLLabelElement;
     }
 
     private _wire() {
@@ -168,6 +151,14 @@ export class MediaInput extends HTMLElement {
         this._label.textContent = label;
         this._label.hidden = label === "";
         this._tile.disabled = this.disabled;
+        this._clearBtn.disabled = this.disabled;
+        const accessibleName = this.getAttribute("aria-label");
+        if (accessibleName) {
+            this._tile.setAttribute("aria-label", accessibleName);
+        } else {
+            this._tile.removeAttribute("aria-label");
+        }
+        this._clearBtn.setAttribute("aria-label", label ? `Remove ${label}` : "Remove selected file");
         this._tile.parentElement?.style.setProperty("--tile-size", `${size > 0 ? size : 64}px`);
     }
 }

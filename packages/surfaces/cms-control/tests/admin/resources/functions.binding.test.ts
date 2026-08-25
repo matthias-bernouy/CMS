@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { fieldWrap } from "cms-control/components/admin/Resources/Functions/dom";
 
 describe("functions admin page", () => {
     test("renders functions list through the binding runtime", async () => {
@@ -20,5 +21,15 @@ describe("functions admin page", () => {
         ).text();
 
         expect(html).toContain("<cms-function-detail>");
+    });
+
+    test("associates generated field labels with their controls", () => {
+        const control = document.createElement("textarea");
+        const field = fieldWrap("Request template", control);
+        const label = field.querySelector("label")!;
+
+        expect(control.id).toStartWith("function-field-");
+        expect(label.htmlFor).toBe(control.id);
+        expect(field.querySelector(`#${control.id}`)).toBe(control);
     });
 });

@@ -15,8 +15,12 @@ export class TokenInput extends Component {
     static readonly observedAttributes = [
         "value",
         "label",
+        "aria-label",
         "placeholder",
         "hint",
+        "hint-level",
+        "invalid",
+        "required",
         "disabled",
         "creatable",
         "api",
@@ -30,6 +34,9 @@ export class TokenInput extends Component {
     private selected: string[] = [];
     private activeIndex = -1;
     private inputFocused = false;
+    private defaultValue = "";
+    private defaultsCaptured = false;
+    private showValidationMessage = false;
 
     constructor() {
         super({ css: baseCss + listCss + css, template: template as unknown as string });
@@ -43,6 +50,11 @@ export class TokenInput extends Component {
         }
         this.view.connect(this.handlers);
         this.syncOptions();
+        if (!this.defaultsCaptured) {
+            this.defaultValue = this.value;
+            this.defaultsCaptured = true;
+        }
+        this.addEventListener("invalid", this.onInvalid);
         this.syncAttributes();
         this.remoteOptions.connect();
     }
@@ -50,6 +62,7 @@ export class TokenInput extends Component {
     disconnectedCallback(): void {
         this.remoteOptions.disconnect();
         this.view.disconnect(this.handlers);
+        this.removeEventListener("invalid", this.onInvalid);
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, value: string | null): void {
@@ -79,8 +92,25 @@ export class TokenInput extends Component {
     set disabled(value: boolean) {
         value ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
+    get required(): boolean {
+        return this.hasAttribute("required");
+    }
+    set required(value: boolean) {
+        value ? this.setAttribute("required", "") : this.removeAttribute("required");
+    }
     override focus(): void {
         this.view.input?.focus();
+    }
+
+    formResetCallback(): void {
+        this.showValidationMessage = false;
+        this.value = this.defaultValue;
+    }
+
+    formStateRestoreCallback(state: string | File | FormData | null): void {
+        if (typeof state === "string") {
+            this.value = state;
+        }
     }
 
     private readonly handlers: TokenInputHandlers = {
@@ -117,12 +147,16 @@ export class TokenInput extends Component {
 
     private syncDisplay(): void {
         this.view.syncDisplay(this.value, this.selected, this.options, this.removeValue);
+        if (this.selected.length > 0) {
+            this.showValidationMessage = false;
+        }
         this.view.syncAttributes(
             this,
             this.disabled,
             this.selected.length,
             this.hasAttribute("creatable") && this.options.length > 0,
         );
+        this.view.syncValidity(this, this.selected.length, this.showValidationMessage);
     }
 
     private renderList(query: string): void {
@@ -228,6 +262,7 @@ export class TokenInput extends Component {
         const step = event.key === "ArrowDown" ? 1 : -1;
         this.activeIndex = Math.max(0, Math.min(this.items.length - 1, this.activeIndex + step));
         this.renderList(this.query);
+        this.view.input?.setAttribute("aria-activedescendant", `option-${this.activeIndex}`);
     }
 
     private hideList(): void {
@@ -238,4 +273,11 @@ export class TokenInput extends Component {
     private get query(): string {
         return this.view.input?.value.trim() ?? "";
     }
+
+    private readonly onInvalid = (event: Event): void => {
+        if (event.target === this) {
+            this.showValidationMessage = true;
+            this.view.syncValidity(this, this.selected.length, true);
+        }
+    };
 }

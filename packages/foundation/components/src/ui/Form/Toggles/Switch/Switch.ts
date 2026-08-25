@@ -10,7 +10,7 @@ export class Switch extends FormControlElement {
     private _input: HTMLInputElement | null;
 
     static get observedAttributes() {
-        return ["checked", "disabled", "name", "value"];
+        return ["checked", "disabled", "name", "value", "aria-label"];
     }
 
     constructor() {
@@ -36,10 +36,12 @@ export class Switch extends FormControlElement {
             }
             this._input.addEventListener("change", this._onChange);
             this._input.addEventListener("click", this._onClick);
+            this._input.setAttribute("role", "switch");
+            this._syncAccessibleName();
         }
 
-        this.setAttribute("role", "switch");
-        this.setAttribute("aria-checked", String(this.hasAttribute("checked")));
+        this.removeAttribute("role");
+        this.removeAttribute("aria-checked");
         syncFormValue(this, this._input, this._internals);
     }
 
@@ -54,7 +56,6 @@ export class Switch extends FormControlElement {
         }
         if (name === "checked") {
             this._input.checked = newVal !== null;
-            this.setAttribute("aria-checked", String(newVal !== null));
             syncFormValue(this, this._input, this._internals);
         } else if (name === "disabled") {
             this._input.disabled = newVal !== null;
@@ -63,6 +64,8 @@ export class Switch extends FormControlElement {
         } else if (name === "value") {
             this._input.value = newVal ?? "";
             syncFormValue(this, this._input, this._internals);
+        } else if (name === "aria-label") {
+            this._syncAccessibleName();
         }
     }
 
@@ -71,5 +74,18 @@ export class Switch extends FormControlElement {
 
     override click() {
         this._input?.click();
+    }
+
+    override focus() {
+        this._input?.focus();
+    }
+
+    private _syncAccessibleName(): void {
+        const label = this.getAttribute("aria-label");
+        if (label === null) {
+            this._input?.removeAttribute("aria-label");
+        } else {
+            this._input?.setAttribute("aria-label", label);
+        }
     }
 }

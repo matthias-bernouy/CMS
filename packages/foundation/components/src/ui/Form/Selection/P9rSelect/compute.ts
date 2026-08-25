@@ -1,5 +1,9 @@
 export const setSelectedClass = (options: HTMLElement[], value: string) => {
-    options.forEach((li) => li.classList.toggle("selected", li.dataset.value === value));
+    options.forEach((li) => {
+        const selected = li.dataset.value === value;
+        li.classList.toggle("selected", selected);
+        li.setAttribute("aria-selected", String(selected));
+    });
 };
 
 export const setLabel = (labelEl: HTMLElement | null, host: HTMLElement) => {

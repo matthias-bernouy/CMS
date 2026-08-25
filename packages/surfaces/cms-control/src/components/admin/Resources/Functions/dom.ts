@@ -36,12 +36,17 @@ export function detailSection(slot: "main" | "aside", heading: string): HTMLElem
 }
 
 export function fieldWrap(titleText: string, control: HTMLElement, hint?: HTMLElement): HTMLElement {
-    const wrap = div("field", label(titleText), control);
+    control.id ||= `function-field-${++fieldId}`;
+    const title = label(titleText);
+    title.htmlFor = control.id;
+    const wrap = div("field", title, control);
     if (hint) {
         wrap.append(hint);
     }
     return wrap;
 }
+
+let fieldId = 0;
 
 export function schemaBlock(titleText: string, value: unknown): HTMLElement {
     return div("schema-block", label(titleText), pre(value === null ? "None" : stringify(value)));

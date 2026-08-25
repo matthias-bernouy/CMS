@@ -67,6 +67,7 @@ export function valuePicker(draft: ValueDraft, references: ReferenceOption[], la
     const wrap = document.createElement("div");
     wrap.className = "value-picker";
     const select = document.createElement("select");
+    select.setAttribute("aria-label", label);
     select.append(option("", label));
     for (const reference of references) {
         select.append(option(reference.value, reference.label));
@@ -76,6 +77,7 @@ export function valuePicker(draft: ValueDraft, references: ReferenceOption[], la
 
     const literal = document.createElement("input");
     literal.type = "text";
+    literal.setAttribute("aria-label", `${label}: fixed value`);
     literal.placeholder = "Text, number, boolean, or JSON";
     literal.value = draft.mode === "literal" ? draft.value : "";
     literal.hidden = draft.mode !== "literal";
@@ -108,7 +110,7 @@ function mappingRow(target: MappingTarget, references: ReferenceOption[], draft:
     const semantic = target.shape?.semantic?.kind === "user-id" ? " · user identity" : "";
     meta.textContent = `${target.shape?.type ?? "value"}${semantic}${target.required ? " · required" : ""}`;
     identity.append(name, meta);
-    row.append(identity, valuePicker(draft, compatibleReferences(references, target.shape)));
+    row.append(identity, valuePicker(draft, compatibleReferences(references, target.shape), `${target.label} source`));
     return row;
 }
 

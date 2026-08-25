@@ -49,6 +49,25 @@ describe("dashboard navigation list widget", () => {
         expect(getComputedStyle(root.querySelector<HTMLElement>("[data-badge]")!).flexGrow).toBe("0");
     });
 
+    test("only exposes navigation semantics when an item has a target", async () => {
+        const passive = navigationItem("status", "Status", "status", "string");
+        passive.removeAttribute("collection");
+        document.body.append(passive);
+        await Promise.resolve();
+        const passiveItem = passive.shadowRoot!.querySelector<HTMLElement>(".item")!;
+        expect({ role: passiveItem.getAttribute("role"), tabindex: passiveItem.getAttribute("tabindex") }).toEqual({
+            role: null,
+            tabindex: null,
+        });
+
+        passive.setAttribute("collection", "statusDetail");
+        const actionableItem = passive.shadowRoot!.querySelector<HTMLElement>(".item")!;
+        expect({
+            role: actionableItem.getAttribute("role"),
+            tabindex: actionableItem.getAttribute("tabindex"),
+        }).toEqual({ role: "button", tabindex: "0" });
+    });
+
     test("emits the configured action with the reordered item ids", async () => {
         const list = navigationList();
         const agency = navigationItem("agency", "Agency", "agency", "string");

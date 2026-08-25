@@ -1,139 +1,179 @@
-import { Component } from "@bernouy/components/base";
+import { Component, upgradeProperty } from "@bernouy/components/base";
 import template from "./template.html" with { type: "text" };
 import baseCss from "./base.css" with { type: "text" };
 import variantCss from "./variant.css" with { type: "text" };
-const css = baseCss + variantCss;
-
-import { setLabel } from "./compute";
+import { SelectKeyboard } from "./domain/keyboard";
 import { buildOptionList, setValue } from "./domain/options";
+import { SelectPopover } from "./domain/popover";
+import { P9rSelectView } from "./P9rSelectView";
+
+const css = baseCss + variantCss;
 
 export class P9rSelect extends Component {
     static formAssociated = true;
+    static readonly observedAttributes = [
+        "value",
+        "label",
+        "aria-label",
+        "disabled",
+        "required",
+        "invalid",
+        "hint",
+        "hint-level",
+    ];
 
-    private _internals: ElementInternals;
-    private _trigger: HTMLElement | null;
-    private _display: HTMLElement | null;
-    private _list: HTMLElement | null;
-    private _panel: HTMLElement | null;
-    private _options: HTMLElement[] = [];
-    private _value = "";
-    private _isOpen = false;
+    private readonly internals: ElementInternals;
+    private readonly view: P9rSelectView;
+    private readonly keyboard: SelectKeyboard;
+    private readonly popoverController: SelectPopover;
+    private options: HTMLElement[] = [];
+    private currentValue = "";
+    private defaultValue = "";
+    private defaultsCaptured = false;
+    private formDisabled = false;
+    private showValidationMessage = false;
 
     constructor() {
         super({ css, template: template as unknown as string });
-        this._internals = this.attachInternals();
-        this._trigger = this.shadowRoot!.querySelector(".trigger");
-        this._display = this.shadowRoot!.querySelector(".value");
-        this._list = this.shadowRoot!.querySelector(".list");
-        this._panel = this.shadowRoot!.querySelector(".panel");
+        this.internals = this.attachInternals();
+        this.view = new P9rSelectView(this.shadowRoot!, this.internals);
+        this.keyboard = new SelectKeyboard(
+            this.view,
+            () => this.options,
+            () => this.currentValue,
+            this.select,
+        );
+        this.popoverController = new SelectPopover(this.view, this.keyboard);
     }
 
-    override connectedCallback() {
-        setLabel(this.shadowRoot!.querySelector(".label"), this);
-        const slot = this.shadowRoot!.querySelector("slot") as HTMLSlotElement;
-        slot.addEventListener("slotchange", this._onSlot);
-        // `beforetoggle` fires synchronously before the popover paints —
-        // positioning here avoids the one-frame flash at top-left that
-        // `toggle` (post-paint) leaves visible.
-        this._panel?.addEventListener("beforetoggle", this._onBeforeToggle);
-        this._panel?.addEventListener("toggle", this._onToggle);
-        this._syncFromSlot();
-    }
-
-    disconnectedCallback() {
-        const slot = this.shadowRoot!.querySelector("slot") as HTMLSlotElement | null;
-        slot?.removeEventListener("slotchange", this._onSlot);
-        this._panel?.removeEventListener("beforetoggle", this._onBeforeToggle);
-        this._panel?.removeEventListener("toggle", this._onToggle);
-        if (this._isOpen) {
-            (this._panel as any)?.hidePopover?.();
+    override connectedCallback(): void {
+        for (const property of ["value", "disabled"]) {
+            upgradeProperty(this, property);
         }
-        this._unbindReposition();
+        this.optionSlot?.addEventListener("slotchange", this.onSlot);
+        this.view.trigger?.addEventListener("keydown", this.onKeydown);
+        this.popoverController.connect();
+        this.addEventListener("invalid", this.onInvalid);
+        this.syncFromSlot();
+        if (!this.defaultsCaptured) {
+            this.defaultValue = this.currentValue;
+            this.defaultsCaptured = true;
+        }
+        this.syncAttributes();
     }
 
-    private _syncFromSlot = () => {
-        const { options, initialValue, initialLabel } = buildOptionList(this, this._list, (v, l) => this._select(v, l));
-        this._options = options;
-
-        const attrValue = this.getAttribute("value");
-        if (attrValue !== null) {
-            const li = options.find((o) => o.dataset.value === attrValue);
-            if (li) {
-                this._setValue(attrValue, li.textContent ?? "");
-                return;
-            }
-        }
-
-        if (initialValue) {
-            this._setValue(initialValue, initialLabel);
-        }
-    };
-
-    private _select(value: string, label: string) {
-        this._setValue(value, label);
-        (this._panel as any)?.hidePopover?.();
-        this.dispatchEvent(new Event("change", { bubbles: true }));
+    disconnectedCallback(): void {
+        this.optionSlot?.removeEventListener("slotchange", this.onSlot);
+        this.view.trigger?.removeEventListener("keydown", this.onKeydown);
+        this.removeEventListener("invalid", this.onInvalid);
+        this.popoverController.disconnect();
     }
 
-    private _setValue(value: string, label: string) {
-        this._value = value;
-        this._internals.setFormValue(value);
-        setValue(this._options, this._display, value, label);
-    }
-
-    /**
-     * The panel is a top-layer popover (see template.html / variant.css):
-     * its containing block is always the viewport, so trigger
-     * `getBoundingClientRect()` coords land in the right reference frame
-     * even when an ancestor uses `transform` / `filter` / `contain`.
-     * Native `popovertarget` on the trigger handles open/close — we just
-     * pre-position on `beforetoggle` (so the first paint already lands at
-     * the right spot, no flash) and bind scroll/resize follow on `toggle`.
-     */
-    private _onBeforeToggle = (e: Event) => {
-        if ((e as ToggleEvent).newState === "open") {
-            this._reposition();
-        }
-    };
-
-    private _onToggle = (e: Event) => {
-        this._isOpen = (e as ToggleEvent).newState === "open";
-        if (this._isOpen) {
-            window.addEventListener("scroll", this._reposition, { capture: true, passive: true });
-            window.addEventListener("resize", this._reposition);
+    attributeChangedCallback(name: string, _oldValue: string | null, value: string | null): void {
+        if (name === "value") {
+            this.value = value ?? "";
         } else {
-            this._unbindReposition();
-        }
-    };
-
-    private _unbindReposition() {
-        window.removeEventListener("scroll", this._reposition, { capture: true } as any);
-        window.removeEventListener("resize", this._reposition);
-    }
-
-    private _reposition = () => {
-        if (!this._trigger || !this._panel) {
-            return;
-        }
-        const rect = this._trigger.getBoundingClientRect();
-        this._panel.style.top = `${rect.bottom + 4}px`;
-        this._panel.style.left = `${rect.left}px`;
-        this._panel.style.width = `${rect.width}px`;
-    };
-
-    get value() {
-        return this._value;
-    }
-    set value(v: string) {
-        const li = this._options.find((o) => o.dataset.value === v);
-        if (li) {
-            this._setValue(v, li.textContent ?? "");
+            this.syncAttributes();
         }
     }
 
-    get name() {
+    get value(): string {
+        return this.currentValue;
+    }
+
+    set value(value: string) {
+        const option = this.options.find((item) => item.dataset.value === value);
+        if (option) {
+            this.setValue(value, option.textContent ?? value);
+        } else if (this.options.length === 0) {
+            this.currentValue = value;
+            this.view.setFormValue(value);
+        }
+    }
+
+    get name(): string | null {
         return this.getAttribute("name");
     }
 
-    private _onSlot = () => this._syncFromSlot();
+    get disabled(): boolean {
+        return this.hasAttribute("disabled");
+    }
+
+    set disabled(value: boolean) {
+        value ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+
+    override focus(): void {
+        this.view.focus();
+    }
+
+    formDisabledCallback(disabled: boolean): void {
+        this.formDisabled = disabled;
+        this.syncAttributes();
+    }
+
+    formResetCallback(): void {
+        this.showValidationMessage = false;
+        this.value = this.defaultValue;
+    }
+
+    formStateRestoreCallback(state: string | File | FormData | null): void {
+        if (typeof state === "string") {
+            this.value = state;
+        }
+    }
+
+    private syncFromSlot = (): void => {
+        const result = buildOptionList(this, this.view.list, this.select);
+        this.options = result.options;
+        const requestedValue = this.getAttribute("value") ?? this.currentValue;
+        const requestedOption = this.options.find((item) => item.dataset.value === requestedValue);
+        if (requestedOption) {
+            this.setValue(requestedValue, requestedOption.textContent ?? "");
+        } else if (result.initialValue !== null) {
+            this.setValue(result.initialValue, result.initialLabel);
+        } else {
+            this.setValue("", "");
+        }
+    };
+
+    private readonly select = (value: string, label: string): void => {
+        this.setValue(value, label);
+        this.view.hide();
+        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    };
+
+    private setValue(value: string, label: string): void {
+        this.currentValue = value;
+        this.showValidationMessage = false;
+        this.view.setFormValue(value);
+        setValue(this.options, this.view.display, value, label);
+        this.view.syncValidity(this, value, false);
+    }
+
+    private syncAttributes(): void {
+        this.view.syncAttributes(
+            this,
+            this.currentValue,
+            this.disabled || this.formDisabled,
+            this.showValidationMessage,
+        );
+    }
+
+    private readonly onKeydown = (event: KeyboardEvent): void => {
+        this.keyboard.handle(event, this.popoverController.isOpen, () => this.popoverController.open());
+    };
+
+    private readonly onInvalid = (event: Event): void => {
+        if (event.target === this) {
+            this.showValidationMessage = true;
+            this.view.syncValidity(this, this.currentValue, true);
+        }
+    };
+
+    private get optionSlot(): HTMLSlotElement | null {
+        return this.shadowRoot?.querySelector("slot") ?? null;
+    }
+
+    private readonly onSlot = (): void => this.syncFromSlot();
 }

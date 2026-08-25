@@ -33,7 +33,8 @@
     overflow: hidden;
 }
 
-.option:hover {
+.option:hover,
+.option[data-active="true"] {
     background: var(--bg-base, #f1f5f9);
 }
 

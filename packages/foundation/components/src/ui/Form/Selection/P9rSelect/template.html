@@ -1,15 +1,18 @@
 <div class="field">
-    <span class="label"></span>
-    <button class="trigger" type="button" tabindex="0"
-            popovertarget="panel" popovertargetaction="toggle">
+    <label class="label" for="trigger"></label>
+    <button id="trigger" class="trigger" type="button"
+            role="combobox" aria-haspopup="listbox" aria-controls="listbox"
+            aria-expanded="false" popovertarget="panel" popovertargetaction="toggle">
         <span class="value"></span>
         <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
             <path d="m6 9 6 6 6-6"/>
         </svg>
     </button>
     <div id="panel" class="panel" popover>
-        <ul class="list"></ul>
+        <ul id="listbox" class="list" role="listbox"></ul>
     </div>
+    <p id="hint" class="hint" aria-live="polite"></p>
 </div>
 <div hidden><slot></slot></div>

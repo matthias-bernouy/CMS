@@ -17,7 +17,16 @@ export class Button extends Component {
     }
 
     static get observedAttributes() {
-        return ["type", "disabled"];
+        return [
+            "type",
+            "disabled",
+            "aria-label",
+            "aria-pressed",
+            "aria-expanded",
+            "aria-haspopup",
+            "aria-controls",
+            "title",
+        ];
     }
 
     override connectedCallback() {
@@ -31,6 +40,7 @@ export class Button extends Component {
         if (!this.hasAttribute("variant")) {
             this.setAttribute("variant", "filled");
         }
+        this._syncAccessibility();
 
         this.addEventListener("click", this._handleClick);
     }
@@ -69,6 +79,13 @@ export class Button extends Component {
         if (name === "disabled") {
             this._btn.disabled = this.hasAttribute("disabled");
         }
+        if (name.startsWith("aria-") || name === "title") {
+            if (newVal === null) {
+                this._btn.removeAttribute(name);
+            } else {
+                this._btn.setAttribute(name, newVal);
+            }
+        }
     }
 
     get disabled() {
@@ -80,6 +97,19 @@ export class Button extends Component {
             this.setAttribute("disabled", "");
         } else {
             this.removeAttribute("disabled");
+        }
+    }
+
+    override focus() {
+        this._btn?.focus();
+    }
+
+    private _syncAccessibility(): void {
+        for (const name of ["aria-label", "aria-pressed", "aria-expanded", "aria-haspopup", "aria-controls", "title"]) {
+            const value = this.getAttribute(name);
+            if (value !== null) {
+                this._btn?.setAttribute(name, value);
+            }
         }
     }
 }

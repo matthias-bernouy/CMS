@@ -15,7 +15,7 @@ export class SegmentedSwitch extends Component {
     private _silentValueChange = false;
 
     static get observedAttributes() {
-        return ["value", "disabled", "name", "label"];
+        return ["value", "disabled", "name", "label", "aria-label"];
     }
 
     constructor() {
@@ -41,6 +41,7 @@ export class SegmentedSwitch extends Component {
         }
         this.addEventListener("keydown", this._onKey);
         updateLabel(this._labelEl, this.getAttribute("label") ?? "");
+        this._syncAccessibleName();
     }
 
     disconnectedCallback() {
@@ -65,6 +66,11 @@ export class SegmentedSwitch extends Component {
             this.value = newVal ?? "";
         } else if (name === "label") {
             updateLabel(this._labelEl, newVal ?? "");
+            this._syncAccessibleName();
+        } else if (name === "aria-label") {
+            this._syncAccessibleName();
+        } else if (name === "disabled") {
+            this._syncAccessibleName();
         }
     }
 
@@ -80,7 +86,7 @@ export class SegmentedSwitch extends Component {
         updateSliderPosition(this, options, v);
         updateSlottedSelections(options, v);
         if (!this._silentValueChange) {
-            this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: v } }));
+            this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: v } }));
         }
     }
 
@@ -107,4 +113,20 @@ export class SegmentedSwitch extends Component {
 
     private _onSlotChange = () => syncOptions(this, this._slot);
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, this._slot, e);
+
+    private _syncAccessibleName(): void {
+        const group = this.shadowRoot?.querySelector<HTMLElement>("[role='radiogroup']");
+        if (!group) {
+            return;
+        }
+        const accessibleName = this.getAttribute("aria-label");
+        if (accessibleName) {
+            group.setAttribute("aria-label", accessibleName);
+            group.removeAttribute("aria-labelledby");
+        } else {
+            group.removeAttribute("aria-label");
+            group.setAttribute("aria-labelledby", "group-label");
+        }
+        group.setAttribute("aria-disabled", String(this.disabled));
+    }
 }

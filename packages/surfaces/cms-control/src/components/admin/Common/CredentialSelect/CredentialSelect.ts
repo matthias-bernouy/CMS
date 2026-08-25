@@ -86,16 +86,28 @@ export class CredentialSelect extends HTMLElement {
         return this.getAttribute("api") ?? "/api/secrets";
     }
 
+    override focus(): void {
+        this._refs?.trigger.focus();
+    }
+
     private _wire() {
         const r = this._refs;
         r.trigger.addEventListener("click", (e) => {
             e.stopPropagation();
             this._isOpen ? closePanel(this) : openPanel(this);
         });
+        r.trigger.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                if (!this._isOpen) {
+                    openPanel(this);
+                }
+            }
+        });
         r.clearBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             setValue(this, "");
-            this.dispatchEvent(new Event("change", { bubbles: true }));
+            this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         });
         // Sync internal state when the popover light-dismisses (click outside / ESC).
         r.panel.addEventListener("toggle", (e) => {
@@ -109,16 +121,50 @@ export class CredentialSelect extends HTMLElement {
             const filtered = q ? this._keys.filter((k) => k.includes(q)) : this._keys;
             renderList(this, filtered);
         });
+        r.search.addEventListener("keydown", (event) => this._onSearchKeydown(event));
         r.list.addEventListener("click", (e) => {
             const li = (e.target as HTMLElement).closest(".option") as HTMLElement | null;
             if (!li || !li.dataset.key) {
                 return;
             }
             setValue(this, keyToRef(li.dataset.key));
-            this.dispatchEvent(new Event("change", { bubbles: true }));
+            this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
             closePanel(this);
         });
         r.createBtn.addEventListener("click", () => openCreateDialog(this));
+    }
+
+    private _onSearchKeydown(event: KeyboardEvent): void {
+        const options = Array.from(this._refs.list.querySelectorAll<HTMLElement>(".option"));
+        if (event.key === "Escape") {
+            event.preventDefault();
+            closePanel(this);
+            this._refs.trigger.focus();
+            return;
+        }
+        if (event.key === "Enter") {
+            const active = options.find((option) => option.dataset.active === "true");
+            if (active) {
+                event.preventDefault();
+                active.click();
+            }
+            return;
+        }
+        if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+            return;
+        }
+        event.preventDefault();
+        const current = options.findIndex((option) => option.dataset.active === "true");
+        const step = event.key === "ArrowDown" ? 1 : -1;
+        const next = (current + step + options.length) % options.length;
+        options.forEach((option, index) => {
+            option.dataset.active = String(index === next);
+        });
+        const active = options[next];
+        if (active) {
+            this._refs.search.setAttribute("aria-activedescendant", active.id);
+            active.scrollIntoView({ block: "nearest" });
+        }
     }
 }
 

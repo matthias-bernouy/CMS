@@ -20,7 +20,7 @@ template.innerHTML = `
         .badge { flex: 0 0 auto; padding: 3px 7px; border-radius: 999px; color: #087048; background: #edf8f1; font-size: 11px; font-weight: 700; }
         .chevron { color: #70807a; font-size: 24px; font-weight: 300; line-height: 1; }
     </style>
-    <div class="item" role="button" tabindex="0">
+    <div class="item">
         <span class="handle" data-handle title="Drag to reorder" aria-label="Drag to reorder" hidden>⠿</span>
         <span class="icon" data-icon hidden></span>
         <span class="content"><span class="title" data-title></span><span class="subtitle" data-subtitle></span></span>
@@ -65,6 +65,14 @@ export class DashboardWNavigationItem extends HTMLElement {
 
     private render(): void {
         const root = this.shadowRoot!;
+        const item = root.querySelector<HTMLElement>(".item")!;
+        if (this.collection) {
+            item.setAttribute("role", "button");
+            item.tabIndex = 0;
+        } else {
+            item.removeAttribute("role");
+            item.removeAttribute("tabindex");
+        }
         setText(root, "[data-title]", this.getAttribute("title") ?? "");
         const subtitle = this.getAttribute("subtitle") ?? "";
         setText(root, "[data-subtitle]", subtitle);

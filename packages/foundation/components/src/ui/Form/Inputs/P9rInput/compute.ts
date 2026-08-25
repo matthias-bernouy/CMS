@@ -39,6 +39,3 @@ export const refreshMetaVisibility = (
     const hasCounter = !counter.hidden;
     meta.hidden = !hasHint && !hasCounter;
 };
-
-let _uid = 0;
-export const nextLabelId = () => `p9r-input-label-${++_uid}`;

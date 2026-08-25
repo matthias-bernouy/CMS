@@ -1,4 +1,5 @@
 import { parseMaxCount, refreshMetaVisibility } from "./compute";
+import { syncDescription } from "./description";
 
 export const syncLabel = (host: HTMLElement, label: HTMLLabelElement | null) => {
     if (!label) {
@@ -19,6 +20,30 @@ export const syncPlaceholder = (host: HTMLElement, input: HTMLInputElement | nul
     } else {
         input.setAttribute("placeholder", v);
     }
+};
+
+export const syncTextAttributes = (host: HTMLElement, input: HTMLInputElement | null) => {
+    if (!input) {
+        return;
+    }
+    for (const name of [
+        "aria-label",
+        "autocomplete",
+        "autocapitalize",
+        "enterkeyhint",
+        "spellcheck",
+        "minlength",
+        "maxlength",
+        "pattern",
+    ]) {
+        const value = host.getAttribute(name);
+        if (value === null) {
+            input.removeAttribute(name);
+        } else {
+            input.setAttribute(name, value);
+        }
+    }
+    input.readOnly = host.hasAttribute("readonly");
 };
 
 export const syncType = (host: HTMLElement, input: HTMLInputElement | null) => {
@@ -135,6 +160,7 @@ export const syncAll = (
 ) => {
     syncLabel(host, label);
     syncPlaceholder(host, input);
+    syncTextAttributes(host, input);
     syncType(host, input);
     syncInputMode(host, input);
     syncNumericConstraints(host, input);
@@ -144,4 +170,5 @@ export const syncAll = (
     syncHintLevel(host, hint);
     syncInvalid(host, input);
     syncMaxCount(host, counter, max, hint, meta);
+    syncDescription(input, hint, counter);
 };

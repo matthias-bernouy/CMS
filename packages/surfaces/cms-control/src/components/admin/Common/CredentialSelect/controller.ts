@@ -19,7 +19,9 @@ export function setValue(host: CredentialSelect, ref: string): void {
     host._refs.trigger.classList.toggle("has-value", has);
     host._refs.clearBtn.style.display = has ? "flex" : "none";
     host._refs.list.querySelectorAll<HTMLElement>(".option").forEach((li) => {
-        li.classList.toggle("selected", li.dataset.key === display);
+        const selected = li.dataset.key === display;
+        li.classList.toggle("selected", selected);
+        li.setAttribute("aria-selected", String(selected));
     });
 }
 
@@ -27,6 +29,7 @@ export function openPanel(host: CredentialSelect): void {
     positionPanel(host);
     host._refs.panel.showPopover();
     host._refs.trigger.classList.add("open");
+    host._refs.trigger.setAttribute("aria-expanded", "true");
     host._isOpen = true;
     void refreshList(host);
     setTimeout(() => host._refs.search.focus(), 0);
@@ -37,6 +40,7 @@ export function closePanel(host: CredentialSelect): void {
         host._refs.panel.hidePopover();
     }
     host._refs.trigger.classList.remove("open");
+    host._refs.trigger.setAttribute("aria-expanded", "false");
     host._isOpen = false;
     host._refs.search.value = "";
     renderList(host, host._keys);
@@ -64,12 +68,16 @@ export async function refreshList(host: CredentialSelect): Promise<void> {
 
 export function renderList(host: CredentialSelect, keys: string[]): void {
     const selected = refToDisplay(host._value);
-    host._refs.list.replaceChildren(...keys.map((k) => buildOption(k, k === selected)));
+    host._refs.list.replaceChildren(...keys.map((key, index) => buildOption(key, index, key === selected)));
+    host._refs.search.removeAttribute("aria-activedescendant");
 }
 
-function buildOption(key: string, selected: boolean): HTMLLIElement {
+function buildOption(key: string, index: number, selected: boolean): HTMLLIElement {
     const li = document.createElement("li");
     li.className = "option" + (selected ? " selected" : "");
+    li.id = `credential-option-${index}`;
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-selected", String(selected));
     li.dataset.key = key;
     li.textContent = key;
     return li;

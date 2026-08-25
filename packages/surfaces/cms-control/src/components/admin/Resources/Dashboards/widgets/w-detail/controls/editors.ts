@@ -14,6 +14,7 @@ export function createTableEditor(column: WDetailTableColumn, value: unknown): H
                 ? tokensEditor(value)
                 : textEditor(value);
     control.dataset.tableColumn = column.key;
+    control.setAttribute("aria-label", column.label);
     return control;
 }
 

@@ -14,7 +14,7 @@ type RoleOption = { id: string; label: string };
 class CmsRoleSelect extends HTMLElement {
     static formAssociated = true;
     static get observedAttributes() {
-        return ["sub", "value"];
+        return ["sub", "value", "label", "aria-label", "disabled"];
     }
 
     private internals: ElementInternals;
@@ -70,7 +70,7 @@ class CmsRoleSelect extends HTMLElement {
         // shows something if the list failed or hasn't arrived.
         const opts = this.roles.length ? this.roles : [{ id: current, label: current }];
         root.innerHTML = `
-        <p9r-select value="${esc(current)}">
+        <p9r-select value="${esc(current)}" label="${esc(this.getAttribute("label") ?? "Role")}"${this.getAttribute("aria-label") ? ` aria-label="${esc(this.getAttribute("aria-label")!)}"` : ""}${this.hasAttribute("disabled") ? " disabled" : ""}>
           ${opts.map((r) => `<option value="${esc(r.id)}"${r.id === current ? " selected" : ""}>${esc(r.label)}</option>`).join("")}
         </p9r-select>`;
         const sel = root.querySelector("p9r-select") as HTMLElement & { value: string };
@@ -107,6 +107,10 @@ class CmsRoleSelect extends HTMLElement {
 
     get name() {
         return this.getAttribute("name");
+    }
+
+    override focus(): void {
+        this.shadowRoot?.querySelector<HTMLElement>("p9r-select")?.focus();
     }
 }
 

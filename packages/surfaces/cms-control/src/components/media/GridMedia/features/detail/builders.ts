@@ -27,14 +27,14 @@ export function buildFields(item: MediaItem): HTMLElement {
     el.slot = "fields";
     el.innerHTML = `
         <div class="detail-field">
-            <label>Name</label>
+            <label for="detail-label">Name</label>
             <input type="text" id="detail-label" value="${escapeAttr(item.label)}">
         </div>
         ${
             isImage
                 ? `
         <div class="detail-field">
-            <label>Alt text</label>
+            <label for="detail-alt">Alt text</label>
             <textarea id="detail-alt" rows="2">${escapeHtml(item.alt || "")}</textarea>
         </div>`
                 : ""
@@ -62,7 +62,7 @@ export function buildFields(item: MediaItem): HTMLElement {
             <label>URL</label>
             <div class="url-row">
                 <span class="detail-value mono">${escapeHtml(mediaUrl)}</span>
-                <button class="btn-copy" id="btn-copy" title="Copy URL">${ICON_COPY}</button>
+                <button class="btn-copy" id="btn-copy" type="button" title="Copy URL" aria-label="Copy media URL">${ICON_COPY}</button>
             </div>
         </div>
     `;

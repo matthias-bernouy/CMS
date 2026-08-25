@@ -1,8 +1,8 @@
 <div class="backdrop" id="backdrop">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="header">
-            <h3>Crop image</h3>
-            <button class="close-btn" id="close-btn" title="Close">
+            <h3 id="crop-title">Crop image</h3>
+            <button class="close-btn" id="close-btn" type="button" title="Close" aria-label="Close crop dialog">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
@@ -14,8 +14,8 @@
             </div>
             <div class="sidebar">
                 <div class="field">
-                    <label>Aspect ratio</label>
-                    <div class="ratio-buttons">
+                    <span class="label" id="aspect-ratio-label">Aspect ratio</span>
+                    <div class="ratio-buttons" role="group" aria-labelledby="aspect-ratio-label">
                         <button class="ratio-btn active" data-ratio="free">Free</button>
                         <button class="ratio-btn" data-ratio="1:1">1:1</button>
                         <button class="ratio-btn" data-ratio="4:3">4:3</button>
@@ -23,7 +23,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label>Output size</label>
+                    <span class="label">Output size</span>
                     <span class="value" id="output-size">—</span>
                 </div>
             </div>
