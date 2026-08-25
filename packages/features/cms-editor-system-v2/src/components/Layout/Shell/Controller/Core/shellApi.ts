@@ -95,7 +95,7 @@ export class ShellApi {
 
     setEditorMode(mode: TopBarEditorMode): void {
         this.context.state.editorMode = mode === "view" ? "view" : "edit";
-        this.context.renderSync.syncEditorMode();
+        this.context.commands.syncEditorMode();
     }
 
     requestSave(): void {
@@ -116,11 +116,13 @@ export class ShellApi {
 
     loadDocument(document: EditorDocument, selectedTarget: HTMLElement | null = null): void {
         this.context.commands.exitAllStateSessions();
+        this.context.commands.resetInlineTextEditing();
         this.context.state.runtime?.dispose();
         this.context.state.editorDocument = document;
         const runtime = new EditorRuntime(this.context.state.catalog, this.context.state.dataSources);
         this.context.state.runtime = runtime;
         runtime.load(document);
+        this.context.commands.refreshInlineTextEditing();
         this.context.commands.renderStructure();
         this.context.commands.select(
             selectedTarget

@@ -1,4 +1,5 @@
 export function wrapRangeContents(range: Range, tagName: string, attributes: Record<string, string> = {}): Range {
+    const document = range.startContainer.ownerDocument!;
     const wrapper = document.createElement(tagName);
     for (const [name, value] of Object.entries(attributes)) {
         wrapper.setAttribute(name, value);
@@ -27,6 +28,7 @@ export function findRangeWrapper(
 }
 
 export function unwrapElement(editor: HTMLElement, element: HTMLElement): Range {
+    const document = editor.ownerDocument;
     const fragment = document.createDocumentFragment();
     const firstChild = element.firstChild;
     const lastChild = element.lastChild;
@@ -58,8 +60,11 @@ function closestWrapper(
     let current: Node | null = node.nodeType === Node.ELEMENT_NODE ? node : node.parentNode;
 
     while (current && current !== editor) {
-        if (current instanceof HTMLElement && current.tagName === normalizedTag && predicate(current)) {
-            return current;
+        if (current.nodeType === Node.ELEMENT_NODE) {
+            const element = current as HTMLElement;
+            if (element.tagName === normalizedTag && predicate(element)) {
+                return element;
+            }
         }
         current = current.parentNode;
     }

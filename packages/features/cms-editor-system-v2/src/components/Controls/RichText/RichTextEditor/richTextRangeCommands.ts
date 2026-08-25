@@ -73,7 +73,7 @@ export class RichTextRangeCommands {
         const range = this.getUsableRange();
         if (!range) {
             this._editor().append(text);
-            const nextRange = document.createRange();
+            const nextRange = this._editor().ownerDocument.createRange();
             nextRange.selectNodeContents(this._editor());
             nextRange.collapse(false);
             this.setSavedRange(nextRange);
@@ -81,6 +81,7 @@ export class RichTextRangeCommands {
         }
 
         range.deleteContents();
+        const document = this._editor().ownerDocument;
         const node = document.createTextNode(text);
         range.insertNode(node);
 

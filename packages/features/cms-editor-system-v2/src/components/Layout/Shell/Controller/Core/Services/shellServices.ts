@@ -3,11 +3,13 @@ import type { EditableStateSession, Editor } from "@bernouy/cms-content/editor";
 import type { ShellDomRefs } from "../../../Domain/shellDomRefs";
 import type { FrameHighlight } from "../FrameHighlight";
 import type { ShellFrames } from "../../shellFrames";
-import { eventElement } from "../../shellFrames";
 import { ShellMutations } from "../../../Domain/Mutations/shellMutations";
+import { InlineTextEditing } from "../../../Domain/Settings/inlineTextEditing";
+import { InlineRichTextToolbar } from "../../../Domain/Settings/inlineRichTextToolbar";
 import { ShellSelection } from "../../shellSelection";
 import { ShellSync } from "../../shellSync";
 import { ShellEvents } from "../../Events/shellEvents";
+import { ShellInlineTextEvents } from "../../Events/shellInlineTextEvents";
 import { ShellApi } from "../shellApi";
 import { ShellCommands } from "../shellCommands";
 import { ShellRenderSyncCommands } from "../shellRenderSyncCommands";
@@ -23,6 +25,7 @@ export function createShellControllerServices(
     stateSessions: WeakMap<Editor, Map<string, EditableStateSession>>,
 ) {
     let events: ShellEvents;
+    let inlineTextEvents: ShellInlineTextEvents;
     const mutations = new ShellMutations({
         frameDocument: () => frames.frameDocument,
         editorDocument: () => state.editorDocument,
@@ -57,13 +60,31 @@ export function createShellControllerServices(
         refs,
     });
     const renderSync = new ShellRenderSyncCommands({ host, state, refs, frames, sync });
+    const inlineText = new InlineTextEditing(
+        new InlineRichTextToolbar(refs.inlineRichText, {
+            dataScopes: () => state.runtime?.getSelectedDataScopes() ?? [],
+            changed: (editor) => {
+                selection.renderSettings();
+                renderSync.syncViewFrameContent();
+                highlight.show(editor);
+            },
+        }),
+    );
     const commands = new ShellCommands({
         host,
         state,
         frames,
         selection,
         renderSync,
-        frameClickHandler: () => events.onFrameClick,
+        inlineText,
+        frameEventHandlers: () => ({
+            click: inlineTextEvents.onFrameClick,
+            focusout: inlineTextEvents.onFrameFocusOut,
+            input: inlineTextEvents.onFrameInput,
+            keydown: inlineTextEvents.onFrameKeyDown,
+            paste: inlineTextEvents.onFramePaste,
+            pointerdown: inlineTextEvents.onFramePointerDown,
+        }),
         saveEventName: "editor-v2:save-document",
         deleteEventName: "editor-v2:delete-document",
     });
@@ -75,8 +96,8 @@ export function createShellControllerServices(
         commands,
         renderSync,
         highlight,
-        frameClickTarget: (event) => eventElement(event),
     });
+    inlineTextEvents = new ShellInlineTextEvents({ state, commands, highlight, inlineText });
     return {
         mutations,
         selection,

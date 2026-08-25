@@ -13,5 +13,4 @@ export type ShellEventsContext = {
     commands: ShellCommands;
     renderSync: ShellRenderSyncCommands;
     highlight: FrameHighlight;
-    frameClickTarget(event: Event): Element | null;
 };

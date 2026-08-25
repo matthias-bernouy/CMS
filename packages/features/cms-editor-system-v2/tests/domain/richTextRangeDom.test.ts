@@ -4,6 +4,7 @@ import {
     unwrapElement,
     wrapRangeContents,
 } from "../../src/components/Controls/RichText/RichTextEditor/richTextRangeDom";
+import { RichTextRangeCommands } from "../../src/components/Controls/RichText/RichTextEditor/richTextRangeCommands";
 
 function textNode(element: Element): Text {
     return element.firstChild as Text;
@@ -67,5 +68,26 @@ describe("rich text range DOM helpers", () => {
         expect(range.collapsed).toBe(true);
         expect(range.startContainer).toBe(editor);
         expect(range.startOffset).toBe(editor.childNodes.length);
+    });
+
+    test("creates formatting nodes in the edited frame document", () => {
+        const frame = document.createElement("iframe");
+        document.body.append(frame);
+        const frameDocument = frame.contentDocument!;
+        const editor = frameDocument.createElement("div");
+        editor.textContent = "Frame text";
+        const range = frameDocument.createRange();
+        range.setStart(textNode(editor), 0);
+        range.setEnd(textNode(editor), 5);
+
+        wrapRangeContents(range, "strong");
+        new RichTextRangeCommands(
+            () => editor,
+            () => null,
+        ).insertText(" appended");
+
+        expect(editor.innerHTML).toBe("<strong>Frame</strong> text appended");
+        expect(editor.firstElementChild?.ownerDocument).toBe(frameDocument);
+        expect(editor.lastChild?.ownerDocument).toBe(frameDocument);
     });
 });

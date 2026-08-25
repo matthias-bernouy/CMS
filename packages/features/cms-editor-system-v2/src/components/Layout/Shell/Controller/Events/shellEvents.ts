@@ -144,17 +144,6 @@ export class ShellEvents {
         this.context.mutations.applyRepeatSelection(event.detail.path, event.detail.alias);
     };
 
-    readonly onFrameClick = (event: Event): void => {
-        const runtime = this.context.state.runtime;
-        if (!runtime) {
-            return;
-        }
-        event.preventDefault();
-        this.context.commands.select(runtime.getClosestEditor(this.context.frameClickTarget(event)) ?? null, {
-            scrollStructureIntoView: true,
-        });
-    };
-
     readonly onCanvasBackgroundClick = (): void => {
         if (this.context.state.runtime) {
             this.context.commands.select(null, { scrollStructureIntoView: false });

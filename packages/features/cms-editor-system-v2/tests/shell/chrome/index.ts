@@ -6,3 +6,5 @@ import "./frames/frames-3.cases";
 import "./frames/frames-4.cases";
 import "./frames/frames-5.cases";
 import "./frames/frames-6.cases";
+import "./frames/frames-7.cases";
+import "./frames/frames-8.cases";

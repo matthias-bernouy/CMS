@@ -1,8 +1,9 @@
 import type { Editor, SettingControl } from "@bernouy/cms-content/editor";
 import type { CanvasFrameReadyDetail } from "../../../Canvas/Canvas";
 import type { ShellSelection } from "../shellSelection";
-import type { ShellFrames } from "../shellFrames";
+import type { ShellFrameEventHandlers, ShellFrames } from "../shellFrames";
 import type { SelectOptions } from "../shellTypes";
+import type { InlineTextEditing } from "../../Domain/Settings/inlineTextEditing";
 import { dispatchDeleteDocument, dispatchSaveDocument, handleShellFrameReady } from "./Document/shellDocumentFlow";
 import type { ShellRenderSyncCommands } from "./shellRenderSyncCommands";
 import type { ShellControllerHost } from "./Services/shellServiceTypes";
@@ -15,7 +16,8 @@ type CommandsContext = {
     frames: ShellFrames;
     selection: ShellSelection;
     renderSync: ShellRenderSyncCommands;
-    frameClickHandler(): EventListener;
+    inlineText: InlineTextEditing;
+    frameEventHandlers(): ShellFrameEventHandlers;
     saveEventName: string;
     deleteEventName: string;
 };
@@ -28,6 +30,7 @@ export class ShellCommands {
     }
 
     saveDocument(): void {
+        this.context.inlineText.stop();
         dispatchSaveDocument({
             host: this.context.host,
             pageConfig: () => this.context.state.pageConfig,
@@ -54,6 +57,7 @@ export class ShellCommands {
     }
 
     select(editor: Editor | null, options: SelectOptions = {}): void {
+        this.context.inlineText.stopUnless(editor);
         this.context.selection.select(editor, options);
     }
 
@@ -79,7 +83,8 @@ export class ShellCommands {
     }
 
     bindFrameDocument(document: Document): void {
-        this.context.frames.bindFrameDocument(document, this.context.frameClickHandler());
+        this.context.inlineText.reset();
+        this.context.frames.bindFrameDocument(document, this.context.frameEventHandlers());
     }
 
     bindViewFrameDocument(document: Document): void {
@@ -87,7 +92,8 @@ export class ShellCommands {
     }
 
     unbindFrameDocument(): void {
-        this.context.frames.unbindFrameDocument(this.context.frameClickHandler());
+        this.context.inlineText.reset();
+        this.context.frames.unbindFrameDocument(this.context.frameEventHandlers());
     }
 
     unbindViewFrameDocument(): void {
@@ -95,6 +101,7 @@ export class ShellCommands {
     }
 
     clearDocument(): void {
+        this.context.inlineText.reset();
         this.context.state.runtime?.dispose();
         this.context.state.runtime = null;
         this.context.state.editorDocument = null;
@@ -117,7 +124,18 @@ export class ShellCommands {
     }
 
     syncEditorMode(): void {
+        if (this.context.state.editorMode !== "edit") {
+            this.context.inlineText.stop();
+        }
         this.context.renderSync.syncEditorMode();
+    }
+
+    refreshInlineTextEditing(): void {
+        this.context.inlineText.refresh(this.context.state.runtime?.getStructure() ?? []);
+    }
+
+    resetInlineTextEditing(): void {
+        this.context.inlineText.reset();
     }
 
     syncBindingPreviewCore(): void {

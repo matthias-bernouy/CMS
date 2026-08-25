@@ -7,6 +7,7 @@ import {
     syncViewFrameContent,
 } from "../Domain/Bindings/shellBindingPreview";
 import { contentHtml } from "../Domain/Structure/structureDocument";
+import { injectInlineTextEditingStyle } from "../Domain/Settings/inlineTextEditing";
 import type { CmsSourceStateForce } from "@bernouy/cms-content/editor";
 import type { EditorDocument } from "@bernouy/cms-content/editor";
 import type { EditorPreviewMode } from "./shellTypes";
@@ -22,15 +23,30 @@ type FrameReadyCallbacks = {
     settings(): SettingsView;
 };
 
+export type ShellFrameEventHandlers = {
+    click: EventListener;
+    focusout: EventListener;
+    input: EventListener;
+    keydown: EventListener;
+    paste: EventListener;
+    pointerdown: EventListener;
+};
+
 export class ShellFrames {
     frameDocument: Document | null = null;
     viewFrameDocument: Document | null = null;
 
-    bindFrameDocument(document: Document, onFrameClick: EventListener): void {
-        this.unbindFrameDocument(onFrameClick);
+    bindFrameDocument(document: Document, handlers: ShellFrameEventHandlers): void {
+        this.unbindFrameDocument(handlers);
         this.frameDocument = document;
-        document.addEventListener("click", onFrameClick, true);
+        document.addEventListener("click", handlers.click, true);
+        document.addEventListener("focusout", handlers.focusout, true);
+        document.addEventListener("input", handlers.input, true);
+        document.addEventListener("keydown", handlers.keydown, true);
+        document.addEventListener("paste", handlers.paste, true);
+        document.addEventListener("pointerdown", handlers.pointerdown, true);
         this.injectBindingPreviewStyle(document);
+        injectInlineTextEditingStyle(document);
     }
 
     bindViewFrameDocument(document: Document, previewMode: EditorPreviewMode = "mirrored"): void {
@@ -40,8 +56,13 @@ export class ShellFrames {
         }
     }
 
-    unbindFrameDocument(onFrameClick: EventListener): void {
-        this.frameDocument?.removeEventListener("click", onFrameClick, true);
+    unbindFrameDocument(handlers: ShellFrameEventHandlers): void {
+        this.frameDocument?.removeEventListener("click", handlers.click, true);
+        this.frameDocument?.removeEventListener("focusout", handlers.focusout, true);
+        this.frameDocument?.removeEventListener("input", handlers.input, true);
+        this.frameDocument?.removeEventListener("keydown", handlers.keydown, true);
+        this.frameDocument?.removeEventListener("paste", handlers.paste, true);
+        this.frameDocument?.removeEventListener("pointerdown", handlers.pointerdown, true);
         this.frameDocument = null;
     }
 

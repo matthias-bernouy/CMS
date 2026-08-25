@@ -12,13 +12,13 @@ export function renderRichTextToolbar(
     toolbar.replaceChildren();
     if (capability.size) {
         toolbar.append(
-            renderSizeButton("decrease", handlers.textSize),
-            renderSizeButton("increase", handlers.textSize),
+            renderSizeButton(toolbar.ownerDocument, "decrease", handlers.textSize),
+            renderSizeButton(toolbar.ownerDocument, "increase", handlers.textSize),
         );
     }
 
     for (const action of richTextActions(capability)) {
-        const button = document.createElement("button");
+        const button = toolbar.ownerDocument.createElement("button");
         button.className = "tool";
         button.type = "button";
         button.innerHTML = richTextActionIcon(action);
@@ -29,6 +29,7 @@ export function renderRichTextToolbar(
 }
 
 function renderSizeButton(
+    document: Document,
     direction: "decrease" | "increase",
     onSelect: (direction: "decrease" | "increase") => void,
 ): HTMLElement {

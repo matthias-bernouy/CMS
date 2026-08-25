@@ -45,6 +45,18 @@ export class ShellDomRefs {
         return this.host.shadowRoot!.querySelector(".page-settings-modal")!;
     }
 
+    get inlineRichText(): InlineRichTextRefs {
+        const root = this.host.shadowRoot!;
+        return {
+            chrome: root.querySelector<HTMLElement>(".inline-rich-text-chrome")!,
+            toolbar: root.querySelector<HTMLElement>(".inline-rich-text-toolbar")!,
+            picker: root.querySelector<HTMLElement>(".inline-rich-text-data-picker")!,
+            search: root.querySelector<HTMLInputElement>(".inline-rich-text-data-search")!,
+            list: root.querySelector<HTMLElement>(".inline-rich-text-data-list")!,
+            closeButton: root.querySelector<HTMLButtonElement>(".inline-rich-text-data-close")!,
+        };
+    }
+
     pageField<T extends HTMLElement>(name: string): T {
         return this.host.shadowRoot!.querySelector<T>(`[data-page-field="${name}"]`)!;
     }
@@ -69,3 +81,12 @@ export class ShellDomRefs {
         }
     }
 }
+
+export type InlineRichTextRefs = {
+    chrome: HTMLElement;
+    toolbar: HTMLElement;
+    picker: HTMLElement;
+    search: HTMLInputElement;
+    list: HTMLElement;
+    closeButton: HTMLButtonElement;
+};

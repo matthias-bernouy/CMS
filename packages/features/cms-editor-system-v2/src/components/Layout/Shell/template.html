@@ -13,6 +13,17 @@
         </cms-editor-v2-panel>
         <cms-editor-v2-canvas viewport-width="100%" viewport-height="100%" viewport-padding="none" viewport-fit="fluid"></cms-editor-v2-canvas>
     </div>
+    <div class="inline-rich-text-chrome" hidden>
+        <div class="inline-rich-text-toolbar" role="toolbar" aria-label="Rich text tools"></div>
+        <div class="inline-rich-text-data-picker" hidden role="dialog" aria-label="Insert dynamic data">
+            <div class="inline-rich-text-data-header">
+                <strong>Insert data</strong>
+                <button type="button" class="inline-rich-text-data-close" aria-label="Close data picker">×</button>
+            </div>
+            <input class="inline-rich-text-data-search" type="search" placeholder="Search data">
+            <div class="inline-rich-text-data-list"></div>
+        </div>
+    </div>
     <div class="page-settings-modal" hidden>
         <div class="page-settings-backdrop" data-page-settings-close></div>
         <section class="page-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="page-settings-title">

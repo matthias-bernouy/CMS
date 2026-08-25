@@ -41000,13 +41000,14 @@ textarea:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextRangeDom.ts
   function wrapRangeContents(range, tagName, attributes = {}) {
-    const wrapper = document.createElement(tagName);
+    const document2 = range.startContainer.ownerDocument;
+    const wrapper = document2.createElement(tagName);
     for (const [name, value3] of Object.entries(attributes)) {
       wrapper.setAttribute(name, value3);
     }
     wrapper.append(range.extractContents());
     range.insertNode(wrapper);
-    const nextRange = document.createRange();
+    const nextRange = document2.createRange();
     nextRange.selectNodeContents(wrapper);
     return nextRange;
   }
@@ -41019,14 +41020,15 @@ textarea:disabled {
     return start === end ? start : null;
   }
   function unwrapElement(editor, element) {
-    const fragment = document.createDocumentFragment();
+    const document2 = editor.ownerDocument;
+    const fragment = document2.createDocumentFragment();
     const firstChild = element.firstChild;
     const lastChild = element.lastChild;
     while (element.firstChild) {
       fragment.append(element.firstChild);
     }
     element.replaceWith(fragment);
-    const nextRange = document.createRange();
+    const nextRange = document2.createRange();
     if (firstChild && lastChild) {
       nextRange.setStartBefore(firstChild);
       nextRange.setEndAfter(lastChild);
@@ -41040,8 +41042,11 @@ textarea:disabled {
     const normalizedTag = tagName.toUpperCase();
     let current = node.nodeType === Node.ELEMENT_NODE ? node : node.parentNode;
     while (current && current !== editor) {
-      if (current instanceof HTMLElement && current.tagName === normalizedTag && predicate(current)) {
-        return current;
+      if (current.nodeType === Node.ELEMENT_NODE) {
+        const element = current;
+        if (element.tagName === normalizedTag && predicate(element)) {
+          return element;
+        }
       }
       current = current.parentNode;
     }
@@ -41113,16 +41118,17 @@ textarea:disabled {
       const range = this.getUsableRange();
       if (!range) {
         this._editor().append(text5);
-        const nextRange2 = document.createRange();
+        const nextRange2 = this._editor().ownerDocument.createRange();
         nextRange2.selectNodeContents(this._editor());
         nextRange2.collapse(false);
         this.setSavedRange(nextRange2);
         return;
       }
       range.deleteContents();
-      const node = document.createTextNode(text5);
+      const document2 = this._editor().ownerDocument;
+      const node = document2.createTextNode(text5);
       range.insertNode(node);
-      const nextRange = document.createRange();
+      const nextRange = document2.createRange();
       nextRange.setStartAfter(node);
       nextRange.collapse(true);
       this.setSavedRange(nextRange);
@@ -41221,10 +41227,10 @@ textarea:disabled {
   function renderRichTextToolbar(toolbar, capability, handlers) {
     toolbar.replaceChildren();
     if (capability.size) {
-      toolbar.append(renderSizeButton("decrease", handlers.textSize), renderSizeButton("increase", handlers.textSize));
+      toolbar.append(renderSizeButton(toolbar.ownerDocument, "decrease", handlers.textSize), renderSizeButton(toolbar.ownerDocument, "increase", handlers.textSize));
     }
     for (const action of richTextActions(capability)) {
-      const button2 = document.createElement("button");
+      const button2 = toolbar.ownerDocument.createElement("button");
       button2.className = "tool";
       button2.type = "button";
       button2.innerHTML = richTextActionIcon(action);
@@ -41233,8 +41239,8 @@ textarea:disabled {
       toolbar.append(button2);
     }
   }
-  function renderSizeButton(direction, onSelect) {
-    const button2 = document.createElement("button");
+  function renderSizeButton(document2, direction, onSelect) {
+    const button2 = document2.createElement("button");
     button2.className = "tool size-tool";
     button2.type = "button";
     button2.title = direction === "increase" ? "Increase text size" : "Decrease text size";
@@ -45333,6 +45339,17 @@ label {
     get pageSettingsModal() {
       return this.host.shadowRoot.querySelector(".page-settings-modal");
     }
+    get inlineRichText() {
+      const root = this.host.shadowRoot;
+      return {
+        chrome: root.querySelector(".inline-rich-text-chrome"),
+        toolbar: root.querySelector(".inline-rich-text-toolbar"),
+        picker: root.querySelector(".inline-rich-text-data-picker"),
+        search: root.querySelector(".inline-rich-text-data-search"),
+        list: root.querySelector(".inline-rich-text-data-list"),
+        closeButton: root.querySelector(".inline-rich-text-data-close")
+      };
+    }
     pageField(name) {
       return this.host.shadowRoot.querySelector(`[data-page-field="${name}"]`);
     }
@@ -45461,6 +45478,176 @@ label {
     return new DOMRect(left, top, right - left, bottom - top);
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/inlineTextEditing.ts
+  var INLINE_TEXT_EDITABLE_ATTRIBUTE = "data-cms-editor-v2-inline-text-editable";
+  var INLINE_TEXT_ACTIVE_ATTRIBUTE = "data-cms-editor-v2-inline-text-active";
+  var INLINE_TEXT_PROTECTED_ATTRIBUTE = "data-cms-editor-v2-inline-text-protected";
+  var INLINE_TEXT_STYLE_ID = "cms-editor-v2-inline-text-style";
+
+  class InlineTextEditing {
+    richTextToolbar;
+    activeEditor = null;
+    markedTargets = new Set;
+    protectedTargets = new Set;
+    constructor(richTextToolbar) {
+      this.richTextToolbar = richTextToolbar;
+    }
+    refresh(structure) {
+      this.reset();
+      this.markStructure(structure);
+    }
+    start(editor, focus = false) {
+      if (this.activeEditor === editor) {
+        if (focus) {
+          editor.target.focus({ preventScroll: true });
+        }
+        return true;
+      }
+      const format = inlineTextFormat(editor);
+      if (!format) {
+        this.stop();
+        return false;
+      }
+      this.stop();
+      this.activeEditor = editor;
+      editor.target.setAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE, "");
+      editor.target.setAttribute("contenteditable", format === "richtext" ? "true" : "plaintext-only");
+      this.protectContentSlots(editor);
+      this.richTextToolbar?.activate(editor);
+      if (focus) {
+        editor.target.focus({ preventScroll: true });
+      }
+      return true;
+    }
+    isActive(editor) {
+      return this.activeEditor === editor;
+    }
+    activeEditorFor(event) {
+      const editor = this.activeEditor;
+      const target2 = eventNode(event.target);
+      return editor && target2 && editor.target.contains(target2) ? editor : null;
+    }
+    activeFormatFor(event) {
+      const editor = this.activeEditorFor(event);
+      return editor?.getTextCapability()?.format ?? null;
+    }
+    preservesFocusOut(target2) {
+      return this.richTextToolbar?.preservesFocusOut(target2) ?? false;
+    }
+    insertPastedText(event, text5) {
+      return this.activeFormatFor(event) === "richtext" && Boolean(this.richTextToolbar?.insertPlainText(text5));
+    }
+    stopUnless(editor) {
+      if (this.activeEditor !== editor) {
+        this.stop();
+      }
+    }
+    stop(blur = false) {
+      const editor = this.activeEditor;
+      if (!editor) {
+        return;
+      }
+      this.activeEditor = null;
+      this.richTextToolbar?.deactivate();
+      editor.target.removeAttribute("contenteditable");
+      editor.target.removeAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE);
+      for (const target2 of this.protectedTargets) {
+        target2.removeAttribute("contenteditable");
+        target2.removeAttribute(INLINE_TEXT_PROTECTED_ATTRIBUTE);
+      }
+      this.protectedTargets.clear();
+      if (blur && editor.target.ownerDocument.activeElement === editor.target) {
+        editor.target.blur();
+      }
+    }
+    reset() {
+      this.stop();
+      for (const target2 of this.markedTargets) {
+        target2.removeAttribute(INLINE_TEXT_EDITABLE_ATTRIBUTE);
+      }
+      this.markedTargets.clear();
+    }
+    markStructure(nodes) {
+      for (const node of nodes) {
+        const format = inlineTextFormat(node.editor);
+        if (format) {
+          node.target.setAttribute(INLINE_TEXT_EDITABLE_ATTRIBUTE, format);
+          this.markedTargets.add(node.target);
+        }
+        this.markStructure(node.children);
+      }
+    }
+    protectContentSlots(editor) {
+      const reserved = reservedSlotNames(editor);
+      for (const child of Array.from(editor.target.children)) {
+        if (!reserved.has(child.getAttribute("slot") ?? "")) {
+          continue;
+        }
+        const target2 = child;
+        target2.setAttribute("contenteditable", "false");
+        target2.setAttribute(INLINE_TEXT_PROTECTED_ATTRIBUTE, "");
+        this.protectedTargets.add(target2);
+      }
+    }
+  }
+  function injectInlineTextEditingStyle(document2) {
+    if (document2.getElementById(INLINE_TEXT_STYLE_ID)) {
+      return;
+    }
+    const style = document2.createElement("style");
+    style.id = INLINE_TEXT_STYLE_ID;
+    style.textContent = `
+        [${INLINE_TEXT_EDITABLE_ATTRIBUTE}] { cursor: text; }
+        [${INLINE_TEXT_EDITABLE_ATTRIBUTE}]:hover {
+            outline: 1px dashed rgba(55, 125, 255, 0.65);
+            outline-offset: 2px;
+        }
+        [${INLINE_TEXT_ACTIVE_ATTRIBUTE}] { caret-color: rgb(55, 125, 255); }
+    `;
+    (document2.head ?? document2.documentElement).append(style);
+  }
+  function stripInlineTextEditingState(root) {
+    const selector = `[${INLINE_TEXT_EDITABLE_ATTRIBUTE}], [${INLINE_TEXT_ACTIVE_ATTRIBUTE}], [${INLINE_TEXT_PROTECTED_ATTRIBUTE}]`;
+    const descendants = Array.from(root.querySelectorAll(selector));
+    const targets = root.matches(selector) ? [root, ...descendants] : descendants;
+    for (const target2 of targets) {
+      if (target2.hasAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE)) {
+        target2.removeAttribute("contenteditable");
+      }
+      if (target2.hasAttribute(INLINE_TEXT_PROTECTED_ATTRIBUTE)) {
+        target2.removeAttribute("contenteditable");
+      }
+      target2.removeAttribute(INLINE_TEXT_EDITABLE_ATTRIBUTE);
+      target2.removeAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE);
+      target2.removeAttribute(INLINE_TEXT_PROTECTED_ATTRIBUTE);
+    }
+  }
+  function inlineTextFormat(editor) {
+    const format = editor.getTextCapability()?.format;
+    const slots = editor.getContentSlots();
+    if (format !== "text" && format !== "richtext" || slots.some((slot) => !slot.slot) || editor.getStructureMode() === "opaque" || editor.target.hasAttribute("contenteditable")) {
+      return null;
+    }
+    const reserved = reservedSlotNames(editor);
+    const reservedChildren = Array.from(editor.target.children).filter((child) => reserved.has(child.getAttribute("slot") ?? ""));
+    if (reservedChildren.some((child) => child.hasAttribute("contenteditable"))) {
+      return null;
+    }
+    if (format === "text") {
+      const hasEditableMarkup = Array.from(editor.target.children).some((child) => !reserved.has(child.getAttribute("slot") ?? ""));
+      if (hasEditableMarkup) {
+        return null;
+      }
+    }
+    return format;
+  }
+  function reservedSlotNames(editor) {
+    return new Set(editor.getContentSlots().flatMap((slot) => slot.slot ? [slot.slot] : []));
+  }
+  function eventNode(target2) {
+    return target2 && "nodeType" in target2 ? target2 : null;
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureDocument.ts
   function isEmptyDocumentContent(contentRoot) {
     if (!contentRoot) {
@@ -45520,6 +45707,7 @@ label {
     }
     c2(content);
     clearBindingRuntimeState(content);
+    stripInlineTextEditingState(content);
     return content;
   }
 
@@ -45617,11 +45805,17 @@ label {
   class ShellFrames {
     frameDocument = null;
     viewFrameDocument = null;
-    bindFrameDocument(document2, onFrameClick) {
-      this.unbindFrameDocument(onFrameClick);
+    bindFrameDocument(document2, handlers) {
+      this.unbindFrameDocument(handlers);
       this.frameDocument = document2;
-      document2.addEventListener("click", onFrameClick, true);
+      document2.addEventListener("click", handlers.click, true);
+      document2.addEventListener("focusout", handlers.focusout, true);
+      document2.addEventListener("input", handlers.input, true);
+      document2.addEventListener("keydown", handlers.keydown, true);
+      document2.addEventListener("paste", handlers.paste, true);
+      document2.addEventListener("pointerdown", handlers.pointerdown, true);
       this.injectBindingPreviewStyle(document2);
+      injectInlineTextEditingStyle(document2);
     }
     bindViewFrameDocument(document2, previewMode = "mirrored") {
       this.viewFrameDocument = document2;
@@ -45629,8 +45823,13 @@ label {
         this.injectBindingPreviewStyle(document2);
       }
     }
-    unbindFrameDocument(onFrameClick) {
-      this.frameDocument?.removeEventListener("click", onFrameClick, true);
+    unbindFrameDocument(handlers) {
+      this.frameDocument?.removeEventListener("click", handlers.click, true);
+      this.frameDocument?.removeEventListener("focusout", handlers.focusout, true);
+      this.frameDocument?.removeEventListener("input", handlers.input, true);
+      this.frameDocument?.removeEventListener("keydown", handlers.keydown, true);
+      this.frameDocument?.removeEventListener("paste", handlers.paste, true);
+      this.frameDocument?.removeEventListener("pointerdown", handlers.pointerdown, true);
       this.frameDocument = null;
     }
     unbindViewFrameDocument() {
@@ -46676,6 +46875,164 @@ label {
     }
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/inlineRichTextToolbar.ts
+  class InlineRichTextToolbar {
+    refs;
+    context;
+    editor = null;
+    commands = null;
+    dataPicker;
+    constructor(refs, context) {
+      this.refs = refs;
+      this.context = context;
+      this.dataPicker = new DynamicDataPickerController({
+        picker: () => this.refs.picker,
+        search: () => this.refs.search,
+        list: () => this.refs.list,
+        closeButton: () => this.refs.closeButton,
+        rawScopes: () => JSON.stringify(this.editor ? this.context.dataScopes(this.editor) : [])
+      }, {
+        saveSelection: () => this.commands?.saveSelection(),
+        restoreSelection: () => this.commands?.restoreSelection(),
+        insertText: (text5) => this.commands?.insertText(text5),
+        focusControl: () => this.editor?.target.focus({ preventScroll: true }),
+        finish: () => this.finishAction()
+      });
+    }
+    activate(editor) {
+      this.deactivate();
+      const capability = editor.getTextCapability();
+      if (capability?.format !== "richtext") {
+        return;
+      }
+      this.editor = editor;
+      this.commands = new RichTextRangeCommands(() => editor.target, () => editor.target.ownerDocument.getSelection?.() ?? null);
+      renderRichTextToolbar(this.refs.toolbar, capability, {
+        action: (action) => this.runAction(action),
+        textSize: (direction) => this.runTextSize(direction)
+      });
+      this.refs.picker.hidden = true;
+      this.refs.chrome.hidden = false;
+      this.dataPicker.connect();
+      this.updateListeners("addEventListener");
+      this.updateSelection();
+    }
+    deactivate() {
+      if (this.editor) {
+        this.updateListeners("removeEventListener");
+        this.dataPicker.disconnect();
+      }
+      this.editor = null;
+      this.commands = null;
+      this.refs.chrome.hidden = true;
+      this.refs.picker.hidden = true;
+      this.refs.toolbar.replaceChildren();
+    }
+    contains(target2) {
+      return Boolean(target2 && this.refs.chrome.contains(target2));
+    }
+    preservesFocusOut(target2) {
+      return this.contains(target2) || !this.refs.picker.hidden;
+    }
+    insertPlainText(text5) {
+      if (!this.editor || !this.commands) {
+        return false;
+      }
+      this.commands.saveSelection();
+      this.commands.insertText(text5);
+      this.finishAction();
+      return true;
+    }
+    runAction(action) {
+      if (!this.commands || action !== "dynamic" && !this.commands.hasSelectedRange()) {
+        return;
+      }
+      if (action === "dynamic") {
+        this.dataPicker.open();
+        return;
+      }
+      if (action === "bold") {
+        this.commands.toggleRange("strong");
+      } else if (action === "italic") {
+        this.commands.toggleRange("em");
+      } else if (action === "underline") {
+        this.commands.toggleRange("u");
+      } else if (action === "code") {
+        this.commands.toggleRange("code");
+      } else if (this.commands.unwrapMatchingRange("a")) {
+        this.finishAction();
+        return;
+      } else {
+        const href = this.refs.chrome.ownerDocument.defaultView?.prompt("Link URL");
+        if (href) {
+          this.commands.wrapRange("a", { href });
+        }
+      }
+      this.finishAction();
+    }
+    runTextSize(direction) {
+      if (this.commands?.stepTextSize(direction)) {
+        this.finishAction();
+      }
+    }
+    finishAction() {
+      const editor = this.editor;
+      if (!editor || !this.commands) {
+        return;
+      }
+      editor.target.focus({ preventScroll: true });
+      this.commands.restoreSelection();
+      this.context.changed(editor);
+      this.position();
+    }
+    updateSelection = () => {
+      this.commands?.saveSelection();
+      this.position();
+    };
+    position = () => {
+      const editor = this.editor;
+      if (!editor || this.refs.chrome.hidden) {
+        return;
+      }
+      const anchor = selectionRect(editor) ?? editor.target.getBoundingClientRect();
+      const frame = editor.target.ownerDocument.defaultView?.frameElement;
+      const frameRect = frame?.getBoundingClientRect();
+      const toolbarRect = this.refs.chrome.getBoundingClientRect();
+      const outerView = this.refs.chrome.ownerDocument.defaultView;
+      const viewportWidth = outerView?.innerWidth || 1024;
+      const frameLeft = frameRect?.left ?? 0;
+      const frameTop = frameRect?.top ?? 0;
+      const left = clamp(frameLeft + anchor.left + anchor.width / 2 - toolbarRect.width / 2, 8, viewportWidth - toolbarRect.width - 8);
+      const above = frameTop + anchor.top - toolbarRect.height - 8;
+      this.refs.chrome.style.left = `${left}px`;
+      this.refs.chrome.style.top = `${above >= 8 ? above : frameTop + anchor.bottom + 8}px`;
+    };
+    updateListeners(method) {
+      const frameDocument = this.editor.target.ownerDocument;
+      const frameView = frameDocument.defaultView;
+      const outerView = this.refs.chrome.ownerDocument.defaultView;
+      frameDocument[method]("selectionchange", this.updateSelection);
+      frameView?.[method]("scroll", this.position, true);
+      frameView?.[method]("resize", this.position);
+      outerView?.[method]("scroll", this.position, true);
+      outerView?.[method]("resize", this.position);
+    }
+  }
+  function selectionRect(editor) {
+    const selection = editor.target.ownerDocument.getSelection?.();
+    if (!selection || selection.rangeCount === 0) {
+      return null;
+    }
+    const range = selection.getRangeAt(0);
+    if (!editor.target.contains(range.commonAncestorContainer)) {
+      return null;
+    }
+    return range.getBoundingClientRect?.() ?? null;
+  }
+  function clamp(value3, min, max) {
+    return Math.max(min, Math.min(Math.max(min, max), value3));
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/valueSurface.ts
   var VALUE_KEY_PATTERN = /^[A-Za-z0-9_.-]+$/;
   function hasStandardValueSurface(target2) {
@@ -46890,7 +47247,7 @@ label {
   }
   function setTextValue(editor, format, value3) {
     assertTextSlotCompatibility(editor);
-    const reserved = reservedSlotNames(editor.getContentSlots());
+    const reserved = reservedSlotNames2(editor.getContentSlots());
     const currentNodes = Array.from(editor.target.childNodes);
     const referenceNode = currentNodes.find((node) => !isReservedSlotNode(node, reserved)) ?? editor.target.firstChild;
     const fragment = editor.target.ownerDocument.createDocumentFragment();
@@ -46954,7 +47311,7 @@ label {
     throw new Error("Editors cannot combine textCapability() with an unnamed content slot.");
   }
   function textContentFragment(editor) {
-    const reserved = reservedSlotNames(editor.getContentSlots());
+    const reserved = reservedSlotNames2(editor.getContentSlots());
     const container = editor.target.ownerDocument.createElement("div");
     for (const node of Array.from(editor.target.childNodes)) {
       if (isReservedSlotNode(node, reserved)) {
@@ -46964,7 +47321,7 @@ label {
     }
     return container;
   }
-  function reservedSlotNames(slots) {
+  function reservedSlotNames2(slots) {
     return new Set(slots.map((slot) => slot.slot).filter((slot) => Boolean(slot)));
   }
   function isReservedSlotNode(node, reserved) {
@@ -47509,16 +47866,6 @@ label {
     onRepeatSelect = (event) => {
       this.context.mutations.applyRepeatSelection(event.detail.path, event.detail.alias);
     };
-    onFrameClick = (event) => {
-      const runtime2 = this.context.state.runtime;
-      if (!runtime2) {
-        return;
-      }
-      event.preventDefault();
-      this.context.commands.select(runtime2.getClosestEditor(this.context.frameClickTarget(event)) ?? null, {
-        scrollStructureIntoView: true
-      });
-    };
     onCanvasBackgroundClick = () => {
       if (this.context.state.runtime) {
         this.context.commands.select(null, { scrollStructureIntoView: false });
@@ -47527,6 +47874,87 @@ label {
   }
   function resolveExternalSettingsHref(href, currentHref) {
     return new URL(href, currentHref).href;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Events/shellInlineTextEvents.ts
+  class ShellInlineTextEvents {
+    context;
+    constructor(context) {
+      this.context = context;
+    }
+    onFramePointerDown = (event) => {
+      const editor = this.editorFor(event);
+      if (!editor || this.context.state.editorMode !== "edit" || !this.context.inlineText.start(editor)) {
+        this.context.inlineText.stop();
+        return;
+      }
+      if (this.context.state.runtime?.getSelection()?.editor !== editor) {
+        this.context.commands.select(editor, { scrollStructureIntoView: true });
+      }
+    };
+    onFrameClick = (event) => {
+      const runtime2 = this.context.state.runtime;
+      if (!runtime2) {
+        return;
+      }
+      event.preventDefault();
+      const editor = this.editorFor(event);
+      if (editor && this.context.state.editorMode === "edit") {
+        this.context.inlineText.start(editor, !this.context.inlineText.isActive(editor));
+      } else {
+        this.context.inlineText.stop();
+      }
+      if (runtime2.getSelection()?.editor !== editor) {
+        this.context.commands.select(editor, { scrollStructureIntoView: true });
+      }
+    };
+    onFrameInput = (event) => {
+      const editor = this.context.inlineText.activeEditorFor(event);
+      if (!editor) {
+        return;
+      }
+      this.context.commands.renderSettings();
+      this.context.commands.syncViewFrameContent();
+      this.context.highlight.show(editor);
+    };
+    onFramePaste = (event) => {
+      const text5 = event.clipboardData?.getData("text/plain");
+      if (text5 === undefined || !this.context.inlineText.insertPastedText(event, text5)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    onFrameKeyDown = (event) => {
+      const format = this.context.inlineText.activeFormatFor(event);
+      if (!format) {
+        return;
+      }
+      const key = event.key;
+      if (key !== "Escape" && (key !== "Enter" || format === "richtext")) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      this.context.inlineText.stop(true);
+    };
+    onFrameFocusOut = (event) => {
+      const editor = this.context.inlineText.activeEditorFor(event);
+      if (!editor) {
+        return;
+      }
+      const relatedTarget = eventNode2(event.relatedTarget);
+      if (relatedTarget && editor.target.contains(relatedTarget) || this.context.inlineText.preservesFocusOut(relatedTarget)) {
+        return;
+      }
+      this.context.inlineText.stop();
+    };
+    editorFor(event) {
+      return this.context.state.runtime?.getClosestEditor(eventElement(event)) ?? null;
+    }
+  }
+  function eventNode2(target2) {
+    return target2 && "nodeType" in target2 ? target2 : null;
   }
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRegistry/EditorRegistry.ts
@@ -48117,7 +48545,7 @@ label {
     }
     setEditorMode(mode) {
       this.context.state.editorMode = mode === "view" ? "view" : "edit";
-      this.context.renderSync.syncEditorMode();
+      this.context.commands.syncEditorMode();
     }
     requestSave() {
       this.context.commands.saveDocument();
@@ -48135,11 +48563,13 @@ label {
     }
     loadDocument(document2, selectedTarget = null) {
       this.context.commands.exitAllStateSessions();
+      this.context.commands.resetInlineTextEditing();
       this.context.state.runtime?.dispose();
       this.context.state.editorDocument = document2;
       const runtime2 = new EditorRuntime(this.context.state.catalog, this.context.state.dataSources);
       this.context.state.runtime = runtime2;
       runtime2.load(document2);
+      this.context.commands.refreshInlineTextEditing();
       this.context.commands.renderStructure();
       this.context.commands.select(selectedTarget ? runtime2.getEditor(selectedTarget) ?? runtime2.getClosestEditor(selectedTarget) ?? null : null, { scrollStructureIntoView: true });
     }
@@ -48205,6 +48635,7 @@ label {
       dispatchDeleteDocument(this.context.host, this.context.deleteEventName);
     }
     saveDocument() {
+      this.context.inlineText.stop();
       dispatchSaveDocument({
         host: this.context.host,
         pageConfig: () => this.context.state.pageConfig,
@@ -48229,6 +48660,7 @@ label {
       });
     }
     select(editor, options2 = {}) {
+      this.context.inlineText.stopUnless(editor);
       this.context.selection.select(editor, options2);
     }
     renderSettings() {
@@ -48244,18 +48676,21 @@ label {
       this.context.selection.exitAllStateSessions();
     }
     bindFrameDocument(document2) {
-      this.context.frames.bindFrameDocument(document2, this.context.frameClickHandler());
+      this.context.inlineText.reset();
+      this.context.frames.bindFrameDocument(document2, this.context.frameEventHandlers());
     }
     bindViewFrameDocument(document2) {
       this.context.frames.bindViewFrameDocument(document2, this.context.state.previewMode);
     }
     unbindFrameDocument() {
-      this.context.frames.unbindFrameDocument(this.context.frameClickHandler());
+      this.context.inlineText.reset();
+      this.context.frames.unbindFrameDocument(this.context.frameEventHandlers());
     }
     unbindViewFrameDocument() {
       this.context.frames.unbindViewFrameDocument();
     }
     clearDocument() {
+      this.context.inlineText.reset();
       this.context.state.runtime?.dispose();
       this.context.state.runtime = null;
       this.context.state.editorDocument = null;
@@ -48273,7 +48708,16 @@ label {
       this.context.renderSync.syncViewport();
     }
     syncEditorMode() {
+      if (this.context.state.editorMode !== "edit") {
+        this.context.inlineText.stop();
+      }
       this.context.renderSync.syncEditorMode();
+    }
+    refreshInlineTextEditing() {
+      this.context.inlineText.refresh(this.context.state.runtime?.getStructure() ?? []);
+    }
+    resetInlineTextEditing() {
+      this.context.inlineText.reset();
     }
     syncBindingPreviewCore() {
       this.context.renderSync.syncBindingPreviewCore();
@@ -48419,6 +48863,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellServices.ts
   function createShellControllerServices(host, state2, refs, frames, highlight, stateSessions) {
     let events;
+    let inlineTextEvents;
     const mutations = new ShellMutations({
       frameDocument: () => frames.frameDocument,
       editorDocument: () => state2.editorDocument,
@@ -48453,13 +48898,29 @@ label {
       refs
     });
     const renderSync = new ShellRenderSyncCommands({ host, state: state2, refs, frames, sync });
+    const inlineText = new InlineTextEditing(new InlineRichTextToolbar(refs.inlineRichText, {
+      dataScopes: () => state2.runtime?.getSelectedDataScopes() ?? [],
+      changed: (editor) => {
+        selection.renderSettings();
+        renderSync.syncViewFrameContent();
+        highlight.show(editor);
+      }
+    }));
     const commands = new ShellCommands({
       host,
       state: state2,
       frames,
       selection,
       renderSync,
-      frameClickHandler: () => events.onFrameClick,
+      inlineText,
+      frameEventHandlers: () => ({
+        click: inlineTextEvents.onFrameClick,
+        focusout: inlineTextEvents.onFrameFocusOut,
+        input: inlineTextEvents.onFrameInput,
+        keydown: inlineTextEvents.onFrameKeyDown,
+        paste: inlineTextEvents.onFramePaste,
+        pointerdown: inlineTextEvents.onFramePointerDown
+      }),
       saveEventName: "editor-v2:save-document",
       deleteEventName: "editor-v2:delete-document"
     });
@@ -48470,9 +48931,9 @@ label {
       mutations,
       commands,
       renderSync,
-      highlight,
-      frameClickTarget: (event) => eventElement(event)
+      highlight
     });
+    inlineTextEvents = new ShellInlineTextEvents({ state: state2, commands, highlight, inlineText });
     return {
       mutations,
       selection,
@@ -48670,6 +49131,156 @@ label {
 }
 `;
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Styles/inlineRichText.css
+  var inlineRichText_default = `.inline-rich-text-chrome {
+    position: fixed;
+    z-index: 2147483647;
+    display: grid;
+    gap: 6px;
+    width: max-content;
+    max-width: min(380px, calc(100vw - 16px));
+}
+
+.inline-rich-text-chrome[hidden],
+.inline-rich-text-data-picker[hidden] {
+    display: none;
+}
+
+.inline-rich-text-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    width: max-content;
+    max-width: 100%;
+    border: 1px solid var(--editor-v2-border-strong);
+    border-radius: 9px;
+    background: var(--editor-v2-surface);
+    padding: 4px;
+    box-shadow: 0 12px 30px rgba(16, 24, 21, .18);
+    user-select: none;
+}
+
+.inline-rich-text-toolbar .tool {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 760;
+    cursor: pointer;
+}
+
+.inline-rich-text-toolbar .tool:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 30%, var(--editor-v2-border));
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-accent);
+}
+
+.inline-rich-text-toolbar .tool svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.inline-rich-text-toolbar .size-tool {
+    font-size: 15px;
+}
+
+.inline-rich-text-toolbar .underline-icon {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.inline-rich-text-data-picker {
+    display: grid;
+    gap: 8px;
+    width: min(360px, calc(100vw - 16px));
+    border: 1px solid var(--editor-v2-border-strong);
+    border-radius: 9px;
+    background: var(--editor-v2-surface);
+    padding: 10px;
+    box-shadow: 0 16px 36px rgba(16, 24, 21, .2);
+}
+
+.inline-rich-text-data-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    color: var(--editor-v2-label);
+    font-size: 12px;
+}
+
+.inline-rich-text-data-close {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.inline-rich-text-data-search {
+    min-height: 32px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-text);
+    padding: 0 8px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.inline-rich-text-data-list {
+    display: grid;
+    gap: 4px;
+    max-height: 220px;
+    overflow: auto;
+}
+
+.inline-rich-text-data-list .data-option {
+    display: grid;
+    gap: 3px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--editor-v2-text);
+    padding: 7px 8px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.inline-rich-text-data-list .data-option:hover,
+.inline-rich-text-data-list .data-option:focus-visible {
+    border-color: var(--editor-v2-border-strong);
+    background: var(--editor-v2-surface-muted);
+    outline: none;
+}
+
+.inline-rich-text-data-list .data-label {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.inline-rich-text-data-list code,
+.inline-rich-text-data-list .data-empty {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+}
+`;
+
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
   var template_default35 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
@@ -48685,6 +49296,17 @@ label {
             <cms-editor-v2-settings-view></cms-editor-v2-settings-view>
         </cms-editor-v2-panel>
         <cms-editor-v2-canvas viewport-width="100%" viewport-height="100%" viewport-padding="none" viewport-fit="fluid"></cms-editor-v2-canvas>
+    </div>
+    <div class="inline-rich-text-chrome" hidden>
+        <div class="inline-rich-text-toolbar" role="toolbar" aria-label="Rich text tools"></div>
+        <div class="inline-rich-text-data-picker" hidden role="dialog" aria-label="Insert dynamic data">
+            <div class="inline-rich-text-data-header">
+                <strong>Insert data</strong>
+                <button type="button" class="inline-rich-text-data-close" aria-label="Close data picker">×</button>
+            </div>
+            <input class="inline-rich-text-data-search" type="search" placeholder="Search data">
+            <div class="inline-rich-text-data-list"></div>
+        </div>
     </div>
     <div class="page-settings-modal" hidden>
         <div class="page-settings-backdrop" data-page-settings-close></div>
@@ -48861,7 +49483,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default23, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default23, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default35)}`;
     return template22;
   }
