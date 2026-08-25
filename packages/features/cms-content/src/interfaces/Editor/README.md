@@ -22,6 +22,7 @@ activate binding features for descendants of that element:
 - `{{ expression }}` text interpolation.
 - `cms-source` data fetching and source scoping.
 - `cms-repeat` repeated rendering.
+- `cms-repeat="$range(5) as index"` fixed rendering with zero-based indices.
 - `cms-condition` conditional rendering.
 - `cms-condition="$source.loading"`, `cms-condition="$source.loaded"`,
   `cms-condition="$source.empty"`, or `cms-condition="$source.error"` for
@@ -38,6 +39,10 @@ activate binding features for descendants of that element:
 
 Nested binding cores are isolated scopes. An implementation can choose the precise
 runtime mechanics, but it should not leak data scopes across nested cores.
+
+`$range(n)` is the only built-in repeat source. It requires a named alias, and
+`n` must be an integer from `0` through `100`. The alias receives each index from
+`0` through `n - 1`. Invalid ranges render no instances.
 
 ## Disabled Scope
 

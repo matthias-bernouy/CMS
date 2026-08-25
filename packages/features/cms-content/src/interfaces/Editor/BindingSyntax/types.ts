@@ -49,6 +49,7 @@ export type CmsConditionExpression = string;
 export type CmsConditionLiteral = string | number | boolean | null;
 export type CmsConditionFieldOperator = (typeof CMS_CONDITION_FIELD_OPERATORS)[number];
 export type CmsRepeatBinding = { path: string; alias?: string };
+export type CmsRepeatRangeBinding = { count: number; alias: string };
 export type CmsSourceTrigger = (typeof CMS_SOURCE_TRIGGERS)[number];
 export type CmsSourceMethod = (typeof CMS_SOURCE_METHODS)[number];
 export type CmsSourceState = (typeof CMS_SOURCE_STATES)[number];

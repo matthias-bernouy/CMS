@@ -1,4 +1,10 @@
-import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, parseRepeat, type Editor } from "@bernouy/cms-content/editor";
+import {
+    CMS_BINDING_ATTRIBUTES,
+    CMS_BINDING_CORE_TAG,
+    parseRepeat,
+    parseRepeatRange,
+    type Editor,
+} from "@bernouy/cms-content/editor";
 import { bindingTextDependsOn, type DependencyScope, withoutBindingExpressions } from "./sourceDependencyExpressions";
 
 export type SourceDependencyUsage = {
@@ -16,6 +22,7 @@ export function collectSourceDependencyUsages(
         editor.target,
         {
             aliases: sourceAlias ? new Set([sourceAlias]) : new Set(),
+            independentAliases: new Set(),
             sourceId,
             sourceLocal: true,
         },
@@ -79,6 +86,7 @@ function collectElementDependencies(
 ): DependencyScope {
     const scope: DependencyScope = {
         aliases: new Set(inheritedScope.aliases),
+        independentAliases: new Set(inheritedScope.independentAliases),
         sourceId: inheritedScope.sourceId,
         sourceLocal: inheritedScope.sourceLocal,
     };
@@ -88,13 +96,20 @@ function collectElementDependencies(
     }
 
     const repeat = element.getAttribute(CMS_BINDING_ATTRIBUTES.repeat);
-    if (repeat && (inheritedScope.sourceLocal || bindingTextDependsOn(repeat, inheritedScope))) {
+    const range = repeat ? parseRepeatRange(repeat) : null;
+    const repeatDependsOnSource =
+        repeat && !range && (inheritedScope.sourceLocal || bindingTextDependsOn(repeat, inheritedScope));
+    if (repeatDependsOnSource) {
         usages.push({ target: element, attribute: CMS_BINDING_ATTRIBUTES.repeat });
         const parsed = parseRepeat(repeat) as { alias?: string } | null;
         const repeatAlias = parsed?.alias?.trim();
         if (repeatAlias) {
+            scope.independentAliases.delete(repeatAlias);
             scope.aliases.add(repeatAlias);
         }
+    } else if (range) {
+        scope.aliases.delete(range.alias);
+        scope.independentAliases.add(range.alias);
     }
 
     for (const attribute of Array.from(element.attributes)) {

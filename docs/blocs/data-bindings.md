@@ -35,9 +35,15 @@ The core provides:
 - `cms-source="URL as alias"` for a source scope;
 - `{{ expression }}` in text and attributes;
 - `cms-repeat="path as item"` for repeated elements;
+- `cms-repeat="$range(5) as index"` for a fixed zero-based range;
 - `cms-condition="expression"` for conditional elements;
 - `$source.loading`, `$source.loaded`, `$source.empty`, and `$source.error` for
   the nearest source state.
+
+A fixed range requires an alias and accepts an integer from `0` through `100`.
+The alias receives `0` through `n - 1`; a range of `0` renders no instances.
+Use this for a bounded number of identical placeholders or decorative items,
+not to materialize independently editable Bloc copies.
 
 Use `cms-source-id` and `$sources.<id>.<state>` when one element must observe a
 specific source among several ancestors.

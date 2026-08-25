@@ -3,6 +3,7 @@ import {
     type Editor,
     type EditorCatalogEntry,
     type EditorDocument,
+    parseRepeatRange,
     parseSourceStatusConditions,
 } from "@bernouy/cms-content/editor";
 import { isCompositionRuntimeElement } from "@bernouy/components/base";
@@ -109,7 +110,9 @@ function structureBadges(editor: Editor): string[] {
         badges.push("Source");
     }
     if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)) {
-        badges.push("Repeat");
+        const repeat = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "";
+        const range = parseRepeatRange(repeat);
+        badges.push(range ? `Repeat ×${range.count}` : "Repeat");
     }
     const condition = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition);
     const sourceStatuses = [...new Set(parseSourceStatusConditions(condition).map((item) => item.state))];

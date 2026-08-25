@@ -4,6 +4,7 @@ import {
     type DataScope,
     type Editor,
     parseRepeat,
+    parseRepeatRange,
     parseSource,
 } from "@bernouy/cms-content/editor";
 import type { EditorRegistry } from "../EditorRegistry/EditorRegistry";
@@ -43,16 +44,18 @@ function parseSourceBinding(value: string): { url: string; alias?: string } | nu
 }
 
 function declareRepeatDataScope(editor: Editor, registry: EditorRegistry): void {
-    const repeat = parseRepeat(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "");
+    const value = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "";
+    const repeat = parseRepeat(value);
     if (!repeat?.alias) {
         return;
     }
 
+    const range = parseRepeatRange(value);
     const field = findDataField(registry.collectDataScopes(editor.target), repeat.path);
     editor.declareDataScope({
         name: repeat.alias,
         label: repeat.alias,
-        fields: field?.children ?? [],
+        fields: range ? [{ path: ".", type: "number" }] : (field?.children ?? []),
     });
 }
 

@@ -1,4 +1,4 @@
-import type { DataField, DataScope, Editor, EditorCatalog } from "@bernouy/cms-content/editor";
+import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
 
 import type { EditorRuntime, EditorStructureNode, StructureNode } from "../../../../../runtime";
 import type { StructureTree } from "../../../StructureTree/StructureTree";
@@ -25,7 +25,7 @@ export function renderStructure(
     const structure = decorateStructure(runtime.getStructure());
     tree.setStructure(structure, runtime.getSelection()?.editor ?? null, catalog, {
         scrollSelectedIntoView: options.scrollStructureIntoView === true,
-        repeatableTargets: repeatableTargets(runtime, structure),
+        repeatableTargets: repeatableTargets(structure),
         rootNode,
     });
 }
@@ -84,18 +84,8 @@ function decorateEditorStructureNode(node: EditorStructureNode): EditorStructure
     };
 }
 
-function repeatableTargets(runtime: EditorRuntime, nodes: StructureNode[]): HTMLElement[] {
-    return flattenStructure(nodes)
-        .filter((node) => hasArrayFields(runtime.registry.collectDataScopes(node.target)))
-        .map((node) => node.target);
-}
-
-function hasArrayFields(scopes: DataScope[]): boolean {
-    return scopes.some((scope) => fieldsContainArray(scope.fields));
-}
-
-function fieldsContainArray(fields: DataField[]): boolean {
-    return fields.some((field) => field.type === "array" || fieldsContainArray(field.children ?? []));
+function repeatableTargets(nodes: StructureNode[]): HTMLElement[] {
+    return flattenStructure(nodes).map((node) => node.target);
 }
 
 function flattenStructure(nodes: StructureNode[]): StructureNode[] {

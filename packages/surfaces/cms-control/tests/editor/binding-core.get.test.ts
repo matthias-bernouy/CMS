@@ -22,6 +22,7 @@ describe("editor binding core endpoint", () => {
         expect(response.status).toBe(200);
         expect(response.headers.get("content-type")).toContain("text/javascript");
         expect(js).toContain("cms-binding-core");
+        expect(js).toContain("cms-fixed-range authored");
         expect(js).toContain("customElements.define");
     });
 });

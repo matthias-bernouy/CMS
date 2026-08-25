@@ -7,11 +7,13 @@ import { PARAM_SYNC_ATTR } from "../params/ParamSync";
 import type { Source } from "../source/Source";
 import { reconcileAttribute, registerWithin, unregisterWithin } from "./BindingDiscovery";
 import { BindingRegistry } from "./BindingRegistry";
+import { FixedRangeRuntime } from "./FixedRangeRuntime";
 import { revealInertSources, revealSources } from "./revealSources";
 export { revealSources } from "./revealSources";
 
 export class BindingRuntime {
     private readonly registry: BindingRegistry;
+    private readonly fixedRanges: FixedRangeRuntime;
     private observer: MutationObserver | null = null;
     private stopped = false;
 
@@ -21,6 +23,7 @@ export class BindingRuntime {
         options: { sourceStateForce?: SourceState } = {},
     ) {
         this.registry = new BindingRegistry(root, filters, options, (source) => this.afterSourceRender(source));
+        this.fixedRanges = new FixedRangeRuntime(root, filters);
     }
 
     start(): void {
@@ -55,6 +58,7 @@ export class BindingRuntime {
             return;
         }
         revealInertSources(this.root);
+        this.fixedRanges.mountWithin(this.root);
         registerWithin(this.root, this.root, this.registry);
         const Observer = this.root.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
         this.observer = new Observer((records) => {
@@ -66,6 +70,7 @@ export class BindingRuntime {
                 record.removedNodes.forEach((node) => unregisterWithin(node, this.root, this.registry));
                 record.addedNodes.forEach((node) => {
                     revealInertSources(node);
+                    this.fixedRanges.mountWithin(node);
                     registerWithin(node, this.root, this.registry);
                 });
             }
@@ -86,6 +91,7 @@ export class BindingRuntime {
         this.observer?.disconnect();
         this.observer = null;
         this.registry.teardown(hooks);
+        this.fixedRanges.restore();
         hooks?.afterDispose?.();
     }
 

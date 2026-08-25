@@ -50,6 +50,7 @@ Binding activates only inside `<cms-binding-core>`. Nested cores are isolated.
 - `cms-condition="$source.loading"`, `$source.error`, `$source.empty`, or
   `$source.loaded` defines source states.
 - `cms-repeat="items"` or `cms-repeat="items as item"` iterates arrays.
+- `cms-repeat="$range(5) as index"` iterates fixed zero-based indices.
 - `{{ path }}` interpolates text. `{{ path | innerHTML }}` injects trusted raw
   HTML.
 - `#{param}` reads a reactive query parameter and reloads affected sources.

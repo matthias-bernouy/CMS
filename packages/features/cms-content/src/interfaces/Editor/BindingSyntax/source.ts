@@ -1,5 +1,4 @@
 import type {
-    CmsRepeatBinding,
     CmsSourceBinding,
     CmsSourceBodyBinding,
     CmsSourceParamMap,
@@ -10,7 +9,6 @@ import { asQueryParamToken } from "./queryParams";
 
 const INTERPOLATION_PATTERN = /^\s*\{\{\s*([\s\S]*?)\s*\}\}\s*$/;
 const SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-const REPEAT_ALIAS_PATTERN = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
 
 export function asInterpolation(expression: string): string {
     return `{{ ${expression.trim()} }}`;
@@ -72,21 +70,6 @@ export function parseSourceBody(value: string | null | undefined): CmsSourceBody
         }
     }
     return Object.keys(body).length ? body : null;
-}
-
-export function asRepeat(binding: CmsRepeatBinding): string {
-    const path = binding.path.trim();
-    const alias = binding.alias?.trim();
-    return alias ? `${path} as ${alias}` : path;
-}
-
-export function parseRepeat(value: string): CmsRepeatBinding | null {
-    const match = REPEAT_ALIAS_PATTERN.exec(value);
-    if (match) {
-        return { path: match[1]!.trim(), alias: match[2]! };
-    }
-    const path = value.trim();
-    return path ? { path } : null;
 }
 
 function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string {

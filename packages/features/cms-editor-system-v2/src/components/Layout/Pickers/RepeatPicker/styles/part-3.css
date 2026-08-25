@@ -21,3 +21,45 @@
     padding: 24px 0;
     text-align: center;
 }
+
+.modes {
+    display: flex;
+    gap: 4px;
+    width: fit-content;
+    padding: 3px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+}
+
+.mode {
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.mode[aria-pressed="true"] {
+    background: var(--editor-v2-bg);
+    color: var(--editor-v2-text);
+    box-shadow: 0 1px 3px color-mix(in srgb, black 10%, transparent);
+}
+
+.range-description {
+    display: grid;
+    gap: 8px;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.range-description strong {
+    color: var(--editor-v2-text);
+    font-size: 14px;
+}

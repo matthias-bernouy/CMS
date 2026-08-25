@@ -2,7 +2,8 @@ import type { DataScope } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./styles/index";
 import { defaultRepeatAlias, repeatArrayOptions, visibleRepeatOptions, type RepeatOption } from "./repeatOptions";
-import { renderRepeatBinding, renderRepeatDetails } from "./repeatPickerDetails";
+import { renderRepeatBinding, renderRepeatDetails, renderRepeatOptions } from "./repeatPickerDetails";
+import { renderRepeatRangeBinding, renderRepeatRangeDetails } from "./repeatRangePicker";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
@@ -17,6 +18,7 @@ export const REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 export class RepeatPicker extends HTMLElement {
     private _options: RepeatOption[] = [];
     private _activeOption: RepeatOption | null = null;
+    private _mode: "array" | "range" = "array";
 
     constructor() {
         super();
@@ -27,6 +29,7 @@ export class RepeatPicker extends HTMLElement {
         this.closeButton.addEventListener("click", this.close);
         this.backdrop.addEventListener("click", this._onBackdropClick);
         this.search.addEventListener("input", this._onSearchInput);
+        this.modeButtons.forEach((button) => button.addEventListener("click", this._onModeClick));
         this.ownerDocument.addEventListener("keydown", this._onKeydown);
     }
 
@@ -34,19 +37,21 @@ export class RepeatPicker extends HTMLElement {
         this.closeButton.removeEventListener("click", this.close);
         this.backdrop.removeEventListener("click", this._onBackdropClick);
         this.search.removeEventListener("input", this._onSearchInput);
+        this.modeButtons.forEach((button) => button.removeEventListener("click", this._onModeClick));
         this.ownerDocument.removeEventListener("keydown", this._onKeydown);
     }
 
     open(scopes: DataScope[], contextLabel?: string): void {
         this._options = repeatArrayOptions(scopes);
         this._activeOption = null;
+        this._mode = this._options.length > 0 ? "array" : "range";
         this.subtitle.textContent = contextLabel
-            ? `Choose an array to repeat ${contextLabel}.`
-            : "Choose an array to repeat.";
+            ? `Choose how to repeat ${contextLabel}.`
+            : "Choose how to repeat this element.";
         this.search.value = "";
         this.backdrop.hidden = false;
         this._render();
-        this.search.focus();
+        (this._mode === "array" ? this.search : this.binding.querySelector<HTMLInputElement>(".count"))?.focus();
     }
 
     readonly close = (): void => {
@@ -54,53 +59,40 @@ export class RepeatPicker extends HTMLElement {
     };
 
     private _render(): void {
+        this.shadowRoot!.querySelector<HTMLElement>(".body")!.dataset.mode = this._mode;
+        this.search.hidden = this._mode === "range";
+        for (const button of this.modeButtons) {
+            button.ariaPressed = String(button.dataset.mode === this._mode);
+        }
+        if (this._mode === "range") {
+            this.arrays.replaceChildren();
+            renderRepeatRangeDetails(this.details);
+            renderRepeatRangeBinding(this.binding, (path, alias) => this._selectPath(path, alias));
+            return;
+        }
         this._renderOptions();
         renderRepeatDetails(this.details, this._activeOption);
-        renderRepeatBinding(this.binding, this._activeOption, (option, alias) => this._select(option, alias));
+        renderRepeatBinding(this.binding, this._activeOption, (option, alias) => this._selectPath(option.path, alias));
     }
 
     private _renderOptions(): void {
-        this.arrays.replaceChildren();
-        const options = this._visibleOptions();
-
-        if (options.length === 0) {
-            const empty = document.createElement("div");
-            empty.className = "empty";
-            empty.textContent = "No array fields available.";
-            this.arrays.append(empty);
-            this._activeOption = null;
-            return;
-        }
-
+        const options = visibleRepeatOptions(this._options, this.search.value);
         if (!this._activeOption || !options.includes(this._activeOption)) {
             this._activeOption = options[0] ?? null;
         }
-
-        for (const option of options) {
-            const button = document.createElement("button");
-            button.className = "array";
-            button.type = "button";
-            button.ariaSelected = String(option === this._activeOption);
-
-            const name = document.createElement("span");
-            name.className = "name";
-            name.textContent = option.path;
-
-            const scope = document.createElement("span");
-            scope.className = "scope";
-            scope.textContent = option.scopeLabel;
-
-            button.append(name, scope);
-            button.addEventListener("click", () => {
+        renderRepeatOptions(
+            this.arrays,
+            options,
+            this._activeOption,
+            (option) => {
                 this._activeOption = option;
                 this._render();
-            });
-            button.addEventListener("dblclick", () => this._select(option));
-            this.arrays.append(button);
-        }
+            },
+            (option) => this._selectPath(option.path, defaultRepeatAlias(option.path)),
+        );
     }
 
-    private _select(option: RepeatOption, alias = defaultRepeatAlias(option.path)): void {
+    private _selectPath(path: string, alias: string): void {
         const cleanAlias = alias.trim();
         if (!cleanAlias) {
             return;
@@ -111,16 +103,12 @@ export class RepeatPicker extends HTMLElement {
                 bubbles: true,
                 composed: true,
                 detail: {
-                    path: option.path,
+                    path,
                     alias: cleanAlias,
                 },
             }),
         );
         this.close();
-    }
-
-    private _visibleOptions(): RepeatOption[] {
-        return visibleRepeatOptions(this._options, this.search.value);
     }
 
     private readonly _onBackdropClick = (event: Event): void => {
@@ -132,6 +120,16 @@ export class RepeatPicker extends HTMLElement {
     private readonly _onSearchInput = (): void => {
         this._activeOption = null;
         this._render();
+    };
+
+    private readonly _onModeClick = (event: Event): void => {
+        const mode = (event.currentTarget as HTMLButtonElement).dataset.mode;
+        if (mode !== "array" && mode !== "range") {
+            return;
+        }
+        this._mode = mode;
+        this._render();
+        (mode === "array" ? this.search : this.binding.querySelector<HTMLInputElement>(".count"))?.focus();
     };
 
     private readonly _onKeydown = (event: KeyboardEvent): void => {
@@ -158,6 +156,10 @@ export class RepeatPicker extends HTMLElement {
 
     private get arrays(): HTMLElement {
         return this.shadowRoot!.querySelector(".arrays")!;
+    }
+
+    private get modeButtons(): HTMLButtonElement[] {
+        return Array.from(this.shadowRoot!.querySelectorAll<HTMLButtonElement>(".mode"));
     }
 
     private get details(): HTMLElement {

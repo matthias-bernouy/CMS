@@ -2,6 +2,7 @@ import { parseSourceStatusConditions } from "@bernouy/cms-content/editor";
 
 export type DependencyScope = {
     aliases: Set<string>;
+    independentAliases: Set<string>;
     sourceId?: string;
     sourceLocal: boolean;
 };
@@ -45,6 +46,9 @@ function containsBindingSyntax(value: string, scope: DependencyScope): boolean {
     for (const match of matches) {
         const expression = match[1]?.trim() ?? "";
         const head = /^[A-Za-z_$][\w$]*/.exec(expression)?.[0] ?? "";
+        if (scope.independentAliases.has(head)) {
+            continue;
+        }
         if (head && expression[head.length] !== ".") {
             return true;
         }

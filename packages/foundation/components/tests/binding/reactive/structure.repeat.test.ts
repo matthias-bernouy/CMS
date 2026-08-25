@@ -37,6 +37,38 @@ describe("CompiledTemplate — cms-repeat", () => {
         expect(Array.from(host.querySelectorAll("li")).map(text)).toEqual(["Grace / Guests", "Lin / Guests"]);
     });
 
+    test("renders fixed ranges with a zero-based named scope", () => {
+        const { host, region } = mount(`<ol><li cms-repeat="$range(3) as index">{{ title }} {{ index }}</li></ol>`, {
+            title: "Step",
+        });
+
+        expect(Array.from(host.querySelectorAll("li")).map(text)).toEqual(["Step 0", "Step 1", "Step 2"]);
+        region.update({ value: { title: "Stage" } });
+        expect(Array.from(host.querySelectorAll("li")).map(text)).toEqual(["Stage 0", "Stage 1", "Stage 2"]);
+    });
+
+    test("renders an empty fixed range and warns for invalid forms", () => {
+        const empty = mount(`<i cms-repeat="$range(0) as index">{{ index }}</i>`, {});
+        expect(empty.host.querySelectorAll("i")).toHaveLength(0);
+
+        const warn = console.warn;
+        const warnings: unknown[][] = [];
+        console.warn = (...args: unknown[]) => warnings.push(args);
+        try {
+            const invalid = mount(`<i cms-repeat="$range(2)"></i>`, {});
+            expect(invalid.host.querySelectorAll("i")).toHaveLength(0);
+        } finally {
+            console.warn = warn;
+        }
+        expect(String(warnings[0]?.[0] ?? "")).toContain("requires an alias");
+    });
+
+    test("evaluates root conditions against each fixed range index", () => {
+        const { host } = mount(`<i cms-repeat="$range(4) as index" cms-condition="index >= 2">{{ index }}</i>`, {});
+
+        expect(Array.from(host.querySelectorAll("i")).map(text)).toEqual(["2", "3"]);
+    });
+
     test("nested repeats restamp from each item scope", () => {
         const { host, region } = mount(
             `<section cms-repeat="groups as group">

@@ -69,18 +69,15 @@ export class RepeatSite implements LiveBindingSite {
     ) {}
     update(scope: Scope): void {
         this.unmount();
-        const result = lookup(scope, this.spec.path);
-        if (!Array.isArray(result.value)) {
-            if (result.found && result.value != null) {
-                console.warn(`cms-repeat="${this.spec.path}" expected an array, got`, result.value);
-            }
+        const values = this.values(scope);
+        if (!values) {
             return;
         }
         const parent = this.end.parentNode;
         if (!parent) {
             return;
         }
-        for (const item of result.value) {
+        for (const item of values) {
             const childScope: Scope = this.spec.name
                 ? { vars: { [this.spec.name]: item }, parent: scope }
                 : { value: item, parent: scope };
@@ -88,6 +85,23 @@ export class RepeatSite implements LiveBindingSite {
                 this.regions.push(this.template.mount(parent, childScope, this.end));
             }
         }
+    }
+    private values(scope: Scope): unknown[] | null {
+        if (this.spec.rangeError) {
+            console.warn(`Invalid cms-repeat="${this.spec.path}": ${this.spec.rangeError}`);
+            return null;
+        }
+        if (this.spec.rangeCount !== undefined) {
+            return Array.from({ length: this.spec.rangeCount }, (_, index) => index);
+        }
+        const result = lookup(scope, this.spec.path);
+        if (!Array.isArray(result.value)) {
+            if (result.found && result.value != null) {
+                console.warn(`cms-repeat="${this.spec.path}" expected an array, got`, result.value);
+            }
+            return null;
+        }
+        return result.value;
     }
     unmount(): void {
         for (const region of this.regions) {

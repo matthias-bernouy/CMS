@@ -27,6 +27,36 @@ import {
 } from "../../support/shellTestSupport";
 
 describe("Shell", () => {
+    test("repeat picker emits a fixed range and alias without data scopes", async () => {
+        installDom();
+
+        const { REPEAT_PICKER_SELECT_EVENT, RepeatPicker } = await import(
+            "../../../../src/components/Layout/Pickers/RepeatPicker/RepeatPicker"
+        );
+
+        const picker = new RepeatPicker();
+        document.body.append(picker);
+
+        let detail: { path: string; alias: string } | undefined;
+        picker.addEventListener(REPEAT_PICKER_SELECT_EVENT, (event) => {
+            detail = (event as CustomEvent<{ path: string; alias: string }>).detail;
+        });
+
+        picker.open([]);
+        expect(picker.shadowRoot!.querySelector<HTMLButtonElement>('[data-mode="range"]')!.ariaPressed).toBe("true");
+        const count = picker.shadowRoot!.querySelector<HTMLInputElement>(".count")!;
+        const alias = picker.shadowRoot!.querySelector<HTMLInputElement>(".alias")!;
+        const insert = picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!;
+        count.value = "";
+        insert.click();
+        expect(detail).toBeUndefined();
+        count.value = "3";
+        alias.value = "position";
+        insert.click();
+
+        expect(detail).toEqual({ path: "$range(3)", alias: "position" });
+    });
+
     test("repeat picker emits selected array and alias", async () => {
         installDom();
 

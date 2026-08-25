@@ -22,4 +22,14 @@ describe("parseRepeat", () => {
         expect(parseRepeat("  items  ")).toEqual({ path: "items" });
         expect(parseRepeat("  items   as   it  ")).toEqual({ path: "items", name: "it" });
     });
+
+    test("fixed range form", () => {
+        expect(parseRepeat("$range(5) as index")).toEqual({
+            path: "$range(5)",
+            name: "index",
+            rangeCount: 5,
+        });
+        expect(parseRepeat("$range(5)").rangeError).toContain("requires an alias");
+        expect(parseRepeat("$range(101) as index").rangeError).toContain("from 0 to 100");
+    });
 });

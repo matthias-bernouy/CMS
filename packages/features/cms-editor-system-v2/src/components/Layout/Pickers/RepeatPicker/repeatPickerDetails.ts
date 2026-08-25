@@ -1,6 +1,39 @@
 import type { DataField } from "@bernouy/cms-content/editor";
 import { defaultRepeatAlias, type RepeatOption } from "./repeatOptions";
 
+export function renderRepeatOptions(
+    container: HTMLElement,
+    options: RepeatOption[],
+    activeOption: RepeatOption | null,
+    onActivate: (option: RepeatOption) => void,
+    onSelect: (option: RepeatOption) => void,
+): void {
+    container.replaceChildren();
+    if (options.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "No array fields available.";
+        container.append(empty);
+        return;
+    }
+    for (const option of options) {
+        const button = document.createElement("button");
+        button.className = "array";
+        button.type = "button";
+        button.ariaSelected = String(option === activeOption);
+        const name = document.createElement("span");
+        name.className = "name";
+        name.textContent = option.path;
+        const scope = document.createElement("span");
+        scope.className = "scope";
+        scope.textContent = option.scopeLabel;
+        button.append(name, scope);
+        button.addEventListener("click", () => onActivate(option));
+        button.addEventListener("dblclick", () => onSelect(option));
+        container.append(button);
+    }
+}
+
 export function renderRepeatDetails(container: HTMLElement, option: RepeatOption | null): void {
     container.replaceChildren();
     if (!option) {
