@@ -2,6 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { hardenStoredHtml, wrapBindingCore } from "@bernouy/cms-content";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
+import { buildEditorFrameFoucCss } from "cms-control/core/editorSystemV2/frameFouc";
 import { networkInertHtml } from "cms-control/core/editorSystemV2/networkInertHtml";
 
 type EditorFrameType = "page" | "template";
@@ -28,6 +29,7 @@ export default async function getEditorFrame(req: Request, cms: ControlCms): Pro
     const basePath = controlBasePath(url.pathname);
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${document.content}</div>`;
     const composed = hardenStoredHtml(content);
+    const foucCss = await buildEditorFrameFoucCss(composed, cms.repository);
 
     return new Response(
         renderFrameDocument({
@@ -35,6 +37,7 @@ export default async function getEditorFrame(req: Request, cms: ControlCms): Pro
             title: document.name,
             description: document.description ?? "",
             composed,
+            foucCss,
         }),
         {
             headers: {
@@ -57,6 +60,7 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${page.content}</div>`;
     const composed = wrapBindingCore(content);
     const hardened = hardenStoredHtml(composed);
+    const foucCss = await buildEditorFrameFoucCss(hardened, cms.repository);
 
     return new Response(
         renderFrameDocument({
@@ -64,6 +68,7 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
             title: page.title,
             description: page.description,
             composed: hardened,
+            foucCss,
         }),
         {
             headers: {
@@ -85,6 +90,7 @@ function renderFrameDocument(input: {
     title: string;
     description: string;
     composed: string;
+    foucCss: string;
 }): string {
     const composed = withEditorBindingCore(networkInertHtml(input.composed));
     return `<!DOCTYPE html>
@@ -95,6 +101,7 @@ function renderFrameDocument(input: {
     <meta name="basePath" content="${escapeHtml(input.basePath)}">
     <title>${escapeHtml(input.title)}</title>
     <meta name="description" content="${escapeHtml(input.description)}">
+    ${input.foucCss ? `<style id="cms-bloc-fouc-shell">${input.foucCss}</style>` : ""}
     <link rel="stylesheet" href="${input.basePath}/.cms/style">
     <script defer src="${input.basePath}/api/editor/component.js"></script>
     <script defer src="${input.basePath}/api/editor/binding-core.js"></script>

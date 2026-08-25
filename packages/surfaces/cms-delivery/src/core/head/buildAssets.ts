@@ -1,4 +1,5 @@
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
+import { buildBlocFoucShellCss } from "@bernouy/cms-content";
 
 /**
  * Preload the stylesheet + every bloc/runtime script as early as possible.
@@ -48,14 +49,13 @@ export function buildBindingCloak(document: Document, head: HTMLElement, enabled
  * page so unrelated custom elements don't freeze the paint.
  */
 export function buildFoucShell(document: Document, head: HTMLElement, usedTags: string[]): void {
-    if (usedTags.length === 0) {
+    const css = buildBlocFoucShellCss(usedTags);
+    if (!css) {
         return;
     }
 
-    const htmlSel = usedTags.map((tag) => `html:has(${tag}:not(:defined))`).join(",");
-    const bodySel = usedTags.map((tag) => `html:has(${tag}:not(:defined)) body`).join(",");
     const style = document.createElement("style");
-    style.textContent = `${htmlSel}{background:#fff}${bodySel}{visibility:hidden}`;
+    style.textContent = css;
     head.appendChild(style);
 }
 

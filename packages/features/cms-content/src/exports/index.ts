@@ -110,6 +110,7 @@ export {
 export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/queries/pagesReferencing";
 export { createBlocUsageResolver } from "cms-content/core/blocs/resolveUsedBlocTags";
 export { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";
+export { buildBlocFoucShellCss } from "cms-content/core/blocs/buildBlocFoucShellCss";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/core/blocs/buildBlocEntries";
 export { collectCmsSourceBindings, type CmsSourceBindingReference } from "cms-content/core/editor/sourceBindings";
 export {
