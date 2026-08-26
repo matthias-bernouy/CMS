@@ -5,7 +5,6 @@ visible: true
 tags: ["portfolio", "photography", "home"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-hero layout="split" scale="display">
         <span slot="eyebrow">Studio photographique indépendant</span>
         <h1 slot="title">Portraits, lieux et commandes éditoriales.</h1>
@@ -22,7 +21,7 @@ tags: ["portfolio", "photography", "home"]
     </photo-section>
     <photo-section spacing="generous" divider="top">
         <h2 slot="heading">Projets récents</h2>
-        <basic-button slot="actions" action="link" href="/albums" appearance="ghost">Tous les albums</basic-button>
+        <basic-button slot="actions" appearance="ghost"><a href="/albums">Tous les albums</a></basic-button>
         <photo-album-list source-id="photo-albums" page-size="6" page-param="featured-page" sync-url="false" grid-min="sm" grid-max="none" grid-gap="lg">
             <basic-grid slot="loading" min="sm" max="none" gap="lg" data-album-grid="" cms-condition="$source.loading">
                 <basic-skeleton height="18rem" animation="wave" label="Chargement des albums"></basic-skeleton>
@@ -56,12 +55,11 @@ tags: ["portfolio", "photography", "home"]
             <h2>Une pratique documentaire, avec une équipe légère.</h2>
             <p>Portraits, reportages et photographie de lieux sont préparés avec les personnes concernées, puis réalisés avec le moins d’interruption possible.</p>
         </basic-stack>
-        <basic-button slot="actions" action="link" href="/a-propos" appearance="outlined">Méthode et prestations</basic-button>
+        <basic-button slot="actions" appearance="outlined"><a href="/a-propos">Méthode et prestations</a></basic-button>
     </photo-section>
     <photo-section layout="split" divider="top" spacing="compact">
         <span slot="heading">Contact</span>
         <h2>Un projet à photographier&#160;?</h2>
-        <basic-button slot="actions" action="link" href="/contact" appearance="filled">Écrire au studio</basic-button>
+        <basic-button slot="actions" appearance="filled"><a href="/contact">Écrire au studio</a></basic-button>
     </photo-section>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>

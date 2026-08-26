@@ -1,19 +1,14 @@
-<a part="skip" data-text="skip" href="#main-content"></a>
+<slot name="skip"></slot>
 <header part="header">
     <div part="shell">
-        <a part="brand" data-text="brand" data-href="brand"></a>
+        <slot name="brand"></slot>
         <nav part="navigation">
-            <a part="navigation-link" data-text="albums" data-href="albums"></a>
-            <a part="navigation-link" data-text="about" data-href="about"></a>
-            <a part="navigation-link" data-text="contact" data-href="contact"></a>
+            <slot name="navigation"></slot>
         </nav>
         <details part="menu">
             <summary part="menu-label" data-text="menu"></summary>
             <nav part="menu-navigation">
-                <a part="menu-link" data-text="home" data-href="home"></a>
-                <a part="menu-link" data-text="albums" data-href="albums"></a>
-                <a part="menu-link" data-text="about" data-href="about"></a>
-                <a part="menu-link" data-text="contact" data-href="contact"></a>
+                <slot name="mobile-navigation"></slot>
             </nav>
         </details>
     </div>

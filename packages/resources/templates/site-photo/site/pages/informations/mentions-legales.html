@@ -5,7 +5,6 @@ visible: true
 tags: ["legal", "information"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-hero layout="split" scale="page">
         <span slot="eyebrow">Informations</span>
         <h1 slot="title">Mentions légales</h1>
@@ -58,7 +57,7 @@ tags: ["legal", "information"]
             <basic-card id="image" appearance="ghost" density="spacious">
                 <h2 slot="title">05 · Droit à l’image</h2>
                 <p>Les personnes reconnaissables peuvent demander des informations sur le contexte de diffusion d’une photographie et, selon leur situation, en demander le retrait. Chaque demande est examinée au regard des autorisations obtenues et des règles applicables.</p>
-                <basic-button slot="actions" action="link" href="/contact#retrait-image" appearance="outlined">Faire une demande liée à une image</basic-button>
+                <basic-button slot="actions" appearance="outlined"><a href="/contact#retrait-image">Faire une demande liée à une image</a></basic-button>
             </basic-card>
             <basic-card id="responsabilite" appearance="ghost" density="spacious">
                 <h2 slot="title">06 · Responsabilité</h2>
@@ -71,9 +70,8 @@ tags: ["legal", "information"]
             <basic-alert tone="info" appearance="soft" role="note">
                 <h2 slot="title">Référence de préparation</h2>
                 <p>Ce modèle s’appuie sur la synthèse officielle des obligations publiée par le ministère de l’Économie. Il ne remplace pas un conseil adapté à votre statut et à votre activité.</p>
-                <basic-button slot="actions" action="link" href="https://www.economie.gouv.fr/entreprises/developper-son-entreprise/innover-et-numeriser-son-entreprise/mentions-sur-votre-site-internet-les-obligations-respecter" target="_blank" appearance="ghost">Consulter la ressource officielle</basic-button>
+                <basic-button slot="actions" appearance="ghost"><a href="https://www.economie.gouv.fr/entreprises/developper-son-entreprise/innover-et-numeriser-son-entreprise/mentions-sur-votre-site-internet-les-obligations-respecter" target="_blank" rel="noopener noreferrer">Consulter la ressource officielle</a></basic-button>
             </basic-alert>
         </basic-stack>
     </photo-section>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>

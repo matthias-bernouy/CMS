@@ -4,7 +4,8 @@ description: "A bold, fully editable website starter for a modern studio, agency
 visible: true
 tags: ["home", "studio", "starter"]
 ---
-<site-layout><basic-stack id="main-content" role="main" gap="none" slot="content">
+<site-layout>
+    <basic-stack id="main-content" role="main" gap="none" slot="content">
         <basic-hero tone="primary" appearance="soft" width="wide" media-position="end" align="start" density="spacious">
             <basic-badge slot="eyebrow" tone="primary" appearance="filled" size="md">Independent creative partner</basic-badge>
             <h1 slot="title">Ideas that move brands forward.</h1>
@@ -13,8 +14,8 @@ tags: ["home", "studio", "starter"]
                 <basic-card appearance="ghost" density="compact"><h3 slot="title">12 years</h3><p>Making ideas tangible</p></basic-card>
                 <basic-card appearance="ghost" density="compact"><h3 slot="title">48 launches</h3><p>Across nine countries</p></basic-card>
             </basic-grid>
-            <basic-button slot="actions" action="link" href="#work" size="xl">See selected work</basic-button>
-            <basic-button slot="actions" action="link" href="/contact" appearance="ghost" size="xl">Let’s talk →</basic-button>
+            <basic-button slot="actions" size="xl"><a href="#work">See selected work</a></basic-button>
+            <basic-button slot="actions" appearance="ghost" size="xl"><a href="/contact">Let’s talk →</a></basic-button>
             <img slot="media" src="/.cms/files/by-id/019fadc7-6f5b-7001-88e1-beaea806763a" width="1122" height="1402" loading="eager" decoding="async" fetchpriority="high" alt="Sculptural blue glass and a red lounge chair in a sunlit design studio">
         </basic-hero>
 
@@ -37,7 +38,7 @@ tags: ["home", "studio", "starter"]
                     <basic-stack gap="xl">
                         <basic-stack direction="row" gap="lg" align-items="end" justify-content="space-between" wrap="true">
                             <basic-stack gap="sm"><p>Selected work · 2024—2026</p><h2>Built to be noticed. Designed to last.</h2></basic-stack>
-                            <basic-button action="link" href="/contact" appearance="outlined">View all projects</basic-button>
+                            <basic-button appearance="outlined"><a href="/contact">View all projects</a></basic-button>
                         </basic-stack>
                         <basic-grid min="xl" max="none" packing="fit" gap="lg">
                             <basic-card appearance="outlined" elevation="elevated" density="compact" stretch="true">
@@ -45,14 +46,14 @@ tags: ["home", "studio", "starter"]
                                 <p slot="description">Place · Identity · Digital</p>
                                 <h3 slot="title">Casa Brava</h3>
                                 <p>A coastal retreat shaped around colour, climate, and a slower rhythm.</p>
-                                <basic-button slot="actions" action="link" href="/contact" appearance="ghost">Explore project →</basic-button>
+                                <basic-button slot="actions" appearance="ghost"><a href="/contact">Explore project →</a></basic-button>
                             </basic-card>
                             <basic-card appearance="outlined" elevation="elevated" density="compact" stretch="true">
                                 <img slot="media" src="/.cms/files/by-id/019fadc7-6f5b-7003-ab85-bf8c7315d09c" width="1448" height="1086" loading="lazy" decoding="async" alt="Blue side table and red lamp in an editorial materials composition">
                                 <p slot="description">Product · Art direction · Campaign</p>
                                 <h3 slot="title">Outline Objects</h3>
                                 <p>A playful launch system that makes everyday objects feel unexpected.</p>
-                                <basic-button slot="actions" action="link" href="/contact" appearance="ghost">Explore project →</basic-button>
+                                <basic-button slot="actions" appearance="ghost"><a href="/contact">Explore project →</a></basic-button>
                             </basic-card>
                         </basic-grid>
                     </basic-stack>
@@ -76,7 +77,7 @@ tags: ["home", "studio", "starter"]
                         <basic-badge tone="primary" appearance="soft">Small by design</basic-badge>
                         <blockquote>“The best work feels inevitable in hindsight — clear, characterful, and impossible to confuse with anything else.”</blockquote>
                         <p>Maya Chen · Creative director</p>
-                        <basic-button action="link" href="/about" appearance="outlined">Meet the studio</basic-button>
+                        <basic-button appearance="outlined"><a href="/about">Meet the studio</a></basic-button>
                     </basic-stack>
                 </basic-card>
             </basic-container>
@@ -85,7 +86,7 @@ tags: ["home", "studio", "starter"]
         <basic-cta tone="warning" appearance="filled" width="wide" align="center" density="spacious">
             <h2 slot="title">Have something brilliant in mind?</h2>
             <p slot="description">Tell us where you want to go. We’ll help make the way there unmistakable.</p>
-            <basic-button slot="actions" action="link" href="/contact" tone="neutral" appearance="filled" size="xl">Start a project →</basic-button>
+            <basic-button slot="actions" tone="neutral" appearance="filled" size="xl"><a href="/contact">Start a project →</a></basic-button>
         </basic-cta>
     </basic-stack>
 </site-layout>

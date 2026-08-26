@@ -4,7 +4,7 @@
         "name": "Morrow",
         "favicon": "",
         "visible": true,
-        "host": "",
+        "host": "https://example.com",
         "language": "en",
         "notFound": {
             "path": "/404"

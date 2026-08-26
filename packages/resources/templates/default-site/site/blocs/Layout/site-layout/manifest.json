@@ -1,6 +1,6 @@
 {
     "default-tag": "site-layout",
-    "bloc": "./Bloc.ts",
+    "composition": "./template.html",
     "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {

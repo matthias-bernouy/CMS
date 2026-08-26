@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
 
@@ -20,12 +20,12 @@ describe("default-site template contract", () => {
         expect(system.site).toMatchObject({
             name: "Morrow",
             visible: true,
-            host: "",
+            host: "https://example.com",
             language: "en",
             notFound: { path: "/404" },
         });
         expect(system).not.toHaveProperty("theme");
-        expect(JSON.stringify(system)).not.toMatch(/token|secret|password|https?:\/\//iu);
+        expect(JSON.stringify(system)).not.toMatch(/token|secret|password/iu);
     });
 
     test("imports only the existing Basic Blocs release", async () => {
@@ -47,6 +47,7 @@ describe("default-site template contract", () => {
                 artifact.type === "bloc" && artifact.bloc.editorJS ? [artifact.bloc.tag] : [],
             ) ?? [],
         );
+        editableTags.add("site-layout");
 
         for (const body of pageBodies) {
             const tags = [...body.matchAll(/<([a-z][a-z0-9-]*)(?:\s|>)/gu)].map((match) => match[1]!);
@@ -59,13 +60,25 @@ describe("default-site template contract", () => {
     test("keeps a complete, accessible page shell", () => {
         for (const body of pageBodies) {
             expect(body).toStartWith("---\n");
-            expect(body).toContain("<header");
+            expect(body).toContain("<site-layout>");
             expect(body).toContain('role="main"');
             expect(body.match(/<h1\b/gu)).toHaveLength(1);
-            expect(body).toContain("<basic-navbar");
             expect(body).toContain("<basic-hero");
-            expect(body).toContain("<basic-site-footer");
         }
+    });
+
+    test("keeps the UI-authored shared shell as a server-rendered composition", () => {
+        const layoutRoot = join(DEFAULT_SITE_TEMPLATE_SITE_ROOT, "blocs/Layout/site-layout");
+        const template = readFileSync(join(layoutRoot, "template.html"), "utf8");
+        const manifest = JSON.parse(readFileSync(join(layoutRoot, "manifest.json"), "utf8"));
+
+        expect(existsSync(join(layoutRoot, "builder.json"))).toBeTrue();
+        expect(existsSync(join(layoutRoot, "Bloc.ts"))).toBeFalse();
+        expect(manifest).toMatchObject({ composition: "./template.html", editor: "./BlocEditor.ts" });
+        expect(template.match(/<a\b[^>]+href=/gu)).toHaveLength(8);
+        expect(template).toContain('<slot name="content"></slot>');
+        expect(template).not.toContain('slot name="header-');
+        expect(template).not.toContain('slot name="footer-');
     });
 
     test("publishes the configured not-found page without indexing it", () => {

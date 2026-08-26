@@ -5,9 +5,8 @@ visible: true
 tags: ["portfolio", "photography", "album-detail"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-section spacing="compact">
-        <basic-button action="link" href="/albums" appearance="ghost">Retour aux albums</basic-button>
+        <basic-button appearance="ghost"><a href="/albums">Retour aux albums</a></basic-button>
     </photo-section>
     <photo-section spacing="compact">
         <photo-album-gallery source-id="photo-albums" slug-param="slug" grid-min="sm" grid-max="none" grid-gap="lg">
@@ -18,7 +17,7 @@ tags: ["portfolio", "photography", "album-detail"]
             <basic-alert slot="error" tone="danger" appearance="soft" role="alert" cms-condition="$source.error">
                 <h2 slot="title">Album introuvable.</h2>
                 <p>Son adresse a peut-être changé ou il n’est plus publié.</p>
-                <basic-button slot="actions" action="link" href="/albums" appearance="outlined">Voir tous les albums</basic-button>
+                <basic-button slot="actions" appearance="outlined"><a href="/albums">Voir tous les albums</a></basic-button>
             </basic-alert>
             <basic-stack slot="album" gap="xl" cms-condition="$source.loaded">
                 <photo-hero layout="split" scale="page">
@@ -43,9 +42,8 @@ tags: ["portfolio", "photography", "album-detail"]
                         </basic-stack>
                     </photo-figure>
                 </basic-grid>
-                <basic-button action="link" href="/albums" appearance="outlined">Tous les albums</basic-button>
+                <basic-button appearance="outlined"><a href="/albums">Tous les albums</a></basic-button>
             </basic-stack>
         </photo-album-gallery>
     </photo-section>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>

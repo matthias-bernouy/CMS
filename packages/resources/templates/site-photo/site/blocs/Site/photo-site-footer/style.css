@@ -23,7 +23,7 @@
     gap: 3rem;
 }
 
-[part="brand"] {
+::slotted(a[slot="brand"]) {
     color: inherit;
     font-size: 1.05rem;
     font-weight: 700;
@@ -50,18 +50,18 @@
     gap: 0.45rem;
 }
 
-[part="main-link"],
-[part="legal-link"] {
+::slotted(a[slot="main-navigation"]),
+::slotted(a[slot="legal-navigation"]) {
     width: fit-content;
     color: inherit;
     font-size: 0.82rem;
     text-decoration: none;
 }
 
-[part="main-link"]:hover,
-[part="main-link"]:focus-visible,
-[part="legal-link"]:hover,
-[part="legal-link"]:focus-visible {
+::slotted(a[slot="main-navigation"]:hover),
+::slotted(a[slot="main-navigation"]:focus-visible),
+::slotted(a[slot="legal-navigation"]:hover),
+::slotted(a[slot="legal-navigation"]:focus-visible) {
     text-decoration: underline;
     text-underline-offset: 0.25em;
 }
@@ -84,12 +84,12 @@
     gap: 1rem;
 }
 
-[part="legal-link"] {
+::slotted(a[slot="legal-navigation"]) {
     color: inherit;
     font-size: inherit;
 }
 
-a:focus-visible {
+::slotted(a:focus-visible) {
     outline: 2px solid currentcolor;
     outline-offset: 4px;
 }

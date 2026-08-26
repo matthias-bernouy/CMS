@@ -5,7 +5,6 @@ visible: true
 tags: ["privacy", "legal", "information"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-hero layout="split" scale="page">
         <span slot="eyebrow">Informations</span>
         <h1 slot="title">Politique de confidentialité</h1>
@@ -75,7 +74,7 @@ tags: ["privacy", "legal", "information"]
                 <h2 slot="title">05 · Vos droits</h2>
                 <p>Selon le traitement et sa base juridique, vous pouvez demander l’accès, la rectification, l’effacement ou la portabilité de vos données, la limitation du traitement, ou vous y opposer. Lorsqu’un traitement repose sur votre consentement, vous pouvez le retirer à tout moment pour l’avenir.</p>
                 <p>Adressez votre demande à <span data-template-placeholder="">[À compléter : e-mail vie privée]</span>. Une preuve d’identité ne sera demandée que si elle est nécessaire pour éviter une divulgation à la mauvaise personne.</p>
-                <p>Vous pouvez également introduire une réclamation auprès de la <a href="https://www.cnil.fr/" rel="noreferrer" target="_blank">CNIL</a>.</p>
+                <p>Vous pouvez également introduire une réclamation auprès de la <a href="https://www.cnil.fr/" rel="noopener noreferrer" target="_blank">CNIL</a>.</p>
             </basic-card>
             <basic-card id="securite" appearance="ghost" density="spacious">
                 <h2 slot="title">06 · Sécurité et mise à jour</h2>
@@ -84,9 +83,8 @@ tags: ["privacy", "legal", "information"]
             <basic-alert tone="info" appearance="soft" role="note">
                 <h2 slot="title">Principe de transparence</h2>
                 <p>L’information doit rester concise, compréhensible et facilement accessible. Les exemples ci-dessus doivent donc être simplifiés ou complétés selon le fonctionnement réel du site.</p>
-                <basic-button slot="actions" action="link" href="https://www.cnil.fr/fr/respecter-les-droits-des-personnes" target="_blank" appearance="ghost">Consulter les recommandations de la CNIL</basic-button>
+                <basic-button slot="actions" appearance="ghost"><a href="https://www.cnil.fr/fr/respecter-les-droits-des-personnes" target="_blank" rel="noopener noreferrer">Consulter les recommandations de la CNIL</a></basic-button>
             </basic-alert>
         </basic-stack>
     </photo-section>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>

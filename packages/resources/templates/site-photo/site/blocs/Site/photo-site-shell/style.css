@@ -11,3 +11,8 @@
     display: block;
     flex: 1;
 }
+
+::slotted([slot="main-target"]) {
+    display: block;
+    height: 0;
+}

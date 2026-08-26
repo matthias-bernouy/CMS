@@ -5,7 +5,6 @@ visible: true
 tags: ["cookies", "privacy", "legal"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-hero layout="split" scale="page">
         <span slot="eyebrow">Informations</span>
         <h1 slot="title">Cookies et traceurs</h1>
@@ -57,9 +56,8 @@ tags: ["cookies", "privacy", "legal"]
             <basic-alert tone="info" appearance="soft" role="note">
                 <h2 slot="title">Référence de préparation</h2>
                 <p>La CNIL détaille les règles applicables aux cookies et autres traceurs, notamment la liberté du choix et la facilité du refus.</p>
-                <basic-button slot="actions" action="link" href="https://www.cnil.fr/fr/cookies-et-autres-traceurs/que-dit-la-loi" target="_blank" appearance="ghost">Consulter la ressource officielle</basic-button>
+                <basic-button slot="actions" appearance="ghost"><a href="https://www.cnil.fr/fr/cookies-et-autres-traceurs/que-dit-la-loi" target="_blank" rel="noopener noreferrer">Consulter la ressource officielle</a></basic-button>
             </basic-alert>
         </basic-stack>
     </photo-section>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>

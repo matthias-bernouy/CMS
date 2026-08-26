@@ -18,6 +18,13 @@ const REQUIRED_PAGES = [
 const publishMode = process.argv.includes("--publish");
 const errors: string[] = [];
 const blockers: string[] = [];
+const shell = await Bun.file(resolve(SITE, "blocs/Site/photo-site-shell/template.html")).text();
+
+for (const marker of ["<photo-site-header", "<photo-site-footer", "<slot></slot>"]) {
+    if (!shell.includes(marker)) {
+        errors.push(`photo-site-shell: missing shared shell marker ${marker}`);
+    }
+}
 
 const pageNames = (await readdir(PAGES, { recursive: true })).filter((name) => name.endsWith(".html")).sort();
 for (const name of REQUIRED_PAGES) {
@@ -32,11 +39,7 @@ for (const name of pageNames) {
     if (!body.startsWith("---\n") || !body.includes("\n---\n")) {
         errors.push(`${name}: missing frontmatter`);
     }
-    if (
-        !body.includes("<photo-site-shell>") ||
-        !body.includes('<photo-site-header slot="header">') ||
-        !body.includes('<photo-site-footer slot="footer">')
-    ) {
+    if (!body.includes("<photo-site-shell>")) {
         errors.push(`${name}: shared site shell is incomplete`);
     }
     if (/\s(?:class|style)=/u.test(body)) {

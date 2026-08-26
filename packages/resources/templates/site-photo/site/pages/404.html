@@ -5,15 +5,13 @@ visible: false
 tags: ["system", "404"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-hero layout="stacked" scale="display">
         <span slot="eyebrow">Erreur 404</span>
         <h1 slot="title">Cette page n’existe pas.</h1>
         <p slot="summary">Le lien est peut-être ancien, ou l’adresse a été modifiée.</p>
         <basic-stack slot="actions" direction="row" gap="sm" wrap="true">
-            <basic-button action="link" href="/" appearance="filled">Revenir à l’accueil</basic-button>
-            <basic-button action="link" href="/albums" appearance="outlined">Voir les albums</basic-button>
+            <basic-button appearance="filled"><a href="/">Revenir à l’accueil</a></basic-button>
+            <basic-button appearance="outlined"><a href="/albums">Voir les albums</a></basic-button>
         </basic-stack>
     </photo-hero>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>

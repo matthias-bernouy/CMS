@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "photo-site-shell-frame",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "Photo site shell frame",
+        "description": "Internal presentation component for the photo site shell."
+    }
+}

@@ -74,9 +74,7 @@ tags: [repository, integrations, catalog]
                                         {{ option.label }}
                                     </basic-option>
                                 </basic-select>
-                                <basic-button action="link" href="/integrations" appearance="ghost">
-                                    Clear filters
-                                </basic-button>
+                                <basic-button appearance="ghost"><a href="/integrations">Clear filters</a></basic-button>
                             </basic-grid>
                         </basic-card>
                     </form>
@@ -127,9 +125,7 @@ tags: [repository, integrations, catalog]
                                     {{ artifact.label }} <strong>{{ artifact.count }}</strong>
                                 </li>
                             </ul>
-                            <basic-button slot="actions" action="link" href="{{ integration.detailsUrl }}" appearance="outlined">
-                                View integration
-                            </basic-button>
+                            <basic-button slot="actions" appearance="outlined"><a href="{{ integration.detailsUrl }}">View integration</a></basic-button>
                         </basic-card>
                     </basic-grid>
                 </basic-stack>
@@ -188,10 +184,8 @@ tags: [repository, integrations, catalog]
                                     <div><strong>Verification</strong><p>{{ item.verificationOutcome }}</p></div>
                                 </basic-grid>
                                 <basic-stack slot="actions" direction="row" gap="sm" wrap="true">
-                                    <basic-button action="link" href="{{ item.detailsUrl }}" appearance="outlined">
-                                        Inspect release
-                                    </basic-button>
-                                    <basic-button action="link" href="{{ item.downloadUrl }}">Download package</basic-button>
+                                    <basic-button appearance="outlined"><a href="{{ item.detailsUrl }}">Inspect release</a></basic-button>
+                                    <basic-button><a href="{{ item.downloadUrl }}">Download package</a></basic-button>
                                 </basic-stack>
                             </basic-card>
                         </basic-stack>
@@ -204,14 +198,8 @@ tags: [repository, integrations, catalog]
                             <p>Package size: {{ catalog.featuredVersion.packageSize }}</p>
                             <p>Compatibility: {{ catalog.featuredVersion.compatibilityLabel }}</p>
                             <basic-stack slot="actions" direction="row" gap="sm" wrap="true">
-                                <basic-button
-                                    action="link"
-                                    href="{{ catalog.featuredVersion.detailsUrl }}"
-                                    appearance="outlined"
-                                >Inspect release</basic-button>
-                                <basic-button action="link" href="{{ catalog.featuredVersion.downloadUrl }}">
-                                    Download package
-                                </basic-button>
+                                <basic-button appearance="outlined"><a href="{{ catalog.featuredVersion.detailsUrl }}">Inspect release</a></basic-button>
+                                <basic-button><a href="{{ catalog.featuredVersion.downloadUrl }}">Download package</a></basic-button>
                             </basic-stack>
                         </basic-card>
                     </section>
@@ -245,9 +233,7 @@ tags: [repository, integrations, catalog]
                             <h2 slot="title">Package</h2>
                             <p>{{ catalog.packageSize }}</p>
                             <repository-prose><code>{{ catalog.packageDigest }}</code></repository-prose>
-                            <basic-button slot="actions" action="link" href="{{ catalog.downloadUrl }}">
-                                Download package
-                            </basic-button>
+                            <basic-button slot="actions"><a href="{{ catalog.downloadUrl }}">Download package</a></basic-button>
                         </basic-card>
                         <basic-card appearance="outlined" density="compact" cms-condition="catalog.release">
                             <h2 slot="title">Admission</h2>
@@ -353,14 +339,8 @@ tags: [repository, integrations, catalog]
                             {{ catalog.releaseNotesHtml | innerHTML }}
                         </repository-prose>
                         <p cms-condition="!catalog.releaseNotesHtml">No release notes are available for this version.</p>
-                        <basic-button
-                            action="link"
-                            href="{{ catalog.releaseNotesDownloadUrl }}"
-                            appearance="ghost"
-                            size="sm"
-                            cms-condition="catalog.releaseNotesDownloadUrl"
-                        >
-                            Download raw release notes
+                        <basic-button appearance="ghost" size="sm" cms-condition="catalog.releaseNotesDownloadUrl">
+                            <a href="{{ catalog.releaseNotesDownloadUrl }}">Download raw release notes</a>
                         </basic-button>
                     </section>
                     </basic-stack>

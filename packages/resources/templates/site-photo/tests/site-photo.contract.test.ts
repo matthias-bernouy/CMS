@@ -45,10 +45,12 @@ describe("site-photo template contract", () => {
         for (const body of pageBodies) {
             expect(body).toStartWith("---\n");
             expect(body).toContain("<photo-site-shell>");
-            expect(body).toContain('<photo-site-header slot="header">');
-            expect(body).toContain('<photo-site-footer slot="footer">');
             expect(body).not.toMatch(/\s(?:class|style)=/u);
         }
+        const shell = readSiteFile("blocs/Site/photo-site-shell/template.html");
+        expect(shell).toContain("<photo-site-header");
+        expect(shell).toContain("<photo-site-footer");
+        expect(shell).toContain("<slot></slot>");
     });
 
     test("imports compact, existing official integration releases", async () => {
@@ -81,8 +83,15 @@ describe("site-photo template contract", () => {
                 const blocRoot = join(root, tag);
                 const manifest = JSON.parse(readFileSync(join(blocRoot, "manifest.json"), "utf8"));
                 expect(manifest["default-tag"]).toBe(tag);
-                expect(manifest).toMatchObject({ bloc: "./Bloc.ts", editor: "./BlocEditor.ts" });
-                expect(readFileSync(join(blocRoot, "Bloc.ts"), "utf8")).not.toContain("customElements.define");
+                if (tag === "photo-site-shell") {
+                    expect(manifest).toMatchObject({ composition: "./template.html", editor: "./BlocEditor.ts" });
+                    expect(existsSync(join(blocRoot, "Bloc.ts"))).toBeFalse();
+                    const controller = JSON.parse(readFileSync(join(blocRoot, "controller/manifest.json"), "utf8"));
+                    expect(controller).toMatchObject({ internal: true, bloc: "./Bloc.ts" });
+                } else {
+                    expect(manifest).toMatchObject({ bloc: "./Bloc.ts", editor: "./BlocEditor.ts" });
+                    expect(readFileSync(join(blocRoot, "Bloc.ts"), "utf8")).not.toContain("customElements.define");
+                }
                 expect(readFileSync(join(blocRoot, "BlocEditor.ts"), "utf8")).not.toContain("registerEditor");
                 expect(readFileSync(join(blocRoot, "template.html"), "utf8")).not.toMatch(/\sclass=/u);
             }

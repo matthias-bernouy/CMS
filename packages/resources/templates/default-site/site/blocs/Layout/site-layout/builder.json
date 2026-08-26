@@ -25,7 +25,9 @@
         ],
         "structure": [
             {
-                "attributes": {},
+                "attributes": {
+                    "density": "regular"
+                },
                 "children": [
                     {
                         "attributes": {
@@ -182,7 +184,7 @@
             }
         ]
     },
-    "draftRevision": 10,
+    "draftRevision": 12,
     "id": "01a02f7f-7d24-7000-86a9-7738ca53beb1",
     "lifecycle": "active",
     "ownership": {
@@ -214,7 +216,9 @@
         ],
         "structure": [
             {
-                "attributes": {},
+                "attributes": {
+                    "density": "regular"
+                },
                 "children": [
                     {
                         "attributes": {
@@ -371,8 +375,8 @@
             }
         ]
     },
-    "publishedRevision": 8,
+    "publishedRevision": 12,
     "schema": "cms.site-bloc.v1",
     "tag": "site-layout",
-    "updatedAt": "2026-08-23T17:35:11.526Z"
+    "updatedAt": "2026-08-26T12:22:20.985Z"
 }

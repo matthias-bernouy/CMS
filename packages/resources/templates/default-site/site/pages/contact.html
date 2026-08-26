@@ -4,13 +4,14 @@ description: "Start a project with Morrow or simply say hello."
 visible: true
 tags: ["contact", "studio"]
 ---
-<site-layout><basic-stack id="main-content" role="main" gap="none" slot="content">
+<site-layout>
+    <basic-stack id="main-content" role="main" gap="none" slot="content">
         <basic-hero tone="neutral" appearance="filled" width="wide" media-position="end" align="start" density="spacious">
             <basic-badge slot="eyebrow" tone="secondary" appearance="filled" dot="true">Now booking</basic-badge>
             <h1 slot="title">Let’s make something unmistakable.</h1>
             <p slot="description">Share the ambition, the challenge, and where you are today. A rough brief is more than enough to begin.</p>
             <p>We usually reply within two working days.</p>
-            <basic-button slot="actions" action="link" href="mailto:hello@morrow.studio" tone="primary" appearance="filled" size="xl">hello@morrow.studio</basic-button>
+            <basic-button slot="actions" tone="primary" appearance="filled" size="xl"><a href="mailto:hello@morrow.studio">hello@morrow.studio</a></basic-button>
         </basic-hero>
 
         <basic-feature-section tone="neutral" appearance="plain" width="content" item-width="sm" align="start" density="regular">
@@ -43,7 +44,7 @@ tags: ["contact", "studio"]
             <p slot="eyebrow">Paris · Europe · Worldwide</p>
             <h2 slot="title">Close collaboration, wherever the work takes us.</h2>
             <p slot="description">We work in English and French, remotely and on site, with partners chosen around each project.</p>
-            <basic-button slot="actions" action="link" href="/about" appearance="outlined">Meet the studio</basic-button>
+            <basic-button slot="actions" appearance="outlined"><a href="/about">Meet the studio</a></basic-button>
             <img slot="media" src="/.cms/files/by-id/019fadc7-6f5b-7002-b474-1dd916562b7b" width="1448" height="1086" loading="lazy" decoding="async" alt="Terracotta architecture and a cobalt stair overlooking the sea">
         </basic-media-section>
     </basic-stack>

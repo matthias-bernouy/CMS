@@ -5,7 +5,6 @@ visible: true
 tags: ["studio", "about", "photography"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-hero layout="stacked" scale="display">
         <span slot="eyebrow">À propos</span>
         <h1 slot="title">Stillroom est un studio photographique indépendant basé à Brest.</h1>
@@ -54,9 +53,8 @@ tags: ["studio", "about", "photography"]
             </basic-card>
             <basic-card appearance="ghost" density="compact">
                 <h3 slot="title">Demandes</h3>
-                <basic-button action="link" href="/contact" appearance="ghost">Contacter le studio</basic-button>
+                <basic-button appearance="ghost"><a href="/contact">Contacter le studio</a></basic-button>
             </basic-card>
         </basic-grid>
     </photo-section>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>

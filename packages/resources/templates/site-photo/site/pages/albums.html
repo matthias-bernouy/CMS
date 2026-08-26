@@ -5,7 +5,6 @@ visible: true
 tags: ["portfolio", "photography", "albums"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-hero layout="split" scale="page">
         <span slot="eyebrow">Les séries</span>
         <h1 slot="title">Albums</h1>
@@ -43,5 +42,4 @@ tags: ["portfolio", "photography", "albums"]
             <basic-pagination slot="pagination" page="1" page-size="12" total="{{ data.total }}" cms-condition="$source.loaded && data.total > data.limit"></basic-pagination>
         </photo-album-list>
     </photo-section>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>

@@ -34,11 +34,22 @@ const EDITABLE_TAGS = new Set([
     "nav",
     "p",
     "section",
+    "site-layout",
     "span",
     "ul",
 ]);
 const errors: string[] = [];
 const pageContents: string[] = [];
+const shell = await Bun.file(resolve(SITE, "blocs/Layout/site-layout/template.html")).text();
+
+for (const marker of ["<basic-navbar", "<basic-site-footer", '<slot name="content"']) {
+    if (!shell.includes(marker)) {
+        errors.push(`site-layout: missing shared shell marker ${marker}`);
+    }
+}
+if ((shell.match(/<a\b[^>]+href=/gu)?.length ?? 0) !== 8) {
+    errors.push("site-layout: expected eight native header and footer links");
+}
 
 const pageNames = (await readdir(PAGES)).filter((name) => name.endsWith(".html")).sort();
 if (JSON.stringify(pageNames) !== JSON.stringify(REQUIRED_PAGES)) {
@@ -51,7 +62,7 @@ for (const name of pageNames) {
     if (!body.startsWith("---\n") || !body.includes("\n---\n")) {
         errors.push(`${name}: missing frontmatter`);
     }
-    for (const marker of ["<header", 'role="main"', "<basic-navbar", "<basic-hero", "<basic-site-footer", "<h1"]) {
+    for (const marker of ["<site-layout", 'role="main"', "<basic-hero", "<h1"]) {
         if (!body.includes(marker)) {
             errors.push(`${name}: missing page-shell marker ${marker}`);
         }
@@ -99,8 +110,11 @@ const system = await Bun.file(resolve(SITE, "system.json")).json();
 if (system.site?.notFound?.path !== "/404" || !system.site?.language) {
     errors.push("system.json: language and /404 not-found configuration are required");
 }
-if (/token|secret|password|https?:\/\//iu.test(JSON.stringify(system))) {
-    errors.push("system.json: deployment-specific values are not allowed");
+if (system.site?.host !== "https://example.com") {
+    errors.push("system.json: use the documented https://example.com canonical placeholder");
+}
+if (/token|secret|password/iu.test(JSON.stringify(system))) {
+    errors.push("system.json: credentials and secrets are not allowed");
 }
 
 if (errors.length > 0) {

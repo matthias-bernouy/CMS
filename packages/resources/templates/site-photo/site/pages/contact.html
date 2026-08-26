@@ -5,13 +5,12 @@ visible: true
 tags: ["contact", "studio", "photography"]
 ---
 <photo-site-shell>
-    <photo-site-header slot="header"></photo-site-header>
     <photo-hero layout="split" scale="display">
         <span slot="eyebrow">Contact</span>
         <h1 slot="title">Parlez-nous de votre projet.</h1>
         <p slot="summary">Indiquez le lieu, les dates envisagées et l’usage prévu des images. Le studio répond habituellement sous deux jours ouvrés.</p>
         <basic-stack slot="actions" gap="sm" align-items="start">
-            <basic-button action="link" href="mailto:bonjour@stillroom.example" appearance="filled">bonjour@stillroom.example</basic-button>
+            <basic-button appearance="filled"><a href="mailto:bonjour@stillroom.example">bonjour@stillroom.example</a></basic-button>
             <p data-template-placeholder="">Adresse de démonstration — à remplacer avant publication.</p>
         </basic-stack>
     </photo-hero>
@@ -21,12 +20,12 @@ tags: ["contact", "studio", "photography"]
             <basic-card id="retrait-image" appearance="outlined" stretch="true">
                 <h3 slot="title">Droit à l’image</h3>
                 <p>Pour une information, un crédit ou un retrait, indiquez l’adresse de la page et la photographie concernée.</p>
-                <basic-button slot="actions" action="link" href="mailto:privacy@stillroom.example" appearance="ghost">privacy@stillroom.example</basic-button>
+                <basic-button slot="actions" appearance="ghost"><a href="mailto:privacy@stillroom.example">privacy@stillroom.example</a></basic-button>
             </basic-card>
             <basic-card id="credits" appearance="outlined" stretch="true">
                 <h3 slot="title">Tirages et licences</h3>
                 <p>Précisez le titre de l’album et l’usage envisagé.</p>
-                <basic-button slot="actions" action="link" href="mailto:studio@stillroom.example" appearance="ghost">studio@stillroom.example</basic-button>
+                <basic-button slot="actions" appearance="ghost"><a href="mailto:studio@stillroom.example">studio@stillroom.example</a></basic-button>
             </basic-card>
             <basic-card appearance="outlined" stretch="true">
                 <h3 slot="title">Adresse</h3>
@@ -34,5 +33,4 @@ tags: ["contact", "studio", "photography"]
             </basic-card>
         </basic-grid>
     </photo-section>
-    <photo-site-footer slot="footer"></photo-site-footer>
 </photo-site-shell>
