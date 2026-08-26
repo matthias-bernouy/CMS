@@ -1,0 +1,1 @@
+{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-official-package-audit","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"commerce-stripe-payments","packageDigest":"2673c0da7e54b7940435864db618c7172110a44f4bb5f8223ed658bcd5f59b63","version":"1.0.0"}}

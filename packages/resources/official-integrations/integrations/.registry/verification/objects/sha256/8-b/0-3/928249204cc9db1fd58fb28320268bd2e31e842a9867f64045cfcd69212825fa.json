@@ -1,1 +1,0 @@
-{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-official-package-audit","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"basic-blocs","packageDigest":"18785354aff81e814654612e6043cff367f1ac581d63911db638ee92c7da85f2","version":"1.0.0"}}
