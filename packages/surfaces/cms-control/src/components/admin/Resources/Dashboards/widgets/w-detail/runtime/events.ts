@@ -54,7 +54,7 @@ export class DetailEvents {
         if (target?.closest("[data-back]")) {
             emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
         }
-        const action = findActionTarget(event);
+        const action = findEventTarget(event, "[data-action]");
         const widget = this.isBound() ? parseJson<DetailWidget>(this.host.dataset.configJson ?? "") : null;
         const data = this.readData();
         if (action?.dataset.action && !this.fields.validate()) {
@@ -96,7 +96,7 @@ export class DetailEvents {
     };
 
     private onInput = (event: Event): void => {
-        const control = (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]");
+        const control = findEventTarget(event, "[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
         if (control && field?.input === "table") {
             updateDerivedTables(field.id, this.fields);
@@ -114,7 +114,7 @@ export class DetailEvents {
     };
 
     private onChange = (event: Event): void => {
-        const control = (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]");
+        const control = findEventTarget(event, "[data-field-control]");
         if (!control) {
             return;
         }
@@ -126,7 +126,7 @@ export class DetailEvents {
 
     private onMediaAction = (event: CustomEvent<DashboardMediaActionDetail>): void => {
         event.stopPropagation();
-        const control = (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]");
+        const control = findEventTarget(event, "[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
         if (!field) {
             return;
@@ -170,8 +170,8 @@ export class DetailEvents {
     }
 }
 
-function findActionTarget(event: Event): HTMLElement | undefined {
+function findEventTarget(event: Event, selector: string): HTMLElement | undefined {
     return event
         .composedPath()
-        .find((target): target is HTMLElement => target instanceof HTMLElement && Boolean(target.dataset.action));
+        .find((target): target is HTMLElement => target instanceof HTMLElement && target.matches(selector));
 }

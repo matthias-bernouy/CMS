@@ -76,8 +76,12 @@ describe("dashboard detail widget actions", () => {
         const inputEvents: string[] = [];
         detail.shadowRoot!.addEventListener("input", (event) => {
             inputEvents.push(
-                (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]")?.dataset.fieldControl ??
-                    "",
+                event
+                    .composedPath()
+                    .find(
+                        (target): target is HTMLElement =>
+                            target instanceof HTMLElement && target.hasAttribute("data-field-control"),
+                    )?.dataset.fieldControl ?? "",
             );
         });
         const postalCode = detail.shadowRoot!.querySelector<HTMLElement & { value: string; shadowRoot: ShadowRoot }>(
