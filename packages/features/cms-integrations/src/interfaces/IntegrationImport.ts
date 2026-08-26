@@ -139,7 +139,10 @@ export type IntegrationBlocArtifact = {
     name: string;
     group?: string;
     description?: string;
-    viewJS: string;
+    internal?: boolean;
+    viewPath?: string;
+    viewJS?: string;
+    compositionHTML?: string;
     editorJS?: string | null;
     source?: Record<string, string>;
 };

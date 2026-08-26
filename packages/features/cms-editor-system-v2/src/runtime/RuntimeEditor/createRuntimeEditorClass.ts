@@ -82,16 +82,10 @@ export function createRuntimeEditorClass(EditorClass: EditorConstructor): Runtim
         }
 
         override getContentSlots(): ContentSlot[] {
-            if (isCompositionRuntimeElement(this.target)) {
-                return [];
-            }
             return [...super.getContentSlots(), ...this._addedContentSlots];
         }
 
         override addContentSlots(slots: ContentSlot | ContentSlot[]): void {
-            if (isCompositionRuntimeElement(this.target)) {
-                return;
-            }
             this._addedContentSlots.push(...toList(slots));
             this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
                 editor: this,

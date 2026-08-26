@@ -8,6 +8,21 @@ import {
 import { siteBlocArtifact, siteBlocDefinition, siteBlocSnapshot } from "../blocs/siteBlocFixture";
 
 describe("site bloc validation", () => {
+    test("keeps composition templates and component views mutually exclusive", () => {
+        const artifact = siteBlocArtifact();
+
+        expect(validateBlocWrite({ ...artifact, viewJS: "", compositionHTML: "<slot></slot>" }).compositionHTML).toBe(
+            "<slot></slot>",
+        );
+        expect(() => validateBlocWrite({ ...artifact, compositionHTML: "<slot></slot>" })).toThrow(
+            ContentValidationError,
+        );
+        expect(() => validateBlocWrite({ ...artifact, viewJS: "", compositionHTML: "  " })).toThrow(
+            ContentValidationError,
+        );
+        expect(() => validateBlocWrite({ ...artifact, internal: true, viewJS: "" })).toThrow(ContentValidationError);
+    });
+
     test("rejects malformed runtime ownership without throwing native type errors", () => {
         for (const ownership of [
             null,

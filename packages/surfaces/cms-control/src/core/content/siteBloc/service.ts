@@ -148,7 +148,7 @@ async function buildSiteBlocArtifact(
             name: definition.draft.name,
             group: definition.draft.group,
             description: definition.draft.description,
-            viewJS: bundle["Bloc.ts"],
+            compositionHTML: bundle["template.html"],
             editorJS: bundle["BlocEditor.ts"],
             source,
             force: true,

@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 describe("site bloc builder", () => {
-    test("saves the active mode before loading a revision-pinned unique preview", async () => {
+    test("uses one toolbar to save, publish, preview, and archive the composition", async () => {
         const requests: Array<{ url: string; method: string }> = [];
         let definition = siteDefinition();
         globalThis.fetch = (async (input, init) => {
@@ -28,6 +28,10 @@ describe("site bloc builder", () => {
             }
             if (url.includes("/api/site-bloc?") && method === "PATCH") {
                 definition = { ...definition, lifecycle: "archived" };
+                return Response.json(definition);
+            }
+            if (url.includes("/api/site-bloc/publish") && method === "POST") {
+                definition = { ...definition, publishedRevision: definition.draftRevision };
                 return Response.json(definition);
             }
             if (url.includes("/api/site-bloc?")) {
@@ -52,9 +56,10 @@ describe("site bloc builder", () => {
         const builder = document.createElement("cms-site-bloc-builder");
         builder.setAttribute("bloc-id", "site-card");
         document.body.append(builder);
-        await waitFor(() => builder.shadowRoot?.querySelector("[data-name]")?.textContent === "Site card");
-
         const shell = builder.shadowRoot!.querySelector("cms-editor-shell")!;
+        const topBar = shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!;
+        await waitFor(() => topBar.shadowRoot?.querySelector(".name")?.textContent === "Site card");
+        const toolbarButton = (selector: string) => topBar.shadowRoot!.querySelector<HTMLButtonElement>(selector)!;
         const canvas = shell.shadowRoot!.querySelector("cms-editor-v2-canvas")!;
         const initialEditorUrl = canvas.getAttribute("editor-frame-url");
         const frameWindow = new GlobalWindow({ url: "http://localhost/editor-frame" });
@@ -73,12 +78,13 @@ describe("site bloc builder", () => {
                 },
             }),
         );
-        builder.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="preview"]')!.click();
+        toolbarButton('[data-site-bloc-action="publish"]').click();
         await waitFor(() => requests.some((request) => request.method === "PUT"));
-        await waitFor(() => shell.hasAttribute("view-mode"));
+        await waitFor(() => requests.some((request) => request.method === "POST"));
 
         expect(requests.filter((request) => request.method !== "GET").map((request) => request.method)).toEqual([
             "PUT",
+            "POST",
         ]);
         const previewUrl = new URL(canvas.getAttribute("view-frame-url")!, "http://localhost");
         expect(previewUrl.searchParams.get("mode")).toBe("preview");
@@ -115,7 +121,7 @@ describe("site bloc builder", () => {
                 },
             }),
         );
-        expect(builder.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="archive"]')?.disabled).toBe(true);
+        expect(toolbarButton('[data-action="delete"]').disabled).toBe(true);
         canvas.dispatchEvent(
             new CustomEvent("editor-v2:frame-ready", {
                 bubbles: true,
@@ -128,15 +134,13 @@ describe("site bloc builder", () => {
                 },
             }),
         );
-        builder.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="archive"]')!.click();
-        await waitFor(
-            () =>
-                builder.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="archive"]')?.textContent ===
-                "Restore",
-        );
-        expect(builder.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="archive"]')?.disabled).toBe(false);
-        expect(builder.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="save"]')?.disabled).toBe(true);
-        expect(builder.shadowRoot!.querySelector<HTMLButtonElement>('[data-mode="structure"]')?.disabled).toBe(true);
+        toolbarButton('[data-action="delete"]').click();
+        await waitFor(() => toolbarButton('[data-action="delete"]').textContent === "Restore");
+        expect(toolbarButton('[data-action="delete"]').disabled).toBe(false);
+        expect(toolbarButton('[data-action="save"]').disabled).toBe(true);
+        expect(toolbarButton('[data-action="page-settings"]').disabled).toBe(true);
+        expect(builder.shadowRoot!.querySelector(".lifecycle-bar")).toBeNull();
+        expect(builder.shadowRoot!.querySelector("[data-mode]")).toBeNull();
         frameWindow.close();
         previewWindow.close();
     });

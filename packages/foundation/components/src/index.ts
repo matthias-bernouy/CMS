@@ -1,11 +1,10 @@
 // Base
 export {
     Component,
-    Composition,
     type ComponentMetadata,
-    type CompositionMetadata,
 } from "./base";
 export {
+    COMPOSITION_AUTHORED_ATTRIBUTE,
     COMPOSITION_INPUT_ATTRIBUTE,
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,

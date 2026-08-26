@@ -22,7 +22,6 @@ describe("CLI site-bloc export", () => {
 
         const source = await sourceResponse(cms, definition.tag);
         expect(Object.keys(source).sort()).toEqual([
-            "Bloc.ts",
             "BlocEditor.ts",
             "builder.json",
             "default.html",
@@ -51,7 +50,7 @@ describe("CLI site-bloc export", () => {
         const list = await getBlocsList(new Request("http://cms.test/api/bloc/list"), cms);
         expect((await list.json())[0]).toMatchObject({ name: "Current draft", group: "Draft layouts" });
         const source = await sourceResponse(cms, definition.tag);
-        for (const path of ["manifest.json", "Bloc.ts", "BlocEditor.ts", "template.html", "default.html"]) {
+        for (const path of ["manifest.json", "BlocEditor.ts", "template.html", "default.html"]) {
             expect(source[path]).toBe(publishedSource[path]);
         }
         const builder = decodedJson(source["builder.json"]!);

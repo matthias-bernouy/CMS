@@ -1,5 +1,7 @@
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
-import type { SiteBlocDefinition } from "@bernouy/cms-content";
+import { expandCompositions, type SiteBlocDefinition } from "@bernouy/cms-content";
+import { serializeSiteBlocTemplate } from "@bernouy/cms-bloc-compile";
+import { parseHTML } from "linkedom";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 import { networkInertHtml } from "cms-control/core/editorSystemV2/networkInertHtml";
 import { siteBlocStructureHtml } from "./structure";
@@ -16,7 +18,6 @@ export function renderSiteBlocFrame(basePath: string, definition: SiteBlocDefini
                   `${basePath}/api/editor/component.js`,
                   `${basePath}/api/editor/binding-core.js`,
                   `${basePath}/api/site-bloc/runtime/dependencies.js?${query}`,
-                  `${basePath}/api/site-bloc/runtime/draft.js?${query}`,
               ];
     const content =
         mode === "structure" ? structureContent(definition) : instanceContent(definition, mode === "preview");
@@ -42,8 +43,14 @@ function structureContent(definition: SiteBlocDefinition): string {
 }
 
 function instanceContent(definition: SiteBlocDefinition, live: boolean): string {
-    const content = live ? definition.draft.defaultContent : networkInertHtml(definition.draft.defaultContent);
-    const instance = `<${definition.tag} ${CONTENT_REGION_ATTR}>${content}</${definition.tag}>`;
+    const { document } = parseHTML("<html><body></body></html>");
+    document.body.innerHTML = `<${definition.tag} ${CONTENT_REGION_ATTR}>${definition.draft.defaultContent}</${definition.tag}>`;
+    expandCompositions(
+        document.body,
+        [{ id: definition.tag, compositionHTML: serializeSiteBlocTemplate(definition.draft) }],
+        live ? "delivery" : "editor",
+    );
+    const instance = live ? document.body.innerHTML : networkInertHtml(document.body.innerHTML);
     if (live) {
         return `<${CMS_BINDING_CORE_TAG}>${instance}</${CMS_BINDING_CORE_TAG}>`;
     }
@@ -71,6 +78,8 @@ ${"cms-site-slot-placeholder"}::before {
     return `html { color-scheme: light; }
 body { margin: 0; min-height: 100vh; }
 [data-cms-content] { display: block; min-height: 100vh; }
+[data-p9r-composition], [data-p9r-composition-output] { display: contents; }
+[data-p9r-composition] > :not([data-p9r-composition-output]):not(template[data-p9r-composition-input]) { display: none !important; }
 ${placeholder}`;
 }
 

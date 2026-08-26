@@ -3,7 +3,7 @@ import type { TPage } from "@bernouy/cms-content";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
-import { sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
+import { expandCompositions, sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
 import { injectMediaVersions } from "@bernouy/cms-files";
 import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
@@ -55,13 +55,20 @@ export async function renderPage(
     // scripts / on* handlers / dangerous URL schemes from the parsed tree
     // before this HTML reaches a public visitor, whatever path stored it.
     sanitizeDomTree(document.body);
+    const blocList = await ctx.repository.getBlocsList();
+    expandCompositions(document.body, blocList);
+    sanitizeDomTree(document.body);
     // A browser may fetch an interpolated img src before the deferred binding
     // runtime executes. Keep only dynamic network attributes inert; static
     // media stays native and remains eligible for server-side optimization.
     prepareNetworkInertBindings(document.body);
 
-    const blocList = await ctx.repository.getBlocsList();
-    const usedTags = await createBlocUsageResolver(blocList, ctx.repository)(composed);
+    const renderedContent = document.body.innerHTML;
+    const resolvedTags = await createBlocUsageResolver(blocList, ctx.repository)(renderedContent);
+    const viewEntries = await Promise.all(
+        resolvedTags.map(async (tag) => ({ tag, viewJS: await ctx.repository.getBlocViewJS(tag) })),
+    );
+    const usedTags = viewEntries.filter((entry) => !!entry.viewJS).map((entry) => entry.tag);
     const assets = await ctx.resolveAssets(usedTags);
     const hasBindingCore = document.querySelector(CMS_BINDING_CORE_TAG) !== null;
 

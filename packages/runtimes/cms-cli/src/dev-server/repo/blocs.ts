@@ -50,6 +50,8 @@ export class BlocsStore {
             name: bloc.label,
             group: bloc.group,
             description: bloc.description,
+            ...(bloc.internal ? { internal: true } : {}),
+            ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
             ownership: structuredClone(bloc.ownership),
         }));
     }

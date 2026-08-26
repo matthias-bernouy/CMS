@@ -13,7 +13,7 @@ const SOURCE = join(import.meta.dir, "../../endpoints/assets/component.client.ts
 
 /**
  * Build the `component.js` bundle — the runtime that exposes
- * `window.p9r.Component` and `window.p9r.Composition` to every bloc IIFE.
+ * `window.p9r.Component` to every bloc IIFE.
  * Compiled once, cached, and
  * served with a content-hash URL so browsers can cache it forever.
  */

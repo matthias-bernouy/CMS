@@ -54,10 +54,18 @@ async function pushBloc(adminBase: URL, token: string, bloc: BuiltBloc, force: b
     form.append("group", bloc.group);
     form.append("description", bloc.description);
     form.append("tag", bloc.tag);
+    if (bloc.internal) {
+        form.append("internal", "true");
+    }
     if (force) {
         form.append("force", "true");
     }
-    form.append("viewJS", new File([bloc.viewJS], `${bloc.tag}.js`, { type: "application/javascript" }));
+    if (bloc.viewJS) {
+        form.append("viewJS", new File([bloc.viewJS], `${bloc.tag}.js`, { type: "application/javascript" }));
+    }
+    if (bloc.compositionHTML !== undefined) {
+        form.append("compositionHTML", bloc.compositionHTML);
+    }
     if (bloc.editorJS) {
         form.append("editorJS", new File([bloc.editorJS], `${bloc.tag}Editor.js`, { type: "application/javascript" }));
     }

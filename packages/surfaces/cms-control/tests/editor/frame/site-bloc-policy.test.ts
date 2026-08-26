@@ -74,8 +74,7 @@ describe("site bloc editor catalog policy", () => {
         expect(catalog.find((candidate) => candidate.tag === "legacy-card")?.insertable).toBe(false);
     });
 
-    test("filters structure cycles and unpublished blocs while exposing current dynamic slots", () => {
-        const value = definition();
+    test("filters structure cycles and unpublished blocs while exposing the slot placeholder", () => {
         const base = ["site-card", "basic-button", "draft-only", "archived-card", "cycle-card"].map(entry);
         base[1]!.defaultContent = "<basic-button>Default page content</basic-button>";
         const catalogs = createSiteBlocCatalogs(
@@ -87,7 +86,7 @@ describe("site bloc editor catalog policy", () => {
                 item("cycle-card", { publishedTransitiveDependencies: ["site-card"] }),
                 item("site-card", { origin: { kind: "site-builder" }, publishedRevision: 1 }),
             ],
-            value,
+            definition(),
         );
 
         expect(catalogs.structure.map((candidate) => candidate.tag)).toEqual([
@@ -95,8 +94,5 @@ describe("site bloc editor catalog policy", () => {
             "cms-site-slot-placeholder",
         ]);
         expect(catalogs.structure[0]?.defaultContent).toBeUndefined();
-        const host = catalogs.defaults.find((candidate) => candidate.tag === "site-card")!;
-        expect(host.insertable).toBe(false);
-        expect(new host.editor(document.createElement("site-card")).getContentSlots()).toEqual(value.draft.slots);
     });
 });

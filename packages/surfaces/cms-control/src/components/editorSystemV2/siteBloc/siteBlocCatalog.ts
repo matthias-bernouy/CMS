@@ -1,5 +1,5 @@
-import type { SiteBlocDefinition, SiteBlocSlot } from "@bernouy/cms-content";
-import { Editor, type EditorCatalogEntry } from "@bernouy/cms-content/editor";
+import type { SiteBlocDefinition } from "@bernouy/cms-content";
+import type { EditorCatalogEntry } from "@bernouy/cms-content/editor";
 import { siteSlotPlaceholderCatalogEntry } from "cms-control/core/editorSystemV2/builtInEditors";
 import type { BlocCatalogueItem } from "./siteBlocApi";
 
@@ -7,7 +7,6 @@ type EditorInsertableCatalogEntry = EditorCatalogEntry & { insertable?: boolean 
 
 export type SiteBlocCatalogs = {
     structure: EditorInsertableCatalogEntry[];
-    defaults: EditorInsertableCatalogEntry[];
     structureTags: Set<string>;
 };
 
@@ -20,9 +19,7 @@ export function createSiteBlocCatalogs(
     const structure = baseCatalog.filter((entry) => structureTags.has(entry.tag.toLowerCase())).map(structureEntry);
     structure.push(siteSlotPlaceholderCatalogEntry());
 
-    const defaults = baseCatalog.filter((entry) => entry.tag.toLowerCase() !== definition.tag);
-    defaults.push(siteBlocHostCatalogEntry(definition));
-    return { structure, defaults, structureTags };
+    return { structure, structureTags };
 }
 
 function structureEntry(entry: EditorInsertableCatalogEntry): EditorInsertableCatalogEntry {
@@ -41,35 +38,6 @@ export function eligibleStructureTags(catalogue: BlocCatalogueItem[], ownerTag: 
             )
             .map((item) => item.tag.toLowerCase()),
     );
-}
-
-function siteBlocHostCatalogEntry(definition: SiteBlocDefinition): EditorInsertableCatalogEntry {
-    const slots = cloneSlots(definition.draft.slots);
-    class SiteBlocHostEditor extends Editor {
-        protected override contentSlots(): SiteBlocSlot[] {
-            return cloneSlots(slots);
-        }
-    }
-
-    return {
-        tag: definition.tag,
-        label: definition.draft.name,
-        description: "Current site bloc instance",
-        category: "Site builder",
-        bloc: HTMLElement,
-        editor: SiteBlocHostEditor,
-        insertable: false,
-    } satisfies EditorInsertableCatalogEntry;
-}
-
-function cloneSlots(slots: SiteBlocSlot[]): SiteBlocSlot[] {
-    return slots.map((slot) => ({
-        ...slot,
-        accepts: slot.accepts.map((accept) => ({
-            ...accept,
-            ...(accept.kind === "media" && accept.accept ? { accept: [...accept.accept] } : {}),
-        })),
-    }));
 }
 
 export function isTagInsertable(tags: ReadonlySet<string>, tag: string, _entry: EditorCatalogEntry): boolean {

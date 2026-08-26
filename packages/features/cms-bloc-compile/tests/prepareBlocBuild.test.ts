@@ -69,6 +69,30 @@ describe("prepare_bloc build output", () => {
         expect(bloc.viewJS).toContain("display: block");
     });
 
+    test("resolves imports from a nested declared view path", async () => {
+        const view = new File(
+            [
+                `import { label } from "../label";\n` +
+                    `customElements.define("BE5_TAG_TO_BE_REPLACED", class extends HTMLElement { label = label; });`,
+            ],
+            "Bloc.ts",
+            { type: "text/typescript" },
+        );
+        const bloc = await prepare_bloc(
+            view,
+            null,
+            "Nested demo",
+            "Content",
+            "",
+            "demo-nested",
+            { "label.ts": Buffer.from(`export const label = "Nested";`).toString("base64") },
+            undefined,
+            { viewPath: "controller/Bloc.ts" },
+        );
+
+        expect(bloc.viewJS).toContain("Nested");
+    });
+
     test("rejects source paths escaping the temporary bundle", async () => {
         const view = new File(["customElements.define('demo-card', class extends HTMLElement {});"], "DemoCard.ts", {
             type: "text/typescript",
@@ -99,19 +123,19 @@ describe("prepare_bloc build output", () => {
         }
     });
 
-    test("exposes the Light DOM Composition base to view bundles", async () => {
+    test("exposes the Component base to view bundles", async () => {
         const view = new File(
             [
-                `import { Composition } from "@bernouy/components/base";`,
-                `export class DemoComposition extends Composition {`,
-                `  constructor() { super({ template: "<p>Demo</p>" }); }`,
+                `import { Component } from "@bernouy/components/base";`,
+                `export class DemoComponent extends Component {`,
+                `  constructor() { super({ template: "<slot></slot>" }); }`,
                 `}`,
             ],
-            "DemoComposition.ts",
+            "DemoComponent.ts",
             { type: "text/typescript" },
         );
-        const bloc = await prepare_bloc(view, null, "Demo composition", "Composition", "", "demo-composition");
-        expect(bloc.viewJS).toContain("window.p9r.Composition");
+        const bloc = await prepare_bloc(view, null, "Demo component", "Content", "", "demo-component");
+        expect(bloc.viewJS).toContain("window.p9r.Component");
     });
 
     test("reports Bun build failures instead of returning an empty view bundle", async () => {

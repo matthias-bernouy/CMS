@@ -27,7 +27,10 @@ export type BlocImportInput = {
     name: string;
     group?: string;
     description?: string;
-    viewJS: string | File;
+    internal?: boolean;
+    viewPath?: string;
+    viewJS?: string | File | null;
+    compositionHTML?: string;
     editorJS?: string | File | null;
     source?: Record<string, string>;
     force?: boolean;
@@ -50,14 +53,17 @@ export async function importBlocArtifact(
     input: BlocImportInput,
     runtime: BlocImportRuntime = {},
 ): Promise<BlocImportResult> {
-    if (!input.name || !input.viewJS || !input.tag) {
-        throw new BlocImportError("Missing argument (name, tag, viewJS required)", 400);
+    if (!input.name || !input.tag || (!input.viewJS && input.compositionHTML === undefined)) {
+        throw new BlocImportError("Missing argument (name, tag and viewJS or compositionHTML required)", 400);
+    }
+    if (input.viewJS && input.compositionHTML !== undefined) {
+        throw new BlocImportError("A bloc cannot define both viewJS and compositionHTML", 400);
     }
     const repository = runtime.repository ?? cms.repository;
 
-    const viewFile = asFile(input.viewJS, "Bloc.js");
+    const viewFile = input.viewJS ? asFile(input.viewJS, "Bloc.js") : null;
     const editorFile = input.editorJS ? asFile(input.editorJS, "BlocEditor.ts") : null;
-    const viewSource = await viewFile.text();
+    const viewSource = viewFile ? await viewFile.text() : undefined;
     const editorSource = editorFile ? await editorFile.text() : undefined;
     const sourceManifest = parseSourceManifest(input.source);
     if (sourceManifest.error) {
@@ -68,7 +74,7 @@ export async function importBlocArtifact(
     const validation = validateBloc({
         tag: input.tag,
         native,
-        viewSource,
+        ...(viewSource !== undefined ? { viewSource } : {}),
         ...(editorSource !== undefined ? { editorSource } : {}),
     });
     if (validation.errors.length > 0) {
@@ -95,10 +101,16 @@ export async function importBlocArtifact(
         input.tag,
         input.source,
         defaultContentResult.content,
-        { native },
+        {
+            native,
+            ...(input.compositionHTML !== undefined ? { compositionHTML: input.compositionHTML } : {}),
+            ...(input.viewPath ? { viewPath: input.viewPath } : {}),
+        },
     );
     const bloc: TBloc = {
         ...prepared,
+        ...(input.internal ? { editorJS: "" } : {}),
+        ...(input.internal ? { internal: true } : {}),
         ownership: runtime.ownership ?? { kind: "code-managed" },
     };
 

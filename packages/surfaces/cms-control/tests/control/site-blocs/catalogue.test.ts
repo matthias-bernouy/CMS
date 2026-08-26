@@ -46,6 +46,19 @@ async function catalogueFixture() {
 }
 
 describe("site bloc catalogue", () => {
+    test("keeps internal behavior controllers out of the author catalogue", async () => {
+        const { cms, repository } = siteBlocHarness();
+        await seedBloc(repository, "site-shell", {
+            compositionHTML: "<site-shell-controller></site-shell-controller>",
+        });
+        await seedBloc(repository, "site-shell-controller", { internal: true });
+
+        const items = await siteBlocCatalogue(cms);
+
+        expect(items.map((item) => item.tag)).toEqual(["site-shell"]);
+        expect(items[0]?.directDependencies).toEqual(["site-shell-controller"]);
+    });
+
     test("projects origins, direct/transitive dependencies and every usage kind", async () => {
         const { cms } = await catalogueFixture();
         const items = await siteBlocCatalogue(cms);

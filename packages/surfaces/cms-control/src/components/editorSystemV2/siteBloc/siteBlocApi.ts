@@ -1,8 +1,6 @@
 import type { SiteBlocDefinition } from "@bernouy/cms-content";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
-export type SiteBlocMode = "structure" | "default";
-
 export type SiteBlocMetadata = {
     name: string;
     group: string;
@@ -32,26 +30,15 @@ export async function loadBlocCatalogue(): Promise<BlocCatalogueItem[]> {
 
 export async function saveSiteBloc(
     definition: SiteBlocDefinition,
-    mode: SiteBlocMode,
     metadata: SiteBlocMetadata,
     content: string,
 ): Promise<SiteBlocDefinition> {
-    const body =
-        mode === "structure"
-            ? {
-                  expectedDraftRevision: definition.draftRevision,
-                  ...metadata,
-                  defaultContent: definition.draft.defaultContent,
-                  structureHtml: content,
-              }
-            : {
-                  expectedDraftRevision: definition.draftRevision,
-                  snapshot: {
-                      ...definition.draft,
-                      ...metadata,
-                      defaultContent: content,
-                  },
-              };
+    const body = {
+        expectedDraftRevision: definition.draftRevision,
+        ...metadata,
+        defaultContent: definition.draft.defaultContent,
+        structureHtml: content,
+    };
     return requestJson(siteBlocUrl("site-bloc", definition.tag), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -78,7 +65,7 @@ export async function setSiteBlocArchived(
     });
 }
 
-export function siteBlocFrameUrl(tag: string, mode: SiteBlocMode | "preview", revision: number, nonce: number): string {
+export function siteBlocFrameUrl(tag: string, mode: "structure" | "preview", revision: number, nonce: number): string {
     const query = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
     return `${getMetaBasePath()}/api/site-bloc/frame?${query}`;
 }

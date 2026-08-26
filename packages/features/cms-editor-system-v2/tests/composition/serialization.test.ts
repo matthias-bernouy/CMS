@@ -4,6 +4,7 @@ import {
     COMPOSITION_INPUT_ATTRIBUTE,
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
+    COMPOSITION_AUTHORED_ATTRIBUTE,
 } from "@bernouy/components/base";
 import { serializableContentHtml } from "../../src/components/Layout/Shell/Domain/Structure/structureDocument";
 import { syncViewFrameContent } from "../../src/components/Layout/Shell/Domain/Bindings/shellBindingPreview";
@@ -36,7 +37,7 @@ describe("composition serialization", () => {
         expect(content).not.toContain("cms-ready");
     });
 
-    test("syncs canonical input without accumulating runtime output", () => {
+    test("syncs expanded Light DOM without accumulating editor runtime output", () => {
         const source = editorDocument();
         const target = parseHTML(`<main data-cms-content></main>`).document;
 
@@ -44,10 +45,34 @@ describe("composition serialization", () => {
         syncViewFrameContent(source, target, "loading", false);
 
         const content = target.querySelector("[data-cms-content]")!.innerHTML;
-        expect(content).toContain("data-authored");
+        expect(content).toContain("data-generated");
+        expect(content).not.toContain("data-authored");
         expect(content).not.toContain(COMPOSITION_RUNTIME_ATTRIBUTE);
         expect(content).not.toContain(COMPOSITION_INPUT_ATTRIBUTE);
-        expect(content).not.toContain("data-generated");
+        expect(content).not.toContain(COMPOSITION_OUTPUT_ATTRIBUTE);
+    });
+
+    test("serializes edited projected children instead of their initial snapshot", () => {
+        const document = parseHTML(`
+            <main data-cms-content>
+                <site-layout ${COMPOSITION_RUNTIME_ATTRIBUTE}>
+                    <template ${COMPOSITION_INPUT_ATTRIBUTE}><h1 slot="content">Initial</h1></template>
+                    <p9r-composition-output ${COMPOSITION_OUTPUT_ATTRIBUTE}>
+                        <header>Private header</header>
+                        <!--p9r-composition-slot-start:content-->
+                        <h1 ${COMPOSITION_AUTHORED_ATTRIBUTE}="content">Edited</h1>
+                        <!--p9r-composition-slot-end:content-->
+                    </p9r-composition-output>
+                </site-layout>
+            </main>
+        `).document;
+
+        const content = serializableContentHtml(document.querySelector<HTMLElement>("[data-cms-content]"));
+
+        expect(content).toContain('<h1 slot="content">Edited</h1>');
+        expect(content).not.toContain("Initial");
+        expect(content).not.toContain("Private header");
+        expect(content).not.toContain(COMPOSITION_AUTHORED_ATTRIBUTE);
     });
 
     test("keeps dynamic image sources inert while syncing the preview", () => {

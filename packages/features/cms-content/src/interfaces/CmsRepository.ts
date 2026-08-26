@@ -9,6 +9,8 @@ export type BlocListItemResponse = {
     name: string;
     group: string;
     description: string;
+    compositionHTML?: string;
+    internal?: boolean;
     ownership: TBloc["ownership"];
 };
 

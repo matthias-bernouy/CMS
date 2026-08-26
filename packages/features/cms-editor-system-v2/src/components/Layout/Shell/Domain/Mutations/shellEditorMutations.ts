@@ -9,7 +9,7 @@ import {
 import type { MutationContext } from "./shellMutations";
 import { reloadFrameDocument } from "./Content/reloadFrameDocument";
 import { applySlot } from "./insertion";
-import { canDelete, canDuplicate, canInsertSibling, canMoveEditor } from "./slots";
+import { authoredSlot, canDelete, canDuplicate, canInsertSibling, canMoveEditor } from "./slots";
 
 export class ShellEditorMutations {
     private _clipboardElement: HTMLElement | null = null;
@@ -82,7 +82,7 @@ export class ShellEditorMutations {
             return;
         }
 
-        applySlot(source.target, target.target.getAttribute("slot") ?? undefined);
+        applySlot(source.target, authoredSlot(target.target));
         applySiblingSourceStatus(source.target, sourceStatusConditionsFromElement(target.target));
 
         if (position === "before") {

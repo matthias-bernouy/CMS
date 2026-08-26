@@ -61,4 +61,59 @@ describe("@bernouy/cms-integrations bloc artifact parsing", () => {
         });
         expect(definition.artifacts?.[0]).not.toHaveProperty("bloc.viewJS");
     });
+
+    test("preserves declarative light-DOM compositions and internal controller metadata", () => {
+        const definition = parseIntegrationDefinition({
+            kind: "composition-pack",
+            label: "Composition pack",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: {
+                        tag: "site-shell",
+                        name: "Site shell",
+                        path: "blocs/site-shell",
+                        composition: "template.html",
+                        editor: "BlocEditor.ts",
+                    },
+                },
+                {
+                    type: "bloc",
+                    bloc: {
+                        tag: "site-shell-controller",
+                        name: "Site shell controller",
+                        internal: true,
+                        path: "blocs/site-shell",
+                        view: "controller/Bloc.ts",
+                        editor: null,
+                    },
+                },
+            ],
+        });
+
+        expect(definition.artifacts).toEqual([
+            {
+                type: "bloc",
+                bloc: {
+                    tag: "site-shell",
+                    name: "Site shell",
+                    path: "blocs/site-shell",
+                    composition: "template.html",
+                    editor: "BlocEditor.ts",
+                },
+            },
+            {
+                type: "bloc",
+                bloc: {
+                    tag: "site-shell-controller",
+                    name: "Site shell controller",
+                    internal: true,
+                    path: "blocs/site-shell",
+                    view: "controller/Bloc.ts",
+                    editor: null,
+                },
+            },
+        ]);
+    });
 });

@@ -6,7 +6,7 @@ import {
     parseRepeatRange,
     parseSourceStatusConditions,
 } from "@bernouy/cms-content/editor";
-import { isCompositionRuntimeElement } from "@bernouy/components/base";
+import { COMPOSITION_AUTHORED_ATTRIBUTE, isCompositionRuntimeElement } from "@bernouy/components/base";
 import type { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import type { EditorStructureNode, RuntimeManagedEditor, StructureNode } from "./types";
 
@@ -102,7 +102,9 @@ function structureChildren(context: EditorRuntimeStructureContext, parent: HTMLE
 
 function structureBadges(editor: Editor): string[] {
     const badges: string[] = [];
-    const slot = editor.target.getAttribute("slot");
+    const slot = editor.target.hasAttribute(COMPOSITION_AUTHORED_ATTRIBUTE)
+        ? editor.target.getAttribute(COMPOSITION_AUTHORED_ATTRIBUTE)
+        : editor.target.getAttribute("slot");
     if (slot) {
         badges.push(slot);
     }
@@ -146,9 +148,11 @@ function closestStructureParent(
 }
 
 function hasCompositionAncestor(element: HTMLElement): boolean {
+    let authored = element.hasAttribute(COMPOSITION_AUTHORED_ATTRIBUTE);
     for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+        authored ||= parent.hasAttribute(COMPOSITION_AUTHORED_ATTRIBUTE);
         if (isCompositionRuntimeElement(parent)) {
-            return true;
+            return !authored;
         }
     }
     return false;

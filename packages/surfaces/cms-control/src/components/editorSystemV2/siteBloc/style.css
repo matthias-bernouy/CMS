@@ -14,99 +14,13 @@
 
 .builder {
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
     width: 100%;
     height: 100%;
     background: #f5f7f6;
 }
 
-.lifecycle-bar {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) auto minmax(360px, 1fr);
-    align-items: center;
-    gap: 20px;
-    min-height: 68px;
-    border-bottom: 1px solid var(--builder-border);
-    background: var(--builder-surface);
-    padding: 9px 16px;
-}
-
-.identity,
-.title-line,
-.actions,
 .a11y { display: flex; align-items: center; }
-.identity { gap: 10px; min-width: 0; }
-.title-line { gap: 8px; min-width: 0; }
-.title-line strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.title-line code { color: var(--builder-muted); font-size: 11px; }
-
-.eyebrow {
-    color: var(--builder-muted);
-    font-size: 10px;
-    font-weight: 750;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
-
-.back {
-    display: grid;
-    width: 32px;
-    height: 32px;
-    place-items: center;
-    border-radius: 7px;
-    color: var(--builder-muted);
-    font-size: 25px;
-    text-decoration: none;
-}
-.back:hover { background: #f0f3f2; color: #151b19; }
-
-.state {
-    border-radius: 999px;
-    background: #e9f4ef;
-    color: #166044;
-    padding: 3px 7px;
-    font-size: 10px;
-    font-weight: 700;
-}
-.state[data-tone="warning"] { background: #fff3d6; color: #805500; }
-.state[data-tone="archived"] { background: #eef0ef; color: #59635f; }
-
-.mode-switch {
-    display: flex;
-    gap: 3px;
-    border: 1px solid var(--builder-border);
-    border-radius: 9px;
-    background: #f4f6f5;
-    padding: 3px;
-}
-.mode-switch button { min-width: 126px; text-align: left; }
-.mode-switch span,
-.mode-switch small { display: block; }
-.mode-switch small { margin-top: 1px; color: var(--builder-muted); font-size: 9px; font-weight: 500; }
-.mode-switch button[aria-pressed="true"] { background: #fff; color: #151b19; box-shadow: 0 1px 3px #1c2b2514; }
-
-button {
-    min-height: 32px;
-    border: 1px solid transparent;
-    border-radius: 7px;
-    background: transparent;
-    color: #31413b;
-    padding: 0 10px;
-    font: inherit;
-    font-size: 12px;
-    font-weight: 680;
-    cursor: pointer;
-}
-button:hover:not(:disabled) { border-color: var(--builder-border); background: #f6f8f7; }
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-a:focus-visible { outline: 3px solid #68a79266; outline-offset: 2px; }
-button:disabled { cursor: not-allowed; opacity: .45; }
-.actions { justify-content: flex-end; gap: 5px; }
-.primary { background: var(--builder-accent); color: #fff; }
-.primary:hover:not(:disabled) { border-color: var(--builder-accent); background: #0f513f; }
-.quiet-danger { color: #a1342a; }
 
 .feedback {
     display: flex;
@@ -128,42 +42,3 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .a11y li { color: #855400; }
 
 cms-editor-shell { display: block; min-height: 0; height: 100%; }
-
-.dialog-layer { position: fixed; z-index: 20; inset: 0; }
-.dialog-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; background: #0d18144d; }
-.dialog {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: min(440px, 100%);
-    height: 100%;
-    border-left: 1px solid var(--builder-border);
-    background: #fff;
-    box-shadow: -20px 0 48px #0a17121a;
-    padding: 22px;
-}
-.dialog header,
-.dialog footer { display: flex; align-items: center; justify-content: space-between; }
-.dialog h2 { margin: 3px 0 0; font-size: 21px; }
-.fields { display: grid; gap: 18px; margin-top: 28px; }
-.fields label { display: grid; gap: 7px; font-size: 12px; font-weight: 700; }
-.fields input,
-.fields textarea {
-    width: 100%;
-    border: 1px solid #ccd5d1;
-    border-radius: 7px;
-    background: #fbfcfb;
-    padding: 10px 11px;
-    color: inherit;
-    font: inherit;
-}
-.fields textarea { resize: vertical; }
-.immutable { display: grid; gap: 5px; border-top: 1px solid var(--builder-border); padding-top: 16px; color: var(--builder-muted); font-size: 11px; }
-.immutable code { color: #273630; font-size: 12px; }
-.dialog footer { margin-top: 26px; }
-
-@media (max-width: 1080px) {
-    .lifecycle-bar { grid-template-columns: minmax(200px, 1fr) auto; }
-    .mode-switch { grid-row: 2; grid-column: 1 / -1; justify-self: center; }
-    .actions { grid-column: 2; grid-row: 1; }
-}

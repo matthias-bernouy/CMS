@@ -3,6 +3,7 @@ import type { ContentSlot, Editor, EditorCatalog, CmsSourceStatusCondition } fro
 import type { EditorRuntime } from "../../../../../runtime";
 import { applySlot } from "./insertion";
 import { acceptsElement } from "../../../../../policy/contentSlotAcceptance";
+import { COMPOSITION_AUTHORED_ATTRIBUTE, isCompositionRuntimeElement } from "@bernouy/components/base";
 
 export function canInsertNodeCount(parent: Editor, slot: ContentSlot, insertedElements: HTMLElement[]): boolean {
     if (typeof slot.max !== "number") {
@@ -21,7 +22,10 @@ export function canReplaceNodeCount(
         return true;
     }
 
-    const replacedCount = (replaced.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined) ? 1 : 0;
+    const replacedSlot = replaced.target.hasAttribute(COMPOSITION_AUTHORED_ATTRIBUTE)
+        ? replaced.target.getAttribute(COMPOSITION_AUTHORED_ATTRIBUTE) || undefined
+        : (replaced.target.getAttribute("slot") ?? undefined);
+    const replacedCount = replacedSlot === (slot.slot ?? undefined) ? 1 : 0;
     return slotChildCount(parent, slot) - replacedCount + insertedElements.length <= slot.max;
 }
 
@@ -31,7 +35,7 @@ export function canDuplicate(runtime: EditorRuntime | null, editor: Editor, cata
         return true;
     }
 
-    const slot = findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
+    const slot = findSlot(parent, authoredSlot(editor.target));
     if (!slot) {
         return true;
     }
@@ -45,7 +49,7 @@ export function canDelete(runtime: EditorRuntime | null, editor: Editor): boolea
         return true;
     }
 
-    const slot = findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
+    const slot = findSlot(parent, authoredSlot(editor.target));
     if (!slot?.min) {
         return true;
     }
@@ -68,7 +72,7 @@ export function canInsertSibling(
         return true;
     }
 
-    const slotName = reference.target.getAttribute("slot") ?? undefined;
+    const slotName = authoredSlot(reference.target);
     const slot = findSlot(parent, slotName);
     if (
         !slot ||
@@ -91,9 +95,8 @@ export function canMoveEditor(
 ): boolean {
     const sourceParent = parentEditor(runtime, source);
     const targetParent = parentEditor(runtime, target);
-    const targetSlotName = target.target.getAttribute("slot") ?? undefined;
-    const isSameSlot =
-        sourceParent === targetParent && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
+    const targetSlotName = authoredSlot(target.target);
+    const isSameSlot = sourceParent === targetParent && authoredSlot(source.target) === targetSlotName;
     if (!isSameSlot && !canDelete(runtime, source)) {
         return false;
     }
@@ -139,7 +142,30 @@ export function parentEditor(runtime: EditorRuntime | null, editor: Editor): Edi
 }
 
 function slotChildCount(parent: Editor, slot: ContentSlot): number {
-    return Array.from(parent.target.children).filter(
-        (child) => (child.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined),
+    const children = isCompositionRuntimeElement(parent.target)
+        ? Array.from(parent.target.querySelectorAll<HTMLElement>(`[${COMPOSITION_AUTHORED_ATTRIBUTE}]`)).filter(
+              (element) => nearestCompositionHost(element) === parent.target,
+          )
+        : Array.from(parent.target.children);
+    return children.filter(
+        (child) =>
+            (child.hasAttribute(COMPOSITION_AUTHORED_ATTRIBUTE)
+                ? child.getAttribute(COMPOSITION_AUTHORED_ATTRIBUTE) || undefined
+                : (child.getAttribute("slot") ?? undefined)) === (slot.slot ?? undefined),
     ).length;
+}
+
+function nearestCompositionHost(element: HTMLElement): HTMLElement | null {
+    for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+        if (isCompositionRuntimeElement(parent)) {
+            return parent;
+        }
+    }
+    return null;
+}
+
+export function authoredSlot(element: HTMLElement): string | undefined {
+    return element.hasAttribute(COMPOSITION_AUTHORED_ATTRIBUTE)
+        ? element.getAttribute(COMPOSITION_AUTHORED_ATTRIBUTE) || undefined
+        : (element.getAttribute("slot") ?? undefined);
 }

@@ -126,6 +126,7 @@ export class ShellCommands {
     syncEditorMode(): void {
         if (this.context.state.editorMode !== "edit") {
             this.context.inlineText.stop();
+            this.context.renderSync.syncViewFrameContent();
         }
         this.context.renderSync.syncEditorMode();
     }

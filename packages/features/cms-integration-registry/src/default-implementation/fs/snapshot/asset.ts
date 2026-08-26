@@ -86,15 +86,21 @@ function hydrateBloc(
     artifact: DeclarativeArtifactTemplate,
     envelope: IntegrationPackageEnvelopeV1,
 ): DeclarativeArtifactTemplate {
-    if (artifact.type !== "bloc" || artifact.bloc.viewJS) {
+    if (artifact.type !== "bloc" || artifact.bloc.viewJS || artifact.bloc.compositionHTML !== undefined) {
         return artifact;
     }
     if (!artifact.bloc.path) {
         throw new Error(`Bloc artifact "${artifact.bloc.tag}" requires path or viewJS`);
     }
     const root = safePackagePath("", artifact.bloc.path);
-    const viewPath = safePackagePath(root, artifact.bloc.view ?? "Bloc.ts");
-    const viewJS = requiredUtf8File(envelope, viewPath, "bloc view");
+    const compositionPath = artifact.bloc.composition ? safePackagePath(root, artifact.bloc.composition) : undefined;
+    const compositionHTML = compositionPath
+        ? requiredUtf8File(envelope, compositionPath, "bloc composition")
+        : undefined;
+    const viewJS =
+        compositionHTML === undefined
+            ? requiredUtf8File(envelope, safePackagePath(root, artifact.bloc.view ?? "Bloc.ts"), "bloc view")
+            : undefined;
     const editorJS = optionalEditor(envelope, root, artifact.bloc.editor);
     const source: Record<string, string> = {};
     const prefix = root ? `${root}/` : "";
@@ -109,7 +115,8 @@ function hydrateBloc(
         ...artifact,
         bloc: {
             ...artifact.bloc,
-            viewJS,
+            ...(viewJS !== undefined ? { viewJS } : {}),
+            ...(compositionHTML !== undefined ? { compositionHTML } : {}),
             ...(editorJS !== undefined ? { editorJS } : {}),
             source,
         },

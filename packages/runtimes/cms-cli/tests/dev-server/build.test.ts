@@ -17,6 +17,29 @@ function tmpBloc(files: Record<string, string>): string {
 }
 
 describe("buildDevBloc", () => {
+    test("builds an internal component without an editor catalogue entry", async () => {
+        const folder = tmpBloc({
+            "Bloc.ts": `customElements.define("BE5_TAG_TO_BE_REPLACED", class extends HTMLElement {});`,
+        });
+        const bloc: DevBloc = {
+            folder,
+            manifest: { internal: true, bloc: "./Bloc.ts", "default-tag": "site-shell-controller" },
+            tag: "site-shell-controller",
+            label: "Site shell controller",
+            group: "Layout",
+            description: "Internal behavior",
+            internal: true,
+            ownership: { kind: "code-managed" },
+            entry: join(folder, "Bloc.ts"),
+        };
+
+        const built = await buildDevBloc(bloc);
+
+        expect(built.internal).toBeTrue();
+        expect(built.viewJS).toContain("site-shell-controller");
+        expect(built.editorJS).toBe("");
+    });
+
     test("injects manifest defaultContent file content into the dev editor bundle", async () => {
         const folder = tmpBloc({
             "Figure.ts": "export class Figure extends HTMLElement {}",
@@ -38,6 +61,7 @@ describe("buildDevBloc", () => {
             label: "Figure",
             group: "Content",
             description: "Image with caption",
+            internal: false,
             ownership: { kind: "code-managed" },
             entry: join(folder, "Figure.ts"),
             editorEntry: join(folder, "BlocEditor.ts"),
@@ -70,6 +94,7 @@ describe("buildDevBloc", () => {
             label: `Grid "layout"`,
             group: "Layout",
             description: `Children can use bleed="wide|full".`,
+            internal: false,
             ownership: { kind: "code-managed" },
             entry: join(folder, "Grid.ts"),
             editorEntry: join(folder, "BlocEditor.ts"),
@@ -102,6 +127,7 @@ describe("buildDevBloc", () => {
             label: "Paragraph",
             group: "Text",
             description: "Native paragraph",
+            internal: false,
             ownership: { kind: "code-managed" },
             editorEntry: join(folder, "BlocEditor.ts"),
         };

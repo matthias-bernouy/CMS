@@ -1,7 +1,11 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
-import { COMPOSITION_INPUT_ATTRIBUTE, COMPOSITION_RUNTIME_ATTRIBUTE } from "@bernouy/components/composition-runtime";
+import {
+    COMPOSITION_INPUT_ATTRIBUTE,
+    COMPOSITION_OUTPUT_ATTRIBUTE,
+    COMPOSITION_RUNTIME_ATTRIBUTE,
+} from "@bernouy/components/composition-runtime";
 
 import type { ShellControllerParts } from "../../../../src/components/Layout/Shell/Controller/Core/Services/shellControllerParts";
 
@@ -57,6 +61,7 @@ export {
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
     COMPOSITION_INPUT_ATTRIBUTE,
+    COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
     describe,
     expect,

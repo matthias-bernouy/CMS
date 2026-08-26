@@ -8,7 +8,5 @@
  */
 export {
     Component,
-    Composition,
     type ComponentMetadata,
-    type CompositionMetadata,
 } from "@bernouy/components/base";

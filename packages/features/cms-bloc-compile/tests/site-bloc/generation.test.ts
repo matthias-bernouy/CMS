@@ -4,12 +4,11 @@ import { definition, publishedSnapshot } from "./fixtures";
 import { expectedBuilderJson, expectedEditorSource } from "./generatedSourceFixtures";
 
 describe("generateSiteBlocSourceBundle", () => {
-    test("generates the exact six conventional source files", () => {
+    test("generates the exact five composition source files", () => {
         const source = generateSiteBlocSourceBundle(definition());
 
         expect(Object.keys(source)).toEqual([
             "manifest.json",
-            "Bloc.ts",
             "BlocEditor.ts",
             "template.html",
             "default.html",
@@ -17,7 +16,7 @@ describe("generateSiteBlocSourceBundle", () => {
         ]);
         expect(source["manifest.json"]).toBe(`{
     "default-tag": "site-hero",
-    "bloc": "./Bloc.ts",
+    "composition": "./template.html",
     "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {
@@ -25,19 +24,6 @@ describe("generateSiteBlocSourceBundle", () => {
         "description": "Reusable hero"
     }
 }
-`);
-        expect(source["Bloc.ts"]).toBe(`import { Component } from "@bernouy/components/base";
-import template from "./template.html" with { type: "text" };
-
-const css = ":host { display: block; }";
-
-export class SiteCompositeBloc extends Component {
-    constructor() {
-        super({ css, template });
-    }
-}
-
-customElements.define("BE5_TAG_TO_BE_REPLACED", SiteCompositeBloc);
 `);
         expect(source["template.html"]).toBe(
             '<basic-container aria-label="A &quot;&lt;&amp;" width="wide"><slot name="title"></slot><slot></slot></basic-container>\n',

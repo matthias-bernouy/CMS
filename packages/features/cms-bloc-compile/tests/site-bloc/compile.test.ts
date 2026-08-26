@@ -10,13 +10,12 @@ describe("generated site bloc compilation", () => {
         );
         const validation = validateBloc({
             tag: "site-hero",
-            viewSource: source["Bloc.ts"],
             editorSource: source["BlocEditor.ts"],
         });
         expect(validation.errors).toEqual([]);
 
         const bloc = await prepare_bloc(
-            new File([source["Bloc.ts"]], "Bloc.ts", { type: "text/typescript" }),
+            null,
             new File([source["BlocEditor.ts"]], "BlocEditor.ts", { type: "text/typescript" }),
             "Hero",
             "Layout",
@@ -24,12 +23,13 @@ describe("generated site bloc compilation", () => {
             "site-hero",
             encoded,
             source["default.html"],
+            { compositionHTML: source["template.html"] },
         );
 
         expect(() => new Function(bloc.viewJS)).not.toThrow();
         expect(() => new Function(bloc.editorJS)).not.toThrow();
-        expect(bloc.viewJS).toContain("window.p9r.Component");
-        expect(bloc.viewJS).toContain('<slot name="title"></slot>');
+        expect(bloc.viewJS).toBe("");
+        expect(bloc.compositionHTML).toContain('<slot name="title"></slot>');
         expect(bloc.editorJS).toContain("window.p9rEditor.Editor");
         expect(bloc.editorJS).toContain("basic-heading-1");
         let registration: { defaultContent?: string } | undefined;

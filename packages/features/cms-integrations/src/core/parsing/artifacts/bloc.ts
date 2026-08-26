@@ -9,6 +9,7 @@ export function parseBlocTemplate(
     const tag = text(value.tag);
     const blocName = text(value.name);
     const viewJS = executableSource(value.viewJS);
+    const compositionHTML = executableSource(value.compositionHTML);
     const editorJS = executableSource(value.editorJS);
     if (!tag) {
         throw new MissingIntegrationParam(`${name}.tag`);
@@ -21,10 +22,13 @@ export function parseBlocTemplate(
         name: blocName,
         ...(text(value.group) ? { group: text(value.group)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
+        ...(value.internal === true ? { internal: true } : {}),
         ...(text(value.path) ? { path: text(value.path)! } : {}),
         ...(text(value.view) ? { view: text(value.view)! } : {}),
+        ...(text(value.composition) ? { composition: text(value.composition)! } : {}),
         ...(value.editor === null ? { editor: null } : text(value.editor) ? { editor: text(value.editor)! } : {}),
         ...(viewJS !== undefined ? { viewJS } : {}),
+        ...(compositionHTML !== undefined ? { compositionHTML } : {}),
         ...(value.editorJS === null ? { editorJS: null } : editorJS !== undefined ? { editorJS } : {}),
         ...(value.source !== undefined ? { source: parseSourceBundle(value.source, `${name}.source`) } : {}),
     };

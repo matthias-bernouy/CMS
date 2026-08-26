@@ -24,23 +24,30 @@ async function hydrateBloc(
     artifact: DeclarativeArtifactTemplate,
     versionRoot: string,
 ): Promise<DeclarativeArtifactTemplate> {
-    if (artifact.type !== "bloc" || artifact.bloc.viewJS) {
+    if (artifact.type !== "bloc" || artifact.bloc.viewJS || artifact.bloc.compositionHTML !== undefined) {
         return artifact;
     }
     if (!artifact.bloc.path) {
         throw new Error(`Bloc artifact "${artifact.bloc.tag}" requires path or viewJS`);
     }
     const blocRoot = await resolveExistingPathWithin(versionRoot, "bloc", artifact.bloc.path);
-    const viewJS = await readFile(
-        await resolveExistingPathWithin(blocRoot, "bloc", artifact.bloc.view ?? "Bloc.ts"),
-        "utf-8",
-    );
+    const compositionHTML = artifact.bloc.composition
+        ? await readFile(await resolveExistingPathWithin(blocRoot, "bloc", artifact.bloc.composition), "utf-8")
+        : undefined;
+    const viewJS =
+        compositionHTML === undefined
+            ? await readFile(
+                  await resolveExistingPathWithin(blocRoot, "bloc", artifact.bloc.view ?? "Bloc.ts"),
+                  "utf-8",
+              )
+            : undefined;
     const editorJS = await readOptionalEditor(blocRoot, artifact.bloc.editor);
     return {
         ...artifact,
         bloc: {
             ...artifact.bloc,
-            viewJS,
+            ...(viewJS !== undefined ? { viewJS } : {}),
+            ...(compositionHTML !== undefined ? { compositionHTML } : {}),
             ...(editorJS !== undefined ? { editorJS } : {}),
             source: await readSourceBundle(blocRoot),
         },

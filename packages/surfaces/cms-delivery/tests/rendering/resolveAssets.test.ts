@@ -63,12 +63,12 @@ describe("resolveRuntimeAssets", () => {
 
         expect(entry.contentType).toBe("text/javascript");
         expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Component\s*:/);
-        expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Composition\s*:/);
         expect(js).toContain("syncResponsiveSourceImageElement");
         expect(js).toContain("cms-width");
 
         (window as any).p9r = {};
         window.eval(js);
+        expect((window as any).p9r.Composition).toBeUndefined();
         expect((window as any).p9r.SOURCE_IMAGE_WIDTHS).toEqual([
             64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,
         ]);

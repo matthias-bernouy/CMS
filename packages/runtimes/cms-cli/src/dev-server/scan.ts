@@ -9,9 +9,11 @@ import { SITE_BLOC_BUILDER_FILE } from "cms-cli/push/blocs/siteBuilder";
 import { scanSiteDevBloc } from "cms-cli/dev-server/bloc-build/siteBloc";
 
 export type BlocManifest = {
+    internal?: boolean;
     runtime?: string;
     editor?: string;
     bloc?: string;
+    composition?: string;
     defaultContent?: string;
     "default-tag"?: string;
     meta?: {
@@ -30,10 +32,13 @@ export type DevBloc = {
     label: string;
     group: string;
     description: string;
+    internal: boolean;
     ownership: BlocOwnership;
     siteDefinition?: SiteBlocDefinition;
     siteBuildSnapshot?: SiteBlocSnapshot;
     entry?: string;
+    /** Server-expanded light-DOM template for blocs without a view entry. */
+    compositionPath?: string;
     editorEntry?: string;
     /** `template.html` next to the entry, when the bloc has a shadow template. */
     templatePath?: string;
@@ -155,10 +160,13 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
     }
 
     const native = isNativeBlocTag(tag);
-    const blocRel = manifest.bloc || (native ? undefined : "./Bloc.ts");
+    const conventionalView = join(folder, "Bloc.ts");
+    const blocRel = manifest.bloc ?? (!native && existsSync(conventionalView) ? "./Bloc.ts" : undefined);
+    const compositionRel = manifest.composition ?? (!native && !blocRel ? "./template.html" : undefined);
     const editorRel = manifest.editor;
 
     const entry = blocRel ? safeJoin(folder, blocRel) : undefined;
+    const compositionPath = compositionRel ? safeJoin(folder, compositionRel) : undefined;
     const editorEntry = editorRel ? safeJoin(folder, editorRel) : undefined;
 
     const templatePath = entry ? join(dirname(entry), "template.html") : join(folder, "template.html");
@@ -171,8 +179,10 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         label: manifest.meta?.title || basename(folder),
         group: folderToCategory(parentName),
         description: manifest.meta?.description || "",
+        internal: manifest.internal === true,
         ownership: structuredClone(options.ownershipByTag?.get(tag) ?? { kind: "code-managed" }),
         ...(entry ? { entry } : {}),
+        ...(compositionPath ? { compositionPath } : {}),
         ...(editorEntry ? { editorEntry } : {}),
         ...(existsSync(templatePath) ? { templatePath } : {}),
         ...(configurationPath && existsSync(configurationPath) ? { configurationPath } : {}),

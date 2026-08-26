@@ -40,7 +40,6 @@ test("site-builder definitions round-trip without allowing a foreign owner", asy
 
     const source = await repository.getBlocSource(definition.tag);
     expect(Object.keys(source ?? {}).sort()).toEqual([
-        "Bloc.ts",
         "BlocEditor.ts",
         "builder.json",
         "default.html",

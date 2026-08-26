@@ -47,15 +47,15 @@ describe("site-builder bloc synchronization", () => {
         expect(form.get("group")).toBe("Draft layouts");
         const pushedSource = JSON.parse(String(form.get("source"))) as Record<string, string>;
         expect(Object.keys(pushedSource).sort()).toEqual([
-            "Bloc.ts",
             "BlocEditor.ts",
             "builder.json",
             "default.html",
             "manifest.json",
             "template.html",
         ]);
-        expect(Buffer.from(pushedSource["Bloc.ts"]!, "base64").toString("utf-8")).not.toContain(
-            "untrusted stale source",
+        expect(pushedSource["Bloc.ts"]).toBeUndefined();
+        expect(Buffer.from(pushedSource["manifest.json"]!, "base64").toString("utf-8")).toContain(
+            '"composition": "./template.html"',
         );
         const manifest = JSON.parse(Buffer.from(pushedSource["manifest.json"]!, "base64").toString("utf-8"));
         expect(manifest.meta.title).toBe("Draft shell");

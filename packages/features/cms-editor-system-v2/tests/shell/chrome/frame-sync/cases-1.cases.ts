@@ -2,6 +2,7 @@ import {
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
     COMPOSITION_INPUT_ATTRIBUTE,
+    COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
     describe,
     expect,
@@ -53,9 +54,11 @@ describe("Shell frame binding sync", () => {
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
         expect(calls).toEqual([]);
 
+        editorDocument.querySelector("[data-cms-content]")!.innerHTML = "<p data-latest>Latest edit</p>";
         shellParts(shell).state.editorMode = "view";
         shellParts(shell).commands.syncEditorMode();
 
+        expect(viewDocument.querySelector("[data-cms-content]")?.innerHTML).toBe('<p data-latest="">Latest edit</p>');
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
         expect(calls).toEqual([]);
     });
@@ -93,7 +96,9 @@ describe("Shell frame binding sync", () => {
                     <template ${COMPOSITION_INPUT_ATTRIBUTE}>
                         <span data-authored>Authored input</span>
                     </template>
-                    <nav data-generated>Generated header</nav>
+                    <p9r-composition-output ${COMPOSITION_OUTPUT_ATTRIBUTE}>
+                        <nav data-generated>Generated header</nav>
+                    </p9r-composition-output>
                 </site-header>
             </main>
         `);
@@ -109,7 +114,7 @@ describe("Shell frame binding sync", () => {
         expect(content).not.toContain("data-generated");
     });
 
-    test("syncs canonical composition input without accumulating runtime output", async () => {
+    test("syncs expanded composition Light DOM without accumulating editor runtime output", async () => {
         installDom();
         const { syncViewFrameContent } = await import(
             "../../../../src/components/Layout/Shell/Domain/Bindings/shellBindingPreview"
@@ -118,7 +123,9 @@ describe("Shell frame binding sync", () => {
             <main data-cms-content>
                 <site-header ${COMPOSITION_RUNTIME_ATTRIBUTE}>
                     <template ${COMPOSITION_INPUT_ATTRIBUTE}><span data-authored>Input</span></template>
-                    <nav data-generated>Generated</nav>
+                    <p9r-composition-output ${COMPOSITION_OUTPUT_ATTRIBUTE}>
+                        <nav data-generated>Generated</nav>
+                    </p9r-composition-output>
                 </site-header>
             </main>
         `);
@@ -128,9 +135,10 @@ describe("Shell frame binding sync", () => {
         syncViewFrameContent(editorDocument, viewDocument, "loading", false);
 
         const content = viewDocument.querySelector("[data-cms-content]")!.innerHTML;
-        expect(content).toContain("data-authored");
+        expect(content).toContain("data-generated");
+        expect(content).not.toContain("data-authored");
         expect(content).not.toContain(COMPOSITION_RUNTIME_ATTRIBUTE);
         expect(content).not.toContain(COMPOSITION_INPUT_ATTRIBUTE);
-        expect(content).not.toContain("data-generated");
+        expect(content).not.toContain(COMPOSITION_OUTPUT_ATTRIBUTE);
     });
 });

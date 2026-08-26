@@ -26,6 +26,8 @@ export function projectBlocList(records: BlocRecord[]): BlocListItemResponse[] {
                       name: bloc.name,
                       group: bloc.group || "",
                       description: bloc.description || "",
+                      ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
+                      ...(bloc.internal ? { internal: true } : {}),
                       ownership: structuredClone(record.ownership),
                   },
               ]

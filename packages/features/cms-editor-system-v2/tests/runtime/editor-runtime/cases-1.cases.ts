@@ -27,7 +27,7 @@ import {
 } from "./support/index";
 
 describe("EditorRuntime", () => {
-    test("treats generated composition content as an opaque runtime detail", () => {
+    test("keeps generated composition content opaque while exposing authored slots", () => {
         const { document, HTMLElement } = parseHTML(`
             <main id="content-root">
                 <x-parent id="composition" ${COMPOSITION_RUNTIME_ATTRIBUTE}>
@@ -66,7 +66,7 @@ describe("EditorRuntime", () => {
         expect(runtime.getEditor(nestedComposition)).toBeUndefined();
         expect(runtime.getClosestEditor(generated)?.target).toBe(composition);
         runtime.select(composition);
-        expect(runtime.getSelection()?.contentSlots).toEqual([]);
+        expect(runtime.getSelection()?.contentSlots).toEqual([childContentSlot]);
         expect(runtime.getSelection()?.textCapability).toBeNull();
     });
 

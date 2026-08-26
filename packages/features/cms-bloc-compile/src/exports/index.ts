@@ -12,3 +12,7 @@ export { isNativeBlocTag } from "cms-bloc-compile/core/nativeBlocTags";
 export { validateBloc, validateBlocTag } from "cms-bloc-compile/core/validateBloc";
 export { p9rExternalsPlugin } from "cms-bloc-compile/core/p9rExternalsPlugin";
 export { generateSiteBlocSourceBundle } from "cms-bloc-compile/core/site-bloc/generateSiteBlocSourceBundle";
+export {
+    serializeSiteBlocDefault,
+    serializeSiteBlocTemplate,
+} from "cms-bloc-compile/core/site-bloc/siteBlocHtml";

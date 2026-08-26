@@ -5,7 +5,7 @@ import DeliveryCms from "cms-delivery/DeliveryCms";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
 
 describe("Delivery robots", () => {
-    test("allows public files, variants, and only declared public Source images", async () => {
+    test("allows rendering assets, public files, variants, and only declared public Source images", async () => {
         const runner = new CaptureRunner("/site");
         const sources = new InMemorySourceRepository();
         await sources.createSource({
@@ -39,6 +39,15 @@ describe("Delivery robots", () => {
         )(new Request("https://unexpected.test/site/robots.txt"));
         const body = await response.text();
 
+        for (const path of [
+            "/site/.cms/style",
+            "/site/.cms/blocset",
+            "/site/.cms/assets/component.js",
+            "/site/.cms/assets/cms-binding-core.js",
+        ]) {
+            expect(body).toContain(`Allow: ${path}$\n`);
+            expect(body).toContain(`Allow: ${path}?\n`);
+        }
         expect(body).toContain("Allow: /site/.cms/files/\n");
         expect(body).toContain("Allow: /site/.cms/img/\n");
         expect(body).toContain("Allow: /site/.cms/sources/catalog/publicImage$\n");

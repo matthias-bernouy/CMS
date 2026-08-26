@@ -46,10 +46,13 @@ export type DeclarativeBlocArtifactTemplate = {
         name: string;
         group?: string;
         description?: string;
+        internal?: boolean;
         path?: string;
         view?: string;
+        composition?: string;
         editor?: string | null;
         viewJS?: string;
+        compositionHTML?: string;
         editorJS?: string | null;
         source?: Record<string, string>;
     };

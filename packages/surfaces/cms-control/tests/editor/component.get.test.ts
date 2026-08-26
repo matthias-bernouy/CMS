@@ -39,7 +39,6 @@ describe("editor component runtime endpoint", () => {
             expect(response.headers.get("content-type")).toContain("text/javascript");
             expect(js).toContain("window.p9r");
             expect(js).toContain("Component");
-            expect(js).toContain("Composition");
             expect(js).toContain("syncResponsiveSourceImageElement");
             expect(js).toContain("cms-width");
             expect(js).not.toContain(`define("base-container"`);
@@ -47,6 +46,7 @@ describe("editor component runtime endpoint", () => {
 
             (window as any).p9r = {};
             window.eval(js);
+            expect((window as any).p9r.Composition).toBeUndefined();
             expect((window as any).p9r.SOURCE_IMAGE_WIDTHS).toEqual([
                 64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,
             ]);

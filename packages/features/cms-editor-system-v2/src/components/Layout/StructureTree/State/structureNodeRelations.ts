@@ -1,4 +1,5 @@
 import type { ContentSlot, Editor } from "@bernouy/cms-content/editor";
+import { COMPOSITION_AUTHORED_ATTRIBUTE } from "@bernouy/components/base";
 import type { EditorStructureNode, StructureNode } from "../../../../runtime";
 
 export function canDuplicateNode(
@@ -40,7 +41,7 @@ export function canDeleteNode(
 }
 
 export function slotForChild(parent: EditorStructureNode, child: EditorStructureNode): ContentSlot | undefined {
-    const childSlot = child.target.getAttribute("slot") ?? undefined;
+    const childSlot = authoredSlot(child.target);
     return parent.editor.getContentSlots().find((slot) => (slot.slot ?? undefined) === childSlot);
 }
 
@@ -53,9 +54,7 @@ export function slotChildCount(
     slot: ContentSlot,
     editorChildrenOf: (parent: EditorStructureNode) => EditorStructureNode[],
 ): number {
-    return editorChildrenOf(parent).filter(
-        (child) => (child.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined),
-    ).length;
+    return editorChildrenOf(parent).filter((child) => authoredSlot(child.target) === (slot.slot ?? undefined)).length;
 }
 
 export function parentStructureNode(nodes: StructureNode[], child: EditorStructureNode): EditorStructureNode | null {
@@ -83,14 +82,18 @@ export function siblingStructureNode(
     offset: -1 | 1,
 ): EditorStructureNode | null {
     const parent = parentStructureNode(nodes, node);
-    const slotName = node.target.getAttribute("slot") ?? undefined;
-    const siblings = (parent?.children ?? nodes).filter(
-        (candidate) => (candidate.target.getAttribute("slot") ?? undefined) === slotName,
-    );
+    const slotName = authoredSlot(node.target);
+    const siblings = (parent?.children ?? nodes).filter((candidate) => authoredSlot(candidate.target) === slotName);
     const index = siblings.indexOf(node);
     return index >= 0 ? (siblings[index + offset] ?? null) : null;
 }
 
 function nodeForEditorChildren(node: StructureNode): StructureNode[] {
     return node.children.flatMap((child) => [child, ...nodeForEditorChildren(child)]);
+}
+
+function authoredSlot(element: HTMLElement): string | undefined {
+    return element.hasAttribute(COMPOSITION_AUTHORED_ATTRIBUTE)
+        ? element.getAttribute(COMPOSITION_AUTHORED_ATTRIBUTE) || undefined
+        : (element.getAttribute("slot") ?? undefined);
 }

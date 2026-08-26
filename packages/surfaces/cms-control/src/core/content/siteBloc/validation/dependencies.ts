@@ -30,7 +30,9 @@ export function siteBlocDependencyGraph(records: BlocRecord[]): Map<string, Set<
     return new Map(
         published.map((record) => {
             const declared = record.siteDefinition?.published?.dependencies;
-            const inferred = declared ?? findUsedBlocTags(record.artifact?.viewJS ?? "", known);
+            const inferred =
+                declared ??
+                findUsedBlocTags(`${record.artifact?.compositionHTML ?? ""}\n${record.artifact?.viewJS ?? ""}`, known);
             return [record.tag, new Set(inferred.filter((tag) => tag !== record.tag))];
         }),
     );

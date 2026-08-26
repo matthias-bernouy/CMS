@@ -41,12 +41,9 @@ export function buildBindingCloak(document: Document, head: HTMLElement, enabled
 }
 
 /**
- * Anti-FOUC shell: while any bloc custom element on the page is still
- * undefined (JS not yet executed), hide the body entirely and paint a
- * plain white page. As soon as every bloc registers its tag the `:has`
- * rules stop matching and the real content flips in at its final layout
- * — no partial-render jump. Scoped to the blocs actually present on this
- * page so unrelated custom elements don't freeze the paint.
+ * Progressive Bloc shell: undefined custom-element hosts stay layout-neutral
+ * while their server-rendered Light DOM remains visible. Once registered, the
+ * component's own display and Shadow DOM styling take over.
  */
 export function buildFoucShell(document: Document, head: HTMLElement, usedTags: string[]): void {
     const css = buildBlocFoucShellCss(usedTags);

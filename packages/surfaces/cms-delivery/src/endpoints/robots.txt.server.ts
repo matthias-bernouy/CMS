@@ -13,6 +13,7 @@ export default async function RobotsServer(req: Request, delivery: DeliveryCms) 
     const body = [
         "User-agent: *",
         "Allow: /",
+        ...publicRuntimePaths(delivery).flatMap((path) => [`Allow: ${path}$`, `Allow: ${path}?`]),
         `Allow: ${delivery.basePath}${CMS_FILES_ROUTE}/`,
         `Allow: ${delivery.basePath}${CMS_IMAGE_VARIANT_ROUTE}/`,
         ...sourceImagePaths.flatMap((path) => [`Allow: ${path}$`, `Allow: ${path}?`]),
@@ -22,6 +23,15 @@ export default async function RobotsServer(req: Request, delivery: DeliveryCms) 
     ].join("\n");
 
     return sendCompressed(req, compress(body, "text/plain; charset=utf-8"));
+}
+
+function publicRuntimePaths(delivery: DeliveryCms): string[] {
+    return [
+        `${delivery.cmsPathPrefix}/style`,
+        `${delivery.cmsPathPrefix}/blocset`,
+        `${delivery.cmsPathPrefix}/assets/component.js`,
+        `${delivery.cmsPathPrefix}/assets/cms-binding-core.js`,
+    ];
 }
 
 async function canonicalSeoBaseUrl(delivery: DeliveryCms): Promise<string | null> {

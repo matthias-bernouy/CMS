@@ -2,13 +2,12 @@ import type { SiteBlocDefinition } from "@bernouy/cms-content";
 import type { EditorCatalogEntry } from "@bernouy/cms-content/editor";
 import { createSiteBlocCatalogs, isTagInsertable } from "../siteBlocCatalog";
 import { scanPreviewAccessibility } from "../previewAccessibility";
-import { siteBlocFrameUrl, type BlocCatalogueItem, type SiteBlocMode } from "../siteBlocApi";
+import { siteBlocFrameUrl, type BlocCatalogueItem } from "../siteBlocApi";
 import type { SiteBlocView } from "../siteBlocView";
 
 export type SiteBlocFrameReadyDetail = { document: Document; kind: "editor" | "view"; url: string };
 
 export class SiteBlocFrames {
-    mode: SiteBlocMode = "structure";
     ready = false;
     dirty = false;
     private frameNonce = 0;
@@ -22,49 +21,32 @@ export class SiteBlocFrames {
     ) {}
 
     configure(
-        mode: SiteBlocMode,
         definition: SiteBlocDefinition,
         catalogue: BlocCatalogueItem[],
         baseCatalog: Array<EditorCatalogEntry & { insertable?: boolean }>,
     ): void {
-        this.mode = mode;
         this.ready = false;
         this.dirty = false;
         this.observer?.disconnect();
         const catalogs = createSiteBlocCatalogs(baseCatalog, catalogue, definition);
-        if (mode === "structure") {
-            this.view.shell.setCatalog(catalogs.structure);
-            this.view.shell.setEditingPolicy({
-                bindings: false,
-                conditions: false,
-                repeats: false,
-                templates: false,
-                looseMedia: false,
-                canInsertTag: (tag, entry) => this.canInsertStructureTag(catalogs.structureTags, tag, entry),
-            });
-        } else {
-            this.view.shell.setCatalog(catalogs.defaults);
-            this.view.shell.setEditingPolicy({
-                bindings: true,
-                canInsertTag: (tag) => tag.toLowerCase() !== definition.tag.toLowerCase(),
-            });
-        }
-        this.editorUrl = this.nextUrl(definition, mode);
+        this.view.shell.setCatalog(catalogs.structure);
+        this.view.shell.setEditingPolicy({
+            bindings: false,
+            conditions: false,
+            repeats: false,
+            templates: false,
+            looseMedia: false,
+            canInsertTag: (tag, entry) => this.canInsertStructureTag(catalogs.structureTags, tag, entry),
+        });
+        this.editorUrl = this.nextUrl(definition, "structure");
         this.previewUrl = this.nextUrl(definition, "preview");
         this.view.shell.setPreviewMode("external");
         this.view.shell.setFrameUrls({ editor: this.editorUrl, view: this.previewUrl });
         const archived = definition.lifecycle === "archived";
         this.view.setReadOnly(archived);
         this.view.shell.setEditorMode(archived ? "view" : "edit");
-        this.view.setMode(mode);
-        this.view.setStatus(this.loadingStatus(definition, mode));
+        this.view.setStatus(this.loadingStatus(definition));
         this.onStateChange();
-    }
-
-    preview(definition: SiteBlocDefinition): void {
-        this.previewUrl = this.nextUrl(definition, "preview");
-        this.view.shell.reloadPreview(this.previewUrl);
-        this.view.shell.setEditorMode("view");
     }
 
     handleReady(detail: SiteBlocFrameReadyDetail, definition: SiteBlocDefinition): void {
@@ -80,7 +62,7 @@ export class SiteBlocFrames {
             this.view.setStatus("Archived bloc · read-only preview. Restore it to continue editing.");
         } else {
             this.observe(detail.document);
-            this.view.setStatus(this.mode === "structure" ? "Structure ready." : "Default content ready.");
+            this.view.setStatus("Composition ready.");
         }
         this.onStateChange();
     }
@@ -120,15 +102,15 @@ export class SiteBlocFrames {
         );
     }
 
-    private nextUrl(definition: SiteBlocDefinition, mode: SiteBlocMode | "preview"): string {
+    private nextUrl(definition: SiteBlocDefinition, mode: "structure" | "preview"): string {
         this.frameNonce += 1;
         return siteBlocFrameUrl(definition.tag, mode, definition.draftRevision, this.frameNonce);
     }
 
-    private loadingStatus(definition: SiteBlocDefinition, mode: SiteBlocMode): string {
+    private loadingStatus(definition: SiteBlocDefinition): string {
         if (definition.lifecycle === "archived") {
             return "Archived bloc · read-only preview. Restore it to continue editing.";
         }
-        return mode === "structure" ? "Loading private structure…" : "Loading default slot content…";
+        return "Loading composition…";
     }
 }

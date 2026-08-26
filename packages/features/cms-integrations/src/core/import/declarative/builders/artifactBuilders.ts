@@ -88,8 +88,11 @@ export function buildBlocArtifacts(
             .map((artifact) => {
                 const tag = resolveTemplate(artifact.bloc.tag, context);
                 const name = resolveTemplate(artifact.bloc.name, context);
-                if (!artifact.bloc.viewJS) {
-                    throw new IntegrationInputError("artifacts", `bloc "${tag}" is missing viewJS`);
+                if (!artifact.bloc.viewJS && artifact.bloc.compositionHTML === undefined) {
+                    throw new IntegrationInputError("artifacts", `bloc "${tag}" is missing a view or composition`);
+                }
+                if (artifact.bloc.viewJS && artifact.bloc.compositionHTML !== undefined) {
+                    throw new IntegrationInputError("artifacts", `bloc "${tag}" defines both a view and composition`);
                 }
                 return {
                     tag,
@@ -98,7 +101,12 @@ export function buildBlocArtifacts(
                     ...(artifact.bloc.description
                         ? { description: resolveTemplate(artifact.bloc.description, context) }
                         : {}),
-                    viewJS: artifact.bloc.viewJS,
+                    ...(artifact.bloc.internal ? { internal: true } : {}),
+                    ...(artifact.bloc.viewJS && artifact.bloc.view ? { viewPath: artifact.bloc.view } : {}),
+                    ...(artifact.bloc.viewJS ? { viewJS: artifact.bloc.viewJS } : {}),
+                    ...(artifact.bloc.compositionHTML !== undefined
+                        ? { compositionHTML: artifact.bloc.compositionHTML }
+                        : {}),
                     ...(artifact.bloc.editorJS !== undefined ? { editorJS: artifact.bloc.editorJS } : {}),
                     ...(artifact.bloc.source ? { source: artifact.bloc.source } : {}),
                 };

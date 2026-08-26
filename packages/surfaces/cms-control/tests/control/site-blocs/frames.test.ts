@@ -1,9 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { BlocRevisionConflictError, ContentValidationError } from "@bernouy/cms-content";
+import { BlocRevisionConflictError } from "@bernouy/cms-content";
 import { parseHTML } from "linkedom";
 import getSiteBlocFrame from "cms-control/api/_content/site-bloc/frame.get";
 import getDependencyScript from "cms-control/api/_content/site-bloc/runtime/dependencies.js.get";
-import getDraftScript from "cms-control/api/_content/site-bloc/runtime/draft.js.get";
 import { seedBloc, seedPublishedSiteBloc, siteBlocHarness, siteSnapshot } from "./fixtures";
 
 function frameSnapshot() {
@@ -69,7 +68,8 @@ describe("site bloc authoring frames", () => {
         expect(defaultHtml).toContain("cms-binding-disabled");
         expect(defaultHtml).toContain("/cms/api/editor/binding-core.js");
         expect(defaultHtml).toContain("/cms/api/site-bloc/runtime/dependencies.js?id=site-framed&amp;revision=1");
-        expect(defaultHtml).toContain("/cms/api/site-bloc/runtime/draft.js?id=site-framed&amp;revision=1");
+        expect(defaultHtml).not.toContain("/cms/api/site-bloc/runtime/draft.js");
+        expect(defaultHtml).toContain("data-p9r-composition-output");
         expect(defaultImage?.getAttribute("src")).toBeNull();
         expect(defaultImage?.getAttribute("data-cms-src")).toBe("/media/{{ item.image }}.jpg");
 
@@ -98,21 +98,9 @@ describe("site bloc authoring frames", () => {
         expect(script).not.toContain("CURRENT_BLOC_MARKER");
     });
 
-    test("rejects malformed and stale runtime revisions with domain HTTP errors", async () => {
+    test("rejects stale dependency revisions with a domain HTTP error", async () => {
         const { cms } = await frameFixture();
 
-        await expect(
-            getDraftScript(
-                new Request("http://localhost/cms/api/site-bloc/runtime/draft.js?id=site-framed&revision=bad"),
-                cms,
-            ),
-        ).rejects.toBeInstanceOf(ContentValidationError);
-        await expect(
-            getDraftScript(
-                new Request("http://localhost/cms/api/site-bloc/runtime/draft.js?id=site-framed&revision=2"),
-                cms,
-            ),
-        ).rejects.toBeInstanceOf(BlocRevisionConflictError);
         await expect(
             getDependencyScript(
                 new Request("http://localhost/cms/api/site-bloc/runtime/dependencies.js?id=site-framed&revision=2"),

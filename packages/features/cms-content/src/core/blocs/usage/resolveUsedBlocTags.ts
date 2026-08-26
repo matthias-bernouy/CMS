@@ -1,19 +1,19 @@
 import type { ContentReader } from "cms-content/interfaces/ContentReader";
-import { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";
+import { findUsedBlocTags } from "cms-content/core/blocs/usage/findUsedBlocTags";
 
-type BlocListItem = { id: string };
+type BlocListItem = { id: string; compositionHTML?: string };
 
 /**
- * Resolves page blocs and the blocs referenced by their compiled templates.
- * Compiled view bundles retain template HTML, so the same tag scanner can
- * follow composition dependencies without making authored blocs register
- * each other manually.
+ * Resolves page blocs and the blocs referenced by server composition templates
+ * or compiled component views. The same tag scanner follows both dependency
+ * forms without making authored blocs register each other manually.
  */
 export function createBlocUsageResolver(
     blocList: BlocListItem[],
     repository: Pick<ContentReader, "getBlocViewJS">,
 ): (content: string) => Promise<string[]> {
     const viewCache = new Map<string, Promise<string | null>>();
+    const compositionByTag = new Map(blocList.map((bloc) => [bloc.id, bloc.compositionHTML]));
 
     const viewFor = (tag: string): Promise<string | null> => {
         const cached = viewCache.get(tag);
@@ -36,15 +36,22 @@ export function createBlocUsageResolver(
         let frontier = [...used];
 
         while (frontier.length > 0) {
-            const views = await Promise.all(frontier.map(viewFor));
+            const sources = await Promise.all(
+                frontier.map(async (tag) => {
+                    const composition = compositionByTag.get(tag);
+                    return [composition, await viewFor(tag)];
+                }),
+            );
             const next = new Set<string>();
-            for (const view of views) {
-                if (!view) {
-                    continue;
-                }
-                for (const tag of findUsedBlocTags(view, blocList)) {
-                    if (!used.has(tag)) {
-                        next.add(tag);
+            for (const sourcesForTag of sources) {
+                for (const source of sourcesForTag) {
+                    if (!source) {
+                        continue;
+                    }
+                    for (const tag of findUsedBlocTags(source, blocList)) {
+                        if (!used.has(tag)) {
+                            next.add(tag);
+                        }
                     }
                 }
             }

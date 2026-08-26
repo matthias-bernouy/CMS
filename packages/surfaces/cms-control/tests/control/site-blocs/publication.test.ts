@@ -67,7 +67,6 @@ describe("site bloc publication", () => {
             ownership: published.ownership,
         });
         expect(record?.artifact?.source).toEqual({
-            "Bloc.ts": expect.any(String),
             "BlocEditor.ts": expect.any(String),
             "builder.json": expect.any(String),
             "default.html": expect.any(String),

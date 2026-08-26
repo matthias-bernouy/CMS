@@ -15,7 +15,15 @@ export type TBloc = {
     name: string;
     group: string;
     description: string;
+    /** Internal behavior component omitted from the authoring catalogue. */
+    internal?: boolean;
     viewJS: string;
+    /**
+     * Server-rendered light-DOM template. A bloc carrying this field is a
+     * composition: its authored host is expanded before delivery and it does
+     * not need a client custom-element definition of its own.
+     */
+    compositionHTML?: string;
     editorJS: string;
     ownership: BlocOwnership;
     /**

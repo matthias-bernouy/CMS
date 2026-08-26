@@ -23,7 +23,6 @@ describe("site-builder CLI import boundary", () => {
         expect(response.status).toBe(200);
         expect(published.draft.defaultContent).toBe("");
         expect(Object.keys(source ?? {}).sort()).toEqual([
-            "Bloc.ts",
             "BlocEditor.ts",
             "builder.json",
             "default.html",

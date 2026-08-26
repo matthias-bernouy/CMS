@@ -15,8 +15,10 @@ export type BuiltBloc = {
     label: string;
     group: string;
     description: string;
+    internal: boolean;
     folder: string;
     viewJS: string;
+    compositionHTML?: string;
     editorJS: string | null;
     ownership: BlocOwnership;
     siteDefinition?: SiteBlocDefinition;
@@ -34,8 +36,9 @@ async function buildPreparedBloc(bloc: DevBloc): Promise<BuiltBloc> {
     const native = isNativeBlocTag(bloc.tag);
     await validateSources(bloc, native);
 
-    const viewJS = native ? "" : await buildRequiredView(bloc);
-    let editorJS = await buildEditor(bloc, native);
+    const compositionHTML = bloc.compositionPath ? await readFile(bloc.compositionPath, "utf-8") : undefined;
+    const viewJS = native || compositionHTML !== undefined ? "" : await buildRequiredView(bloc);
+    let editorJS = bloc.internal ? "" : await buildEditor(bloc, native);
     const defaultContent = await readDefaultContent(bloc);
     const defaultContentLiteral = JSON.stringify(defaultContent ?? "").replaceAll("$", "$$$$");
 
@@ -51,8 +54,10 @@ async function buildPreparedBloc(bloc: DevBloc): Promise<BuiltBloc> {
         label: bloc.label,
         group: bloc.group,
         description: bloc.description,
+        internal: bloc.internal,
         folder: bloc.folder,
         viewJS,
+        ...(compositionHTML !== undefined ? { compositionHTML } : {}),
         editorJS,
         ownership: structuredClone(bloc.ownership),
     };
@@ -68,7 +73,8 @@ async function buildGeneratedSiteBloc(bloc: DevBloc): Promise<BuiltBloc> {
         const generated: DevBloc = {
             ...bloc,
             folder: generatedFolder,
-            entry: join(generatedFolder, "Bloc.ts"),
+            entry: undefined,
+            compositionPath: join(generatedFolder, "template.html"),
             editorEntry: join(generatedFolder, "BlocEditor.ts"),
             templatePath: join(generatedFolder, "template.html"),
             siteDefinition: undefined,
@@ -142,6 +148,9 @@ async function buildEditor(bloc: DevBloc, native: boolean): Promise<string> {
     }
     if (!native && bloc.entry) {
         return buildOpaqueEditorBundle(bloc.folder, bloc.entry, bloc.tag);
+    }
+    if (!native && bloc.compositionPath) {
+        throw new Error(`Composition "${bloc.tag}" requires an editor entry`);
     }
     if (!native) {
         throw new Error(`Missing view entry for ${bloc.tag}`);

@@ -1,3 +1,6 @@
-import "./cases-1.cases";
-import "./cases-2.cases";
-import "./cases-3.cases";
+import { test } from "bun:test";
+import { runIsolatedTestFixture } from "../../support/runIsolatedTestFixture";
+
+test("runs Shell frame synchronization in an isolated DOM process", () => {
+    runIsolatedTestFixture(new URL("./shellFrameSync.fixture.ts", import.meta.url));
+});

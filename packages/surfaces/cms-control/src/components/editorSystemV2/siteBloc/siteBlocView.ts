@@ -2,7 +2,6 @@ import type { SiteBlocDefinition } from "@bernouy/cms-content";
 import { Shell } from "@bernouy/cms-editor-system-v2";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import type { PreviewAccessibilityIssue } from "./previewAccessibility";
-import type { SiteBlocMetadata, SiteBlocMode } from "./siteBlocApi";
 
 type BuilderShell = Shell & {
     requestSave(): void;
@@ -11,42 +10,18 @@ type BuilderShell = Shell & {
 
 export class SiteBlocView {
     readonly shell: BuilderShell;
-    private readonly detailsButton: HTMLButtonElement;
+    private topBar: HTMLElement | null = null;
+    private publishButton: HTMLButtonElement | null = null;
 
     constructor(private readonly root: ShadowRoot) {
         this.shell = this.require<BuilderShell>("cms-editor-shell");
-        this.detailsButton = this.require('[data-action="details"]');
-        this.require<HTMLAnchorElement>("[data-back]").href = `${getMetaBasePath()}/admin/blocs`;
-    }
-
-    metadata(): SiteBlocMetadata {
-        return {
-            name: this.field("name").value.trim(),
-            group: this.field("group").value.trim(),
-            description: this.field("description").value.trim(),
-        };
+        this.shell.setAttribute("back-href", `${getMetaBasePath()}/admin/blocs`);
     }
 
     setDefinition(definition: SiteBlocDefinition): void {
-        const { draft } = definition;
-        this.require("[data-name]").textContent = draft.name;
-        this.require("[data-tag]").textContent = definition.tag;
-        this.require("[data-dialog-tag]").textContent = definition.tag;
-        this.field("name").value = draft.name;
-        this.field("group").value = draft.group;
-        this.field("description").value = draft.description;
-        const state = this.require("[data-state]");
-        const unpublished = definition.publishedRevision !== definition.draftRevision;
-        state.textContent =
-            definition.lifecycle === "archived" ? "Archived" : unpublished ? "Draft changes" : "Published";
-        state.dataset.tone = definition.lifecycle === "archived" ? "archived" : unpublished ? "warning" : "published";
-        const archive = this.require<HTMLButtonElement>('[data-action="archive"]');
-        archive.textContent = definition.lifecycle === "archived" ? "Restore" : "Archive";
-    }
-
-    setMode(mode: SiteBlocMode): void {
-        for (const button of Array.from(this.root.querySelectorAll<HTMLButtonElement>("[data-mode]"))) {
-            button.ariaPressed = String(button.dataset.mode === mode);
+        const archive = this.chromeButton('[data-action="delete"]');
+        if (archive) {
+            archive.textContent = definition.lifecycle === "archived" ? "Restore" : "Archive";
         }
     }
 
@@ -54,27 +29,24 @@ export class SiteBlocView {
         this.require(".builder").setAttribute("aria-busy", String(input.busy));
         const disabled = input.busy || !input.ready || !input.definition;
         const archived = input.definition?.lifecycle === "archived";
-        for (const button of Array.from(this.root.querySelectorAll<HTMLButtonElement>("[data-mode], [data-action]"))) {
-            if (button.dataset.action === "close-details" || button.dataset.action === "details") {
-                button.disabled = input.busy || !input.definition;
-                continue;
-            }
-            button.disabled = disabled;
+        const settings = this.chromeButton('[data-action="page-settings"]');
+        const save = this.chromeButton('[data-action="save"]');
+        const archive = this.chromeButton('[data-action="delete"]');
+        if (settings) {
+            settings.disabled = input.busy || !input.definition || Boolean(archived);
         }
-        if (archived) {
-            for (const button of Array.from(
-                this.root.querySelectorAll<HTMLButtonElement>(
-                    '[data-mode], [data-action="save"], [data-action="preview"], [data-action="publish"]',
-                ),
-            )) {
-                button.disabled = true;
-            }
-            this.require<HTMLButtonElement>('[data-action="archive"]').disabled = input.busy;
+        if (save) {
+            save.disabled = disabled || Boolean(archived);
         }
-        const publish = this.require<HTMLButtonElement>('[data-action="publish"]');
-        if (input.definition) {
+        if (archive) {
+            archive.disabled = input.busy || !input.definition || (!input.ready && !archived);
+        }
+        if (this.publishButton) {
+            this.publishButton.disabled = disabled || Boolean(archived);
+        }
+        if (input.definition && this.publishButton) {
             const unpublished = input.definition.publishedRevision !== input.definition.draftRevision;
-            publish.disabled = disabled || input.definition.lifecycle === "archived" || (!input.dirty && !unpublished);
+            this.publishButton.disabled = disabled || Boolean(archived) || (!input.dirty && !unpublished);
         }
     }
 
@@ -105,43 +77,47 @@ export class SiteBlocView {
         list.hidden = issues.length === 0;
     }
 
-    openDetails(): void {
-        this.require("[data-details-dialog]").hidden = false;
-        this.field("name").focus();
-    }
-
-    closeDetails(): void {
-        this.require("[data-details-dialog]").hidden = true;
-        this.detailsButton.focus();
-    }
-
-    detailsOpen(): boolean {
-        return !this.require("[data-details-dialog]").hidden;
-    }
-
-    async simplifyShellChrome(): Promise<void> {
+    async configureShellChrome(publish: () => void): Promise<void> {
+        await customElements.whenDefined("cms-editor-shell");
         await customElements.whenDefined("cms-editor-v2-topbar");
-        const topBar = this.shell.shadowRoot?.querySelector<HTMLElement>("cms-editor-v2-topbar");
-        const chrome = topBar?.shadowRoot;
-        chrome?.querySelector<HTMLElement>(".start")?.setAttribute("hidden", "");
-        chrome?.querySelector<HTMLElement>(".end")?.setAttribute("hidden", "");
-        const bar = chrome?.querySelector<HTMLElement>(".topbar");
-        if (bar) {
-            bar.style.gridTemplateColumns = "1fr";
-        }
+        const { topBar, end, save } = await this.toolbarElements();
+        this.topBar = topBar;
+        save.querySelector(".save-label")!.textContent = "Save draft";
+        this.publishButton = document.createElement("button");
+        this.publishButton.type = "button";
+        this.publishButton.dataset.siteBlocAction = "publish";
+        this.publishButton.textContent = "Publish";
+        this.publishButton.addEventListener("click", publish);
+        end.insertBefore(this.publishButton, save);
     }
 
     setReadOnly(readOnly: boolean): void {
-        const topBar = this.shell.shadowRoot?.querySelector<HTMLElement>("cms-editor-v2-topbar");
-        const edit = topBar?.shadowRoot?.querySelector<HTMLButtonElement>('[data-editor-mode="edit"]');
+        const edit = this.chromeButton('[data-editor-mode="edit"]');
         if (edit) {
             edit.disabled = readOnly;
         }
         this.shell.toggleAttribute("data-builder-read-only", readOnly);
     }
 
-    private field(name: keyof SiteBlocMetadata): HTMLInputElement | HTMLTextAreaElement {
-        return this.require(`[data-field="${name}"]`);
+    private chromeButton(selector: string): HTMLButtonElement | null {
+        return this.topBar?.shadowRoot?.querySelector<HTMLButtonElement>(selector) ?? null;
+    }
+
+    private async toolbarElements(): Promise<{
+        topBar: HTMLElement;
+        end: HTMLElement;
+        save: HTMLButtonElement;
+    }> {
+        for (let attempt = 0; attempt < 50; attempt += 1) {
+            const topBar = this.shell.shadowRoot?.querySelector<HTMLElement>("cms-editor-v2-topbar");
+            const end = topBar?.shadowRoot?.querySelector<HTMLElement>(".end");
+            const save = topBar?.shadowRoot?.querySelector<HTMLButtonElement>('[data-action="save"]');
+            if (topBar && end && save) {
+                return { topBar, end, save };
+            }
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+        throw new Error("Composition editor toolbar is unavailable");
     }
 
     private require<T extends Element = HTMLElement>(selector: string): T {

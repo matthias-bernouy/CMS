@@ -23,7 +23,7 @@ registerEditor({ editor: DefaultBlocEditor });
  * never depend on the process cwd being writable.
  */
 export async function prepare_bloc(
-    fileView: File,
+    fileView: File | null,
     fileEditor: File | null,
     label: string,
     group: string,
@@ -31,7 +31,7 @@ export async function prepare_bloc(
     blocId: string,
     source: Record<string, string> | undefined = undefined,
     defaultContent: string | undefined = undefined,
-    options: { native?: boolean } = {},
+    options: { native?: boolean; compositionHTML?: string; viewPath?: string } = {},
 ) {
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
 
@@ -46,10 +46,15 @@ export async function prepare_bloc(
             plugins: [p9rExternalsPlugin],
         });
 
-        const viewPath = join(tempDir, blocId + ".js");
+        const viewPath = options.viewPath
+            ? resolveSourceEntryPath(tempDir, options.viewPath)
+            : join(tempDir, blocId + ".js");
         const editorPath = join(tempDir, blocId + "Editor.ts");
 
-        await Bun.write(viewPath, fileView);
+        if (fileView) {
+            await mkdir(dirname(viewPath), { recursive: true });
+            await Bun.write(viewPath, fileView);
+        }
         if (fileEditor) {
             await Bun.write(editorPath, fileEditor);
         } else {
@@ -57,7 +62,9 @@ export async function prepare_bloc(
         }
 
         const [viewJSRaw, editorJSRaw] = await Promise.all([
-            options.native ? "" : runBuild(buildOptions(viewPath), `view bundle for ${blocId}`),
+            options.native || options.compositionHTML !== undefined
+                ? ""
+                : runBuild(buildOptions(viewPath), `view bundle for ${blocId}`),
             runBuild(buildOptions(editorPath), `editor bundle for ${blocId}`),
         ]);
 
@@ -84,6 +91,7 @@ export async function prepare_bloc(
             id: blocId,
             editorJS: editorJS,
             viewJS: viewJS,
+            ...(options.compositionHTML !== undefined ? { compositionHTML: options.compositionHTML } : {}),
             name: label,
             group: group,
             description: description,
@@ -92,6 +100,21 @@ export async function prepare_bloc(
     } finally {
         await rm(tempDir, { recursive: true, force: true }).catch(() => null);
     }
+}
+
+function resolveSourceEntryPath(tempDir: string, rawPath: string): string {
+    const path = rawPath.replace(/^\.\/+/, "");
+    const segments = path.split("/");
+    if (
+        !path ||
+        rawPath.includes("\\") ||
+        rawPath.includes("\0") ||
+        isAbsolute(rawPath) ||
+        segments.some((segment) => segment === "" || segment === "." || segment === "..")
+    ) {
+        throw new Error(`Invalid bloc view path: ${rawPath}`);
+    }
+    return join(tempDir, ...segments);
 }
 
 /**

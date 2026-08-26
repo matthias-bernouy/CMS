@@ -109,9 +109,20 @@ export {
     validateSiteBlocSnapshot,
 } from "cms-content/core/validation/blocs";
 export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/queries/pagesReferencing";
-export { createBlocUsageResolver } from "cms-content/core/blocs/resolveUsedBlocTags";
-export { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";
+export { createBlocUsageResolver } from "cms-content/core/blocs/usage/resolveUsedBlocTags";
+export { findUsedBlocTags } from "cms-content/core/blocs/usage/findUsedBlocTags";
 export { buildBlocFoucShellCss } from "cms-content/core/blocs/buildBlocFoucShellCss";
+export {
+    COMPOSITION_CONTROLLER_ATTRIBUTE,
+    COMPOSITION_CONTROLLER_RUNTIME_ATTRIBUTE,
+    COMPOSITION_AUTHORED_ATTRIBUTE,
+    COMPOSITION_INPUT_ATTRIBUTE,
+    COMPOSITION_OUTPUT_ATTRIBUTE,
+    COMPOSITION_RUNTIME_ATTRIBUTE,
+    expandCompositions,
+    type CompositionDefinition,
+    type CompositionExpansionMode,
+} from "cms-content/core/blocs/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/core/blocs/buildBlocEntries";
 export { collectCmsSourceBindings, type CmsSourceBindingReference } from "cms-content/core/editor/sourceBindings";
 export {

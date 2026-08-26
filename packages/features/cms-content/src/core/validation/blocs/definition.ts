@@ -15,6 +15,15 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (!isRegisteredBlocTag(bloc.id)) {
         throw new ContentValidationError("id", "valid lower-case HTML or custom-element tag expected");
     }
+    if (bloc.compositionHTML !== undefined && !bloc.compositionHTML.trim()) {
+        throw new ContentValidationError("compositionHTML", "non-empty HTML expected");
+    }
+    if (bloc.compositionHTML !== undefined && bloc.viewJS.trim()) {
+        throw new ContentValidationError("bloc", "viewJS and compositionHTML are mutually exclusive");
+    }
+    if (bloc.internal && (bloc.compositionHTML !== undefined || !bloc.viewJS.trim())) {
+        throw new ContentValidationError("internal", "internal blocs must provide a component view");
+    }
     return bloc;
 }
 

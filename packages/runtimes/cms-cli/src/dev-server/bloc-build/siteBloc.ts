@@ -35,7 +35,7 @@ export async function readSiteDevBloc(folder: string, target: "published" | "dra
         folder,
         manifest: {
             "default-tag": definition.tag,
-            bloc: "./Bloc.ts",
+            composition: "./template.html",
             editor: "./BlocEditor.ts",
             defaultContent: "./default.html",
             meta: { title: snapshot.name, description: snapshot.description },
@@ -44,10 +44,11 @@ export async function readSiteDevBloc(folder: string, target: "published" | "dra
         label: snapshot.name,
         group: snapshot.group,
         description: snapshot.description,
+        internal: false,
         ownership: structuredClone(definition.ownership),
         siteDefinition: definition,
         siteBuildSnapshot: snapshot,
-        entry: join(folder, "Bloc.ts"),
+        compositionPath: join(folder, "template.html"),
         editorEntry: join(folder, "BlocEditor.ts"),
         templatePath: join(folder, "template.html"),
     };

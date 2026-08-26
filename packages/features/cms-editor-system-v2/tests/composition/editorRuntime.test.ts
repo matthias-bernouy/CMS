@@ -5,6 +5,7 @@ import {
     COMPOSITION_INPUT_ATTRIBUTE,
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
+    COMPOSITION_AUTHORED_ATTRIBUTE,
 } from "@bernouy/components/base";
 import { EditorRegistry, EditorRuntime, RuntimeEditor } from "../../src/runtime";
 
@@ -28,13 +29,14 @@ function blocConstructor(HTMLElementCtor: typeof HTMLElement): CustomElementCons
 }
 
 describe("composition editor runtime", () => {
-    test("treats generated composition content as an opaque runtime detail", () => {
+    test("keeps private output opaque while exposing projected authored content", () => {
         const { document, HTMLElement } = parseHTML(`
             <main id="content-root">
                 <x-parent id="composition" ${COMPOSITION_RUNTIME_ATTRIBUTE}>
                     <template ${COMPOSITION_INPUT_ATTRIBUTE}></template>
                     <p9r-composition-output ${COMPOSITION_OUTPUT_ATTRIBUTE}>
                         <x-child id="generated"></x-child>
+                        <x-child id="authored" ${COMPOSITION_AUTHORED_ATTRIBUTE}=""></x-child>
                         <x-parent id="nested-composition" ${COMPOSITION_RUNTIME_ATTRIBUTE}>
                             <template ${COMPOSITION_INPUT_ATTRIBUTE}></template>
                             <x-child id="nested-generated"></x-child>
@@ -60,18 +62,21 @@ describe("composition editor runtime", () => {
         const contentRoot = document.getElementById("content-root")!;
         const composition = document.getElementById("composition")!;
         const generated = document.getElementById("generated")!;
+        const authored = document.getElementById("authored")!;
         const nestedComposition = document.getElementById("nested-composition")!;
         const nestedGenerated = document.getElementById("nested-generated")!;
 
         runtime.load({ root: contentRoot, contentRoot });
 
         expect(runtime.getStructure().map((node) => node.label)).toEqual(["Composition"]);
+        expect(runtime.getStructure()[0]?.children.map((node) => node.label)).toEqual(["Generated child"]);
         expect(runtime.getEditor(generated)).toBeUndefined();
+        expect(runtime.getEditor(authored)).toBeDefined();
         expect(runtime.getEditor(nestedComposition)).toBeUndefined();
         expect(runtime.getClosestEditor(generated)?.target).toBe(composition);
         expect(runtime.getClosestEditor(nestedGenerated)?.target).toBe(composition);
         runtime.select(composition);
-        expect(runtime.getSelection()?.contentSlots).toEqual([]);
+        expect(runtime.getSelection()?.contentSlots).toEqual([childSlot]);
         expect(runtime.getSelection()?.textCapability).toBeNull();
     });
 
@@ -86,7 +91,7 @@ describe("composition editor runtime", () => {
         editor.addContentSlots(childSlot);
         editor.setTextCapability({ format: "text", dynamic: true });
 
-        expect(editor.getContentSlots()).toEqual([]);
+        expect(editor.getContentSlots()).toEqual([childSlot]);
         expect(editor.getTextCapability()).toBeNull();
     });
 });

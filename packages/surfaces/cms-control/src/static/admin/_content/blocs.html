@@ -1,7 +1,7 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Blocs</span>
     <p9r-open-modal modal-target="create-site-bloc-modal" slot="action">
-        <p9r-button color="primary">+ New bloc</p9r-button>
+        <p9r-button color="primary">+ New composition</p9r-button>
     </p9r-open-modal>
 
     <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.25rem;">
@@ -94,13 +94,13 @@
                 <rect x="14" y="14" width="7" height="7" rx="1"/>
             </svg>
             <p slot="title">No blocs found</p>
-            <p slot="hint">Adjust the filters or create a site composite bloc.</p>
+            <p slot="hint">Adjust the filters or create a composition.</p>
         </cms-empty-state>
     </p9r-table>
 </w13c-fixed-admin-layout>
 
-<p9r-modal id="create-site-bloc-modal" aria-label="Create a site composite bloc">
-    <span slot="title">New site bloc</span>
+<p9r-modal id="create-site-bloc-modal" aria-label="Create a composition">
+    <span slot="title">New composition</span>
     <form
         cms-source="{{BASE_PATH}}/api/site-bloc as result"
         cms-source-trigger="submit"
@@ -114,7 +114,7 @@
                 hint="Must start with site- and cannot be changed later."></p9r-input>
             <p9r-input name="group" label="Group" placeholder="Marketing"></p9r-input>
             <p9r-input name="description" label="Description" placeholder="Reusable hero with editable content slots."></p9r-input>
-            <p9r-button color="primary" fullWidth type="submit">Create bloc</p9r-button>
+            <p9r-button color="primary" fullWidth type="submit">Create composition</p9r-button>
         </p9r-stack>
     </form>
 </p9r-modal>

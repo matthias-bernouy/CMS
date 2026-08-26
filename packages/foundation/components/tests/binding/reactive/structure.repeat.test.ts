@@ -37,6 +37,30 @@ describe("CompiledTemplate — cms-repeat", () => {
         expect(Array.from(host.querySelectorAll("li")).map(text)).toEqual(["Grace / Guests", "Lin / Guests"]);
     });
 
+    test("repeats native links and interpolates their navigation attributes", () => {
+        const { host, region } = mount(
+            `<a cms-repeat="offers as offer" href="/offer?slug={{ offer.slug }}" aria-label="View {{ offer.title }}"></a>`,
+            {
+                offers: [
+                    { slug: "first-offer", title: "First offer" },
+                    { slug: "second-offer", title: "Second offer" },
+                ],
+            },
+        );
+        expect(Array.from(host.querySelectorAll("a[href]")).map((link) => link.getAttribute("href"))).toEqual([
+            "/offer?slug=first-offer",
+            "/offer?slug=second-offer",
+        ]);
+        expect(Array.from(host.querySelectorAll("a[href]")).map((link) => link.getAttribute("aria-label"))).toEqual([
+            "View First offer",
+            "View Second offer",
+        ]);
+
+        region.update({ value: { offers: [{ slug: "updated-offer", title: "Updated offer" }] } });
+        expect(host.querySelector("a[href]")?.getAttribute("href")).toBe("/offer?slug=updated-offer");
+        expect(host.querySelector("a[href]")?.getAttribute("aria-label")).toBe("View Updated offer");
+    });
+
     test("renders fixed ranges with a zero-based named scope", () => {
         const { host, region } = mount(`<ol><li cms-repeat="$range(3) as index">{{ title }} {{ index }}</li></ol>`, {
             title: "Step",

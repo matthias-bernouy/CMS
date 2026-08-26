@@ -34,12 +34,7 @@ export const p9rExternalsPlugin: BunPlugin = {
                 args.path === "@bernouy/cms/component" ||
                 args.path === "@bernouy/cms-control/component"
             ) {
-                return {
-                    contents:
-                        `export const Component = window.p9r.Component;\n` +
-                        `export const Composition = window.p9r.Composition;`,
-                    loader: "js",
-                };
+                return { contents: `export const Component = window.p9r.Component;`, loader: "js" };
             }
             return {
                 contents:

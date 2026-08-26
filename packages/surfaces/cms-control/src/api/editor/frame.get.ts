@@ -1,5 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { hardenStoredHtml, wrapBindingCore } from "@bernouy/cms-content";
+import { expandCompositions, hardenStoredHtml, wrapBindingCore } from "@bernouy/cms-content";
+import { parseHTML } from "linkedom";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 import { buildEditorFrameFoucCss } from "cms-control/core/editorSystemV2/frameFouc";
@@ -28,7 +29,7 @@ export default async function getEditorFrame(req: Request, cms: ControlCms): Pro
 
     const basePath = controlBasePath(url.pathname);
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${document.content}</div>`;
-    const composed = hardenStoredHtml(content);
+    const composed = await expandEditorContent(hardenStoredHtml(content), cms);
     const foucCss = await buildEditorFrameFoucCss(composed, cms.repository);
 
     return new Response(
@@ -59,7 +60,7 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
     const basePath = controlBasePath(url.pathname);
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${page.content}</div>`;
     const composed = wrapBindingCore(content);
-    const hardened = hardenStoredHtml(composed);
+    const hardened = await expandEditorContent(hardenStoredHtml(composed), cms);
     const foucCss = await buildEditorFrameFoucCss(hardened, cms.repository);
 
     return new Response(
@@ -101,6 +102,7 @@ function renderFrameDocument(input: {
     <meta name="basePath" content="${escapeHtml(input.basePath)}">
     <title>${escapeHtml(input.title)}</title>
     <meta name="description" content="${escapeHtml(input.description)}">
+    <style data-p9r-composition-style>[data-p9r-composition]{display:contents}[data-p9r-composition]>[data-p9r-composition-output]{display:contents}[data-p9r-composition]>:not([data-p9r-composition-output]):not(template[data-p9r-composition-input]){display:none!important}</style>
     ${input.foucCss ? `<style id="cms-bloc-fouc-shell">${input.foucCss}</style>` : ""}
     <link rel="stylesheet" href="${input.basePath}/.cms/style">
     <script defer src="${input.basePath}/api/editor/component.js"></script>
@@ -111,6 +113,13 @@ function renderFrameDocument(input: {
     <div data-cms-editor-root style="display:contents">${composed}</div>
 </body>
 </html>`;
+}
+
+async function expandEditorContent(content: string, cms: ControlCms): Promise<string> {
+    const { document } = parseHTML("<html><body></body></html>");
+    document.body.innerHTML = content;
+    expandCompositions(document.body, await cms.repository.getBlocsList(), "editor");
+    return hardenStoredHtml(document.body.innerHTML);
 }
 
 function withEditorBindingCore(composed: string): string {

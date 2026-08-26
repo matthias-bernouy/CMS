@@ -96,6 +96,24 @@ describe("scanDevBlocs", () => {
         expect(tags).toEqual(["base-accordion", "base-accordion-item"]);
     });
 
+    test("marks code-only controller manifests as internal", async () => {
+        const root = makeBlocsRoot({
+            "Layout/site-shell/controller": {
+                "manifest.json": JSON.stringify({
+                    internal: true,
+                    "default-tag": "site-shell-controller",
+                    bloc: "./Bloc.ts",
+                }),
+                "Bloc.ts": "",
+            },
+        });
+
+        const blocs = await scanDevBlocs(root, { quiet: true });
+
+        expect(blocs).toHaveLength(1);
+        expect(blocs[0]?.internal).toBeTrue();
+    });
+
     test("accepts native editor-only blocs without manifest runtime metadata or a view entry", async () => {
         const root = makeBlocsRoot({
             "Text/paragraph": {
