@@ -276,7 +276,7 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
         return this.root.querySelector("[data-handoff]");
     }
     get trackingLink() {
-        return this.root.querySelector("[data-tracking-link]");
+        return this.querySelector('[slot="tracking-action"] > a[data-tracking-link]');
     }
     get message() {
         return this.root.querySelector("[data-message]");

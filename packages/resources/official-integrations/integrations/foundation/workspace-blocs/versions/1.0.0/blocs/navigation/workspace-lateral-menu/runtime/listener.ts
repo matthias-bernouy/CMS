@@ -8,7 +8,7 @@ export function handleKeydown(host: HTMLElement, event: KeyboardEvent): void {
     }
 
     const active = document.activeElement;
-    const currentIndex = items.findIndex((item) => item === active || item.contains(active));
+    const currentIndex = items.findIndex((item) => item === active);
     let nextIndex = -1;
     switch (event.key) {
         case "ArrowDown":

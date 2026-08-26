@@ -18,6 +18,7 @@ const checkoutBody = (offerIds: number[], buyer: string | null = null) => ({
     p_offer_ids: offerIds,
     p_order_id: null,
     p_buyer_cms_user_id: buyer,
+    p_price_agreement_public_id: null,
 });
 
 describe("commerce protected-checkout seller context boundaries", () => {
@@ -45,7 +46,7 @@ describe("commerce protected-checkout seller context boundaries", () => {
 
     test("validates checkout items before resolving the actor or reading offers", async () => {
         const cases = [
-            [{}, "items must be a non-empty array of objects"],
+            [{}, "provide exactly one of agreementId or items"],
             [{ items: [] }, "items must be a non-empty array of objects"],
             [{ items: ["invalid"] }, "items must be a non-empty array of objects"],
             [{ items: [{}] }, "items.0.offerId is required"],

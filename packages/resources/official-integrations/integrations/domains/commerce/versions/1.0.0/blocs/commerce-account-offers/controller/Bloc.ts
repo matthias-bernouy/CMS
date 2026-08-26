@@ -1,10 +1,9 @@
-import { Composition } from "@bernouy/components/base";
+import { Component } from "@bernouy/components/base";
 
-import template from "./template.html" with { type: "text" };
 import { positiveInteger, setAttributeIfChanged, statusCodes, statusDefaults } from "./helpers";
 import { syncPresentation, syncRenderedOffers } from "./presentation";
 
-export class CommerceAccountOffers extends Composition {
+export class CommerceAccountOffers extends Component {
     static observedAttributes = [
         "accent-color",
         "button-accent-color",
@@ -51,7 +50,7 @@ export class CommerceAccountOffers extends Composition {
     ];
 
     constructor() {
-        super({ template });
+        super({ css: ":host { display: contents; }", template: "<slot></slot>" });
         this.page = 1;
         this.status = "all";
         this.observer = null;

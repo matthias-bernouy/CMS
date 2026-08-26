@@ -19,6 +19,7 @@
         "$files": [
             "artifacts/blocs/basic/basic-button.json",
             "artifacts/blocs/basic/basic-card.json",
+            "artifacts/blocs/content/actions/basic-button-control.json",
             "artifacts/blocs/content/headings/basic-heading-1.json",
             "artifacts/blocs/content/headings/basic-heading-2.json",
             "artifacts/blocs/content/headings/basic-heading-3.json",

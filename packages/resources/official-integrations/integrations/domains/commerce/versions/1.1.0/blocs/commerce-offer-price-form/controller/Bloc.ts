@@ -1,7 +1,6 @@
-import { Composition } from "@bernouy/components/base";
+import { Component } from "@bernouy/components/base";
 
-import template from "./template.html" with { type: "text" };
-import { formatMoney, majorToMinor, minorToMajor } from "./money.ts";
+import { formatMoney, majorToMinor, minorToMajor } from "../money.ts";
 import {
     comparableProfileValue,
     parseDate,
@@ -11,13 +10,13 @@ import {
     stripeEnrollmentComplete,
     textValue,
     validEmail,
-} from "./profile.ts";
-import { createAccountToken } from "./stripe-account-token.ts";
+} from "../profile.ts";
+import { createAccountToken } from "../stripe-account-token.ts";
 
 const colorGroups = ["card", "field", "button"];
 let formInstance = 0;
 
-export class CommerceOfferPriceForm extends Composition {
+export class CommerceOfferPriceForm extends Component {
     static observedAttributes = [
         "account-source-id",
         "activation-copy",
@@ -89,7 +88,7 @@ export class CommerceOfferPriceForm extends Composition {
     ];
 
     constructor() {
-        super({ template });
+        super({ css: ":host { display: contents; }", template: "<slot></slot>" });
         this.offer = null;
         this.enrollment = null;
         this.sellerTermsRequirement = null;
@@ -638,8 +637,8 @@ export class CommerceOfferPriceForm extends Composition {
         for (const element of [this.amount, ...this.profileControls]) {
             copyColors(this, element, "field");
         }
-        for (const element of [this.submit, this.back, this.successLink, this.technicalRetry]) {
-            copyColors(this, element, "button");
+        for (const control of [this.submit, this.back, this.successLink, this.technicalRetry]) {
+            copyColors(this, control?.closest("basic-button"), "button");
         }
     }
 

@@ -28,7 +28,9 @@ describe("Stripe Connect onboarding marketplace terms UI", () => {
                 try {
                     const termsForm = onboarding.root.querySelector<HTMLFormElement>("[data-terms-form]");
                     const checkbox = termsForm?.querySelector<HTMLInputElement>("[name='marketplaceTermsAccepted']");
-                    const link = termsForm?.querySelector<HTMLAnchorElement>("[data-marketplace-terms]");
+                    const link = onboarding.querySelector<HTMLAnchorElement>(
+                        ':scope > a[slot="marketplace-update-terms"]',
+                    );
 
                     expect(requests).toEqual(["getConnectStatus"]);
                     expect(termsForm?.hidden).toBeFalse();
@@ -65,17 +67,27 @@ describe("Stripe Connect onboarding marketplace terms UI", () => {
                 throw new Error(`unexpected seller call: ${id}`);
             },
             async () => {
-                const onboarding = await mountStripeConnectOnboarding({
-                    "terms-url": "/conditions-vendeur-historiques",
-                    "marketplace-terms-label": "Conditions vendeur historiques",
-                    "marketplace-consent-text": "J’accepte les Conditions vendeur historiques.",
-                });
+                const onboarding = await mountStripeConnectOnboarding(
+                    {
+                        "marketplace-terms-label": "Conditions vendeur historiques",
+                        "marketplace-consent-text": "J’accepte les Conditions vendeur historiques.",
+                    },
+                    (element) => {
+                        const link = element.querySelector<HTMLAnchorElement>(
+                            ':scope > a[slot="marketplace-update-terms"]',
+                        );
+                        link?.setAttribute("href", "/conditions-vendeur-historiques");
+                    },
+                );
                 try {
                     const termsForm = onboarding.root.querySelector<HTMLFormElement>("[data-terms-form]");
                     const checkbox = termsForm?.querySelector<HTMLInputElement>("[name='marketplaceTermsAccepted']");
-                    const link = termsForm?.querySelector<HTMLAnchorElement>("[data-marketplace-terms]");
+                    const link = onboarding.querySelector<HTMLAnchorElement>(
+                        ':scope > a[slot="marketplace-update-terms"]',
+                    );
                     expect(termsForm?.hidden).toBeFalse();
-                    expect(termsForm?.textContent).toContain("J’accepte les Conditions vendeur historiques.");
+                    expect(termsForm?.querySelector("[data-consent-before]")?.textContent).toBe("J’accepte les ");
+                    expect(termsForm?.querySelector("[data-consent-after]")?.textContent).toBe(".");
                     expect(link?.pathname).toBe("/conditions-vendeur-historiques");
                     expect(link?.textContent).toBe("Conditions vendeur historiques");
                     if (!checkbox) {
@@ -317,8 +329,8 @@ describe("Stripe Connect onboarding marketplace terms UI", () => {
                     const refreshed = onboarding.root.querySelector<HTMLInputElement>(
                         "[data-terms-form] [name='marketplaceTermsAccepted']",
                     );
-                    const refreshedLink = onboarding.root.querySelector<HTMLAnchorElement>(
-                        "[data-terms-form] [data-marketplace-terms]",
+                    const refreshedLink = onboarding.querySelector<HTMLAnchorElement>(
+                        ':scope > a[slot="marketplace-update-terms"]',
                     );
                     expect(requests).toEqual([
                         { id: "getConnectStatus", body: null },

@@ -38,6 +38,7 @@ export function normalizeLegalRequirements(value: unknown): PaymentLegalRequirem
 }
 
 export function renderLegalRequirements(
+    host: HTMLElement,
     container: HTMLElement,
     requirements: PaymentLegalRequirements,
     onChange: () => void,
@@ -48,6 +49,9 @@ export function renderLegalRequirements(
             String(input.dataset.legalVersionId),
         ),
     );
+    for (const link of host.querySelectorAll(":scope > a[data-commerce-payment-legal-link]")) {
+        link.remove();
+    }
     container.replaceChildren();
     for (const documentRequirement of requirements.documents) {
         const row = document.createElement("div");
@@ -66,13 +70,18 @@ export function renderLegalRequirements(
         const content = document.createElement("span");
         content.className = "legal-document-content";
         const link = document.createElement("a");
+        link.slot = `legal-document-${++legalControlSequence}`;
+        link.dataset.commercePaymentLegalLink = "";
         link.href = safeDocumentUrl(documentRequirement.pageUrl);
         link.target = "_blank";
         link.rel = "noopener noreferrer";
+        host.append(link);
+        const linkSlot = document.createElement("slot");
+        linkSlot.name = link.slot;
         if (appearance === "compact") {
             label.className = "legal-document-consent";
             link.textContent = documentRequirement.label;
-            appendLinkedConsent(label, documentRequirement.consentText, documentRequirement.label, link);
+            appendLinkedConsent(label, documentRequirement.consentText, documentRequirement.label, linkSlot);
             content.append(label);
         } else {
             label.textContent = documentRequirement.consentText;
@@ -80,7 +89,7 @@ export function renderLegalRequirements(
             const version = document.createElement("span");
             version.className = "legal-document-version";
             version.textContent = `Version du ${formatVersionDate(documentRequirement.versionDate)}`;
-            content.append(label, link, version);
+            content.append(label, linkSlot, version);
         }
         row.append(checkbox, content);
         container.append(row);
@@ -160,7 +169,7 @@ function appendLinkedConsent(
     label: HTMLLabelElement,
     consentText: string,
     documentLabel: string,
-    link: HTMLAnchorElement,
+    link: HTMLSlotElement,
 ): void {
     const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
     if (start < 0) {

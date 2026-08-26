@@ -5,6 +5,7 @@
         "name": "Negotiation list",
         "group": "Commerce",
         "description": "Customizable received and sent proposal list composed from Basic Blocs.",
-        "path": "blocs/commerce-negotiation-list"
+        "path": "blocs/commerce-negotiation-list",
+        "composition": "template.html"
     }
 }

@@ -2,74 +2,55 @@ import { Component } from "@bernouy/components/base";
 
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
-import { checkActiveState, setActiveState, updateBadge, updateHref, upgradeProperty } from "./runtime/compute";
-import { handleKeydown } from "./runtime/listener";
+import { checkActiveState, setActiveState, updateBadge, upgradeProperty } from "./runtime/compute";
 
 export class WorkspaceLateralMenuItem extends Component {
     constructor() {
         super({ css, template });
-        this.anchor = this.shadowRoot?.querySelector("a") ?? null;
         this.badgeElement = this.shadowRoot?.getElementById("badge-element") ?? null;
+        this.contentSlot = this.shadowRoot?.querySelector("slot") ?? null;
+        this.anchorObserver = new MutationObserver(this.onAnchorMutation);
     }
 
     static get observedAttributes() {
-        return ["active", "badge", "disabled", "exact", "href"];
+        return ["active", "badge", "exact"];
     }
 
     connectedCallback() {
-        for (const property of ["active", "badge", "disabled", "exact", "href"]) {
+        for (const property of ["active", "badge", "exact"]) {
             upgradeProperty(this, property);
         }
-        if (!this.hasAttribute("role")) {
-            this.setAttribute("role", "listitem");
-        }
-        if (!this.hasAttribute("tabindex")) {
-            this.setAttribute("tabindex", "0");
-        }
-        updateHref(this.anchor, this.getAttribute("href"));
         updateBadge(this.badgeElement, this.getAttribute("badge"));
-        this.syncDisabled();
-        checkActiveState(this, this.anchor);
+        this.contentSlot?.addEventListener("slotchange", this.syncAnchor);
+        this.anchorObserver.observe(this, { attributes: true, attributeFilter: ["href"], subtree: true });
+        this.syncAnchor();
         window.addEventListener("popstate", this.onPopstate);
-        this.addEventListener("keydown", this.onKeyDown);
     }
 
     disconnectedCallback() {
         window.removeEventListener("popstate", this.onPopstate);
-        this.removeEventListener("keydown", this.onKeyDown);
+        this.contentSlot?.removeEventListener("slotchange", this.syncAnchor);
+        this.anchorObserver.disconnect();
     }
 
     attributeChangedCallback(name, _oldValue, newValue) {
-        if (name === "href") {
-            updateHref(this.anchor, newValue);
-        } else if (name === "badge") {
+        if (name === "badge") {
             updateBadge(this.badgeElement, newValue);
-        } else if (name === "disabled") {
-            this.syncDisabled();
         }
-        if (this.isConnected && ["active", "exact", "href"].includes(name)) {
+        if (this.isConnected && ["active", "exact"].includes(name)) {
             name === "active" && newValue !== null
                 ? setActiveState(this, this.anchor, true)
                 : checkActiveState(this, this.anchor);
         }
     }
 
-    syncDisabled() {
-        const disabled = this.hasAttribute("disabled");
-        this.setAttribute("aria-disabled", String(disabled));
-        this.setAttribute("tabindex", disabled ? "-1" : "0");
-    }
+    syncAnchor = () => {
+        this.anchor = this.querySelector(":scope > a");
+        checkActiveState(this, this.anchor);
+    };
 
+    onAnchorMutation = () => checkActiveState(this, this.anchor);
     onPopstate = () => checkActiveState(this, this.anchor);
-    onKeyDown = (event) => handleKeydown(this, this.anchor, event);
-
-    get href() {
-        return this.getAttribute("href");
-    }
-
-    set href(value) {
-        value === null ? this.removeAttribute("href") : this.setAttribute("href", value);
-    }
 
     get badge() {
         return this.getAttribute("badge");
@@ -77,14 +58,6 @@ export class WorkspaceLateralMenuItem extends Component {
 
     set badge(value) {
         value === null ? this.removeAttribute("badge") : this.setAttribute("badge", value);
-    }
-
-    get disabled() {
-        return this.hasAttribute("disabled");
-    }
-
-    set disabled(value) {
-        this.toggleAttribute("disabled", Boolean(value));
     }
 
     get active() {

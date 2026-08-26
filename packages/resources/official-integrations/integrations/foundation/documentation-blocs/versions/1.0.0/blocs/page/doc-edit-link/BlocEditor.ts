@@ -1,42 +1,23 @@
-import { Editor, registerEditor, type SettingSection, type ContentSlot } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
 export class BlocEditor extends Editor {
-    // -- Generated from legacy editor metadata --
-
     protected override settings(): SettingSection[] {
         return [
             {
-                "kind": "self",
-                "label": "Link",
-                "settings": [
+                kind: "self",
+                label: "Presentation",
+                settings: [
                     {
-                        "type": "select",
-                        "label": "Provider",
-                        "attribute": "provider",
-                        "options": [
-                            {
-                                "label": "GitHub",
-                                "value": "github",
-                            },
-                            {
-                                "label": "GitLab",
-                                "value": "gitlab",
-                            },
-                            {
-                                "label": "Bitbucket",
-                                "value": "bitbucket",
-                            },
-                            {
-                                "label": "Generic",
-                                "value": "generic",
-                            },
+                        type: "select",
+                        label: "Provider",
+                        attribute: "provider",
+                        options: [
+                            { label: "GitHub", value: "github" },
+                            { label: "GitLab", value: "gitlab" },
+                            { label: "Bitbucket", value: "bitbucket" },
+                            { label: "Generic", value: "generic" },
                         ],
-                        "defaultValue": "github",
-                    },
-                    {
-                        "type": "page-link",
-                        "label": "Edit URL",
-                        "attribute": "href",
+                        defaultValue: "github",
                     },
                 ],
             },
@@ -46,18 +27,13 @@ export class BlocEditor extends Editor {
     protected override contentSlots(): ContentSlot[] {
         return [
             {
-                "label": "Label",
-                "accepts": [
-                    {
-                        "kind": "any-component",
-                    },
-                ],
-                "slot": "label",
-                "max": 1,
+                label: "Edit link",
+                accepts: [{ kind: "component", tag: "a" }],
+                min: 1,
+                max: 1,
             },
         ];
     }
-    // -- End generated legacy editor metadata --
 
     constructor(target: HTMLElement) {
         super(target);

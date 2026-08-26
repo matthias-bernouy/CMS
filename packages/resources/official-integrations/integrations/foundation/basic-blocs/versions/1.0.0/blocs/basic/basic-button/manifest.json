@@ -5,6 +5,6 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Basic button",
-        "description": "Themed action button with semantic tones, appearances and inherited typography."
+        "description": "Presentation wrapper for a direct native anchor or button child."
     }
 }

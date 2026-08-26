@@ -1,6 +1,6 @@
 {
     "default-tag": "commerce-account-offers",
-    "bloc": "./Bloc.ts",
+    "composition": "./template.html",
     "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {

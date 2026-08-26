@@ -9,6 +9,8 @@ import {
     setTextIfChanged,
 } from "./helpers";
 
+// Presentation helpers stay below the artifact root so installation can bundle them.
+
 export function syncPresentation(host, pageSize) {
     const filter = host.querySelector("[data-status-filter]");
     filter?.removeAttribute("label");
@@ -22,7 +24,7 @@ export function syncPresentation(host, pageSize) {
     const createButton = host.querySelector("[data-create-button]");
     setTextIfChanged(createButton, host.getAttribute("create-label") || "Déposer une annonce");
     setAttributeIfChanged(createButton, "href", host.getAttribute("create-url") || "/deposer-une-annonce");
-    copyColorAttributes(host, createButton, "button");
+    copyColorAttributes(host, createButton?.closest("basic-button"), "button");
 
     copyOptionalAttribute(host, host.querySelector("[data-offers-layout]"), "text-color");
     const grid = host.querySelector("[data-offers-grid]");
@@ -94,7 +96,7 @@ export function syncRenderedOffers(host) {
         }
         setTextIfChanged(edit, action.label);
         setAttributeIfChanged(edit, "href", offerUrl(action.url, edit.dataset.offerId, edit.dataset.offerSlug));
-        copyColorAttributes(host, edit, "button");
+        copyColorAttributes(host, edit.closest("basic-button"), "button");
     }
 
     copyColorAttributes(host, host.querySelector("[data-empty-state]"), "card");

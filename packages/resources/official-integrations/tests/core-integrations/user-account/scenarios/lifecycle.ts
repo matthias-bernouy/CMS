@@ -136,7 +136,8 @@ export function registerLifecycleTest(): void {
         const getByUserIdEndpoint = source?.endpoints.find(
             (endpoint) => endpoint.urn === "urn:user-account:getAccountByUserId",
         );
-        const accountForm = harness.importedBlocs.find((bloc) => bloc.tag.includes("user-account-form"));
+        const accountForm = harness.importedBlocs.find((bloc) => bloc.tag === "user-account-form");
+        const accountFormController = harness.importedBlocs.find((bloc) => bloc.tag === "user-account-form-controller");
         const accountAvatar = harness.importedBlocs.find((bloc) => bloc.tag.includes("user-account-avatar"));
         const accountFormTemplate = decodeBlocSource(accountForm, "template.html");
         const accountAvatarTemplate = decodeBlocSource(accountAvatar, "template.html");
@@ -344,7 +345,7 @@ export function registerLifecycleTest(): void {
         expect(accountFormTemplate).not.toContain('date-format="day-month-year"');
         expect(accountFormTemplate).not.toContain('placeholder="jj/mm/aaaa"');
         expect(accountFormTemplate).not.toContain("invalid-date-message");
-        expect(accountFormTemplate).toContain("data-account-button>Enregistrer</basic-button>");
+        expect(accountFormTemplate).toContain('type="submit" data-account-button>Enregistrer</button>');
         expect(accountFormTemplate).toContain('name="addressLine3"');
         expect(accountFormTemplate).toContain('name="countryCode"');
         expect(accountFormTemplate).toContain('data-account-field="login-email" data-auth-load');
@@ -358,13 +359,14 @@ export function registerLifecycleTest(): void {
         expect(accountFormTemplate.indexOf('data-account-field="login-email"')).toBeLessThan(
             accountFormTemplate.indexOf('data-account-field="phone"'),
         );
-        expect(accountForm?.viewJS).toContain("extends Composition");
-        expect(accountForm?.viewJS).toContain("`${prefix}/system-auth/me`");
-        expect(accountForm?.viewJS).toContain(
+        expect(accountForm?.compositionHTML).toContain("<user-account-form-controller");
+        expect(accountForm?.viewJS).toBeUndefined();
+        expect(accountFormController?.viewJS).toContain("`${prefix}/system-auth/me`");
+        expect(accountFormController?.viewJS).toContain(
             'this.querySelector(\'[data-account-field="birth-date"]\'), "max", currentLocalDate()',
         );
         expect(accountFormTemplate).toContain("<basic-input");
-        expect(accountFormTemplate).toContain('<basic-button type="submit"');
+        expect(accountFormTemplate).toContain('<basic-button><button type="submit" data-account-button');
         expect(accountFormTemplate).toContain('<user-account-avatar data-avatar-input name="file"');
         expect(accountFormTemplate).toContain('<basic-grid min="lg" max="none"');
         expect(accountFormTemplate).toContain("<basic-stack");
@@ -393,9 +395,9 @@ export function registerLifecycleTest(): void {
         expect(accountFormTemplate).not.toContain('cms-reload-on="user-account:avatar-updated"');
         expect(accountFormTemplate).not.toContain('cms-source-publish="user-account:updated"');
         expect(accountFormTemplate).not.toContain('cms-reload-on="user-account:updated"');
-        expect(accountForm?.viewJS).toContain('this.querySelector("[data-avatar-form]")?.requestSubmit()');
-        expect(accountForm?.viewJS).toContain('fileId.includes("{{")');
-        expect(accountForm?.viewJS).toContain("this.avatarObserver.observe(this");
+        expect(accountFormController?.viewJS).toContain('this.querySelector("[data-avatar-form]")?.requestSubmit()');
+        expect(accountFormController?.viewJS).toContain('fileId.includes("{{")');
+        expect(accountFormController?.viewJS).toContain("this.avatarObserver.observe(this");
         expect(accountFormTemplate).not.toContain('name="avatarUrl"');
         expect(accountFormTemplate.indexOf("<user-account-avatar")).toBeLessThan(
             accountFormTemplate.indexOf('<basic-skeleton shape="circle"'),

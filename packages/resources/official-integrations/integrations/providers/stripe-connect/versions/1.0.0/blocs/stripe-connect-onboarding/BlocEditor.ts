@@ -1,4 +1,10 @@
-import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
+import {
+    Editor,
+    registerEditor,
+    type ColorSetting,
+    type ContentSlot,
+    type SettingSection,
+} from "@bernouy/cms-content/editor";
 
 const color = (label: string, attribute: string): ColorSetting => ({
     type: "color",
@@ -30,7 +36,6 @@ export class StripeConnectOnboardingEditor extends Editor {
                     { type: "text", label: "Activation button", attribute: "button-label" },
                     { type: "text", label: "Incomplete profile title", attribute: "missing-title" },
                     { type: "text", label: "Complete profile link", attribute: "profile-link-label" },
-                    { type: "page-link", label: "Profile page", attribute: "profile-url" },
                 ],
             },
             {
@@ -44,7 +49,6 @@ export class StripeConnectOnboardingEditor extends Editor {
                     { type: "text", label: "Marketplace terms label", attribute: "marketplace-terms-label" },
                     { type: "textarea", label: "Marketplace consent text", attribute: "marketplace-consent-text" },
                     { type: "text", label: "Payment terms label", attribute: "payment-terms-label" },
-                    { type: "page-link", label: "Marketplace terms", attribute: "terms-url" },
                 ],
             },
             {
@@ -72,6 +76,19 @@ export class StripeConnectOnboardingEditor extends Editor {
             },
         ];
     }
+
+    protected override contentSlots(): ContentSlot[] {
+        return [
+            anchorSlot("Profile link", "profile-link"),
+            anchorSlot("Marketplace terms for activation", "marketplace-activation-terms"),
+            anchorSlot("Payment service terms", "payment-terms"),
+            anchorSlot("Marketplace terms update", "marketplace-update-terms"),
+        ];
+    }
+}
+
+function anchorSlot(label: string, slot: string): ContentSlot {
+    return { label, slot, accepts: [{ kind: "component", tag: "a" }], min: 1, max: 1 };
 }
 
 registerEditor({ editor: StripeConnectOnboardingEditor });

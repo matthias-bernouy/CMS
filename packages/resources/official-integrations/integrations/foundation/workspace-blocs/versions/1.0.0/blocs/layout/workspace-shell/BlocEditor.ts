@@ -30,7 +30,14 @@ export class WorkspaceShellEditor extends Editor {
             {
                 label: "Skip link",
                 slot: "skip-link",
-                accepts: [{ kind: "any-component" }],
+                accepts: [{ kind: "component", tag: "a" }],
+                max: 1,
+            },
+            {
+                label: "Main content target",
+                slot: "main-target",
+                accepts: [{ kind: "component", tag: "span" }],
+                min: 1,
                 max: 1,
             },
             {

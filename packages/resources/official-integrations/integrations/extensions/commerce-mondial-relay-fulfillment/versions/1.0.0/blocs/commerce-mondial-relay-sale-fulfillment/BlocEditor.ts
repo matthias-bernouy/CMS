@@ -1,4 +1,10 @@
-import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
+import {
+    Editor,
+    registerEditor,
+    type ColorSetting,
+    type ContentSlot,
+    type SettingSection,
+} from "@bernouy/cms-content/editor";
 
 const color = (label: string, attribute: string): ColorSetting => ({ type: "color", label, attribute });
 
@@ -37,6 +43,18 @@ export class CommerceMondialRelaySaleFulfillmentEditor extends Editor {
                     color("Text", "text-color"),
                     color("Primary button text", "button-text-color"),
                 ],
+            },
+        ];
+    }
+
+    protected override contentSlots(): ContentSlot[] {
+        return [
+            {
+                label: "Tracking action",
+                slot: "tracking-action",
+                accepts: [{ kind: "any-component" }],
+                min: 1,
+                max: 1,
             },
         ];
     }

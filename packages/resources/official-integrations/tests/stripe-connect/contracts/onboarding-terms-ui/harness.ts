@@ -1,4 +1,5 @@
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { Buffer } from "node:buffer";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
@@ -16,6 +17,7 @@ export type TestStripeConnectOnboardingElement = HTMLElement & {
 
 export async function mountStripeConnectOnboarding(
     attributes: Record<string, string> = {},
+    configureLightDom?: (element: TestStripeConnectOnboardingElement) => void,
 ): Promise<TestStripeConnectOnboardingElement> {
     const tag = `test-stripe-connect-onboarding-terms-${++tagSequence}`;
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("stripe-connect");
@@ -36,9 +38,19 @@ export async function mountStripeConnectOnboarding(
     );
     new Function(compiled.viewJS)();
     const element = document.createElement(tag) as TestStripeConnectOnboardingElement;
+    const manifest = JSON.parse(Buffer.from(artifact.bloc.source?.["manifest.json"] ?? "", "base64").toString()) as {
+        defaultContent: string;
+    };
+    const defaultSource = artifact.bloc.source?.[manifest.defaultContent.replace(/^\.\//u, "")];
+    const template = document.createElement("template");
+    template.innerHTML = Buffer.from(defaultSource ?? "", "base64").toString();
+    element.append(
+        ...Array.from(template.content.firstElementChild?.children ?? []).map((child) => child.cloneNode(true)),
+    );
     for (const [name, value] of Object.entries(attributes)) {
         element.setAttribute(name, value);
     }
+    configureLightDom?.(element);
     document.body.append(element);
     await settleOnboardingLifecycle();
     return element;

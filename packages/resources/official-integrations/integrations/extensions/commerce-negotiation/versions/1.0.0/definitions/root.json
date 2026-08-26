@@ -26,7 +26,9 @@
             "artifacts/functions/get-proposal-policy.json",
             "artifacts/functions/create-my-proposal.json",
             "artifacts/blocs/commerce-negotiation-form.json",
+            "artifacts/blocs/commerce-negotiation-form-controller.json",
             "artifacts/blocs/commerce-negotiation-list.json",
+            "artifacts/blocs/commerce-negotiation-list-controller.json",
             "artifacts/dashboards/proposals/root.json",
             "artifacts/dashboards/settings.json"
         ]

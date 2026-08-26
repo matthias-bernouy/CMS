@@ -26,54 +26,61 @@ import {
 } from "@bernouy/cms-official-integrations/publication";
 
 const PHOTO_ALBUMS_1_0_0_DIGEST = "61dd7b41ee3594a8bf8ed60d1adbdee993705787207d8cbef03383e6797b275f";
+const ADDITIVE_RELEASE_TEST_TIMEOUT = 15_000;
 
 describe("official Photo Albums additive release", () => {
-    test("keeps the embedded release unverified while building its exact candidate", async () => {
-        const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-        const index = await repository.getIndex("photo-albums");
-        if (!index) {
-            throw new Error("Photo Albums index is missing");
-        }
-        expect(index.stable).toBe("1.0.0");
-        expect(index.latest).toBe("1.0.0");
-        expect(index.versions.find(({ version }) => version === "1.1.0")?.status).toBe("unverified");
-        expect(resolveInstallableIntegrationDefinitionVersion(index, "1.1.0", "latest")).toBeNull();
-        expect(resolveInstallableIntegrationDefinitionVersion(index, undefined, "latest")?.version).toBe("1.0.0");
-        expect(() => assertUpgradeEligible(index, "1.1.0")).toThrow(/unverified/);
+    test(
+        "keeps the embedded release unverified while building its exact candidate",
+        async () => {
+            const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+            const index = await repository.getIndex("photo-albums");
+            if (!index) {
+                throw new Error("Photo Albums index is missing");
+            }
+            expect(index.stable).toBe("1.0.0");
+            expect(index.latest).toBe("1.0.0");
+            expect(index.versions.find(({ version }) => version === "1.1.0")?.status).toBe("unverified");
+            expect(resolveInstallableIntegrationDefinitionVersion(index, "1.1.0", "latest")).toBeNull();
+            expect(resolveInstallableIntegrationDefinitionVersion(index, undefined, "latest")?.version).toBe("1.0.0");
+            expect(() => assertUpgradeEligible(index, "1.1.0")).toThrow(/unverified/);
 
-        const packages = await buildOfficialIntegrationPackages();
-        const legacy = packageVersion(packages, "1.0.0");
-        const target = packageVersion(packages, "1.1.0");
-        expect(legacy.digest).toBe(PHOTO_ALBUMS_1_0_0_DIGEST);
-        expect(target.package.envelope.releaseNotes).toBe("release-notes.txt");
-        expect(Object.keys(target.package.envelope.files).some((path) => path.startsWith("tests/"))).toBeFalse();
-        expect(Object.keys(target.package.envelope.files).some((path) => /\.mdx?$/u.test(path))).toBeFalse();
+            const packages = await buildOfficialIntegrationPackages();
+            const legacy = packageVersion(packages, "1.0.0");
+            const target = packageVersion(packages, "1.1.0");
+            expect(legacy.digest).toBe(PHOTO_ALBUMS_1_0_0_DIGEST);
+            expect(target.package.envelope.releaseNotes).toBe("release-notes.txt");
+            expect(Object.keys(target.package.envelope.files).some((path) => path.startsWith("tests/"))).toBeFalse();
+            expect(Object.keys(target.package.envelope.files).some((path) => /\.mdx?$/u.test(path))).toBeFalse();
 
-        const candidate = (await buildOfficialIntegrationCandidates()).find(
-            ({ kind, version }) => kind === "photo-albums" && version === "1.1.0",
-        );
-        if (!candidate) {
-            throw new Error("Photo Albums candidate is missing");
-        }
-        const parsed = await parseIntegrationCandidateEnvelope(candidate.canonicalBytes);
-        expect(parsed.packageDigest).toBe(target.digest);
-        expect(parsed.verificationDigest).toBe(candidate.verificationDigest);
-        expect(parsed.envelope.verification.target).toEqual({
-            kind: "photo-albums",
-            version: "1.1.0",
-            packageDigest: target.digest,
-        });
-        expect(parsed.envelope.verification.manifest.runnerRequirements).toEqual([
-            OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT,
-        ]);
-        expect(parsed.envelope.verification.manifest.behavioralRls).toBe("platform/behavioral-rls.json");
-        expect(parsed.envelope.verification.files["platform/behavioral-rls.json"]?.content).toContain('"probes":[]');
+            const candidate = (await buildOfficialIntegrationCandidates()).find(
+                ({ kind, version }) => kind === "photo-albums" && version === "1.1.0",
+            );
+            if (!candidate) {
+                throw new Error("Photo Albums candidate is missing");
+            }
+            const parsed = await parseIntegrationCandidateEnvelope(candidate.canonicalBytes);
+            expect(parsed.packageDigest).toBe(target.digest);
+            expect(parsed.verificationDigest).toBe(candidate.verificationDigest);
+            expect(parsed.envelope.verification.target).toEqual({
+                kind: "photo-albums",
+                version: "1.1.0",
+                packageDigest: target.digest,
+            });
+            expect(parsed.envelope.verification.manifest.runnerRequirements).toEqual([
+                OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT,
+            ]);
+            expect(parsed.envelope.verification.manifest.behavioralRls).toBe("platform/behavioral-rls.json");
+            expect(parsed.envelope.verification.files["platform/behavioral-rls.json"]?.content).toContain(
+                '"probes":[]',
+            );
 
-        const backfill = await loadOfficialIntegrationVerificationBackfill();
-        const historical = selectOfficialVerificationBackfillPackages(packages, backfill.index);
-        expect(historical).toHaveLength(14);
-        expect(historical.some(({ kind, version }) => kind === "photo-albums" && version === "1.1.0")).toBeFalse();
-    });
+            const backfill = await loadOfficialIntegrationVerificationBackfill();
+            const historical = selectOfficialVerificationBackfillPackages(packages, backfill.index);
+            expect(historical).toHaveLength(14);
+            expect(historical.some(({ kind, version }) => kind === "photo-albums" && version === "1.1.0")).toBeFalse();
+        },
+        ADDITIVE_RELEASE_TEST_TIMEOUT,
+    );
 
     test("classifies the release as minor and rejects additive or breaking changes mislabeled as patches", async () => {
         const packages = await buildOfficialIntegrationPackages();

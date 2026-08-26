@@ -57,7 +57,6 @@ export class CommerceSaleDetailEditor extends Editor {
                         defaultValue: "Article",
                     },
                     { type: "text", label: "Back label", attribute: "back-label", defaultValue: "Retour aux ventes" },
-                    { type: "page-link", label: "Back page", attribute: "back-url" },
                     { type: "text", label: "Error title", attribute: "error-title", defaultValue: "Vente introuvable" },
                     {
                         type: "textarea",
@@ -181,7 +180,10 @@ export class CommerceSaleDetailEditor extends Editor {
     }
 
     protected override contentSlots(): ContentSlot[] {
-        return [{ label: "Fulfillment", slot: "fulfillment", max: 1, accepts: [{ kind: "any-component" }] }];
+        return [
+            { label: "Back action", slot: "error-action", max: 1, accepts: [{ kind: "any-component" }] },
+            { label: "Fulfillment", slot: "fulfillment", max: 1, accepts: [{ kind: "any-component" }] },
+        ];
     }
 }
 

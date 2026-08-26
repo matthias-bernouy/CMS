@@ -47,6 +47,7 @@ export function registerBuildTest(): void {
             "basic-textarea",
             "basic-toast",
             "blockquote",
+            "button",
             "footer",
             "form",
             "h1",

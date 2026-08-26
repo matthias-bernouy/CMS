@@ -8,6 +8,7 @@ const blocDirectory = resolve(
     "../../../../integrations/extensions/commerce-mondial-relay-fulfillment/versions/1.0.0/blocs/commerce-mondial-relay-sale-fulfillment",
 );
 const tag = "test-commerce-mondial-relay-sale-fulfillment-refetch";
+let defaultContent = "";
 
 export type RequestCall = {
     path: string;
@@ -50,6 +51,7 @@ export async function createBloc(
     await defineBloc();
     const calls: RequestCall[] = [];
     const bloc = document.createElement(tag) as TestFulfillmentBloc;
+    bloc.innerHTML = defaultContent;
     bloc.setAttribute("order-id", String(order.orderId));
     bloc.request = async (path, init = {}) => {
         const call = {
@@ -81,8 +83,8 @@ export function snapshot(bloc: TestFulfillmentBloc) {
         createHidden: hidden("[data-create]"),
         handoffHidden: hidden("[data-handoff]"),
         labelHidden: hidden("[data-label]"),
-        trackingHidden: hidden("[data-tracking-link]"),
-        trackingUrl: root.querySelector("[data-tracking-link]")?.getAttribute("href"),
+        trackingHidden: (bloc.querySelector("[data-tracking-link]") as HTMLElement | null)?.hidden,
+        trackingUrl: bloc.querySelector("[data-tracking-link]")?.getAttribute("href"),
     };
 }
 
@@ -96,7 +98,13 @@ async function defineBloc(): Promise<void> {
     const editor = await readFile(resolve(blocDirectory, "BlocEditor.ts"), "utf8");
     const source: Record<string, string> = {};
     for (const file of files.filter((name) => !["Bloc.ts", "BlocEditor.ts"].includes(name))) {
-        source[file] = Buffer.from(await readFile(resolve(blocDirectory, file))).toString("base64");
+        const content = await readFile(resolve(blocDirectory, file));
+        source[file] = Buffer.from(content).toString("base64");
+        if (file === "default.html") {
+            const template = document.createElement("template");
+            template.innerHTML = content.toString();
+            defaultContent = template.content.firstElementChild?.innerHTML ?? "";
+        }
     }
     const compiled = await prepare_bloc(
         new File([view], "Bloc.ts", { type: "text/typescript" }),

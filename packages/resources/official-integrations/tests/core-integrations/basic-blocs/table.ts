@@ -36,7 +36,11 @@ export function registerTableTests(): void {
 
         expect(decodeDefaultContent(table?.source)).toContain('<basic-table-row slot="header">');
         expect(decodeSource(table?.source?.["style.css"])).toContain("overflow-x: auto");
-        expect(row?.viewJS).toContain('CustomEvent("basic-table-row:activate"');
+        expect(decodeSource(row?.source?.["template.html"])).toContain('slot name="navigation"');
+        expect(row?.viewJS).toContain('setAttribute("role", "row")');
+        expect(row?.viewJS).not.toContain('CustomEvent("basic-table-row:activate"');
+        expect(row?.editorJS).toContain('label: "Navigation"');
+        expect(row?.editorJS).toContain('tag: "a"');
         expect(cell?.viewJS).toContain('setAttribute("role", "cell")');
         expect(headerCell?.viewJS).toContain('setAttribute("role", "columnheader")');
         expect(headerCell?.viewJS).toContain('url.searchParams.set("sort", sort)');
@@ -85,16 +89,17 @@ export function registerTableTests(): void {
         expect(cell.getAttribute("role")).toBe("cell");
         expect(headerCell.getAttribute("role")).toBe("columnheader");
 
-        row.setAttribute("href", "/sales/42");
-        expect(row.getAttribute("role")).toBe("link");
-        expect(row.getAttribute("tabindex")).toBe("0");
-        let activation: unknown;
-        row.addEventListener("basic-table-row:activate", (event) => {
-            activation = (event as CustomEvent).detail;
-            event.preventDefault();
-        });
-        row.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-        expect(activation).toEqual({ href: "/sales/42", target: null });
+        const navigation = document.createElement("a");
+        navigation.slot = "navigation";
+        navigation.href = "/sales/42";
+        navigation.setAttribute("aria-label", "Open Acme sale");
+        row.prepend(navigation);
+        expect(row.getAttribute("role")).toBe("row");
+        expect(row.hasAttribute("href")).toBeFalse();
+        expect(row.hasAttribute("tabindex")).toBeFalse();
+        expect(row.querySelector(":scope > a[href]")).toBe(navigation);
+        expect(navigation.pathname).toBe("/sales/42");
+        expect(navigation.getAttribute("aria-label")).toBe("Open Acme sale");
 
         const filterButton = headerCell.shadowRoot?.querySelector("[data-filter-toggle]");
         const filterPopover = headerCell.shadowRoot?.querySelector("[data-filter-popover]");

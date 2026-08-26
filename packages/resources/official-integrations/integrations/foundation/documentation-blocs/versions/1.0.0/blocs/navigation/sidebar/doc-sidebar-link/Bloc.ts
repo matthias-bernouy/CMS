@@ -3,41 +3,48 @@ import css from "./style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 
 export class Bloc extends Component {
-    static observedAttributes = ["href", "auto-active"];
-    _anchor = null;
+    static observedAttributes = ["auto-active"];
+
     constructor() {
         super({ css, template });
+        this._observer = new MutationObserver(this._syncActive);
     }
+
     connectedCallback() {
-        this._anchor = this.shadowRoot?.querySelector("a") ?? null;
-        this._syncHref();
+        this._observer.observe(this, { attributes: true, attributeFilter: ["href"], subtree: true });
         this._syncActive();
+        window.addEventListener("popstate", this._syncActive);
     }
+
+    disconnectedCallback() {
+        this._observer.disconnect();
+        window.removeEventListener("popstate", this._syncActive);
+    }
+
     attributeChangedCallback() {
-        this._syncHref();
         this._syncActive();
     }
-    _syncHref() {
-        const href = this.getAttribute("href") ?? "#";
-        this._anchor?.setAttribute("href", href);
-    }
-    _syncActive() {
-        if (this.getAttribute("auto-active") === "false") {
-            return;
-        }
-        const href = this.getAttribute("href");
-        if (!href) {
+
+    _syncActive = () => {
+        const anchor = this.querySelector(":scope > a[href]");
+        if (!anchor || this.getAttribute("auto-active") === "false") {
+            this.removeAttribute("active");
+            anchor?.removeAttribute("aria-current");
             return;
         }
         try {
-            const url = new URL(href, window.location.origin);
-            if (url.pathname === window.location.pathname) {
-                this.setAttribute("active", "");
+            const active = new URL(anchor.href, window.location.href).pathname === window.location.pathname;
+            this.toggleAttribute("active", active);
+            if (active) {
+                anchor.setAttribute("aria-current", "page");
             } else {
-                this.removeAttribute("active");
+                anchor.removeAttribute("aria-current");
             }
-        } catch {}
-    }
+        } catch {
+            this.removeAttribute("active");
+            anchor.removeAttribute("aria-current");
+        }
+    };
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", Bloc);

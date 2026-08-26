@@ -107,10 +107,22 @@ describe("commerce negotiation 1.0.0", () => {
             "dashboard",
             "bloc",
             "bloc",
+            "bloc",
+            "bloc",
         ]);
         expect(importedBlocs.map((bloc) => bloc.tag)).toEqual([
             "commerce-negotiation-form",
+            "commerce-negotiation-form-controller",
             "commerce-negotiation-list",
+            "commerce-negotiation-list-controller",
+        ]);
+        expect(importedBlocs.filter((bloc) => bloc.internal).map((bloc) => bloc.tag)).toEqual([
+            "commerce-negotiation-form-controller",
+            "commerce-negotiation-list-controller",
+        ]);
+        expect(importedBlocs.filter((bloc) => bloc.internal).map((bloc) => bloc.viewPath)).toEqual([
+            "controller/Bloc.ts",
+            "controller/Bloc.ts",
         ]);
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
@@ -170,67 +182,84 @@ describe("commerce negotiation 1.0.0", () => {
             definition.artifacts?.filter(
                 (item): item is Extract<typeof item, { type: "bloc" }> => item.type === "bloc",
             ) ?? [];
-        const compiled = new Map<string, Awaited<ReturnType<typeof prepare_bloc>>>();
-        for (const artifact of artifacts) {
-            if (!artifact.bloc.viewJS || !artifact.bloc.editorJS) {
-                throw new Error(`${artifact.bloc.tag} sources not found`);
-            }
-            compiled.set(
-                artifact.bloc.tag,
-                await prepare_bloc(
-                    new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
-                    new File([artifact.bloc.editorJS], "BlocEditor.ts", { type: "text/typescript" }),
-                    artifact.bloc.name,
-                    artifact.bloc.group ?? "Commerce",
-                    artifact.bloc.description ?? "",
-                    artifact.bloc.tag,
-                    artifact.bloc.source,
-                ),
-            );
-        }
-
-        const form = compiled.get("commerce-negotiation-form");
-        const list = compiled.get("commerce-negotiation-list");
         const formArtifact = artifacts.find((artifact) => artifact.bloc.tag === "commerce-negotiation-form");
         const listArtifact = artifacts.find((artifact) => artifact.bloc.tag === "commerce-negotiation-list");
-        const formViewSource = formArtifact ? declaredBlocViewSources(formArtifact.bloc) : "";
-        const listViewSource = listArtifact ? declaredBlocViewSources(listArtifact.bloc) : "";
+        const formController = artifacts.find(
+            (artifact) => artifact.bloc.tag === "commerce-negotiation-form-controller",
+        );
+        const listController = artifacts.find(
+            (artifact) => artifact.bloc.tag === "commerce-negotiation-list-controller",
+        );
+        if (
+            !formArtifact?.bloc.compositionHTML ||
+            !formArtifact.bloc.editorJS ||
+            !listArtifact?.bloc.compositionHTML ||
+            !listArtifact.bloc.editorJS ||
+            !formController?.bloc.viewJS ||
+            !listController?.bloc.viewJS
+        ) {
+            throw new Error("commerce negotiation composition sources not found");
+        }
+        const form = await prepare_bloc(
+            new File([formController.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+            null,
+            formController.bloc.name,
+            formController.bloc.group ?? "Commerce",
+            formController.bloc.description ?? "",
+            formController.bloc.tag,
+            formController.bloc.source,
+            undefined,
+            { viewPath: "controller/Bloc.ts" },
+        );
+        const list = await prepare_bloc(
+            new File([listController.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+            null,
+            listController.bloc.name,
+            listController.bloc.group ?? "Commerce",
+            listController.bloc.description ?? "",
+            listController.bloc.tag,
+            listController.bloc.source,
+            undefined,
+            { viewPath: "controller/Bloc.ts" },
+        );
+        const formRuntime = `${formArtifact.bloc.compositionHTML}\n${form.viewJS}`;
+        const listRuntime = `${listArtifact.bloc.compositionHTML}\n${list.viewJS}`;
+        const formViewSource = declaredBlocViewSources(formController.bloc);
+        const listViewSource = declaredBlocViewSources(listController.bloc);
         const formEditorSource = formArtifact?.bloc.editorJS ?? "";
         const listEditorSource = listArtifact?.bloc.editorJS ?? "";
-        expect(form).toBeTruthy();
-        expect(list).toBeTruthy();
         expect(definition.dependencies).toEqual([
             { name: "basicBlocs", kind: "basic-blocs" },
             { name: "commerce", kind: "commerce" },
         ]);
-        expect(form?.viewJS).toContain("window.p9r.Composition");
-        expect(form?.viewJS).toContain("getProposalPolicy");
-        expect(form?.viewJS).toContain("myProposals");
-        expect(form?.viewJS).toContain("existing-message");
-        expect(form?.viewJS).toContain("createMyProposal");
-        expect(form?.viewJS).toContain("system-functions");
+        expect(form.viewJS).toContain("window.p9r.Component");
+        expect(formRuntime).toContain("getProposalPolicy");
+        expect(formRuntime).toContain("myProposals");
+        expect(formRuntime).toContain("existing-message");
+        expect(formRuntime).toContain("createMyProposal");
+        expect(formRuntime).toContain("system-functions");
         expect(formViewSource).toContain('getAttribute("show-message") === "false"');
         expect(formViewSource).toContain("wholeUnitPrices");
         expect(formViewSource).toContain('style.setProperty("display", "none", "important")');
-        expect(form?.viewJS).toContain("<basic-input");
-        expect(form?.viewJS).toContain("<basic-textarea");
-        expect(form?.viewJS).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+        expect(formRuntime).toContain("<basic-input");
+        expect(formRuntime).toContain("<basic-textarea");
+        expect(formRuntime).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
         expect(formEditorSource).toContain('"card-background-color"');
-        expect(list?.viewJS).toContain("window.p9r.Composition");
-        expect(list?.viewJS).toContain("myProposals");
-        expect(list?.viewJS).toContain("respondToProposal");
-        expect(list?.viewJS).toContain("withdrawMyProposal");
-        expect(list?.viewJS).toContain("basic-pagination:change");
-        expect(list?.viewJS).toContain('justify-content="space-between"');
-        expect(list?.viewJS).toContain("data-empty-state");
+        expect(list.viewJS).toContain("window.p9r.Component");
+        expect(listRuntime).toContain("myProposals");
+        expect(listRuntime).toContain("respondToProposal");
+        expect(listRuntime).toContain("withdrawMyProposal");
+        expect(listRuntime).toContain("basic-pagination:change");
+        expect(listRuntime).toContain('justify-content="space-between"');
+        expect(listRuntime).toContain("data-empty-state");
         expect(listViewSource).toContain("this.total <= positiveInteger");
-        expect(list?.viewJS).toContain("history.replaceState");
+        expect(listRuntime).toContain("history.replaceState");
         expect(listViewSource).toContain('style.setProperty("display", "none", "important")');
         expect(listViewSource).toContain('toggleAttribute("selected", this.role === "buyer")');
         expect(listViewSource).toContain('this.role === "all"');
         expect(listViewSource).toContain('getAttribute("grid-packing")');
         expect(listViewSource).toContain('proposal.viewerRole === "buyer"');
-        expect(list?.viewJS).not.toContain("location.reload");
+        expect(listRuntime).not.toContain("location.reload");
         expect(listEditorSource).toContain('attribute: "initial-role"');
         expect(listEditorSource).toContain('{ label: "Combined", value: "all" }');
 
@@ -249,10 +278,24 @@ describe("commerce negotiation 1.0.0", () => {
             "basic-textarea",
             "basic-toast",
             "commerce-negotiation-form",
+            "commerce-negotiation-form-controller",
             "commerce-negotiation-list",
-        ].map((id) => ({ id }));
+            "commerce-negotiation-list-controller",
+        ].map((id) => ({
+            id,
+            ...(id === "commerce-negotiation-form" ? { compositionHTML: formArtifact.bloc.compositionHTML } : {}),
+            ...(id === "commerce-negotiation-list" ? { compositionHTML: listArtifact.bloc.compositionHTML } : {}),
+        }));
         const resolver = createBlocUsageResolver(available, {
-            getBlocViewJS: async (tag) => compiled.get(tag)?.viewJS ?? null,
+            getBlocViewJS: async (tag) => {
+                if (tag === "commerce-negotiation-form-controller") {
+                    return form.viewJS;
+                }
+                if (tag === "commerce-negotiation-list-controller") {
+                    return list.viewJS;
+                }
+                return null;
+            },
         });
         expect(await resolver("<commerce-negotiation-form></commerce-negotiation-form>")).toEqual(
             expect.arrayContaining([
@@ -265,6 +308,7 @@ describe("commerce negotiation 1.0.0", () => {
                 "basic-textarea",
                 "basic-toast",
                 "commerce-negotiation-form",
+                "commerce-negotiation-form-controller",
             ]),
         );
         expect(await resolver("<commerce-negotiation-list></commerce-negotiation-list>")).toEqual(
@@ -281,6 +325,7 @@ describe("commerce negotiation 1.0.0", () => {
                 "basic-stack",
                 "basic-toast",
                 "commerce-negotiation-list",
+                "commerce-negotiation-list-controller",
             ]),
         );
     });

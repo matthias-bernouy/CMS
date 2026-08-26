@@ -212,7 +212,7 @@
                 <span cms-repeat="saveResult.body.missingRequirements as requirement">{{ requirement.subjectName }} requires {{ requirement.requiredName }}</span>
             </basic-stack>
             <basic-toast role="status" cms-condition="$source.loaded">Draft saved.</basic-toast>
-            <basic-button type="submit" appearance="filled">Save draft</basic-button>
+            <basic-button appearance="filled"><button type="submit">Save draft</button></basic-button>
         </form>
 
         <basic-card appearance="outlined" cms-condition="proposalData.proposal.draftVersion">
@@ -238,7 +238,7 @@
             <basic-toast role="status" cms-condition="$source.loading">Publishing the proposal…</basic-toast>
             <basic-toast role="alert" cms-condition="$source.error">The proposal could not be published. Resolve every prerequisite and try again.</basic-toast>
             <basic-toast role="status" cms-condition="$source.loaded">Proposal published.</basic-toast>
-            <basic-button type="submit" appearance="filled">Publish proposal</basic-button>
+            <basic-button appearance="filled"><button type="submit">Publish proposal</button></basic-button>
         </form>
 
         <section data-sales-editable cms-condition="proposalData.proposal.publishedVersion">
@@ -251,7 +251,7 @@
                     <basic-input type="datetime-local" name="expiresAt" label="Optional expiry"></basic-input>
                     <basic-toast role="status" cms-condition="$source.loading">Creating the client link…</basic-toast>
                     <basic-toast role="alert" cms-condition="$source.error">The client link could not be created.</basic-toast>
-                    <basic-button type="submit" appearance="filled">Create client link</basic-button>
+                    <basic-button appearance="filled"><button type="submit">Create client link</button></basic-button>
 
                     <basic-card appearance="outlined" cms-condition="$source.loaded && shareResult.body.token">
                         <strong slot="title">Copy this link now</strong>
@@ -273,7 +273,7 @@
                         <input type="hidden" name="shareId" value="{{ share.id }}">
                         <basic-toast role="status" cms-condition="$source.loading">Revoking link…</basic-toast>
                         <basic-toast role="alert" cms-condition="$source.error">The link could not be revoked.</basic-toast>
-                        <basic-button type="submit" appearance="outlined">Revoke link</basic-button>
+                        <basic-button appearance="outlined"><button type="submit">Revoke link</button></basic-button>
                     </form>
                 </basic-card>
             </basic-stack>

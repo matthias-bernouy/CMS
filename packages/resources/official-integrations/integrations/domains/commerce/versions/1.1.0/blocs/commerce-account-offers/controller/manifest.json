@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "commerce-account-offers-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "commerce-account-offers controller",
+        "description": "Internal behavior controller for commerce-account-offers."
+    }
+}

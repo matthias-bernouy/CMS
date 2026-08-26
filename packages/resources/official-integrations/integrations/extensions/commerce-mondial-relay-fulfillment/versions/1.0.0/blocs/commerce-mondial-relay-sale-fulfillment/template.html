@@ -18,10 +18,10 @@
             <p data-latest></p>
         </div>
         <div slot="actions" class="actions">
-            <basic-button data-create type="button"></basic-button>
-            <basic-button data-handoff type="button" hidden></basic-button>
-            <basic-button data-label type="button" appearance="outlined" hidden></basic-button>
-            <basic-button data-tracking-link action="link" appearance="ghost" hidden></basic-button>
+            <basic-button><button data-create type="button"></button></basic-button>
+            <basic-button><button data-handoff type="button" hidden></button></basic-button>
+            <basic-button appearance="outlined"><button data-label type="button" hidden></button></basic-button>
+            <slot name="tracking-action"></slot>
         </div>
         <p slot="footer" class="message" data-message aria-live="polite"></p>
     </basic-card>

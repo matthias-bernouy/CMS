@@ -1,6 +1,4 @@
-import { Composition } from "@bernouy/components/base";
-
-import template from "./template.html" with { type: "text" };
+import { Component } from "@bernouy/components/base";
 
 const fields = [
     "given-name",
@@ -19,7 +17,7 @@ const fields = [
     "avatar",
 ];
 
-export class UserAccountForm extends Composition {
+export class UserAccountForm extends Component {
     static observedAttributes = [
         "source-id",
         "source-prefix",
@@ -55,7 +53,7 @@ export class UserAccountForm extends Composition {
     ];
 
     constructor() {
-        super({ template });
+        super({ css: ":host { display: contents; }", template: "<slot></slot>" });
         this.avatarObserver = null;
         this.sourceBase = "";
         this.saveAfterAvatar = false;

@@ -109,9 +109,11 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-offer-filter",
             "commerce-offer-preview",
             "commerce-account-offers",
+            "commerce-account-offers-controller",
             "commerce-account-sales",
             "commerce-sale-detail",
             "commerce-offer-price-form",
+            "commerce-offer-price-form-controller",
             "commerce-notification-preferences",
         ]);
         expect(endpointUrns).toHaveLength(175);

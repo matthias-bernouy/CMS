@@ -70,13 +70,15 @@ function syncTheme(host) {
         card.setAttribute("border-color", border);
         card.setAttribute("text-color", text);
     }
-    for (const button of [host.createButton, host.handoffButton]) {
+    for (const control of [host.createButton, host.handoffButton]) {
+        const button = control.closest("basic-button");
         button.setAttribute("accent-color", accent);
         button.setAttribute("background-color", accent);
         button.setAttribute("border-color", accent);
         button.setAttribute("text-color", buttonText);
     }
-    for (const button of [host.labelButton, host.trackingLink]) {
+    for (const control of [host.labelButton, host.trackingLink]) {
+        const button = control.closest("basic-button");
         button.setAttribute("accent-color", accent);
         button.setAttribute("border-color", accent);
         button.setAttribute("text-color", accent);

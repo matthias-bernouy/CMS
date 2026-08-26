@@ -7,17 +7,6 @@ export function upgradeProperty(element: HTMLElement, property: string): void {
     (element as unknown as Record<string, unknown>)[property] = value;
 }
 
-export function updateHref(anchor: HTMLAnchorElement | null, value: string | null): void {
-    if (!anchor) {
-        return;
-    }
-    if (value) {
-        anchor.setAttribute("href", value);
-    } else {
-        anchor.removeAttribute("href");
-    }
-}
-
 export function updateBadge(element: HTMLElement | null, value: string | null): void {
     if (!element) {
         return;
@@ -29,11 +18,10 @@ export function updateBadge(element: HTMLElement | null, value: string | null): 
 export function setActiveState(host: HTMLElement, anchor: HTMLAnchorElement | null, active: boolean): void {
     host.toggleAttribute("data-current", active);
     if (active) {
-        host.setAttribute("aria-current", "page");
+        anchor?.setAttribute("aria-current", "page");
     } else {
-        host.removeAttribute("aria-current");
+        anchor?.removeAttribute("aria-current");
     }
-    anchor?.classList.toggle("active", active);
 }
 
 export function checkActiveState(host: HTMLElement, anchor: HTMLAnchorElement | null): void {
@@ -41,7 +29,7 @@ export function checkActiveState(host: HTMLElement, anchor: HTMLAnchorElement | 
         setActiveState(host, anchor, true);
         return;
     }
-    const href = host.getAttribute("href");
+    const href = anchor?.getAttribute("href");
     if (!anchor || !href) {
         setActiveState(host, anchor, false);
         return;
@@ -58,7 +46,7 @@ export function checkActiveState(host: HTMLElement, anchor: HTMLAnchorElement | 
               : current.pathname === targetPath || current.pathname.startsWith(`${targetPath}/`);
         setActiveState(host, anchor, active);
     } catch {
-        console.warn("Invalid href in WorkspaceLateralMenuItem:", href);
+        console.warn("Invalid workspace navigation href:", href);
         setActiveState(host, anchor, false);
     }
 }

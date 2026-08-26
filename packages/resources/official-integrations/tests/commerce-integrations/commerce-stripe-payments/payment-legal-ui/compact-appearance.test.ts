@@ -30,14 +30,16 @@ test("offers an accessible compact legal appearance without visible heading or v
         try {
             const checkbox = payment.root.querySelector<HTMLInputElement>("[data-legal-version-id]")!;
             const label = payment.root.querySelector<HTMLLabelElement>(".legal-document-consent")!;
-            const link = label.querySelector<HTMLAnchorElement>("a")!;
+            const link = payment.querySelector<HTMLAnchorElement>(":scope > a[data-commerce-payment-legal-link]")!;
+            const linkSlot = label.querySelector<HTMLSlotElement>("slot")!;
             const styles = payment.root.querySelector("style")?.textContent ?? "";
             expect(checkbox.required).toBe(true);
             expect(checkbox.checked).toBe(false);
             expect(label.htmlFor).toBe(checkbox.id);
-            expect(label.textContent).toBe("J’accepte les Conditions générales de vente.");
+            expect(label.textContent).toBe("J’accepte les .");
             expect(link.textContent).toBe("Conditions générales de vente");
             expect(link.pathname).toBe("/cgu-cgv");
+            expect(linkSlot.assignedElements()).toEqual([link]);
             expect(payment.root.querySelector(".legal-document-version")).toBeNull();
             expect(styles).toContain(':host([legal-appearance="compact"]) .legal legend');
 

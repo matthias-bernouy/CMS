@@ -1,37 +1,14 @@
-import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot } from "@bernouy/cms-content/editor";
 
 export class BasicTableRowEditor extends Editor {
-    protected override settings(): SettingSection[] {
-        return [
-            {
-                kind: "self",
-                label: "Link",
-                settings: [
-                    {
-                        type: "page-link",
-                        label: "Target",
-                        attribute: "href",
-                        allowPage: true,
-                        allowExternal: true,
-                        allowMedia: false,
-                    },
-                    {
-                        type: "select",
-                        label: "Open in",
-                        attribute: "target",
-                        defaultValue: "",
-                        options: [
-                            { label: "Same tab", value: "" },
-                            { label: "New tab", value: "_blank" },
-                        ],
-                    },
-                ],
-            },
-        ];
-    }
-
     protected override contentSlots(): ContentSlot[] {
         return [
+            {
+                label: "Navigation",
+                slot: "navigation",
+                max: 1,
+                accepts: [{ kind: "component", tag: "a" }],
+            },
             {
                 label: "Cells",
                 min: 1,

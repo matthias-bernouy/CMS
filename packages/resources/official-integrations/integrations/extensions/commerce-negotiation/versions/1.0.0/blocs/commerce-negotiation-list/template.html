@@ -1,5 +1,6 @@
+<commerce-negotiation-list-controller data-p9r-composition-controller>
 <style>
-    commerce-negotiation-list [data-offer-media] {
+    commerce-negotiation-list-controller [data-offer-media] {
         display: grid;
         min-height: 8rem;
         overflow: hidden;
@@ -9,28 +10,28 @@
         place-items: center;
     }
 
-    commerce-negotiation-list [data-offer-image] {
+    commerce-negotiation-list-controller [data-offer-image] {
         width: 100%;
         height: 9rem;
         object-fit: cover;
     }
 
-    commerce-negotiation-list [data-offer-placeholder] {
+    commerce-negotiation-list-controller [data-offer-placeholder] {
         width: min(6rem, 45%);
         color: var(--text-muted, currentColor);
     }
 
-    commerce-negotiation-list [data-offer-title-link] {
+    commerce-negotiation-list-controller [data-offer-title-link] {
         color: inherit;
         text-decoration: none;
     }
 
-    commerce-negotiation-list [data-offer-title-link]:hover {
+    commerce-negotiation-list-controller [data-offer-title-link]:hover {
         text-decoration: underline;
         text-underline-offset: .2em;
     }
 
-    commerce-negotiation-list [data-status] {
+    commerce-negotiation-list-controller [data-status] {
         width: fit-content;
         padding: .2rem .55rem;
         border-radius: 999px;
@@ -39,8 +40,8 @@
         font-weight: 700;
     }
 
-    commerce-negotiation-list [data-decision],
-    commerce-negotiation-list [data-checkout-expiration] {
+    commerce-negotiation-list-controller [data-decision],
+    commerce-negotiation-list-controller [data-checkout-expiration] {
         color: var(--text-muted, currentColor);
     }
 </style>
@@ -114,15 +115,22 @@
                 <small data-decision hidden></small>
                 <small data-checkout-expiration hidden></small>
             </basic-stack>
-            <basic-button slot="actions" size="sm" appearance="filled" data-action="accept">Accepter</basic-button>
-            <basic-button slot="actions" size="sm" appearance="outlined" data-action="reject">Refuser</basic-button>
-            <basic-button slot="actions" size="sm" appearance="ghost" data-action="withdraw">Retirer</basic-button>
-            <basic-button slot="actions" action="link" size="sm" appearance="filled" data-action-link="checkout">
-                Finaliser l’achat
+            <basic-button slot="actions" size="sm" appearance="filled">
+                <button type="button" data-action="accept">Accepter</button>
             </basic-button>
-            <basic-button slot="actions" action="link" size="sm" appearance="outlined" data-action-link="order">
-                Voir ma commande
+            <basic-button slot="actions" size="sm" appearance="outlined">
+                <button type="button" data-action="reject">Refuser</button>
+            </basic-button>
+            <basic-button slot="actions" size="sm" appearance="ghost">
+                <button type="button" data-action="withdraw">Retirer</button>
+            </basic-button>
+            <basic-button slot="actions" size="sm" appearance="filled">
+                <a data-action-link="checkout" href="/checkout">Finaliser l’achat</a>
+            </basic-button>
+            <basic-button slot="actions" size="sm" appearance="outlined">
+                <a data-action-link="order" href="/account/orders">Voir ma commande</a>
             </basic-button>
         </basic-card>
     </template>
 </basic-stack>
+</commerce-negotiation-list-controller>

@@ -106,10 +106,7 @@ export class BasicNavbar extends Component {
 }
 
 function isLink(item) {
-    return (
-        item instanceof Element &&
-        item.matches('a[href][slot="brand"], a[href][slot="navigation"], a[href][slot="actions"]')
-    );
+    return item instanceof Element && item.matches("a[href]");
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", BasicNavbar);

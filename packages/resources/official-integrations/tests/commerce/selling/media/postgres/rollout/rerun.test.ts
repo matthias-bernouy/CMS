@@ -63,6 +63,19 @@ describe("Commerce media connector rerun", () => {
             secrets,
             installations,
             connectorDeployers: [deployer],
+            sourceExecutorDeps: {
+                fetchImpl: async (input) => {
+                    const request = new Request(input);
+                    if (request.url.includes("/cms-commerce/system/buyer-legal-documents/sync")) {
+                        return Response.json({ enabled: false, documents: [] });
+                    }
+                    return Response.json(
+                        { error: `unexpected after-installation request: ${request.url}` },
+                        { status: 500 },
+                    );
+                },
+                resolveSecret: async () => "commerce-rollout-cms-api-key",
+            },
             blocs: {
                 async importBloc(artifact: { tag: string }, options: IntegrationImportOptions) {
                     forceOptions.push(options.force === true);
@@ -77,7 +90,11 @@ describe("Commerce media connector rerun", () => {
             installations,
             packageResolver,
             siteIntegrations: [definition],
-            dto: { kind: "commerce", answers: { id: "commerce" }, options: {} },
+            dto: {
+                kind: "commerce",
+                answers: { id: "commerce", buyerLegalEnabled: false, buyerLegalDocuments: [] },
+                options: {},
+            },
         });
         requests.length = 0;
         forceOptions.length = 0;

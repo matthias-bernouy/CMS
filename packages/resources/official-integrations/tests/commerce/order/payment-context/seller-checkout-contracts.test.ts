@@ -37,6 +37,7 @@ describe("commerce protected-checkout seller context contracts", () => {
             p_offer_ids: [91, 92],
             p_order_id: null,
             p_buyer_cms_user_id: buyerCmsUserId,
+            p_price_agreement_public_id: null,
         });
     });
 
@@ -59,6 +60,7 @@ describe("commerce protected-checkout seller context contracts", () => {
                 p_offer_ids: [91, 92],
                 p_order_id: null,
                 p_buyer_cms_user_id: buyerCmsUserId,
+                p_price_agreement_public_id: null,
             });
         });
     }

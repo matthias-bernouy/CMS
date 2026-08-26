@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
-import { Composition } from "@bernouy/components/base";
+import { Component } from "@bernouy/components/base";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import {
@@ -12,6 +12,7 @@ import {
 const tag = "test-commerce-negotiation-list-checkout";
 const agreementId = "018f72b8-1f90-7c31-a933-592c90c8178a";
 let imageRuntime: BoundImageRuntime;
+let listTemplateHTML = "";
 
 beforeEach(() => {
     imageRuntime = installBoundImageRuntime(
@@ -54,7 +55,7 @@ describe("commerce negotiation list buyer checkout", () => {
                 ),
             );
         };
-        const list = document.createElement(tag);
+        const list = createList();
         list.setAttribute("initial-role", "all");
         list.setAttribute("show-role-tabs", "false");
         list.setAttribute("grid-packing", "fill");
@@ -102,7 +103,7 @@ describe("commerce negotiation list buyer checkout", () => {
             );
         };
 
-        const list = document.createElement(tag);
+        const list = createList();
         list.setAttribute("initial-role", "buyer");
         list.setAttribute("checkout-url", "/checkout");
         list.setAttribute("checkout-param", "agreementId");
@@ -155,7 +156,7 @@ describe("commerce negotiation list buyer checkout", () => {
                     { status: 200, headers: { "content-type": "application/json" } },
                 ),
             );
-        const list = document.createElement(tag);
+        const list = createList();
         list.setAttribute("initial-role", "seller");
         try {
             document.body.append(list);
@@ -191,7 +192,7 @@ describe("commerce negotiation list buyer checkout", () => {
                     total: 2,
                 }),
             );
-        const list = document.createElement(tag);
+        const list = createList();
         try {
             document.body.append(list);
             await settleLifecycle();
@@ -232,7 +233,7 @@ describe("commerce negotiation list buyer checkout", () => {
                     { status: 200, headers: { "content-type": "application/json" } },
                 ),
             );
-        const list = document.createElement(tag);
+        const list = createList();
         list.setAttribute("initial-role", "buyer");
         try {
             document.body.append(list);
@@ -283,7 +284,7 @@ describe("commerce negotiation list buyer checkout", () => {
             confirmations.push(String(message));
             return false;
         };
-        const list = document.createElement(tag);
+        const list = createList();
         list.setAttribute("initial-role", "seller");
         try {
             document.body.append(list);
@@ -348,27 +349,48 @@ async function defineList(): Promise<void> {
     const artifact = definition?.artifacts?.find(
         (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "commerce-negotiation-list",
     );
-    if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS) {
-        throw new Error("commerce-negotiation-list source not found");
+    const controller = definition?.artifacts?.find(
+        (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "commerce-negotiation-list-controller",
+    );
+    if (
+        !artifact ||
+        artifact.type !== "bloc" ||
+        artifact.bloc.compositionHTML === undefined ||
+        !controller ||
+        controller.type !== "bloc" ||
+        !controller.bloc.viewJS
+    ) {
+        throw new Error("commerce-negotiation-list composition sources not found");
     }
     const compiled = await prepare_bloc(
-        new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+        new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
         null,
-        artifact.bloc.name,
-        artifact.bloc.group ?? "Commerce",
-        artifact.bloc.description ?? "",
+        controller.bloc.name,
+        controller.bloc.group ?? "Commerce",
+        controller.bloc.description ?? "",
         tag,
-        artifact.bloc.source,
+        controller.bloc.source,
+        undefined,
+        { viewPath: "controller/Bloc.ts" },
     );
+    const composition = document.createElement("div");
+    composition.innerHTML = artifact.bloc.compositionHTML;
+    listTemplateHTML = composition.firstElementChild?.innerHTML ?? "";
     const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
     (window as typeof window & { p9r?: unknown }).p9r = {
-        Composition,
+        Component,
     };
     try {
         new Function(compiled.viewJS)();
     } finally {
         (window as typeof window & { p9r?: unknown }).p9r = previousP9r;
     }
+}
+
+function createList(): HTMLElement {
+    const list = document.createElement(tag);
+    list.innerHTML = listTemplateHTML;
+    return list;
 }
 
 async function settleLifecycle(): Promise<void> {

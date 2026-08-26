@@ -1,3 +1,4 @@
+<commerce-account-offers-controller data-p9r-composition-controller>
 <basic-stack gap="lg" data-offers-layout>
     <basic-stack direction="row" justify-content="space-between" align-items="end" wrap="true" gap="sm" data-offers-toolbar>
         <basic-select data-status-filter accessible-label="Filtrer par statut" value="all">
@@ -10,7 +11,7 @@
             <basic-option value="rejected">Refusées</basic-option>
             <basic-option value="archived">Archivées</basic-option>
         </basic-select>
-        <basic-button data-create-button action="link">Déposer une annonce</basic-button>
+        <basic-button><a data-create-button href="/deposer-une-annonce">Déposer une annonce</a></basic-button>
     </basic-stack>
 
     <section data-offers-source>
@@ -37,7 +38,9 @@
                         <strong data-offer-price data-display-amount="{{ offer.sellerDisplayPriceAmount }}" data-currency="{{ offer.currency }}"></strong>
                         <small data-offer-updated data-date="{{ offer.updatedAt }}"></small>
                     </basic-stack>
-                    <basic-button slot="actions" data-edit-button data-offer-id="{{ offer.id }}" data-offer-slug="{{ offer.slug }}" data-workflow-state="{{ offer.workflowState }}" data-publicly-visible="{{ offer.publiclyVisible }}" action="link" appearance="outlined" size="sm">Voir</basic-button>
+                    <basic-button slot="actions" appearance="outlined" size="sm">
+                        <a data-edit-button data-offer-id="{{ offer.id }}" data-offer-slug="{{ offer.slug }}" data-workflow-state="{{ offer.workflowState }}" data-publicly-visible="{{ offer.publiclyVisible }}" href="/annonce?slug={{ offer.slug }}">Voir</a>
+                    </basic-button>
                 </basic-card>
             </basic-grid>
 
@@ -45,3 +48,4 @@
         </basic-stack>
     </section>
 </basic-stack>
+</commerce-account-offers-controller>

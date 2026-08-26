@@ -14,25 +14,8 @@ export class CommerceOfferPreviewEditor extends Editor {
         return [
             {
                 kind: "self",
-                label: "Offer",
+                label: "Price",
                 settings: [
-                    { type: "page-link", label: "Target page", attribute: "href" },
-                    {
-                        type: "text",
-                        label: "Accessible label",
-                        attribute: "accessible-label",
-                        defaultValue: "Voir l’annonce",
-                    },
-                    {
-                        type: "select",
-                        label: "Open in",
-                        attribute: "target",
-                        defaultValue: "_self",
-                        options: [
-                            { label: "Same tab", value: "_self" },
-                            { label: "New tab", value: "_blank" },
-                        ],
-                    },
                     { type: "text", label: "Amount in minor units", attribute: "amount" },
                     { type: "text", label: "Currency", attribute: "currency", defaultValue: "EUR" },
                     { type: "text", label: "Locale", attribute: "locale", defaultValue: "fr-FR" },
@@ -93,6 +76,12 @@ export class CommerceOfferPreviewEditor extends Editor {
 
     protected override contentSlots(): ContentSlot[] {
         return [
+            {
+                label: "Navigation",
+                slot: "navigation",
+                max: 1,
+                accepts: [{ kind: "component", tag: "a" }],
+            },
             { label: "Media", slot: "media", max: 1, accepts: anyComponent },
             { label: "Badges", slot: "badge", accepts: anyComponent },
             { label: "Eyebrow", slot: "eyebrow", max: 1, accepts: anyComponent },

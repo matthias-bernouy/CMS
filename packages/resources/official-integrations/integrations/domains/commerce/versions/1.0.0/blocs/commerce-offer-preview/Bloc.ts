@@ -6,17 +6,14 @@ import { formatMoney, parseBooleanAttribute } from "./money";
 
 export class CommerceOfferPreview extends Component {
     static observedAttributes = [
-        "accessible-label",
         "accent-color",
         "amount",
         "background-color",
         "border-color",
         "currency",
-        "href",
         "locale",
         "muted-text-color",
         "price-color",
-        "target",
         "text-color",
         "whole-unit-prices",
     ];
@@ -36,26 +33,6 @@ export class CommerceOfferPreview extends Component {
     }
 
     sync() {
-        const href = this.getAttribute("href")?.trim() || "";
-        if (href) {
-            this.navigation.setAttribute("href", href);
-            this.navigation.setAttribute("aria-label", this.getAttribute("accessible-label") || "Voir l’annonce");
-        } else {
-            this.navigation.removeAttribute("href");
-            this.navigation.removeAttribute("aria-label");
-        }
-        const target = this.getAttribute("target")?.trim();
-        if (target) {
-            this.navigation.setAttribute("target", target);
-        } else {
-            this.navigation.removeAttribute("target");
-        }
-        if (target === "_blank") {
-            this.navigation.setAttribute("rel", "noopener noreferrer");
-        } else {
-            this.navigation.removeAttribute("rel");
-        }
-
         const price = formatMoney(
             this.getAttribute("amount"),
             this.getAttribute("currency"),
@@ -80,10 +57,6 @@ export class CommerceOfferPreview extends Component {
                 this.style.removeProperty(property);
             }
         }
-    }
-
-    get navigation() {
-        return this.shadowRoot.querySelector("[data-navigation]");
     }
 
     get price() {

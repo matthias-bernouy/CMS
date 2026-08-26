@@ -7,7 +7,6 @@ import {
 } from "@bernouy/cms-official-integrations/publication";
 import { type DeclarativeConnectorTemplate, type IntegrationDefinition } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { compare as compareVersions } from "semver";
 
 export const OFFICIAL_SQL_INTEGRATION_KINDS = Object.freeze(
     OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS.map(({ kind }) => kind),
@@ -80,6 +79,11 @@ async function loadSchemaCalibrationSubjects(
     const repository = new FsIntegrationDefinitionRepository(root);
     const packages = await buildOfficialIntegrationPackages(root);
     const packageByIdentity = new Map(packages.map((entry) => [identity(entry.kind, entry.version), entry]));
+    const targetVersions = new Map(targets.map(({ kind, version }) => [kind, version]));
+    const dependencyPackages = packages.filter((entry) => {
+        const targetVersion = targetVersions.get(entry.kind);
+        return targetVersion === undefined || entry.version === targetVersion;
+    });
     const definitions = new Map<string, IntegrationDefinition>();
     for (const entry of packages) {
         const definition = await repository.get(entry.kind, entry.version);
@@ -96,14 +100,10 @@ async function loadSchemaCalibrationSubjects(
     const subjects: OfficialSchemaCalibrationSubject[] = [];
     for (const target of targets) {
         const { kind } = target;
-        const matches = packages
-            .filter((entry) => entry.kind === kind)
-            .sort((left, right) => compareVersions(right.version, left.version));
-        const selected = matches.filter((entry) => entry.version === target.version);
-        if (selected.length !== 1) {
+        const entry = packageByIdentity.get(identity(kind, target.version));
+        if (!entry) {
             throw new Error(`Schema calibration requires the reviewed official ${kind}@${target.version} version`);
         }
-        const entry = selected[0]!;
         const definition = definitions.get(identity(entry.kind, entry.version))!;
         const connector = sqlConnector(definition);
         if (!connector) {
@@ -113,7 +113,7 @@ async function loadSchemaCalibrationSubjects(
         if (!location) {
             throw new Error(`Official package location disappeared: ${entry.kind}@${entry.version}`);
         }
-        const dependencies = resolveOfficialIntegrationDependencies(definition, packages);
+        const dependencies = resolveOfficialIntegrationDependencies(definition, dependencyPackages);
         subjects.push({
             kind: entry.kind,
             version: entry.version,

@@ -100,7 +100,7 @@ describe("public integrations 1.0.0", () => {
             kind: "user-account",
             sourceId: "user-account",
             dashboardId: "user-account-users",
-            blocTags: ["user-account-avatar", "user-account-form"],
+            blocTags: ["user-account-avatar", "user-account-form", "user-account-form-controller"],
             answers: { id: "user-account" },
             functionName: "cms-user-account",
             schemas: ["user_account"],

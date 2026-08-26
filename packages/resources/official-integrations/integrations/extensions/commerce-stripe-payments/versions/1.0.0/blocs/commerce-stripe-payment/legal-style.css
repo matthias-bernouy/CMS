@@ -44,7 +44,7 @@
     cursor: pointer;
 }
 
-.legal-document-content a {
+::slotted(a[data-commerce-payment-legal-link]) {
     width: fit-content;
     color: var(--payment-accent);
     font-weight: 700;
@@ -77,6 +77,6 @@
     display: block;
 }
 
-.legal-document-consent a {
+::slotted(a[data-commerce-payment-legal-link]) {
     display: inline;
 }

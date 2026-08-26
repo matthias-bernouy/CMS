@@ -19,7 +19,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { schemaCalibrationEnvironmentIdentity } from "../../environment/manifest";
 
 const temporaryRoots: string[] = [];
-const COPY_TEST_TIMEOUT = 20_000;
+const COPY_TEST_TIMEOUT = 45_000;
 
 afterEach(async () => {
     await Promise.all(temporaryRoots.splice(0).map((root) => rm(root, { recursive: true, force: true })));

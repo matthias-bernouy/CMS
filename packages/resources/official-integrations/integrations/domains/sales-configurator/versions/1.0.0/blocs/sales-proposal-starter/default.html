@@ -159,16 +159,16 @@
                             <basic-input data-sales-request-label label="Request label"></basic-input>
                             <basic-textarea data-sales-request-description label="Description" rows="3" placeholder="Describe the expected result."></basic-textarea>
                             <basic-input data-sales-request-quantity type="number" min="1" step="1" label="Quantity" value="1"></basic-input>
-                            <basic-button data-sales-remove-request type="button" appearance="ghost">Remove</basic-button>
+                            <basic-button appearance="ghost"><button data-sales-remove-request type="button">Remove</button></basic-button>
                         </basic-card>
                     </basic-stack>
-                    <basic-button data-sales-add-request type="button" appearance="outlined">Add another request</basic-button>
+                    <basic-button appearance="outlined"><button data-sales-add-request type="button">Add another request</button></basic-button>
                     <template data-sales-request-template>
                         <basic-card data-sales-custom-request data-sales-custom-request-row appearance="outlined">
                             <basic-input data-sales-request-label label="Request label"></basic-input>
                             <basic-textarea data-sales-request-description label="Description" rows="3" placeholder="Describe the expected result."></basic-textarea>
                             <basic-input data-sales-request-quantity type="number" min="1" step="1" label="Quantity" value="1"></basic-input>
-                            <basic-button data-sales-remove-request type="button" appearance="ghost">Remove</basic-button>
+                            <basic-button appearance="ghost"><button data-sales-remove-request type="button">Remove</button></basic-button>
                         </basic-card>
                     </template>
                 </basic-stack>
@@ -178,14 +178,14 @@
                     <strong>Missing prerequisites</strong>
                     <span cms-repeat="saveResult.body.missingRequirements as requirement">{{ requirement.subjectName }} requires {{ requirement.requiredName }}</span>
                 </basic-stack>
-                <basic-button type="submit" appearance="filled">Create draft proposal</basic-button>
+                <basic-button appearance="filled"><button type="submit">Create draft proposal</button></basic-button>
             </basic-stack>
 
             <basic-toast role="status" cms-condition="$source.loading">Creating the proposal…</basic-toast>
             <basic-card appearance="outlined" cms-condition="$source.loaded">
                 <strong slot="title">Proposal created</strong>
                 <span slot="description">{{ saveResult.body.proposal.reference }} is saved as a draft.</span>
-                <basic-button data-sales-created-link data-proposal-id="{{ saveResult.body.proposal.id }}" slot="actions" action="link" appearance="filled">Open and finish proposal</basic-button>
+                <basic-button slot="actions" appearance="filled"><a data-sales-created-link data-proposal-id="{{ saveResult.body.proposal.id }}" href="/sales/proposals/{{ saveResult.body.proposal.id }}">Open and finish proposal</a></basic-button>
             </basic-card>
         </form>
     </basic-stack>
@@ -197,7 +197,7 @@
             <p cms-condition="$source.empty || clientsData.items.length == 0">A proposal must belong to one of your clients. Company, contact, and email are the only required fields.</p>
             <p cms-condition="$source.loaded && clientsData.items.length > 0">Create another customer profile without leaving the proposal flow.</p>
         </header>
-        <basic-button data-sales-client-create-open type="button" appearance="filled">Nouveau client</basic-button>
+        <basic-button appearance="filled"><button data-sales-client-create-open type="button">Nouveau client</button></basic-button>
         <dialog data-sales-client-create-dialog aria-label="Nouveau client" style="width: min(42rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto;">
             <header>
                 <h3>Nouveau client</h3>
@@ -229,8 +229,8 @@
                 <basic-toast role="alert" cms-condition="$source.error">The client could not be saved.</basic-toast>
                 <basic-toast role="status" cms-condition="$source.loaded">Client saved.</basic-toast>
                 <basic-stack class="sales-dialog-actions" direction="row" gap="sm" justify-content="end" wrap="true">
-                    <basic-button data-sales-client-dialog-close type="button" appearance="ghost">Annuler</basic-button>
-                    <basic-button type="submit" appearance="filled">Create client</basic-button>
+                    <basic-button appearance="ghost"><button data-sales-client-dialog-close type="button">Annuler</button></basic-button>
+                    <basic-button appearance="filled"><button type="submit">Create client</button></basic-button>
                 </basic-stack>
             </form>
         </dialog>

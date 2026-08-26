@@ -1,6 +1,6 @@
 {
     "default-tag": "commerce-offer-price-form",
-    "bloc": "./Bloc.ts",
+    "composition": "./template.html",
     "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {

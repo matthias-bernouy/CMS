@@ -11,7 +11,7 @@
             <basic-option value="expired">Expired</basic-option>
             <basic-option value="archived">Archived</basic-option>
         </basic-select>
-        <basic-button data-sales-proposal-start action="link" appearance="filled">New proposal</basic-button>
+        <basic-button appearance="filled"><a data-sales-proposal-start href="/sales/proposals/new">New proposal</a></basic-button>
     </basic-stack>
 
     <input type="hidden" data-sales-cursor-state cms-page-state="salesProposalCursor">
@@ -28,7 +28,7 @@
         <strong data-sales-empty-filtered slot="title" hidden>No matching proposals</strong>
         <span data-sales-empty-unfiltered slot="description">Create a proposal to start configuring a client offer.</span>
         <span data-sales-empty-filtered slot="description" hidden>Try another search or status to find your proposals.</span>
-        <basic-button data-sales-proposal-start slot="actions" action="link" appearance="filled">Create a proposal</basic-button>
+        <basic-button slot="actions" appearance="filled"><a data-sales-proposal-start href="/sales/proposals/new">Create a proposal</a></basic-button>
     </basic-card>
 
     <basic-stack gap="md" cms-condition="$source.loaded && proposals.items.length > 0">
@@ -39,9 +39,9 @@
             <span>Quoted total: <strong data-sales-money data-amount-cents="{{ proposal.fixedTotalCents }}" data-currency="{{ proposal.currency }}">—</strong></span>
             <span cms-condition="proposal.quoteItemCount > 0">+ {{ proposal.quoteItemCount }} item(s) requiring a quote</span>
             <small>Updated {{ proposal.updatedAt }}</small>
-            <basic-button data-sales-proposal-link data-proposal-id="{{ proposal.id }}" slot="actions" action="link" appearance="outlined">Open proposal</basic-button>
+            <basic-button slot="actions" appearance="outlined"><a data-sales-proposal-link data-proposal-id="{{ proposal.id }}" href="/sales/proposals/{{ proposal.id }}">Open proposal</a></basic-button>
         </basic-card>
     </basic-stack>
 
-    <basic-button data-sales-proposal-next data-cursor="{{ proposals.nextCursor }}" cms-condition="$source.loaded && proposals.nextCursor">Next proposals</basic-button>
+    <basic-button cms-condition="$source.loaded && proposals.nextCursor"><button data-sales-proposal-next data-cursor="{{ proposals.nextCursor }}" type="button">Next proposals</button></basic-button>
 </sales-proposal-list>

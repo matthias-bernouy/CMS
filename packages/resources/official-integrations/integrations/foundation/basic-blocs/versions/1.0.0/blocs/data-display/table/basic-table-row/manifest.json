@@ -5,6 +5,6 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Table row",
-        "description": "Editable table row with optional link behavior."
+        "description": "Editable table row with an optional direct native navigation link."
     }
 }

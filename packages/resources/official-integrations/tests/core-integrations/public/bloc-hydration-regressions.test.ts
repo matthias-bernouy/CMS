@@ -7,7 +7,7 @@ describe("public bloc hydration regressions 1.0.0", () => {
     test("defers offer-price attribute reactions until its composition template exists", async () => {
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
         const artifact = definition?.artifacts?.find(
-            (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form",
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form-controller",
         );
         const viewJS = artifact?.type === "bloc" ? (artifact.bloc.viewJS ?? "") : "";
         const compactViewJS = viewJS.replace(/\s+/g, "");

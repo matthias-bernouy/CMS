@@ -4,7 +4,7 @@ import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/bro
 import accountOffersTemplate from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/template.html" with {
     type: "text",
 };
-import { syncRenderedOffers } from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/presentation";
+import { syncRenderedOffers } from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/controller/presentation";
 
 const nativeFetch = globalThis.fetch;
 

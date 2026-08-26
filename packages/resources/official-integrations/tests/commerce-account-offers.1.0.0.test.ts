@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
-import { Composition } from "@bernouy/components/base";
-import { createBlocUsageResolver } from "@bernouy/cms-content";
+import { Component } from "@bernouy/components/base";
+import { createBlocUsageResolver, expandCompositions } from "@bernouy/cms-content";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { syncRenderedOffers } from "../integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/presentation";
+import { syncRenderedOffers } from "../integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/controller/presentation";
 import { declaredBlocViewSources } from "./helpers/blocArtifactSource";
 
 describe("commerce account offers 1.0.0", () => {
@@ -67,34 +67,51 @@ describe("commerce account offers 1.0.0", () => {
 
     test("renders the exact published seller consent once with its document link", async () => {
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
-        const artifact = definition?.artifacts?.find(
+        const composition = definition?.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form",
         );
-        if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS) {
-            throw new Error("commerce-offer-price-form source not found");
+        const controller = definition?.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form-controller",
+        );
+        if (
+            !composition ||
+            composition.type !== "bloc" ||
+            composition.bloc.compositionHTML === undefined ||
+            !controller ||
+            controller.type !== "bloc" ||
+            !controller.bloc.viewJS
+        ) {
+            throw new Error("commerce-offer-price-form composition sources not found");
         }
-        const tag = "test-commerce-offer-price-form-seller-consent";
+        const tag = controller.bloc.tag;
         if (!customElements.get(tag)) {
-            Object.assign(((window as Window & { p9r?: Record<string, unknown> }).p9r ??= {}), { Composition });
+            Object.assign(((window as Window & { p9r?: Record<string, unknown> }).p9r ??= {}), { Component });
             const compiled = await prepare_bloc(
-                new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+                new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
                 null,
-                artifact.bloc.name,
-                artifact.bloc.group ?? "Commerce",
-                artifact.bloc.description ?? "",
+                controller.bloc.name,
+                controller.bloc.group ?? "Commerce",
+                controller.bloc.description ?? "",
                 tag,
-                artifact.bloc.source,
+                controller.bloc.source,
+                undefined,
+                { viewPath: "controller/Bloc.ts" },
             );
             new Function(compiled.viewJS)();
         }
-        const form = document.createElement(tag) as HTMLElement & {
+        const expanded = document.createElement("div");
+        expanded.innerHTML = `<commerce-offer-price-form></commerce-offer-price-form>`;
+        expandCompositions(expanded, [{ id: composition.bloc.tag, compositionHTML: composition.bloc.compositionHTML }]);
+        const fragment = document.createElement("template");
+        fragment.innerHTML = expanded.innerHTML;
+        const form = fragment.content.querySelector(tag) as HTMLElement & {
             sellerTermsRequirement: Record<string, unknown>;
             activationRequired: boolean;
             load(): Promise<void>;
             syncPresentation(): void;
         };
         form.load = async () => {};
-        document.body.append(form);
+        document.body.append(fragment.content);
         form.sellerTermsRequirement = {
             mode: "published_page",
             version: "cms-page:revision-1",
@@ -193,7 +210,9 @@ describe("commerce account offers 1.0.0", () => {
         expect(previewViewSource).toContain("new Intl.NumberFormat");
         expect(preview?.viewJS).toContain('slot name="media"');
         expect(preview?.viewJS).toContain('slot name="price"');
-        expect(preview?.viewJS).not.toContain("@media");
+        expect(preview?.viewJS).toContain('slot name="navigation"');
+        expect(preview?.viewJS).toContain("@media (prefers-reduced-motion: reduce)");
+        expect(preview?.viewJS).not.toContain("@media (max-width");
         expect(previewEditorSource).toContain('color("Price", "price-color")');
         expect(previewEditorSource).toContain('attribute: "stretch"');
         expect(previewStyles).toContain(':host([stretch]:not([stretch="false"]))');
@@ -243,18 +262,31 @@ describe("commerce account offers 1.0.0", () => {
         const artifact = definition.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-offers",
         );
-        if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS || !artifact.bloc.editorJS) {
+        const controller = definition.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-offers-controller",
+        );
+        if (
+            !artifact ||
+            artifact.type !== "bloc" ||
+            artifact.bloc.compositionHTML === undefined ||
+            !artifact.bloc.editorJS ||
+            !controller ||
+            controller.type !== "bloc" ||
+            !controller.bloc.viewJS
+        ) {
             throw new Error("commerce-account-offers sources not found");
         }
 
-        const compiled = await prepare_bloc(
-            new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
-            new File([artifact.bloc.editorJS], "BlocEditor.ts", { type: "text/typescript" }),
-            artifact.bloc.name,
-            artifact.bloc.group ?? "Commerce",
-            artifact.bloc.description ?? "",
-            artifact.bloc.tag,
-            artifact.bloc.source,
+        const compiledController = await prepare_bloc(
+            new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+            null,
+            controller.bloc.name,
+            controller.bloc.group ?? "Commerce",
+            controller.bloc.description ?? "",
+            controller.bloc.tag,
+            controller.bloc.source,
+            undefined,
+            { viewPath: "controller/Bloc.ts" },
         );
         const resolveUsage = createBlocUsageResolver(
             [
@@ -268,42 +300,50 @@ describe("commerce account offers 1.0.0", () => {
                 "basic-stack",
                 "basic-toast",
                 "commerce-account-offers",
+                "commerce-account-offers-controller",
                 "img",
-            ].map((id) => ({ id })),
-            { getBlocViewJS: async (tag) => (tag === "commerce-account-offers" ? compiled.viewJS : null) },
+            ].map((id) => ({
+                id,
+                ...(id === "commerce-account-offers" ? { compositionHTML: artifact.bloc.compositionHTML } : {}),
+            })),
+            {
+                getBlocViewJS: async (tag) =>
+                    tag === "commerce-account-offers-controller" ? compiledController.viewJS : null,
+            },
         );
-        const viewSource = declaredBlocViewSources(artifact.bloc);
+        const viewSource = declaredBlocViewSources(controller.bloc);
         const editorSource = artifact.bloc.editorJS;
+        const runtimeSource = `${artifact.bloc.compositionHTML}\n${compiledController.viewJS}`;
 
         expect(definition.dependencies).toEqual([
             { name: "basicBlocs", kind: "basic-blocs" },
             { name: "emailer", kind: "emailer", optional: true },
         ]);
-        expect(compiled.viewJS).toContain("window.p9r.Composition");
-        expect(compiled.viewJS).toContain('cms-repeat="items as offer"');
-        expect(compiled.viewJS).toContain('<img slot="media"');
-        expect(compiled.viewJS).toContain("/listMyOffers?status=");
-        expect(compiled.viewJS).toContain("basic-pagination:change");
+        expect(compiledController.viewJS).toContain("window.p9r.Component");
+        expect(runtimeSource).toContain('cms-repeat="items as offer"');
+        expect(runtimeSource).toContain('<img slot="media"');
+        expect(runtimeSource).toContain("/listMyOffers?status=");
+        expect(runtimeSource).toContain("basic-pagination:change");
         expect(viewSource).toContain('host.getAttribute("grid-packing") || "fit"');
         expect(viewSource).toContain('host.getAttribute("image-fit") || "cover"');
         expect(viewSource).toContain('host.getAttribute("image-height") || "12rem"');
         expect(viewSource).toContain('card.toggleAttribute("stretch"');
-        expect(compiled.viewJS).toContain("history.replaceState");
+        expect(runtimeSource).toContain("history.replaceState");
         expect(viewSource).toContain('attributeFilter: ["data-media-id", "data-source-height", "data-source-width"]');
         expect(viewSource).toContain('positiveIdentifier(image?.getAttribute("data-media-id"))');
-        expect(compiled.viewJS).toContain('data-offer-slug="{{ offer.slug }}"');
-        expect(compiled.viewJS).toContain('data-publicly-visible="{{ offer.publiclyVisible }}"');
-        expect(compiled.viewJS).toContain('data-display-amount="{{ offer.sellerDisplayPriceAmount }}"');
-        expect(compiled.viewJS).not.toContain('data-amount="{{ offer.acceptedPriceAmount }}"');
-        expect(compiled.viewJS).toContain('replaceAll("{slug}"');
-        expect(compiled.viewJS).toContain(
+        expect(runtimeSource).toContain('data-offer-slug="{{ offer.slug }}"');
+        expect(runtimeSource).toContain('data-publicly-visible="{{ offer.publiclyVisible }}"');
+        expect(runtimeSource).toContain('data-display-amount="{{ offer.sellerDisplayPriceAmount }}"');
+        expect(runtimeSource).not.toContain('data-amount="{{ offer.acceptedPriceAmount }}"');
+        expect(runtimeSource).toContain('replaceAll("{slug}"');
+        expect(runtimeSource).toContain(
             '<basic-stack direction="row" justify-content="space-between" align-items="end" wrap="true"',
         );
-        expect(compiled.viewJS).toContain('accessible-label="Filtrer par statut"');
-        expect(compiled.viewJS).toContain('data-empty-state cms-condition="total == 0"');
-        expect(compiled.viewJS).toContain('cms-condition="total > limit"');
-        expect(compiled.viewJS).not.toContain("<cms-binding-core");
-        expect(compiled.viewJS).not.toContain("<style>");
+        expect(runtimeSource).toContain('accessible-label="Filtrer par statut"');
+        expect(runtimeSource).toContain('data-empty-state cms-condition="total == 0"');
+        expect(runtimeSource).toContain('cms-condition="total > limit"');
+        expect(runtimeSource).not.toContain("<cms-binding-core");
+        expect(runtimeSource).not.toContain("<style>");
         expect(editorSource).toContain('attribute: "page-size"');
         expect(editorSource).toContain('attribute: "grid-packing"');
         expect(editorSource).toContain('attribute: "image-fit"');
@@ -320,6 +360,7 @@ describe("commerce account offers 1.0.0", () => {
             "basic-stack",
             "basic-toast",
             "commerce-account-offers",
+            "commerce-account-offers-controller",
             "img",
         ]);
 
@@ -375,18 +416,31 @@ describe("commerce account offers 1.0.0", () => {
         const artifact = definition.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form",
         );
-        if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS || !artifact.bloc.editorJS) {
+        const controller = definition.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form-controller",
+        );
+        if (
+            !artifact ||
+            artifact.type !== "bloc" ||
+            artifact.bloc.compositionHTML === undefined ||
+            !artifact.bloc.editorJS ||
+            !controller ||
+            controller.type !== "bloc" ||
+            !controller.bloc.viewJS
+        ) {
             throw new Error("commerce-offer-price-form sources not found");
         }
 
-        const compiled = await prepare_bloc(
-            new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
-            new File([artifact.bloc.editorJS], "BlocEditor.ts", { type: "text/typescript" }),
-            artifact.bloc.name,
-            artifact.bloc.group ?? "Commerce",
-            artifact.bloc.description ?? "",
-            artifact.bloc.tag,
-            artifact.bloc.source,
+        const compiledController = await prepare_bloc(
+            new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+            null,
+            controller.bloc.name,
+            controller.bloc.group ?? "Commerce",
+            controller.bloc.description ?? "",
+            controller.bloc.tag,
+            controller.bloc.source,
+            undefined,
+            { viewPath: "controller/Bloc.ts" },
         );
         const defaultContent = Buffer.from(artifact.bloc.source?.["default.html"] ?? "", "base64").toString("utf-8");
         const manifest = JSON.parse(
@@ -402,16 +456,24 @@ describe("commerce account offers 1.0.0", () => {
                 "basic-stack",
                 "basic-toast",
                 "commerce-offer-price-form",
-            ].map((id) => ({ id })),
-            { getBlocViewJS: async (tag) => (tag === "commerce-offer-price-form" ? compiled.viewJS : null) },
+                "commerce-offer-price-form-controller",
+            ].map((id) => ({
+                id,
+                ...(id === "commerce-offer-price-form" ? { compositionHTML: artifact.bloc.compositionHTML } : {}),
+            })),
+            {
+                getBlocViewJS: async (tag) =>
+                    tag === "commerce-offer-price-form-controller" ? compiledController.viewJS : null,
+            },
         );
-        const viewSource = declaredBlocViewSources(artifact.bloc);
+        const viewSource = declaredBlocViewSources(controller.bloc);
         const editorSource = artifact.bloc.editorJS;
+        const runtimeSource = `${artifact.bloc.compositionHTML}\n${compiledController.viewJS}`;
 
-        expect(compiled.viewJS).toContain("window.p9r.Composition");
-        expect(compiled.viewJS).toContain("myOffer?id=");
-        expect(compiled.viewJS).toContain("getSellerSaleEnrollment");
-        expect(compiled.viewJS).toContain("submitSellerOfferPrice");
+        expect(compiledController.viewJS).toContain("window.p9r.Component");
+        expect(runtimeSource).toContain("myOffer?id=");
+        expect(runtimeSource).toContain("getSellerSaleEnrollment");
+        expect(runtimeSource).toContain("submitSellerOfferPrice");
         expect(viewSource).toContain('workflowState !== "awaiting_seller_price"');
         expect(viewSource).toContain("majorToMinor");
         expect(viewSource).toContain("marketplaceTermsCurrentVersionAccepted");
@@ -436,49 +498,49 @@ describe("commerce account offers 1.0.0", () => {
         expect(viewSource).toContain('stripeAccountApiVersion === "v2"');
         expect(viewSource).toContain("applicationControlledRecipient === true");
         expect(viewSource).toContain('stripeTermsStatus === "accepted"');
-        expect(compiled.viewJS).toContain("getConnectClientConfig");
+        expect(runtimeSource).toContain("getConnectClientConfig");
         expect(viewSource).toContain('STRIPE_V2_API = "https://api.stripe.com/v2"');
-        expect(compiled.viewJS).toContain("/core/account_tokens");
+        expect(runtimeSource).toContain("/core/account_tokens");
         expect(viewSource).toContain('"stripe-version": STRIPE_V2_VERSION');
         expect(viewSource).not.toContain("country: profile.countryCode.toLowerCase()");
         expect(viewSource).toContain('this.requestSource(this.accountSourceId, "updateAccount"');
         expect(viewSource).toContain("payload.accountToken");
         expect(viewSource).toContain("payload.sellerTermsAccepted = true");
-        expect(compiled.viewJS).toContain('data-profile-control="givenName"');
-        expect(compiled.viewJS).toContain('data-profile-control="birthDate"');
-        expect(compiled.viewJS).toContain('data-profile-control="countryCode"');
-        expect(compiled.viewJS).toContain('name="email" type="email" autocomplete="email" readonly required');
+        expect(runtimeSource).toContain('data-profile-control="givenName"');
+        expect(runtimeSource).toContain('data-profile-control="birthDate"');
+        expect(runtimeSource).toContain('data-profile-control="countryCode"');
+        expect(runtimeSource).toContain('name="email" type="email" autocomplete="email" readonly required');
         expect(viewSource).toContain("profile.email = textValue(this.profile?.email)");
         expect(viewSource).toContain("control.hidden = profileFieldReady");
-        expect(compiled.viewJS).not.toContain("data-profile-link");
+        expect(runtimeSource).not.toContain("data-profile-link");
         expect(viewSource).not.toContain("profileLink");
-        expect(compiled.viewJS).toContain('name="sellerTermsAccepted" type="checkbox"');
+        expect(runtimeSource).toContain('name="sellerTermsAccepted" type="checkbox"');
         expect(viewSource).toContain("this.stripeConsentFragment.hidden = !this.enrollmentRequired");
         expect(viewSource).toContain("if (!this.templateReady)");
-        expect(compiled.viewJS).toContain("conditions vendeur Courtside");
-        expect(compiled.viewJS).toContain("Les informations renseignées sont traitées");
-        expect(compiled.viewJS).toContain("Consulter l’avis de confidentialité");
-        expect(compiled.viewJS).toContain(
+        expect(runtimeSource).toContain("conditions vendeur Courtside");
+        expect(runtimeSource).toContain("Les informations renseignées sont traitées");
+        expect(runtimeSource).toContain("Consulter l’avis de confidentialité");
+        expect(runtimeSource).toContain(
             "Tu dois accepter les conditions vendeur Courtside et les conditions du service de paiement pour continuer.",
         );
-        expect(compiled.viewJS).not.toContain("accord de compte connecté Stripe");
-        expect(compiled.viewJS).toContain("Tu dois accepter les conditions vendeur Courtside pour continuer.");
-        expect(compiled.viewJS).toContain("sessionStorage.setItem");
-        expect(compiled.viewJS).not.toContain("history.pushState");
-        expect(compiled.viewJS).not.toContain("submitMyOfferPrice?id=");
-        expect(compiled.viewJS).not.toContain("eligibility-ensure-function-id");
-        expect(compiled.viewJS).not.toContain("payoutEligible");
-        expect(compiled.viewJS).not.toContain("canReceiveProtectedPayments");
-        expect(compiled.viewJS).not.toContain("payoutsEnabled");
-        expect(compiled.viewJS).not.toContain("verificationStatus");
-        expect(compiled.viewJS).not.toContain("bankAccountToken");
-        expect(compiled.viewJS).not.toContain("createBankAccountToken");
-        expect(compiled.viewJS).not.toContain("contactEmail");
-        expect(compiled.viewJS).not.toContain("l’accord Stripe et la politique de confidentialité");
-        expect(compiled.viewJS).not.toContain("data-stripe-consent-fragment hidden");
-        expect(compiled.viewJS.toLowerCase()).not.toContain("iban");
-        expect(compiled.viewJS).not.toContain("synchronizeSellerPayoutEligibility");
-        expect(compiled.viewJS).toContain("commerce-offer-price:submitted");
+        expect(runtimeSource).not.toContain("accord de compte connecté Stripe");
+        expect(runtimeSource).toContain("Tu dois accepter les conditions vendeur Courtside pour continuer.");
+        expect(runtimeSource).toContain("sessionStorage.setItem");
+        expect(runtimeSource).not.toContain("history.pushState");
+        expect(runtimeSource).not.toContain("submitMyOfferPrice?id=");
+        expect(runtimeSource).not.toContain("eligibility-ensure-function-id");
+        expect(runtimeSource).not.toContain("payoutEligible");
+        expect(runtimeSource).not.toContain("canReceiveProtectedPayments");
+        expect(runtimeSource).not.toContain("payoutsEnabled");
+        expect(runtimeSource).not.toContain("verificationStatus");
+        expect(runtimeSource).not.toContain("bankAccountToken");
+        expect(runtimeSource).not.toContain("createBankAccountToken");
+        expect(runtimeSource).not.toContain("contactEmail");
+        expect(runtimeSource).not.toContain("l’accord Stripe et la politique de confidentialité");
+        expect(runtimeSource).not.toContain("data-stripe-consent-fragment hidden");
+        expect(runtimeSource.toLowerCase()).not.toContain("iban");
+        expect(runtimeSource).not.toContain("synchronizeSellerPayoutEligibility");
+        expect(runtimeSource).toContain("commerce-offer-price:submitted");
         expect(editorSource).toContain('attribute: "success-url"');
         expect(editorSource).toContain('attribute: "range-message"');
         expect(editorSource).toContain('attribute: "enrollment-function-id"');
@@ -511,6 +573,7 @@ describe("commerce account offers 1.0.0", () => {
             "basic-stack",
             "basic-toast",
             "commerce-offer-price-form",
+            "commerce-offer-price-form-controller",
         ]);
 
         const source = definition.artifacts?.find((item) => item.type === "source");

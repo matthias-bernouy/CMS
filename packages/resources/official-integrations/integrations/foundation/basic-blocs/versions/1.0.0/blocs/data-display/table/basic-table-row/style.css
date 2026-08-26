@@ -1,18 +1,25 @@
 :host {
+    position: relative;
     display: table-row;
 }
 
-:host([href]) {
+:host(:has(> a[slot="navigation"][href])) {
     cursor: pointer;
 }
 
-:host(:focus-visible) {
+::slotted(a[slot="navigation"]) {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    color: transparent;
+    text-decoration: none;
+}
+
+::slotted(a[slot="navigation"]:focus-visible) {
     outline: 2px inset var(--integration-basic-blocs-focus-color, var(--primary-base, CanvasText));
     outline-offset: -2px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    :host {
-        transition: background-color 0.15s ease;
-    }
+    :host { transition: background-color 0.15s ease; }
 }

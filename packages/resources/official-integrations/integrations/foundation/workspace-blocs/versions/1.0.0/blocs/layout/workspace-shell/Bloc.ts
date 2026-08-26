@@ -238,11 +238,7 @@ export class WorkspaceShell extends Component {
 }
 
 function isNavigationAction(path) {
-    return path.some(
-        (target) =>
-            target instanceof Element &&
-            target.matches("a[href], button:not([disabled]), workspace-lateral-menu-item:not([disabled])"),
-    );
+    return path.some((target) => target instanceof Element && target.matches("a[href], button:not([disabled])"));
 }
 
 function validLength(value) {

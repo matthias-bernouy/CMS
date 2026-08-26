@@ -13,7 +13,6 @@ export class CommerceSaleDetail extends Component {
         "sale-id",
         "order-param",
         "locale",
-        "back-url",
         "back-label",
         "eyebrow",
         "date-prefix",
@@ -119,10 +118,9 @@ export class CommerceSaleDetail extends Component {
         const errorCard = this.root.querySelector("[data-error]");
         errorCard.setAttribute("appearance", this.getAttribute("card-appearance") || "outlined");
         copyColors(this, errorCard, "card");
-        for (const button of this.root.querySelectorAll("[data-error-back]")) {
-            button.setAttribute("href", this.getAttribute("back-url") || "/account/sales");
+        for (const button of this.querySelectorAll('[slot="error-action"] > a[data-error-back]')) {
             button.textContent = this.text("back-label", "Retour aux ventes");
-            copyColors(this, button, "button");
+            copyColors(this, button.closest("basic-button"), "button");
         }
         const labels = [
             ["[data-eyebrow]", "eyebrow", "VENTE"],

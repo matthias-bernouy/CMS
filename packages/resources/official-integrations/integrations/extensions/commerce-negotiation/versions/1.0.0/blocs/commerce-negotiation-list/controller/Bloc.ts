@@ -1,6 +1,4 @@
-import { Composition } from "@bernouy/components/base";
-
-import template from "./template.html" with { type: "text" };
+import { Component } from "@bernouy/components/base";
 
 const statuses = ["all", "pending", "accepted", "rejected", "withdrawn", "expired", "superseded", "canceled"];
 const roles = ["all", "buyer", "seller"];
@@ -26,7 +24,7 @@ const defaultFilterLabels = {
 };
 const reloadAttributes = new Set(["source-id", "source-prefix", "page-size", "initial-role"]);
 
-export class CommerceNegotiationList extends Composition {
+export class CommerceNegotiationList extends Component {
     static observedAttributes = [
         "accept-label",
         "accept-button-accent-color",
@@ -130,7 +128,7 @@ export class CommerceNegotiationList extends Composition {
     ];
 
     constructor() {
-        super({ template });
+        super({ css: ":host { display: contents; }", template: "<slot></slot>" });
         this.role = "seller";
         this.status = "all";
         this.page = 1;
@@ -721,8 +719,9 @@ export class CommerceNegotiationList extends Composition {
     }
 
     syncActionTheme(button, action) {
-        copyColors(this, button, "button", ["accent-color", "text-color", "background-color", "border-color"]);
-        copyColors(this, button, `${action}-button`, [
+        const wrapper = button?.closest("basic-button");
+        copyColors(this, wrapper, "button", ["accent-color", "text-color", "background-color", "border-color"]);
+        copyColors(this, wrapper, `${action}-button`, [
             "accent-color",
             "text-color",
             "background-color",

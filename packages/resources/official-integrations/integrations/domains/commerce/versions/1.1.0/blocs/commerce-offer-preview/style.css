@@ -18,16 +18,34 @@
     border-radius: var(--commerce-offer-radius, var(--integration-commerce-offer-radius, var(--radius-card, 1rem)));
     background: var(--commerce-offer-background, var(--integration-commerce-offer-background, var(--bg-surface, Canvas)));
     color: var(--commerce-offer-color, var(--integration-commerce-offer-text, var(--text-main, inherit)));
+    transition: box-shadow 120ms ease, transform 120ms ease;
 }
 
 :host([stretch]:not([stretch="false"])) [part="card"] {
     min-height: 100%;
 }
 
-[part="navigation"] {
+::slotted(a[slot="navigation"]) {
     position: absolute;
     z-index: 1;
     inset: 0;
+    border-radius: inherit;
+    color: transparent;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+::slotted(a[slot="navigation"]:focus-visible) {
+    outline: 3px solid var(--commerce-offer-accent, var(--integration-commerce-offer-accent, currentColor));
+    outline-offset: -3px;
+}
+
+:host(:has(> a[slot="navigation"]:hover)) [part="card"] {
+    box-shadow: var(--commerce-offer-hover-shadow, 0 .4rem 1rem color-mix(in srgb, currentColor 12%, transparent));
+}
+
+:host(:has(> a[slot="navigation"]:active)) [part="card"] {
+    transform: translateY(1px);
 }
 
 [part="media"] {
@@ -45,11 +63,13 @@
 }
 
 [part="content"] {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: .65rem;
     min-width: 0;
     padding: var(--commerce-offer-padding, 1.25rem);
+    pointer-events: none;
 }
 
 [part="badges"] {
@@ -102,10 +122,11 @@
 
 [part="actions"] {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     display: flex;
     flex-wrap: wrap;
     gap: .75rem;
+    pointer-events: auto;
 }
 
 :host(:not(:has([slot="media"]))) [part="media"],
@@ -135,4 +156,8 @@
 
 :host([density="spacious"]) [part="content"] {
     --commerce-offer-padding: 1.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [part="card"] { transition: none; }
 }

@@ -5,7 +5,7 @@
             <h2>Manage your clients</h2>
             <p>Create complete customer profiles, then select one to update it without leaving the page.</p>
         </div>
-        <basic-button data-sales-client-create-open type="button" appearance="filled" cms-condition="$source.empty || $source.loaded">Nouveau client</basic-button>
+        <basic-button appearance="filled" cms-condition="$source.empty || $source.loaded"><button data-sales-client-create-open type="button">Nouveau client</button></basic-button>
     </header>
 
     <basic-stack gap="md" cms-condition="$source.loading">
@@ -51,7 +51,7 @@
                         <small cms-condition="client.country">{{ client.country }}</small>
                     </td>
                     <td class="sales-client-cell" data-label="Action">
-                        <basic-button data-sales-client-open data-client-id="{{ client.id }}" type="button" appearance="outlined" aria-pressed="false">Modifier</basic-button>
+                        <basic-button appearance="outlined"><button data-sales-client-open data-client-id="{{ client.id }}" type="button" aria-pressed="false">Modifier</button></basic-button>
                     </td>
                 </tr>
             </tbody>
@@ -89,8 +89,8 @@
                 <basic-toast role="alert" cms-condition="$source.error">The client could not be created.</basic-toast>
                 <basic-toast role="status" cms-condition="$source.loaded">Client created.</basic-toast>
                 <basic-stack class="sales-dialog-actions" direction="row" gap="sm" justify-content="end" wrap="true">
-                    <basic-button data-sales-client-dialog-close type="button" appearance="ghost">Annuler</basic-button>
-                    <basic-button type="submit" appearance="filled">Create client</basic-button>
+                    <basic-button appearance="ghost"><button data-sales-client-dialog-close type="button">Annuler</button></basic-button>
+                    <basic-button appearance="filled"><button type="submit">Create client</button></basic-button>
                 </basic-stack>
             </form>
         </dialog>
@@ -137,12 +137,12 @@
                         <basic-toast role="alert" cms-condition="$source.error">The client could not be updated.</basic-toast>
                         <basic-toast role="status" cms-condition="$source.loaded">Client updated.</basic-toast>
                         <basic-stack class="sales-dialog-actions" direction="row" gap="sm" justify-content="end" wrap="true">
-                            <basic-button data-sales-client-dialog-close type="button" appearance="ghost">Annuler</basic-button>
-                            <basic-button type="submit" appearance="filled">Save client</basic-button>
+                            <basic-button appearance="ghost"><button data-sales-client-dialog-close type="button">Annuler</button></basic-button>
+                            <basic-button appearance="filled"><button type="submit">Save client</button></basic-button>
                         </basic-stack>
                     </form>
                 </basic-stack>
-                <basic-button data-sales-client-dialog-close type="button" appearance="ghost" cms-condition="$source.loading || $source.error || $source.empty">Annuler</basic-button>
+                <basic-button appearance="ghost" cms-condition="$source.loading || $source.error || $source.empty"><button data-sales-client-dialog-close type="button">Annuler</button></basic-button>
             </dialog>
         </template>
     </div>

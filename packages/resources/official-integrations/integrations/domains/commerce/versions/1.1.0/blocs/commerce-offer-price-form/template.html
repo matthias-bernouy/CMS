@@ -1,3 +1,4 @@
+<commerce-offer-price-form-controller data-p9r-composition-controller>
 <basic-stack gap="lg" data-layout>
     <div data-loading>
         <basic-grid min="none" max="none" gap="md">
@@ -68,7 +69,7 @@
                             </basic-stack>
                         </basic-card>
 
-                        <basic-button data-submit type="submit">Envoyer mon prix</basic-button>
+                        <basic-button><button data-submit type="submit">Envoyer mon prix</button></basic-button>
                     </basic-stack>
                 </form>
             </basic-stack>
@@ -79,7 +80,9 @@
         <basic-card data-card-surface appearance="outlined" density="regular">
             <strong slot="title" data-unavailable-title>Cette action n’est pas disponible</strong>
             <span slot="description" data-unavailable-message>Cette annonce ne nécessite plus de proposition de prix.</span>
-            <basic-button slot="actions" data-back action="link" href="/mon-espace/mes-annonces" appearance="outlined">Retour à mes annonces</basic-button>
+            <basic-button slot="actions" appearance="outlined">
+                <a data-back href="/mon-espace/mes-annonces">Retour à mes annonces</a>
+            </basic-button>
         </basic-card>
     </div>
 
@@ -87,7 +90,7 @@
         <basic-card data-card-surface appearance="outlined" density="regular">
             <strong slot="title" data-technical-title>Impossible de charger le prix</strong>
             <span slot="description" data-technical-message>Impossible de charger cette annonce pour le moment. Réessaie dans quelques instants.</span>
-            <basic-button slot="actions" data-technical-retry type="button" data-retry>Réessayer</basic-button>
+            <basic-button slot="actions" data-technical-retry><button data-retry type="button">Réessayer</button></basic-button>
         </basic-card>
     </div>
 
@@ -95,7 +98,10 @@
         <basic-card data-card-surface appearance="outlined" density="regular">
             <strong slot="title" data-success-title>Prix envoyé</strong>
             <span slot="description" data-success-message>Ta proposition a bien été transmise et va maintenant être vérifiée.</span>
-            <basic-button slot="actions" data-success-link action="link" href="/mon-espace/mes-annonces">Retour à mes annonces</basic-button>
+            <basic-button slot="actions">
+                <a data-success-link href="/mon-espace/mes-annonces">Retour à mes annonces</a>
+            </basic-button>
         </basic-card>
     </div>
 </basic-stack>
+</commerce-offer-price-form-controller>

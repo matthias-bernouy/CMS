@@ -9,7 +9,7 @@
     <basic-card data-error hidden appearance="outlined" density="compact" role="alert">
         <strong slot="title" data-error-title>Vente introuvable</strong>
         <span slot="description" data-error-message></span>
-        <basic-button slot="actions" data-error-back action="link" appearance="outlined">Retour aux ventes</basic-button>
+        <slot name="error-action" slot="actions"></slot>
     </basic-card>
 
     <div data-content hidden class="content">

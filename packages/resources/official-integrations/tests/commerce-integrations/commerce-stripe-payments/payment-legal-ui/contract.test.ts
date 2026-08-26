@@ -24,7 +24,9 @@ describe("commerce Stripe payment buyer legal UI", () => {
                 const payment = await mountPaymentElement();
                 try {
                     const checkboxes = payment.root.querySelectorAll<HTMLInputElement>("[data-legal-version-id]");
-                    const link = payment.root.querySelector<HTMLAnchorElement>(".legal-document a");
+                    const link = payment.querySelector<HTMLAnchorElement>(
+                        ":scope > a[data-commerce-payment-legal-link]",
+                    );
                     expect(checkboxes).toHaveLength(2);
                     expect(Array.from(checkboxes, ({ checked }) => checked)).toEqual([false, false]);
                     expect(Array.from(checkboxes, ({ required }) => required)).toEqual([true, true]);

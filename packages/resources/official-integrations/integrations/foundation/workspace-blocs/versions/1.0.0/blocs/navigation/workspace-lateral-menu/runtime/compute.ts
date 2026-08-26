@@ -7,16 +7,15 @@ export function upgradeProperty(element: HTMLElement, property: string): void {
     (element as unknown as Record<string, unknown>)[property] = value;
 }
 
-export function getMenuItems(slot: HTMLSlotElement | null): HTMLElement[] {
+export function getMenuItems(slot: HTMLSlotElement | null): HTMLAnchorElement[] {
     if (!slot) {
         return [];
     }
-    return slot
-        .assignedElements({ flatten: true })
-        .filter(
-            (element): element is HTMLElement =>
-                element instanceof HTMLElement &&
-                element.tagName.toLowerCase() === "workspace-lateral-menu-item" &&
-                !element.hasAttribute("disabled"),
-        );
+    return slot.assignedElements({ flatten: true }).flatMap((element) => {
+        if (!(element instanceof HTMLElement) || element.tagName.toLowerCase() !== "workspace-lateral-menu-item") {
+            return [];
+        }
+        const anchor = element.querySelector(":scope > a[href]");
+        return anchor instanceof HTMLAnchorElement ? [anchor] : [];
+    });
 }

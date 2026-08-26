@@ -350,6 +350,7 @@ class CommerceStripePayment extends HTMLElement {
     renderLegalRequirements() {
         const requirements = this.legalRequirements || { enabled: false, documents: [] };
         renderLegalRequirements(
+            this,
             this.legalDocuments,
             requirements,
             () => {
@@ -373,6 +374,9 @@ class CommerceStripePayment extends HTMLElement {
         this.stripe = null;
         this.payment = null;
         this.legalDocuments?.replaceChildren();
+        for (const link of this.querySelectorAll(":scope > a[data-commerce-payment-legal-link]")) {
+            link.remove();
+        }
         if (this.legalRegion) {
             this.legalRegion.hidden = true;
         }

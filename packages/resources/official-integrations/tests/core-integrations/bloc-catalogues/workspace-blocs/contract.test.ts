@@ -67,15 +67,18 @@ describe("workspace-blocs 1.0.0 catalogue", () => {
         expect(shellStyle).toContain("@media (max-width: 720px)");
         expect(shellStyle).toContain(":host([mobile-secondary-open]) .secondary-sidebar");
         expect(menuRuntime).toContain('removeEventListener("keydown", this.onKeyDown)');
-        expect(itemRuntime).toContain('host.setAttribute("aria-current", "page")');
+        expect(itemRuntime).toContain('anchor?.setAttribute("aria-current", "page")');
         expect(itemRuntime).toContain("current.pathname.startsWith(`${targetPath}/`)");
     });
 
     test("exposes editor contracts for application chrome and detail tools", async () => {
         const expectedSlots = new Map([
-            ["workspace-shell", ["Primary navigation", "Secondary navigation", "Content"]],
+            [
+                "workspace-shell",
+                ["Skip link", "Primary navigation", "Secondary navigation", "Main content target", "Content"],
+            ],
             ["workspace-lateral-menu", ["Header", "Navigation items", "Footer"]],
-            ["workspace-lateral-menu-item", ["Icon"]],
+            ["workspace-lateral-menu-item", ["Navigation link"]],
             ["workspace-shell-detail", ["Title", "Actions", "Main", "Aside"]],
             ["workspace-detail-section", ["Actions", "Content"]],
         ]);

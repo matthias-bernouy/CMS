@@ -16,15 +16,16 @@
     font-weight: 700;
 }
 .heading ::slotted(*) { margin: 0; font: inherit; color: inherit; }
-.anchor {
+::slotted(a[slot="navigation"]) {
     opacity: 0;
     color: var(--ah-accent);
     text-decoration: none;
     font-weight: 400;
     transition: opacity 160ms ease;
 }
-.heading:hover .anchor,
-.anchor:focus-visible { opacity: 1; }
+.heading:hover ::slotted(a[slot="navigation"]),
+::slotted(a[slot="navigation"]:focus-visible) { opacity: 1; }
+::slotted(a[slot="navigation"]:focus-visible) { outline: 2px solid var(--ah-accent); outline-offset: 2px; }
 :host([level="1"]) .heading { font-size: 2.25rem; }
 :host([level="2"]) .heading,
 :host(:not([level])) .heading { font-size: 1.75rem; }

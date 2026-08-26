@@ -1,8 +1,26 @@
-import { Editor, registerEditor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
+import {
+    Editor,
+    registerEditor,
+    type ContentSlot,
+    type SettingSection,
+    type TextCapability,
+} from "@bernouy/cms-content/editor";
 
 export class BlocEditor extends Editor {
     protected override textCapability(): TextCapability {
         return { format: "text", dynamic: true };
+    }
+
+    protected override contentSlots(): ContentSlot[] {
+        return [
+            {
+                label: "Permalink",
+                slot: "navigation",
+                accepts: [{ kind: "component", tag: "a" }],
+                min: 1,
+                max: 1,
+            },
+        ];
     }
 
     // -- Generated from legacy editor metadata --

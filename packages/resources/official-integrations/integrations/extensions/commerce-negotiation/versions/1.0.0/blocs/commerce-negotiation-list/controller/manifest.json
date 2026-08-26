@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "commerce-negotiation-list-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "commerce-negotiation-list controller",
+        "description": "Internal behavior controller for commerce-negotiation-list."
+    }
+}

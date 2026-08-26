@@ -27,6 +27,7 @@
         "$files": [
             "artifacts/blocs/user-account-avatar.json",
             "artifacts/blocs/user-account-form.json",
+            "artifacts/blocs/user-account-form-controller.json",
             "artifacts/sources/primary/definition.json",
             "artifacts/source-overlays/extra-fields.json",
             "artifacts/source-overlays/flat-metadata-fields.json",

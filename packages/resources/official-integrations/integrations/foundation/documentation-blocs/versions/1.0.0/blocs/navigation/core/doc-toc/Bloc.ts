@@ -3,18 +3,22 @@ import css from "./style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 
 export class Bloc extends Component {
-    _list = null;
     _observer = null;
     _links = new Map();
+    static observedAttributes = ["levels"];
     constructor() {
         super({ css, template });
     }
     connectedCallback() {
-        this._list = this.shadowRoot?.querySelector(".list") ?? null;
         this._build();
     }
     disconnectedCallback() {
         this._observer?.disconnect();
+    }
+    attributeChangedCallback() {
+        if (this.isConnected) {
+            this._build();
+        }
     }
     _levels() {
         const l = this.getAttribute("levels") ?? "h2-h3";
@@ -27,11 +31,11 @@ export class Bloc extends Component {
         return "h2, h3";
     }
     _build() {
-        if (!this._list) {
-            return;
-        }
+        this._observer?.disconnect();
         const headings = Array.from(document.querySelectorAll(this._levels()));
-        this._list.innerHTML = "";
+        for (const link of this.querySelectorAll(":scope > a[data-doc-toc-entry]")) {
+            link.remove();
+        }
         this._links.clear();
         for (const h of headings) {
             if (!h.id) {
@@ -40,13 +44,13 @@ export class Bloc extends Component {
                     .replace(/[^a-z0-9]+/g, "-")
                     .replace(/^-|-$/g, "");
             }
-            const li = document.createElement("li");
-            li.className = `lvl-${h.tagName.toLowerCase()}`;
             const a = document.createElement("a");
+            a.slot = "entry";
+            a.dataset.docTocEntry = "";
+            a.dataset.level = h.tagName.toLowerCase();
             a.href = `#${h.id}`;
             a.textContent = h.textContent ?? "";
-            li.appendChild(a);
-            this._list.appendChild(li);
+            this.appendChild(a);
             this._links.set(h.id, a);
         }
         this._observer = new IntersectionObserver(
@@ -57,8 +61,8 @@ export class Bloc extends Component {
                         continue;
                     }
                     if (e.isIntersecting) {
-                        this._links.forEach((l) => l.classList.remove("active"));
-                        link.classList.add("active");
+                        this._links.forEach((l) => l.removeAttribute("data-active"));
+                        link.setAttribute("data-active", "");
                     }
                 }
             },

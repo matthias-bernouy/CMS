@@ -1,3 +1,4 @@
+// Controller dependencies stay below the artifact root so installation can bundle them.
 export const statusCodes = [
     "all",
     "draft",

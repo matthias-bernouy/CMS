@@ -1,16 +1,4 @@
 <nav class="wrap" part="wrap">
-    <a class="pn prev" part="prev">
-        <span class="arrow">&larr;</span>
-        <span class="col">
-            <span class="label">Previous</span>
-            <span class="title"><slot name="prev-title"></slot></span>
-        </span>
-    </a>
-    <a class="pn next" part="next">
-        <span class="col end">
-            <span class="label">Next</span>
-            <span class="title"><slot name="next-title"></slot></span>
-        </span>
-        <span class="arrow">&rarr;</span>
-    </a>
+    <slot name="previous"></slot>
+    <slot name="next"></slot>
 </nav>

@@ -157,19 +157,21 @@ export function registerHydrationTest(): void {
         expect(form?.type === "bloc" ? form.bloc.editorJS : "").toContain("cms-source-success-redirect");
         expect(form?.type === "bloc" ? form.bloc.editorJS : "").not.toContain('label: "Method"');
         expect(form?.type === "bloc" ? decodeSource(form.bloc.source?.["default.html"]) : "").toContain(
-            '<basic-button action="submit">',
+            '<basic-button><button type="submit">Envoyer</button></basic-button>',
         );
         expect(redirect?.type === "bloc" ? redirect.bloc.editorJS : "").toContain('type: "page-link"');
         expect(redirect?.type === "bloc" ? redirect.bloc.viewJS : "").toContain("anchor.click()");
-        expect(button.bloc.editorJS).toContain("visibleWhen");
-        expect(button.bloc.editorJS).toContain('type: "page-link"');
-        expect(button.bloc.editorJS).toContain('{ label: "Submit", value: "submit" }');
+        expect(button.bloc.editorJS).not.toContain('attribute: "href"');
+        expect(button.bloc.editorJS).not.toContain('attribute: "type"');
+        expect(button.bloc.editorJS).toContain('{ kind: "component", tag: "a" }');
+        expect(button.bloc.editorJS).toContain('{ kind: "component", tag: "button" }');
         expect(button.bloc.editorJS).toContain('attribute: "tone"');
         expect(button.bloc.editorJS).toContain('attribute: "appearance"');
-        expect(button.bloc.editorJS).toContain('slot: "icon-left"');
+        expect(button.bloc.editorJS).not.toContain('slot: "icon-left"');
         expect(decodeSource(button.bloc.source?.["colorSchemes.ts"])).toContain('role("action-background"');
         expect(decodeSource(button.bloc.source?.["style.css"])).toContain("--_button-background: var(--_tone-base)");
-        expect(button.bloc.viewJS).toContain("requestFormSubmit");
+        expect(button.bloc.viewJS).not.toContain("requestFormSubmit");
+        expect(button.bloc.viewJS).not.toContain("formAssociated");
 
         const chip = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-chip");
         const chipGroup = artifacts.find(

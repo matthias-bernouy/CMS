@@ -1,10 +1,8 @@
-import { Composition } from "@bernouy/components/base";
-
-import template from "./template.html" with { type: "text" };
+import { Component } from "@bernouy/components/base";
 
 const orchestratedEndpoints = new Set(["getProposalPolicy", "createMyProposal"]);
 
-export class CommerceNegotiationForm extends Composition {
+export class CommerceNegotiationForm extends Component {
     static observedAttributes = [
         "amount-hint",
         "amount-label",
@@ -51,7 +49,7 @@ export class CommerceNegotiationForm extends Composition {
     ];
 
     constructor() {
-        super({ template });
+        super({ css: ":host { display: contents; }", template: "<slot></slot>" });
         this.policy = null;
         this.existingProposal = null;
         this.controller = null;

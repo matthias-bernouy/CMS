@@ -22,8 +22,6 @@ class StripeConnectOnboarding extends HTMLElement {
             "security-copy",
             "available-label",
             "pending-label",
-            "profile-url",
-            "terms-url",
             "marketplace-consent-text",
             "marketplace-terms-label",
             "payment-terms-label",
@@ -155,7 +153,7 @@ class StripeConnectOnboarding extends HTMLElement {
                     font-weight: 400;
                 }
                 .check input { width: 1rem; height: 1rem; margin-top: .15rem; accent-color: var(--wallet-accent); }
-                a { color: var(--wallet-accent); }
+                ::slotted(a) { color: var(--wallet-accent); }
                 button {
                     width: max-content;
                     padding: .72rem 1rem;
@@ -260,7 +258,7 @@ class StripeConnectOnboarding extends HTMLElement {
                 <div class="missing" data-missing hidden>
                     <strong data-missing-title></strong>
                     <p data-missing-copy></p>
-                    <a data-profile-link href="${escapeHtml(this.getAttribute("profile-url") || "/account/profile")}"></a>
+                    <slot name="profile-link"></slot>
                 </div>
                 <form data-form hidden novalidate>
                     <p data-ready-copy></p>
@@ -271,11 +269,13 @@ class StripeConnectOnboarding extends HTMLElement {
                     </div>
                     <label class="check">
                         <input type="checkbox" name="marketplaceTermsAccepted" autocomplete="off" required>
-                        <span data-marketplace-consent></span>
+                        <span data-marketplace-consent data-link-slot="marketplace-activation-terms">
+                            <span data-consent-before></span><slot name="marketplace-activation-terms"></slot><span data-consent-after></span>
+                        </span>
                     </label>
                     <label class="check">
                         <input type="checkbox" name="paymentTermsAccepted" autocomplete="off" required>
-                        <span>J’accepte les <a data-payment-terms href="https://stripe.com/fr/legal/connect-account" target="_blank" rel="noopener noreferrer"></a>.</span>
+                        <span>J’accepte les <slot name="payment-terms"></slot>.</span>
                     </label>
                     <div class="security">
                         <span aria-hidden="true">🔒</span>
@@ -288,7 +288,9 @@ class StripeConnectOnboarding extends HTMLElement {
                     <p class="muted" data-terms-update-copy></p>
                     <label class="check">
                         <input type="checkbox" name="marketplaceTermsAccepted" autocomplete="off" required>
-                        <span data-marketplace-consent></span>
+                        <span data-marketplace-consent data-link-slot="marketplace-update-terms">
+                            <span data-consent-before></span><slot name="marketplace-update-terms"></slot><span data-consent-after></span>
+                        </span>
                     </label>
                     <button type="submit" data-terms-submit></button>
                 </form>
@@ -358,10 +360,6 @@ class StripeConnectOnboarding extends HTMLElement {
             "Nous ne conservons pas ton IBAN. Il est transmis de manière sécurisée pour configurer tes versements.",
         );
         this.setText("[data-security-copy]", "security-copy", "Tes informations sont vérifiées de manière sécurisée.");
-        const profileLink = this.root.querySelector("[data-profile-link]");
-        if (profileLink) {
-            profileLink.setAttribute("href", this.getAttribute("profile-url")?.trim() || "/account/profile");
-        }
         const publishedRequirement = publishedMarketplaceTermsRequirement(this.marketplaceTermsRequirement);
         const marketplaceLabel =
             publishedRequirement?.label ||
@@ -371,15 +369,16 @@ class StripeConnectOnboarding extends HTMLElement {
             publishedRequirement?.consentText ||
             this.getAttribute("marketplace-consent-text")?.trim() ||
             `J’accepte les ${marketplaceLabel}.`;
-        const marketplaceTermsUrl =
-            publishedRequirement?.page.path || this.getAttribute("terms-url")?.trim() || "/legal/terms";
         for (const container of this.root.querySelectorAll("[data-marketplace-consent]")) {
-            renderLinkedConsent(container, marketplaceConsentText, marketplaceLabel, marketplaceTermsUrl);
+            const link = this.querySelector(`:scope > a[slot="${container.dataset.linkSlot}"]`);
+            const marketplaceTermsUrl =
+                publishedRequirement?.page.path || link?.getAttribute("href")?.trim() || "/legal/terms";
+            renderLinkedConsent(container, link, marketplaceConsentText, marketplaceLabel, marketplaceTermsUrl);
         }
     }
 
     setText(selector, attribute, fallback) {
-        const element = this.root.querySelector(selector);
+        const element = this.root.querySelector(selector) || this.querySelector(selector);
         if (element) {
             element.textContent = providerNeutralCopy(this.getAttribute(attribute)) || fallback;
         }
@@ -976,20 +975,22 @@ function verificationPending(status) {
     return status?.bankAccountStatus === "attached" && status?.payoutsEnabled !== true && !actionRequired;
 }
 
-function renderLinkedConsent(container, consentText, documentLabel, documentUrl) {
-    const link = document.createElement("a");
-    link.setAttribute("data-marketplace-terms", "");
-    link.href = documentUrl;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = documentLabel;
-    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
-    container.replaceChildren();
-    if (start < 0) {
-        container.append(consentText, " ", link);
+function renderLinkedConsent(container, link, consentText, documentLabel, documentUrl) {
+    if (!(link instanceof HTMLAnchorElement)) {
         return;
     }
-    container.append(consentText.slice(0, start), link, consentText.slice(start + documentLabel.length));
+    link.href = documentUrl;
+    link.textContent = documentLabel;
+    const start = consentText.toLocaleLowerCase().indexOf(documentLabel.toLocaleLowerCase());
+    const before = container.querySelector("[data-consent-before]");
+    const after = container.querySelector("[data-consent-after]");
+    if (start < 0) {
+        before.textContent = `${consentText} `;
+        after.textContent = "";
+        return;
+    }
+    before.textContent = consentText.slice(0, start);
+    after.textContent = consentText.slice(start + documentLabel.length);
 }
 
 function marketplaceTermsRequirement(value) {
@@ -1039,10 +1040,6 @@ function isFramed() {
     } catch {
         return true;
     }
-}
-
-function escapeHtml(value) {
-    return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", StripeConnectOnboarding);

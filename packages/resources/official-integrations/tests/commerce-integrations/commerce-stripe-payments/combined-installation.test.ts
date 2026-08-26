@@ -436,7 +436,10 @@ function repositoryBackedBlocImporter(repository: InMemoryCmsRepository) {
                 artifact.tag,
                 artifact.source,
                 undefined,
-                { native: isNativeBlocTag(artifact.tag) },
+                {
+                    native: isNativeBlocTag(artifact.tag),
+                    ...(artifact.viewPath ? { viewPath: artifact.viewPath } : {}),
+                },
             );
             if (previous !== null && options.force) {
                 await repository.replaceBloc(bloc);

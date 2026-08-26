@@ -1,60 +1,22 @@
-import { Editor, registerEditor, type SettingSection, type ContentSlot } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot } from "@bernouy/cms-content/editor";
 
 export class BlocEditor extends Editor {
-    // -- Generated from legacy editor metadata --
-
-    protected override settings(): SettingSection[] {
-        return [
-            {
-                "kind": "self",
-                "label": "Previous page",
-                "settings": [
-                    {
-                        "type": "page-link",
-                        "label": "Target page",
-                        "attribute": "prev-href",
-                    },
-                ],
-            },
-            {
-                "kind": "self",
-                "label": "Next page",
-                "settings": [
-                    {
-                        "type": "page-link",
-                        "label": "Target page",
-                        "attribute": "next-href",
-                    },
-                ],
-            },
-        ];
-    }
-
     protected override contentSlots(): ContentSlot[] {
         return [
             {
-                "label": "Prev Title",
-                "accepts": [
-                    {
-                        "kind": "any-component",
-                    },
-                ],
-                "slot": "prev-title",
-                "max": 1,
+                label: "Previous page",
+                accepts: [{ kind: "component", tag: "a" }],
+                slot: "previous",
+                max: 1,
             },
             {
-                "label": "Next Title",
-                "accepts": [
-                    {
-                        "kind": "any-component",
-                    },
-                ],
-                "slot": "next-title",
-                "max": 1,
+                label: "Next page",
+                accepts: [{ kind: "component", tag: "a" }],
+                slot: "next",
+                max: 1,
             },
         ];
     }
-    // -- End generated legacy editor metadata --
 
     constructor(target: HTMLElement) {
         super(target);

@@ -91,24 +91,35 @@ describe("public integration blocs 1.0.0", () => {
             const definition = await repo.get(kind);
             const blocs = definition?.artifacts?.filter((artifact) => artifact.type === "bloc") ?? [];
 
-            expect(blocs.map((artifact) => artifact.bloc.tag).sort()).toEqual(tags);
+            expect(
+                blocs
+                    .filter((artifact) => !artifact.bloc.internal)
+                    .map((artifact) => artifact.bloc.tag)
+                    .sort(),
+            ).toEqual(tags);
 
             for (const artifact of blocs) {
                 const bloc = artifact.bloc;
-                expect(bloc.viewJS).toContain("BE5_TAG_TO_BE_REPLACED");
                 expect(bloc.source?.["manifest.json"]).toBeTruthy();
                 expect(bloc.source?.["default.html"]).toBeTruthy();
-                expect(bloc.source?.["Bloc.ts"]).toBeTruthy();
-                expect(
-                    validateBloc({
-                        tag: bloc.tag,
-                        viewSource: bloc.viewJS,
-                        editorSource: bloc.editorJS,
-                    }).errors,
-                ).toEqual([]);
+                if (bloc.compositionHTML !== undefined) {
+                    expect(bloc.viewJS).toBeUndefined();
+                    expect(bloc.compositionHTML).toContain("<");
+                    expect(bloc.source?.["template.html"]).toBeTruthy();
+                } else {
+                    expect(bloc.viewJS).toContain("BE5_TAG_TO_BE_REPLACED");
+                    expect(bloc.source?.[bloc.view ?? "Bloc.ts"]).toBeTruthy();
+                    expect(
+                        validateBloc({
+                            tag: bloc.tag,
+                            viewSource: bloc.viewJS,
+                            editorSource: bloc.editorJS,
+                        }).errors,
+                    ).toEqual([]);
+                }
 
                 const built = await prepare_bloc(
-                    new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
+                    bloc.viewJS ? new File([bloc.viewJS], "Bloc.js", { type: "application/javascript" }) : null,
                     bloc.editorJS
                         ? new File([bloc.editorJS], "BlocEditor.ts", { type: "application/typescript" })
                         : null,
@@ -118,10 +129,19 @@ describe("public integration blocs 1.0.0", () => {
                     bloc.tag,
                     bloc.source,
                     decodeDefaultContent(bloc.source),
+                    {
+                        ...(bloc.compositionHTML !== undefined ? { compositionHTML: bloc.compositionHTML } : {}),
+                        ...(bloc.view ? { viewPath: bloc.view } : {}),
+                    },
                 );
 
                 expect(built.id).toBe(bloc.tag);
-                expect(built.viewJS).toContain(bloc.tag);
+                if (bloc.compositionHTML !== undefined) {
+                    expect(built.viewJS).toBe("");
+                    expect(built.compositionHTML).toBe(bloc.compositionHTML);
+                } else {
+                    expect(built.viewJS).toContain(bloc.tag);
+                }
             }
         }
     });

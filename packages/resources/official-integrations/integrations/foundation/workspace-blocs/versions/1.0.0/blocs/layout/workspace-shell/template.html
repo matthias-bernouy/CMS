@@ -1,7 +1,5 @@
 <div class="app-container" part="container">
-    <a class="skip-link" part="skip-link" href="#main-content">
-        <slot name="skip-link">Skip to main content</slot>
-    </a>
+    <slot name="skip-link"></slot>
 
     <div class="mobile-toolbar" part="mobile-toolbar">
         <button
@@ -58,7 +56,8 @@
         </nav>
     </aside>
 
-    <main id="main-content" class="app-content" part="content" tabindex="-1">
+    <main class="app-content" part="content" tabindex="-1">
+        <slot name="main-target"></slot>
         <slot></slot>
     </main>
 </div>

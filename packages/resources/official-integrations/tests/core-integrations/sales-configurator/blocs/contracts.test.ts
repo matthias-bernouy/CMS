@@ -137,12 +137,14 @@ describe("sales-configurator bloc contracts", () => {
         expect(content).toContain("<dialog data-sales-client-detail-source data-sales-client-edit-dialog");
         expect(content).toContain("data-sales-client-create-open");
         expect(content).toContain('<header class="sales-section-header"');
-        expect(content).toContain('appearance="ghost">Annuler</basic-button>');
+        expect(content).toContain(
+            'appearance="ghost"><button data-sales-client-dialog-close type="button">Annuler</button></basic-button>',
+        );
         expect(content).not.toContain('appearance="text"');
-        expect(content).toContain(">Nouveau client</basic-button>");
-        expect(content).toContain(">Modifier</basic-button>");
+        expect(content).toContain(">Nouveau client</button></basic-button>");
+        expect(content).toContain(">Modifier</button></basic-button>");
         expect(content).toContain("data-sales-client-dialog-close");
-        expect(content.match(/>Annuler<\/basic-button>/g)).toHaveLength(3);
+        expect(content.match(/>Annuler<\/button><\/basic-button>/g)).toHaveLength(3);
         expect(content).not.toContain("data-sales-client-detail-placeholder");
         expect(content).toContain('class="sales-client-list sales-client-table-scroll"');
         expect(content).toContain('<table class="sales-client-table"');

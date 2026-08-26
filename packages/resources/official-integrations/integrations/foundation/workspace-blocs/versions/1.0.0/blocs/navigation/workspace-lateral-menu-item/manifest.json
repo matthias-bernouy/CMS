@@ -5,7 +5,7 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Workspace lateral menu item",
-        "description": "Current-aware, keyboard-accessible lateral navigation item.",
+        "description": "Current-aware presentation for a direct native navigation link.",
         "categories": [
             "navigation"
         ]
