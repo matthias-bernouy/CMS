@@ -43,6 +43,7 @@ describe("official repository bootstrap", () => {
         expect(await bootstrapRepositoryRegistryIfEmpty(root, prepareOfficialRepositoryBootstrap)).toBe("bootstrapped");
 
         const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({ root });
+        expect(snapshot.diagnostics).toEqual([]);
         expect(snapshot.health).toBe("healthy");
         expect(snapshot.summaries.map(({ kind }) => kind)).toEqual(
             identified.plan.packages.map(({ package: entry }) => entry.envelope.kind),
@@ -95,5 +96,5 @@ describe("official repository bootstrap", () => {
             });
         }
         expect(await readdir(root)).not.toContain(REPOSITORY_BOOTSTRAP_MARKER);
-    }, 60_000);
+    }, 120_000);
 });

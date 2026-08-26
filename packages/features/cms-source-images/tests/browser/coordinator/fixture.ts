@@ -21,7 +21,9 @@ export function install(root: Document | Element, rollout = { public: true, priv
 }
 
 export async function settle(): Promise<void> {
-    await Promise.resolve();
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    for (let turn = 0; turn < 2; turn += 1) {
+        await Promise.resolve();
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    }
     await Promise.resolve();
 }

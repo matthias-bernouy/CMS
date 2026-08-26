@@ -54,6 +54,7 @@
         "tldts": "^7.4.9",
       },
       "peerDependencies": {
+        "mongodb": "^7.2.0",
         "typescript": "^5.9.3",
       },
     },
@@ -272,6 +273,9 @@
         "@bernouy/cms-sources": "workspace:*",
         "sharp": "^0.34.5",
       },
+      "devDependencies": {
+        "linkedom": "^0.18.12",
+      },
       "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^5.9.3",
@@ -446,6 +450,7 @@
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
@@ -546,6 +551,7 @@
       "name": "@bernouy/cms-repository-management",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",

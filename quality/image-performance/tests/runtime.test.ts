@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
-import { SharpSourceImageTransformer } from "@bernouy/cms-source-images/sharp";
 import { runSustainedForeground } from "../benchmark/listingRequests";
-import { startBrowserFixtureServer } from "../browser/server";
 import { assertReleaseAdapterSpecifier, createAdapter } from "../core/adapter";
 import type { LoadedAsset } from "../core/corpus";
 import { syntheticPng } from "../core/png";
@@ -92,40 +89,15 @@ describe("image performance runtime", () => {
         }
     });
 
-    test("serves the browser fixture through the real Source and Sharp adapter", async () => {
-        const server = await startBrowserFixtureServer();
-        try {
-            const original = await fetch(`${server.origin}/image/original.png?slot=baseline`);
-            const derivative = await fetch(`${server.origin}/image/original.png?slot=candidate&cms-width=384`);
-            const transformer = new SharpSourceImageTransformer();
-            const originalMetadata = await transformer.inspect(
-                new Uint8Array(await original.arrayBuffer()),
-                SOURCE_RESPONSIVE_WEBP_V1,
-            );
-            const derivativeMetadata = await transformer.inspect(
-                new Uint8Array(await derivative.arrayBuffer()),
-                SOURCE_RESPONSIVE_WEBP_V1,
-            );
+    test("serves the browser fixture through the real Source and Sharp adapter", () => {
+        const result = Bun.spawnSync({
+            cmd: [process.execPath, new URL("./browser-runtime.fixture.ts", import.meta.url).pathname],
+            cwd: new URL("../../../", import.meta.url).pathname,
+            stderr: "pipe",
+        });
 
-            expect(original.headers.get("content-type")).toBe("image/png");
-            expect(originalMetadata).toMatchObject({ format: "png", width: 1_600, height: 1_200 });
-            expect(derivative.headers.get("content-type")).toBe("image/webp");
-            expect(derivativeMetadata).toMatchObject({ format: "webp", width: 384, height: 288 });
-            expect(server.adapter).toEqual({
-                name: "source-responsive-webp-v1-local-fs",
-                implementation: {
-                    mode: "source-image",
-                    recipeId: SOURCE_RESPONSIVE_WEBP_V1.id,
-                    encoderIdentity: transformer.encoderIdentity,
-                },
-            });
-            expect(server.requests).toEqual([
-                "/image/original.png?slot=baseline",
-                "/image/original.png?slot=candidate&cms-width=384",
-            ]);
-        } finally {
-            await server.stop();
-        }
+        expect(new TextDecoder().decode(result.stderr)).toBe("");
+        expect(result.exitCode).toBe(0);
     });
 
     test("keeps foreground workers active until image work settles", async () => {

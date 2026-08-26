@@ -17,6 +17,9 @@
         "@bernouy/cms-sources": "workspace:*",
         "sharp": "^0.34.5"
     },
+    "devDependencies": {
+        "linkedom": "^0.18.12"
+    },
     "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^5.9.3"

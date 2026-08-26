@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { utimes } from "node:fs/promises";
+import { join } from "node:path";
 import { FsIntegrationRegistryCandidateStore } from "@bernouy/cms-integration-registry/fs";
 import {
     type CandidateGarbageCollectionSchedule,
@@ -53,6 +55,20 @@ describe("production candidate garbage collection", () => {
             expiresAt: "2026-07-26T10:30:00.000Z",
         });
         await store.expire(uploaded.candidateId, uploaded.revision, "2026-07-26T10:30:00.000Z");
+        const objectTimestamp = new Date("2026-07-26T10:00:00.000Z");
+        await Promise.all(
+            [
+                join(root, ".registry", "candidates", "objects", "packages", `${uploaded.packageDigest}.json`),
+                join(
+                    root,
+                    ".registry",
+                    "candidates",
+                    "objects",
+                    "verifications",
+                    `${uploaded.verificationDigest}.json`,
+                ),
+            ].map((path) => utimes(path, objectTimestamp, objectTimestamp)),
+        );
         const telemetry = new RepositoryOperationalTelemetry();
 
         const first = collector(root, "2026-07-26T12:00:00.000Z", telemetry);
