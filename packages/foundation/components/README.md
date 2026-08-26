@@ -1,6 +1,6 @@
 # @bernouy/components
 
-CMS blocs and admin custom elements toolkit built with [Bun](https://bun.com) and TypeScript. Visual components use the Shadow DOM `Component` base; reusable fixed compositions can use the transparent Light DOM `Composition` base.
+CMS blocs and admin custom elements toolkit built with [Bun](https://bun.com) and TypeScript. Visual components use the Shadow DOM `Component` base. Reusable fixed compositions are expanded into light DOM by the CMS server and do not need a client base class.
 
 ## Install
 
@@ -61,12 +61,6 @@ Two tag prefixes are currently in use across the library: `p9r-` (majority) and 
 | Class | Description |
 | --- | --- |
 | `Component` | Abstract base class. Attaches an open Shadow Root and injects CSS + template. |
-| `Composition` | Abstract Light DOM base that renders a fixed template while keeping authored children inert and out of the generated output. |
-
-`Composition` is intentionally slotless for now. Its generated subtree is a
-client-side runtime detail: editors save only the composition host and its
-inert authored input. Server-side source preflight and media transforms do not
-inspect generated composition markup yet.
 
 ### Dialog
 

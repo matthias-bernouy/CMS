@@ -20,8 +20,8 @@ binding runtime used by Control, Delivery, and authored blocs.
 - Binding runtime: `<cms-binding-core>` plus `cms-source`, `cms-repeat`,
   `cms-condition`, `cms-reload-on`, `#{param}`, `{{ path }}`, and
   `cms-param-sync`.
-- Light DOM compositions extend `Composition`. They render fixed templates,
-  expose no content slots yet, and keep authored children inert.
+- Reusable light-DOM compositions are server-expanded CMS resources. They do
+  not belong in this foundation package and must not define a client class.
 
 `cms-*` tag names are reserved for Control internals, even when the binding
 runtime uses a `cms-` activation tag.

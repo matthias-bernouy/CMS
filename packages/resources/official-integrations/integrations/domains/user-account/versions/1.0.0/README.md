@@ -5,7 +5,7 @@ connector. Version `1.0.0` ships one Supabase connector that owns the database
 schema and the `cms-user-account` Edge Function.
 
 The public account form depends on the `basic-blocs` integration. It is a Light
-DOM `Composition` built from `basic-stack`, `basic-grid`, `basic-input`,
+DOM server composition built from `basic-stack`, `basic-grid`, `basic-input`,
 `basic-button`, native forms, and the page-level declarative CMS binding
 runtime. Avatar selection is encapsulated by the form-associated
 `user-account-avatar` component and its Shadow DOM. The form editor settings
