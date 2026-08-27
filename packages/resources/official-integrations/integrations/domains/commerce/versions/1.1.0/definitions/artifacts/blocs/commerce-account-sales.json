@@ -5,6 +5,7 @@
         "name": "Account sales",
         "group": "Commerce",
         "description": "Authenticated seller sales list with status filters, compact cards, and pagination.",
-        "path": "blocs/commerce-account-sales"
+        "path": "blocs/commerce-account-sales",
+        "composition": "template.html"
     }
 }

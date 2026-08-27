@@ -43,6 +43,7 @@
             "artifacts/blocs/seller/commerce-account-offers.json",
             "artifacts/blocs/seller/commerce-account-offers-controller.json",
             "artifacts/blocs/commerce-account-sales.json",
+            "artifacts/blocs/seller/commerce-account-sales-controller.json",
             "artifacts/blocs/commerce-sale-detail.json",
             "artifacts/blocs/seller/commerce-offer-price-form.json",
             "artifacts/blocs/seller/commerce-offer-price-form-controller.json",

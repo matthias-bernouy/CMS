@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "commerce-account-sales-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "commerce-account-sales controller",
+        "description": "Internal behavior controller for commerce-account-sales."
+    }
+}

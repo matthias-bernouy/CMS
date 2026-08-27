@@ -90,6 +90,7 @@ describe("commerce 1.0.0 contract", () => {
                 { type: "source", id: "urn:commerce", action: "created" },
                 { type: "bloc", id: "commerce-account-offers", action: "created" },
                 { type: "bloc", id: "commerce-account-sales", action: "created" },
+                { type: "bloc", id: "commerce-account-sales-controller", action: "created" },
                 { type: "bloc", id: "commerce-sale-detail", action: "created" },
                 { type: "bloc", id: "commerce-notification-preferences", action: "created" },
                 ...["product", "offer", "seller", "order"].map((entity) => ({
@@ -111,6 +112,7 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-account-offers",
             "commerce-account-offers-controller",
             "commerce-account-sales",
+            "commerce-account-sales-controller",
             "commerce-sale-detail",
             "commerce-offer-price-form",
             "commerce-offer-price-form-controller",

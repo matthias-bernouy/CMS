@@ -1,7 +1,8 @@
-<section>
+<commerce-account-sales-controller data-p9r-composition-controller>
+    <input data-pagination-offset cms-param-sync="commerceSalesOffset" type="hidden">
     <basic-stack gap="lg">
-        <basic-select data-status-filter accessible-label="Filtrer les ventes par statut" value="all">
-            <basic-option value="all">Toutes</basic-option>
+        <basic-select data-pagination-reset cms-param-sync="commerceSalesStatus" accessible-label="Filtrer les ventes par statut">
+            <basic-option value="">Toutes</basic-option>
             <basic-option value="awaiting_quote">Livraison à finaliser</basic-option>
             <basic-option value="awaiting_payment">Paiement en attente</basic-option>
             <basic-option value="active">À expédier</basic-option>
@@ -11,23 +12,54 @@
             <basic-option value="expired">Expirées</basic-option>
         </basic-select>
 
-        <basic-stack data-loading gap="sm">
-            <basic-skeleton height="7rem" animation="wave" label="Chargement des ventes"></basic-skeleton>
-            <basic-skeleton height="7rem" animation="wave" aria-hidden="true"></basic-skeleton>
-            <basic-skeleton height="7rem" animation="wave" aria-hidden="true"></basic-skeleton>
-        </basic-stack>
+        <section cms-source="/.cms/sources/commerce/mySales?status=#{commerceSalesStatus}&amp;limit=10&amp;offset=#{commerceSalesOffset}">
+            <basic-stack gap="sm" cms-condition="$source.loading">
+                <basic-skeleton height="7rem" animation="wave" label="Chargement des ventes"></basic-skeleton>
+                <basic-skeleton height="7rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                <basic-skeleton height="7rem" animation="wave" aria-hidden="true"></basic-skeleton>
+            </basic-stack>
 
-        <basic-card data-empty hidden appearance="outlined" density="compact">
-            <strong slot="title" data-empty-title>Aucune vente pour le moment</strong>
-            <span slot="description" data-empty-message>Les commandes de vos acheteurs apparaîtront ici.</span>
-        </basic-card>
+            <basic-toast tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">
+                Impossible de charger les ventes. Réessayez dans quelques instants.
+            </basic-toast>
 
-        <basic-card data-error hidden appearance="outlined" density="compact" role="alert">
-            <strong slot="title">Impossible de charger les ventes</strong>
-            <span slot="description" data-error-message></span>
-        </basic-card>
+            <basic-stack gap="lg" cms-condition="$source.loaded">
+                <basic-card appearance="outlined" density="compact" cms-condition="total == 0">
+                    <strong slot="title">Aucune vente pour le moment</strong>
+                    <span slot="description">Les commandes de vos acheteurs apparaîtront ici.</span>
+                </basic-card>
 
-        <basic-stack data-list hidden gap="sm"></basic-stack>
-        <basic-pagination data-pagination hidden page="1" page-size="10" total="0"></basic-pagination>
+                <basic-stack gap="sm" cms-condition="total > 0">
+                    <basic-card appearance="outlined" density="compact" cms-repeat="items as sale">
+                        <basic-grid min="sm" max="none" gap="md" style="align-items: center">
+                            <basic-stack gap="xs">
+                                <strong>{{ sale.orderNumber }}</strong>
+                                <span>{{ sale.lineSummary.firstTitle }}</span>
+                                <small cms-condition="sale.lineSummary.lineCount > 1">{{ sale.lineSummary.lineCount }} articles</small>
+                                <small>Vendue le <time datetime="{{ sale.createdAt }}">{{ sale.createdAt | dateLong }}</time></small>
+                            </basic-stack>
+
+                            <basic-stack gap="xs">
+                                <basic-badge tone="warning" appearance="filled" cms-condition="sale.status == 'awaiting_quote'">Livraison à finaliser</basic-badge>
+                                <basic-badge tone="warning" appearance="filled" cms-condition="sale.status == 'awaiting_payment'">Paiement en attente</basic-badge>
+                                <basic-badge tone="primary" appearance="filled" cms-condition="sale.status == 'active'">À expédier</basic-badge>
+                                <basic-badge tone="success" appearance="filled" cms-condition="sale.status == 'completed'">Terminée</basic-badge>
+                                <basic-badge tone="warning" appearance="filled" cms-condition="sale.status == 'cancellation_pending'">Annulation en cours</basic-badge>
+                                <basic-badge tone="danger" appearance="filled" cms-condition="sale.status == 'cancelled'">Annulée</basic-badge>
+                                <basic-badge tone="danger" appearance="filled" cms-condition="sale.status == 'expired'">Expirée</basic-badge>
+                            </basic-stack>
+
+                            <strong>{{ sale.totalAmount | minorCurrency(sale.currency) }}</strong>
+
+                            <basic-button appearance="outlined" size="sm">
+                                <a href="/account/sale?orderId={{ sale.id | urlencode }}">Voir la vente</a>
+                            </basic-button>
+                        </basic-grid>
+                    </basic-card>
+                </basic-stack>
+
+                <basic-pagination data-pagination page="1" page-size="10" total="{{ total }}" cms-condition="total > limit"></basic-pagination>
+            </basic-stack>
+        </section>
     </basic-stack>
-</section>
+</commerce-account-sales-controller>

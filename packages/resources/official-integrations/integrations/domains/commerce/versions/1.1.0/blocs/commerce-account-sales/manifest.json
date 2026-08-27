@@ -1,6 +1,6 @@
 {
     "default-tag": "commerce-account-sales",
-    "bloc": "./Bloc.ts",
+    "composition": "./template.html",
     "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {

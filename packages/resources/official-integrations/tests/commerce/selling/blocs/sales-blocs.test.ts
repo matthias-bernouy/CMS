@@ -3,17 +3,12 @@ import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { Component } from "@bernouy/components/base";
+import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { declaredBlocViewSources } from "../../../helpers/blocArtifactSource";
 import {
-    formatMoney as formatListMoney,
-    lineSummaryLabel,
-    saleFilterDefaults,
-    saleDetailUrl,
-    saleStatusDefaults as listSaleStatusDefaults,
-    saleStatuses,
-} from "../../../../integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-sales/helpers";
-import {
     conditionLabel,
+    formatMoney as formatListMoney,
     platformShippingShareAmount,
     salePresentationStatus,
     saleStatusDefaults,
@@ -29,33 +24,8 @@ import { renderSale } from "../../../../integrations/domains/commerce/versions/1
 const blocsRoot = resolve(import.meta.dir, "../../../../integrations/domains/commerce/versions/1.0.0/blocs");
 
 describe("Commerce seller blocs", () => {
-    test("formats immutable sale summaries and detail links", () => {
+    test("formats immutable sale details", () => {
         expect(formatListMoney(11450, "eur", "fr-FR")).toBe("114,50 €");
-        expect(saleDetailUrl("/account/sale", { id: 42 }, "orderId")).toBe("/account/sale?orderId=42");
-        expect(saleDetailUrl("/sales/{publicId}", { publicId: "order / 42" })).toBe("/sales/order%20%2F%2042");
-        expect(
-            lineSummaryLabel({
-                lineSummary: { firstTitle: "Wilson Blade 98", lineCount: 1, totalQuantity: 1 },
-            }),
-        ).toBe("Wilson Blade 98");
-        expect(
-            lineSummaryLabel({
-                lineSummary: { firstTitle: "Wilson Blade 98", lineCount: 3, totalQuantity: 4 },
-            }),
-        ).toBe("Wilson Blade 98 + 2 autres");
-        expect(lineSummaryLabel({ lineSummary: { firstTitle: null, lineCount: 0 } })).toBe("");
-        expect(saleStatuses).toEqual([
-            "all",
-            "awaiting_quote",
-            "awaiting_payment",
-            "active",
-            "completed",
-            "cancellation_pending",
-            "cancelled",
-            "expired",
-        ]);
-        expect(listSaleStatusDefaults.active).toBe("À expédier");
-        expect(saleFilterDefaults.completed).toBe("Terminées");
         expect(shippingAmount({ shippingAmount: 450 })).toBe(450);
         expect(shippingAmount({ shippingAmount: 999, financialTerms: { shippingAmount: 450 } })).toBe(450);
         expect(Number.isNaN(shippingAmount({ subtotalAmount: 11000, totalAmount: 12070 }))).toBe(true);
@@ -108,81 +78,125 @@ describe("Commerce seller blocs", () => {
         ).toBe("cancelled");
     });
 
-    test("compiles an authenticated sales list from the expected Commerce endpoint", async () => {
-        const compiled = await compile("commerce-account-sales");
-        expect(compiled.viewSource).toContain('getAttribute("sales-endpoint") || "mySales"');
-        expect(compiled.viewJS).toContain("basic-pagination:change");
-        expect(compiled.viewJS).toContain("history.replaceState");
-        expect(compiled.viewJS).toContain("<basic-card");
-        expect(compiled.viewJS).toContain("<basic-select");
-        expect(compiled.editorSource).toContain('attribute: "sales-endpoint"');
-        expect(compiled.editorSource).toContain('attribute: "detail-url"');
+    test("compiles an authenticated sales list as a Light DOM composition", async () => {
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        const composition = definition?.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-sales",
+        );
+        const controller = definition?.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-sales-controller",
+        );
+        if (
+            !composition ||
+            composition.type !== "bloc" ||
+            composition.bloc.compositionHTML === undefined ||
+            !composition.bloc.editorJS ||
+            !controller ||
+            controller.type !== "bloc" ||
+            !controller.bloc.viewJS
+        ) {
+            throw new Error("commerce-account-sales composition sources not found");
+        }
+
+        const compiledController = await prepare_bloc(
+            new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+            null,
+            controller.bloc.name,
+            controller.bloc.group ?? "Commerce",
+            controller.bloc.description ?? "",
+            controller.bloc.tag,
+            controller.bloc.source,
+            undefined,
+            { viewPath: "controller/Bloc.ts" },
+        );
+        const runtimeSource = `${composition.bloc.compositionHTML}\n${compiledController.viewJS}`;
+        const viewSource = declaredBlocViewSources(controller.bloc);
+        const template = document.createElement("template");
+        template.innerHTML = composition.bloc.compositionHTML;
+
+        expect(runtimeSource).toContain("/.cms/sources/commerce/mySales?status=#{commerceSalesStatus}");
+        expect(runtimeSource).toContain("basic-pagination:change");
+        expect(runtimeSource).toContain('cms-param-sync="commerceSalesOffset"');
+        expect(runtimeSource).toContain("minorCurrency(sale.currency)");
+        expect(runtimeSource).toContain("sale.createdAt | dateLong");
+        expect(runtimeSource).toContain('cms-repeat="items as sale"');
+        expect(runtimeSource).toContain('cms-condition="$source.loaded"');
+        expect(runtimeSource).not.toContain("fetch(");
+        expect(viewSource).not.toContain("Intl.");
+        expect(viewSource).not.toContain("text-color");
+        expect(viewSource).not.toContain('setAttribute("href"');
+        expect(runtimeSource).not.toContain('createElement("basic-button")');
+        expect(runtimeSource).not.toContain('setAttribute("action", "link")');
+        expect(template.content.querySelector("basic-button > a[href]")?.getAttribute("href")).toBe(
+            "/account/sale?orderId={{ sale.id | urlencode }}",
+        );
+        expect(composition.bloc.editorJS).not.toContain("ColorSetting");
+        expect(composition.bloc.editorJS).not.toContain("settings()");
     });
 
-    test("coalesces initial sales loading, ignores cosmetic attributes, and aborts stale requests", async () => {
-        const tag = "test-commerce-account-sales-request-budget";
+    test("bridges pagination to the declarative offset control without rendering content", async () => {
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        const composition = definition?.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-sales",
+        );
+        const controller = definition?.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-sales-controller",
+        );
+        if (
+            !composition ||
+            composition.type !== "bloc" ||
+            composition.bloc.compositionHTML === undefined ||
+            !controller ||
+            controller.type !== "bloc" ||
+            !controller.bloc.viewJS
+        ) {
+            throw new Error("commerce-account-sales composition sources not found");
+        }
+
+        const tag = "test-commerce-account-sales-controller";
         const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
-        const realFetch = globalThis.fetch;
-        const calls: Array<{ url: string; signal: AbortSignal }> = [];
-        let resolveStale: ((response: Response) => void) | undefined;
         (window as typeof window & { p9r?: unknown }).p9r = { Component };
         if (!customElements.get(tag)) {
-            const compiled = await compile("commerce-account-sales", tag);
+            const compiled = await prepare_bloc(
+                new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+                null,
+                controller.bloc.name,
+                controller.bloc.group ?? "Commerce",
+                controller.bloc.description ?? "",
+                tag,
+                controller.bloc.source,
+                undefined,
+                { viewPath: "controller/Bloc.ts" },
+            );
             new Function(compiled.viewJS)();
         }
-        globalThis.fetch = (input, init) => {
-            const signal = init?.signal as AbortSignal;
-            calls.push({ url: String(input), signal });
-            if (calls.length === 2) {
-                return new Promise<Response>((resolve) => {
-                    resolveStale = resolve;
-                });
-            }
-            return Promise.resolve(jsonResponse());
-        };
 
+        const authored = document.createElement("template");
+        authored.innerHTML = composition.bloc.compositionHTML;
         const sales = document.createElement(tag);
-        for (const [name, value] of [
-            ["source-id", "commerce"],
-            ["sales-endpoint", "mySales"],
-            ["page-size", "8"],
-            ["detail-label", "Voir la vente"],
-            ["text-color", "#111111"],
-            ["card-background-color", "#ffffff"],
-        ]) {
-            sales.setAttribute(name, value);
-        }
+        sales.innerHTML = authored.content.querySelector("commerce-account-sales-controller")?.innerHTML ?? "";
 
         try {
+            const offset = sales.querySelector<HTMLInputElement>("[data-pagination-offset]")!;
+            offset.value = "10";
             document.body.append(sales);
             await settleLifecycle();
-            expect(calls).toHaveLength(1);
-
-            sales.setAttribute("text-color", "#222222");
-            sales.setAttribute("detail-label", "Consulter");
+            const pagination = sales.querySelector("[data-pagination]");
+            expect(pagination?.getAttribute("page")).toBe("2");
+            pagination?.dispatchEvent(
+                new CustomEvent("basic-pagination:change", { bubbles: true, detail: { offset: 20 } }),
+            );
             await settleLifecycle();
-            expect(calls).toHaveLength(1);
+            expect(offset.value).toBe("20");
+            expect(pagination?.getAttribute("page")).toBe("3");
 
-            sales.setAttribute("source-id", "commerce-next");
-            await Promise.resolve();
-            expect(calls).toHaveLength(2);
-            expect(calls[1]!.signal.aborted).toBe(false);
-
-            sales.setAttribute("page-size", "9");
+            const filter = sales.querySelector("[data-pagination-reset]")!;
+            filter.dispatchEvent(new Event("change", { bubbles: true }));
             await settleLifecycle();
-            expect(calls).toHaveLength(3);
-            expect(calls[1]!.signal.aborted).toBe(true);
-            expect(calls[2]!.url).toContain("limit=9");
-
-            sales.setAttribute("source-prefix", "/.cms/sources-next");
-            sales.setAttribute("source-id", "commerce-final");
-            await settleLifecycle();
-            expect(calls).toHaveLength(4);
-            expect(calls[3]!.url).toContain("/.cms/sources-next/commerce-final/mySales");
+            expect(offset.value).toBe("");
+            expect(pagination?.getAttribute("page")).toBe("1");
         } finally {
-            resolveStale?.(jsonResponse());
             sales.remove();
-            globalThis.fetch = realFetch;
             (window as typeof window & { p9r?: unknown }).p9r = previousP9r;
         }
     });
@@ -296,13 +310,6 @@ async function compile(tag: string, runtimeTag = tag) {
         viewSource: declaredBlocViewSources({ viewJS: view, source }),
         editorSource: editor,
     };
-}
-
-function jsonResponse(): Response {
-    return new Response(JSON.stringify({ items: [], total: 0 }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-    });
 }
 
 async function settleLifecycle(): Promise<void> {
