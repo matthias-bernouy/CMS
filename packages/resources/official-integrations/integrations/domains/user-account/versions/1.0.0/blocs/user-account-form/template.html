@@ -7,7 +7,7 @@
                     <user-account-avatar data-avatar-input name="file" accept="image/jpeg,image/png,image/webp,image/gif"></user-account-avatar>
                     <span data-avatar-file-id hidden>{{ avatarFileId }}</span>
                     <p cms-condition="avatar.loading">Envoi de l’image…</p>
-                    <basic-toast data-toast-kind="error" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="avatar.error">Impossible de mettre à jour la photo de profil.</basic-toast>
+                    <basic-toast data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="avatar.error">Impossible de mettre à jour la photo de profil.</basic-toast>
                 </basic-stack>
             </form>
 
@@ -29,7 +29,7 @@
                     <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
                 </basic-grid>
             </basic-stack>
-            <basic-toast data-toast-kind="error" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Impossible de charger vos informations personnelles.</basic-toast>
+            <basic-toast data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Impossible de charger vos informations personnelles.</basic-toast>
 
             <form data-account-form cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-condition="$source.loaded">
                 <basic-stack gap="lg">
@@ -61,8 +61,8 @@
                     </basic-stack>
 
                     <basic-button><button type="submit" data-account-button>Enregistrer</button></basic-button>
-                    <basic-toast data-toast-kind="success" role="status" aria-live="polite" aria-atomic="true" position="top-right" duration="4500" cms-condition="save.ok">Informations enregistrées.</basic-toast>
-                    <basic-toast data-toast-kind="error" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="save.error">Impossible d’enregistrer vos informations.</basic-toast>
+                    <basic-toast data-toast-kind="success" tone="success" appearance="filled" role="status" aria-live="polite" aria-atomic="true" position="top-right" duration="4500" cms-condition="save.ok">Informations enregistrées.</basic-toast>
+                    <basic-toast data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="save.error">Impossible d’enregistrer vos informations.</basic-toast>
                 </basic-stack>
             </form>
         </basic-stack>

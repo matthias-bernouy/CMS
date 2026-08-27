@@ -59,12 +59,6 @@ export class UserAccountFormEditor extends Editor {
                     color("Avatar border", "avatar-border-color"),
                     color("Skeleton base", "skeleton-base-color"),
                     color("Skeleton highlight", "skeleton-highlight-color"),
-                    color("Success toast text", "success-toast-text-color"),
-                    color("Success toast background", "success-toast-background-color"),
-                    color("Success toast border", "success-toast-border-color"),
-                    color("Error toast text", "error-toast-text-color"),
-                    color("Error toast background", "error-toast-background-color"),
-                    color("Error toast border", "error-toast-border-color"),
                 ],
             },
             {

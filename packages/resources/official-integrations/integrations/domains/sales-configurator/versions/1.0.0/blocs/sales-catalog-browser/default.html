@@ -56,7 +56,7 @@
         <basic-skeleton height="12rem" animation="wave" aria-hidden="true"></basic-skeleton>
     </basic-stack>
 
-    <basic-toast role="alert" cms-condition="$source.error">Le catalogue n’a pas pu être chargé. Réessayez dans un instant.</basic-toast>
+    <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">Le catalogue n’a pas pu être chargé. Réessayez dans un instant.</basic-toast>
 
     <basic-card class="sales-catalog-empty" cms-condition="$source.empty || $source.loaded && catalogData.selectionRows.length == 0">
         <strong slot="title">Catalogue vide</strong>

@@ -241,6 +241,9 @@ describe("commerce negotiation 1.0.0", () => {
         expect(formViewSource).toContain('getAttribute("show-message") === "false"');
         expect(formViewSource).toContain("wholeUnitPrices");
         expect(formViewSource).toContain('style.setProperty("display", "none", "important")');
+        expect(formViewSource).toContain('toast.setAttribute("tone", error ? "danger" : "success")');
+        expect(formViewSource).toContain('toast.setAttribute("appearance", "filled")');
+        expect(formViewSource).not.toContain('"toast-error-background-color"');
         expect(formRuntime).toContain("<basic-input");
         expect(formRuntime).toContain("<basic-textarea");
         expect(formRuntime).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
@@ -259,6 +262,9 @@ describe("commerce negotiation 1.0.0", () => {
         expect(listViewSource).toContain('this.role === "all"');
         expect(listViewSource).toContain('getAttribute("grid-packing")');
         expect(listViewSource).toContain('proposal.viewerRole === "buyer"');
+        expect(listViewSource).toContain('toast.setAttribute("tone", error ? "danger" : "success")');
+        expect(listViewSource).toContain('toast.setAttribute("appearance", "filled")');
+        expect(listViewSource).not.toContain('"toast-error-background-color"');
         expect(listRuntime).not.toContain("location.reload");
         expect(listEditorSource).toContain('attribute: "initial-role"');
         expect(listEditorSource).toContain('{ label: "Combined", value: "all" }');

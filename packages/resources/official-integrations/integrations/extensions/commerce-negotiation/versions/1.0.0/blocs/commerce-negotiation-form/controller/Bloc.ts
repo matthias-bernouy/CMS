@@ -39,12 +39,6 @@ export class CommerceNegotiationForm extends Component {
         "source-prefix",
         "success-message",
         "title",
-        "toast-background-color",
-        "toast-border-color",
-        "toast-error-background-color",
-        "toast-error-border-color",
-        "toast-error-text-color",
-        "toast-text-color",
         "unavailable-message",
     ];
 
@@ -375,9 +369,9 @@ export class CommerceNegotiationForm extends Component {
             this.querySelector("[data-toast-template]")?.content.firstElementChild?.cloneNode(true) ??
             this.ownerDocument.createElement("basic-toast");
         toast.setAttribute("role", error ? "alert" : "status");
+        toast.setAttribute("tone", error ? "danger" : "success");
+        toast.setAttribute("appearance", "filled");
         toast.textContent = message;
-        const prefix = error ? "toast-error" : "toast";
-        copyColors(this, toast, prefix, ["text-color", "background-color", "border-color"]);
         this.querySelector("[data-toast-region]")?.replaceChildren(toast);
     }
 

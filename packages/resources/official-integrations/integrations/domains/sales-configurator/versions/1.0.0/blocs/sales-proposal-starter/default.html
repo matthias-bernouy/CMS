@@ -36,7 +36,7 @@
         <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
     </basic-stack>
 
-    <basic-toast role="alert" cms-condition="$source.error">Your clients could not be loaded. Try again in a moment.</basic-toast>
+    <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">Your clients could not be loaded. Try again in a moment.</basic-toast>
 
     <basic-stack gap="lg" cms-condition="$source.loaded && clientsData.items.length > 0">
         <header class="sales-section-header">
@@ -59,7 +59,7 @@
 
                 <section class="sales-form-section" data-sales-catalog-source cms-source="/.cms/sources/sales-configurator/getPartnerCatalog as catalogData">
                     <basic-skeleton cms-condition="$source.loading" height="14rem" animation="wave" label="Loading catalogue"></basic-skeleton>
-                    <basic-toast role="alert" cms-condition="$source.error">The published catalogue could not be loaded.</basic-toast>
+                    <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">The published catalogue could not be loaded.</basic-toast>
                     <basic-card cms-condition="$source.empty || $source.loaded && catalogData.modules.length == 0">
                         <strong slot="title">No published modules</strong>
                         <span slot="description">Ask an administrator to publish the catalogue before creating proposals.</span>
@@ -173,7 +173,7 @@
                     </template>
                 </basic-stack>
 
-                <basic-toast role="alert" cms-condition="$source.error">The proposal could not be created. Review the selection and try again.</basic-toast>
+                <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">The proposal could not be created. Review the selection and try again.</basic-toast>
                 <basic-stack gap="xs" cms-condition="$source.error && saveResult.body.missingRequirements.length > 0">
                     <strong>Missing prerequisites</strong>
                     <span cms-repeat="saveResult.body.missingRequirements as requirement">{{ requirement.subjectName }} requires {{ requirement.requiredName }}</span>
@@ -226,8 +226,8 @@
                 </div>
                 <small>Optional company details are copied into each proposal version so published history stays accurate.</small>
                 <basic-toast role="status" cms-condition="$source.loading">Saving the client…</basic-toast>
-                <basic-toast role="alert" cms-condition="$source.error">The client could not be saved.</basic-toast>
-                <basic-toast role="status" cms-condition="$source.loaded">Client saved.</basic-toast>
+                <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">The client could not be saved.</basic-toast>
+                <basic-toast tone="success" appearance="filled" role="status" cms-condition="$source.loaded">Client saved.</basic-toast>
                 <basic-stack class="sales-dialog-actions" direction="row" gap="sm" justify-content="end" wrap="true">
                     <basic-button appearance="ghost"><button data-sales-client-dialog-close type="button">Annuler</button></basic-button>
                     <basic-button appearance="filled"><button type="submit">Create client</button></basic-button>

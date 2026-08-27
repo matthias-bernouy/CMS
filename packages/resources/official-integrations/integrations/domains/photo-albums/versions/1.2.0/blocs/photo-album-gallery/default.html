@@ -1,7 +1,7 @@
 <photo-album-gallery source-id="photo-albums" slug-param="slug" grid-min="sm" grid-max="none" grid-gap="sm">
     <basic-skeleton slot="loading" height="24rem" animation="wave" label="Loading photo album" cms-condition="$source.loading"></basic-skeleton>
 
-    <basic-toast slot="error" role="alert" cms-condition="$source.error">This photo album could not be loaded.</basic-toast>
+    <basic-toast slot="error" tone="danger" appearance="filled" role="alert" cms-condition="$source.error">This photo album could not be loaded.</basic-toast>
 
     <basic-stack slot="album" gap="md" cms-condition="$source.loaded">
         <header>

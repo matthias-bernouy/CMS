@@ -43,12 +43,6 @@ export class UserAccountForm extends Component {
         "toast-shadow",
         "success-toast-duration",
         "error-toast-duration",
-        "success-toast-text-color",
-        "success-toast-background-color",
-        "success-toast-border-color",
-        "error-toast-text-color",
-        "error-toast-background-color",
-        "error-toast-border-color",
         ...fields.map((field) => `show-${field}`),
     ];
 
@@ -174,10 +168,6 @@ export class UserAccountForm extends Component {
                 "duration",
                 this.getAttribute(`${kind}-toast-duration`) || (kind === "success" ? "4500" : "6000"),
             );
-            this.setOptionalAttribute(toast, "text-color", this.getAttribute(`${kind}-toast-text-color`));
-            this.setOptionalAttribute(toast, "close-color", this.getAttribute(`${kind}-toast-text-color`));
-            this.setOptionalAttribute(toast, "background-color", this.getAttribute(`${kind}-toast-background-color`));
-            this.setOptionalAttribute(toast, "border-color", this.getAttribute(`${kind}-toast-border-color`));
         }
     }
 

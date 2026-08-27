@@ -36,7 +36,7 @@
         <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
     </basic-stack>
 
-    <basic-toast role="alert" cms-condition="$source.error">This proposal could not be loaded. Check that it is still available to your account.</basic-toast>
+    <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">This proposal could not be loaded. Check that it is still available to your account.</basic-toast>
 
     <basic-card cms-condition="$source.empty">
         <strong slot="title">Proposal unavailable</strong>
@@ -80,7 +80,7 @@
             <span slot="description">Its final status prevents further edits, publication, or sharing.</span>
         </basic-card>
 
-        <basic-toast role="alert" cms-condition="proposalData.proposal.missingRequirements.length > 0">
+        <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="proposalData.proposal.missingRequirements.length > 0">
             The current selection has {{ proposalData.proposal.missingRequirements.length }} missing prerequisite(s). Resolve them before publishing.
         </basic-toast>
 
@@ -99,7 +99,7 @@
                     <basic-skeleton height="12rem" animation="wave" label="Loading catalogue"></basic-skeleton>
                 </basic-stack>
 
-                <basic-toast role="alert" cms-condition="$source.error">The published catalogue could not be loaded.</basic-toast>
+                <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">The published catalogue could not be loaded.</basic-toast>
 
                 <basic-card cms-condition="$source.empty || $source.loaded && catalogData.modules.length == 0">
                     <strong slot="title">No published modules</strong>
@@ -206,12 +206,12 @@
             </basic-stack>
 
             <basic-toast role="status" cms-condition="$source.loading">Saving the draft…</basic-toast>
-            <basic-toast role="alert" cms-condition="$source.error">The draft could not be saved. Review the selection and try again.</basic-toast>
+            <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">The draft could not be saved. Review the selection and try again.</basic-toast>
             <basic-stack gap="xs" cms-condition="$source.error && saveResult.body.missingRequirements.length > 0">
                 <strong>Missing prerequisites</strong>
                 <span cms-repeat="saveResult.body.missingRequirements as requirement">{{ requirement.subjectName }} requires {{ requirement.requiredName }}</span>
             </basic-stack>
-            <basic-toast role="status" cms-condition="$source.loaded">Draft saved.</basic-toast>
+            <basic-toast tone="success" appearance="filled" role="status" cms-condition="$source.loaded">Draft saved.</basic-toast>
             <basic-button appearance="filled"><button type="submit">Save draft</button></basic-button>
         </form>
 
@@ -236,8 +236,8 @@
             <input type="hidden" name="expectedVersionId" value="{{ proposalData.proposal.draftVersion.id }}">
             <input type="hidden" name="expectedRevision" value="{{ proposalData.proposal.draftVersion.revision }}">
             <basic-toast role="status" cms-condition="$source.loading">Publishing the proposal…</basic-toast>
-            <basic-toast role="alert" cms-condition="$source.error">The proposal could not be published. Resolve every prerequisite and try again.</basic-toast>
-            <basic-toast role="status" cms-condition="$source.loaded">Proposal published.</basic-toast>
+            <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">The proposal could not be published. Resolve every prerequisite and try again.</basic-toast>
+            <basic-toast tone="success" appearance="filled" role="status" cms-condition="$source.loaded">Proposal published.</basic-toast>
             <basic-button appearance="filled"><button type="submit">Publish proposal</button></basic-button>
         </form>
 
@@ -250,7 +250,7 @@
                     <input type="hidden" name="proposalId" value="{{ proposalData.proposal.id }}">
                     <basic-input type="datetime-local" name="expiresAt" label="Optional expiry"></basic-input>
                     <basic-toast role="status" cms-condition="$source.loading">Creating the client link…</basic-toast>
-                    <basic-toast role="alert" cms-condition="$source.error">The client link could not be created.</basic-toast>
+                    <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">The client link could not be created.</basic-toast>
                     <basic-button appearance="filled"><button type="submit">Create client link</button></basic-button>
 
                     <basic-card appearance="outlined" cms-condition="$source.loaded && shareResult.body.token">
@@ -272,7 +272,7 @@
                         <input type="hidden" name="proposalId" value="{{ proposalData.proposal.id }}">
                         <input type="hidden" name="shareId" value="{{ share.id }}">
                         <basic-toast role="status" cms-condition="$source.loading">Revoking link…</basic-toast>
-                        <basic-toast role="alert" cms-condition="$source.error">The link could not be revoked.</basic-toast>
+                        <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">The link could not be revoked.</basic-toast>
                         <basic-button appearance="outlined"><button type="submit">Revoke link</button></basic-button>
                     </form>
                 </basic-card>

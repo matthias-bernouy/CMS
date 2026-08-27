@@ -5,7 +5,7 @@
         <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
     </basic-grid>
 
-    <basic-toast role="alert" cms-condition="$source.error">Impossible de charger les annonces.</basic-toast>
+    <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">Impossible de charger les annonces.</basic-toast>
 
     <basic-card appearance="outlined" cms-condition="$source.loaded && data.total == 0">
         <strong slot="title">Aucune annonce disponible</strong>

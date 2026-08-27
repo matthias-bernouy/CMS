@@ -378,10 +378,10 @@ export function registerLifecycleTest(): void {
         expect(accountFormTemplate).not.toContain("<p9r-grid");
         expect(accountFormTemplate).not.toContain("<p9r-stack");
         expect(accountFormTemplate).toContain(
-            '<basic-toast data-toast-kind="success" role="status" aria-live="polite"',
+            '<basic-toast data-toast-kind="success" tone="success" appearance="filled" role="status" aria-live="polite"',
         );
         expect(accountFormTemplate).toContain(
-            '<basic-toast data-toast-kind="error" role="alert" aria-live="assertive"',
+            '<basic-toast data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive"',
         );
         expect(accountFormTemplate).not.toContain("<basic-toast type=");
         expect(accountFormTemplate).not.toContain('<p cms-condition="save.ok"');

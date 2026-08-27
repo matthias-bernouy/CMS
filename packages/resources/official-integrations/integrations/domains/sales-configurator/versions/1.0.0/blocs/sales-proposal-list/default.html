@@ -21,7 +21,7 @@
         <basic-skeleton height="8rem" animation="wave" aria-hidden="true"></basic-skeleton>
     </basic-stack>
 
-    <basic-toast role="alert" cms-condition="$source.error">Proposals could not be loaded. Try again in a moment.</basic-toast>
+    <basic-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">Proposals could not be loaded. Try again in a moment.</basic-toast>
 
     <basic-card class="sales-proposal-empty" cms-condition="$source.empty || $source.loaded && proposals.items.length == 0">
         <strong data-sales-empty-unfiltered slot="title">No proposals yet</strong>

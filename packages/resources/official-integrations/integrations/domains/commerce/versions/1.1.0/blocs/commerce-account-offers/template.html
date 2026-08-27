@@ -21,7 +21,7 @@
             <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
         </basic-grid>
 
-        <basic-toast data-error-toast role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Impossible de charger vos annonces.</basic-toast>
+        <basic-toast data-error-toast tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Impossible de charger vos annonces.</basic-toast>
 
         <basic-stack gap="lg" cms-condition="$source.loaded">
             <basic-card appearance="outlined" density="regular" data-empty-state cms-condition="total == 0">
