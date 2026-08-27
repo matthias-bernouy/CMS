@@ -41,9 +41,10 @@ export function buildBindingCloak(document: Document, head: HTMLElement, enabled
 }
 
 /**
- * Progressive Bloc shell: undefined custom-element hosts stay layout-neutral
- * while their server-rendered Light DOM remains visible. Once registered, the
- * component's own display and Shadow DOM styling take over.
+ * Anti-FOUC shell: while any Bloc used by the page is still undefined, hide
+ * the body and paint a neutral background. The server-rendered Light DOM stays
+ * in the document for crawlers and becomes visible in its final layout once
+ * every required custom element has registered.
  */
 export function buildFoucShell(document: Document, head: HTMLElement, usedTags: string[]): void {
     const css = buildBlocFoucShellCss(usedTags);

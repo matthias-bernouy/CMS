@@ -6,9 +6,10 @@ describe("buildBlocFoucShellCss", () => {
         expect(buildBlocFoucShellCss([])).toBe("");
     });
 
-    test("keeps Light DOM visible while used Blocs remain undefined", () => {
+    test("cloaks the body while used Blocs remain undefined", () => {
         expect(buildBlocFoucShellCss(["child-card", "root-card"])).toBe(
-            "child-card:not(:defined),root-card:not(:defined){display:contents}",
+            "html:has(child-card:not(:defined)),html:has(root-card:not(:defined)){background:#fff}" +
+                "html:has(child-card:not(:defined)) body,html:has(root-card:not(:defined)) body{visibility:hidden}",
         );
     });
 });
