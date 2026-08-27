@@ -902,7 +902,7 @@ export class CommerceOfferPriceForm extends Component {
         return this.querySelector("[data-technical-message]");
     }
     get technicalRetry() {
-        return this.querySelector("[data-technical-retry]");
+        return this.querySelector("[data-retry]");
     }
     get successTitle() {
         return this.querySelector("[data-success-title]");

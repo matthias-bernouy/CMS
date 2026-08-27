@@ -86,6 +86,26 @@ describe("native light-DOM navigation", () => {
         expect(readFileSync(headerCell, "utf8")).toContain("<a data-navigation hidden></a>");
     });
 
+    test("does not recreate the removed basic-button link API at runtime", () => {
+        const findings = integrationFiles("**/*.ts")
+            .filter((file) => /setAttribute\(\s*["']action["']\s*,\s*["']link["']/u.test(readFileSync(file, "utf8")))
+            .map(show)
+            .sort();
+        expect(findings).toEqual([]);
+    });
+
+    test("updates offer-price retry labels on the native button", () => {
+        for (const version of ["1.0.0", "1.1.0"]) {
+            const controller = resolve(
+                OFFICIAL_INTEGRATIONS_ROOT,
+                `domains/commerce/versions/${version}/blocs/commerce-offer-price-form/controller/Bloc.ts`,
+            );
+            const source = readFileSync(controller, "utf8");
+            expect(source).toContain('return this.querySelector("[data-retry]");');
+            expect(source).not.toContain('return this.querySelector("[data-technical-retry]");');
+        }
+    });
+
     test("exposes template and repeated navigation to a shadow-unaware crawl", () => {
         for (const file of sitePages("templates/default-site/site")) {
             expect(expandedSitePage(file, "site-layout").querySelectorAll("a[href]").length).toBeGreaterThanOrEqual(8);

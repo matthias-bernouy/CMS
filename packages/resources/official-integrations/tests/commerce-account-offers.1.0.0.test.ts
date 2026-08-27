@@ -132,6 +132,9 @@ describe("commerce account offers 1.0.0", () => {
             "conditions du service de paiement",
         );
         expect(form.querySelector("[data-stripe-consent-fragment]")?.textContent).not.toContain("Stripe");
+        expect(form.querySelector("basic-button[data-technical-retry] > button[data-retry]")?.textContent).toBe(
+            "Réessayer",
+        );
         form.remove();
     });
 
