@@ -31,11 +31,20 @@ export function registerFileInputTest(): void {
         const input = document.createElement("basic-file-input");
         input.setAttribute("name", "file");
         input.setAttribute("required", "");
+        input.setAttribute("accent-color", "tomato");
+        input.setAttribute("background-color", "ivory");
+        input.setAttribute("border-color", "sienna");
+        input.setAttribute("text-color", "navy");
         document.body.append(input);
 
         const error = input.shadowRoot?.querySelector(".error");
         expect(error?.textContent).toBe("");
         expect(error?.hasAttribute("hidden")).toBe(true);
+        const fieldStyle = input.shadowRoot?.querySelector<HTMLElement>(".field")?.style;
+        expect(fieldStyle?.getPropertyValue("--cms-focus-color")).toBe("tomato");
+        expect(fieldStyle?.getPropertyValue("--cms-file-background")).toBe("ivory");
+        expect(fieldStyle?.getPropertyValue("--cms-file-border-color")).toBe("sienna");
+        expect(fieldStyle?.getPropertyValue("--cms-file-color")).toBe("navy");
         input.remove();
     });
 }

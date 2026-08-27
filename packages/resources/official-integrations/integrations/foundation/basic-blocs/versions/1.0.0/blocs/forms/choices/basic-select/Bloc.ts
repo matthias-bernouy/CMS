@@ -4,6 +4,9 @@ class BasicSelect extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
         "accessible-label",
+        "accent-color",
+        "background-color",
+        "border-color",
         "disabled",
         "hint",
         "label",
@@ -12,6 +15,7 @@ class BasicSelect extends HTMLElement {
         "placeholder",
         "presentation",
         "required",
+        "text-color",
         "value",
     ];
 
@@ -192,11 +196,11 @@ class BasicSelect extends HTMLElement {
                 .option:hover:not(:disabled),
                 .option:focus-visible {
                     outline: none;
-                    background: var(--_tone-muted);
+                    background: color-mix(in srgb, var(--cms-focus-color, var(--_tone-focus)) 12%, transparent);
                 }
 
                 .option[aria-selected="true"] {
-                    background: var(--_tone-muted);
+                    background: color-mix(in srgb, var(--cms-focus-color, var(--_tone-focus)) 18%, transparent);
                     font-weight: 650;
                 }
 
@@ -236,6 +240,7 @@ class BasicSelect extends HTMLElement {
             </div>
             <div class="source" aria-hidden="true"><slot></slot></div>
         `;
+        this.fieldElement = this.root.querySelector(".field");
         this.labelElement = this.root.querySelector(".label");
         this.customShell = this.root.querySelector(".custom-shell");
         this.control = this.root.querySelector(".control");
@@ -352,6 +357,7 @@ class BasicSelect extends HTMLElement {
     }
 
     sync(restorePresentationFocus = false) {
+        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         this.hintElement.textContent = this.getAttribute("hint") || "";
@@ -387,6 +393,22 @@ class BasicSelect extends HTMLElement {
         this.renderOptions();
         this.syncPresentation(restorePresentationFocus);
         this.updateFormValue();
+    }
+
+    syncColors() {
+        for (const [attribute, property] of [
+            ["accent-color", "--cms-focus-color"],
+            ["background-color", "--cms-input-background"],
+            ["border-color", "--cms-input-border-color"],
+            ["text-color", "--cms-input-color"],
+        ]) {
+            const value = this.getAttribute(attribute)?.trim();
+            if (value) {
+                this.fieldElement.style.setProperty(property, value);
+            } else {
+                this.fieldElement.style.removeProperty(property);
+            }
+        }
     }
 
     addPresentationQueryListener() {

@@ -83,6 +83,11 @@ export function registerButtonTest(): void {
         expect(styles).toContain("::slotted(button)");
         expect(styles).toContain("::slotted(button:disabled)");
         expect(styles).toContain("color: var(--cms-button-color, var(--_button-color)) !important");
+        expect(styles).toContain("font-weight: var(--cms-button-font-weight, 700) !important");
+        expect(styles).toContain("line-height: 1.2 !important");
+        expect(styles).toContain("text-decoration: none !important");
+        expect(styles).toContain("var(--cms-button-background, var(--_tone-base)) 88%");
+        expect(styles).toContain("var(--cms-button-color, var(--_button-color)) 10%");
         expect(styles).toContain(':host([appearance="soft"])');
         expect(styles).toContain("prefers-reduced-motion: reduce");
         expect(styles).not.toContain("--primary-base");

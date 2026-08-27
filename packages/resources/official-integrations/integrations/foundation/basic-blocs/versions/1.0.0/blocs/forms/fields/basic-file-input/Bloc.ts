@@ -4,6 +4,9 @@ class BasicFileInput extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
         "accept",
+        "accent-color",
+        "background-color",
+        "border-color",
         "capture",
         "disabled",
         "empty-label",
@@ -15,6 +18,7 @@ class BasicFileInput extends HTMLElement {
         "preview-shape",
         "preview-size",
         "required",
+        "text-color",
     ];
 
     constructor() {
@@ -129,6 +133,7 @@ class BasicFileInput extends HTMLElement {
                 <small class="hint" part="hint"></small>
                 <small class="error" part="error" aria-live="polite"></small>
             </div>`;
+        this.fieldElement = this.root.querySelector(".field");
         this.input = this.root.querySelector("input");
         this.labelElement = this.root.querySelector(".label");
         this.pickerLabelElement = this.root.querySelector(".picker-button");
@@ -208,6 +213,7 @@ class BasicFileInput extends HTMLElement {
     }
 
     sync() {
+        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         this.pickerLabelElement.textContent = this.getAttribute("picker-label") || "Choose file";
@@ -230,6 +236,22 @@ class BasicFileInput extends HTMLElement {
         this.syncSelectedPreview();
         this.syncPreview();
         this.updateFormValue();
+    }
+
+    syncColors() {
+        for (const [attribute, property] of [
+            ["accent-color", "--cms-focus-color"],
+            ["background-color", "--cms-file-background"],
+            ["border-color", "--cms-file-border-color"],
+            ["text-color", "--cms-file-color"],
+        ]) {
+            const value = this.getAttribute(attribute)?.trim();
+            if (value) {
+                this.fieldElement.style.setProperty(property, value);
+            } else {
+                this.fieldElement.style.removeProperty(property);
+            }
+        }
     }
 
     syncFileName() {

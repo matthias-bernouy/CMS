@@ -4,6 +4,9 @@ class BasicInput extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
         "autocomplete",
+        "accent-color",
+        "background-color",
+        "border-color",
         "date-format",
         "disabled",
         "hint",
@@ -19,6 +22,7 @@ class BasicInput extends HTMLElement {
         "readonly",
         "required",
         "step",
+        "text-color",
         "type",
         "value",
     ];
@@ -84,6 +88,7 @@ class BasicInput extends HTMLElement {
                 <small class="hint" part="hint"></small>
                 <small class="error" part="error" aria-live="polite"></small>
             </div>`;
+        this.fieldElement = this.root.querySelector(".field");
         this.input = this.root.querySelector("input");
         this.labelElement = this.root.querySelector("label");
         this.hintElement = this.root.querySelector(".hint");
@@ -154,6 +159,7 @@ class BasicInput extends HTMLElement {
     }
 
     sync() {
+        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         this.hintElement.textContent = this.getAttribute("hint") || "";
@@ -184,6 +190,22 @@ class BasicInput extends HTMLElement {
         }
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
+    }
+
+    syncColors() {
+        for (const [attribute, property] of [
+            ["accent-color", "--cms-focus-color"],
+            ["background-color", "--cms-input-background"],
+            ["border-color", "--cms-input-border-color"],
+            ["text-color", "--cms-input-color"],
+        ]) {
+            const value = this.getAttribute(attribute)?.trim();
+            if (value) {
+                this.fieldElement.style.setProperty(property, value);
+            } else {
+                this.fieldElement.style.removeProperty(property);
+            }
+        }
     }
 
     syncValidity() {

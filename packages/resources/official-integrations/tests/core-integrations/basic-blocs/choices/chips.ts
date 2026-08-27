@@ -48,6 +48,12 @@ export function registerChipTest(): void {
         });
         group.setAttribute("tone", "success");
         group.setAttribute("appearance", "soft");
+        group.setAttribute("accent-color", "tomato");
+        group.setAttribute("background-color", "ivory");
+        group.setAttribute("border-color", "sienna");
+        group.setAttribute("selected-background-color", "gold");
+        group.setAttribute("selected-text-color", "maroon");
+        group.setAttribute("text-color", "navy");
         const club = document.createElement("basic-chip");
         club.setAttribute("value", "club");
         const professional = document.createElement("basic-chip");
@@ -66,6 +72,13 @@ export function registerChipTest(): void {
         expect(styles).toContain(':host([appearance="soft"])');
         expect(styles).toContain("--cms-chip-selected-background: var(--_tone-muted)");
         expect(choices?.getAttribute("aria-label")).toBe("Playing level");
+        expect(group.style.getPropertyValue("--cms-chip-background")).toBe("ivory");
+        expect(group.style.getPropertyValue("--cms-chip-border-color")).toBe("sienna");
+        expect(group.style.getPropertyValue("--cms-chip-color")).toBe("navy");
+        expect(group.style.getPropertyValue("--cms-chip-selected-background")).toBe("gold");
+        expect(group.style.getPropertyValue("--cms-chip-selected-border")).toBe("gold");
+        expect(group.style.getPropertyValue("--cms-chip-selected-color")).toBe("maroon");
+        expect(group.style.getPropertyValue("--cms-focus-color")).toBe("tomato");
         group.formDisabledCallback(true);
         expect(group.hasAttribute("disabled")).toBe(true);
 

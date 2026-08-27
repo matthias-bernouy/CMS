@@ -4,12 +4,17 @@ class BasicCheckbox extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
         "accessible-label",
+        "accent-color",
+        "background-color",
+        "border-color",
         "checked",
         "checked-state",
+        "check-color",
         "disabled",
         "name",
         "presentation",
         "required",
+        "text-color",
         "unchecked-value",
         "value",
     ];
@@ -30,7 +35,7 @@ class BasicCheckbox extends HTMLElement {
                     --_checkbox-checked-border: var(--_tone-border);
                     --_checkbox-check-color: var(--_tone-foreground);
                     display: inline-block;
-                    color: var(--integration-basic-blocs-field-text, inherit);
+                    color: var(--cms-input-color, var(--integration-basic-blocs-field-text, inherit));
                     font: inherit;
                 }
 
@@ -137,6 +142,7 @@ class BasicCheckbox extends HTMLElement {
             </label>
             <small class="error" part="error" aria-live="polite"></small>
         `;
+        this.labelElement = this.root.querySelector("label");
         this.control = this.root.querySelector("input");
         this.errorElement = this.root.querySelector(".error");
     }
@@ -200,6 +206,7 @@ class BasicCheckbox extends HTMLElement {
         this.control.focus(options);
     }
     sync() {
+        this.syncColors();
         this.control.checked = this.checked;
         this.control.disabled = this.disabled;
         this.control.required = this.hasAttribute("required");
@@ -216,6 +223,22 @@ class BasicCheckbox extends HTMLElement {
             this.control.removeAttribute("role");
         }
         this.updateFormValue();
+    }
+    syncColors() {
+        for (const [attribute, property] of [
+            ["accent-color", "--cms-accent-color"],
+            ["background-color", "--cms-checkbox-background"],
+            ["border-color", "--cms-checkbox-border"],
+            ["check-color", "--cms-checkbox-check-color"],
+            ["text-color", "--cms-input-color"],
+        ]) {
+            const value = this.getAttribute(attribute)?.trim();
+            if (value) {
+                this.style.setProperty(property, value);
+            } else {
+                this.style.removeProperty(property);
+            }
+        }
     }
     updateFormValue() {
         if (this.disabled) {

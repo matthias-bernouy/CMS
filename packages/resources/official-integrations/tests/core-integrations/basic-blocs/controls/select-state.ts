@@ -46,6 +46,10 @@ export function registerSelectStateTest(): void {
         select.setAttribute("label", "Condition");
         select.setAttribute("name", "condition");
         select.setAttribute("required", "");
+        select.setAttribute("accent-color", "tomato");
+        select.setAttribute("background-color", "ivory");
+        select.setAttribute("border-color", "sienna");
+        select.setAttribute("text-color", "navy");
         const placeholder = document.createElement("basic-option");
         placeholder.setAttribute("value", "");
         placeholder.textContent = "All conditions";
@@ -66,6 +70,13 @@ export function registerSelectStateTest(): void {
         expect(styles).toContain(':host([appearance="outlined"])');
         expect(styles).toContain("--_field-border: var(--_tone-border)");
         expect(styles).toContain("--_field-color: var(--_tone-contrasted)");
+        expect(styles).toContain("var(--cms-focus-color, var(--_tone-focus)) 12%");
+        expect(styles).toContain("var(--cms-focus-color, var(--_tone-focus)) 18%");
+        const fieldStyle = select.shadowRoot?.querySelector<HTMLElement>(".field")?.style;
+        expect(fieldStyle?.getPropertyValue("--cms-focus-color")).toBe("tomato");
+        expect(fieldStyle?.getPropertyValue("--cms-input-background")).toBe("ivory");
+        expect(fieldStyle?.getPropertyValue("--cms-input-border-color")).toBe("sienna");
+        expect(fieldStyle?.getPropertyValue("--cms-input-color")).toBe("navy");
         expect(select.getAttribute("data-resolved-presentation")).toBe("custom");
         expect(select.shadowRoot?.querySelector<HTMLElement>(".custom-shell")?.hidden).toBe(false);
         expect(select.shadowRoot?.querySelector<HTMLElement>(".native-shell")?.hidden).toBe(true);

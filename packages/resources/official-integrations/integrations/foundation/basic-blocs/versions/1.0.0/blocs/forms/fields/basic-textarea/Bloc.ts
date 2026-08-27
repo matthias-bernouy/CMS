@@ -3,6 +3,9 @@ import { basicColorSchemeCss } from "./colorSchemes";
 class BasicTextarea extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
+        "accent-color",
+        "background-color",
+        "border-color",
         "disabled",
         "hint",
         "label",
@@ -13,6 +16,7 @@ class BasicTextarea extends HTMLElement {
         "readonly",
         "required",
         "rows",
+        "text-color",
         "value",
     ];
 
@@ -96,6 +100,7 @@ class BasicTextarea extends HTMLElement {
                 <small class="error" part="error" aria-live="polite"></small>
             </div>
         `;
+        this.fieldElement = this.root.querySelector(".field");
         this.control = this.root.querySelector("textarea");
         this.labelElement = this.root.querySelector("label");
         this.hintElement = this.root.querySelector(".hint");
@@ -147,6 +152,7 @@ class BasicTextarea extends HTMLElement {
     }
 
     sync() {
+        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         this.hintElement.textContent = this.getAttribute("hint") || "";
@@ -163,6 +169,21 @@ class BasicTextarea extends HTMLElement {
             this.control.value = value;
         }
         this.updateFormValue();
+    }
+    syncColors() {
+        for (const [attribute, property] of [
+            ["accent-color", "--cms-focus-color"],
+            ["background-color", "--cms-input-background"],
+            ["border-color", "--cms-input-border-color"],
+            ["text-color", "--cms-input-color"],
+        ]) {
+            const value = this.getAttribute(attribute)?.trim();
+            if (value) {
+                this.fieldElement.style.setProperty(property, value);
+            } else {
+                this.fieldElement.style.removeProperty(property);
+            }
+        }
     }
     updateFormValue() {
         this.internals.setFormValue(this.disabled ? null : this.control.value);

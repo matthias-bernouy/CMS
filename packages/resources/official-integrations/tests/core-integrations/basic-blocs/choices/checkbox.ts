@@ -36,6 +36,11 @@ export function registerCheckboxTest(): void {
         checkbox.setAttribute("tone", "warning");
         checkbox.setAttribute("appearance", "soft");
         checkbox.setAttribute("required", "");
+        checkbox.setAttribute("accent-color", "tomato");
+        checkbox.setAttribute("background-color", "ivory");
+        checkbox.setAttribute("border-color", "sienna");
+        checkbox.setAttribute("check-color", "white");
+        checkbox.setAttribute("text-color", "navy");
         const form = document.createElement("form");
         form.append(checkbox);
         document.body.append(form);
@@ -48,6 +53,11 @@ export function registerCheckboxTest(): void {
         expect(styles).toContain(':host([appearance="soft"])');
         expect(styles).toContain("--_checkbox-checked-background: var(--_tone-muted)");
         expect(checkbox.shadowRoot?.querySelector(".error")?.textContent).toBe("");
+        expect(checkbox.style.getPropertyValue("--cms-accent-color")).toBe("tomato");
+        expect(checkbox.style.getPropertyValue("--cms-checkbox-background")).toBe("ivory");
+        expect(checkbox.style.getPropertyValue("--cms-checkbox-border")).toBe("sienna");
+        expect(checkbox.style.getPropertyValue("--cms-checkbox-check-color")).toBe("white");
+        expect(checkbox.style.getPropertyValue("--cms-input-color")).toBe("navy");
 
         checkbox.setAttribute("checked-state", "true");
         expect(checkbox.checked).toBe(true);

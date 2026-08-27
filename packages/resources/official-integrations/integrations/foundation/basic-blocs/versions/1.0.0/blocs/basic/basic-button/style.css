@@ -7,7 +7,11 @@
     --_button-background: var(--_tone-base);
     --_button-color: var(--_tone-foreground);
     --_button-border: var(--_tone-border);
-    --_button-hover-background: color-mix(in srgb, var(--_tone-base) 88%, var(--_tone-foreground));
+    --_button-hover-background: color-mix(
+        in srgb,
+        var(--cms-button-background, var(--_tone-base)) 88%,
+        Canvas
+    );
 }
 
 ::slotted(a),
@@ -25,10 +29,10 @@
     background: var(--cms-button-background, var(--_button-background));
     color: var(--cms-button-color, var(--_button-color)) !important;
     font: inherit;
-    font-weight: var(--cms-button-font-weight, 700);
-    line-height: 1.2;
+    font-weight: var(--cms-button-font-weight, 700) !important;
+    line-height: 1.2 !important;
     text-align: center;
-    text-decoration: none;
+    text-decoration: none !important;
     cursor: pointer;
     transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
 }
@@ -65,14 +69,22 @@
     --_button-background: transparent;
     --_button-color: var(--_tone-contrasted);
     --_button-border: var(--_tone-border);
-    --_button-hover-background: var(--_tone-muted);
+    --_button-hover-background: color-mix(
+        in srgb,
+        var(--cms-button-color, var(--_button-color)) 10%,
+        transparent
+    );
 }
 
 :host([appearance="ghost"]) {
     --_button-background: transparent;
     --_button-color: var(--_tone-contrasted);
     --_button-border: transparent;
-    --_button-hover-background: var(--_tone-muted);
+    --_button-hover-background: color-mix(
+        in srgb,
+        var(--cms-button-color, var(--_button-color)) 10%,
+        transparent
+    );
 }
 
 :host([size="xs"]) ::slotted(a),

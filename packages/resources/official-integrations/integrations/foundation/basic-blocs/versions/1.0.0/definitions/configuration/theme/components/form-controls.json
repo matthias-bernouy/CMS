@@ -29,7 +29,7 @@
             "label": "Field radius",
             "description": "Default rounding for form controls.",
             "type": "length",
-            "defaults": { "light": "var(--integration-basic-blocs-radius-control)" }
+            "defaults": { "light": "var(--integration-basic-blocs-radius-card)" }
         },
         {
             "id": "muted-text",

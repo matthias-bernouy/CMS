@@ -2,7 +2,21 @@ import { basicColorSchemeCss } from "./colorSchemes";
 
 class BasicChipGroup extends HTMLElement {
     static formAssociated = true;
-    static observedAttributes = ["accessible-label", "disabled", "label", "mode", "name", "required", "value"];
+    static observedAttributes = [
+        "accessible-label",
+        "accent-color",
+        "background-color",
+        "border-color",
+        "disabled",
+        "label",
+        "mode",
+        "name",
+        "required",
+        "selected-background-color",
+        "selected-text-color",
+        "text-color",
+        "value",
+    ];
 
     constructor() {
         super();
@@ -135,6 +149,7 @@ class BasicChipGroup extends HTMLElement {
     }
 
     sync = () => {
+        this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         const accessibleLabel = this.getAttribute("accessible-label") || "";
@@ -148,6 +163,29 @@ class BasicChipGroup extends HTMLElement {
         this.syncDisabled();
         this.updateFormValue();
     };
+
+    syncColors() {
+        const values = [
+            ["background-color", ["--cms-chip-background"]],
+            ["border-color", ["--cms-chip-border-color"]],
+            ["text-color", ["--cms-chip-color"]],
+            ["accent-color", ["--cms-chip-selected-background", "--cms-chip-selected-border", "--cms-focus-color"]],
+            ["selected-background-color", ["--cms-chip-selected-background", "--cms-chip-selected-border"]],
+            ["selected-text-color", ["--cms-chip-selected-color"]],
+        ];
+        for (const [attribute, properties] of values) {
+            const value = this.getAttribute(attribute)?.trim();
+            for (const property of properties) {
+                if (value) {
+                    this.style.setProperty(property, value);
+                    this.choicesElement.style.setProperty(property, value);
+                } else {
+                    this.style.removeProperty(property);
+                    this.choicesElement.style.removeProperty(property);
+                }
+            }
+        }
+    }
 
     initialValues() {
         const explicitValue = this.getAttribute("value");
