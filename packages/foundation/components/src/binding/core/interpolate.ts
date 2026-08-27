@@ -24,25 +24,59 @@
 
 import { lookup, type Scope } from "./scope";
 
-export type Filter = (value: unknown) => unknown;
+export type Filter = (value: unknown, ...args: unknown[]) => unknown;
 export type FilterMap = Record<string, Filter>;
 
-const BUILTIN_FILTERS: FilterMap = {
-    urlencode: (value) => encodeURIComponent(value == null ? "" : String(value)),
-};
+const BUILTIN_FILTERS = createBuiltinFilters();
 
-/** `{{ path }}` or `{{ path | filter }}`. Paths are word chars, `$`, `.`, and `-`;
- *  the filter name is a bare word. Surrounding whitespace is ignored. */
-const TOKEN = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+export function createBuiltinFilters(locale?: string): FilterMap {
+    const normalizedLocale = locale?.trim() || undefined;
+    return {
+        dateLong: (value) => formatLongDate(value, normalizedLocale),
+        minorCurrency: (value, currency) => formatMinorCurrency(value, currency, normalizedLocale),
+        urlencode: (value) => encodeURIComponent(value == null ? "" : String(value)),
+    };
+}
+
+/** `{{ path }}`, `{{ path | filter }}`, or `{{ path | filter(arg.path) }}`.
+ * Paths are word chars, `$`, `.`, and `-`; the filter name is a bare word. */
+const TOKEN = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+)(?:\(\s*([\w$.-]+)\s*\))?)?\s*\}\}/g;
 
 export function interpolateString(str: string, scope: Scope, filters: FilterMap = {}): string {
-    return str.replace(TOKEN, (_whole: string, path: string, filter: string | undefined) => {
-        const res = lookup(scope, path);
-        if (!res.found) {
-            return ""; // absent in the whole scope chain → blank
-        }
-        const fn = filter ? (filters[filter] ?? BUILTIN_FILTERS[filter]) : undefined;
-        const value = fn ? fn(res.value) : res.value;
-        return value == null ? "" : String(value);
-    });
+    return str.replace(
+        TOKEN,
+        (_whole: string, path: string, filter: string | undefined, argPath: string | undefined) => {
+            const res = lookup(scope, path);
+            if (!res.found) {
+                return ""; // absent in the whole scope chain → blank
+            }
+            const fn = filter ? (filters[filter] ?? BUILTIN_FILTERS[filter]) : undefined;
+            const argument = argPath ? lookup(scope, argPath) : null;
+            const value = fn ? fn(res.value, argument?.found ? argument.value : undefined) : res.value;
+            return value == null ? "" : String(value);
+        },
+    );
+}
+
+function formatLongDate(value: unknown, locale?: string): string {
+    const date = new Date(String(value ?? ""));
+    if (Number.isNaN(date.getTime())) {
+        return "—";
+    }
+    return new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(date);
+}
+
+function formatMinorCurrency(value: unknown, currency: unknown, locale?: string): string {
+    const amount = Number(value);
+    const unit = String(currency ?? "")
+        .trim()
+        .toUpperCase();
+    if (!Number.isSafeInteger(amount) || !unit) {
+        return "—";
+    }
+    try {
+        return new Intl.NumberFormat(locale, { style: "currency", currency: unit }).format(amount / 100);
+    } catch {
+        return "—";
+    }
 }

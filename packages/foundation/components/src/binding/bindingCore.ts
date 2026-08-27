@@ -14,7 +14,7 @@
  */
 
 import { BindingRuntime, revealSources } from "./runtime/BindingRuntime";
-import { type FilterMap } from "./core/interpolate";
+import { createBuiltinFilters, type FilterMap } from "./core/interpolate";
 import { injectCloak } from "./core/cloak";
 import {
     BINDING_CORE_TAG,
@@ -103,7 +103,9 @@ export class BindingCore extends HTMLElement {
         if (this._runtime && !this._runtime.isStopped) {
             return;
         }
-        this._runtime = new BindingRuntime(this, FILTERS, {
+        const locale = this.ownerDocument?.documentElement.lang;
+        const filters = { ...createBuiltinFilters(locale), ...FILTERS };
+        this._runtime = new BindingRuntime(this, filters, {
             sourceStateForce: this._sourceStateForce(),
         });
         this._runtime.start();

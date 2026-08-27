@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { interpolateString, type FilterMap } from "../../../src/binding/core/interpolate";
+import { createBuiltinFilters, interpolateString, type FilterMap } from "../../../src/binding/core/interpolate";
 import { type Scope } from "../../../src/binding/core/scope";
 
 const s = (value: unknown): Scope => ({ value });
@@ -88,6 +88,30 @@ describe("interpolateString — filters (injected)", () => {
                 }),
             ),
         ).toBe("email=seller%2B2%40example.com");
+    });
+
+    test("passes a scoped argument to injected filters", () => {
+        const withUnit: FilterMap = { measure: (value, unit) => `${value} ${unit}` };
+        expect(interpolateString("{{ amount | measure(unit) }}", s({ amount: 12, unit: "kg" }), withUnit)).toBe(
+            "12 kg",
+        );
+    });
+
+    test("formats long dates and minor-unit currencies with built-in filters", () => {
+        const value = { amount: 11_450, currency: "eur", date: "2026-07-13T12:00:00.000Z" };
+        expect(interpolateString("{{ amount | minorCurrency(currency) }}", s(value))).toBe(
+            new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR" }).format(114.5),
+        );
+        expect(interpolateString("{{ date | dateLong }}", s(value))).toBe(
+            new Intl.DateTimeFormat(undefined, { dateStyle: "long" }).format(new Date(value.date)),
+        );
+    });
+
+    test("formats dates and currencies with an explicit page locale", () => {
+        const value = { amount: 12_990, currency: "EUR", date: "2026-08-26T10:30:00.000Z" };
+        const filters = createBuiltinFilters("fr-FR");
+        expect(interpolateString("{{ amount | minorCurrency(currency) }}", s(value), filters)).toBe("129,90 €");
+        expect(interpolateString("{{ date | dateLong }}", s(value), filters)).toBe("26 août 2026");
     });
 });
 
