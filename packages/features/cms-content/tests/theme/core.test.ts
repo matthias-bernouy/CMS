@@ -129,6 +129,17 @@ describe("structured themes", () => {
 
         expect(() => validateThemeSettings(settings)).toThrow("integration token cannot reference another integration");
     });
+
+    test("accepts theme links to explicitly declared integration dependencies", () => {
+        const settings = defaultThemeSettings();
+        const gallery = integrationSource("gallery", "Gallery accent");
+        gallery.owner.dependencies = ["commerce"];
+        settings.sources.push(gallery, integrationSource("commerce", "Commerce accent"));
+        settings.themes[0]!.values.light["integration-gallery-accent"] =
+            "var(--integration-commerce-accent, var(--primary-base))";
+
+        expect(validateThemeSettings(settings)).toEqual(settings);
+    });
 });
 
 function addCustomToken(settings: ReturnType<typeof defaultThemeSettings>, id: string, type: "color"): void {

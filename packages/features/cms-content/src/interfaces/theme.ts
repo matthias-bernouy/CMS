@@ -3,7 +3,12 @@ export type ThemeMode = "light" | "dark";
 
 export type ThemeTokenDefaults = Partial<Record<ThemeMode, string>>;
 
-export type ThemeSourceOwner = { kind: "integration"; integrationId: string };
+export type ThemeSourceOwner = {
+    kind: "integration";
+    integrationId: string;
+    /** Integration kinds whose public theme tokens this source may reference. */
+    dependencies?: string[];
+};
 
 export type ThemeToken = {
     /** Stable identifier used by persisted theme values. */
@@ -52,6 +57,8 @@ export type ThemeCategoryContribution = {
 export type IntegrationThemeContribution = {
     integrationId: string;
     label: string;
+    /** Declared integration dependencies allowed as theme-token providers. */
+    dependencies?: string[];
     categories: ThemeCategoryContribution[];
 };
 

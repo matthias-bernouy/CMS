@@ -18795,7 +18795,7 @@ circle.endpoint-timeline__errors {
   function compatibleTokenOwners(current, target2) {
     const currentOwner = current.source.owner;
     const targetOwner = target2.source.owner;
-    return currentOwner?.kind !== "integration" || targetOwner?.kind !== "integration" || currentOwner.integrationId === targetOwner.integrationId;
+    return currentOwner?.kind !== "integration" || targetOwner?.kind !== "integration" || currentOwner.integrationId === targetOwner.integrationId || currentOwner.dependencies?.includes(targetOwner.integrationId) === true;
   }
   function themeReferenceCycles(settings, theme, mode) {
     return themeTokenEntries(settings).filter((entry) => resolveThemeTokenValue(settings, theme, mode, entry.token.id).state === "cycle").map((entry) => entry.token.label);

@@ -66,6 +66,18 @@ describe("theme token references", () => {
         expect(canReferenceThemeToken(settings, theme, "light", "album-accent", "commerce-accent")).toBeFalse();
     });
 
+    test("offers integration tokens owned by declared dependencies", () => {
+        const settings = fixture();
+        settings.sources[2]!.owner!.dependencies = ["commerce"];
+        const theme = settings.themes[0]!;
+        const token = settings.sources[2]!.categories[0]!.tokens[0]!;
+        const row = renderToken(token, settings, theme, "light", false);
+        const options = Array.from(referenceControl(row).querySelectorAll("option"), (option) => option.value);
+
+        expect(canReferenceThemeToken(settings, theme, "light", "album-accent", "commerce-accent")).toBeTrue();
+        expect(options).toContain("var(--commerce-accent)");
+    });
+
     test("resolves a linked integration color to its final value", () => {
         const settings = fixture();
         const resolved = resolveThemeTokenValue(settings, settings.themes[0]!, "light", "album-accent");

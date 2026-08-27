@@ -17,6 +17,7 @@ describe("integration Theme contributions", () => {
         expect(contributions[0]).toMatchObject({
             integrationId: "alpha",
             label: "alpha definition",
+            dependencies: ["basic-blocs"],
             categories: [{ id: "appearance", tokens: [{ id: "accent" }] }],
         });
     });
@@ -40,6 +41,7 @@ function installation(id: string, status: IntegrationInstallationStatus, withThe
             kind: id,
             label: `${id} definition`,
             inputs: [],
+            dependencies: [{ name: "basicBlocs", kind: "basic-blocs", versionRange: "^1.0.0" }],
             ...(withTheme
                 ? {
                       theme: {

@@ -74,7 +74,11 @@ function assertIntegrationIsolation(
     }
     for (const match of value.matchAll(/var\s*\(\s*--([a-z][a-z0-9-]*)/gi)) {
         const target = variableSources.get(match[1]!.toLowerCase());
-        if (target?.owner?.kind === "integration" && target.owner.integrationId !== source.owner.integrationId) {
+        if (
+            target?.owner?.kind === "integration" &&
+            target.owner.integrationId !== source.owner.integrationId &&
+            !source.owner.dependencies?.includes(target.owner.integrationId)
+        ) {
             throw new ContentValidationError(
                 "theme",
                 `integration token cannot reference another integration: ${source.owner.integrationId}`,
@@ -94,6 +98,14 @@ function validateSource(source: ThemeSource, sourceIds: Set<string>, integration
     if (owner?.kind === "integration") {
         assertIdentifier("integration id", owner.integrationId);
         assertUnique(integrationOwners, owner.integrationId, "integration owner");
+        const dependencies = new Set<string>();
+        for (const dependency of owner.dependencies ?? []) {
+            assertIdentifier("integration theme dependency", dependency);
+            if (dependency === owner.integrationId) {
+                throw new ContentValidationError("theme", `integration theme cannot depend on itself: ${source.id}`);
+            }
+            assertUnique(dependencies, dependency, "integration theme dependency");
+        }
         if (source.id !== `integration-${owner.integrationId}`) {
             throw new ContentValidationError(
                 "theme",

@@ -118,6 +118,21 @@ describe("integration theme contributions", () => {
         malformed.categories[0]!.tokens[0]!.defaults.light = "var(primary-base)";
         expect(() => createIntegrationThemeSource(malformed)).toThrow("invalid CSS variable reference");
     });
+
+    test("carries declared dependencies into owned theme sources", () => {
+        const dependent = photoTheme();
+        dependent.dependencies = ["commerce"];
+        dependent.categories[0]!.tokens[0]!.defaults.light = "var(--integration-commerce-accent)";
+
+        const settings = composeThemeSettings(defaultThemeSettings(), [dependent, commerceTheme()]);
+
+        expect(settings.sources.find((source) => source.id === "integration-photo-albums")?.owner).toEqual({
+            kind: "integration",
+            integrationId: "photo-albums",
+            dependencies: ["commerce"],
+        });
+        expect(validateThemeSettings(settings)).toEqual(settings);
+    });
 });
 
 function photoTheme(label = "Photo Albums"): IntegrationThemeContribution {

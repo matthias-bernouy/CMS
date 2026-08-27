@@ -18,6 +18,13 @@ export function collectIntegrationInstallationThemeContributions(
         contributions.push({
             integrationId: installation.id,
             label: snapshot.label,
+            ...(snapshot.dependencies?.length
+                ? {
+                      dependencies: [...new Set(snapshot.dependencies.map((dependency) => dependency.kind))].sort(
+                          compareText,
+                      ),
+                  }
+                : {}),
             categories: structuredClone(snapshot.theme.categories),
         });
     }

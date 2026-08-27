@@ -44,7 +44,11 @@ export function createIntegrationThemeSource(contribution: IntegrationThemeContr
             category.tokens.some((token) => token.defaults.dark !== undefined),
         ),
         categories,
-        owner: { kind: "integration", integrationId },
+        owner: {
+            kind: "integration",
+            integrationId,
+            ...(contribution.dependencies?.length ? { dependencies: [...contribution.dependencies] } : {}),
+        },
     };
     return validateThemeSettings({
         activeThemeId: "catalog",
@@ -126,6 +130,14 @@ function replaceIntegrationSources(
 function assertContribution(contribution: IntegrationThemeContribution): void {
     integrationThemeSourceId(contribution.integrationId);
     assertText("integration theme label", contribution.label);
+    const dependencies = new Set<string>();
+    for (const dependency of contribution.dependencies ?? []) {
+        assertIdentifier("integration theme dependency", dependency);
+        if (dependency === contribution.integrationId) {
+            throw new ContentValidationError("theme", "integration theme cannot depend on itself");
+        }
+        assertUnique(dependencies, dependency, "integration theme dependency");
+    }
     if (!Array.isArray(contribution.categories)) {
         throw new ContentValidationError("theme", "integration categories must be an array.");
     }

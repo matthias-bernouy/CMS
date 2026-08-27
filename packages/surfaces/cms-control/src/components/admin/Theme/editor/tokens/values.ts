@@ -89,7 +89,8 @@ function compatibleTokenOwners(current: ThemeTokenEntry, target: ThemeTokenEntry
     return (
         currentOwner?.kind !== "integration" ||
         targetOwner?.kind !== "integration" ||
-        currentOwner.integrationId === targetOwner.integrationId
+        currentOwner.integrationId === targetOwner.integrationId ||
+        currentOwner.dependencies?.includes(targetOwner.integrationId) === true
     );
 }
 
