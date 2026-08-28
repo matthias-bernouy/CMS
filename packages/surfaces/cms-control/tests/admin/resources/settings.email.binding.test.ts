@@ -22,7 +22,6 @@ describe("admin settings binding", () => {
                         login: { path: "" },
                         theme: "",
                     },
-                    editor: { layoutCategory: "" },
                     security: {},
                     email: {
                         enabled: true,
@@ -43,7 +42,6 @@ describe("admin settings binding", () => {
                         },
                     },
                     pages: [],
-                    layoutCategories: [],
                 });
             }
             if (href.includes("/api/secrets")) {

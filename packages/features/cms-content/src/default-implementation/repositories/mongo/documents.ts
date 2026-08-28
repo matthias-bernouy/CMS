@@ -2,7 +2,6 @@ import type { BlocOwnership, BlocRecord, TBlocWrite } from "cms-content/interfac
 import { CODE_MANAGED_BLOC_OWNERSHIP, isBlocOwnership, normalizeBlocWrite } from "cms-content/core/blocs/records";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
-import type { TTemplate } from "cms-content/interfaces/templates";
 
 export const SYSTEM_ID = "singleton" as const;
 
@@ -11,7 +10,6 @@ export type LegacyBlocDoc = WithMongoId<TBlocWrite>;
 export type BlocRecordDoc = Omit<BlocRecord, "tag"> & { _id: string };
 export type BlocDoc = LegacyBlocDoc | BlocRecordDoc;
 export type PageDoc = WithMongoId<TPage>;
-export type TemplateDoc = WithMongoId<TTemplate>;
 export type SystemDoc = TSystem & { _id: typeof SYSTEM_ID };
 export type SiteBlocPublicationLockDoc = {
     _id: "published-graph";
@@ -81,12 +79,4 @@ export function fromPageDoc(document: PageDoc | null): TPage | null {
     }
     const { _id, ...rest } = document;
     return { id: _id, ...rest, visible: document.visible === true };
-}
-
-export function fromTemplateDoc(document: TemplateDoc | null): TTemplate | null {
-    if (!document) {
-        return null;
-    }
-    const { _id, ...rest } = document;
-    return { id: _id, ...rest };
 }

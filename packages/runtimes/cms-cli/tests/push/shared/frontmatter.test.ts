@@ -35,24 +35,6 @@ tags: [public, "marketing", 'top']
         expect(content).toBe("<bloc-card></bloc-card>");
     });
 
-    test("parses template keys (name, description)", () => {
-        const raw = `---
-name: "Header global"
-description: "Navbar shared across pages"
----
-<nav></nav>`;
-        const { frontmatter } = parseFrontmatter(raw);
-        expect(frontmatter).toEqual({
-            name: "Header global",
-            description: "Navbar shared across pages",
-        });
-    });
-
-    test("rejects category — derived from the parent folder name", () => {
-        const raw = `---\nname: "X"\ncategory: "Layout"\n---\n`;
-        expect(() => parseFrontmatter(raw)).toThrow(/category.*derived from the parent folder/);
-    });
-
     test("ignores blank lines and # comments", () => {
         const raw = `---
 

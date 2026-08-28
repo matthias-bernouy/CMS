@@ -5,7 +5,7 @@ export { extractRefs };
 export type ValidationKind = "bloc";
 
 export type ValidationIssue = {
-    /** Human-readable origin of the offending content (page path, template identifier, ...). */
+    /** Human-readable origin of the offending content. */
     source: string;
     kind: ValidationKind;
     name: string;

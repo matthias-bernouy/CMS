@@ -8,18 +8,11 @@ import type { EditorStructureNode } from "../../../../runtime";
 import { slotOptions } from "./structurePickerOptions";
 import {
     isCatalogEntryInsertable,
-    isInsertionItemAllowed,
     type ResolvedEditorInteractionPolicy,
 } from "../../../../policy/editorInteractionPolicy";
 
-export type DefaultTemplateSelection = {
-    category?: string;
-};
-
 export type StructurePickerGroupContext = {
     catalog: EditorCatalog;
-    insertItems: BlockPickerItem[];
-    defaultTemplateSelection: DefaultTemplateSelection;
     editingPolicy: ResolvedEditorInteractionPolicy;
     rootNode: EditorStructureNode | null;
     editorChildrenOf(parent: EditorStructureNode): EditorStructureNode[];
@@ -45,12 +38,6 @@ export function rootGroups(context: StructurePickerGroupContext): BlockPickerSlo
                 entry,
                 slotLabel: "Page",
             })),
-        ...context.insertItems
-            .filter((item) => item.kind !== "media" && isInsertionItemAllowed(context.editingPolicy, item))
-            .map((item) => ({
-                item,
-                slotLabel: "Page",
-            })),
     ];
 
     return [
@@ -58,19 +45,6 @@ export function rootGroups(context: StructurePickerGroupContext): BlockPickerSlo
             label: "Page",
             disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
             options,
-        },
-    ];
-}
-
-export function defaultTemplateGroups(templates: BlockPickerItem[]): BlockPickerSlotGroup[] {
-    return [
-        {
-            label: "Default templates",
-            disabledReason: templates.length === 0 ? "No default templates." : undefined,
-            options: templates.map((item) => ({
-                item,
-                slotLabel: "Page",
-            })),
         },
     ];
 }
@@ -114,17 +88,6 @@ export function replaceGroups(context: StructurePickerGroupContext, node: Editor
 
 export function hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean {
     return groups.some((group) => !group.disabledReason && group.options.length > 0);
-}
-
-export function defaultTemplateItems(context: StructurePickerGroupContext): BlockPickerItem[] {
-    const templates = context.insertItems.filter(
-        (item): item is Extract<BlockPickerItem, { kind: "template" }> =>
-            item.kind === "template" && isInsertionItemAllowed(context.editingPolicy, item),
-    );
-    if (context.defaultTemplateSelection.category) {
-        return templates.filter((item) => item.category === context.defaultTemplateSelection.category);
-    }
-    return [];
 }
 
 export function isSlotFull(

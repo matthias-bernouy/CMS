@@ -12,7 +12,6 @@ export type EditorInteractionPolicy = {
     bindings?: boolean;
     conditions?: boolean;
     repeats?: boolean;
-    templates?: boolean;
     looseMedia?: boolean;
     canInsertTag?: (tag: string, entry: EditorCatalogEntry) => boolean;
 };
@@ -29,7 +28,6 @@ export const DEFAULT_EDITOR_INTERACTION_POLICY: ResolvedEditorInteractionPolicy 
     bindings: true,
     conditions: true,
     repeats: true,
-    templates: true,
     looseMedia: true,
 };
 
@@ -51,9 +49,6 @@ export function isCatalogEntryInsertable(
 }
 
 export function isInsertionItemAllowed(policy: ResolvedEditorInteractionPolicy, item: BlockPickerItem): boolean {
-    if (item.kind === "template") {
-        return policy.templates;
-    }
     if (item.kind === "media") {
         return policy.looseMedia;
     }

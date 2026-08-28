@@ -7,7 +7,6 @@ export type EditorV2PageConfig = {
     description: string;
     tags: string[];
     published: boolean;
-    defaultTemplateCategory?: string;
 };
 
 export type EditorV2SaveDocumentDetail = {

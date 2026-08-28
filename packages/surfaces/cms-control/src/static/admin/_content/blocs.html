@@ -52,7 +52,6 @@
                 <details cms-condition="usageCount">
                     <summary>{{ usageLabel }}</summary>
                     <a cms-repeat="usages.pages" href="{{BASE_PATH}}/editor/page?id={{ id }}">Page · {{ label }}</a><br>
-                    <a cms-repeat="usages.templates" href="{{BASE_PATH}}/editor/template?id={{ id }}">Template · {{ label }}</a><br>
                     <a cms-repeat="usages.blocs" href="{{BASE_PATH}}/admin/blocs?search={{ tag }}">Bloc · {{ label }}</a>
                 </details>
                 <span cms-condition="!usageCount">No usage</span>
@@ -78,7 +77,6 @@
                 <details cms-condition="usageCount">
                     <summary>{{ usageLabel }}</summary>
                     <a cms-repeat="usages.pages" href="{{BASE_PATH}}/editor/page?id={{ id }}">Page · {{ label }}</a><br>
-                    <a cms-repeat="usages.templates" href="{{BASE_PATH}}/editor/template?id={{ id }}">Template · {{ label }}</a><br>
                     <a cms-repeat="usages.blocs" href="{{BASE_PATH}}/admin/blocs?search={{ tag }}">Bloc · {{ label }}</a>
                 </details>
                 <span cms-condition="!usageCount">No usage</span>

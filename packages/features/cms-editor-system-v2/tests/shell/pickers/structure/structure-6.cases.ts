@@ -86,11 +86,9 @@ describe("Structure tree accessibility", () => {
         const tree = new StructureTree();
         document.body.append(tree);
         tree.setCatalog([allowed, self, catalogEntry("private-card", DemoBloc, TestEditor)]);
-        tree.setInsertItems([{ kind: "template", id: "layout", label: "Layout", content: "<main></main>" }]);
         tree.setDataSources([{ label: "Plans", url: "/plans", fields: [] }]);
         tree.setEditingPolicy({
             bindings: false,
-            templates: false,
             looseMedia: false,
             canInsertTag: (tag) => tag === "basic-card",
         });
@@ -102,8 +100,6 @@ describe("Structure tree accessibility", () => {
         expect(tree.controller.pickers.childGroups(container)[0]?.options.map((option) => option.item?.kind)).toEqual([
             "block",
         ]);
-        expect(tree.controller.pickers.defaultTemplateItems()).toEqual([]);
-
         tree.controller.menus.openContextMenu(container, 0, 0);
         const labels = contextLabels(tree);
         expect(labels).not.toContain("Add source");

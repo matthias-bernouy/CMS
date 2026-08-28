@@ -118,12 +118,12 @@ describe("Shell", () => {
         };
         const tree = new StructureTree();
         document.body.append(tree);
-        tree.setInsertItems([
+        tree.setCatalog([
             {
-                kind: "template",
-                id: "replacement",
+                tag: "demo-child",
                 label: "Replacement",
-                content: "<demo-child>Replacement</demo-child>",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ChildEditor,
             },
         ]);
         tree.setStructure([parentNode], null);
@@ -131,6 +131,6 @@ describe("Shell", () => {
         const groups = tree.controller.replaceGroups(childNode);
 
         expect(groups[0]!.disabledReason).toBeUndefined();
-        expect(groups[0]!.options.map((option) => option.item?.id)).toContain("replacement");
+        expect(groups[0]!.options.map((option) => option.entry?.tag)).toContain("demo-child");
     });
 });

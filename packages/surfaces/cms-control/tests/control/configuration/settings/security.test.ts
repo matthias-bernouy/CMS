@@ -91,12 +91,11 @@ describe("parseSettingsUpdateDto — security section (parsing)", () => {
         expect(dto.security?.mediaExtras).toEqual(["https://cdn.x.com"]);
     });
 
-    test("ignores legacy editor.shell updates", () => {
+    test("ignores removed editor settings", () => {
         const dto = parseSettingsUpdateDto({
-            "editor.layoutCategory": "Layouts",
             "editor.shell": "<cms-binding-core>{{CONTENT}}</cms-binding-core>",
         });
-        expect(dto.editor).toEqual({ layoutCategory: "Layouts" });
+        expect(dto).toEqual({});
     });
 });
 

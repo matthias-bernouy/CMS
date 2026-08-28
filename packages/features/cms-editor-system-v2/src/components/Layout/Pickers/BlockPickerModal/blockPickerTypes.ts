@@ -3,16 +3,6 @@ import type { EditorCatalogEntry, MediaAccept } from "@bernouy/cms-content/edito
 export type BlockPickerItem =
     | { kind: "block"; entry: EditorCatalogEntry }
     | {
-          kind: "template";
-          id: string;
-          label: string;
-          description?: string;
-          category?: string;
-          subCategory?: string;
-          icon?: string;
-          content: string;
-      }
-    | {
           kind: "media";
           label: string;
           description?: string;

@@ -14,8 +14,6 @@ import {
 import {
     isStructureTree,
     syncStructureTreeCatalog,
-    syncStructureTreeDefaultTemplateSelection,
-    syncStructureTreeInsertItems,
     syncStructureTreeEditingPolicy,
 } from "../Domain/shellStructureTreeSync";
 import { syncStructureTreeDataSources } from "../Domain/Structure/structureDataSources";
@@ -65,27 +63,7 @@ export class ShellSync {
     }
 
     syncStructureTreeCatalog(): void {
-        syncStructureTreeCatalog(
-            this.context.host.shadowRoot!,
-            this.context.state.catalog,
-            this.context.state.insertItems,
-            this.context.state.defaultTemplateSelection,
-        );
-    }
-
-    syncStructureTreeInsertItems(): void {
-        syncStructureTreeInsertItems(
-            this.context.host.shadowRoot!,
-            this.context.state.insertItems,
-            this.context.state.defaultTemplateSelection,
-        );
-    }
-
-    syncStructureTreeDefaultTemplateSelection(): void {
-        syncStructureTreeDefaultTemplateSelection(
-            this.context.host.shadowRoot!,
-            this.context.state.defaultTemplateSelection,
-        );
+        syncStructureTreeCatalog(this.context.host.shadowRoot!, this.context.state.catalog);
     }
 
     syncStructureTreeDataSources(): void {

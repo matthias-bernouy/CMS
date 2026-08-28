@@ -1,8 +1,6 @@
 import { type EditorCatalog, type EditorDocument } from "@bernouy/cms-content/editor";
 
 import { EditorRuntime, type EditorDataSource } from "../../../../../runtime";
-import type { DefaultTemplateSelection } from "../../../StructureTree/StructureTree";
-import type { BlockPickerItem } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { TopBarEditorMode } from "../../../TopBar/TopBar";
 import type { EditorFrameUrls, EditorPreviewMode, EditorV2PageConfig } from "../shellTypes";
 import {
@@ -29,19 +27,6 @@ export class ShellApi {
         this.context.state.catalog = [...catalog];
         this.context.host.setAttribute("catalog-size", String(catalog.length));
         this.context.renderSync.syncStructureTreeCatalog();
-    }
-
-    setInsertItems(items: BlockPickerItem[]): void {
-        this.context.state.insertItems = items.map((item) => ({ ...item }));
-        this.context.renderSync.syncStructureTreeInsertItems();
-        if (this.context.state.runtime) {
-            this.context.commands.renderStructure();
-        }
-    }
-
-    setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
-        this.context.state.defaultTemplateSelection = { ...selection };
-        this.context.renderSync.syncStructureTreeDefaultTemplateSelection();
     }
 
     setDataSources(sources: EditorDataSource[]): void {
@@ -107,9 +92,6 @@ export class ShellApi {
             ...config,
             tags: [...config.tags],
         };
-        if (config.defaultTemplateCategory) {
-            this.setDefaultTemplateSelection({ category: config.defaultTemplateCategory });
-        }
         this.context.refs.topBar.setPageTitle(config.title, config.path);
         this.context.renderSync.syncPageSettingsForm();
     }

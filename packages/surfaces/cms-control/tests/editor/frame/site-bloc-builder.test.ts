@@ -40,7 +40,7 @@ describe("site bloc builder", () => {
             if (url.includes("/api/bloc/catalogue")) {
                 return Response.json([]);
             }
-            if (url.includes("/api/template/list") || url.includes("/api/editor/sources")) {
+            if (url.includes("/api/editor/sources")) {
                 return Response.json([]);
             }
             if (url.includes("/api/system/settings")) {

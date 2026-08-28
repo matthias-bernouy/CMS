@@ -5,11 +5,7 @@ import { siteBlocDependencyGraph, transitiveDependencies } from "./validation/de
 export type BlocCatalogueQuery = { search?: string; origin?: string; group?: string };
 
 export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQuery = {}) {
-    const [records, pages, templates] = await Promise.all([
-        cms.repository.getBlocRecords(),
-        cms.repository.getAllPages(),
-        cms.repository.getAllTemplates(),
-    ]);
+    const [records, pages] = await Promise.all([cms.repository.getBlocRecords(), cms.repository.getAllPages()]);
     const publishedGraph = siteBlocDependencyGraph(records);
     const draftGraph = new Map([...publishedGraph].map(([tag, dependencies]) => [tag, new Set(dependencies)]));
     for (const record of records) {
@@ -19,10 +15,6 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
     }
     const publishedTags = records.filter((record) => record.artifact).map((record) => ({ id: record.tag }));
     const pageRefs = pages.map((page) => ({ page, tags: new Set(findUsedBlocTags(page.content, publishedTags)) }));
-    const templateRefs = templates.map((template) => ({
-        template,
-        tags: new Set(findUsedBlocTags(template.content, publishedTags)),
-    }));
     const normalizedSearch = query.search?.trim().toLowerCase() ?? "";
 
     return records
@@ -41,7 +33,6 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
                 : "published";
             const usageCount =
                 pageRefs.filter(({ tags }) => tags.has(record.tag)).length +
-                templateRefs.filter(({ tags }) => tags.has(record.tag)).length +
                 records.filter(
                     (candidate) => candidate.tag !== record.tag && publishedGraph.get(candidate.tag)?.has(record.tag),
                 ).length;
@@ -67,9 +58,6 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
                     pages: pageRefs
                         .filter(({ tags }) => tags.has(record.tag))
                         .map(({ page }) => ({ id: page.id, label: page.title, path: page.path })),
-                    templates: templateRefs
-                        .filter(({ tags }) => tags.has(record.tag))
-                        .map(({ template }) => ({ id: template.id, label: template.name, tag: template.identifier })),
                     blocs: records
                         .filter(
                             (candidate) =>

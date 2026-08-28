@@ -75,61 +75,8 @@ describe("Shell", () => {
             "Media feature",
         );
 
-        picker.shadowRoot!.querySelector<HTMLButtonElement>(".sources .filter:nth-child(3)")!.click();
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".sources .filter:nth-child(2)")!.click();
 
         expect(selected).toEqual(["media"]);
-    });
-
-    test("block picker hides template items that exceed slot max", async () => {
-        installDom();
-
-        const { StructureTree } = await import("../../../../src/components/Layout/StructureTree/StructureTree");
-
-        class CardEditor extends Editor {
-            protected override contentSlots() {
-                return [
-                    {
-                        label: "Header",
-                        slot: "header",
-                        max: 1,
-                        accepts: [{ kind: "any-component" as const }],
-                    },
-                ];
-            }
-        }
-
-        const target = document.createElement("demo-card");
-        const editor = new CardEditor(target);
-        const node: EditorStructureNode = {
-            editor,
-            target,
-            tag: "demo-card",
-            label: "Card",
-            badges: [],
-            children: [],
-        };
-        const tree = new StructureTree();
-        document.body.append(tree);
-        tree.setInsertItems([
-            {
-                kind: "template",
-                id: "multi-root",
-                label: "Multi root",
-                content: "<p>One</p><p>Two</p>",
-            },
-            {
-                kind: "template",
-                id: "single-root",
-                label: "Single root",
-                content: "<p>One</p>",
-            },
-        ]);
-        tree.setStructure([node], null);
-
-        const groups = tree.controller.childGroups(node);
-        const optionIds = groups.flatMap((group) => group.options.map((option) => option.item?.id));
-
-        expect(optionIds).toContain("single-root");
-        expect(optionIds).not.toContain("multi-root");
     });
 });

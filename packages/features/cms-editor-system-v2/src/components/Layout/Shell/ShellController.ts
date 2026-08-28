@@ -6,8 +6,6 @@ import "../../Settings/SettingsView/SettingsView";
 import "../Pickers/RepeatPicker/RepeatPicker";
 import type { EditorDocument } from "@bernouy/cms-content/editor";
 import type { EditorDataSource } from "../../../runtime";
-import type { DefaultTemplateSelection } from "../StructureTree/StructureTree";
-import type { BlockPickerItem } from "../Pickers/BlockPickerModal/BlockPickerModal";
 import { createShellControllerParts, type ShellControllerParts } from "./Controller/Core/Services/shellControllerParts";
 import { connectShellController, disconnectShellController } from "./Controller/Core/Lifecycle/shellLifecycleFlow";
 import { SHELL_OBSERVED_ATTRIBUTES } from "./Controller/Core/Lifecycle/shellAttributes";
@@ -56,14 +54,6 @@ export class ShellController extends HTMLElement {
 
     setCatalog(catalog: EditorInsertableCatalogEntry[]): void {
         this._parts.api.setCatalog(catalog);
-    }
-
-    setInsertItems(items: BlockPickerItem[]): void {
-        this._parts.api.setInsertItems(items);
-    }
-
-    setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
-        this._parts.api.setDefaultTemplateSelection(selection);
     }
 
     setDataSources(sources: EditorDataSource[]): void {

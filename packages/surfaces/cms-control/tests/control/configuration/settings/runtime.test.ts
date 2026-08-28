@@ -7,31 +7,26 @@ import { getSettings } from "cms-control/core/management/settings/getSettings";
 import { updateSettings } from "cms-control/core/management/settings/updateSettings";
 
 describe("settings runtime", () => {
-    test("combines system settings with page and layout choices", async () => {
+    test("combines system settings with page choices", async () => {
         const system = defaultSystem();
         const pages = [{ path: "/about", title: "About" }];
-        const layoutCategories = ["Landing", "Marketing"];
         const getSystem = mock(async () => system);
         const getLinks = mock(async () => pages);
-        const getTemplateCategories = mock(async () => layoutCategories);
         const cms = {
-            repository: { getSystem, getLinks, getTemplateCategories },
+            repository: { getSystem, getLinks },
         } as unknown as ControlCms;
 
         const settings = await getSettings(cms);
 
         expect(settings).toEqual({
             site: system.site,
-            editor: system.editor,
             theme: system.theme,
             security: system.security,
             email: system.email,
             pages,
-            layoutCategories,
         });
         expect(getSystem).toHaveBeenCalledTimes(1);
         expect(getLinks).toHaveBeenCalledTimes(1);
-        expect(getTemplateCategories).toHaveBeenCalledTimes(1);
     });
 
     test("composes successful installation Theme catalogs for the editor", async () => {
@@ -40,7 +35,6 @@ describe("settings runtime", () => {
             repository: {
                 getSystem: async () => system,
                 getLinks: async () => [],
-                getTemplateCategories: async () => [],
             },
             configuredIntegrationInstallations: {
                 list: async () => [successfulThemeInstallation()],

@@ -24,12 +24,9 @@ export class StructureTreeRenderer {
         this.tree.refs.contextMenu.remove();
 
         if (this.tree.state.nodes.length === 0) {
-            const defaultTemplates = this.tree.pickers.defaultTemplateItems();
             treeEl.append(
                 renderEmptyStructureTree({
-                    defaultTemplates,
                     openRootPicker: () => this.tree.pickers.openRootPicker(),
-                    useDefaultTemplate: (templates) => this.tree.pickers.useDefaultTemplate(templates),
                 }),
             );
             this.restoreSelectedFocus();

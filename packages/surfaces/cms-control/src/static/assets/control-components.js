@@ -12835,16 +12835,6 @@ p {
             Pages
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="templates">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M3 9h18" />
-                <path d="M9 21V9" />
-            </svg>
-            Templates
-        </w13c-lateral-menu-item>
-
         <w13c-lateral-menu-item data-route="files">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -13281,20 +13271,10 @@ ${followMessage}`)) {
   function formatConflict(body) {
     const lines = [];
     const pages = Array.isArray(body?.pages) ? body.pages : [];
-    const templates = Array.isArray(body?.templates) ? body.templates : [];
     if (pages.length) {
       lines.push("Pages:");
       for (const p2 of pages) {
         lines.push(`  • ${p2.title || p2.path}`);
-      }
-    }
-    if (templates.length) {
-      if (lines.length) {
-        lines.push("");
-      }
-      lines.push("Templates:");
-      for (const t of templates) {
-        lines.push(`  • ${t.name || t.identifier}`);
       }
     }
     return lines.join(`
@@ -38039,9 +38019,6 @@ dd {
     throw new Error("Block picker option requires either item or entry.");
   }
   function blockPickerSourceLabel(kind) {
-    if (kind === "template") {
-      return "Template";
-    }
     if (kind === "media") {
       return "Media";
     }
@@ -38069,10 +38046,7 @@ dd {
     if (item.kind === "block") {
       return item.entry.tag;
     }
-    if (item.kind === "media") {
-      return item.accept?.join(", ") ?? "media";
-    }
-    return item.id;
+    return item.accept?.join(", ") ?? "media";
   }
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
@@ -38253,7 +38227,7 @@ dd {
   function renderBlockPickerSidebar(input3) {
     input3.sources.replaceChildren();
     input3.categories.replaceChildren();
-    input3.sources.append(sourceButton("Blocks", "block", input3), sourceButton("Templates", "template", input3), sourceButton("Media", "media", input3));
+    input3.sources.append(sourceButton("Blocks", "block", input3), sourceButton("Media", "media", input3));
     input3.categories.append(filterButton("All", input3.activeCategory === "", () => input3.onCategory(""), blockPickerSourceCount(input3.group, input3.activeSource)));
     for (const category of blockPickerCategories(input3.group, input3.activeSource)) {
       input3.categories.append(filterButton(category, input3.activeCategory === category, () => input3.onCategory(category), blockPickerCategoryCount(input3.group, input3.activeSource, category)));
@@ -39108,18 +39082,6 @@ dd {
     const options2 = groups.filter((group) => !group.disabledReason).flatMap((group) => group.options);
     return options2.length === 1 ? options2[0] ?? null : null;
   }
-  function useDefaultTemplate(templates, groups, context) {
-    if (templates.length === 0) {
-      return false;
-    }
-    if (templates.length === 1) {
-      context.emitAction("add-root", templates[0]);
-      return true;
-    }
-    context.setPendingPickerAction({ action: "add-root" });
-    context.openBlockPicker(groups, "Page");
-    return true;
-  }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureSourcePicker.ts
   function openStructureSourcePicker(node, context) {
@@ -39153,7 +39115,6 @@ dd {
     bindings: true,
     conditions: true,
     repeats: true,
-    templates: true,
     looseMedia: true
   };
   function resolveEditorInteractionPolicy(policy = {}) {
@@ -39169,9 +39130,6 @@ dd {
     return policy.canInsertTag?.(entry.tag, entry) ?? true;
   }
   function isInsertionItemAllowed(policy, item) {
-    if (item.kind === "template") {
-      return policy.templates;
-    }
     if (item.kind === "media") {
       return policy.looseMedia;
     }
@@ -39216,18 +39174,6 @@ dd {
       return true;
     }
     return accept.tag.toLowerCase() === entry.tag.toLowerCase();
-  }
-  function acceptsItem(accept, item) {
-    if (item.kind === "media") {
-      return accept.kind === "media";
-    }
-    if (item.kind === "block") {
-      return acceptsEntry(accept, item.entry);
-    }
-    if (accept.kind === "media") {
-      return false;
-    }
-    return accept.kind === "any-component";
   }
   function acceptsElement(slot, element, catalog) {
     const tag = element.localName.toLowerCase();
@@ -39281,11 +39227,6 @@ dd {
       slot: slot.slot,
       slotLabel: slot.label
     }));
-    const externalOptions = context.insertItems.filter((item) => isInsertionItemAllowed(context.editingPolicy, item)).filter((item) => slot.accepts.some((accept) => acceptsItem(accept, item))).filter((item) => canFitItem(context, parent, slot, item, replaced)).map((item) => ({
-      item,
-      slot: slot.slot,
-      slotLabel: slot.label
-    }));
     const mediaAccept = mediaAcceptForSlot(slot);
     const mediaOptions = mediaAccept && context.editingPolicy.looseMedia ? [
       {
@@ -39304,7 +39245,6 @@ dd {
     ] : [];
     return [
       ...blockOptions.filter((option8) => canFitItem(context, parent, slot, option8.item, replaced)),
-      ...externalOptions,
       ...mediaOptions.filter((option8) => option8.item && canFitItem(context, parent, slot, option8.item, replaced))
     ];
   }
@@ -39314,19 +39254,7 @@ dd {
     }
     const replacedSlot = replaced ? context.slotForChild(parent, replaced) : undefined;
     const replacedCount = replacedSlot && context.sameSlot(replacedSlot, slot) ? 1 : 0;
-    return context.slotChildCount(parent, slot) - replacedCount + itemRootCount(item) <= slot.max;
-  }
-  function itemRootCount(item) {
-    if (item.kind !== "template") {
-      return 1;
-    }
-    const template9 = document.createElement("template");
-    template9.innerHTML = item.content;
-    const elementCount = template9.content.children.length;
-    if (elementCount > 0) {
-      return elementCount;
-    }
-    return template9.content.textContent?.trim() ? 1 : 0;
+    return context.slotChildCount(parent, slot) - replacedCount + 1 <= slot.max;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Pickers/structurePickerGroups.ts
@@ -39342,10 +39270,6 @@ dd {
         },
         entry,
         slotLabel: "Page"
-      })),
-      ...context.insertItems.filter((item) => item.kind !== "media" && isInsertionItemAllowed(context.editingPolicy, item)).map((item) => ({
-        item,
-        slotLabel: "Page"
       }))
     ];
     return [
@@ -39353,18 +39277,6 @@ dd {
         label: "Page",
         disabledReason: options2.length === 0 ? "No compatible blocks." : undefined,
         options: options2
-      }
-    ];
-  }
-  function defaultTemplateGroups(templates) {
-    return [
-      {
-        label: "Default templates",
-        disabledReason: templates.length === 0 ? "No default templates." : undefined,
-        options: templates.map((item) => ({
-          item,
-          slotLabel: "Page"
-        }))
       }
     ];
   }
@@ -39401,13 +39313,6 @@ dd {
   }
   function hasEnabledGroup(groups) {
     return groups.some((group) => !group.disabledReason && group.options.length > 0);
-  }
-  function defaultTemplateItems(context) {
-    const templates = context.insertItems.filter((item) => item.kind === "template" && isInsertionItemAllowed(context.editingPolicy, item));
-    if (context.defaultTemplateSelection.category) {
-      return templates.filter((item) => item.category === context.defaultTemplateSelection.category);
-    }
-    return [];
   }
   function isSlotFull(context, parent, slot) {
     return typeof slot.max === "number" && context.slotChildCount(parent, slot) >= slot.max;
@@ -39508,9 +39413,6 @@ dd {
     rootGroups() {
       return rootGroups(this.groupContext());
     }
-    defaultTemplateGroups(templates) {
-      return defaultTemplateGroups(templates.filter((item) => item.kind === "template" ? this.tree.state.editingPolicy.templates : true));
-    }
     childGroups(node) {
       return childGroups(this.groupContext(), node);
     }
@@ -39557,12 +39459,6 @@ dd {
       picker.addEventListener(CONDITION_PICKER_REMOVE_EVENT, this.tree.events.onConditionRemove);
       picker.open(structureConditionPickerOptions(this.tree, node));
     }
-    defaultTemplateItems() {
-      return defaultTemplateItems(this.groupContext());
-    }
-    useDefaultTemplate(templates = this.defaultTemplateItems()) {
-      return useDefaultTemplate(templates, this.defaultTemplateGroups(templates), this.blockPickerContext());
-    }
     blockPickerContext(editor) {
       return {
         emitAction: (action, item, slot) => this.tree.emitter.emitAction(action, editor, item, slot),
@@ -39575,8 +39471,6 @@ dd {
     groupContext() {
       return {
         catalog: this.tree.state.catalog,
-        insertItems: this.tree.state.insertItems,
-        defaultTemplateSelection: this.tree.state.defaultTemplateSelection,
         editingPolicy: this.tree.state.editingPolicy,
         rootNode: this.tree.state.rootNode,
         editorChildrenOf: (parent) => this.tree.nodes.editorChildrenOf(parent),
@@ -39646,12 +39540,9 @@ dd {
     empty4.className = "empty";
     const button2 = document.createElement("button");
     button2.type = "button";
-    button2.textContent = context.defaultTemplates.length > 0 ? "Use default template" : "Add block";
+    button2.textContent = "Add block";
     button2.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (context.useDefaultTemplate(context.defaultTemplates)) {
-        return;
-      }
       context.openRootPicker();
     });
     empty4.append("No editable elements", button2);
@@ -39780,11 +39671,8 @@ dd {
       treeEl.replaceChildren();
       this.tree.refs.contextMenu.remove();
       if (this.tree.state.nodes.length === 0) {
-        const defaultTemplates = this.tree.pickers.defaultTemplateItems();
         treeEl.append(renderEmptyStructureTree({
-          defaultTemplates,
-          openRootPicker: () => this.tree.pickers.openRootPicker(),
-          useDefaultTemplate: (templates) => this.tree.pickers.useDefaultTemplate(templates)
+          openRootPicker: () => this.tree.pickers.openRootPicker()
         }));
         this.restoreSelectedFocus();
         return;
@@ -39891,8 +39779,6 @@ dd {
     selectedEditor = null;
     catalog = [];
     dataSources = [];
-    defaultTemplateSelection = {};
-    insertItems = [];
     editingPolicy = resolveEditorInteractionPolicy();
     scrollSelectedIntoViewOnRender = false;
     restoreSelectedFocusOnRender = false;
@@ -39940,13 +39826,6 @@ dd {
     }
     setCatalog(catalog) {
       this.catalog = catalog;
-    }
-    setInsertItems(items) {
-      this.state.insertItems = items.map((item) => ({ ...item }));
-    }
-    setDefaultTemplateSelection(selection) {
-      this.state.defaultTemplateSelection = { ...selection };
-      this.renderer.render();
     }
     setDataSources(sources) {
       this.state.dataSources = sources.map((source2) => ({ ...source2, fields: [...source2.fields] }));
@@ -40335,12 +40214,6 @@ dd {
     }
     setCatalog(catalog) {
       this.controller.setCatalog(catalog);
-    }
-    setInsertItems(items) {
-      this.controller.setInsertItems(items);
-    }
-    setDefaultTemplateSelection(selection) {
-      this.controller.setDefaultTemplateSelection(selection);
     }
     setDataSources(sources) {
       this.controller.setDataSources(sources);
@@ -46479,34 +46352,14 @@ label {
     if (item.kind === "media") {
       return null;
     }
-    if (item.kind === "block") {
-      const fragment2 = createBlockFragment(document2, item.entry);
-      L2(fragment2);
-      const slotElements2 = slotElementChildren(fragment2);
-      for (const child of slotElements2) {
-        applySlot(child, slotName);
-        applyCondition(child, sourceStatusConditions2);
-      }
-      const selectionTarget2 = slotElements2.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements2[0] ?? null;
-      if (!selectionTarget2) {
-        return null;
-      }
-      return {
-        fragment: fragment2,
-        selectionTarget: selectionTarget2,
-        slotElements: slotElements2
-      };
-    }
-    const template22 = document2.createElement("template");
-    template22.innerHTML = item.content;
-    const fragment = template22.content.cloneNode(true);
+    const fragment = createBlockFragment(document2, item.entry);
     L2(fragment);
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
       applySlot(child, slotName);
       applyCondition(child, sourceStatusConditions2);
     }
-    const selectionTarget = slotElements[0] ?? null;
+    const selectionTarget = slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
     if (!selectionTarget) {
       return null;
     }
@@ -48080,9 +47933,6 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellChrome.ts
   function shellResourceChromeDefaults(resource) {
-    if (resource === "template") {
-      return chromeDefaults("Templates", "/admin/templates", "Template settings", "Configure template metadata.", "Identifier", "Category", "Status", "Description");
-    }
     return chromeDefaults("Pages", "/admin/pages", "Page settings", "Configure page-level metadata and routing.", "Path", "Tags", "Status", "SEO description");
   }
   function applyShellChromeLabels(host, topBar, resource, defaults, pageField) {
@@ -48160,27 +48010,14 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellStructureTreeSync.ts
   function isStructureTree(value3) {
-    return Boolean(value3 && "catalog" in value3 && "setStructure" in value3 && "setInsertItems" in value3 && "setDefaultTemplateSelection" in value3 && "setEditingPolicy" in value3);
+    return Boolean(value3 && "catalog" in value3 && "setStructure" in value3 && "setEditingPolicy" in value3);
   }
   function syncStructureTreeEditingPolicy(root, policy) {
     withStructureTree(root, (tree) => tree.setEditingPolicy(policy));
   }
-  function syncStructureTreeCatalog(root, catalog, insertItems, defaultTemplateSelection) {
+  function syncStructureTreeCatalog(root, catalog) {
     withStructureTree(root, (tree) => {
       tree.catalog = catalog;
-      tree.setInsertItems(insertItems);
-      tree.setDefaultTemplateSelection(defaultTemplateSelection);
-    });
-  }
-  function syncStructureTreeInsertItems(root, insertItems, defaultTemplateSelection) {
-    withStructureTree(root, (tree) => {
-      tree.setInsertItems(insertItems);
-      tree.setDefaultTemplateSelection(defaultTemplateSelection);
-    });
-  }
-  function syncStructureTreeDefaultTemplateSelection(root, defaultTemplateSelection) {
-    withStructureTree(root, (tree) => {
-      tree.setDefaultTemplateSelection(defaultTemplateSelection);
     });
   }
   function withStructureTree(root, apply) {
@@ -48213,7 +48050,7 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureRender.ts
-  function renderStructure(tree, runtime2, contentRoot, catalog, _insertItems, isEmptyDocumentContent2, options2 = {}) {
+  function renderStructure(tree, runtime2, contentRoot, catalog, isEmptyDocumentContent2, options2 = {}) {
     const rootNode = runtime2 && contentRoot ? editorRootNode(runtime2, contentRoot, catalog) : null;
     if (!runtime2 || isEmptyDocumentContent2()) {
       tree.setStructure([], null, catalog, { rootNode });
@@ -48308,13 +48145,7 @@ label {
       this.context.refs.topBar.saveStatus = label3;
     }
     syncStructureTreeCatalog() {
-      syncStructureTreeCatalog(this.context.host.shadowRoot, this.context.state.catalog, this.context.state.insertItems, this.context.state.defaultTemplateSelection);
-    }
-    syncStructureTreeInsertItems() {
-      syncStructureTreeInsertItems(this.context.host.shadowRoot, this.context.state.insertItems, this.context.state.defaultTemplateSelection);
-    }
-    syncStructureTreeDefaultTemplateSelection() {
-      syncStructureTreeDefaultTemplateSelection(this.context.host.shadowRoot, this.context.state.defaultTemplateSelection);
+      syncStructureTreeCatalog(this.context.host.shadowRoot, this.context.state.catalog);
     }
     syncStructureTreeDataSources() {
       syncStructureTreeDataSources(this.context.host.shadowRoot, this.context.state.dataSources, isStructureTree);
@@ -49087,17 +48918,6 @@ label {
       this.context.host.setAttribute("catalog-size", String(catalog.length));
       this.context.renderSync.syncStructureTreeCatalog();
     }
-    setInsertItems(items) {
-      this.context.state.insertItems = items.map((item) => ({ ...item }));
-      this.context.renderSync.syncStructureTreeInsertItems();
-      if (this.context.state.runtime) {
-        this.context.commands.renderStructure();
-      }
-    }
-    setDefaultTemplateSelection(selection) {
-      this.context.state.defaultTemplateSelection = { ...selection };
-      this.context.renderSync.syncStructureTreeDefaultTemplateSelection();
-    }
     setDataSources(sources) {
       this.context.state.dataSources = sources.map((source2) => ({
         ...source2,
@@ -49152,9 +48972,6 @@ label {
         ...config,
         tags: [...config.tags]
       };
-      if (config.defaultTemplateCategory) {
-        this.setDefaultTemplateSelection({ category: config.defaultTemplateCategory });
-      }
       this.context.refs.topBar.setPageTitle(config.title, config.path);
       this.context.renderSync.syncPageSettingsForm();
     }
@@ -49385,7 +49202,7 @@ label {
       this.context = context;
     }
     renderStructure(options2 = {}) {
-      renderStructure(this.context.refs.structureTree, this.context.state.runtime, this.context.state.editorDocument?.contentRoot, this.context.state.catalog, this.context.state.insertItems, () => this.isEmptyDocumentContent(), options2);
+      renderStructure(this.context.refs.structureTree, this.context.state.runtime, this.context.state.editorDocument?.contentRoot, this.context.state.catalog, () => this.isEmptyDocumentContent(), options2);
     }
     isEmptyDocumentContent() {
       return isEmptyDocumentContent(this.context.state.editorDocument?.contentRoot);
@@ -49438,12 +49255,6 @@ label {
     syncStructureTreeCatalog() {
       this.context.sync.syncStructureTreeCatalog();
     }
-    syncStructureTreeInsertItems() {
-      this.context.sync.syncStructureTreeInsertItems();
-    }
-    syncStructureTreeDefaultTemplateSelection() {
-      this.context.sync.syncStructureTreeDefaultTemplateSelection();
-    }
     syncStructureTreeDataSources() {
       this.context.sync.syncStructureTreeDataSources();
     }
@@ -49471,7 +49282,6 @@ label {
         const contentRoot = state2.editorDocument?.contentRoot;
         return contentRoot && state2.runtime ? state2.runtime.getEditor(contentRoot) ?? null : null;
       },
-      insertItems: () => state2.insertItems,
       editingPolicy: () => state2.editingPolicy,
       repeatPicker: () => refs.repeatPicker,
       findStructureNodeLabel: (editor) => renderSync.findStructureNodeLabel(editor),
@@ -49554,8 +49364,6 @@ label {
     return {
       catalog: [],
       dataSources: [],
-      defaultTemplateSelection: {},
-      insertItems: [],
       runtime: null,
       editorDocument: null,
       settingsMode: "settings",
@@ -50237,12 +50045,6 @@ label {
     setCatalog(catalog) {
       this._parts.api.setCatalog(catalog);
     }
-    setInsertItems(items) {
-      this._parts.api.setInsertItems(items);
-    }
-    setDefaultTemplateSelection(selection) {
-      this._parts.api.setDefaultTemplateSelection(selection);
-    }
     setDataSources(sources) {
       this._parts.api.setDataSources(sources);
     }
@@ -50464,35 +50266,22 @@ label {
   function currentPageIdentifier() {
     return new URL(window.location.href).searchParams.get("id");
   }
-  function shellResource(shell) {
-    return shell.getAttribute("resource") === "template" ? "template" : "page";
-  }
-  function listUrl(resource) {
-    return `${getMetaBasePath()}/admin/${resource === "page" ? "pages" : `${resource}s`}`;
-  }
-  function resourceLabel(resource) {
-    return resource[0].toUpperCase() + resource.slice(1);
-  }
 
   // src/components/editorSystemV2/shellSetup.ts
   async function configureShellCatalogAndFrame(shell, options2 = {}) {
-    const [catalog, insertItems, dataSources, settings] = await Promise.all([
+    const [catalog, dataSources, settings] = await Promise.all([
       loadEditorCatalog(),
-      loadTemplateItems(),
       fetchJson("editor/sources", []),
       fetchJson("system/settings", {})
     ]);
     shell.setCatalog(catalog);
-    shell.setInsertItems(insertItems);
     shell.setDataSources(dataSources);
-    shell.setDefaultTemplateSelection({ category: settings.editor?.layoutCategory || undefined });
     setThemeTokens(shell, settings);
     if (options2.frame === false) {
       return;
     }
     const documentId = currentPageIdentifier();
-    const resource = shellResource(shell);
-    const frameUrl = documentId ? `${getMetaBasePath()}/api/editor/frame?type=${resource}&id=${encodeURIComponent(documentId)}` : `${getMetaBasePath()}/api/editor/frame?type=${resource}`;
+    const frameUrl = documentId ? `${getMetaBasePath()}/api/editor/frame?id=${encodeURIComponent(documentId)}` : `${getMetaBasePath()}/api/editor/frame`;
     shell.shadowRoot?.querySelector("cms-editor-v2-canvas")?.setAttribute("frame-url", frameUrl);
   }
   function setThemeTokens(shell, settings) {
@@ -50503,22 +50292,6 @@ label {
     }))));
     const settingsView = shell.shadowRoot?.querySelector("cms-editor-v2-settings-view");
     settingsView?.setThemeTokens(themeTokens);
-  }
-  async function loadTemplateItems() {
-    const templates = await fetchJson("template/list", []);
-    const details = await Promise.all(templates.map((template22) => fetchJson(`template?id=${encodeURIComponent(template22.id)}`, {
-      ...template22,
-      content: ""
-    })));
-    return details.filter((template22) => template22.content).map((template22) => ({
-      kind: "template",
-      id: template22.id,
-      label: template22.name,
-      description: template22.description,
-      category: template22.category || "Templates",
-      icon: "T",
-      content: template22.content ?? ""
-    }));
   }
   async function fetchJson(path, fallback) {
     try {
@@ -50887,7 +50660,6 @@ label {
         bindings: false,
         conditions: false,
         repeats: false,
-        templates: false,
         looseMedia: false,
         canInsertTag: (tag, entry) => this.canInsertStructureTag(catalogs.structureTags, tag, entry)
       });
@@ -51174,11 +50946,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/editorSystemV2/documentLoad.ts
-  async function loadDocumentConfig(shell, resource, id2) {
-    if (resource !== "page") {
-      await loadTemplateConfig(shell, id2);
-      return;
-    }
+  async function loadDocumentConfig(shell, id2) {
     await loadPageConfig(shell, id2);
   }
   async function loadPageConfig(shell, pageId) {
@@ -51198,48 +50966,12 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       path: page.path,
       description: page.description,
       tags: page.tags,
-      published: page.published,
-      defaultTemplateCategory: page.defaultTemplateCategory
-    });
-  }
-  async function loadTemplateConfig(shell, id2) {
-    const response = await fetch(`${getMetaBasePath()}/api/template?id=${encodeURIComponent(id2)}`);
-    if (response.redirected) {
-      window.location.href = response.url;
-      return;
-    }
-    if (!response.ok) {
-      shell.setSaveStatus(`${resourceLabel("template")} load failed`);
-      return;
-    }
-    const detail = await response.json();
-    shell.setPageConfig({
-      id: detail.id,
-      title: detail.name,
-      path: detail.identifier,
-      description: detail.description ?? "",
-      tags: detail.category ? [detail.category] : [],
-      published: true
+      published: page.published
     });
   }
 
   // src/components/editorSystemV2/documentMutations.ts
-  async function saveDocument(resource, page, content) {
-    if (resource === "page") {
-      await savePage(page, content);
-      return;
-    }
-    await saveTemplate(page, content);
-  }
-  async function deleteDocument(resource, id2) {
-    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id2)}`, {
-      method: "DELETE"
-    });
-    if (!response.ok) {
-      throw new Error(`${resourceLabel(resource)} delete failed with ${response.status}`);
-    }
-  }
-  async function savePage(page, content) {
+  async function saveDocument(page, content) {
     const response = await fetch(`${getMetaBasePath()}/api/page/content`, {
       method: "PUT",
       headers: {
@@ -51254,32 +50986,11 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       throw new Error(`Page save failed with ${response.status}`);
     }
   }
-  async function saveTemplate(page, content) {
-    const response = await fetch(`${getMetaBasePath()}/api/template`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        id: page.id,
-        name: page.title,
-        category: page.tags[0] ?? "",
-        description: page.description,
-        content
-      })
-    });
-    if (!response.ok) {
-      throw new Error(`${resourceLabel("template")} save failed with ${response.status}`);
-    }
-  }
 
   // src/components/editorSystemV2/bootstrap.ts
   var configuredShells = new WeakSet;
   var saveDocumentListener = (event) => {
     onSaveDocument(event);
-  };
-  var deleteDocumentListener = (event) => {
-    onDeleteDocument(event);
   };
   function configureShell(shell) {
     if (!(shell instanceof Shell) || !isDocumentEditorShell(shell) || configuredShells.has(shell)) {
@@ -51287,20 +50998,14 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     }
     configuredShells.add(shell);
     shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, saveDocumentListener);
-    if (shellResource(shell) !== "page") {
-      shell.addEventListener(EDITOR_V2_DELETE_DOCUMENT_EVENT, deleteDocumentListener);
-    }
     configureShellCatalogAndFrame(shell);
     const documentId = currentPageIdentifier();
     if (documentId) {
       configurePageManagement(shell, documentId);
-      loadDocumentConfig(shell, shellResource(shell), documentId);
+      loadDocumentConfig(shell, documentId);
     }
   }
   function configurePageManagement(shell, documentId) {
-    if (shellResource(shell) !== "page") {
-      return;
-    }
     const detailUrl = `${getMetaBasePath()}/admin/pages/detail?id=${encodeURIComponent(documentId)}`;
     shell.setAttribute("back-href", detailUrl);
     shell.setAttribute("settings-href", detailUrl);
@@ -51316,33 +51021,11 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       return;
     }
     try {
-      await saveDocument(shellResource(shell), event.detail.page, event.detail.content);
+      await saveDocument(event.detail.page, event.detail.content);
       shell.setSaveStatus("Saved");
     } catch (error) {
       console.error("[editor] save failed", error);
       shell.setSaveStatus("Save failed");
-    }
-  }
-  async function onDeleteDocument(event) {
-    const shell = event.currentTarget;
-    if (!(shell instanceof Shell)) {
-      return;
-    }
-    const resource = shellResource(shell);
-    const id2 = currentPageIdentifier();
-    if (!id2) {
-      shell.setSaveStatus(`${resourceLabel(resource)} delete failed`);
-      return;
-    }
-    if (!window.confirm(`Delete this ${resource}? This cannot be undone.`)) {
-      return;
-    }
-    try {
-      await deleteDocument(resource, id2);
-      window.location.href = listUrl(resource);
-    } catch (error) {
-      console.error("[editor] delete failed", error);
-      shell.setSaveStatus(`${resourceLabel(resource)} delete failed`);
     }
   }
   function configureExistingShells() {

@@ -5,16 +5,10 @@ import {
     CONDITION_PICKER_APPLY_EVENT,
     CONDITION_PICKER_REMOVE_EVENT,
 } from "../../../Pickers/ConditionPicker/ConditionPicker";
-import {
-    openPickerOrEmitSingleMedia,
-    useDefaultTemplate,
-    type StructureBlockPickerContext,
-} from "../../Actions/structureBlockPicker";
+import { openPickerOrEmitSingleMedia, type StructureBlockPickerContext } from "../../Actions/structureBlockPicker";
 import { openStructureSourcePicker } from "../../Actions/structureSourcePicker";
 import {
     childGroups,
-    defaultTemplateGroups,
-    defaultTemplateItems,
     hasEnabledGroup,
     isSlotFull,
     replaceGroups,
@@ -30,12 +24,6 @@ export class StructureTreePickers {
 
     rootGroups(): BlockPickerSlotGroup[] {
         return rootGroups(this.groupContext());
-    }
-
-    defaultTemplateGroups(templates: BlockPickerItem[]): BlockPickerSlotGroup[] {
-        return defaultTemplateGroups(
-            templates.filter((item) => (item.kind === "template" ? this.tree.state.editingPolicy.templates : true)),
-        );
     }
 
     childGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
@@ -96,14 +84,6 @@ export class StructureTreePickers {
         picker.open(structureConditionPickerOptions(this.tree, node));
     }
 
-    defaultTemplateItems(): BlockPickerItem[] {
-        return defaultTemplateItems(this.groupContext());
-    }
-
-    useDefaultTemplate(templates = this.defaultTemplateItems()): boolean {
-        return useDefaultTemplate(templates, this.defaultTemplateGroups(templates), this.blockPickerContext());
-    }
-
     private blockPickerContext(editor?: Editor): StructureBlockPickerContext {
         return {
             emitAction: (action, item, slot) => this.tree.emitter.emitAction(action, editor, item, slot),
@@ -117,8 +97,6 @@ export class StructureTreePickers {
     private groupContext(): StructurePickerGroupContext {
         return {
             catalog: this.tree.state.catalog,
-            insertItems: this.tree.state.insertItems,
-            defaultTemplateSelection: this.tree.state.defaultTemplateSelection,
             editingPolicy: this.tree.state.editingPolicy,
             rootNode: this.tree.state.rootNode,
             editorChildrenOf: (parent) => this.tree.nodes.editorChildrenOf(parent),

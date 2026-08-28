@@ -2,7 +2,6 @@ import { randomUUIDv7 } from "bun";
 import type { PageLink, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
-import type { TTemplate } from "cms-content/interfaces/templates";
 import { defaultSystem } from "cms-content/core/lifecycle/system";
 import { filterAndSortPages } from "cms-content/core/queries/pagesQuery";
 import { isPublishedPage } from "cms-content/core/lifecycle/publication";
@@ -11,7 +10,6 @@ import { DuplicatePagePathError } from "cms-content/core/validation/errors";
 
 export class InMemoryContentRepository extends InMemoryBlocRepository {
     protected readonly pages = new Map<string, TPage>();
-    protected readonly templates = new Map<string, TTemplate>();
     protected system: TSystem = defaultSystem();
 
     async getPage(path: string): Promise<TPage | null> {

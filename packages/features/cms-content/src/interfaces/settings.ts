@@ -59,15 +59,6 @@ export type TSystem = {
         login: TPageRef;
     };
 
-    editor: {
-        /**
-         * Name of the template category used as "layouts". When set, opening
-         * the editor for a brand-new page auto-opens the BlocLibrary locked
-         * on the Templates tab, filtered to this category.
-         */
-        layoutCategory: string;
-    };
-
     /** Structured design tokens. `site.theme` remains the free-form CSS layer. */
     theme: ThemeSettings;
 

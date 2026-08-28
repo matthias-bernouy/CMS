@@ -1,7 +1,6 @@
 import { getAccessToken } from "../credentials";
 import { runPages } from "../push/pages/run";
 import { runIntegrationPageDependencies } from "../push/pages/integrationDependencies";
-import { runTemplates } from "../push/templates/run";
 import { runSystem } from "../push/system/run";
 import { runFiles } from "../push/files/run";
 import { runIntegrations } from "../push/integrations/run";
@@ -9,19 +8,11 @@ import { runBlocs } from "../push/blocs/run";
 
 type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string; only: Set<string> | null };
 
-const TYPES = ["*", "system", "integrations", "files", "blocs", "templates", "pages"] as const;
+const TYPES = ["*", "system", "integrations", "files", "blocs", "pages"] as const;
 // Publish only page-link inputs before integrations. The complete page set stays
 // last so a failed integration cannot expose the rest of a site against missing
 // runtime sources or generated blocs.
-export const FULL_PUSH_ORDER = [
-    "system",
-    "files",
-    "blocs",
-    "templates",
-    "integration-pages",
-    "integrations",
-    "pages",
-] as const;
+export const FULL_PUSH_ORDER = ["system", "files", "blocs", "integration-pages", "integrations", "pages"] as const;
 type Stage = (typeof FULL_PUSH_ORDER)[number];
 
 function parseFlags(args: string[]): Flags {
@@ -74,8 +65,6 @@ async function runStage(stage: Stage, args: string[], adminBase: URL, token: str
             return runFiles(adminBase, token, flags);
         case "blocs":
             return runBlocs(adminBase, token, flags);
-        case "templates":
-            return runTemplates(adminBase, token, flags);
         case "integration-pages":
             return runIntegrationPageDependencies(adminBase, token, flags);
         case "pages":

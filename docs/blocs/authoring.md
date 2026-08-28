@@ -71,7 +71,7 @@ Slots stay empty. Initial authored children belong in `default.html`:
 ```
 
 `default.html` is inserted when an author adds a new Bloc. Changing it does not
-rewrite instances already saved in pages or templates.
+rewrite instances already saved in pages.
 
 Files named `template.html` and `style.css` are conventions, not implicit
 inputs. Import them from `Bloc.ts`:

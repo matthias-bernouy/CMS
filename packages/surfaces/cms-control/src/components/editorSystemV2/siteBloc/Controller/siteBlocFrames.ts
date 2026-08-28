@@ -34,7 +34,6 @@ export class SiteBlocFrames {
             bindings: false,
             conditions: false,
             repeats: false,
-            templates: false,
             looseMedia: false,
             canInsertTag: (tag, entry) => this.canInsertStructureTag(catalogs.structureTags, tag, entry),
         });

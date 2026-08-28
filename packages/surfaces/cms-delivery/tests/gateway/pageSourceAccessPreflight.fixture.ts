@@ -38,7 +38,6 @@ const system: TSystem = {
         serverError: null,
         login: null,
     },
-    editor: { layoutCategory: "" },
     security: { connectExtras: [], mediaExtras: [] },
 };
 

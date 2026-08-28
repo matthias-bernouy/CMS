@@ -35,7 +35,6 @@ export function createShellControllerServices(
             const contentRoot = state.editorDocument?.contentRoot;
             return contentRoot && state.runtime ? (state.runtime.getEditor(contentRoot) ?? null) : null;
         },
-        insertItems: () => state.insertItems,
         editingPolicy: () => state.editingPolicy,
         repeatPicker: () => refs.repeatPicker,
         findStructureNodeLabel: (editor) => renderSync.findStructureNodeLabel(editor),

@@ -46,20 +46,25 @@ describe("Shell", () => {
         expect(shellParts(shell).commands.getContentHtml()).toBe(`<demo-bloc><p>Content</p></demo-bloc>`);
     });
 
-    test("makes image bindings inert before inserting template content", async () => {
+    test("makes image bindings inert before inserting block default content", async () => {
         installDom();
 
         const { createInsertion } = await import("../../../../src/components/Layout/Shell/Domain/Mutations/insertion");
+        class ImageEditor extends Editor {}
         const insertion = createInsertion(document, {
-            kind: "template",
-            id: "image-card",
-            label: "Image card",
-            content: `
-                <img data-kind="dynamic" src="/media/{{ product.image }}.jpg">
-                <img data-kind="static" src="/media/static.jpg">
-            `,
+            kind: "block",
+            entry: {
+                tag: "img",
+                label: "Image card",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ImageEditor,
+                defaultContent: `
+                    <img data-kind="dynamic" src="/media/{{ product.image }}.jpg">
+                    <img data-kind="static" src="/media/static.jpg">
+                `,
+            },
         });
-        document.body.append(insertion.fragment);
+        document.body.append(insertion!.fragment);
 
         const dynamicImage = document.querySelector('[data-kind="dynamic"]');
         const staticImage = document.querySelector('[data-kind="static"]');
@@ -69,7 +74,7 @@ describe("Shell", () => {
         expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
     });
 
-    test("inserts template fragments into selected content slots", async () => {
+    test("inserts block default content into selected content slots", async () => {
         installDom();
 
         const { Shell } = await import("../../../../src/exports");
@@ -86,6 +91,7 @@ describe("Shell", () => {
         }
 
         class ParagraphEditor extends Editor {}
+        class ReservedEditor extends Editor {}
 
         const { document: frameDocument } = parseHTML(`
             <!DOCTYPE html>
@@ -105,10 +111,8 @@ describe("Shell", () => {
         document.body.append(shell);
         const structureTree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as Element & {
             catalog?: unknown[];
-            setInsertItems?: (_items: unknown[]) => void;
             setStructure?: () => void;
         };
-        structureTree.setInsertItems = () => undefined;
         structureTree.setStructure = () => undefined;
         shell.setCatalog([
             {
@@ -123,6 +127,13 @@ describe("Shell", () => {
                 bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: ParagraphEditor,
             },
+            {
+                tag: "w13c-reserved-example",
+                label: "Reserved example",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ReservedEditor,
+                defaultContent: `<p>Inserted from block</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`,
+            },
         ]);
         setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
@@ -134,14 +145,18 @@ describe("Shell", () => {
         }
 
         shellParts(shell).mutations.addChild(parentEditor, {
-            kind: "template",
-            id: "tpl-hero",
-            label: "Hero template",
-            content: `<p>Inserted from template</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`,
+            kind: "block",
+            entry: {
+                tag: "w13c-reserved-example",
+                label: "Reserved example",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ReservedEditor,
+                defaultContent: `<p>Inserted from block</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`,
+            },
         });
 
         expect(container.innerHTML).toBe(
-            `<p>Inserted from template</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`,
+            `<p>Inserted from block</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`,
         );
     });
 });

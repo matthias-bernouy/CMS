@@ -13,18 +13,6 @@ export type ShellChromeDefaults = {
 };
 
 export function shellResourceChromeDefaults(resource: string): ShellChromeDefaults {
-    if (resource === "template") {
-        return chromeDefaults(
-            "Templates",
-            "/admin/templates",
-            "Template settings",
-            "Configure template metadata.",
-            "Identifier",
-            "Category",
-            "Status",
-            "Description",
-        );
-    }
     return chromeDefaults(
         "Pages",
         "/admin/pages",

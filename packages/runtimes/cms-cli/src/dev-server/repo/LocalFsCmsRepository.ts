@@ -9,10 +9,9 @@ import type {
     TBlocWrite,
 } from "@bernouy/cms-content";
 import { countValues, isPublishedPage, normalizeTags } from "@bernouy/cms-content";
-import type { TBloc, TPage, TSystem, TTemplate } from "@bernouy/cms-content";
+import type { TBloc, TPage, TSystem } from "@bernouy/cms-content";
 import type { BuiltBloc } from "../bloc-build/index";
 import { PagesStore } from "./pages";
-import { TemplatesStore } from "./templates";
 import { SystemStore } from "./system";
 import { BlocsStore } from "./blocs";
 import { type LocalSiteBlocPublicationGuard, SiteBlocsStore } from "./siteBlocs";
@@ -32,14 +31,12 @@ export type LocalFsCmsRepositoryOptions = {
  */
 export class LocalFsCmsRepository implements CmsRepository {
     private readonly _pages: PagesStore;
-    private readonly _templates: TemplatesStore;
     private readonly _system: SystemStore;
     private readonly _blocs: BlocsStore;
     private readonly _siteBlocs: SiteBlocsStore;
 
     constructor(siteDir: string, builtBlocs: Map<string, BuiltBloc>, options: LocalFsCmsRepositoryOptions = {}) {
         this._pages = new PagesStore(siteDir);
-        this._templates = new TemplatesStore(siteDir);
         this._system = new SystemStore(siteDir);
         this._blocs = new BlocsStore(siteDir, builtBlocs, { rootDir: options.blocRootDir });
         this._siteBlocs = new SiteBlocsStore(this._blocs);
@@ -132,14 +129,8 @@ export class LocalFsCmsRepository implements CmsRepository {
     getPagesMetadata(opts?: PagesQuery) {
         return this._pages.metadata(opts);
     }
-    getTemplatesMetadata() {
-        return this._templates.metadata();
-    }
     async getTagCounts() {
         return countValues((await this._pages.getAll()).flatMap((p) => normalizeTags((p as { tags: unknown }).tags)));
-    }
-    async getCategoryCounts(_resource: "templates") {
-        return countValues((await this._templates.getAll()).map((t) => t.category));
     }
 
     // ── System ──
@@ -148,28 +139,5 @@ export class LocalFsCmsRepository implements CmsRepository {
     }
     updateSystem(patch: Partial<TSystem>): Promise<TSystem> {
         return this._system.update(patch);
-    }
-
-    // ── Template ──
-    createTemplate(template: Omit<TTemplate, "id">): Promise<TTemplate> {
-        return this._templates.create(template);
-    }
-    getTemplateById(id: string): Promise<TTemplate | null> {
-        return this._templates.getById(id);
-    }
-    getTemplateByIdentifier(identifier: string): Promise<TTemplate | null> {
-        return this._templates.getByIdentifier(identifier);
-    }
-    getAllTemplates(): Promise<TTemplate[]> {
-        return this._templates.getAll();
-    }
-    getTemplateCategories(): Promise<string[]> {
-        return this._templates.categories();
-    }
-    updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
-        return this._templates.update(id, data);
-    }
-    deleteTemplate(id: string): Promise<void> {
-        return this._templates.delete(id);
     }
 }

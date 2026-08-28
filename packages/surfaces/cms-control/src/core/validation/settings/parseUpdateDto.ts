@@ -26,18 +26,6 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
         dto.site = parseSiteSettings(body);
     }
 
-    if (hasSectionKey(body, "editor")) {
-        const editor: Partial<TSystem["editor"]> = {};
-        if ("editor.layoutCategory" in body) {
-            const value = body["editor.layoutCategory"];
-            if (typeof value !== "string") {
-                throw new InvalidParam("editor.layoutCategory", "expected a string.");
-            }
-            editor.layoutCategory = value;
-        }
-        dto.editor = editor as TSystem["editor"];
-    }
-
     if ("theme" in body) {
         const value = body.theme;
         if (!value || typeof value !== "object" || Array.isArray(value)) {

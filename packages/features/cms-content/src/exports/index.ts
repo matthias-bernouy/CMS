@@ -2,10 +2,9 @@
  * @bernouy/cms-content — the content aggregate behind `CmsRepository`.
  *
  * Entities live in one package because they form ONE consistency domain
- * (pages embed blocs, templates prototype pages, the settings shell wraps every
- * render) — but each has its own interface file, so promoting one to a package
- * later is mechanical.
- * The Mongo implementation lives under `@bernouy/cms-content/mongo`.
+ * Pages, blocs, and settings live in one package because they form one
+ * consistency domain. The Mongo implementation lives under
+ * `@bernouy/cms-content/mongo`.
  */
 
 // ── Entities ───────────────────────────────────────────────────────────
@@ -20,7 +19,6 @@ export type {
     TBlocWrite,
 } from "cms-content/interfaces/blocs";
 export type { PageIndexingConfiguration, TPage, TPageRef } from "cms-content/interfaces/pages";
-export type { TTemplate } from "cms-content/interfaces/templates";
 export type { SiteOrganizationAddress, SiteOrganizationSettings, TSystem } from "cms-content/interfaces/settings";
 export type {
     IntegrationThemeContribution,
@@ -146,11 +144,6 @@ export {
     validatePageTitle,
     validatePagePatch,
 } from "cms-content/core/validation/documents/pages";
-export {
-    validateTemplateIdentifier,
-    validateTemplateCreate,
-    validateTemplatePatch,
-} from "cms-content/core/validation/documents/templates";
 export { canonicalSiteBaseUrl, validateSettingsPatch } from "cms-content/core/validation/settings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/documents/pageRef";
 export {

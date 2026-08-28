@@ -84,48 +84,4 @@ describe("Shell", () => {
         expect(picker.shadowRoot!.querySelector("h3")?.textContent).toBe("Paragraph");
         expect(selected).toEqual(["block"]);
     });
-
-    test("block picker supports template source items", async () => {
-        installDom();
-
-        const { BLOCK_PICKER_SELECT_EVENT, BlockPickerModal } = await import(
-            "../../../../src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal"
-        );
-
-        const picker = new BlockPickerModal();
-        let selectedContent = "";
-        picker.addEventListener(BLOCK_PICKER_SELECT_EVENT, (event) => {
-            const item = (event as CustomEvent<BlockPickerSelectDetail>).detail.option.item;
-            selectedContent = item?.kind === "template" ? item.content : "";
-        });
-        document.body.append(picker);
-
-        picker.open(
-            [
-                {
-                    label: "Content",
-                    options: [
-                        {
-                            item: {
-                                kind: "template",
-                                id: "tpl-1",
-                                label: "Hero template",
-                                description: "Reusable hero.",
-                                category: "Marketing",
-                                content: "<section></section>",
-                            },
-                            slotLabel: "Content",
-                        },
-                    ],
-                },
-            ],
-            "Container",
-        );
-
-        picker.shadowRoot!.querySelector<HTMLButtonElement>(".sources .filter:nth-child(2)")!.click();
-        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
-
-        expect(picker.shadowRoot!.querySelector("h3")?.textContent).toBe("Hero template");
-        expect(selectedContent).toBe("<section></section>");
-    });
 });

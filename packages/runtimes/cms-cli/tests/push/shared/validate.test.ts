@@ -71,8 +71,8 @@ describe("validateDocs", () => {
         expect(r.errors).toEqual([{ source: "/a", kind: "bloc", name: "cs-missing" }]);
     });
 
-    test("works on template sources too — same generic shape", () => {
-        const r = validateDocs([{ source: "template:header", content: "<cs-button></cs-button>" }], empty(), empty());
-        expect(r.errors).toEqual([{ source: "template:header", kind: "bloc", name: "cs-button" }]);
+    test("preserves arbitrary source labels", () => {
+        const r = validateDocs([{ source: "draft:/header", content: "<cs-button></cs-button>" }], empty(), empty());
+        expect(r.errors).toEqual([{ source: "draft:/header", kind: "bloc", name: "cs-button" }]);
     });
 });

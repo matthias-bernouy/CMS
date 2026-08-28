@@ -34,14 +34,6 @@ async function catalogueFixture() {
     await repository.insertPage("/home", "Home");
     const page = await repository.getPage("/home");
     await repository.updatePage({ ...page!, content: "<basic-card></basic-card>" });
-    await repository.createTemplate({
-        identifier: "catalogue-page",
-        name: "Catalogue page",
-        description: "",
-        content: "<catalogue-grid></catalogue-grid>",
-        category: "Commerce",
-        createdAt: new Date("2026-07-27T10:00:00.000Z"),
-    });
     return fixture;
 }
 
@@ -59,7 +51,7 @@ describe("site bloc catalogue", () => {
         expect(items[0]?.directDependencies).toEqual(["site-shell-controller"]);
     });
 
-    test("projects origins, direct/transitive dependencies and every usage kind", async () => {
+    test("projects origins, direct/transitive dependencies and usage", async () => {
         const { cms } = await catalogueFixture();
         const items = await siteBlocCatalogue(cms);
         const basic = items.find((item) => item.tag === "basic-card")!;
@@ -83,9 +75,6 @@ describe("site bloc catalogue", () => {
         expect(integration.directDependencies).toEqual(["basic-card"]);
         expect(integration.transitiveDependencies).toEqual(["basic-card"]);
         expect(integration.publishedTransitiveDependencies).toEqual(["basic-card"]);
-        expect(integration.usages.templates).toEqual([
-            { id: expect.any(String), label: "Catalogue page", tag: "catalogue-page" },
-        ]);
         expect(integration.usages.blocs).toEqual([{ tag: "site-showcase", label: "Editorial showcase" }]);
 
         expect(site.origin).toMatchObject({ kind: "site-builder", label: "Site builder" });

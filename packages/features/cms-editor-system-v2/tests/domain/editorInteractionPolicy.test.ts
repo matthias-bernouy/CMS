@@ -16,7 +16,6 @@ describe("editor interaction policy", () => {
             bindings: true,
             conditions: true,
             repeats: true,
-            templates: true,
             looseMedia: true,
         });
     });
@@ -51,11 +50,10 @@ describe("editor interaction policy", () => {
         expect(row?.type === "row" ? row.settings.map((setting) => setting.attribute) : []).toEqual(["class"]);
     });
 
-    test("enforces templates, loose media, entry insertable and tag predicates", () => {
+    test("enforces loose media, entry insertable and tag predicates", () => {
         const allowed = { tag: "basic-card" } as EditorCatalogEntry;
         const blocked = { tag: "site-self", insertable: false } as EditorCatalogEntry & { insertable: boolean };
         const policy = resolveEditorInteractionPolicy({
-            templates: false,
             looseMedia: false,
             canInsertTag: (tag) => tag !== "private-card",
         });
@@ -63,9 +61,6 @@ describe("editor interaction policy", () => {
         expect(isCatalogEntryInsertable(policy, allowed)).toBe(true);
         expect(isCatalogEntryInsertable(policy, blocked)).toBe(false);
         expect(isCatalogEntryInsertable(policy, { tag: "private-card" } as EditorCatalogEntry)).toBe(false);
-        expect(isInsertionItemAllowed(policy, { kind: "template", id: "layout", label: "Layout", content: "" })).toBe(
-            false,
-        );
         expect(isInsertionItemAllowed(policy, { kind: "media", label: "Image" })).toBe(false);
     });
 });

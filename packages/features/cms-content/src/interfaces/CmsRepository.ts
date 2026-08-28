@@ -2,7 +2,6 @@ import type { ContentReader } from "cms-content/interfaces/ContentReader";
 import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
-import type { TTemplate } from "cms-content/interfaces/templates";
 
 export type BlocListItemResponse = {
     id: string;
@@ -91,23 +90,9 @@ export interface CmsRepository extends ContentReader {
     deletePage(id: string): Promise<void>;
     getLinks(): Promise<PageLink[]>;
     getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]>;
-    getTemplatesMetadata(): Promise<
-        { id: string; identifier: string; name: string; category: string; createdAt: string }[]
-    >;
     getTagCounts(): Promise<ValueCount[]>;
-    getCategoryCounts(resource: "templates"): Promise<ValueCount[]>;
 
     // SYSTEM
     getSystem(): Promise<TSystem>;
     updateSystem(system: Partial<TSystem>): Promise<TSystem>;
-
-    // TEMPLATE
-    createTemplate(template: Omit<TTemplate, "id">): Promise<TTemplate>;
-    getTemplateById(id: string): Promise<TTemplate | null>;
-    getTemplateByIdentifier(identifier: string): Promise<TTemplate | null>;
-    getAllTemplates(): Promise<TTemplate[]>;
-    /** Distinct, sorted, non-empty `category` values across every template. */
-    getTemplateCategories(): Promise<string[]>;
-    updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null>;
-    deleteTemplate(id: string): Promise<void>;
 }

@@ -20,35 +20,11 @@ export function cmsWithPage(
                 requestedPaths.push(path);
                 return page && page.path === path ? { visible: true, tags: [], ...page } : null;
             },
-            getSystem: async () => ({ editor: { layoutCategory: "" } }),
+            getSystem: async () => ({}),
             ...frameBlocRepository(blocs),
         },
     };
     return { cms, requestedIds, requestedPaths };
-}
-
-export function cmsWithReusableDocument(
-    document: {
-        id: string;
-        identifier: string;
-        name: string;
-        description: string;
-        category: string;
-        content: string;
-    } | null,
-    blocs: FrameBloc[] = [],
-) {
-    const requestedIds: string[] = [];
-    const cms = {
-        repository: {
-            getTemplateById: async (id: string) => {
-                requestedIds.push(id);
-                return document && document.id === id ? document : null;
-            },
-            ...frameBlocRepository(blocs),
-        },
-    };
-    return { cms, requestedIds };
 }
 
 type FrameBloc = { id: string; viewJS?: string };

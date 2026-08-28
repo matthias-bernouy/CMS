@@ -21,8 +21,6 @@ describe("MongoCmsRepository content persistence", () => {
         await repository.init();
 
         expect(db.get("tenant_pages").indexes).toEqual([{ keys: { path: 1 }, options: { unique: true } }]);
-        expect(db.get("tenant_templates").indexes).toEqual([{ keys: { identifier: 1 }, options: { unique: true } }]);
-        expect(db.get("tenant_templates").updateManyCalls).toBe(1);
         expect(db.requestedCollections.every((name) => name.startsWith("tenant_"))).toBe(true);
     });
 
@@ -88,21 +86,6 @@ describe("MongoCmsRepository content persistence", () => {
         await expect(repository.updatePage({ id: draft!.id, path: "/taken" })).rejects.toBeInstanceOf(
             DuplicatePagePathError,
         );
-    });
-
-    test("round-trips template documents without exposing Mongo ids", async () => {
-        const { repository } = createMongoContentRepository();
-        const template = await repository.createTemplate({
-            identifier: "landing-page",
-            name: "Landing page",
-            description: "Marketing layout",
-            content: "<site-card></site-card>",
-            category: "Marketing",
-            createdAt: new Date("2026-01-02T00:00:00.000Z"),
-        });
-
-        expect(await repository.getTemplateById(template.id)).toEqual(template);
-        expect(await repository.getTemplateById("missing")).toBeNull();
     });
 
     test("seeds and updates the singleton system document", async () => {

@@ -140,15 +140,15 @@ describe("Shell", () => {
         document.body.append(topbar);
 
         topbar.setNavigation({
-            backHref: "/cms/admin/templates",
-            backLabel: "Templates",
-            settingsLabel: "Template settings",
+            backHref: "/cms/admin/pages",
+            backLabel: "Pages",
+            settingsLabel: "Page settings",
         });
 
         const back = topbar.shadowRoot!.querySelector<HTMLAnchorElement>(".back")!;
-        expect(back.getAttribute("href")).toBe("/cms/admin/templates");
-        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Templates");
-        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Template settings");
+        expect(back.getAttribute("href")).toBe("/cms/admin/pages");
+        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Pages");
+        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Page settings");
     });
 
     test("topbar updates save status label", async () => {

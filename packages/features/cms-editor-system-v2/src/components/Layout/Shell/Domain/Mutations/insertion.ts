@@ -26,29 +26,7 @@ export function createInsertion(
         return null;
     }
 
-    if (item.kind === "block") {
-        const fragment = createBlockFragment(document, item.entry);
-        prepareNetworkInertBindings(fragment);
-        const slotElements = slotElementChildren(fragment);
-        for (const child of slotElements) {
-            applySlot(child, slotName);
-            applyCondition(child, sourceStatusConditions);
-        }
-        const selectionTarget =
-            slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
-        if (!selectionTarget) {
-            return null;
-        }
-        return {
-            fragment,
-            selectionTarget,
-            slotElements,
-        };
-    }
-
-    const template = document.createElement("template");
-    template.innerHTML = item.content;
-    const fragment = template.content.cloneNode(true) as DocumentFragment;
+    const fragment = createBlockFragment(document, item.entry);
     prepareNetworkInertBindings(fragment);
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
@@ -56,7 +34,8 @@ export function createInsertion(
         applyCondition(child, sourceStatusConditions);
     }
 
-    const selectionTarget = slotElements[0] ?? null;
+    const selectionTarget =
+        slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
     if (!selectionTarget) {
         return null;
     }

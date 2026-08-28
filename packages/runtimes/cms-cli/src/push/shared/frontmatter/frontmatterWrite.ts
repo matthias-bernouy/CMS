@@ -21,11 +21,11 @@ export function serializeFrontmatter(fm: Frontmatter): string {
 
 /**
  * Stable key order so the same frontmatter object always produces the same
- * file content. Pages share `description` with templates, so the order is
- * split into "intro" + "scalars" + "indexing" + "tags last".
+ * file content. The order is split into "intro" + "scalars" + "indexing" +
+ * "tags last".
  */
 function orderedEntries(fm: Frontmatter): [string, unknown][] {
-    const KEY_ORDER = ["title", "name", "description", "visible", "indexing", "tags"] as const;
+    const KEY_ORDER = ["title", "description", "visible", "indexing", "tags"] as const;
     const out: [string, unknown][] = [];
     for (const k of KEY_ORDER) {
         if (fm[k as keyof Frontmatter] !== undefined) {

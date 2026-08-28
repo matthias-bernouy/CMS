@@ -102,9 +102,9 @@ describe("Shell", () => {
         const topbar = shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!;
         Object.setPrototypeOf(topbar, HTMLElement.prototype);
 
-        shell.setAttribute("resource", "template");
-        shell.setAttribute("back-label", "Templates");
-        shell.setAttribute("settings-label", "Template settings");
+        shell.setAttribute("resource", "page");
+        shell.setAttribute("back-label", "Pages");
+        shell.setAttribute("settings-label", "Page settings");
         await Promise.resolve();
         await Promise.resolve();
 
@@ -135,9 +135,9 @@ describe("Shell", () => {
             },
         });
 
-        canvas.setAttribute("frame-url", "/cms/api/editor/frame?type=template&id=t1");
+        canvas.setAttribute("frame-url", "/cms/api/editor/frame?id=p1");
 
-        expect(calls).toEqual(["/cms/api/editor/frame?type=template&id=t1"]);
-        expect(frame.getAttribute("src")).not.toBe("/cms/api/editor/frame?type=template&id=t1");
+        expect(calls).toEqual(["/cms/api/editor/frame?id=p1"]);
+        expect(frame.getAttribute("src")).not.toBe("/cms/api/editor/frame?id=p1");
     });
 });

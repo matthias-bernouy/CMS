@@ -8,7 +8,7 @@ Do not replace this contract with an ad-hoc `fetch()` in `Bloc.ts`.
 
 ## Binding Scope
 
-Bindings activate below one `<cms-binding-core>`. The page or template shell
+Bindings activate below one `<cms-binding-core>`. The page shell
 normally owns that element; an individual Bloc uses binding attributes inside
 the existing scope. Adding a core around every Bloc creates isolated nested
 scopes and prevents outer data from flowing into them.

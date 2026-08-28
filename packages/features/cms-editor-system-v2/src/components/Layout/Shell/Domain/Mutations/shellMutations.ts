@@ -19,7 +19,6 @@ export type MutationContext = {
     runtime(): EditorRuntime | null;
     catalog(): EditorCatalog;
     rootEditor?(): Editor | null;
-    insertItems(): BlockPickerItem[];
     editingPolicy(): ResolvedEditorInteractionPolicy;
     repeatPicker(): RepeatPicker;
     findStructureNodeLabel(editor: Editor): string | null;

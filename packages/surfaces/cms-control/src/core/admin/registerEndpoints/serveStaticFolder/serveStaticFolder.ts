@@ -55,8 +55,7 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
                 // /editor/<resource> needs an `id` query param; without one the
                 // client-side JS would hit /api/<resource> and 500 with
                 // `MissingParam("id")`. Bounce the user to the matching admin
-                // listing instead. Plural is just "+s" for the current set
-                // (page, template).
+                // listing instead. Plural is just "+s" for the current set.
                 if (finalRoute.startsWith("/editor/")) {
                     const url = new URL(req.url);
                     if (!url.searchParams.get("id")) {

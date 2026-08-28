@@ -7,7 +7,7 @@ import { type TPage, type TSystem } from "@bernouy/cms-content";
 
 const BINDING_CORE_URL = "/.cms/assets/cms-binding-core.js?v=core";
 
-function makeCtx(legacyEditor?: Record<string, unknown>): RenderContext {
+function makeCtx(): RenderContext {
     const system: TSystem = {
         initializationStep: 1,
         site: {
@@ -22,7 +22,6 @@ function makeCtx(legacyEditor?: Record<string, unknown>): RenderContext {
             serverError: null,
             login: null,
         },
-        editor: { layoutCategory: "", ...legacyEditor },
         security: { connectExtras: [], mediaExtras: [] },
     };
     return {
@@ -51,8 +50,8 @@ const page = {
     tags: [],
 } as unknown as TPage;
 
-async function htmlOf(legacyEditor?: Record<string, unknown>): Promise<string> {
-    const entry = await renderPage(page, makeCtx(legacyEditor));
+async function htmlOf(): Promise<string> {
+    const entry = await renderPage(page, makeCtx());
     return new TextDecoder().decode(entry.raw);
 }
 
@@ -66,13 +65,6 @@ describe("renderPage — binding core wrapper", () => {
         expect(html).toContain("[cms-source]:not([cms-ready]){visibility:hidden}");
         expect(html).not.toContain("body{visibility:hidden}");
         expect(html).toContain(BINDING_CORE_URL);
-    });
-
-    test("ignores legacy editor.shell values", async () => {
-        const html = await htmlOf({ shell: "<header>HDR_X</header><main>{{CONTENT}}</main><footer>FTR_X</footer>" });
-        expect(html).toContain("HELLO_BODY");
-        expect(html).toContain("<cms-binding-core");
-        expect(html).not.toContain("HDR_X");
     });
 
     test("includes CSP origins declared by successful integration installations", async () => {

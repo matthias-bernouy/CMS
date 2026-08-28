@@ -21,13 +21,7 @@ export function acceptsItem(accept: ContentSlotAccept, item: BlockPickerItem): b
     if (item.kind === "media") {
         return accept.kind === "media";
     }
-    if (item.kind === "block") {
-        return acceptsEntry(accept, item.entry);
-    }
-    if (accept.kind === "media") {
-        return false;
-    }
-    return accept.kind === "any-component";
+    return acceptsEntry(accept, item.entry);
 }
 
 export function acceptsElement(slot: ContentSlot, element: HTMLElement, catalog: EditorCatalog): boolean {

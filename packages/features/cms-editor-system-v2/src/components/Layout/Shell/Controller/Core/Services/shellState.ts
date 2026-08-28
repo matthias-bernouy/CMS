@@ -3,8 +3,6 @@ import type { CmsSourceStateForce, EditorCatalog, EditorDocument } from "@bernou
 import type { EditorRuntime, EditorDataSource } from "../../../../../../runtime";
 import type { TopBarEditorMode, TopBarViewport } from "../../../../TopBar/TopBar";
 import type { SettingsViewMode } from "../../../../../Settings/SettingsView/SettingsView";
-import type { DefaultTemplateSelection } from "../../../../StructureTree/StructureTree";
-import type { BlockPickerItem } from "../../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorPreviewMode, EditorV2PageConfig } from "../../shellTypes";
 import {
     resolveEditorInteractionPolicy,
@@ -14,8 +12,6 @@ import {
 export type ShellState = {
     catalog: EditorCatalog;
     dataSources: EditorDataSource[];
-    defaultTemplateSelection: DefaultTemplateSelection;
-    insertItems: BlockPickerItem[];
     runtime: EditorRuntime | null;
     editorDocument: EditorDocument | null;
     settingsMode: SettingsViewMode;
@@ -32,8 +28,6 @@ export function createShellState(): ShellState {
     return {
         catalog: [],
         dataSources: [],
-        defaultTemplateSelection: {},
-        insertItems: [],
         runtime: null,
         editorDocument: null,
         settingsMode: "settings",

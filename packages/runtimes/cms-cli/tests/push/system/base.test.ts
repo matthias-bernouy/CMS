@@ -71,7 +71,6 @@ describe("flatten", () => {
                 serverError: null,
                 login: { path: "/login" },
             },
-            editor: { layoutCategory: "Layouts" },
         });
         expect(body).toEqual({
             "site.name": "Foo",
@@ -80,24 +79,23 @@ describe("flatten", () => {
             "site.forbidden": "/forbidden",
             "site.serverError": "",
             "site.login": "/login",
-            "editor.layoutCategory": "Layouts",
         });
     });
 });
 
 describe("projectRemote", () => {
     test("only keeps keys present in the local payload", () => {
-        const local = { site: { name: "" }, editor: {} };
-        const remote = { site: { name: "Foo", host: "bar" }, editor: { layoutCategory: "x" } };
+        const local = { site: { name: "" } };
+        const remote = { site: { name: "Foo", host: "bar" } };
         const out = projectRemote(local, remote);
-        expect(out).toEqual({ site: { name: "Foo" }, editor: {} });
+        expect(out).toEqual({ site: { name: "Foo" } });
     });
 });
 
 describe("canonicalSystemHash", () => {
     test("two equivalent payloads share a hash", () => {
-        const a = { site: { name: "X" }, editor: {} };
-        const b = { site: { name: "X" }, editor: {} };
+        const a = { site: { name: "X" } };
+        const b = { site: { name: "X" } };
         expect(canonicalSystemHash(a)).toBe(canonicalSystemHash(b));
     });
 });

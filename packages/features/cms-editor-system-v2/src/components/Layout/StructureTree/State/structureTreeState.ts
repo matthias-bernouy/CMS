@@ -1,8 +1,6 @@
 import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorDataSource, EditorStructureNode, StructureNode } from "../../../../runtime";
 import type { PendingPickerAction, StructureTreeKey } from "./structureTreeTypes";
-import type { DefaultTemplateSelection } from "../Pickers/structurePickerGroups";
 import type { StructureDragDropState } from "../Actions/structureDragDrop";
 import {
     resolveEditorInteractionPolicy,
@@ -15,8 +13,6 @@ export class StructureTreeState {
     selectedEditor: Editor | null = null;
     catalog: EditorCatalog = [];
     dataSources: EditorDataSource[] = [];
-    defaultTemplateSelection: DefaultTemplateSelection = {};
-    insertItems: BlockPickerItem[] = [];
     editingPolicy: ResolvedEditorInteractionPolicy = resolveEditorInteractionPolicy();
     scrollSelectedIntoViewOnRender = false;
     restoreSelectedFocusOnRender = false;

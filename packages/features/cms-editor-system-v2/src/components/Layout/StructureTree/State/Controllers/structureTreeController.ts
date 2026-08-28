@@ -1,7 +1,6 @@
 import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem, BlockPickerSlotGroup } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
+import type { BlockPickerSlotGroup } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorDataSource, EditorStructureNode, StructureNode } from "../../../../../runtime";
-import type { DefaultTemplateSelection } from "../../Pickers/structurePickerGroups";
 import type { PendingPickerAction, StructureTreeRenderOptions } from "../structureTreeTypes";
 import { StructureTreeEmitter } from "./structureTreeEmitter";
 import { StructureTreeEvents } from "./structureTreeEvents";
@@ -44,13 +43,6 @@ export class StructureTreeController {
 
     setCatalog(catalog: EditorCatalog): void {
         this.catalog = catalog;
-    }
-    setInsertItems(items: BlockPickerItem[]): void {
-        this.state.insertItems = items.map((item) => ({ ...item }));
-    }
-    setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
-        this.state.defaultTemplateSelection = { ...selection };
-        this.renderer.render();
     }
     setDataSources(sources: EditorDataSource[]): void {
         this.state.dataSources = sources.map((source) => ({ ...source, fields: [...source.fields] }));

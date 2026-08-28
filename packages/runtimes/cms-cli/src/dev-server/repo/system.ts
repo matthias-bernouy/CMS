@@ -24,12 +24,6 @@ export class SystemStore {
         return mergeSystemUpdate(base, {
             initializationStep: typeof json.initializationStep === "number" ? json.initializationStep : 1,
             site: readSiteSettings(json.site, base.site, theme),
-            editor: {
-                layoutCategory:
-                    typeof json.editor?.layoutCategory === "string"
-                        ? json.editor.layoutCategory
-                        : base.editor.layoutCategory,
-            },
             theme:
                 json.theme && typeof json.theme === "object"
                     ? organizeThemeSettings(json.theme)
@@ -89,7 +83,6 @@ export class SystemStore {
     private async _readJson(): Promise<{
         initializationStep?: any;
         site?: any;
-        editor?: any;
         theme?: any;
         security?: any;
         email?: any;
@@ -117,11 +110,8 @@ export class SystemStore {
         await mkdir(this.siteDir, { recursive: true });
         const { theme: _, ...site } = system.site;
         const body =
-            JSON.stringify(
-                { site, editor: system.editor, theme: system.theme, security: system.security, email: system.email },
-                null,
-                4,
-            ) + "\n";
+            JSON.stringify({ site, theme: system.theme, security: system.security, email: system.email }, null, 4) +
+            "\n";
         await writeFile(join(this.siteDir, SYSTEM_FILE), body, "utf-8");
     }
 

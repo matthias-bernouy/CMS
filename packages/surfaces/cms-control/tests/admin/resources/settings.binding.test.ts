@@ -21,7 +21,6 @@ describe("admin settings binding", () => {
                         login: { path: "" },
                         theme: "",
                     },
-                    editor: { layoutCategory: "" },
                     security: {},
                     email: {
                         enabled: true,
@@ -42,7 +41,6 @@ describe("admin settings binding", () => {
                         },
                     },
                     pages: [{ path: "/404", title: "Not found" }],
-                    layoutCategories: ["Layouts"],
                 });
             }
             if (href.includes("/api/identity/providers")) {

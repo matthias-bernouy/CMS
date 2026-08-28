@@ -1,6 +1,6 @@
 # @bernouy/cms-content
 
-Feature package for the content aggregate: pages, blocs, templates, settings,
+Feature package for the content aggregate: pages, blocs, settings,
 editor contracts, validation, and read models.
 
 ## Boundaries
@@ -19,7 +19,7 @@ editor contracts, validation, and read models.
 - Content validation belongs in `core/validation/` and should be enforced by
   `ValidatingCmsRepository`.
 - Stored HTML/SVG must pass through the existing hardening/sanitizing helpers.
-- Page/template bloc references should use the existing content-ref helpers.
+- Page bloc references should use the existing content-ref helpers.
 - Editor contracts must remain stable; authored blocs depend on them.
 - When changing repository behavior, update both in-memory and Mongo behavior
   or document why only one implementation changes.

@@ -48,7 +48,7 @@ Resources:
 
 Feature packages:
 
-- `@bernouy/cms-content`: pages, blocs, templates, settings, validation,
+- `@bernouy/cms-content`: pages, blocs, settings, validation,
   editor contracts, and repository contracts.
 - `@bernouy/cms-files`: metadata and blob stores, media lifecycle, local/S3
   storage, image variants, and file-serving handlers.

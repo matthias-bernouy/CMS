@@ -6,46 +6,9 @@ import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegi
 import { buildEditorFrameFoucCss } from "cms-control/core/editorSystemV2/frameFouc";
 import { networkInertHtml } from "cms-control/core/editorSystemV2/networkInertHtml";
 
-type EditorFrameType = "page" | "template";
-
 export default async function getEditorFrame(req: Request, cms: ControlCms): Promise<Response> {
     const url = new URL(req.url);
-    const type = frameType(url.searchParams.get("type"));
-    const id = url.searchParams.get("id");
-
-    if (type === "page") {
-        return renderPageFrame(url, cms);
-    }
-
-    if (!id) {
-        return redirectToListing(url, type);
-    }
-
-    const document = await cms.repository.getTemplateById(id);
-
-    if (!document) {
-        return redirectToListing(url, type);
-    }
-
-    const basePath = controlBasePath(url.pathname);
-    const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${document.content}</div>`;
-    const composed = await expandEditorContent(hardenStoredHtml(content), cms);
-    const foucCss = await buildEditorFrameFoucCss(composed, cms.repository);
-
-    return new Response(
-        renderFrameDocument({
-            basePath,
-            title: document.name,
-            description: document.description ?? "",
-            composed,
-            foucCss,
-        }),
-        {
-            headers: {
-                "Content-Type": "text/html; charset=utf-8",
-            },
-        },
-    );
+    return renderPageFrame(url, cms);
 }
 
 async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
@@ -77,13 +40,6 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
             },
         },
     );
-}
-
-function frameType(value: string | null): EditorFrameType {
-    if (value === "template") {
-        return value;
-    }
-    return "page";
 }
 
 function renderFrameDocument(input: {
@@ -150,10 +106,6 @@ function hasAttribute(attrs: string, name: string): boolean {
 
 function redirectToPages(url: URL): Response {
     return Response.redirect(`${controlBasePath(url.pathname)}/admin/pages`, 302);
-}
-
-function redirectToListing(url: URL, type: EditorFrameType): Response {
-    return Response.redirect(`${controlBasePath(url.pathname)}/admin/${type}s`, 302);
 }
 
 function controlBasePath(pathname: string): string {

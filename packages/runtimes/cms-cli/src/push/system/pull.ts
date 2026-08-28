@@ -16,7 +16,6 @@ export async function pullSystem(adminBase: URL, token: string, siteDir: string)
     const theme = typeof site.theme === "string" ? site.theme : "";
     delete site.theme;
 
-    const editor = remote.editor ?? {};
     const themeSettings = remote.theme;
 
     site.notFound = coercePageRef(site.notFound);
@@ -28,7 +27,6 @@ export async function pullSystem(adminBase: URL, token: string, siteDir: string)
         JSON.stringify(
             {
                 site,
-                editor,
                 ...(themeSettings ? { theme: themeSettings } : {}),
             },
             null,

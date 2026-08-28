@@ -2,8 +2,8 @@ import type { ContentSlot } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem, BlockPickerOption } from "../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorStructureNode } from "../../../../runtime";
 import type { StructurePickerGroupContext } from "./structurePickerGroups";
-import { isCatalogEntryInsertable, isInsertionItemAllowed } from "../../../../policy/editorInteractionPolicy";
-import { acceptsEntry, acceptsItem, mediaAcceptForSlot } from "../../../../policy/contentSlotAcceptance";
+import { isCatalogEntryInsertable } from "../../../../policy/editorInteractionPolicy";
+import { acceptsEntry, mediaAcceptForSlot } from "../../../../policy/contentSlotAcceptance";
 
 export function slotOptions(
     context: StructurePickerGroupContext,
@@ -31,16 +31,6 @@ export function slotOptions(
             slotLabel: slot.label,
         }));
 
-    const externalOptions: BlockPickerOption[] = context.insertItems
-        .filter((item) => isInsertionItemAllowed(context.editingPolicy, item))
-        .filter((item) => slot.accepts.some((accept) => acceptsItem(accept, item)))
-        .filter((item) => canFitItem(context, parent, slot, item, replaced))
-        .map((item) => ({
-            item,
-            slot: slot.slot,
-            slotLabel: slot.label,
-        }));
-
     const mediaAccept = mediaAcceptForSlot(slot);
     const mediaOptions: BlockPickerOption[] =
         mediaAccept && context.editingPolicy.looseMedia
@@ -63,7 +53,6 @@ export function slotOptions(
 
     return [
         ...blockOptions.filter((option) => canFitItem(context, parent, slot, option.item!, replaced)),
-        ...externalOptions,
         ...mediaOptions.filter((option) => option.item && canFitItem(context, parent, slot, option.item, replaced)),
     ];
 }
@@ -81,20 +70,5 @@ export function canFitItem(
 
     const replacedSlot = replaced ? context.slotForChild(parent, replaced) : undefined;
     const replacedCount = replacedSlot && context.sameSlot(replacedSlot, slot) ? 1 : 0;
-    return context.slotChildCount(parent, slot) - replacedCount + itemRootCount(item) <= slot.max;
-}
-
-export function itemRootCount(item: BlockPickerItem): number {
-    if (item.kind !== "template") {
-        return 1;
-    }
-
-    const template = document.createElement("template");
-    template.innerHTML = item.content;
-    const elementCount = template.content.children.length;
-    if (elementCount > 0) {
-        return elementCount;
-    }
-
-    return template.content.textContent?.trim() ? 1 : 0;
+    return context.slotChildCount(parent, slot) - replacedCount + 1 <= slot.max;
 }

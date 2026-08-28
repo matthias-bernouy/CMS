@@ -1,10 +1,8 @@
 import "../Pickers/DataSourcePicker/DataSourcePicker";
 import "../Pickers/ConditionPicker/ConditionPicker";
 import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem } from "../Pickers/BlockPickerModal/BlockPickerModal";
 import type { EditorDataSource, StructureNode } from "../../../runtime";
 import { StructureTreeController } from "./State/Controllers/structureTreeController";
-import type { DefaultTemplateSelection } from "./Pickers/structurePickerGroups";
 import type { StructureTreeRenderOptions } from "./State/structureTreeTypes";
 import badgesCss from "./Styles/badges.css" with { type: "text" };
 import contextCss from "./Styles/context.css" with { type: "text" };
@@ -18,7 +16,6 @@ template.innerHTML = `<style>${[componentCss, sourceStatesCss, badgesCss, contex
     .map((css) => String(css))
     .join("\n")}</style>${String(templateHtml)}`;
 
-export type { DefaultTemplateSelection } from "./Pickers/structurePickerGroups";
 export type {
     StructureTreeAction,
     StructureTreeActionDetail,
@@ -44,14 +41,6 @@ export class StructureTree extends HTMLElement {
 
     setCatalog(catalog: EditorCatalog): void {
         this.controller.setCatalog(catalog);
-    }
-
-    setInsertItems(items: BlockPickerItem[]): void {
-        this.controller.setInsertItems(items);
-    }
-
-    setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
-        this.controller.setDefaultTemplateSelection(selection);
     }
 
     setDataSources(sources: EditorDataSource[]): void {

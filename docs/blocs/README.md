@@ -4,7 +4,7 @@ CmsCore blocs are reusable HTML elements with four separate contracts:
 
 | Contract | Owner | Purpose |
 | --- | --- | --- |
-| Authored content | Site author | The Light DOM saved in pages and templates. |
+| Authored content | Site author | The Light DOM saved in pages. |
 | View | Bloc author | Browser behavior and optional Shadow DOM structure. |
 | Editor | Bloc author | Settings, content slots, text editing, data scopes, and preview states. |
 | Theme | Site and Bloc authors | Site-wide design tokens plus deliberate Bloc-level extension points. |

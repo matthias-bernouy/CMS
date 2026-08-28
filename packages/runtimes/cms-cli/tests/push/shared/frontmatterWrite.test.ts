@@ -22,8 +22,8 @@ tags: ["featured", "say \\"hello\\""]
     });
 
     test("omits absent keys while retaining empty scalar values", () => {
-        expect(serializeFrontmatter({ name: "", description: undefined })).toBe(`---
-name: ""
+        expect(serializeFrontmatter({ title: "", description: undefined })).toBe(`---
+title: ""
 ---
 `);
     });

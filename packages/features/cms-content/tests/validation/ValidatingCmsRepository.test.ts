@@ -8,8 +8,6 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
     const calls: Record<string, any[]> = {
         insertPage: [],
         updatePage: [],
-        createTemplate: [],
-        updateTemplate: [],
     };
     const inner = {
         insertPage: async (path: string, title: string) => {
@@ -17,14 +15,6 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
         },
         updatePage: async (p: any) => {
             calls.updatePage.push(p);
-        },
-        createTemplate: async (t: any) => {
-            calls.createTemplate.push(t);
-            return { ...t, id: "t1" };
-        },
-        updateTemplate: async (id: string, d: any) => {
-            calls.updateTemplate.push([id, d]);
-            return null;
         },
         getBlocsList: async () => (opts.blocs ?? []).map((id) => ({ id, name: id, group: "", description: "" })),
     } as unknown as CmsRepository;
@@ -70,53 +60,6 @@ describe("ValidatingCmsRepository — pages", () => {
         await repo.updatePage({ id: "p1", content: "<cs-card></cs-card>" });
         expect(calls.updatePage[0].content).toContain("cs-card");
         await expect(repo.updatePage({ id: "p1", content: "<cs-ghost></cs-ghost>" })).rejects.toThrow();
-    });
-});
-
-describe("ValidatingCmsRepository — templates", () => {
-    test("createTemplate rejects a non-kebab identifier and trims the name", async () => {
-        const { repo, calls } = makeRepo();
-        await expect(
-            repo.createTemplate({
-                identifier: "Bad Id",
-                name: "X",
-                description: "",
-                content: "",
-                category: "",
-                createdAt: new Date(),
-            }),
-        ).rejects.toThrow(ContentValidationError);
-        await repo.createTemplate({
-            identifier: "ok",
-            name: "  Tpl  ",
-            description: "",
-            content: "",
-            category: "",
-            createdAt: new Date(),
-        });
-        expect(calls.createTemplate[0].name).toBe("Tpl");
-    });
-
-    test("createTemplate requires all create fields but updateTemplate accepts patches", async () => {
-        const { repo, calls } = makeRepo();
-        const base = {
-            identifier: "hero",
-            name: "Hero",
-            description: "",
-            content: "",
-            category: "",
-            createdAt: new Date(),
-        };
-
-        await expect(repo.createTemplate({ ...base, description: undefined } as any)).rejects.toThrow(
-            ContentValidationError,
-        );
-        await expect(repo.createTemplate({ ...base, createdAt: "today" } as any)).rejects.toThrow(
-            ContentValidationError,
-        );
-
-        await repo.updateTemplate("t1", { name: "  Partial  " });
-        expect(calls.updateTemplate[0][1].name).toBe("Partial");
     });
 });
 

@@ -16,7 +16,6 @@ describe("pullSystem", () => {
                 expect(init?.headers).toEqual({ Authorization: "Bearer token" });
                 return Response.json({
                     site: { name: "Foo", theme: ":root { --x: red; }" },
-                    editor: { layoutCategory: "Layouts" },
                 });
             },
             async () => {
@@ -33,7 +32,7 @@ describe("pullSystem", () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-system-pull-"));
 
         await withFetch(
-            async () => Response.json({ site: { name: "Legacy" }, editor: {} }),
+            async () => Response.json({ site: { name: "Legacy" } }),
             async () => {
                 await pullSystem(new URL("http://cms.test/"), "token", siteDir);
             },

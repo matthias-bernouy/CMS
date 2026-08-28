@@ -42,30 +42,28 @@ describe("Shell", () => {
         }
 
         const shell = new Shell();
-        shell.setAttribute("resource", "template");
-        shell.setAttribute("back-href", "/cms/admin/templates");
-        shell.setAttribute("back-label", "Templates");
-        shell.setAttribute("settings-label", "Template settings");
-        shell.setAttribute("settings-title", "Template settings");
-        shell.setAttribute("settings-description", "Configure template metadata.");
-        shell.setAttribute("settings-path-label", "Identifier");
-        shell.setAttribute("settings-tags-label", "Category");
+        shell.setAttribute("resource", "page");
+        shell.setAttribute("back-href", "/cms/admin/pages");
+        shell.setAttribute("back-label", "Pages");
+        shell.setAttribute("settings-label", "Page settings");
+        shell.setAttribute("settings-title", "Page settings");
+        shell.setAttribute("settings-description", "Configure page metadata.");
+        shell.setAttribute("settings-path-label", "Path");
+        shell.setAttribute("settings-tags-label", "Tags");
         document.body.append(shell);
 
         const topbar = shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!;
         const back = topbar.shadowRoot!.querySelector<HTMLAnchorElement>(".back")!;
 
-        expect(back.getAttribute("href")).toBe("/cms/admin/templates");
-        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Templates");
-        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Template settings");
-        expect(shell.shadowRoot!.querySelector("#page-settings-title")!.textContent).toBe("Template settings");
-        expect(shell.shadowRoot!.querySelector(".settings-description")!.textContent).toBe(
-            "Configure template metadata.",
-        );
-        expect(shell.shadowRoot!.querySelector('[data-page-label="path"]')!.textContent).toBe("Identifier");
-        expect(shell.shadowRoot!.querySelector('[data-page-label="tags"]')!.textContent).toBe("Category");
-        expect(shell.shadowRoot!.querySelector('[data-page-field="path"]')!.hasAttribute("disabled")).toBe(true);
-        expect(shell.shadowRoot!.querySelector('[data-page-field="published"]')!.closest("label")!.hidden).toBe(true);
+        expect(back.getAttribute("href")).toBe("/cms/admin/pages");
+        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Pages");
+        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Page settings");
+        expect(shell.shadowRoot!.querySelector("#page-settings-title")!.textContent).toBe("Page settings");
+        expect(shell.shadowRoot!.querySelector(".settings-description")!.textContent).toBe("Configure page metadata.");
+        expect(shell.shadowRoot!.querySelector('[data-page-label="path"]')!.textContent).toBe("Path");
+        expect(shell.shadowRoot!.querySelector('[data-page-label="tags"]')!.textContent).toBe("Tags");
+        expect(shell.shadowRoot!.querySelector('[data-page-field="path"]')!.hasAttribute("disabled")).toBe(false);
+        expect(shell.shadowRoot!.querySelector('[data-page-field="published"]')!.closest("label")!.hidden).toBe(false);
     });
 
     test("resolves an external page settings destination against the editor URL", async () => {
@@ -110,6 +108,13 @@ describe("Shell", () => {
                 bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: ParagraphEditor,
             },
+            {
+                tag: "main",
+                label: "Main",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ParagraphEditor,
+                defaultContent: "<main></main>",
+            },
         ]);
 
         let renderedStructure: EditorStructureNode[] | undefined;
@@ -125,10 +130,14 @@ describe("Shell", () => {
         expect(renderedStructure).toEqual([]);
 
         shellParts(shell).mutations.addRoot({
-            kind: "template",
-            id: "tpl-default",
-            label: "Default template",
-            content: "<main></main>",
+            kind: "block",
+            entry: {
+                tag: "main",
+                label: "Main",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ParagraphEditor,
+                defaultContent: "<main></main>",
+            },
         });
 
         expect(contentRoot.innerHTML).toBe("<main></main>");

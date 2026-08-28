@@ -8,10 +8,8 @@ import type {
 } from "cms-content/interfaces/CmsRepository";
 import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
-import type { TTemplate } from "cms-content/interfaces/templates";
 import type { TSystem } from "cms-content/interfaces/settings";
 import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/documents/pages";
-import { validateTemplateCreate, validateTemplatePatch } from "cms-content/core/validation/documents/templates";
 import { assertContentRefsExist } from "cms-content/core/validation/documents/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/core/validation/settings";
 import {
@@ -42,20 +40,6 @@ export class ValidatingCmsRepository implements CmsRepository {
             await assertContentRefsExist(this.inner, valid.content);
         }
         return this.inner.updatePage(valid);
-    }
-
-    async createTemplate(template: Omit<TTemplate, "id">): Promise<TTemplate> {
-        const valid = validateTemplateCreate(template);
-        await assertContentRefsExist(this.inner, valid.content);
-        return this.inner.createTemplate(valid);
-    }
-
-    async updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
-        const valid = validateTemplatePatch(data);
-        if (valid.content !== undefined) {
-            await assertContentRefsExist(this.inner, valid.content);
-        }
-        return this.inner.updateTemplate(id, valid);
     }
 
     // ── Pass-through: blocs (compiled + validated upstream) ────────────────
@@ -143,14 +127,8 @@ export class ValidatingCmsRepository implements CmsRepository {
     getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]> {
         return this.inner.getPagesMetadata(opts);
     }
-    getTemplatesMetadata() {
-        return this.inner.getTemplatesMetadata();
-    }
     getTagCounts() {
         return this.inner.getTagCounts();
-    }
-    getCategoryCounts(resource: "templates") {
-        return this.inner.getCategoryCounts(resource);
     }
 
     // ── Pass-through: system (settings validated elsewhere) ────────────────
@@ -159,22 +137,5 @@ export class ValidatingCmsRepository implements CmsRepository {
     }
     updateSystem(system: Partial<TSystem>): Promise<TSystem> {
         return this.inner.updateSystem(validateSettingsPatch(system));
-    }
-
-    // ── Pass-through: template reads + deletes ─────────────────────────────
-    getTemplateById(id: string) {
-        return this.inner.getTemplateById(id);
-    }
-    getTemplateByIdentifier(identifier: string) {
-        return this.inner.getTemplateByIdentifier(identifier);
-    }
-    getAllTemplates() {
-        return this.inner.getAllTemplates();
-    }
-    getTemplateCategories() {
-        return this.inner.getTemplateCategories();
-    }
-    deleteTemplate(id: string) {
-        return this.inner.deleteTemplate(id);
     }
 }

@@ -26,7 +26,6 @@ export class ShellRenderSyncCommands {
             this.context.state.runtime,
             this.context.state.editorDocument?.contentRoot,
             this.context.state.catalog,
-            this.context.state.insertItems,
             () => this.isEmptyDocumentContent(),
             options,
         );
@@ -103,14 +102,6 @@ export class ShellRenderSyncCommands {
 
     syncStructureTreeCatalog(): void {
         this.context.sync.syncStructureTreeCatalog();
-    }
-
-    syncStructureTreeInsertItems(): void {
-        this.context.sync.syncStructureTreeInsertItems();
-    }
-
-    syncStructureTreeDefaultTemplateSelection(): void {
-        this.context.sync.syncStructureTreeDefaultTemplateSelection();
     }
 
     syncStructureTreeDataSources(): void {

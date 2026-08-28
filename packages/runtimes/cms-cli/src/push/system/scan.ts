@@ -7,7 +7,6 @@ import type { TPageRef, TSystem } from "@bernouy/cms-content";
 /** Subset of `TSystem` actually pushable from disk. */
 export type SystemPayload = {
     site: Partial<TSystem["site"]>;
-    editor: Partial<TSystem["editor"]>;
     theme?: TSystem["theme"];
 };
 
@@ -39,7 +38,6 @@ export async function scanSystem(siteDir: string): Promise<LocalSystem | null> {
     const raw: Partial<SystemPayload> = hasSystem ? await readJson(systemPath) : {};
     const payload: SystemPayload = {
         site: raw.site ?? {},
-        editor: raw.editor ?? {},
         theme: raw.theme,
     };
 

@@ -16,16 +16,11 @@ export class FakeContentCollection {
     beforeInsertOne?: (document: StoredDocument) => Promise<void>;
     beforeUpdateOne?: (update: { $set: Filter }) => Promise<void>;
     afterUpdateOne?: (update: { $set: Filter }) => Promise<void>;
-    updateManyCalls = 0;
     private readonly documents = new Map<string, StoredDocument>();
 
     async createIndex(keys: Filter, options: Filter): Promise<string> {
         this.indexes.push({ keys, options });
         return Object.keys(keys).join("_");
-    }
-
-    async updateMany(): Promise<void> {
-        this.updateManyCalls += 1;
     }
 
     async insertOne(document: StoredDocument): Promise<void> {

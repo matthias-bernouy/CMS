@@ -12,7 +12,6 @@ export function renderStructure(
     runtime: EditorRuntime | null,
     contentRoot: HTMLElement | null | undefined,
     catalog: EditorCatalog,
-    _insertItems: unknown[],
     isEmptyDocumentContent: () => boolean,
     options: StructureRenderOptions = {},
 ): void {

@@ -67,10 +67,8 @@ describe("Shell", () => {
         const shell = new Shell();
         document.body.append(shell);
         const structureTree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as Element & {
-            setInsertItems?: (_items: unknown[]) => void;
             setStructure?: () => void;
         };
-        structureTree.setInsertItems = () => undefined;
         structureTree.setStructure = () => undefined;
         shell.setCatalog([
             {

@@ -13,11 +13,7 @@ export function renderBlockPickerSidebar(input: {
 }): void {
     input.sources.replaceChildren();
     input.categories.replaceChildren();
-    input.sources.append(
-        sourceButton("Blocks", "block", input),
-        sourceButton("Templates", "template", input),
-        sourceButton("Media", "media", input),
-    );
+    input.sources.append(sourceButton("Blocks", "block", input), sourceButton("Media", "media", input));
     input.categories.append(
         filterButton(
             "All",

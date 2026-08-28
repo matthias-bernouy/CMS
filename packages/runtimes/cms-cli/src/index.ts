@@ -21,11 +21,10 @@ Usage:
                                    caching, minification, and security headers.
                                    Uses local adapters and development auth;
                                    never expose it as a production deployment.
-  p9r push [flags]                 Push system/integrations/files/blocs/
-                                   templates/pages in that order to the remote
-                                   CMS.
+  p9r push [flags]                 Push system/integrations/files/blocs/pages
+                                   in that order to the remote CMS.
       --type=<one>|*               One of: system, integrations, files, blocs,
-                                   templates, pages (default *).
+                                   pages (default *).
       --dry-run                    Show what would be uploaded, no writes.
       --yes | -y                   Skip the [y/N] prompt.
       --force | -f                 Bypass conflict + cross-ref validation.

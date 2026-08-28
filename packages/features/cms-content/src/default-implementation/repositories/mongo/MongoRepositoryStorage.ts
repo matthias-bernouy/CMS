@@ -5,7 +5,6 @@ import {
     type PageDoc,
     type SiteBlocPublicationLockDoc,
     type SystemDoc,
-    type TemplateDoc,
 } from "cms-content/default-implementation/repositories/mongo/documents";
 
 export type MongoCmsRepositoryConfig = {
@@ -25,14 +24,7 @@ export class MongoRepositoryStorage {
 
     /** Create the unique indexes required by the repository contract. */
     async init(): Promise<void> {
-        await this.templates.updateMany(
-            { $or: [{ identifier: { $exists: false } }, { identifier: null }, { identifier: "" }] } as never,
-            [{ $set: { identifier: "$_id" } }] as never,
-        );
-        await Promise.all([
-            this.pages.createIndex({ path: 1 }, { unique: true }),
-            this.templates.createIndex({ identifier: 1 }, { unique: true }),
-        ]);
+        await this.pages.createIndex({ path: 1 }, { unique: true });
     }
 
     protected get blocs(): Collection<BlocDoc> {
@@ -41,10 +33,6 @@ export class MongoRepositoryStorage {
 
     protected get pages(): Collection<PageDoc> {
         return this.db.collection<PageDoc>(this.prefix + "pages");
-    }
-
-    protected get templates(): Collection<TemplateDoc> {
-        return this.db.collection<TemplateDoc>(this.prefix + "templates");
     }
 
     protected get system(): Collection<SystemDoc> {

@@ -4,14 +4,13 @@ import { loadPushConfig } from "../push/shared/config";
 import { confirm } from "../push/shared/recap";
 import { pullBlocs } from "../push/blocs/pull";
 import { pullPages } from "../push/pages/pull";
-import { pullTemplates } from "../push/templates/pull";
 import { pullSystem } from "../push/system/pull";
 import { pullIntegrations } from "../push/integrations/pull";
 
 type Flags = { force: boolean; yes: boolean; type: string };
 
-const TYPES = ["*", "system", "integrations", "blocs", "templates", "pages"] as const;
-const ORDER = ["system", "integrations", "blocs", "templates", "pages"] as const;
+const TYPES = ["*", "system", "integrations", "blocs", "pages"] as const;
+const ORDER = ["system", "integrations", "blocs", "pages"] as const;
 type Stage = (typeof ORDER)[number];
 
 function parseFlags(args: string[]): Flags {
@@ -51,8 +50,6 @@ async function runStage(stage: Stage, adminBase: URL, token: string, siteDir: st
         reportItems(await pullIntegrations(adminBase, token, siteDir), "integrations", "id");
     } else if (stage === "blocs") {
         reportBlocs(await pullBlocs(adminBase, token, siteDir));
-    } else if (stage === "templates") {
-        reportTemplates(await pullTemplates(adminBase, token, siteDir));
     } else {
         reportItems(await pullPages(adminBase, token, siteDir), "pages", "path");
     }
@@ -93,23 +90,6 @@ function reportBlocs(r: {
         console.error(`    ✗ ${ko.tag}: ${ko.error}`);
     }
     console.log(`→ blocs: ${r.pulled.length} pulled, ${r.skipped.length} skipped, ${r.failed.length} failed.`);
-}
-
-function reportTemplates(r: {
-    pulled: string[];
-    skipped: { reason: string }[];
-    failed: { identifier: string; error: string }[];
-}): void {
-    for (const ok of r.pulled) {
-        console.log(`    ✓ ${ok}`);
-    }
-    for (const sk of r.skipped) {
-        console.warn(`    ⚠ ${sk.reason}`);
-    }
-    for (const ko of r.failed) {
-        console.error(`    ✗ ${ko.identifier}: ${ko.error}`);
-    }
-    console.log(`→ templates: ${r.pulled.length} pulled, ${r.skipped.length} skipped, ${r.failed.length} failed.`);
 }
 
 export default async function CLI_pull(args: string[]) {

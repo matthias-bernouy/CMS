@@ -35,7 +35,6 @@ describe("Shell editing policy", () => {
         ]);
         shell.setEditingPolicy({
             bindings: false,
-            templates: false,
             canInsertTag: () => false,
         });
         setShellFrameDocument(shell, frameDocument);
@@ -49,10 +48,6 @@ describe("Shell editing policy", () => {
             action: "set-source",
             editor,
             dataSource: { label: "Plans", url: "/plans", fields: [] },
-        });
-        shellParts(shell).mutations.handleStructureAction({
-            action: "add-root",
-            item: { kind: "template", id: "layout", label: "Layout", content: "<section></section>" },
         });
         shellParts(shell).mutations.handleStructureAction({
             action: "add-root",

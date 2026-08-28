@@ -3,7 +3,7 @@ import type { TSystem } from "cms-content/interfaces/settings";
 
 /**
  * Read-only view of the content aggregate — the subset public rendering
- * needs: no create/update/delete paths, no editor bundles, no templates.
+ * needs: no create/update/delete paths and no editor bundles.
  * `CmsRepository` extends it, so any repository satisfies a reader.
  *
  * Delivery normally addresses rendered pages by path. Stable page identifiers
