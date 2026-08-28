@@ -60,7 +60,7 @@ describe("LocalFsEnvSecretStore", () => {
         await store.set("API_KEY", "x");
 
         expect(existsSync(envPath)).toBe(true);
-        expect(await store.list()).toEqual([{ key: "API_KEY", value: "x" }]);
+        expect(await store.listKeys()).toEqual(["API_KEY"]);
     });
 
     test("restricts an existing site/.env to the owner after every write", async () => {

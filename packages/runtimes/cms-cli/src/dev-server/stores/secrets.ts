@@ -55,10 +55,6 @@ export class LocalFsEnvSecretStore implements SecretStore {
         await this.writeLines(lines.filter((line) => parseEnvLine(line)?.key !== key));
     }
 
-    async list(): Promise<Array<{ key: string; value: string }>> {
-        return Array.from(await this.readEntries(), ([key, value]) => ({ key, value }));
-    }
-
     async listKeys(): Promise<string[]> {
         return Array.from((await this.readEntries()).keys());
     }

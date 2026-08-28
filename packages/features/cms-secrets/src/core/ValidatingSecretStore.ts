@@ -26,7 +26,7 @@ export function validateSecretKey(key: string): void {
 /**
  * Decorator that validates the key on every `set` before delegating — the
  * unbypassable barrier so no writer (admin API, CLI, …) can store a
- * malformed key. Reads/deletes/lists pass straight through.
+ * malformed key. Reads, deletes, and key listings pass straight through.
  *
  *   `new ValidatingSecretStore(new EncryptedMongoSecretStore(...))`
  */
@@ -43,9 +43,6 @@ export class ValidatingSecretStore implements SecretStore {
     }
     delete(key: string) {
         return this.inner.delete(key);
-    }
-    list() {
-        return this.inner.list();
     }
     listKeys() {
         return this.inner.listKeys();

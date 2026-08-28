@@ -6,6 +6,7 @@ import "cms-control/components/admin/Common/RoleSelect/RoleSelect";
 import "cms-control/components/admin/Secrets/Secrets";
 
 const originalFetch = globalThis.fetch;
+const originalConfirm = globalThis.confirm;
 
 if (!HTMLElement.prototype.scrollIntoView) {
     HTMLElement.prototype.scrollIntoView = () => {};
@@ -14,6 +15,7 @@ if (!HTMLElement.prototype.scrollIntoView) {
 afterEach(() => {
     document.body.replaceChildren();
     globalThis.fetch = originalFetch;
+    globalThis.confirm = originalConfirm;
 });
 
 const nextTask = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -102,19 +104,56 @@ describe("admin control accessibility", () => {
         }).toEqual({ label: "Account role", ariaLabel: "Choose account role", disabled: true });
     });
 
-    test("names secret values and icon-only actions with their secret key", async () => {
-        globalThis.fetch = (async () =>
-            Response.json([{ key: "STRIPE_KEY", value: "secret" }])) as unknown as typeof fetch;
+    test("configures write-only secrets in a scrubbed modal and confirms deletion", async () => {
+        let requests = 0;
+        globalThis.fetch = (async () => {
+            requests++;
+            return Response.json([{ key: "STRIPE_KEY" }]);
+        }) as unknown as typeof fetch;
         const secrets = document.createElement("cms-secrets");
         document.body.append(secrets);
         await nextTask();
 
         const row = secrets.shadowRoot!.querySelector<HTMLElement>("[data-key='STRIPE_KEY']")!;
-        expect(row.querySelector("[data-role='value']")?.getAttribute("aria-label")).toBe("Value for STRIPE_KEY");
-        expect(
-            ["reveal", "save", "delete"].map((action) =>
-                row.querySelector(`[data-action='${action}']`)?.getAttribute("aria-label"),
-            ),
-        ).toEqual(["reveal STRIPE_KEY secret", "save STRIPE_KEY secret", "delete STRIPE_KEY secret"]);
+        const configure = row.querySelector<HTMLElement>("[data-action='configure']")!;
+        const deleteButton = row.querySelector<HTMLElement>("[data-action='delete']")!;
+        expect(row.querySelector("[data-role='value']")).toBeNull();
+        expect(row.querySelector("[data-action='reveal']")).toBeNull();
+        expect(configure.textContent?.trim()).toBe("Configure");
+        expect(configure.getAttribute("aria-label")).toBe("Configure STRIPE_KEY secret");
+        expect(deleteButton.textContent?.trim()).toBe("Delete");
+        expect(deleteButton.getAttribute("aria-label")).toBe("Delete STRIPE_KEY secret");
+
+        configure.click();
+        const root = secrets.shadowRoot!;
+        const modal = root.querySelector<HTMLElement>("[data-role='configure-modal']")!;
+        const value = root.querySelector<HTMLElement & { value: string }>("[data-role='configure-value']")!;
+        const cancel = root.querySelector<HTMLElement>("[data-action='configure-cancel']")!;
+        const confirm = root.querySelector<HTMLElement & { disabled: boolean }>("[data-action='configure-confirm']")!;
+        expect(modal.hasAttribute("open")).toBe(true);
+        expect(modal.getAttribute("aria-label")).toBe("Configure STRIPE_KEY secret");
+        expect(value.value).toBe("");
+        expect(cancel.textContent?.trim()).toBe("Cancel");
+        expect(confirm.textContent?.trim()).toBe("Confirm");
+        expect(confirm.disabled).toBe(true);
+        expect(requests).toBe(1);
+
+        value.value = "replacement";
+        value.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        expect(confirm.disabled).toBe(false);
+
+        cancel.click();
+        expect(modal.hasAttribute("open")).toBe(false);
+        expect(value.value).toBe("");
+
+        let confirmation = "";
+        globalThis.confirm = (message) => {
+            confirmation = message ?? "";
+            return false;
+        };
+        deleteButton.click();
+        await nextTask();
+        expect(confirmation).toContain('Delete secret "STRIPE_KEY"?');
+        expect(requests).toBe(1);
     });
 });

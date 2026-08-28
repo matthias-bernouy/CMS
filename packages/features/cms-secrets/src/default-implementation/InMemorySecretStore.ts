@@ -25,10 +25,6 @@ export class InMemorySecretStore implements SecretStore {
         this._data.delete(key);
     }
 
-    async list(): Promise<Array<{ key: string; value: string }>> {
-        return Array.from(this._data, ([key, value]) => ({ key, value }));
-    }
-
     async listKeys(): Promise<string[]> {
         return Array.from(this._data.keys());
     }

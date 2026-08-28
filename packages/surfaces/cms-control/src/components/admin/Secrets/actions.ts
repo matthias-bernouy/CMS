@@ -1,4 +1,5 @@
 import BubblesEvent from "cms-control/core/dom/BubblesEvent";
+import type { SecretSummary } from "cms-control/api/_access/secrets/secrets.get";
 
 const RELOAD_EVENT = "secret:saved";
 
@@ -11,7 +12,7 @@ export type ActionResult = { ok: true } | { ok: false; error: string };
  * so the host re-fetches and re-renders.
  */
 
-export async function fetchSecrets(api: string): Promise<Array<{ key: string; value: string }>> {
+export async function fetchSecrets(api: string): Promise<SecretSummary[]> {
     const res = await fetch(api, { headers: { Accept: "application/json" } });
     if (!res.ok) {
         throw new Error("Failed to load secrets");

@@ -7,12 +7,14 @@ import { postSecret, deleteSecret } from "./actions";
  * the lifecycle/setup logic stays focused.
  */
 
-export async function opSaveRow(api: string, key: string, value: string): Promise<void> {
+export async function opConfigureSecret(api: string, key: string, value: string): Promise<boolean> {
     const r = await postSecret(api, key, value);
     if (r.ok) {
         showToast(`Secret ${key} updated`, { type: "success" });
+        return true;
     } else {
         showToast(`Update failed: ${r.error}`, { type: "error" });
+        return false;
     }
 }
 

@@ -13469,9 +13469,6 @@ ${followMessage}`)) {
     async delete(key) {
       this._data.delete(key);
     }
-    async list() {
-      return Array.from(this._data, ([key, value]) => ({ key, value }));
-    }
     async listKeys() {
       return Array.from(this._data.keys());
     }
@@ -14746,14 +14743,26 @@ p9r-action-menu {
 <template data-role="row-template">
     <div class="row">
         <strong data-role="key"></strong>
-        <p9r-input data-role="value" type="password"></p9r-input>
-        <button class="icon-btn" data-action="reveal" data-icon="eye" title="Reveal or hide" aria-label="Reveal or hide secret" type="button"></button>
-        <button class="icon-btn" data-action="save" data-icon="save" title="Save" aria-label="Save secret" type="button"></button>
-        <button class="icon-btn icon-btn--danger" data-action="delete" data-icon="trash" title="Delete" aria-label="Delete secret" type="button"></button>
+        <div class="row-actions">
+            <p9r-button data-action="configure" variant="outlined">Configure</p9r-button>
+            <p9r-button data-action="delete" color="danger" variant="ghost">Delete</p9r-button>
+        </div>
     </div>
 </template>
 
 <div data-role="empty" hidden>No secrets yet.</div>
+
+<p9r-modal data-role="configure-modal" aria-label="Configure secret">
+    <span slot="title" data-role="configure-title">Configure secret</span>
+    <form id="secret-configure-form" data-role="configure-form">
+        <p class="configure-note">The existing value cannot be viewed. Confirming replaces it with the new value below.</p>
+        <p9r-input data-role="configure-value" label="New value" type="password" autocomplete="new-password" required></p9r-input>
+    </form>
+    <div slot="footer" class="modal-actions">
+        <p9r-button data-action="configure-cancel" variant="outlined">Cancel</p9r-button>
+        <p9r-button data-action="configure-confirm" type="submit" form="secret-configure-form" color="primary" disabled>Confirm</p9r-button>
+    </div>
+</p9r-modal>
 `;
 
   // src/components/admin/Secrets/style.css
@@ -14769,7 +14778,7 @@ p9r-action-menu {
 
 .row {
     display: grid;
-    grid-template-columns: minmax(180px, 0.9fr) minmax(220px, 1.1fr) 32px 32px 32px;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
@@ -14788,34 +14797,24 @@ p9r-action-menu {
     color: var(--text-main, #1e293b);
 }
 
-.row > [data-role="value"] {
-    width: 100%;
-    min-width: 0;
-}
-
-.icon-btn {
-    display: inline-flex;
+.row-actions,
+.modal-actions {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+[data-role="configure-modal"]::part(header),
+[data-role="configure-modal"]::part(footer) {
+    display: flex;
+}
+
+.configure-note {
+    margin: 0 0 16px;
     color: var(--text-muted, #64748b);
-    cursor: pointer;
-    transition: background 0.1s, color 0.1s;
-}
-
-.icon-btn:hover {
-    background: var(--bg-base, #f1f5f9);
-    color: var(--text-main, #1e293b);
-}
-
-.icon-btn--danger:hover {
-    color: var(--danger-base, #dc2626);
-    background: var(--danger-muted, #fef2f2);
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 [data-role="empty"] {
@@ -14828,11 +14827,11 @@ p9r-action-menu {
 
 @media (max-width: 680px) {
     .row {
-        grid-template-columns: minmax(0, 1fr) 32px 32px 32px;
+        grid-template-columns: 1fr;
     }
 
-    .row > [data-role="key"] {
-        grid-column: 1 / -1;
+    .row-actions {
+        justify-content: flex-start;
     }
 }
 `;
@@ -14878,45 +14877,15 @@ p9r-action-menu {
   }
   var SECRETS_RELOAD_EVENT = RELOAD_EVENT;
 
-  // src/components/icons.ts
-  var ICON_EYE = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
-    <circle cx="12" cy="12" r="3"/>
-</svg>
-`;
-  var ICON_SAVE = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
-    <polyline points="17 21 17 13 7 13 7 21"/>
-    <polyline points="7 3 7 8 15 8"/>
-</svg>
-`;
-  var ICON_TRASH = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <polyline points="3 6 5 6 21 6"/>
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-</svg>
-`;
-
-  // src/components/admin/Secrets/icons.ts
-  var ICONS = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH };
-  function injectIcons(root) {
-    root.querySelectorAll("[data-icon]").forEach((el2) => {
-      const name = el2.dataset.icon;
-      if (ICONS[name]) {
-        el2.innerHTML = ICONS[name];
-      }
-    });
-  }
-
   // src/components/admin/Secrets/ops.ts
-  async function opSaveRow(api, key, value) {
+  async function opConfigureSecret(api, key, value) {
     const r = await postSecret(api, key, value);
     if (r.ok) {
       Rp(`Secret ${key} updated`, { type: "success" });
+      return true;
     } else {
       Rp(`Update failed: ${r.error}`, { type: "error" });
+      return false;
     }
   }
   async function opDeleteSecret(api, key) {
@@ -14931,14 +14900,92 @@ p9r-action-menu {
     }
   }
 
+  // src/components/admin/Secrets/configureDialog.ts
+  class SecretConfigureDialog {
+    api;
+    modal;
+    title;
+    form;
+    input;
+    submitButton;
+    key = null;
+    pending = false;
+    token = 0;
+    constructor(root, api) {
+      this.api = api;
+      this.modal = root.querySelector('[data-role="configure-modal"]');
+      this.title = root.querySelector('[data-role="configure-title"]');
+      this.form = root.querySelector('[data-role="configure-form"]');
+      this.input = root.querySelector('[data-role="configure-value"]');
+      this.submitButton = root.querySelector('[data-action="configure-confirm"]');
+      this.form.addEventListener("submit", (event) => void this.submit(event));
+      this.input.addEventListener("input", this.syncSubmitState);
+      this.input.addEventListener("change", this.syncSubmitState);
+      root.querySelector('[data-action="configure-cancel"]').addEventListener("click", this.close);
+      this.modal.addEventListener("close", this.clear);
+    }
+    open(key) {
+      this.token++;
+      this.key = key;
+      this.pending = false;
+      this.input.value = "";
+      this.title.textContent = `Configure ${key}`;
+      this.modal.setAttribute("aria-label", `Configure ${key} secret`);
+      this.syncSubmitState();
+      this.modal.setAttribute("open", "");
+      queueMicrotask(() => this.input.focus());
+    }
+    close = () => {
+      this.modal.removeAttribute("open");
+      this.clear();
+    };
+    clear = () => {
+      this.token++;
+      this.key = null;
+      this.pending = false;
+      this.input.value = "";
+      this.submitButton.removeAttribute("aria-busy");
+      this.syncSubmitState();
+    };
+    syncSubmitState = () => {
+      this.submitButton.disabled = this.pending || this.input.value.length === 0;
+    };
+    async submit(event) {
+      event.preventDefault();
+      if (!this.key || this.pending || !this.form.reportValidity()) {
+        return;
+      }
+      const token = this.token;
+      const key = this.key;
+      const value = this.input.value;
+      this.pending = true;
+      this.submitButton.setAttribute("aria-busy", "true");
+      this.syncSubmitState();
+      try {
+        const saved = await opConfigureSecret(this.api(), key, value);
+        if (saved && token === this.token) {
+          this.close();
+        }
+      } finally {
+        if (token === this.token) {
+          this.pending = false;
+          this.submitButton.removeAttribute("aria-busy");
+          this.syncSubmitState();
+        }
+      }
+    }
+  }
+
   // src/components/admin/Secrets/Secrets.ts
   class CmsSecrets extends l2 {
     _list = null;
     _rowTemplate = null;
     _empty = null;
+    _configureDialog;
     _onReload = () => this._reload();
     constructor() {
       super({ css: style_default3, template: template_default4 });
+      this._configureDialog = new SecretConfigureDialog(this.shadowRoot, () => this._api);
     }
     connectedCallback() {
       const sr = this.shadowRoot;
@@ -14950,6 +14997,7 @@ p9r-action-menu {
     }
     disconnectedCallback() {
       document.removeEventListener(SECRETS_RELOAD_EVENT, this._onReload);
+      this._configureDialog.close();
     }
     get _api() {
       return this.getAttribute("api") ?? "/api/secrets";
@@ -14961,41 +15009,26 @@ p9r-action-menu {
       try {
         const items = await fetchSecrets(this._api);
         items.sort((a, b) => a.key.localeCompare(b.key));
-        this._list.replaceChildren(...items.map((it2) => this._buildRow(it2.key, it2.value)));
+        this._list.replaceChildren(...items.map((it2) => this._buildRow(it2.key)));
         this._empty.hidden = items.length > 0;
       } catch {
         this._empty.hidden = false;
         this._empty.textContent = "Failed to load secrets.";
       }
     }
-    _buildRow(key, value) {
+    _buildRow(key) {
       const frag = this._rowTemplate.content.cloneNode(true);
       const row = frag.firstElementChild;
       row.dataset.key = key;
       const keyEl = row.querySelector('[data-role="key"]');
       keyEl.textContent = key;
       keyEl.title = key;
-      const input = row.querySelector('[data-role="value"]');
-      input.setAttribute("aria-label", `Value for ${key}`);
-      input.value = value;
-      for (const action of ["reveal", "save", "delete"]) {
-        row.querySelector(`[data-action="${action}"]`)?.setAttribute("aria-label", `${action} ${key} secret`);
-      }
-      injectIcons(row);
-      row.querySelector('[data-action="reveal"]')?.addEventListener("click", () => this._toggleReveal(row));
-      row.querySelector('[data-action="save"]')?.addEventListener("click", () => this._save(row));
+      const configure = row.querySelector('[data-action="configure"]');
+      configure.setAttribute("aria-label", `Configure ${key} secret`);
+      row.querySelector('[data-action="delete"]')?.setAttribute("aria-label", `Delete ${key} secret`);
+      configure.addEventListener("click", () => this._configureDialog.open(key));
       row.querySelector('[data-action="delete"]')?.addEventListener("click", () => opDeleteSecret(this._api, key));
       return row;
-    }
-    _toggleReveal(row) {
-      const input = row.querySelector('[data-role="value"]');
-      const cur = input.getAttribute("type") ?? "password";
-      input.setAttribute("type", cur === "password" ? "text" : "password");
-    }
-    _save(row) {
-      const key = row.dataset.key;
-      const value = row.querySelector('[data-role="value"]').value;
-      return opSaveRow(this._api, key, value);
     }
   }
   if (!customElements.get("cms-secrets")) {

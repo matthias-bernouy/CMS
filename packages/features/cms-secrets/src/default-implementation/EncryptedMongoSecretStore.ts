@@ -70,20 +70,6 @@ export class EncryptedMongoSecretStore implements SecretStore {
         await this._collection.deleteOne({ _id: key });
     }
 
-    async list(): Promise<Array<{ key: string; value: string }>> {
-        const docs = await this._collection.find({}).toArray();
-        // Decrypt sequentially is fine — admin path, low fan-out.
-        const out: Array<{ key: string; value: string }> = [];
-        for (const doc of docs) {
-            const value = await this._crypto.decrypt(this._scopeId, {
-                ciphertext: asBuffer(doc.ciphertext),
-                iv: asBuffer(doc.iv),
-            });
-            out.push({ key: doc._id, value });
-        }
-        return out;
-    }
-
     async listKeys(): Promise<string[]> {
         const docs = await this._collection.find({}, { projection: { _id: 1 } }).toArray();
         return docs.map((d) => d._id);

@@ -2,11 +2,11 @@ import { Component } from "@bernouy/components/base";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { fetchSecrets, SECRETS_RELOAD_EVENT } from "./actions";
-import { injectIcons } from "./icons";
-import { opSaveRow, opDeleteSecret } from "./ops";
+import { SecretConfigureDialog } from "./configureDialog";
+import { opDeleteSecret } from "./ops";
 
 /**
- * `<cms-secrets>` — Secrets tab UI. Self-driving: fetches the list on
+ * `<cms-secrets>` — write-only Secrets tab UI. Self-driving: fetches the key list on
  * connect, re-fetches on `secret:saved` (own + external). Per-operation
  * UI (validation, toasts) lives in `ops.ts`; lifecycle + DOM wiring stay
  * here.
@@ -18,10 +18,12 @@ export class CmsSecrets extends Component {
     private _list: HTMLElement | null = null;
     private _rowTemplate: HTMLTemplateElement | null = null;
     private _empty: HTMLElement | null = null;
+    private readonly _configureDialog: SecretConfigureDialog;
     private _onReload = () => this._reload();
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
+        this._configureDialog = new SecretConfigureDialog(this.shadowRoot!, () => this._api);
     }
 
     override connectedCallback(): void {
@@ -35,6 +37,7 @@ export class CmsSecrets extends Component {
 
     disconnectedCallback(): void {
         document.removeEventListener(SECRETS_RELOAD_EVENT, this._onReload);
+        this._configureDialog.close();
     }
 
     private get _api(): string {
@@ -48,7 +51,7 @@ export class CmsSecrets extends Component {
         try {
             const items = await fetchSecrets(this._api);
             items.sort((a, b) => a.key.localeCompare(b.key));
-            this._list.replaceChildren(...items.map((it) => this._buildRow(it.key, it.value)));
+            this._list.replaceChildren(...items.map((it) => this._buildRow(it.key)));
             this._empty.hidden = items.length > 0;
         } catch {
             this._empty.hidden = false;
@@ -56,36 +59,19 @@ export class CmsSecrets extends Component {
         }
     }
 
-    private _buildRow(key: string, value: string): HTMLElement {
+    private _buildRow(key: string): HTMLElement {
         const frag = this._rowTemplate!.content.cloneNode(true) as DocumentFragment;
         const row = frag.firstElementChild as HTMLElement;
         row.dataset.key = key;
         const keyEl = row.querySelector('[data-role="key"]') as HTMLElement;
         keyEl.textContent = key;
         keyEl.title = key;
-        const input = row.querySelector('[data-role="value"]') as HTMLElement & { value: string };
-        input.setAttribute("aria-label", `Value for ${key}`);
-        input.value = value;
-        for (const action of ["reveal", "save", "delete"] as const) {
-            row.querySelector(`[data-action="${action}"]`)?.setAttribute("aria-label", `${action} ${key} secret`);
-        }
-        injectIcons(row);
-        row.querySelector('[data-action="reveal"]')?.addEventListener("click", () => this._toggleReveal(row));
-        row.querySelector('[data-action="save"]')?.addEventListener("click", () => this._save(row));
+        const configure = row.querySelector<HTMLElement>('[data-action="configure"]')!;
+        configure.setAttribute("aria-label", `Configure ${key} secret`);
+        row.querySelector('[data-action="delete"]')?.setAttribute("aria-label", `Delete ${key} secret`);
+        configure.addEventListener("click", () => this._configureDialog.open(key));
         row.querySelector('[data-action="delete"]')?.addEventListener("click", () => opDeleteSecret(this._api, key));
         return row;
-    }
-
-    private _toggleReveal(row: HTMLElement): void {
-        const input = row.querySelector('[data-role="value"]') as HTMLElement;
-        const cur = input.getAttribute("type") ?? "password";
-        input.setAttribute("type", cur === "password" ? "text" : "password");
-    }
-
-    private _save(row: HTMLElement): Promise<void> {
-        const key = row.dataset.key!;
-        const value = (row.querySelector('[data-role="value"]') as HTMLInputElement).value;
-        return opSaveRow(this._api, key, value);
     }
 }
 

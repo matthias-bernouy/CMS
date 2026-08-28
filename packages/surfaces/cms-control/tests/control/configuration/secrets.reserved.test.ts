@@ -23,11 +23,11 @@ describe("reserved connector provider secrets", () => {
         const listText = await listResponse.text();
         const keysText = await keysResponse.text();
 
-        expect(JSON.parse(listText)).toEqual([{ key: "PUBLIC_ADMIN_SECRET", value: "visible-value" }]);
+        expect(JSON.parse(listText)).toEqual([{ key: "PUBLIC_ADMIN_SECRET" }]);
         expect(JSON.parse(keysText)).toEqual(["PUBLIC_ADMIN_SECRET"]);
         expect(`${listText}${keysText}`).not.toContain(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY);
         expect(`${listText}${keysText}`).not.toContain("sbp_hidden");
-        expect(reads).toEqual(["PUBLIC_ADMIN_SECRET"]);
+        expect(reads).toEqual([]);
     });
 
     test("generic secret writes cannot replace the reserved token", async () => {

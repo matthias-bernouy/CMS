@@ -31,7 +31,7 @@ describe("ValidatingSecretStore", () => {
         expect(await store.get("API_KEY")).toBe("");
     });
 
-    test("reads/deletes/lists pass through", async () => {
+    test("reads, deletes, and key listings pass through", async () => {
         const store = new ValidatingSecretStore(new InMemorySecretStore());
         await store.set("A", "1");
         await store.delete("A");

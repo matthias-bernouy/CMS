@@ -9,6 +9,9 @@ import { listSecretKeys } from "cms-control/core/management/secrets/listSecrets"
 export default async function getSecretKeysEndpoint(_req: Request, cms: ControlCms) {
     const keys = await listSecretKeys(cms);
     return new Response(JSON.stringify(keys), {
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Cache-Control": "no-store",
+            "Content-Type": "application/json",
+        },
     });
 }
