@@ -23,6 +23,8 @@ test("page forms derive, validate, and check paths in a real browser", async () 
         const page = await browser.newPage();
         const pageErrors: string[] = [];
         const availabilityRequests: URL[] = [];
+        let pageLinks = [{ title: "Source page", path: "/source" }];
+        let pageLinksRequests = 0;
         page.on("pageerror", (error) => pageErrors.push(error.message));
         await page.route("http://cms.test/**", async (route) => {
             const request = route.request();
@@ -34,6 +36,9 @@ test("page forms derive, validate, and check paths in a real browser", async () 
                 const path = url.searchParams.get("path");
                 const currentPath = url.searchParams.get("current-path");
                 await route.fulfill({ json: { exists: path === "/taken" && currentPath !== path } });
+            } else if (url.pathname === "/api/page/links") {
+                pageLinksRequests += 1;
+                await route.fulfill({ json: pageLinks });
             } else {
                 await route.fulfill({ json: [] });
             }
@@ -59,6 +64,46 @@ test("page forms derive, validate, and check paths in a real browser", async () 
         expect(await titleControl.getAttribute("required")).not.toBeNull();
         expect(await pathControl.getAttribute("hint")).toContain("single slashes");
         expect(await pathControl.getAttribute("help")).toContain("public URL");
+
+        const copyToggle = form.locator("[data-page-copy-toggle]");
+        const copyField = form.locator("[data-page-copy-field]");
+        const copyLookup = form.locator("p9r-combobox[data-page-copy-lookup]");
+        expect(await copyField.getAttribute("hidden")).not.toBeNull();
+        expect(await copyLookup.getAttribute("data-source-url")).toBe("/api/page/links");
+        await copyToggle.evaluate((control: HTMLElement & { checked: boolean }) => {
+            control.checked = true;
+            control.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        expect(await copyField.getAttribute("hidden")).toBeNull();
+        expect(await copyLookup.getAttribute("disabled")).toBeNull();
+        expect(await copyLookup.getAttribute("required")).not.toBeNull();
+        await waitFor(() => pageLinksRequests >= 1);
+        await page.waitForFunction(
+            () => document.querySelector('p9r-combobox[data-page-copy-lookup] option[value="/source"]') !== null,
+            undefined,
+            waitOptions,
+        );
+        await copyLookup.evaluate((control) => {
+            control.focus();
+        });
+        await copyLookup.evaluate((control) => {
+            control.shadowRoot
+                ?.querySelector<HTMLElement>(".option")
+                ?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        });
+        expect(await copyLookup.evaluate((control: HTMLElement & { value: string }) => control.value)).toBe("/source");
+        expect(await form.evaluate((element: HTMLFormElement) => new FormData(element).get("sourcePath"))).toBe(
+            "/source",
+        );
+
+        pageLinks = [...pageLinks, { title: "New page", path: "/new-page" }];
+        await page.evaluate(() => document.dispatchEvent(new Event("new:page")));
+        await waitFor(() => pageLinksRequests >= 2);
+        await page.waitForFunction(
+            () => document.querySelector('p9r-combobox[data-page-copy-lookup] option[value="/new-page"]') !== null,
+            undefined,
+            waitOptions,
+        );
 
         await titleInput.fill("À propos de l’équipe");
         await page.waitForFunction(
@@ -114,6 +159,14 @@ test("page forms derive, validate, and check paths in a real browser", async () 
             element.dispatchEvent(new CustomEvent("cms-source:success", { detail: { body: null } }));
             element.reset();
         });
+        await page.waitForFunction(
+            () => document.querySelector<HTMLElement>("[data-page-copy-field]")?.hidden === true,
+            undefined,
+            waitOptions,
+        );
+        expect(await copyLookup.getAttribute("disabled")).not.toBeNull();
+        expect(await copyLookup.getAttribute("required")).toBeNull();
+        expect(await copyLookup.evaluate((control: HTMLElement & { value: string }) => control.value)).toBe("");
         await titleInput.fill("Fresh page");
         await page.waitForFunction(
             () =>

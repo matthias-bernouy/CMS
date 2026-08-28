@@ -54,6 +54,13 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         expect(isPublishedPage({ visible: false } as any)).toBe(false);
     });
 
+    test("can create a page with initial editorial content", async () => {
+        const repo = new InMemoryCmsRepository();
+        await repo.insertPage("/copy", "Copy", "<main>Copied content</main>");
+
+        expect((await repo.getPage("/copy"))?.content).toBe("<main>Copied content</main>");
+    });
+
     test("value counts use value asc as a stable tie-break", () => {
         expect(countValues(["beta", "alpha"])).toEqual([
             { value: "alpha", count: 1 },

@@ -5,6 +5,14 @@ import { join } from "node:path";
 import { LocalFsCmsRepository } from "cms-cli/dev-server/repo/LocalFsCmsRepository";
 
 describe("LocalFsCmsRepository pages", () => {
+    test("creates a page with initial editorial content", async () => {
+        const siteDir = mkdtempSync(join(tmpdir(), "p9r-dev-pages-"));
+        const repository = new LocalFsCmsRepository(siteDir, new Map());
+        await repository.insertPage("/copy", "Copy", "<main>Copied content</main>");
+
+        expect((await repository.getPage("/copy"))?.content).toBe("<main>Copied content</main>\n");
+    });
+
     test("moves the page file when its path changes", async () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-dev-pages-"));
         const repository = new LocalFsCmsRepository(siteDir, new Map());

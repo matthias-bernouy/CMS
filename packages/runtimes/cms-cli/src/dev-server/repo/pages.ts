@@ -26,12 +26,12 @@ export class PagesStore {
         return this.getByPath(id);
     }
 
-    async insert(path: string, title: string): Promise<void> {
+    async insert(path: string, title: string, content = "<p></p>"): Promise<void> {
         const file = this._fileForPath(path);
         if (existsSync(file)) {
             throw new Error(`Page already exists at ${path}`);
         }
-        await this._write(file, { title, description: "", visible: true, tags: [] }, "<p></p>");
+        await this._write(file, { title, description: "", visible: true, tags: [] }, content);
     }
 
     async update(page: Partial<TPage>): Promise<void> {

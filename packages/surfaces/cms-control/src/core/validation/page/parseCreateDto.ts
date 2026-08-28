@@ -3,6 +3,7 @@ import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 export type PageCreateDto = {
     title: string;
     path: string;
+    sourcePath?: string;
 };
 
 /**
@@ -18,5 +19,10 @@ export function parsePageCreateDto(body: Record<string, unknown>): PageCreateDto
     if (!path) {
         throw new MissingParam("path");
     }
-    return { title: String(title), path: String(path) };
+    const sourcePath = body.sourcePath == null ? "" : String(body.sourcePath).trim();
+    return {
+        title: String(title),
+        path: String(path),
+        ...(sourcePath ? { sourcePath } : {}),
+    };
 }

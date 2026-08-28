@@ -10,8 +10,8 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
         updatePage: [],
     };
     const inner = {
-        insertPage: async (path: string, title: string) => {
-            calls.insertPage.push([path, title]);
+        insertPage: async (path: string, title: string, content?: string) => {
+            calls.insertPage.push([path, title, content]);
         },
         updatePage: async (p: any) => {
             calls.updatePage.push(p);
@@ -25,8 +25,15 @@ describe("ValidatingCmsRepository — pages", () => {
     test("insertPage normalizes title and rejects a bad path", async () => {
         const { repo, calls } = makeRepo();
         await repo.insertPage("/ok", "  Hello  ");
-        expect(calls.insertPage[0]).toEqual(["/ok", "Hello"]); // title trimmed
+        expect(calls.insertPage[0]).toEqual(["/ok", "Hello", undefined]); // title trimmed
         await expect(repo.insertPage("bad path", "T")).rejects.toThrow(ContentValidationError);
+    });
+
+    test("insertPage validates copied content and its bloc references", async () => {
+        const { repo, calls } = makeRepo({ blocs: ["cs-card"] });
+        await repo.insertPage("/copy", "Copy", "<cs-card></cs-card>");
+        expect(calls.insertPage[0][2]).toContain("cs-card");
+        await expect(repo.insertPage("/bad-copy", "Bad copy", "<cs-ghost></cs-ghost>")).rejects.toThrow();
     });
 
     test("updatePage trims the title and forwards it", async () => {

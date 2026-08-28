@@ -25,13 +25,13 @@ export class MongoContentRepository extends MongoBlocRepository {
         return (await this.getAllPages()).filter(isPublishedPage);
     }
 
-    async insertPage(path: string, title: string): Promise<void> {
+    async insertPage(path: string, title: string, content = "<p></p>"): Promise<void> {
         try {
             await this.pages.insertOne({
                 _id: randomUUIDv7(),
                 path,
                 title,
-                content: "<p></p>",
+                content,
                 description: "",
                 tags: [],
                 visible: false,

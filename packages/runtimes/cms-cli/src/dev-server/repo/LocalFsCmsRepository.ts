@@ -114,8 +114,8 @@ export class LocalFsCmsRepository implements CmsRepository {
     async getPublishedPages(): Promise<TPage[]> {
         return (await this.getAllPages()).filter(isPublishedPage);
     }
-    insertPage(path: string, title: string): Promise<void> {
-        return this._pages.insert(path, title);
+    insertPage(path: string, title: string, content?: string): Promise<void> {
+        return this._pages.insert(path, title, content);
     }
     updatePage(page: Partial<TPage>): Promise<void> {
         return this._pages.update(page);

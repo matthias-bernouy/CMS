@@ -85,7 +85,7 @@ export interface CmsRepository extends ContentReader {
     getAllPages(): Promise<TPage[]>;
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPages(): Promise<TPage[]>;
-    insertPage(path: string, title: string): Promise<void>;
+    insertPage(path: string, title: string, content?: string): Promise<void>;
     updatePage(page: Partial<TPage>): Promise<void>;
     deletePage(id: string): Promise<void>;
     getLinks(): Promise<PageLink[]>;

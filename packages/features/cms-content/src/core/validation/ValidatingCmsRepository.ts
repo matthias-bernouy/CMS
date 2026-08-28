@@ -30,8 +30,15 @@ import {
 export class ValidatingCmsRepository implements CmsRepository {
     constructor(private readonly inner: CmsRepository) {}
     // ── Validated authored-content writes ─────────────────────────────────
-    async insertPage(path: string, title: string): Promise<void> {
-        return this.inner.insertPage(validatePagePath(path), validatePageTitle(title));
+    async insertPage(path: string, title: string, content?: string): Promise<void> {
+        const validPath = validatePagePath(path);
+        const validTitle = validatePageTitle(title);
+        if (content === undefined) {
+            return this.inner.insertPage(validPath, validTitle);
+        }
+        const validContent = validatePagePatch({ content }).content!;
+        await assertContentRefsExist(this.inner, validContent);
+        return this.inner.insertPage(validPath, validTitle, validContent);
     }
 
     async updatePage(page: Partial<TPage>): Promise<void> {

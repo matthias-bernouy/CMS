@@ -47,6 +47,7 @@ import {
     setBindingFilters,
 } from "@bernouy/components";
 import { PageFormController } from "./admin/Common/PageSettings/PageFormController";
+import { PageCopySource } from "./admin/Common/PageSettings/PageCopySource";
 
 function define(tag: string, constructor: CustomElementConstructor) {
     if (!customElements.get(tag)) {
@@ -56,6 +57,7 @@ function define(tag: string, constructor: CustomElementConstructor) {
 
 define(CMS_BINDING_CORE_TAG, BindingCore);
 define("cms-page-form-controller", PageFormController);
+define("cms-page-copy-source", PageCopySource);
 setBindingFilters({
     json: (value) => (value === undefined ? undefined : JSON.stringify(value)),
     jsonurl: (value) => (value === undefined ? undefined : encodeURIComponent(JSON.stringify(value))),

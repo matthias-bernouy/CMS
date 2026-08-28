@@ -30,7 +30,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         return (await this.getAllPages()).filter(isPublishedPage);
     }
 
-    async insertPage(path: string, title: string): Promise<void> {
+    async insertPage(path: string, title: string, content = "<p></p>"): Promise<void> {
         if (this.pages.has(path)) {
             throw new DuplicatePagePathError(path);
         }
@@ -38,7 +38,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             id: randomUUIDv7(),
             path,
             title,
-            content: "<p></p>",
+            content,
             description: "",
             tags: [],
             visible: false,
