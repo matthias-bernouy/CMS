@@ -24,11 +24,22 @@
     gap: 16px;
 }
 
+.shell-detail-header[hidden],
+.shell-detail-identity[hidden],
+.shell-detail-title[hidden],
+.shell-detail-actions[hidden] {
+    display: none;
+}
+
 .shell-detail-identity,
 .shell-detail-actions {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.shell-detail-actions {
+    margin-inline-start: auto;
 }
 
 .shell-detail-title {

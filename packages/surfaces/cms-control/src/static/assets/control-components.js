@@ -12816,6 +12816,73 @@ p {
   }
   var adminSystemSettingsStore = new AdminSystemSettingsStore;
 
+  // src/components/admin/Layout/AdminLayout/style.css
+  var style_default = `:host {
+    display: block;
+    min-width: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.admin-page {
+    min-width: 0;
+}
+
+.admin-page-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.admin-page-header[data-has-tabs] {
+    margin-bottom: 1rem;
+}
+
+.admin-page-header[hidden],
+.admin-page-tabs[hidden] {
+    display: none;
+}
+
+h1 {
+    margin: 0;
+    line-height: 1;
+}
+
+.admin-page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 4px;
+}
+
+.admin-page-tabs {
+    min-width: 0;
+    margin-bottom: 2rem;
+}
+
+slot[name="tabs"]::slotted(*) {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (max-width: 720px) {
+    .admin-page-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .admin-page-actions {
+        width: 100%;
+        padding-top: 0;
+    }
+}
+`;
+
   // src/components/admin/Layout/AdminLayout/template.html
   var template_default = `<w13c-left-menu-layout>
     <w13c-lateral-menu slot="sidebar" aria-label="Admin navigation" style="--menu-brand-mark: 'C'; --menu-brand-mark-display: grid; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;">
@@ -12964,14 +13031,17 @@ p {
     </w13c-lateral-menu>
 
     <slot name="secondary-lateral-nav" slot="secondary-sidebar"></slot>
-    <div>
-        <div class="admin-page-header" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
-            <h1 style="margin: 0; line-height: 1;">
+    <div class="admin-page">
+        <div class="admin-page-header">
+            <h1>
                 <slot name="title"></slot>
             </h1>
-            <div style="display: flex; align-items: center; gap: 0.75rem; padding-top: 4px;">
+            <div class="admin-page-actions">
                 <slot name="action"></slot>
             </div>
+        </div>
+        <div class="admin-page-tabs" hidden>
+            <slot name="tabs"></slot>
         </div>
         <slot></slot>
     </div>
@@ -12984,10 +13054,12 @@ p {
   class FixedAdminLayout extends l2 {
     _titleSlot = null;
     _actionSlot = null;
+    _tabsSlot = null;
     _pageHeader = null;
+    _pageTabs = null;
     constructor() {
       super({
-        css: "",
+        css: style_default,
         template: template_default
       });
     }
@@ -13000,19 +13072,23 @@ p {
       const basePath = this._basePath();
       this._titleSlot = root.querySelector('slot[name="title"]');
       this._actionSlot = root.querySelector('slot[name="action"]');
+      this._tabsSlot = root.querySelector('slot[name="tabs"]');
       this._pageHeader = root.querySelector(".admin-page-header");
+      this._pageTabs = root.querySelector(".admin-page-tabs");
       this._syncRoutes(root, basePath);
       this._setBrandName(root, DEFAULT_BRAND_NAME);
-      this._syncPageHeader();
+      this._syncPageChrome();
       this._syncSiteName(root);
       document.addEventListener("settings:saved", this._onSettingsSaved);
       this._titleSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
       this._actionSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
+      this._tabsSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
     }
     disconnectedCallback() {
       document.removeEventListener("settings:saved", this._onSettingsSaved);
       this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
       this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
+      this._tabsSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
     }
     _basePath() {
       const meta = document.querySelector('meta[name="basePath"]');
@@ -13045,16 +13121,17 @@ p {
       }
       menu?.style.setProperty("--menu-brand-mark", JSON.stringify(mark));
     }
-    _syncPageHeader() {
-      if (!this._pageHeader) {
-        return;
-      }
+    _syncPageChrome() {
       const hasTitle = this._slotHasVisibleContent(this._titleSlot);
       const hasAction = this._slotHasVisibleContent(this._actionSlot);
-      const visible = hasTitle || hasAction;
-      this._pageHeader.hidden = !visible;
-      this._pageHeader.style.display = visible ? "flex" : "none";
-      this._pageHeader.style.marginBottom = visible ? "2rem" : "0";
+      const hasTabs = Boolean(this._tabsSlot?.assignedElements({ flatten: true }).some((node) => !node.hasAttribute("hidden")));
+      if (this._pageHeader) {
+        this._pageHeader.hidden = !hasTitle && !hasAction;
+        this._pageHeader.toggleAttribute("data-has-tabs", hasTabs);
+      }
+      if (this._pageTabs) {
+        this._pageTabs.hidden = !hasTabs;
+      }
     }
     _slotHasVisibleContent(slot) {
       return !!slot?.assignedNodes({ flatten: true }).some((node) => {
@@ -13072,7 +13149,7 @@ p {
       adminSystemSettingsStore.invalidate();
       this._syncSiteName(root);
     };
-    _onPageHeaderSlotChange = () => this._syncPageHeader();
+    _onPageHeaderSlotChange = () => this._syncPageChrome();
   }
   if (!customElements.get("w13c-fixed-admin-layout")) {
     customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
@@ -13816,7 +13893,7 @@ ${followMessage}`)) {
 `;
 
   // src/components/admin/Common/EmptyState/style.css
-  var style_default = `:host {
+  var style_default2 = `:host {
     display: table-row;
     position: relative;
     height: 320px;
@@ -13872,7 +13949,7 @@ ${followMessage}`)) {
   class EmptyState extends l2 {
     constructor() {
       super({
-        css: style_default,
+        css: style_default2,
         template: template_default2
       });
     }
@@ -14525,7 +14602,7 @@ ${followMessage}`)) {
   customElements.define("cms-role-editor", CmsRoleEditor);
 
   // src/components/admin/Actions/UserActions/style.css
-  var style_default2 = `:host {
+  var style_default3 = `:host {
     display: inline-flex;
 }
 
@@ -14560,7 +14637,7 @@ p9r-action-menu {
       return ["password-reset", "email-verification", "mark-verified"];
     }
     constructor() {
-      super({ css: style_default2, template: template_default3 });
+      super({ css: style_default3, template: template_default3 });
     }
     connectedCallback() {
       this.addEventListener("click", this.onClick);
@@ -14766,7 +14843,7 @@ p9r-action-menu {
 `;
 
   // src/components/admin/Secrets/style.css
-  var style_default3 = `:host {
+  var style_default4 = `:host {
     display: block;
 }
 
@@ -14984,7 +15061,7 @@ p9r-action-menu {
     _configureDialog;
     _onReload = () => this._reload();
     constructor() {
-      super({ css: style_default3, template: template_default4 });
+      super({ css: style_default4, template: template_default4 });
       this._configureDialog = new SecretConfigureDialog(this.shadowRoot, () => this._api);
     }
     connectedCallback() {
@@ -15036,7 +15113,7 @@ p9r-action-menu {
   }
 
   // src/components/admin/Layout/SettingsSections/style.css
-  var style_default4 = `:host {
+  var style_default5 = `:host {
     display: block;
     height: 100%;
 }
@@ -15121,14 +15198,14 @@ w13c-lateral-menu-item {
         Secrets
     </w13c-lateral-menu-item>
 
-    <w13c-lateral-menu-item data-settings-section="identity">
+    <w13c-lateral-menu-item data-settings-section="authentication">
         <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
             <path d="m17 11 2 2 4-4" />
         </svg>
-        Identity
+        Authentication
     </w13c-lateral-menu-item>
 
     <w13c-lateral-menu-item data-settings-section="connectors">
@@ -15151,14 +15228,14 @@ w13c-lateral-menu-item {
     "email",
     "privacy-analytics",
     "secrets",
-    "identity",
+    "authentication",
     "connectors"
   ];
   var DEFAULT_SECTION = "general";
 
   class CmsSettingsNav extends l2 {
     constructor() {
-      super({ css: style_default4, template: template_default5 });
+      super({ css: style_default5, template: template_default5 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -15177,7 +15254,8 @@ w13c-lateral-menu-item {
         if (!isSettingsSection(section)) {
           continue;
         }
-        item.setAttribute("href", `${basePath}/admin/settings/${section}`);
+        const target = section === "authentication" ? "authentication/methods" : section;
+        item.setAttribute("href", `${basePath}/admin/settings/${target}`);
       }
     }
     syncActive = () => {
@@ -15197,7 +15275,7 @@ w13c-lateral-menu-item {
       if (path === "admin/settings") {
         return DEFAULT_SECTION;
       }
-      const section = path.match(/^admin\/settings\/([^/]+)$/)?.[1] ?? "";
+      const section = path.match(/^admin\/settings\/([^/]+)(?:\/|$)/)?.[1] ?? "";
       return isSettingsSection(section) ? section : DEFAULT_SECTION;
     }
     basePath() {
@@ -15210,6 +15288,172 @@ w13c-lateral-menu-item {
   }
   function isSettingsSection(value) {
     return SETTINGS_SECTIONS.includes(value);
+  }
+
+  // src/components/admin/Layout/SettingsSections/authentication-tabs.css
+  var authentication_tabs_default = `:host {
+    display: block;
+    width: min(100%, var(--p9r-container-lg, 1024px));
+    min-width: 0;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.25rem;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-bottom: 1px solid var(--border-default);
+    scrollbar-width: thin;
+}
+
+a {
+    position: relative;
+    flex: none;
+    padding: 0.65rem 0.9rem;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+a:hover {
+    color: var(--text-main);
+}
+
+a[aria-current="page"] {
+    color: var(--primary-base);
+}
+
+a[aria-current="page"]::after {
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 2px;
+    background: currentcolor;
+    content: "";
+}
+
+a:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid var(--primary-base);
+    outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    a {
+        transition: color 0.15s ease;
+    }
+}
+`;
+
+  // src/components/admin/Layout/SettingsSections/authentication-tabs.html
+  var authentication_tabs_default2 = `<nav class="tabs" aria-label="Authentication settings">
+    <a data-authentication-tab="methods">Methods</a>
+    <a data-authentication-tab="policies">Policies &amp; MFA</a>
+    <a data-authentication-tab="sso">SSO</a>
+    <a data-authentication-tab="sessions">Sessions</a>
+    <a data-authentication-tab="recovery">Recovery</a>
+</nav>
+`;
+
+  // src/components/admin/Layout/SettingsSections/AuthenticationTabs.ts
+  var AUTHENTICATION_TABS = ["methods", "policies", "sso", "sessions", "recovery"];
+  var DEFAULT_TAB = "methods";
+
+  class CmsAuthenticationTabs extends l2 {
+    revealFrame;
+    constructor() {
+      super({ css: authentication_tabs_default, template: authentication_tabs_default2 });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this.configureLinks();
+      this.syncActive();
+      window.addEventListener("popstate", this.syncActive);
+      window.addEventListener("resize", this.syncActive);
+    }
+    disconnectedCallback() {
+      window.removeEventListener("popstate", this.syncActive);
+      window.removeEventListener("resize", this.syncActive);
+      if (this.revealFrame !== undefined) {
+        window.cancelAnimationFrame(this.revealFrame);
+        this.revealFrame = undefined;
+      }
+    }
+    configureLinks() {
+      for (const link of this.links()) {
+        const tab = link.dataset.authenticationTab ?? "";
+        if (isAuthenticationTab(tab)) {
+          link.href = authenticationTabPath(tab);
+        }
+      }
+    }
+    syncActive = () => {
+      const active = authenticationTabFromPath(window.location.pathname);
+      let activeLink;
+      for (const link of this.links()) {
+        if (link.dataset.authenticationTab === active) {
+          link.setAttribute("aria-current", "page");
+          activeLink = link;
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      }
+      if (activeLink) {
+        this.scheduleReveal(activeLink);
+      }
+    };
+    scheduleReveal(link) {
+      if (this.revealFrame !== undefined) {
+        window.cancelAnimationFrame(this.revealFrame);
+      }
+      this.revealFrame = window.requestAnimationFrame(() => {
+        this.revealFrame = undefined;
+        if (this.isConnected) {
+          this.reveal(link);
+        }
+      });
+    }
+    reveal(link) {
+      const tabs = this.shadowRoot.querySelector(".tabs");
+      if (!tabs) {
+        return;
+      }
+      const visibleStart = tabs.scrollLeft;
+      const visibleEnd = visibleStart + tabs.clientWidth;
+      const linkStart = link.offsetLeft - tabs.offsetLeft;
+      const linkEnd = linkStart + link.offsetWidth;
+      if (linkEnd > visibleEnd) {
+        tabs.scrollLeft = linkEnd - tabs.clientWidth;
+      } else if (linkStart < visibleStart) {
+        tabs.scrollLeft = linkStart;
+      }
+    }
+    links() {
+      return Array.from(this.shadowRoot.querySelectorAll("[data-authentication-tab]"));
+    }
+  }
+  if (!customElements.get("cms-authentication-tabs")) {
+    customElements.define("cms-authentication-tabs", CmsAuthenticationTabs);
+  }
+  function authenticationTabPath(tab, basePath = readBasePath()) {
+    return `${basePath}/admin/settings/authentication/${tab}`;
+  }
+  function authenticationTabFromPath(path, basePath = readBasePath()) {
+    const relativePath = basePath && path.startsWith(`${basePath}/`) ? path.slice(basePath.length) : path;
+    const tab = relativePath.match(/^\/admin\/settings\/authentication\/([^/]+)\/?$/)?.[1] ?? "";
+    return isAuthenticationTab(tab) ? tab : DEFAULT_TAB;
+  }
+  function readBasePath() {
+    const meta = document.querySelector('meta[name="basePath"]');
+    return (meta?.getAttribute("content") ?? "").replace(/\/+$/, "");
+  }
+  function isAuthenticationTab(value) {
+    return AUTHENTICATION_TABS.includes(value);
   }
 
   // src/components/admin/Layout/AnalyticsPrivacySettings/api.ts
@@ -15244,7 +15488,7 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Layout/AnalyticsPrivacySettings/style.css
-  var style_default5 = `cms-analytics-privacy-settings {
+  var style_default6 = `cms-analytics-privacy-settings {
     display: block;
     padding: 1.5rem;
 }
@@ -15443,7 +15687,7 @@ button {
     request = null;
     connectedCallback() {
       if (!this.hasChildNodes()) {
-        this.innerHTML = `<style>${style_default5}</style>${template_default6}`;
+        this.innerHTML = `<style>${style_default6}</style>${template_default6}`;
         this.query("[data-retry]").addEventListener("click", () => void this.load());
         this.query("[data-settings-form]").addEventListener("submit", (event) => void this.saveSettings(event));
         this.query("[data-snapshot-form]").addEventListener("submit", (event) => void this.saveSnapshot(event));
@@ -15572,7 +15816,7 @@ button {
   }
 
   // src/components/admin/Layout/ShellDetail/style.css
-  var style_default6 = `:host {
+  var style_default7 = `:host {
     display: block;
 }
 
@@ -15598,11 +15842,22 @@ button {
     gap: 16px;
 }
 
+.shell-detail-header[hidden],
+.shell-detail-identity[hidden],
+.shell-detail-title[hidden],
+.shell-detail-actions[hidden] {
+    display: none;
+}
+
 .shell-detail-identity,
 .shell-detail-actions {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.shell-detail-actions {
+    margin-inline-start: auto;
 }
 
 .shell-detail-title {
@@ -15878,8 +16133,65 @@ p {
 
   // src/components/admin/Layout/ShellDetail/ShellDetail.ts
   class CmsShellDetail extends l2 {
+    header = null;
+    identity = null;
+    titleContainer = null;
+    actions = null;
+    chromeSlots = [];
     constructor() {
-      super({ css: style_default6, template: template_default7 });
+      super({ css: style_default7, template: template_default7 });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      const root = this.shadowRoot;
+      if (!root) {
+        return;
+      }
+      this.header = root.querySelector(".shell-detail-header");
+      this.identity = root.querySelector(".shell-detail-identity");
+      this.titleContainer = root.querySelector(".shell-detail-title");
+      this.actions = root.querySelector(".shell-detail-actions");
+      this.chromeSlots = Array.from(root.querySelectorAll('slot[name="back"], slot[name="title"], slot[name="actions"]'));
+      for (const slot of this.chromeSlots) {
+        slot.addEventListener("slotchange", this.syncHeader);
+      }
+      this.syncHeader();
+    }
+    disconnectedCallback() {
+      for (const slot of this.chromeSlots) {
+        slot.removeEventListener("slotchange", this.syncHeader);
+      }
+      this.chromeSlots = [];
+    }
+    syncHeader = () => {
+      const root = this.shadowRoot;
+      if (!root) {
+        return;
+      }
+      const hasBack = this.hasAssignedContent(root.querySelector('slot[name="back"]'));
+      const hasTitle = this.hasAssignedContent(root.querySelector('slot[name="title"]'));
+      const hasActions = this.hasAssignedContent(root.querySelector('slot[name="actions"]'));
+      const hasIdentity = hasBack || hasTitle;
+      if (this.header) {
+        this.header.hidden = !hasIdentity && !hasActions;
+      }
+      if (this.identity) {
+        this.identity.hidden = !hasIdentity;
+      }
+      if (this.titleContainer) {
+        this.titleContainer.hidden = !hasTitle;
+      }
+      if (this.actions) {
+        this.actions.hidden = !hasActions;
+      }
+    };
+    hasAssignedContent(slot) {
+      return Boolean(slot?.assignedNodes({ flatten: true }).some((node) => {
+        if (node instanceof Element) {
+          return !node.hasAttribute("hidden");
+        }
+        return node.textContent?.trim() !== "";
+      }));
     }
   }
   if (!customElements.get("cms-shell-detail")) {
@@ -24822,7 +25134,7 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/style.css
-  var style_default7 = `:host { display: block; }
+  var style_default8 = `:host { display: block; }
 
 .reorderable-list { display: grid; gap: 8px; }
 
@@ -24903,7 +25215,7 @@ button {
     value = emptyData();
     draggingIndex = null;
     constructor() {
-      super({ css: style_default7, template: template_default10 });
+      super({ css: style_default8, template: template_default10 });
     }
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this.onClick);
@@ -25495,7 +25807,7 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/style.css
-  var style_default8 = `.detail-schema {
+  var style_default9 = `.detail-schema {
     display: grid;
     gap: 12px;
 }
@@ -26860,7 +27172,7 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/index.ts
-  var styles = [base_default, controls_default, style_default8].join(`
+  var styles = [base_default, controls_default, style_default9].join(`
 `);
 
   class DashboardWDetail extends l2 {
@@ -27258,7 +27570,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default9 = `:host {
+  var style_default10 = `:host {
     display: block;
     --dashboard-table-columns: 46px 1fr;
 }
@@ -27484,7 +27796,7 @@ slot {
     value = { title: "", actions: [], columns: [], filters: [], filterValues: {}, rows: [] };
     selectedRow = "";
     constructor() {
-      super({ css: style_default9, template: template_default12 });
+      super({ css: style_default10, template: template_default12 });
     }
     set data(value2) {
       this.value = value2;
@@ -28396,7 +28708,7 @@ slot {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
-  var style_default10 = `:host {
+  var style_default11 = `:host {
     display: block;
     max-inline-size: 960px;
 }
@@ -28457,7 +28769,7 @@ slot { display: contents; }
     value = null;
     dragging = null;
     constructor() {
-      super({ css: style_default10, template: template_default13 });
+      super({ css: style_default11, template: template_default13 });
     }
     static get observedAttributes() {
       return ["data-config-json"];
@@ -30089,7 +30401,7 @@ p {
   }
 
   // src/components/admin/Resources/Functions/detail/style.css
-  var style_default11 = `:host {
+  var style_default12 = `:host {
     display: block;
 }
 * {
@@ -30314,7 +30626,7 @@ pre {
       }
     }
     renderState(message) {
-      this.replaceChildren(styleNode(style_default11), state(message));
+      this.replaceChildren(styleNode(style_default12), state(message));
     }
     renderDetail() {
       if (!this.detail) {
@@ -30323,7 +30635,7 @@ pre {
       const shell = document.createElement("cms-shell-detail");
       shell.className = "functions-shell";
       shell.append(backLink(), title(this.detail), headerActions(), inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
-      this.replaceChildren(styleNode(style_default11), shell);
+      this.replaceChildren(styleNode(style_default12), shell);
       this.bindRefs();
       hydrateExecuteFields(this, this.detail, this.draft);
     }
@@ -33820,7 +34132,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default12 = `.triggers-surface {
+  var style_default13 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -34053,7 +34365,7 @@ button.run:disabled {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default12;
+      style.textContent = style_default13;
       const body = document.createElement("template");
       body.innerHTML = template_default16;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -35579,7 +35891,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default13 = `:host {
+  var style_default14 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -35679,7 +35991,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default13)}</style>${String(template_default18)}`;
+  template5.innerHTML = `<style>${String(style_default14)}</style>${String(template_default18)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -36991,7 +37303,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default14 = `:host { display: contents; }
+  var style_default15 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -37395,7 +37707,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default14)}</style>${String(template_default20)}`;
+  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default20)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -40058,7 +40370,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default15 = `:host {
+  var style_default16 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -40229,7 +40541,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${[style_default15, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+  template9.innerHTML = `<style>${[style_default16, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default22)}`;
 
   class StructureTree extends HTMLElement {
@@ -40280,7 +40592,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default16 = `:host {
+  var style_default17 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -40389,7 +40701,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(style_default16)}</style>${String(template_default23)}`;
+  template10.innerHTML = `<style>${String(style_default17)}</style>${String(template_default23)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -40542,7 +40854,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default17 = `:host {
+  var style_default18 = `:host {
     display: block;
 }
 
@@ -40631,7 +40943,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template11 = createFieldTemplate(template_default24, style_default17);
+  var template11 = createFieldTemplate(template_default24, style_default18);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -40676,7 +40988,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default18 = `:host {
+  var style_default19 = `:host {
     display: block;
 }
 
@@ -41113,7 +41425,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template12 = createFieldTemplate(template_default25, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default25, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -41194,7 +41506,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default19 = `:host {
+  var style_default20 = `:host {
     display: block;
 }
 
@@ -41266,7 +41578,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template13 = createFieldTemplate(template_default26, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
+  var template13 = createFieldTemplate(template_default26, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -42098,7 +42410,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default20 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
@@ -42202,7 +42514,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template15 = createFieldTemplate(template_default28, style_default20);
+  var template15 = createFieldTemplate(template_default28, style_default21);
 
   class Select extends HTMLElement {
     constructor() {
@@ -42249,7 +42561,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -42362,7 +42674,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template16 = createFieldTemplate(template_default29, style_default21);
+  var template16 = createFieldTemplate(template_default29, style_default22);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -42385,7 +42697,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -42431,7 +42743,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template17 = createFieldTemplate(template_default30, style_default22);
+  var template17 = createFieldTemplate(template_default30, style_default23);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -49794,7 +50106,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -49922,7 +50234,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default23, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default24, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default35)}`;
     return template22;
   }
@@ -50909,7 +51221,7 @@ label {
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -50957,7 +51269,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template22 = document.createElement("template");
-  template22.innerHTML = `<style>${String(style_default24)}</style>${String(template_default36)}`;
+  template22.innerHTML = `<style>${String(style_default25)}</style>${String(template_default36)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -51118,7 +51430,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default25 = `:host {
+  var style_default26 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -51243,7 +51555,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l2 {
     constructor() {
       super({
-        css: style_default25,
+        css: style_default26,
         template: template_default37
       });
     }

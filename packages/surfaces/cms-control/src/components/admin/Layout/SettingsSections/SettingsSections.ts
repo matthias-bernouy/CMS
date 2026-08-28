@@ -9,7 +9,7 @@ const SETTINGS_SECTIONS = [
     "email",
     "privacy-analytics",
     "secrets",
-    "identity",
+    "authentication",
     "connectors",
 ] as const;
 const DEFAULT_SECTION: SettingsSection = "general";
@@ -40,7 +40,8 @@ export class CmsSettingsNav extends Component {
             if (!isSettingsSection(section)) {
                 continue;
             }
-            item.setAttribute("href", `${basePath}/admin/settings/${section}`);
+            const target = section === "authentication" ? "authentication/methods" : section;
+            item.setAttribute("href", `${basePath}/admin/settings/${target}`);
         }
     }
 
@@ -62,7 +63,7 @@ export class CmsSettingsNav extends Component {
         if (path === "admin/settings") {
             return DEFAULT_SECTION;
         }
-        const section = path.match(/^admin\/settings\/([^/]+)$/)?.[1] ?? "";
+        const section = path.match(/^admin\/settings\/([^/]+)(?:\/|$)/)?.[1] ?? "";
         return isSettingsSection(section) ? section : DEFAULT_SECTION;
     }
 

@@ -123,6 +123,7 @@ import "./admin/Actions/UserActions/UserActions";
 import "./admin/Common/Tokens/TokenCreate";
 import "./admin/Secrets/Secrets";
 import "./admin/Layout/SettingsSections/SettingsSections";
+import "./admin/Layout/SettingsSections/AuthenticationTabs";
 import "./admin/Layout/AnalyticsPrivacySettings/AnalyticsPrivacySettings";
 import "./admin/Layout/ShellDetail/ShellDetail";
 import "./admin/Layout/Analytics/AnalyticsNav";

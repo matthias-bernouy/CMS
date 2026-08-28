@@ -1,0 +1,27 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Authentication</span>
+    <cms-settings-nav slot="secondary-lateral-nav"></cms-settings-nav>
+    <cms-authentication-tabs slot="tabs"></cms-authentication-tabs>
+
+    <p9r-container size="lg">
+        <cms-shell-detail>
+            <cms-detail-section slot="main" heading="Administration sessions" description="Inactivity, maximum lifetime, and reauthentication rules for CmsCore administration.">
+                <p9r-stack gap="sm">
+                    <span>No administration session settings are connected in this layout preview.</span>
+                </p9r-stack>
+            </cms-detail-section>
+
+            <cms-detail-section slot="main" heading="Website sessions" description="Independent session rules for people using the published website.">
+                <p9r-stack gap="sm">
+                    <span>No website session settings are connected in this layout preview.</span>
+                </p9r-stack>
+            </cms-detail-section>
+
+            <cms-detail-section slot="aside" heading="Session boundaries">
+                <p9r-stack gap="sm">
+                    <span>Administration and website sessions remain visibly separate instead of using a hidden scope selector.</span>
+                </p9r-stack>
+            </cms-detail-section>
+        </cms-shell-detail>
+    </p9r-container>
+</w13c-fixed-admin-layout>

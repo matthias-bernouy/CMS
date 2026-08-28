@@ -1,6 +1,7 @@
 import { Component } from "@bernouy/components/base";
 import { adminSystemSettingsStore } from "../../Common/SystemSettings/store";
 
+import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
 const DEFAULT_BRAND_NAME = "CmsCore";
@@ -21,11 +22,13 @@ const DEFAULT_BRAND_NAME = "CmsCore";
 export class FixedAdminLayout extends Component {
     private _titleSlot: HTMLSlotElement | null = null;
     private _actionSlot: HTMLSlotElement | null = null;
+    private _tabsSlot: HTMLSlotElement | null = null;
     private _pageHeader: HTMLElement | null = null;
+    private _pageTabs: HTMLElement | null = null;
 
     constructor() {
         super({
-            css: "",
+            css: css as unknown as string,
             template: template as unknown as string,
         });
     }
@@ -40,22 +43,26 @@ export class FixedAdminLayout extends Component {
         const basePath = this._basePath();
         this._titleSlot = root.querySelector('slot[name="title"]');
         this._actionSlot = root.querySelector('slot[name="action"]');
+        this._tabsSlot = root.querySelector('slot[name="tabs"]');
         this._pageHeader = root.querySelector(".admin-page-header");
+        this._pageTabs = root.querySelector(".admin-page-tabs");
 
         this._syncRoutes(root, basePath);
         this._setBrandName(root, DEFAULT_BRAND_NAME);
-        this._syncPageHeader();
+        this._syncPageChrome();
         void this._syncSiteName(root);
 
         document.addEventListener("settings:saved", this._onSettingsSaved);
         this._titleSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
         this._actionSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
+        this._tabsSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
     }
 
     disconnectedCallback() {
         document.removeEventListener("settings:saved", this._onSettingsSaved);
         this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
         this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
+        this._tabsSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
     }
 
     private _basePath(): string {
@@ -97,16 +104,19 @@ export class FixedAdminLayout extends Component {
         menu?.style.setProperty("--menu-brand-mark", JSON.stringify(mark));
     }
 
-    private _syncPageHeader(): void {
-        if (!this._pageHeader) {
-            return;
-        }
+    private _syncPageChrome(): void {
         const hasTitle = this._slotHasVisibleContent(this._titleSlot);
         const hasAction = this._slotHasVisibleContent(this._actionSlot);
-        const visible = hasTitle || hasAction;
-        this._pageHeader.hidden = !visible;
-        this._pageHeader.style.display = visible ? "flex" : "none";
-        this._pageHeader.style.marginBottom = visible ? "2rem" : "0";
+        const hasTabs = Boolean(
+            this._tabsSlot?.assignedElements({ flatten: true }).some((node) => !node.hasAttribute("hidden")),
+        );
+        if (this._pageHeader) {
+            this._pageHeader.hidden = !hasTitle && !hasAction;
+            this._pageHeader.toggleAttribute("data-has-tabs", hasTabs);
+        }
+        if (this._pageTabs) {
+            this._pageTabs.hidden = !hasTabs;
+        }
     }
 
     private _slotHasVisibleContent(slot: HTMLSlotElement | null): boolean {
@@ -127,7 +137,7 @@ export class FixedAdminLayout extends Component {
         void this._syncSiteName(root);
     };
 
-    private _onPageHeaderSlotChange = (): void => this._syncPageHeader();
+    private _onPageHeaderSlotChange = (): void => this._syncPageChrome();
 }
 
 if (!customElements.get("w13c-fixed-admin-layout")) {

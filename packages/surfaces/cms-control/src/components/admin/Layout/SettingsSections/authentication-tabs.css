@@ -1,0 +1,57 @@
+:host {
+    display: block;
+    width: min(100%, var(--p9r-container-lg, 1024px));
+    min-width: 0;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.25rem;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-bottom: 1px solid var(--border-default);
+    scrollbar-width: thin;
+}
+
+a {
+    position: relative;
+    flex: none;
+    padding: 0.65rem 0.9rem;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+a:hover {
+    color: var(--text-main);
+}
+
+a[aria-current="page"] {
+    color: var(--primary-base);
+}
+
+a[aria-current="page"]::after {
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 2px;
+    background: currentcolor;
+    content: "";
+}
+
+a:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid var(--primary-base);
+    outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    a {
+        transition: color 0.15s ease;
+    }
+}
