@@ -3,9 +3,16 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { LocalFsIntegrationInstallationRepository } from "cms-cli/dev-server/stores/integrationInstallations";
-import type { IntegrationRun } from "@bernouy/cms-integrations";
+import type { IntegrationDefinition, IntegrationRun } from "@bernouy/cms-integrations";
 
 const PACKAGE_DIGEST = "a".repeat(64);
+const DEFINITION: IntegrationDefinition = {
+    kind: "test",
+    label: "Test",
+    version: "1.0.0",
+    inputs: [],
+    artifacts: [],
+};
 
 describe("LocalFsIntegrationInstallationRepository", () => {
     test("persists integration installations across repository objects", async () => {
@@ -16,7 +23,8 @@ describe("LocalFsIntegrationInstallationRepository", () => {
         await first.create({
             id: "test",
             label: "Test",
-            definitionVersion: "1",
+            definitionVersion: "1.0.0",
+            definitionSnapshot: DEFINITION,
             packageDigest: PACKAGE_DIGEST,
             answersSnapshot: { id: "main" },
             secretRefs: { apiKey: "TEST_MAIN_API_KEY" },
@@ -34,11 +42,15 @@ describe("LocalFsIntegrationInstallationRepository", () => {
         expect(loaded?.runs[0]?.startedAt).toBeInstanceOf(Date);
         expect((await second.list()).map((installation) => installation.id)).toEqual(["test"]);
 
+        await second.replace({ ...loaded!, label: "Updated test" });
+
         const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test.json"), "utf-8"));
         expect(authoringImport).toMatchObject({
             kind: "test",
+            version: "1.0.0",
             answers: { id: "main" },
         });
+        expect(Object.hasOwn(authoringImport, "definition")).toBeFalse();
         expect(Object.hasOwn(authoringImport, "packageDigest")).toBeFalse();
         expect(JSON.stringify(authoringImport)).not.toContain("apiKey");
 
@@ -72,6 +84,26 @@ describe("LocalFsIntegrationInstallationRepository", () => {
 
         const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test.json"), "utf-8"));
         expect(authoringImport.answers).toEqual({});
+    });
+
+    test("keeps embedded definitions for manual integrations", async () => {
+        const siteDir = await mkdtemp(join(tmpdir(), "p9r-integrations-"));
+        const repo = new LocalFsIntegrationInstallationRepository(siteDir);
+
+        await repo.create({
+            id: "test",
+            label: "Test",
+            definitionVersion: "1.0.0",
+            definitionSnapshot: DEFINITION,
+            answersSnapshot: {},
+            secretRefs: {},
+            secretInputs: [],
+            artifacts: [],
+            runs: [],
+        });
+
+        const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test.json"), "utf-8"));
+        expect(authoringImport).toEqual({ kind: "test", definition: DEFINITION, answers: {} });
     });
 });
 

@@ -91,12 +91,16 @@ export class LocalFsIntegrationInstallationRepository implements IntegrationInst
 
     private async writeImport(installation: IntegrationInstallation): Promise<void> {
         await mkdir(this.importsDir, { recursive: true });
+        const repositoryManaged = installation.packageDigest !== undefined;
         await writeFile(
             join(this.importsDir, `${slug(installation.id)}.json`),
             `${JSON.stringify(
                 {
                     kind: installation.id,
-                    ...(installation.definitionSnapshot ? { definition: installation.definitionSnapshot } : {}),
+                    ...(repositoryManaged ? { version: installation.definitionVersion } : {}),
+                    ...(!repositoryManaged && installation.definitionSnapshot
+                        ? { definition: installation.definitionSnapshot }
+                        : {}),
                     answers: installation.answersSnapshot ?? {},
                 },
                 null,
