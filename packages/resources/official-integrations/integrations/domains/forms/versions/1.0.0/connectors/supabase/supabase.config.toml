@@ -1,0 +1,2 @@
+[functions.cms-forms]
+verify_jwt = false
