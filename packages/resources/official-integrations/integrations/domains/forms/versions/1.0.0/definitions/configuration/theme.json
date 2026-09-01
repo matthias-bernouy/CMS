@@ -1,0 +1,51 @@
+{
+    "categories": [
+        {
+            "id": "form-surface",
+            "label": "Form surface",
+            "description": "Colours shared by the renderer, fields, progress, and completion state.",
+            "tokens": [
+                {
+                    "id": "accent",
+                    "label": "Accent",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--primary-base, #b9583f)"
+                    }
+                },
+                {
+                    "id": "background",
+                    "label": "Background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--bg-surface, #fffdf9)"
+                    }
+                },
+                {
+                    "id": "text",
+                    "label": "Text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-main, #292724)"
+                    }
+                },
+                {
+                    "id": "muted-text",
+                    "label": "Muted text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-muted, #77716b)"
+                    }
+                },
+                {
+                    "id": "border",
+                    "label": "Border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--border-default, #dfd8ce)"
+                    }
+                }
+            ]
+        }
+    ]
+}

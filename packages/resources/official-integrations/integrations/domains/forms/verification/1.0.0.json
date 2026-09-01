@@ -1,0 +1,30 @@
+{
+    "schema": "cms.integration.verification.v1",
+    "target": {
+        "kind": "forms",
+        "version": "1.0.0",
+        "packageDigest": "655820fe6ee7507ff85708910a7dbd7fd4621e4864311d3338fde5150c87e4b5"
+    },
+    "manifest": {
+        "runnerRequirements": [
+            {
+                "name": "cms-postgres",
+                "versionRange": "^1.0.0"
+            }
+        ],
+        "contracts": [],
+        "conformance": [
+            {
+                "suiteId": "forms-storage-boundary",
+                "entrypoint": "suites/forms-storage-boundary.ts"
+            }
+        ],
+        "fixtures": []
+    },
+    "files": {
+        "suites/forms-storage-boundary.ts": {
+            "encoding": "utf8",
+            "content": "import { defineSuite, expect, test } from \"@bernouy/cms-integration-verification/sdk/v1\";\n\nexport default defineSuite({\n    tests: [\n        test(\"declares operations while denying raw form writes\", async ({ query }) => {\n            const operations = await query(\n                \"select to_regprocedure('forms.save_form_draft(text,text,text,text,jsonb,text)') is not null as save_draft, to_regprocedure('forms.submit_form(text,integer,text,uuid,jsonb,text,jsonb)') is not null as submit_form, c.relrowsecurity as rls_enabled, c.relforcerowsecurity as rls_forced from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid = c.relnamespace where n.nspname = 'forms' and c.relname = 'forms'\",\n            );\n            expect(operations).toEqual([{ save_draft: true, submit_form: true, rls_enabled: true, rls_forced: true }]);\n\n            let rawWriteRejected = false;\n            try {\n                await query(\n                    \"insert into forms.forms (form_key, title, access_mode, draft_definition) values ('verification-contact', 'Verification contact', 'public', '{\\\"schemaVersion\\\":1,\\\"fields\\\":[]}'::jsonb)\",\n                );\n            } catch {\n                rawWriteRejected = true;\n            }\n            expect(rawWriteRejected).toBe(true);\n        }),\n    ],\n});\n"
+        }
+    }
+}

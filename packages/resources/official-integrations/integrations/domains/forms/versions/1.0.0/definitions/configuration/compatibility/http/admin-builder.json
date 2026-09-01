@@ -1,0 +1,86 @@
+[
+    {
+        "route": "/admin/form/sections",
+        "method": "GET",
+        "requiredInputs": ["context"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/sections/create",
+        "method": "POST",
+        "requiredInputs": ["context"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/sections/reorder",
+        "method": "POST",
+        "requiredInputs": ["context", "refs"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/section",
+        "method": "GET",
+        "requiredInputs": ["ref"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/section",
+        "method": "POST",
+        "requiredInputs": ["ref", "title"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/section/delete",
+        "method": "POST",
+        "requiredInputs": ["ref"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/questions",
+        "method": "GET",
+        "requiredInputs": ["context"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/questions/create",
+        "method": "POST",
+        "requiredInputs": ["context"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/questions/reorder",
+        "method": "POST",
+        "requiredInputs": ["context", "refs"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/question",
+        "method": "GET",
+        "requiredInputs": ["ref"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/question",
+        "method": "POST",
+        "requiredInputs": ["label", "ref", "type"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/question/delete",
+        "method": "POST",
+        "requiredInputs": ["ref"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    }
+]

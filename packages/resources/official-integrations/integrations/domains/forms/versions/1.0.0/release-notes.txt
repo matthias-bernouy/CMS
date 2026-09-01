@@ -1,0 +1,7 @@
+Forms 1.0.0
+
+- Adds a responsive multi-step renderer built on Basic Blocs form controls.
+- Adds public and authenticated published-form delivery through a CMS Source.
+- Adds immutable published versions and idempotent Supabase submission storage.
+- Adds form lifecycle and submission review dashboards.
+- Adds bounded batch retention and private connector access controls.

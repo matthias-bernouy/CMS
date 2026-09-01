@@ -37,6 +37,7 @@
         "./integrations/commerce-negotiation/*": "./integrations/extensions/commerce-negotiation/*",
         "./integrations/commerce-stripe-payments/*": "./integrations/extensions/commerce-stripe-payments/*",
         "./integrations/emailer/*": "./integrations/providers/emailer/*",
+        "./integrations/forms/*": "./integrations/domains/forms/*",
         "./integrations/mondial-relay/*": "./integrations/providers/mondial-relay/*",
         "./integrations/newsletter/*": "./integrations/domains/newsletter/*",
         "./integrations/photo-albums/*": "./integrations/domains/photo-albums/*",

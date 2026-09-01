@@ -1,0 +1,16 @@
+[
+    {
+        "route": "/system/health",
+        "method": "GET",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/system/retention",
+        "method": "POST",
+        "requiredInputs": ["retentionDays"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    }
+]
