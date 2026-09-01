@@ -36,6 +36,12 @@ export function registerTableTests(): void {
 
         expect(decodeDefaultContent(table?.source)).toContain('<basic-table-row slot="header">');
         expect(decodeSource(table?.source?.["style.css"])).toContain("overflow-x: auto");
+        expect(decodeSource(cell?.source?.["style.css"])).toContain(
+            "font-size: var(--integration-basic-blocs-table-font-size, 0.875rem)",
+        );
+        expect(decodeSource(headerCell?.source?.["style.css"])).toContain(
+            "font-size: var(--integration-basic-blocs-table-font-size, 0.875rem)",
+        );
         expect(decodeSource(row?.source?.["template.html"])).toContain('slot name="navigation"');
         expect(row?.viewJS).toContain('setAttribute("role", "row")');
         expect(row?.viewJS).not.toContain('CustomEvent("basic-table-row:activate"');
