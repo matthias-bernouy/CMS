@@ -1,0 +1,57 @@
+---
+title: Restaurant menu · Categories
+description: Preview the icon-led category presentation of the restaurant menu.
+visible: true
+tags: [restaurant, demo, menu, categories]
+---
+<restaurant-header layout="compact" position="flow" width="wide" appearance="solid" menu-target="site-menu" menu-style="plain" menu-icon="none">
+    <basic-badge slot="status" tone="success" appearance="outlined" size="lg" dot>Open until 11 pm</basic-badge>
+    <a slot="brand" href="/">Passionné</a>
+    <basic-menu slot="menu" id="site-menu" tone="neutral" presentation="curtain" layout="split" motion="smooth" backdrop="dim">
+        <basic-button slot="trigger" tone="neutral" appearance="ghost"><button type="button">Menu</button></basic-button>
+        <strong slot="brand">Passionné</strong>
+        <span slot="eyebrow">Restaurant · Le Havre</span>
+        <a slot="navigation" href="/">The restaurant</a>
+        <a slot="navigation" href="/menu-tabs">Category menu</a>
+        <a slot="navigation" href="/menu-stacked">Full menu</a>
+        <a slot="navigation" href="/contact">Contact</a>
+        <span slot="details">Tuesday–Sunday</span>
+        <span slot="details">12 pm–2:30 pm · 7 pm–11 pm</span>
+    </basic-menu>
+</restaurant-header>
+
+<main>
+    <restaurant-menu-catalog presentation="tabs" navigation="sticky" surface="plain" scheme="light" density="regular" navigation-label="Menu categories">
+        <span slot="eyebrow">Autumn · À la carte</span>
+        <h1 slot="title">Our seasonal menu</h1>
+        <p slot="description">A short menu that follows the coast, nearby market gardens, and the rhythm of the dining room.</p>
+        <restaurant-menu-section columns="one" density="regular" anchor="starters">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 13h16M6 13a6 6 0 0 1 12 0M9 5.5 12 3l3 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            <h2 slot="title">Starters</h2>
+            <p slot="description">Bright, precise openings available individually or to share.</p>
+            <restaurant-menu-item layout="media" media-position="start" media-ratio="square" emphasis="standard" availability="available"><img slot="media" src="/.cms/files/restaurant/black-bowl.png" alt="Green starter presented in a dark bowl" width="1254" height="1254" loading="lazy" decoding="async"><h3 slot="name">Sea bream crudo</h3><p slot="description">Citrus, shaved fennel, and herb oil.</p><span slot="meta">Gluten free</span><span slot="price">€16</span></restaurant-menu-item>
+            <restaurant-menu-item layout="media" media-position="end" media-ratio="landscape" emphasis="standard" availability="available"><img slot="media" src="/.cms/files/restaurant/minimal-plate.png" alt="Seasonal starter on a pale ceramic plate" width="1254" height="1254" loading="lazy" decoding="async"><h3 slot="name">Roasted beetroot</h3><p slot="description">Fresh goat cheese, blackcurrant, and toasted seeds.</p><span slot="meta">Vegetarian</span><span slot="price">€14</span></restaurant-menu-item>
+        </restaurant-menu-section>
+        <restaurant-menu-section columns="one" density="regular" anchor="mains">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3v8m3-8v8M7 7h3m-1.5 4v10M16 3c2 3 2 7 0 9v9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+            <h2 slot="title">Main courses</h2>
+            <p slot="description">Seasonal produce and carefully sourced fish and meat.</p>
+            <restaurant-menu-item layout="media" media-position="start" media-ratio="landscape" emphasis="signature" availability="available"><img slot="media" src="/.cms/files/restaurant/signature-dish.png" alt="Herb-topped signature dish" width="1598" height="984" loading="lazy" decoding="async"><h3 slot="name">Line-caught sea bass with preserved lemon and shellfish bisque</h3><p slot="description">Leek, coastal herbs, and a concentrated shellfish jus.</p><span slot="meta">Chef's signature</span><span slot="price">€28</span></restaurant-menu-item>
+            <restaurant-menu-item layout="text" emphasis="standard" availability="available"><h3 slot="name">Free-range duck</h3><p slot="description">Carrot, buckwheat, and a reduced spiced jus.</p><span slot="price">€31</span></restaurant-menu-item>
+        </restaurant-menu-section>
+        <restaurant-menu-section columns="one" density="regular" anchor="desserts">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 14h14l-1.5 6h-11L5 14Zm2-3h10l2 3H5l2-3Zm3-3c0-2 1-3 2-4 1 1 2 2 2 4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg>
+            <h2 slot="title">Desserts</h2>
+            <p slot="description">House-made desserts with measured sweetness.</p>
+            <restaurant-menu-item layout="media" media-position="start" media-ratio="portrait" emphasis="standard" availability="available"><img slot="media" src="/.cms/files/restaurant/colorful-dish.png" alt="Colorful plated restaurant dessert" width="1024" height="1536" loading="lazy" decoding="async"><h3 slot="name">Dark chocolate crémeux</h3><p slot="description">Cocoa nib, olive oil, and sea salt.</p><span slot="price">€12</span></restaurant-menu-item>
+            <restaurant-menu-item layout="text" emphasis="standard" availability="sold-out"><h3 slot="name">Strawberry and verbena</h3><p slot="description">Fresh berries, verbena cream, and almond biscuit.</p><span slot="meta">Sold out today</span><span slot="price">€11</span></restaurant-menu-item>
+        </restaurant-menu-section>
+        <restaurant-menu-section columns="one" density="regular" anchor="drinks">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3h12l-2 8a4 4 0 0 1-8 0L6 3Zm6 12v6m-4 0h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            <h2 slot="title">Drinks</h2>
+            <p slot="description">A focused selection with and without alcohol.</p>
+            <restaurant-menu-item layout="text" emphasis="standard" availability="available"><h3 slot="name">Discovery pairing</h3><p slot="description">Three glasses selected for the current menu.</p><span slot="price">€24</span></restaurant-menu-item>
+            <restaurant-menu-item layout="text" emphasis="standard" availability="available"><h3 slot="name">Botanical pairing</h3><p slot="description">Three house infusions, ferments, and seasonal juices.</p><span slot="meta">Alcohol free</span><span slot="price">€18</span></restaurant-menu-item>
+        </restaurant-menu-section>
+    </restaurant-menu-catalog>
+</main>

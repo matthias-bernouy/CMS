@@ -1,0 +1,103 @@
+---
+title: Restaurant contact cards
+description: Compare split, stacked, and sidebar restaurant contact presentations.
+visible: true
+tags: [restaurant, demo, contact, opening-hours]
+---
+<restaurant-header layout="compact" position="flow" width="wide" appearance="solid" menu-target="site-menu" menu-style="outline" menu-icon="lines">
+    <basic-badge slot="status" tone="success" appearance="outlined" size="lg" dot>Open until 11 pm</basic-badge>
+    <a slot="brand" href="/">Passionné</a>
+    <button slot="menu" type="button">Menu</button>
+</restaurant-header>
+<restaurant-menu id="site-menu" presentation="panel" layout="links" motion="smooth" media="hide">
+    <strong slot="brand">Passionné</strong>
+    <span slot="eyebrow">Restaurant · Le Havre</span>
+    <a slot="navigation" href="/">The restaurant</a>
+    <a slot="navigation" href="/menu-tabs">Category menu</a>
+    <a slot="navigation" href="/menu-stacked">Full menu</a>
+    <a slot="navigation" href="/contact">Contact</a>
+</restaurant-menu>
+
+<main>
+    <restaurant-contact-card presentation="split" surface="card" scheme="light" density="regular">
+        <basic-badge slot="status" tone="success" appearance="soft" size="lg" dot>Currently open</basic-badge>
+        <h1 slot="title">Contact and opening hours</h1>
+        <p slot="description">Split presentation inspired by a traditional restaurant information card.</p>
+        <restaurant-contact-item slot="contacts" icon-style="soft" alignment="horizontal">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h3l1.5 4-2 1.5a15 15 0 0 0 5 5l1.5-2L20 14v3c0 1.5-1.2 2.7-2.7 2.5C10.4 18.7 5.3 13.6 4.5 6.7 4.3 5.2 5.5 4 7 4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg>
+            <span slot="label">Telephone</span>
+            <a slot="value" href="tel:+33615649712">+33 6 15 64 97 12</a>
+            <span slot="note">Calls answered from 10 am</span>
+        </restaurant-contact-item>
+        <restaurant-contact-item slot="contacts" icon-style="soft" alignment="horizontal">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s7-5.5 7-12a7 7 0 1 0-14 0c0 6.5 7 12 7 12Zm0-9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="1.5" /></svg>
+            <span slot="label">Address</span>
+            <a slot="value" href="https://maps.example.com">15 Quai de l'Île, 76600 Le Havre</a>
+        </restaurant-contact-item>
+        <h2 slot="hours-title">Opening hours</h2>
+        <basic-table slot="hours" accessible-label="Weekly opening hours">
+            <basic-table-row><basic-table-cell>Monday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Tuesday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Wednesday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell tone="success" appearance="soft">Thursday</basic-table-cell><basic-table-cell tone="success" appearance="soft">12:00–14:30</basic-table-cell><basic-table-cell tone="success" appearance="soft">19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Friday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Saturday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Sunday</basic-table-cell><basic-table-cell>Closed</basic-table-cell><basic-table-cell>—</basic-table-cell></basic-table-row>
+        </basic-table>
+        <span slot="note">Kitchen closes 30 minutes before the restaurant.</span>
+    </restaurant-contact-card>
+
+    <restaurant-contact-card presentation="stacked" surface="plain" scheme="light" density="spacious">
+        <basic-badge slot="status" tone="warning" appearance="outlined" size="lg" dot>Closes in 45 minutes</basic-badge>
+        <h2 slot="title">Plan your visit</h2>
+        <p slot="description">Stacked presentation for narrower content columns and editorial pages.</p>
+        <restaurant-contact-item slot="contacts" icon-style="outline" alignment="horizontal">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h3l1.5 4-2 1.5a15 15 0 0 0 5 5l1.5-2L20 14v3c0 1.5-1.2 2.7-2.7 2.5C10.4 18.7 5.3 13.6 4.5 6.7 4.3 5.2 5.5 4 7 4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg>
+            <span slot="label">Telephone</span>
+            <a slot="value" href="tel:+33615649712">+33 6 15 64 97 12</a>
+        </restaurant-contact-item>
+        <restaurant-contact-item slot="contacts" icon-style="outline" alignment="horizontal">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s7-5.5 7-12a7 7 0 1 0-14 0c0 6.5 7 12 7 12Zm0-9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="1.5" /></svg>
+            <span slot="label">Address</span>
+            <a slot="value" href="https://maps.example.com">15 Quai de l'Île, 76600 Le Havre</a>
+        </restaurant-contact-item>
+        <restaurant-contact-item slot="contacts" icon-style="outline" alignment="horizontal">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg>
+            <span slot="label">Email</span>
+            <a slot="value" href="mailto:hello@passionne.example">hello@passionne.example</a>
+        </restaurant-contact-item>
+        <h3 slot="hours-title">Service times</h3>
+        <basic-table slot="hours" accessible-label="Weekly service times">
+            <basic-table-row><basic-table-cell>Monday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Tuesday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Wednesday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell tone="warning" appearance="soft">Thursday</basic-table-cell><basic-table-cell tone="warning" appearance="soft">12:00–14:30</basic-table-cell><basic-table-cell tone="warning" appearance="soft">19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Friday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Saturday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Sunday</basic-table-cell><basic-table-cell>Closed</basic-table-cell><basic-table-cell>—</basic-table-cell></basic-table-row>
+        </basic-table>
+    </restaurant-contact-card>
+
+    <restaurant-contact-card presentation="sidebar" surface="card" scheme="dark" density="compact">
+        <basic-badge slot="status" tone="neutral" appearance="outlined" size="lg">Currently closed</basic-badge>
+        <h2 slot="title">Practical information</h2>
+        <p slot="description">A restrained compact presentation for reservation and footer-adjacent contexts.</p>
+        <restaurant-contact-item slot="contacts" icon-style="plain" alignment="horizontal">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h3l1.5 4-2 1.5a15 15 0 0 0 5 5l1.5-2L20 14v3c0 1.5-1.2 2.7-2.7 2.5C10.4 18.7 5.3 13.6 4.5 6.7 4.3 5.2 5.5 4 7 4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg>
+            <span slot="label">Telephone</span>
+            <a slot="value" href="tel:+33615649712">+33 6 15 64 97 12</a>
+        </restaurant-contact-item>
+        <restaurant-contact-item slot="contacts" icon-style="plain" alignment="horizontal">
+            <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s7-5.5 7-12a7 7 0 1 0-14 0c0 6.5 7 12 7 12Zm0-9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="1.5" /></svg>
+            <span slot="label">Address</span>
+            <a slot="value" href="https://maps.example.com">15 Quai de l'Île, 76600 Le Havre</a>
+        </restaurant-contact-item>
+        <h3 slot="hours-title">Next services</h3>
+        <basic-table slot="hours" accessible-label="Next restaurant services">
+            <basic-table-row><basic-table-cell>Friday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Saturday</basic-table-cell><basic-table-cell>12:00–14:30</basic-table-cell><basic-table-cell>19:00–23:00</basic-table-cell></basic-table-row>
+            <basic-table-row><basic-table-cell>Sunday</basic-table-cell><basic-table-cell>Closed</basic-table-cell><basic-table-cell>—</basic-table-cell></basic-table-row>
+        </basic-table>
+        <span slot="note">Reservations reopen online at 9 am.</span>
+    </restaurant-contact-card>
+</main>

@@ -10,7 +10,7 @@ const pages = new Map([
     ["split.html", "restaurant-hero-split"],
     ["cover.html", "restaurant-hero-cover"],
 ]);
-const routes = new Set(["/", "/split", "/cover"]);
+const routes = new Set(["/", "/split", "/cover", "/menu-tabs", "/menu-stacked", "/contact"]);
 
 describe("restaurant demo site", () => {
     test("pins the required official integrations", async () => {
@@ -41,6 +41,13 @@ describe("restaurant demo site", () => {
             expect(source).toContain('<basic-select slot="locale"');
             expect(source).toContain('<basic-option value="en">🇬🇧 English</basic-option>');
             expect(source).toContain('<basic-option value="fr">🇫🇷 Français</basic-option>');
+            expect(source).toContain(
+                '<img slot="brand" src="/.cms/files/restaurant/passionne-logo.png" alt="Passionné" width="680" height="96">',
+            );
+            expect(source).toContain('<h1 slot="title">Contemporary French cuisine</h1>');
+            expect(source).not.toContain('<h1 slot="brand">');
+            expect(source).not.toContain('height="screen"');
+            expect(source).not.toContain("emblem=");
             if (file === "index.html") {
                 expect(source).toContain('menu-style="plain"');
                 expect(source.match(/<basic-menu\b/g)).toHaveLength(1);
@@ -48,13 +55,6 @@ describe("restaurant demo site", () => {
                 expect(source).toContain('<button type="button">Menu</button>');
                 expect(source).toContain('<svg slot="icon-end" viewBox="0 0 24 24"');
                 expect(source).toContain('stroke="currentColor"');
-                expect(source).toContain(
-                    '<img slot="brand" src="/.cms/files/restaurant/passionne-logo.png" alt="Passionné"',
-                );
-                expect(source).toContain('<h1 slot="title">Contemporary French cuisine</h1>');
-                expect(source).not.toContain('<h1 slot="brand">');
-                expect(source).not.toContain('height="screen"');
-                expect(source).not.toContain("emblem=");
                 expect(source).not.toContain("mobile-image-fit=");
                 expect(source).not.toContain("<restaurant-menu");
             } else {
