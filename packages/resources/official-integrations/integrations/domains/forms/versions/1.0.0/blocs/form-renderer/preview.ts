@@ -40,9 +40,9 @@ export const restaurantPreview: PublishedForm = {
                         label: "What should it feel like?",
                         required: true,
                         options: [
-                            { value: "warm", label: "Warm and crafted" },
-                            { value: "bright", label: "Bright and fresh" },
-                            { value: "bold", label: "Bold and modern" },
+                            { key: "warm", label: "Warm and crafted" },
+                            { key: "bright", label: "Bright and fresh" },
+                            { key: "bold", label: "Bold and modern" },
                         ],
                     },
                 ],
@@ -59,7 +59,7 @@ export const restaurantPreview: PublishedForm = {
                         required: true,
                         options: ["French", "Italian", "Japanese", "Mediterranean"].map((label) => ({
                             label,
-                            value: label.toLowerCase(),
+                            key: label.toLowerCase(),
                         })),
                     },
                     { key: "city", type: "text", label: "City", autocomplete: "address-level2", required: true },

@@ -54,7 +54,7 @@ async function submissionDetail(id: number): Promise<Record<string, unknown>> {
                 key: field.key,
                 section: String(section.title ?? "Section"),
                 question: String(field.label ?? field.key),
-                answer: displayAnswer(rawAnswers[field.key], field.type),
+                answer: displayAnswer(rawAnswers[field.key], field),
             });
         }
     }
@@ -62,14 +62,23 @@ async function submissionDetail(id: number): Promise<Record<string, unknown>> {
     return { ...detail, answers: rows };
 }
 
-function displayAnswer(value: unknown, type: unknown): string {
+function displayAnswer(value: unknown, field: Record<string, unknown>): string {
     if (value === undefined || value === null || value === "") {
         return "—";
     }
-    if (type === "checkbox") {
+    if (field.type === "checkbox") {
         return String(value) === "true" ? "Yes" : "No";
     }
-    return Array.isArray(value) ? value.map(String).join(", ") : String(value);
+    const labels = new Map(
+        (Array.isArray(field.options) ? field.options : [])
+            .filter(isRecord)
+            .map((option) => [
+                String(option.key ?? option.value ?? ""),
+                String(option.label ?? option.key ?? option.value ?? ""),
+            ]),
+    );
+    const displayed = (Array.isArray(value) ? value : [value]).map((item) => labels.get(String(item)) ?? String(item));
+    return displayed.join(", ");
 }
 
 function numericId(value: string): number {

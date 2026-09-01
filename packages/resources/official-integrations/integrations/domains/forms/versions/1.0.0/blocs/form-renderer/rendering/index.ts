@@ -1,4 +1,5 @@
-import type { FormAnswers, FormDefinition, FormField } from "./definition";
+import { optionKey, type FormAnswers, type FormDefinition, type FormField } from "../definition";
+import { imageChoiceControl } from "./imageChoice";
 
 export function formsRoot(host: HTMLElement): HTMLElement {
     let root = host.querySelector<HTMLElement>("[data-forms-root]");
@@ -30,20 +31,24 @@ function controlFor(field: FormField, saved: string | string[] | undefined): HTM
         const select = standardControl("basic-select", field, saved);
         for (const option of field.options ?? []) {
             const item = document.createElement("basic-option");
-            item.setAttribute("value", option.value);
+            item.setAttribute("value", optionKey(option));
             item.textContent = option.label;
             select.append(item);
         }
         return select;
     }
     if (field.type === "choice") {
+        if (field.presentation === "image-grid") {
+            return imageChoiceControl(field, saved);
+        }
         const group = standardControl("basic-chip-group", field, saved);
         group.setAttribute("mode", field.multiple ? "multiple" : "single");
         const selected = new Set(Array.isArray(saved) ? saved : saved ? [saved] : []);
         for (const option of field.options ?? []) {
+            const key = optionKey(option);
             const chip = document.createElement("basic-chip");
-            chip.setAttribute("value", option.value);
-            chip.toggleAttribute("selected", selected.has(option.value));
+            chip.setAttribute("value", key);
+            chip.toggleAttribute("selected", selected.has(key));
             chip.textContent = option.label;
             group.append(chip);
         }

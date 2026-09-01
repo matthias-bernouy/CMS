@@ -13,7 +13,10 @@ export type FieldType = (typeof fieldTypes)[number];
 
 export interface FormOption {
     label: string;
-    value: string;
+    key?: string;
+    value?: string;
+    imageUrl?: string;
+    imageAlt?: string;
 }
 
 export interface FormField {
@@ -25,6 +28,7 @@ export interface FormField {
     required?: boolean;
     autocomplete?: string;
     multiple?: boolean;
+    presentation?: "image-grid";
     options?: FormOption[];
 }
 
@@ -91,13 +95,53 @@ function assertStep(value: unknown): asserts value is FormStep {
         throw new Error("A form step is invalid.");
     }
     for (const field of value.fields) {
-        if (
-            !isRecord(field) ||
-            typeof field.key !== "string" ||
-            typeof field.label !== "string" ||
-            !fieldTypes.includes(field.type as FieldType)
-        ) {
-            throw new Error("A form field is invalid.");
+        assertField(field);
+    }
+}
+
+function assertField(field: unknown): asserts field is FormField {
+    if (
+        !isRecord(field) ||
+        typeof field.key !== "string" ||
+        typeof field.label !== "string" ||
+        !fieldTypes.includes(field.type as FieldType)
+    ) {
+        throw new Error("A form field is invalid.");
+    }
+    if (field.type !== "select" && field.type !== "choice") {
+        return;
+    }
+    if (!Array.isArray(field.options) || field.options.length === 0) {
+        throw new Error("A choice field has no options.");
+    }
+    for (const option of field.options) {
+        if (!isRecord(option) || typeof option.label !== "string" || !optionKey(option as FormOption)) {
+            throw new Error("A form option is invalid.");
         }
+        if (field.presentation === "image-grid" && !safeImageSource(option.imageUrl)) {
+            throw new Error("An image choice has an invalid image URL.");
+        }
+    }
+    if (field.presentation !== undefined && (field.type !== "choice" || field.presentation !== "image-grid")) {
+        throw new Error("A choice presentation is invalid.");
+    }
+}
+
+export function optionKey(option: FormOption): string {
+    const key = String(option.key ?? option.value ?? "").trim();
+    return /^[a-z][A-Za-z0-9_-]*$/.test(key) && key.length <= 80 ? key : "";
+}
+
+export function safeImageSource(value: unknown): string {
+    if (typeof value !== "string" || !value || value.length > 2048) {
+        return "";
+    }
+    if (value.startsWith("/") && !value.startsWith("//")) {
+        return value;
+    }
+    try {
+        return new URL(value).protocol === "https:" ? value : "";
+    } catch {
+        return "";
     }
 }

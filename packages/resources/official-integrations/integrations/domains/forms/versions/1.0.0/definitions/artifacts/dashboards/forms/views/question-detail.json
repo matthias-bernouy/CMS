@@ -15,16 +15,19 @@
                     "endpoint": "saveQuestion",
                     "body": {
                         "ref": "$resource.ref",
+                        "key": "$field.key",
                         "label": "$field.label",
                         "type": "$field.type",
                         "required": "$field.required",
                         "hint": "$field.hint",
                         "placeholder": "$field.placeholder",
+                        "presentation": "$field.presentation",
                         "multiple": "$field.multiple",
-                        "options": "$field.options"
+                        "options": "$field.options",
+                        "imageOptions": "$field.imageOptions"
                     }
                 },
-                "after": { "resource": "$result" }
+                "after": { "opens": "questionDetail", "row": "$result.ref", "resource": "$result" }
             },
             {
                 "id": "backToSection",
@@ -49,7 +52,14 @@
                 "title": "Question",
                 "fields": [
                     { "id": "label", "label": "Label", "path": "label", "type": "text", "required": true },
-                    { "id": "key", "label": "Stable key", "path": "key", "type": "readonly" },
+                    {
+                        "id": "key",
+                        "label": "Stable key",
+                        "path": "key",
+                        "type": "text",
+                        "required": true,
+                        "placeholder": "customerIntent"
+                    },
                     {
                         "id": "type",
                         "label": "Answer type",
@@ -70,32 +80,76 @@
                     },
                     { "id": "required", "label": "Required answer", "path": "required", "type": "checkbox" },
                     { "id": "hint", "label": "Help text", "path": "hint", "type": "text" },
-                    { "id": "placeholder", "label": "Placeholder", "path": "placeholder", "type": "text" }
+                    { "id": "placeholder", "label": "Placeholder", "path": "placeholder", "type": "text" },
+                    {
+                        "id": "presentation",
+                        "label": "Choice layout",
+                        "path": "presentation",
+                        "type": "select",
+                        "options": [
+                            { "value": "chips", "label": "Choice chips" },
+                            { "value": "image-grid", "label": "Image grid" }
+                        ],
+                        "visibleWhen": { "value": "$field.type", "equals": "choice" }
+                    }
                 ]
             },
             {
                 "id": "choices",
                 "title": "Choices",
-                "description": "Drag choices to reorder them. This section only applies to dropdowns and choice chips.",
+                "description": "Each answer stores its stable key. Labels and images can evolve without changing submitted values.",
                 "fields": [
                     {
                         "id": "options",
                         "label": "Options",
                         "path": "options",
                         "type": "reorderable-list",
-                        "itemKey": "id",
+                        "itemKey": "key",
                         "positionPath": "position",
                         "addLabel": "Add option",
                         "maxItems": 50,
                         "visibleWhen": {
                             "any": [
                                 { "value": "$field.type", "equals": "select" },
-                                { "value": "$field.type", "equals": "choice" }
+                                {
+                                    "all": [
+                                        { "value": "$field.type", "equals": "choice" },
+                                        { "value": "$field.presentation", "notEquals": "image-grid" }
+                                    ]
+                                }
                             ]
                         },
                         "fields": [
-                            { "id": "value", "label": "Value", "path": "value", "required": true },
+                            { "id": "key", "label": "Stable key", "path": "key", "required": true },
                             { "id": "label", "label": "Label", "path": "label", "required": true }
+                        ]
+                    },
+                    {
+                        "id": "imageOptions",
+                        "label": "Image choices",
+                        "path": "options",
+                        "type": "reorderable-list",
+                        "itemKey": "key",
+                        "positionPath": "position",
+                        "addLabel": "Add image choice",
+                        "maxItems": 50,
+                        "visibleWhen": {
+                            "all": [
+                                { "value": "$field.type", "equals": "choice" },
+                                { "value": "$field.presentation", "equals": "image-grid" }
+                            ]
+                        },
+                        "fields": [
+                            { "id": "key", "label": "Stable key", "path": "key", "required": true },
+                            { "id": "label", "label": "Label", "path": "label", "required": true },
+                            {
+                                "id": "imageUrl",
+                                "label": "Image URL",
+                                "path": "imageUrl",
+                                "required": true,
+                                "placeholder": "https://… or /media/…"
+                            },
+                            { "id": "imageAlt", "label": "Image alt text", "path": "imageAlt" }
                         ]
                     },
                     {

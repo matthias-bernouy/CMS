@@ -12,6 +12,7 @@
         "required": { "type": "boolean" },
         "hint": { "type": "string", "nullable": true },
         "placeholder": { "type": "string", "nullable": true },
+        "presentation": { "type": "string" },
         "multiple": { "type": "boolean" },
         "position": { "type": "number" },
         "options": {
@@ -20,11 +21,13 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "value": { "type": "string" },
+                    "key": { "type": "string" },
                     "label": { "type": "string" },
+                    "imageUrl": { "type": "string", "nullable": true },
+                    "imageAlt": { "type": "string", "nullable": true },
                     "position": { "type": "number" }
                 },
-                "required": ["id", "value", "label"]
+                "required": ["id", "key", "label"]
             }
         }
     },

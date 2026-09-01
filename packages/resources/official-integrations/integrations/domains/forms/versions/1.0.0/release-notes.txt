@@ -5,3 +5,4 @@ Forms 1.0.0
 - Adds immutable published versions and idempotent Supabase submission storage.
 - Adds form lifecycle and submission review dashboards.
 - Adds bounded batch retention and private connector access controls.
+- Adds editable stable question and option keys with accessible image-grid choices.

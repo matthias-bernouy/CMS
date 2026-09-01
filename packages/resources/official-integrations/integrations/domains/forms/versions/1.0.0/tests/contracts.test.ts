@@ -108,6 +108,34 @@ describe("Forms 1.0.0 contracts", () => {
         ).toMatchObject({ restaurantName: "Maison Sépia", consent: "true" });
     });
 
+    test("validates stable image-choice keys and safe image URLs", () => {
+        const definition = structuredClone(restaurantPreview.definition) as any;
+        const mood = definition.steps[1].fields[1];
+        mood.presentation = "image-grid";
+        mood.options = [
+            { key: "warm", label: "Warm", imageUrl: "/media/warm.webp" },
+            { key: "bright", label: "Bright", imageUrl: "https://images.example.test/bright.webp" },
+        ];
+
+        expect(formDefinition(definition)).toBe(definition);
+        expect(
+            submissionAnswers(definition, {
+                ownerName: "Alex Morgan",
+                email: "alex@example.test",
+                restaurantName: "Maison Sépia",
+                mood: "bright",
+                cuisine: "french",
+                city: "Bordeaux",
+                consent: "true",
+            }),
+        ).toMatchObject({ mood: "bright" });
+        mood.options[1].key = "warm";
+        expect(() => formDefinition(definition)).toThrow("duplicate option keys");
+        mood.options[1].key = "bright";
+        mood.options[1].imageUrl = "javascript:alert(1)";
+        expect(() => formDefinition(definition)).toThrow("image choices need HTTPS");
+    });
+
     test("serves a published form and submits through mocked PostgREST", async () => {
         const calls: string[] = [];
         globalThis.fetch = async (input) => {

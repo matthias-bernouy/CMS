@@ -1,6 +1,7 @@
-import { answersFrom, formsRoot, renderStep, sourceBase } from "./renderer";
+import { answersFrom, formsRoot, renderStep, sourceBase } from "./rendering";
 import { parsePublishedForm } from "./definition";
 import { restaurantPreview } from "./preview";
+import { installRendererStyles } from "./rendering/styles";
 import { clearFormDrafts, readDraft, writeDraft } from "./state";
 
 export class FormsRenderer extends HTMLElement {
@@ -13,6 +14,7 @@ export class FormsRenderer extends HTMLElement {
     request;
 
     connectedCallback() {
+        installRendererStyles(this);
         this.load();
     }
 

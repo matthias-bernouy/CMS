@@ -3,7 +3,6 @@ import {
     editableForm,
     optionalText,
     questionIn,
-    recordArray,
     requiredText,
     saveEditableForm,
     sectionIn,
@@ -12,6 +11,7 @@ import {
     type FormQuestion,
     type FormSection,
 } from "./model.ts";
+import { normalizedOptions, normalizedQuestionKey, optionItems } from "./options.ts";
 import { builderReference, questionReference, sectionReference } from "./references.ts";
 
 const choiceTypes = new Set(["select", "choice"]);
@@ -54,17 +54,33 @@ export async function saveQuestion(input: Record<string, unknown>, actor: string
     if (!questionTypes.has(type)) {
         throw new HttpError(422, "question type is not supported");
     }
+    const key = normalizedQuestionKey(input.key);
+    if (
+        key !== question.key &&
+        form.definition.steps.some((candidate) => candidate.fields.some((field) => field.key === key))
+    ) {
+        throw new HttpError(422, `question key "${key}" is already used`);
+    }
+    question.key = key;
     question.label = requiredText(input.label, "question label", 240);
     question.type = type;
     setOptional(question, "hint", input.hint);
     setOptional(question, "placeholder", input.placeholder, 240);
     question.required = input.required === true;
     if (choiceTypes.has(type)) {
-        question.options = normalizedOptions(input.options);
+        const imageGrid = type === "choice" && input.presentation === "image-grid";
+        const optionInput = imageGrid ? (input.imageOptions ?? input.options) : input.options;
+        question.options = normalizedOptions(optionInput, imageGrid);
         question.multiple = type === "choice" && input.multiple === true;
+        if (imageGrid) {
+            question.presentation = "image-grid";
+        } else {
+            delete question.presentation;
+        }
     } else {
         delete question.options;
         delete question.multiple;
+        delete question.presentation;
     }
     await saveEditableForm(form, form.definition, actor);
     return questionDetail(form, section, question);
@@ -118,9 +134,7 @@ function questionItem(
 }
 
 function questionDetail(form: EditableForm, section: FormSection, question: FormQuestion): Record<string, unknown> {
-    const options = Array.isArray(question.options)
-        ? question.options.filter((option) => typeof option === "object")
-        : [];
+    const options = optionItems(question.options);
     return {
         ...questionItem(form, section, question, section.fields.indexOf(question)),
         ref: questionReference(form.reference.formKey, section.id, question.key),
@@ -133,16 +147,9 @@ function questionDetail(form: EditableForm, section: FormSection, question: Form
         hint: question.hint ?? "",
         placeholder: question.placeholder ?? "",
         multiple: question.multiple === true,
-        options: options.map((option, index) => ({ ...option, id: String(index + 1), position: index })),
+        presentation: question.presentation === "image-grid" ? "image-grid" : "chips",
+        options,
     };
-}
-
-function normalizedOptions(value: unknown): Record<string, unknown>[] {
-    const options = recordArray(value).map((option) => ({
-        value: requiredText(option.value, "option value", 160),
-        label: requiredText(option.label, "option label", 160),
-    }));
-    return options.length > 0 ? options : [{ value: "option-1", label: "Option 1" }];
 }
 
 function setOptional(target: Record<string, unknown>, key: string, value: unknown, maximum = 1000): void {

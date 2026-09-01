@@ -72,7 +72,7 @@
     {
         "route": "/admin/form/question",
         "method": "POST",
-        "requiredInputs": ["label", "ref", "type"],
+        "requiredInputs": ["key", "label", "ref", "type"],
         "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
         "responses": [{ "status": "200" }, { "status": "default" }]
     },

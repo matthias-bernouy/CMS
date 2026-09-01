@@ -60,7 +60,7 @@ beforeEach(() => {
         createdAt: "2026-09-01T08:00:00Z",
         updatedAt: "2026-09-01T08:00:00Z",
         definition: structuredClone(restaurantPreview.definition),
-        answers: { ownerName: "Alex Morgan", consent: "true" },
+        answers: { ownerName: "Alex Morgan", mood: "bright", consent: "true" },
     };
     globalThis.fetch = async (_input, init) => {
         const url = String(_input);
@@ -114,25 +114,54 @@ describe("Forms admin workflows", () => {
         const savedQuestion = await handleFormsRequest(
             adminRequest("/admin/form/question", {
                 ref: question.ref,
-                label: "Preferred table",
+                key: "preferredTable",
+                label: "Preferred atmosphere",
                 type: "choice",
                 required: true,
                 multiple: false,
-                options: [
-                    { id: "1", value: "inside", label: "Inside", position: 0 },
-                    { id: "2", value: "terrace", label: "Terrace", position: 1 },
+                presentation: "image-grid",
+                imageOptions: [
+                    {
+                        id: "inside",
+                        key: "inside",
+                        label: "Inside",
+                        imageUrl: "/media/inside.webp",
+                        imageAlt: "Dining room",
+                        position: 0,
+                    },
+                    {
+                        id: "terrace",
+                        key: "terrace",
+                        label: "Terrace",
+                        imageUrl: "https://images.example.test/terrace.webp",
+                        position: 1,
+                    },
                 ],
             }),
         );
         expect(savedQuestion.status).toBe(200);
-        expect(await savedQuestion.json()).toMatchObject({
-            label: "Preferred table",
+        const savedQuestionBody = (await savedQuestion.json()) as Record<string, unknown>;
+        expect(savedQuestionBody).toMatchObject({
+            key: "preferredTable",
+            label: "Preferred atmosphere",
             type: "choice",
+            presentation: "image-grid",
             options: [
-                { value: "inside", label: "Inside" },
-                { value: "terrace", label: "Terrace" },
+                { key: "inside", label: "Inside", imageUrl: "/media/inside.webp" },
+                { key: "terrace", label: "Terrace", imageUrl: "https://images.example.test/terrace.webp" },
             ],
         });
+        const duplicateKey = await handleFormsRequest(
+            adminRequest("/admin/form/question", {
+                ref: savedQuestionBody.ref,
+                key: "mood",
+                label: "Preferred atmosphere",
+                type: "choice",
+                presentation: "image-grid",
+                imageOptions: [{ key: "inside", label: "Inside", imageUrl: "/media/inside.webp" }],
+            }),
+        );
+        expect(duplicateKey.status).toBe(422);
         expect(JSON.stringify(managed)).not.toContain("definitionJson");
     });
 
@@ -152,6 +181,12 @@ describe("Forms admin workflows", () => {
             section: "One last look.",
             question: "I confirm that these details are accurate and may be published.",
             answer: "Yes",
+        });
+        expect(resource.answers).toContainEqual({
+            key: "mood",
+            section: "Give your place a personality.",
+            question: "What should it feel like?",
+            answer: "Bright and fresh",
         });
 
         const updated = await handleFormsRequest(

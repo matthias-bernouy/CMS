@@ -3,7 +3,7 @@
     "target": {
         "kind": "forms",
         "version": "1.0.0",
-        "packageDigest": "655820fe6ee7507ff85708910a7dbd7fd4621e4864311d3338fde5150c87e4b5"
+        "packageDigest": "258d20aa25942c605932a6fd3b40c0da6777ebb1a0e60fcaa291cedb352e46c8"
     },
     "manifest": {
         "runnerRequirements": [

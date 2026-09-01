@@ -74,16 +74,23 @@ function validateField(value: unknown, keys: Set<string>): void {
         if (!Array.isArray(value.options) || value.options.length < 1 || value.options.length > 50) {
             throw new HttpError(422, `${value.key} needs between 1 and 50 options`);
         }
-        const optionValues = new Set<string>();
+        const optionKeys = new Set<string>();
         for (const option of value.options) {
-            if (!isRecord(option) || !shortText(option.label, 160) || !shortText(option.value, 160)) {
+            const key = isRecord(option) ? stableOptionKey(option) : "";
+            if (!isRecord(option) || !shortText(option.label, 160) || !key) {
                 throw new HttpError(422, `${value.key} contains an invalid option`);
             }
-            if (optionValues.has(option.value as string)) {
-                throw new HttpError(422, `${value.key} contains duplicate option values`);
+            if (optionKeys.has(key)) {
+                throw new HttpError(422, `${value.key} contains duplicate option keys`);
             }
-            optionValues.add(option.value as string);
+            optionKeys.add(key);
+            if (value.presentation === "image-grid" && !validImageUrl(option.imageUrl)) {
+                throw new HttpError(422, `${value.key} image choices need HTTPS or CMS-relative image URLs`);
+            }
         }
+    }
+    if (value.presentation !== undefined && (value.type !== "choice" || value.presentation !== "image-grid")) {
+        throw new HttpError(422, `${value.key} contains an invalid choice presentation`);
     }
 }
 
@@ -108,9 +115,7 @@ function validateAnswer(
         errors[key] = "Invalid answer";
         return;
     }
-    const options = Array.isArray(field.options)
-        ? new Set(field.options.filter(isRecord).map((option) => String(option.value)))
-        : null;
+    const options = Array.isArray(field.options) ? new Set(field.options.filter(isRecord).map(stableOptionKey)) : null;
     if (options && values.some((item) => !options.has(item as string))) {
         errors[key] = "Choose one of the available options";
     }
@@ -144,6 +149,25 @@ function emptyAnswer(value: unknown): boolean {
 
 function shortText(value: unknown, maximum: number): boolean {
     return typeof value === "string" && value.trim().length > 0 && value.length <= maximum;
+}
+
+function stableOptionKey(option: Record<string, unknown>): string {
+    const key = String(option.key ?? option.value ?? "").trim();
+    return /^[a-z][A-Za-z0-9_-]*$/.test(key) && key.length <= 80 ? key : "";
+}
+
+function validImageUrl(value: unknown): boolean {
+    if (typeof value !== "string" || !value || value.length > 2048) {
+        return false;
+    }
+    if (value.startsWith("/") && !value.startsWith("//")) {
+        return true;
+    }
+    try {
+        return new URL(value).protocol === "https:";
+    } catch {
+        return false;
+    }
 }
 
 function parseJson(value: string): unknown {
