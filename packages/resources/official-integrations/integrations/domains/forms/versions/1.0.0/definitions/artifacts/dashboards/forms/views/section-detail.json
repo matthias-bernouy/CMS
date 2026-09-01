@@ -1,0 +1,107 @@
+[
+    {
+        "widget": "w-detail",
+        "id": "sectionDetail",
+        "source": { "endpoint": "manageSection", "params": { "ref": "$selection.id" } },
+        "title": { "path": "title", "fallback": "Section" },
+        "status": { "path": "badge" },
+        "actions": [
+            {
+                "id": "saveSection",
+                "label": "Save section",
+                "tone": "primary",
+                "placement": "primary",
+                "endpoint": {
+                    "endpoint": "saveSection",
+                    "body": {
+                        "ref": "$resource.ref",
+                        "title": "$field.title",
+                        "description": "$field.description"
+                    }
+                },
+                "after": { "resource": "$result" }
+            },
+            {
+                "id": "backToForm",
+                "label": "Form settings",
+                "placement": "secondary",
+                "endpoint": { "endpoint": "manageForm", "params": { "key": "$resource.formKey" } },
+                "after": { "opens": "formDetail", "row": "$result.key" }
+            },
+            {
+                "id": "deleteSection",
+                "label": "Delete section",
+                "tone": "danger",
+                "placement": "more",
+                "confirm": "Delete this section and every question it contains?",
+                "endpoint": { "endpoint": "deleteSection", "body": { "ref": "$resource.ref" } },
+                "after": { "opens": "formDetail", "row": "$result.formKey" }
+            }
+        ],
+        "main": [
+            {
+                "id": "sectionContent",
+                "title": "Section content",
+                "description": "Questions are managed from the ordered list below.",
+                "fields": [
+                    { "id": "title", "label": "Title", "path": "title", "type": "text", "required": true },
+                    { "id": "description", "label": "Description", "path": "description", "type": "textarea", "rows": 3 }
+                ]
+            },
+            {
+                "widget": "w-navigation-list",
+                "id": "questionNavigation",
+                "title": "Questions",
+                "description": "Open a question to configure its type and choices. Drag questions to reorder them.",
+                "source": {
+                    "endpoint": "manageQuestions",
+                    "params": { "context": "$selection.sectionDetail.id" },
+                    "itemsPath": "items"
+                },
+                "rowKey": "id",
+                "item": {
+                    "title": { "path": "title" },
+                    "subtitle": { "path": "subtitle" },
+                    "badge": { "path": "badge" }
+                },
+                "selection": { "opens": "questionDetail" },
+                "reorderable": { "action": "reorderQuestions" },
+                "actions": [
+                    {
+                        "id": "createQuestion",
+                        "label": "Add question",
+                        "tone": "primary",
+                        "placement": "primary",
+                        "endpoint": {
+                            "endpoint": "createQuestion",
+                            "body": { "context": "$selection.sectionDetail.id" }
+                        },
+                        "after": { "opens": "questionDetail", "row": "$result.ref", "resource": "$result" }
+                    },
+                    {
+                        "id": "reorderQuestions",
+                        "label": "Reorder questions",
+                        "endpoint": {
+                            "endpoint": "reorderQuestions",
+                            "body": {
+                                "context": "$selection.sectionDetail.id",
+                                "refs": "$value"
+                            }
+                        }
+                    }
+                ]
+            }
+        ],
+        "aside": [
+            {
+                "id": "sectionMetadata",
+                "title": "Structure",
+                "fields": [
+                    { "id": "sectionId", "label": "Stable id", "path": "sectionId", "type": "readonly" },
+                    { "id": "questionCount", "label": "Questions", "path": "questionCount", "type": "readonly" },
+                    { "id": "formKey", "label": "Form", "path": "formKey", "type": "readonly" }
+                ]
+            }
+        ]
+    }
+]

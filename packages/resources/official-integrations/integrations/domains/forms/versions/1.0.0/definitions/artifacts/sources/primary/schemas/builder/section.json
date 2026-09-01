@@ -1,0 +1,14 @@
+{
+    "type": "object",
+    "properties": {
+        "id": { "type": "string" },
+        "ref": { "type": "string" },
+        "sectionId": { "type": "string" },
+        "formKey": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string", "nullable": true },
+        "questionCount": { "type": "number" },
+        "position": { "type": "number" }
+    },
+    "required": ["id", "ref", "formKey", "title"]
+}

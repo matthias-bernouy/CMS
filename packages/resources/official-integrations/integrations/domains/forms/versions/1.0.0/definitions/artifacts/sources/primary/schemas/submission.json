@@ -1,0 +1,15 @@
+{
+    "type": "object",
+    "properties": {
+        "id": { "type": "number" },
+        "receiptId": { "type": "string" },
+        "formKey": { "type": "string" },
+        "formVersion": { "type": "number" },
+        "status": { "type": "string" },
+        "answers": { "type": "object" },
+        "submittedBy": { "type": "string", "nullable": true },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string", "nullable": true }
+    },
+    "required": ["id", "receiptId", "formKey", "formVersion", "status", "answers", "createdAt"]
+}

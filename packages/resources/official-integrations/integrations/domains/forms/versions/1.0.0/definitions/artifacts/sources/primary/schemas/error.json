@@ -1,0 +1,8 @@
+{
+    "type": "object",
+    "properties": {
+        "error": { "type": "string" },
+        "fields": { "type": "object", "nullable": true }
+    },
+    "required": ["error"]
+}

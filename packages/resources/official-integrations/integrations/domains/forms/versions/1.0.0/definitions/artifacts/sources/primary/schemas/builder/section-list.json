@@ -1,0 +1,21 @@
+{
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "sectionId": { "type": "string" },
+                    "title": { "type": "string" },
+                    "subtitle": { "type": "string" },
+                    "badge": { "type": "string" },
+                    "position": { "type": "number" }
+                },
+                "required": ["id", "title"]
+            }
+        }
+    },
+    "required": ["items"]
+}

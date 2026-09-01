@@ -1,0 +1,12 @@
+{
+    "type": "object",
+    "properties": {
+        "version": { "type": "number" },
+        "idempotencyKey": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "website": { "type": "string" },
+        "answers": { "type": "object" }
+    },
+    "required": ["version", "idempotencyKey", "sessionId", "startedAt", "answers"]
+}

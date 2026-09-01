@@ -1,0 +1,9 @@
+{
+    "type": "object",
+    "properties": {
+        "ok": { "type": "boolean" },
+        "receiptId": { "type": "string", "nullable": true },
+        "deleted": { "type": "number", "nullable": true }
+    },
+    "required": ["ok"]
+}

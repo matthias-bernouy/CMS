@@ -1,0 +1,113 @@
+[
+    {
+        "endpointId": "manageQuestions",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/questions",
+        "params": [{ "name": "context", "in": "query", "type": "string", "required": true }],
+        "headers": { "$include": "../../shared/admin-headers.json" },
+        "output": [
+            { "status": "200", "body": { "$include": "../../schemas/builder/question-list.json" } },
+            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+        ]
+    },
+    {
+        "endpointId": "createQuestion",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/questions/create",
+        "params": [],
+        "headers": { "$include": "../../shared/admin-headers.json" },
+        "body": {
+            "type": "object",
+            "properties": { "context": { "type": "string" } },
+            "required": ["context"]
+        },
+        "output": [
+            { "status": "200", "body": { "$include": "../../schemas/builder/question.json" } },
+            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+        ]
+    },
+    {
+        "endpointId": "reorderQuestions",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/questions/reorder",
+        "params": [],
+        "headers": { "$include": "../../shared/admin-headers.json" },
+        "body": {
+            "type": "object",
+            "properties": {
+                "context": { "type": "string" },
+                "refs": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["context", "refs"]
+        },
+        "output": [
+            { "status": "200", "body": { "$include": "../../schemas/builder/question-list.json" } },
+            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+        ]
+    },
+    {
+        "endpointId": "manageQuestion",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/question",
+        "params": [{ "name": "ref", "in": "query", "type": "string", "required": true }],
+        "headers": { "$include": "../../shared/admin-headers.json" },
+        "output": [
+            { "status": "200", "body": { "$include": "../../schemas/builder/question.json" } },
+            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+        ]
+    },
+    {
+        "endpointId": "saveQuestion",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/question",
+        "params": [],
+        "headers": { "$include": "../../shared/admin-headers.json" },
+        "body": {
+            "type": "object",
+            "properties": {
+                "ref": { "type": "string" },
+                "label": { "type": "string" },
+                "type": { "type": "string" },
+                "required": { "type": "boolean" },
+                "hint": { "type": "string", "nullable": true },
+                "placeholder": { "type": "string", "nullable": true },
+                "multiple": { "type": "boolean" },
+                "options": { "type": "array", "items": { "type": "object" } }
+            },
+            "required": ["ref", "label", "type"]
+        },
+        "output": [
+            { "status": "200", "body": { "$include": "../../schemas/builder/question.json" } },
+            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+        ]
+    },
+    {
+        "endpointId": "deleteQuestion",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/question/delete",
+        "params": [],
+        "headers": { "$include": "../../shared/admin-headers.json" },
+        "body": {
+            "type": "object",
+            "properties": { "ref": { "type": "string" } },
+            "required": ["ref"]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": { "ok": { "type": "boolean" }, "sectionRef": { "type": "string" } },
+                    "required": ["ok", "sectionRef"]
+                }
+            },
+            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+        ]
+    }
+]

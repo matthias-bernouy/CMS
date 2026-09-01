@@ -1,0 +1,9 @@
+{
+    "type": "dashboard",
+    "dashboard": {
+        "id": "{{answers.id}}-submissions",
+        "source": "{{answers.id}}",
+        "meta": { "name": "Form submissions", "icon": "inbox" },
+        "views": { "$files": ["views/submissions-table.json", "views/submission-detail.json"] }
+    }
+}

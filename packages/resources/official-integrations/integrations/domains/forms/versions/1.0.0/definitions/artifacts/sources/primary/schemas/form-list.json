@@ -1,0 +1,11 @@
+{
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": { "$include": "form.json" }
+        },
+        "total": { "type": "number" }
+    },
+    "required": ["items", "total"]
+}

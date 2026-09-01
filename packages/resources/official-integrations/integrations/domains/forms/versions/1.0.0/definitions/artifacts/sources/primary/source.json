@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}",
+    "meta": {
+        "name": "Forms",
+        "description": "Published form definitions, submissions, and administrator workflows.",
+        "icon": {
+            "path": "assets/icon.svg"
+        }
+    },
+    "endpoints": {
+        "$include": "endpoints.json"
+    }
+}

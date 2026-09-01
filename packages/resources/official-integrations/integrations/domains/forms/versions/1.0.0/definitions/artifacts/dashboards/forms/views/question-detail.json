@@ -1,0 +1,122 @@
+[
+    {
+        "widget": "w-detail",
+        "id": "questionDetail",
+        "source": { "endpoint": "manageQuestion", "params": { "ref": "$selection.id" } },
+        "title": { "path": "label", "fallback": "Question" },
+        "status": { "path": "type" },
+        "actions": [
+            {
+                "id": "saveQuestion",
+                "label": "Save question",
+                "tone": "primary",
+                "placement": "primary",
+                "endpoint": {
+                    "endpoint": "saveQuestion",
+                    "body": {
+                        "ref": "$resource.ref",
+                        "label": "$field.label",
+                        "type": "$field.type",
+                        "required": "$field.required",
+                        "hint": "$field.hint",
+                        "placeholder": "$field.placeholder",
+                        "multiple": "$field.multiple",
+                        "options": "$field.options"
+                    }
+                },
+                "after": { "resource": "$result" }
+            },
+            {
+                "id": "backToSection",
+                "label": "Section",
+                "placement": "secondary",
+                "endpoint": { "endpoint": "manageSection", "params": { "ref": "$resource.sectionRef" } },
+                "after": { "opens": "sectionDetail", "row": "$result.ref" }
+            },
+            {
+                "id": "deleteQuestion",
+                "label": "Delete question",
+                "tone": "danger",
+                "placement": "more",
+                "confirm": "Delete this question? Existing published versions and responses remain unchanged.",
+                "endpoint": { "endpoint": "deleteQuestion", "body": { "ref": "$resource.ref" } },
+                "after": { "opens": "sectionDetail", "row": "$result.sectionRef" }
+            }
+        ],
+        "main": [
+            {
+                "id": "questionContent",
+                "title": "Question",
+                "fields": [
+                    { "id": "label", "label": "Label", "path": "label", "type": "text", "required": true },
+                    { "id": "key", "label": "Stable key", "path": "key", "type": "readonly" },
+                    {
+                        "id": "type",
+                        "label": "Answer type",
+                        "path": "type",
+                        "type": "select",
+                        "required": true,
+                        "options": [
+                            { "value": "text", "label": "Short text" },
+                            { "value": "textarea", "label": "Long text" },
+                            { "value": "email", "label": "Email" },
+                            { "value": "tel", "label": "Phone" },
+                            { "value": "number", "label": "Number" },
+                            { "value": "date", "label": "Date" },
+                            { "value": "select", "label": "Dropdown" },
+                            { "value": "choice", "label": "Choice chips" },
+                            { "value": "checkbox", "label": "Confirmation checkbox" }
+                        ]
+                    },
+                    { "id": "required", "label": "Required answer", "path": "required", "type": "checkbox" },
+                    { "id": "hint", "label": "Help text", "path": "hint", "type": "text" },
+                    { "id": "placeholder", "label": "Placeholder", "path": "placeholder", "type": "text" }
+                ]
+            },
+            {
+                "id": "choices",
+                "title": "Choices",
+                "description": "Drag choices to reorder them. This section only applies to dropdowns and choice chips.",
+                "fields": [
+                    {
+                        "id": "options",
+                        "label": "Options",
+                        "path": "options",
+                        "type": "reorderable-list",
+                        "itemKey": "id",
+                        "positionPath": "position",
+                        "addLabel": "Add option",
+                        "maxItems": 50,
+                        "visibleWhen": {
+                            "any": [
+                                { "value": "$field.type", "equals": "select" },
+                                { "value": "$field.type", "equals": "choice" }
+                            ]
+                        },
+                        "fields": [
+                            { "id": "value", "label": "Value", "path": "value", "required": true },
+                            { "id": "label", "label": "Label", "path": "label", "required": true }
+                        ]
+                    },
+                    {
+                        "id": "multiple",
+                        "label": "Allow multiple choices",
+                        "path": "multiple",
+                        "type": "checkbox",
+                        "visibleWhen": { "value": "$field.type", "equals": "choice" }
+                    }
+                ]
+            }
+        ],
+        "aside": [
+            {
+                "id": "questionMetadata",
+                "title": "Location",
+                "fields": [
+                    { "id": "sectionTitle", "label": "Section", "path": "sectionTitle", "type": "readonly" },
+                    { "id": "formKey", "label": "Form", "path": "formKey", "type": "readonly" }
+                ]
+            }
+        ]
+    }
+]
