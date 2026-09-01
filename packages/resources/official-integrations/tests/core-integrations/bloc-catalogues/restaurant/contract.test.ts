@@ -9,6 +9,11 @@ const restaurantTags = [
     "restaurant-hero-gallery",
     "restaurant-hero-split",
     "restaurant-hero-cover",
+    "restaurant-menu-catalog",
+    "restaurant-menu-section",
+    "restaurant-menu-item",
+    "restaurant-contact-card",
+    "restaurant-contact-item",
 ] as const;
 const heroTags = ["restaurant-hero-gallery", "restaurant-hero-split", "restaurant-hero-cover"] as const;
 
@@ -94,21 +99,35 @@ describe("restaurant 1.0.0 bloc catalogue", () => {
         expect(headerResponsiveCss).toContain("@media (max-width: 360px)");
         expect(galleryTemplate).toContain('slot name="gallery-start"');
         expect(galleryTemplate).toContain('slot name="gallery-end"');
-        expect(splitTemplate).toContain('slot name="media-accent"');
+        expect(splitTemplate).not.toContain('slot name="media-accent"');
+        expect(splitTemplate).not.toContain('part="shade"');
         expect(coverTemplate).toContain('<div part="shade" aria-hidden="true"></div>');
 
         for (const tag of heroTags) {
             const bloc = await loadRestaurantBloc(tag);
             const editor = decodeSource(bloc.source?.["BlocEditor.ts"]);
+            const defaultContent = decodeDefaultContent(bloc.source) ?? "";
             const controller = decodeSource(bloc.source?.["carousel.ts"]);
             const template = decodeSource(bloc.source?.["template.html"]);
+            expect(editor).toContain('label: "Brand logo"');
             expect(editor).toContain('slot: "brand"');
+            expect(editor).toContain('{ kind: "component", tag: "img" }');
+            expect(editor).toContain('label: "Page title"');
+            expect(editor).toContain('slot: "title"');
             expect(editor).toContain('label: "Actions"');
             expect(editor).toContain('label: "Details"');
             expect(editor).toContain('attribute: "autoplay"');
             expect(editor).toContain('attribute: "rotation-interval"');
+            expect(editor).not.toContain('attribute: "height"');
+            expect(editor).not.toContain('attribute: "emblem"');
             expect(editor).not.toContain('type: "color"');
+            expect(template).toContain('<div part="title"><slot name="title"></slot></div>');
+            expect(template).not.toContain("emblem");
             expect(template).toContain('part="progress-value"');
+            expect(defaultContent).toContain('<img slot="brand"');
+            expect(defaultContent).toContain('<h1 slot="title">');
+            expect(defaultContent).not.toContain('height="screen"');
+            expect(defaultContent).not.toContain("emblem");
             expect(controller).toContain("setTimeout(() => this.advance(), duration)");
             expect(controller).toContain('event.key !== "Enter"');
             expect(controller).toContain("prefers-reduced-motion: reduce");
@@ -206,6 +225,26 @@ describe("restaurant 1.0.0 bloc catalogue", () => {
         expect(baseCss).toContain("--integration-basic-blocs-font-size-display");
         expect(responsiveCss).not.toContain(":host([height=");
         expect(responsiveCss).not.toContain('mobile-image-fit="contain"');
+    });
+
+    test("keeps alternate hero frames full-screen and crop-stable", async () => {
+        for (const tag of ["restaurant-hero-split", "restaurant-hero-cover"] as const) {
+            const bloc = await loadRestaurantBloc(tag);
+            const editor = decodeSource(bloc.source?.["BlocEditor.ts"]);
+            const baseCss = decodeSource(bloc.source?.["styles/base.css"]);
+            const responsiveCss = decodeSource(bloc.source?.["styles/responsive.css"]);
+            const allCss = Object.entries(bloc.source ?? {})
+                .filter(([path]) => path.endsWith(".css"))
+                .map(([, source]) => decodeSource(source))
+                .join("\n");
+
+            expect(editor).toContain('attribute: "image-position"');
+            expect(baseCss).toContain("width: 100vw");
+            expect(baseCss).toContain("height: 100svh");
+            expect(baseCss).toContain("height: 100%");
+            expect(allCss).toContain("object-fit: cover");
+            expect(responsiveCss).not.toContain(":host([height=");
+        }
     });
 
     test("keeps authored restaurant text at or above sixteen pixels", async () => {

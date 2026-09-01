@@ -1,0 +1,89 @@
+:host {
+    --_accent: var(--integration-restaurant-accent, #39ad65);
+    --_muted: var(--integration-restaurant-content-muted-text, #60665f);
+    display: block;
+    min-width: 0;
+    color: inherit;
+    font-family: var(--integration-restaurant-font-body, Inter, system-ui, sans-serif);
+    scroll-margin-block-start: 8rem;
+}
+
+[part="section"],
+[part="intro"],
+[part="items"] {
+    min-width: 0;
+}
+
+[part="title"] {
+    min-width: 0;
+}
+
+[part="header"] {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-block-end: 1.5rem;
+}
+
+[part="icon"] {
+    display: grid;
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--_accent);
+    background: color-mix(in srgb, var(--_accent) 10%, transparent);
+}
+
+:host([icon="hide"]) [part="icon"] {
+    display: none;
+}
+
+[part="description"] {
+    max-width: 46rem;
+    margin-block-start: 0.5rem;
+    color: var(--_muted);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+[part="items"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 2.5rem;
+}
+
+::slotted([slot="title"]),
+::slotted([slot="description"]) {
+    margin: 0;
+}
+
+::slotted([slot="title"]) {
+    overflow-wrap: anywhere;
+}
+
+::slotted(svg[slot="icon"]) {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+}
+
+:host([columns="two"]) [part="items"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:host([density="compact"]) [part="header"] {
+    margin-block-end: 1rem;
+}
+
+:host([density="spacious"]) [part="header"] {
+    margin-block-end: 2.25rem;
+}
+
+@media (max-width: 720px) {
+    :host([columns="two"]) [part="items"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

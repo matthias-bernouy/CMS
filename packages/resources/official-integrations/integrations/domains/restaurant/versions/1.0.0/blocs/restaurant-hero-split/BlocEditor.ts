@@ -19,12 +19,13 @@ export class RestaurantHeroSplitEditor extends Editor {
                     },
                     {
                         type: "segmented",
-                        label: "Height",
-                        attribute: "height",
-                        defaultValue: "screen",
+                        label: "Image focus",
+                        attribute: "image-position",
+                        defaultValue: "center",
                         options: [
-                            { label: "Content", value: "content" },
-                            { label: "Screen", value: "screen" },
+                            { label: "Left", value: "left" },
+                            { label: "Center", value: "center" },
+                            { label: "Right", value: "right" },
                         ],
                     },
                     {
@@ -69,16 +70,6 @@ export class RestaurantHeroSplitEditor extends Editor {
                             { label: "10 s", value: "10" },
                         ],
                     },
-                    {
-                        type: "segmented",
-                        label: "Emblem",
-                        attribute: "emblem",
-                        defaultValue: "show",
-                        options: [
-                            { label: "Show", value: "show" },
-                            { label: "Hide", value: "hide" },
-                        ],
-                    },
                 ],
             },
         ];
@@ -86,12 +77,18 @@ export class RestaurantHeroSplitEditor extends Editor {
 
     protected override contentSlots(): ContentSlot[] {
         return [
-            { label: "Brand", slot: "brand", accepts: [{ kind: "component", tag: "h1" }], min: 1, max: 1 },
+            {
+                label: "Brand logo",
+                slot: "brand",
+                accepts: [{ kind: "component", tag: "img" }],
+                min: 1,
+                max: 1,
+            },
+            { label: "Page title", slot: "title", accepts: [{ kind: "component", tag: "h1" }], min: 1, max: 1 },
             { label: "Subtitle", slot: "subtitle", accepts: [{ kind: "component", tag: "p" }], max: 1 },
             { label: "Actions", slot: "actions", accepts: [{ kind: "component", tag: "a" }], max: 2 },
             { label: "Details", slot: "details", accepts: [{ kind: "any-component" }], max: 3 },
             { label: "Main image", slot: "media", accepts: [{ kind: "component", tag: "img" }], min: 1, max: 1 },
-            { label: "Image accent", slot: "media-accent", accepts: [{ kind: "component", tag: "img" }], max: 1 },
             { label: "Thumbnail rail", slot: "gallery", accepts: [{ kind: "component", tag: "img" }], max: 4 },
         ];
     }

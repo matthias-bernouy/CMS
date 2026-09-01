@@ -1,0 +1,10 @@
+{
+    "default-tag": "restaurant-menu-item",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Restaurant menu item",
+        "description": "Semantic restaurant dish with an editable name, description, details, price, and optional image."
+    }
+}

@@ -2,6 +2,7 @@ import { Component } from "@bernouy/components/base";
 
 import { RestaurantCarouselController } from "./carousel";
 import baseCss from "./styles/base.css" with { type: "text" };
+import mediaCss from "./styles/media.css" with { type: "text" };
 import responsiveCss from "./styles/responsive.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
@@ -11,7 +12,7 @@ export class RestaurantHeroCover extends Component {
     carousel = new RestaurantCarouselController(this);
 
     constructor() {
-        super({ css: `${baseCss}\n${responsiveCss}`, template });
+        super({ css: `${baseCss}\n${mediaCss}\n${responsiveCss}`, template });
     }
 
     connectedCallback() {

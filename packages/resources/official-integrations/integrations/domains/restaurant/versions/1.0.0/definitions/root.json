@@ -4,7 +4,7 @@
     "label": "Restaurant",
     "version": "1.0.0",
     "category": "Blocks",
-    "description": "Install editorial headers, configurable navigation overlays, and image-led hero blocs for restaurant websites.",
+    "description": "Install editorial headers, navigation, menus, contact information, and image-led heroes for restaurant websites.",
     "icon": {
         "path": "assets/icon.svg"
     },
@@ -24,7 +24,12 @@
             "artifacts/blocs/restaurant-menu.json",
             "artifacts/blocs/restaurant-hero-gallery.json",
             "artifacts/blocs/restaurant-hero-split.json",
-            "artifacts/blocs/restaurant-hero-cover.json"
+            "artifacts/blocs/restaurant-hero-cover.json",
+            "artifacts/blocs/menu/restaurant-menu-catalog.json",
+            "artifacts/blocs/menu/restaurant-menu-section.json",
+            "artifacts/blocs/menu/restaurant-menu-item.json",
+            "artifacts/blocs/contact/restaurant-contact-card.json",
+            "artifacts/blocs/contact/restaurant-contact-item.json"
         ]
     }
 }

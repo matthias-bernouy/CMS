@@ -1,0 +1,10 @@
+{
+    "default-tag": "restaurant-contact-card",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Restaurant contact card",
+        "description": "Restaurant contact and opening-hours card with split, stacked, and sidebar presentations."
+    }
+}

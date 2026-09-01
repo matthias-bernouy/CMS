@@ -5,7 +5,7 @@
     "instructions": [
         [
             "Install restaurant blocs",
-            "CmsCore imports a configurable header and three restaurant hero layouts."
+            "CmsCore imports configurable navigation, menu, contact, and hero blocs."
         ],
         [
             "Choose a hero structure",
@@ -24,7 +24,7 @@
     "resources": [
         [
             "Blocs",
-            "One restaurant header and three responsive restaurant hero layouts"
+            "Restaurant navigation, menu, contact, and responsive hero building blocks"
         ]
     ],
     "review": [
@@ -37,6 +37,11 @@
         "Install restaurant-hero-gallery",
         "Install restaurant-hero-split",
         "Install restaurant-hero-cover",
+        "Install restaurant-menu-catalog",
+        "Install restaurant-menu-section",
+        "Install restaurant-menu-item",
+        "Install restaurant-contact-card",
+        "Install restaurant-contact-item",
         "Refresh Blocs"
     ],
     "syncNote": "This integration installs only bloc artifacts and restaurant theme tokens."

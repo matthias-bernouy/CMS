@@ -1,0 +1,93 @@
+:host {
+    --_accent: var(--integration-restaurant-accent, #39ad65);
+    --_border: var(--integration-restaurant-content-border, #ddd8cf);
+    --_muted: var(--integration-restaurant-content-muted-text, #60665f);
+    display: block;
+    min-width: 0;
+    color: inherit;
+    font-family: var(--integration-restaurant-font-body, Inter, system-ui, sans-serif);
+}
+
+[part="item"] {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+[part="icon"] {
+    display: grid;
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--_accent);
+    background: color-mix(in srgb, var(--_accent) 10%, transparent);
+}
+
+:host([icon-style="outline"]) [part="icon"] {
+    border: 1px solid var(--_border);
+    background: transparent;
+}
+
+:host([icon-style="plain"]) [part="icon"] {
+    width: 2rem;
+    height: 2rem;
+    background: transparent;
+}
+
+[part="body"],
+[part="value"] {
+    min-width: 0;
+}
+
+[part="label"] {
+    margin-block-end: 0.3rem;
+    color: var(--_muted);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+[part="value"] {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+[part="note"] {
+    margin-block-start: 0.3rem;
+    color: var(--_muted);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+::slotted(svg[slot="icon"]) {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+}
+
+::slotted([slot="value"]),
+::slotted([slot="label"]),
+::slotted([slot="note"]) {
+    margin: 0;
+    color: inherit;
+}
+
+::slotted(a[slot="value"]) {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+}
+
+::slotted(a[slot="value"]:focus-visible) {
+    outline: 3px solid color-mix(in srgb, var(--_accent) 65%, white);
+    outline-offset: 0.2rem;
+    border-radius: 0.2rem;
+}
+
+:host([alignment="stacked"]) [part="item"] {
+    display: grid;
+}

@@ -1,7 +1,7 @@
 {
     "id": "foundations",
     "label": "Restaurant foundations",
-    "description": "Shared colors, typography, and dimensions for restaurant headers and heroes.",
+    "description": "Shared colors, typography, and dimensions for restaurant editorial surfaces.",
     "tokens": [
         {
             "id": "background",
@@ -55,6 +55,51 @@
             "defaults": {
                 "light": "#e4b45d",
                 "dark": "#e4b45d"
+            }
+        },
+        {
+            "id": "content-background",
+            "label": "Editorial background",
+            "type": "color",
+            "defaults": {
+                "light": "#f5f1e9",
+                "dark": "#15171a"
+            }
+        },
+        {
+            "id": "content-surface",
+            "label": "Editorial surface",
+            "type": "color",
+            "defaults": {
+                "light": "#fffaf2",
+                "dark": "#1d2124"
+            }
+        },
+        {
+            "id": "content-text",
+            "label": "Editorial text",
+            "type": "color",
+            "defaults": {
+                "light": "#202421",
+                "dark": "#fffaf0"
+            }
+        },
+        {
+            "id": "content-muted-text",
+            "label": "Editorial muted text",
+            "type": "color",
+            "defaults": {
+                "light": "#60665f",
+                "dark": "#d0cbc1"
+            }
+        },
+        {
+            "id": "content-border",
+            "label": "Editorial border",
+            "type": "color",
+            "defaults": {
+                "light": "#ddd8cf",
+                "dark": "#4c4e4f"
             }
         },
         {
