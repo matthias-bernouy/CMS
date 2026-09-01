@@ -30,7 +30,10 @@ describe("Theme style entry", () => {
 
         expect(css).toContain("@layer cms-theme-base");
         expect(css).toContain("font-family: var(--integration-basic-blocs-font-body, system-ui, sans-serif)");
-        expect(css).toContain("color: var(--cms-link-color, var(--integration-basic-blocs-primary-base, LinkText))");
+        expect(css).toContain(":where(a) {\n    color: inherit;");
+        expect(css).toContain(":where(img:not([slot]), video:not([slot])) {\n    block-size: auto;");
+        expect(css).not.toContain("--cms-link-color");
+        expect(css).not.toContain("LinkText");
         expect(css).not.toContain("var(--font-body");
         expect(css.indexOf("@layer cms-theme-base")).toBeLessThan(css.indexOf(".site { display: block; }"));
         expect(css).toContain(".site { display: block; }");

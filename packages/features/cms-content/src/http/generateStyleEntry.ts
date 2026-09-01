@@ -26,7 +26,7 @@ const THEME_SEMANTIC_BASELINE = `@layer cms-theme-base {
   }
 
   :where(a) {
-    color: var(--cms-link-color, var(--integration-basic-blocs-primary-base, LinkText));
+    color: inherit;
   }
 
   :where(button, input, select, textarea) {
@@ -38,7 +38,7 @@ const THEME_SEMANTIC_BASELINE = `@layer cms-theme-base {
     max-inline-size: 100%;
   }
 
-  :where(img, video) {
+  :where(img:not([slot]), video:not([slot])) {
     block-size: auto;
   }
 }`;
