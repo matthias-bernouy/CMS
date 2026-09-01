@@ -63,10 +63,17 @@ function fieldControl(field: ReorderableListItemField, value: unknown): HTMLElem
         control.value = text;
         return control;
     }
-    const input = document.createElement("input");
-    input.type = field.type ?? "text";
-    input.value = value === null || value === undefined ? "" : String(value);
-    return input;
+    if (field.type === "checkbox") {
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        return input;
+    }
+    const control = document.createElement("p9r-input") as ValueControl;
+    const text = value === null || value === undefined ? "" : String(value);
+    control.setAttribute("type", "text");
+    control.setAttribute("value", text);
+    control.value = text;
+    return control;
 }
 
 function valueAtValue(value: unknown): DashboardMediaItem | null {

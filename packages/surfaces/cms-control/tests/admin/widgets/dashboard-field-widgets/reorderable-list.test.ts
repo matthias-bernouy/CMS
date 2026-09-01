@@ -31,6 +31,8 @@ describe("dashboard reorderable list widget", () => {
 
         expect(list.shadowRoot!.querySelector("[data-header]")?.textContent).toBe("ValueLabel");
         expect(list.shadowRoot!.querySelectorAll(".row label")).toHaveLength(0);
+        expect(list.shadowRoot!.querySelectorAll(".row p9r-input")).toHaveLength(4);
+        expect(list.shadowRoot!.querySelector("[data-item-path='details.value']")?.getAttribute("required")).toBe("");
         const rows = list.shadowRoot!.querySelectorAll<HTMLElement>(".row");
         rows[0]!.querySelector<HTMLElement>(".handle")!.dispatchEvent(new Event("dragstart", { bubbles: true }));
         rows[1]!.dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
@@ -57,7 +59,8 @@ describe("dashboard reorderable list widget", () => {
         };
         document.body.append(list);
 
-        const input = list.shadowRoot!.querySelector<HTMLInputElement>("[data-item-path='label']")!;
+        const input = list.shadowRoot!.querySelector<HTMLElement & { value: string }>("[data-item-path='label']")!;
+        expect(input.tagName).toBe("P9R-INPUT");
         input.focus();
         input.value = "Agency updated";
         input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -83,7 +86,7 @@ describe("dashboard reorderable list widget", () => {
         };
         document.body.append(list);
 
-        const input = list.shadowRoot!.querySelector<HTMLInputElement>("[data-item-path]")!;
+        const input = list.shadowRoot!.querySelector<HTMLElement & { value: string }>("[data-item-path]")!;
         input.value = "polluted";
         input.dispatchEvent(new Event("input", { bubbles: true }));
 

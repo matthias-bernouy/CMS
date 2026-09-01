@@ -25223,33 +25223,40 @@ button {
   }
   function fieldControl(field2, value2) {
     if (field2.type === "media") {
-      const control = document.createElement("cms-dashboard-w-media-field");
+      const control2 = document.createElement("cms-dashboard-w-media-field");
       const resolved = valueAtValue(value2);
-      control.setAttribute("label", field2.label);
-      control.setAttribute("layout", "card");
-      control.setAttribute("accept", "image/*");
-      control.items = resolved ? [resolved] : [];
-      return control;
+      control2.setAttribute("label", field2.label);
+      control2.setAttribute("layout", "card");
+      control2.setAttribute("accept", "image/*");
+      control2.items = resolved ? [resolved] : [];
+      return control2;
     }
     if (field2.type === "select" || field2.type === "combobox") {
-      const control = document.createElement(field2.type === "select" ? "p9r-select" : "p9r-combobox");
-      control.setAttribute("aria-label", field2.label);
-      const text4 = value2 === null || value2 === undefined ? "" : String(value2);
-      control.setAttribute("value", text4);
-      control.replaceChildren(...(field2.options ?? []).map((option2) => {
+      const control2 = document.createElement(field2.type === "select" ? "p9r-select" : "p9r-combobox");
+      control2.setAttribute("aria-label", field2.label);
+      const text5 = value2 === null || value2 === undefined ? "" : String(value2);
+      control2.setAttribute("value", text5);
+      control2.replaceChildren(...(field2.options ?? []).map((option2) => {
         const element = document.createElement("option");
         element.value = option2.value;
         element.textContent = option2.label;
-        element.selected = option2.value === text4;
+        element.selected = option2.value === text5;
         return element;
       }));
-      control.value = text4;
-      return control;
+      control2.value = text5;
+      return control2;
     }
-    const input = document.createElement("input");
-    input.type = field2.type ?? "text";
-    input.value = value2 === null || value2 === undefined ? "" : String(value2);
-    return input;
+    if (field2.type === "checkbox") {
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      return input;
+    }
+    const control = document.createElement("p9r-input");
+    const text4 = value2 === null || value2 === undefined ? "" : String(value2);
+    control.setAttribute("type", "text");
+    control.setAttribute("value", text4);
+    control.value = text4;
+    return control;
   }
   function valueAtValue(value2) {
     if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
@@ -25526,10 +25533,11 @@ button {
 .remove:hover { background: #fff0f0; color: #bd2533; }
 
 .field { display: grid; min-width: 0; }
+.field p9r-input,
 .field p9r-select,
 .field p9r-combobox { min-width: 0; width: 100%; }
-.field input { border: 1px solid var(--border-default); border-radius: 6px; box-sizing: border-box; font: inherit; min-width: 0; padding: 7px 8px; width: 100%; }
-.field input:focus { border-color: #0f6b53; box-shadow: 0 0 0 2px rgb(15 107 83 / 12%); outline: none; }
+.field input[type="checkbox"] { accent-color: var(--primary-base); height: 18px; margin: 0; width: 18px; }
+.field input[type="checkbox"]:focus-visible { outline: 2px solid var(--primary-muted); outline-offset: 2px; }
 
 .add { border: 1px dashed #aab6b2; justify-self: start; padding: 0 12px; }
 
