@@ -1,0 +1,12 @@
+:root {
+    color-scheme: dark;
+    background: #15171a;
+}
+
+html,
+body {
+    min-height: 100%;
+    margin: 0;
+    overflow-x: hidden;
+    background: #15171a;
+}

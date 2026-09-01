@@ -28,3 +28,7 @@ build/
 
 # Generated files
 coverage/
+
+# .p9r files
+.p9r/
+.p9r-state.json

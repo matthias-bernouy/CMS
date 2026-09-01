@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "byId": {
+    "01a05c74-d94b-7000-ac59-d129605e98cb": {
+      "path": "restaurant",
+      "hash": null
+    },
+    "01a05c74-d951-7000-822e-d09f084dcc09": {
+      "path": "restaurant/black-bowl.png",
+      "hash": "3a7b8e1ed5f71acbe37fba35ee05dd7c526bcd386604e86719f2c80802841d7c"
+    },
+    "01a05c74-d951-7001-b93c-8f21437731f4": {
+      "path": "restaurant/colorful-dish.png",
+      "hash": "67653b5731c1358389e0754464c5de1cb10b76af19a154c2a7295ff580553d2e"
+    },
+    "01a05c74-d951-7004-a46d-a52dd1b0418a": {
+      "path": "restaurant/menu.svg",
+      "hash": "4228234699b30b12349ffdb2b9a2972eca877b70d5b752ed3fab9a1a584c039a"
+    },
+    "01a05c74-d951-7002-bb8b-6422ac92a346": {
+      "path": "restaurant/minimal-plate.png",
+      "hash": "0251672ce961dd0164044d538fed708e06a4e531533eccc57a9a05e1d6e2409f"
+    },
+    "01a05c74-d951-7005-86e8-947e63f6e4f1": {
+      "path": "restaurant/passionne-logo.png",
+      "hash": "cfa084c13400759586a48fc4dfdfecca56223dd2f56ca91fc3c24bdce50b6dd0"
+    },
+    "01a05c74-d951-7003-a8e4-fec44c40cc39": {
+      "path": "restaurant/signature-dish.png",
+      "hash": "92c48c12a9e3534ae361bcb17277c58afc3f4f098e3f5e8a20715f22c069bee3"
+    }
+  },
+  "byPath": {
+    "restaurant": "01a05c74-d94b-7000-ac59-d129605e98cb",
+    "restaurant/black-bowl.png": "01a05c74-d951-7000-822e-d09f084dcc09",
+    "restaurant/colorful-dish.png": "01a05c74-d951-7001-b93c-8f21437731f4",
+    "restaurant/menu.svg": "01a05c74-d951-7004-a46d-a52dd1b0418a",
+    "restaurant/minimal-plate.png": "01a05c74-d951-7002-bb8b-6422ac92a346",
+    "restaurant/passionne-logo.png": "01a05c74-d951-7005-86e8-947e63f6e4f1",
+    "restaurant/signature-dish.png": "01a05c74-d951-7003-a8e4-fec44c40cc39"
+  }
+}

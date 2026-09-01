@@ -1,0 +1,44 @@
+---
+title: Restaurant split hero
+description: Preview the restaurant split hero with a reusable overlay header.
+visible: true
+tags: [restaurant, demo, hero, split]
+---
+<restaurant-header layout="utility" position="overlay" width="wide" appearance="transparent" menu-target="restaurant-menu" menu-style="outline" menu-icon="plus">
+    <basic-badge slot="status" tone="success" appearance="outlined" size="lg" dot>Open until 11 pm</basic-badge>
+    <basic-select slot="locale" name="locale" accessible-label="Language" value="en" presentation="auto">
+        <basic-option value="en">🇬🇧 English</basic-option>
+        <basic-option value="fr">🇫🇷 Français</basic-option>
+    </basic-select>
+    <button slot="menu" type="button">Menu</button>
+</restaurant-header>
+
+<restaurant-menu id="restaurant-menu" presentation="drawer" layout="split" motion="snappy" media="hide">
+    <strong slot="brand">Passionné</strong>
+    <span slot="eyebrow">Restaurant · Paris</span>
+    <a slot="navigation" href="/">The restaurant</a>
+    <a slot="navigation" href="/split">Menu</a>
+    <a slot="navigation" href="/cover">Reservations</a>
+    <a slot="secondary" href="/cover">Private events</a>
+    <span slot="details">Tuesday–Sunday</span>
+    <span slot="details">12 pm–2 pm · 7 pm–11 pm</span>
+    <a slot="footer" href="/">Instagram</a>
+</restaurant-menu>
+
+<main>
+    <restaurant-hero-split media-position="start" height="screen" density="regular" gallery="show" autoplay="on" rotation-interval="5" emblem="show">
+        <h1 slot="brand">Passionné</h1>
+        <p slot="subtitle">Contemporary French cuisine</p>
+        <a slot="actions" href="/">Reserve a table</a>
+        <a slot="actions" href="/cover">Discover the menu</a>
+        <span slot="details" data-accent>★ 4.7</span>
+        <span slot="details">456 reviews</span>
+        <span slot="details">Menus from €15</span>
+        <img slot="media" src="/.cms/files/restaurant/colorful-dish.png" alt="Colorful contemporary signature plate" loading="eager" fetchpriority="high">
+        <img slot="media-accent" src="/.cms/files/restaurant/black-bowl.png" alt="Green starter in a dark bowl" loading="lazy" decoding="async">
+        <img slot="gallery" src="/.cms/files/restaurant/black-bowl.png" alt="Green starter in a dark bowl" loading="lazy" decoding="async">
+        <img slot="gallery" src="/.cms/files/restaurant/colorful-dish.png" alt="Colorful contemporary plate" loading="lazy" decoding="async">
+        <img slot="gallery" src="/.cms/files/restaurant/minimal-plate.png" alt="Minimal seasonal plate" loading="lazy" decoding="async">
+        <img slot="gallery" src="/.cms/files/restaurant/colorful-dish.png" alt="Chef's colorful signature plate" loading="lazy" decoding="async">
+    </restaurant-hero-split>
+</main>

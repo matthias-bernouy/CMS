@@ -9,6 +9,8 @@ and theme resources that CmsCore exposes to its users.
   global integration repository. A designated CMS renders the site, reads the
   anonymous same-origin repository facade, and keeps all browser state in query
   parameters; it does not manage repository mutations.
+- `restaurant-demo` is a self-contained visual preview of the three
+  `restaurant` hero layouts and their shared configurable header.
 
 ## Authoring And Deployment
 
