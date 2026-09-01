@@ -1,7 +1,7 @@
 import type { DashboardField } from "@bernouy/cms-dashboards";
 import type { WDetailField } from "../../widgets/w-detail/types";
 import { formatDashboardValue } from "../../domain/formatting";
-import { matchesDashboardVisibility, valueAt } from "../expressions";
+import { matchesDashboardVisibility, setValueAt, valueAt } from "../expressions";
 import { mediaValue } from "../media";
 import {
     isCreatable,
@@ -118,9 +118,10 @@ export function detailField(
         return {
             ...base,
             input: "reorderable-list",
-            value: tableValue(value),
+            value: reorderableValue(value, field, sourceId),
             itemKey: field.itemKey,
             ...(field.positionPath ? { positionPath: field.positionPath } : {}),
+            ...(field.layout ? { reorderableLayout: field.layout } : {}),
             reorderableFields: field.fields.map((item) => reorderableField(field.id, item, options)),
             ...(field.addLabel ? { addLabel: field.addLabel } : {}),
             ...(field.minItems !== undefined ? { minItems: field.minItems } : {}),
@@ -138,7 +139,13 @@ export function detailField(
         };
     }
     if (field.type === "media") {
-        return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
+        return {
+            ...base,
+            input: "media-list",
+            value: mediaValue(value, field, sourceId),
+            accept: "image/*",
+            multiple: field.multiple === true,
+        };
     }
     if (field.type === "readonly") {
         if (field.format === "image") {
@@ -156,6 +163,24 @@ export function detailField(
         return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     }
     return { ...base, input: "text", value: textValue(value) };
+}
+
+function reorderableValue(
+    value: unknown,
+    field: Extract<DashboardField, { type: "reorderable-list" }>,
+    sourceId: string,
+): Record<string, unknown>[] {
+    return tableValue(value).map((item) => {
+        const next = structuredClone(item);
+        for (const nested of field.fields) {
+            if (nested.type !== "media") {
+                continue;
+            }
+            const media = mediaValue(valueAt(item, nested.path), nested, sourceId)[0] ?? null;
+            setValueAt(next, nested.path, media);
+        }
+        return next;
+    });
 }
 
 function detailCurrency(resource: unknown, fields: Record<string, unknown>, valuePath: string): string | undefined {

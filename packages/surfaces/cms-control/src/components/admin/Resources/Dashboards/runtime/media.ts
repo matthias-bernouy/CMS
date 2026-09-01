@@ -3,10 +3,15 @@ import { route } from "../api";
 import type { DashboardMediaItem } from "../widgets/w-media-field/types";
 import { arrayAt, textAt } from "./expressions";
 
-type MediaField = Extract<DashboardField, { type: "media" }>;
+export type MediaDefinition = Pick<Extract<DashboardField, { type: "media" }>, "item" | "actions">;
 
-export function mediaValue(value: unknown, field: MediaField, sourceId: string): DashboardMediaItem[] {
-    return (Array.isArray(value) ? value : arrayAt({ value }, "value"))
+export function mediaValue(value: unknown, field: MediaDefinition, sourceId: string): DashboardMediaItem[] {
+    const values = Array.isArray(value)
+        ? value
+        : value !== null && typeof value === "object"
+          ? [value]
+          : arrayAt({ value }, "value");
+    return values
         .map((item) => {
             const source = sourceMediaItem(item, field, sourceId);
             return source.id && source.url ? source : (normalizedMediaItem(item) ?? source);
@@ -36,7 +41,7 @@ function normalizedMediaItem(item: unknown): DashboardMediaItem | null {
     };
 }
 
-function sourceMediaItem(item: unknown, field: MediaField, sourceId: string): DashboardMediaItem {
+function sourceMediaItem(item: unknown, field: MediaDefinition, sourceId: string): DashboardMediaItem {
     return {
         id: textAt(item, field.item.idPath, textAt(item, field.item.urlPath)),
         url: mediaUrl(item, field, sourceId),
@@ -44,7 +49,7 @@ function sourceMediaItem(item: unknown, field: MediaField, sourceId: string): Da
     };
 }
 
-function mediaUrl(item: unknown, field: MediaField, sourceId: string): string {
+function mediaUrl(item: unknown, field: MediaDefinition, sourceId: string): string {
     const raw = textAt(item, field.item.urlPath);
     if (isRenderableUrl(raw)) {
         return raw;
@@ -59,7 +64,7 @@ function mediaUrl(item: unknown, field: MediaField, sourceId: string): string {
     );
 }
 
-function mediaFileEndpoint(field: MediaField): string {
+function mediaFileEndpoint(field: MediaDefinition): string {
     const upload = field.actions?.upload?.endpoint ?? "";
     if (!upload.startsWith("upload") || upload.length <= "upload".length) {
         return "";

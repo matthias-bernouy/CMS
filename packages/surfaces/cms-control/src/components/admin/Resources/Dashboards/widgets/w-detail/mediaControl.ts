@@ -8,6 +8,7 @@ export function mediaList(field: WDetailField): HTMLElement {
     const input = document.createElement("cms-dashboard-w-media-field") as MediaControl;
     input.setAttribute("label", field.label);
     input.setAttribute("accept", field.accept ?? "image/*");
+    input.toggleAttribute("multiple", field.multiple === true);
     input.items = mediaValue(field.value);
     input.dataset.fieldControl = field.id;
     return input;

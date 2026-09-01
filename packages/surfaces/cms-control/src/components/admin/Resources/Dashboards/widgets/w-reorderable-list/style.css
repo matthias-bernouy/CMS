@@ -16,6 +16,8 @@
     text-transform: uppercase;
 }
 
+.header[hidden] { display: none; }
+
 .row {
     align-items: end;
     background: #fff;
@@ -59,8 +61,76 @@
 
 .add { border: 1px dashed #aab6b2; justify-self: start; padding: 0 12px; }
 
+.reorderable-list[data-layout="cards"] .rows {
+    grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
+    gap: 12px;
+}
+
+.reorderable-list[data-layout="cards"] .row {
+    align-content: start;
+    align-items: stretch;
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px;
+}
+
+.reorderable-list[data-layout="cards"] .row[data-drop-target] {
+    transform: translateY(-2px);
+}
+
+.card-toolbar {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 32px;
+}
+
+.card-toolbar code {
+    color: var(--text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.field-label {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 750;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.field-media { min-height: 0; }
+
+.card-details {
+    border-top: 1px solid var(--border-default);
+    display: grid;
+    gap: 10px;
+    padding-top: 9px;
+}
+
+.card-details summary {
+    color: #42514c;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    list-style-position: inside;
+}
+
+.card-details[open] summary { margin-bottom: 2px; }
+
+.reorderable-list[data-layout="cards"] .add {
+    min-height: 42px;
+    width: 100%;
+}
+
 @media (max-width: 720px) {
-    .row { align-items: center; grid-template-columns: 24px minmax(0, 1fr) 32px; }
+    .reorderable-list:not([data-layout="cards"]) .row {
+        align-items: center;
+        grid-template-columns: 24px minmax(0, 1fr) 32px;
+    }
     .header { display: none; }
-    .field { grid-column: 2 / -1; }
+    .reorderable-list:not([data-layout="cards"]) .field { grid-column: 2 / -1; }
 }

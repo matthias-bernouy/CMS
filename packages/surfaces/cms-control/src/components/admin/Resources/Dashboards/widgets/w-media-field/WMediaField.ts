@@ -30,7 +30,7 @@ export class DashboardWMediaField extends Component {
     }
 
     static get observedAttributes(): string[] {
-        return ["label", "accept"];
+        return ["label", "accept", "layout", "multiple"];
     }
 
     override connectedCallback(): void {
@@ -78,7 +78,8 @@ export class DashboardWMediaField extends Component {
 
     private renderGrid(): void {
         const grid = this.query<HTMLElement>("[data-grid]");
-        grid.replaceChildren(...this.currentItems.map(renderMediaTile), renderAddTile());
+        const add = this.hasAttribute("multiple") || this.currentItems.length === 0 ? [renderAddTile()] : [];
+        grid.replaceChildren(...this.currentItems.map(renderMediaTile), ...add);
     }
 
     private onClick = (event: Event): void => {
@@ -105,7 +106,7 @@ export class DashboardWMediaField extends Component {
         this.pendingPick = pick;
         input.value = "";
         input.accept = this.getAttribute("accept") ?? "image/*";
-        input.multiple = pick.action === "upload";
+        input.multiple = pick.action === "upload" && this.hasAttribute("multiple");
         input.click();
     }
 
@@ -119,7 +120,9 @@ export class DashboardWMediaField extends Component {
         if (!file) {
             return;
         }
-        this.pendingPick.action === "replace" ? this.replace(this.pendingPick.index, file) : this.upload(files);
+        this.pendingPick.action === "replace"
+            ? this.replace(this.pendingPick.index, file)
+            : this.upload(this.hasAttribute("multiple") ? files : [file]);
     };
 
     private upload(files: File[]): void {

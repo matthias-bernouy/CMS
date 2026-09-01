@@ -58,13 +58,20 @@ describe("typed dashboard field parsing", () => {
             },
             {
                 ...base("axis", "reorderable-list"),
+                layout: "cards",
                 itemKey: "id",
                 fields: [
                     { ...base("text", "text") },
                     { ...base("check", "checkbox") },
                     { ...base("select", "select"), options: ["one"] },
                     { ...base("combo", "combobox"), lookup: lookup() },
-                    ...nestedFields(DASHBOARD_MAX_NESTED_FIELDS - 4, 4),
+                    {
+                        ...base("media", "media"),
+                        secondary: true,
+                        item: { idPath: "id", urlPath: "url", altPath: "alt" },
+                        actions: { upload: { endpoint: "uploadImage" } },
+                    },
+                    ...nestedFields(DASHBOARD_MAX_NESTED_FIELDS - 5, 5),
                 ],
             },
             {
@@ -85,6 +92,8 @@ describe("typed dashboard field parsing", () => {
         expect((fields[4] as any).columns).toHaveLength(DASHBOARD_MAX_NESTED_FIELDS);
         expect((fields[4] as any).columns[3]).toMatchObject({ editable: true, type: "tokens" });
         expect((fields[5] as any).fields).toHaveLength(DASHBOARD_MAX_NESTED_FIELDS);
+        expect(fields[5]).toMatchObject({ layout: "cards" });
+        expect((fields[5] as any).fields[4]).toMatchObject({ type: "media", secondary: true });
         expect(fields[6]).toMatchObject({ type: "schema", exclude: { from: "$field.axis", valuePath: "fieldKey" } });
     });
 

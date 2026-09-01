@@ -2,6 +2,13 @@ import type { DashboardAction, DashboardField, DashboardSection, DashboardWidget
 
 export type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 export type MediaField = Extract<DashboardField, { type: "media" }>;
+export type ReorderableMediaField = Extract<DashboardField, { type: "reorderable-list" }>["fields"][number] & {
+    type: "media";
+};
+export type MediaFieldTarget = {
+    field: MediaField | ReorderableMediaField;
+    parent?: Extract<DashboardField, { type: "reorderable-list" }>;
+};
 
 export function findDetailWidget(widgets: DashboardWidget[], id: string): DetailWidget | null {
     for (const widget of widgets) {
@@ -71,11 +78,22 @@ export function findCollectionAction(
     return null;
 }
 
-export function findMediaField(widget: DetailWidget, fieldId: string): MediaField | null {
+export function findMediaField(widget: DetailWidget, fieldId: string, itemFieldId?: string): MediaFieldTarget | null {
     const fields = [...widget.main.filter(isDetailSection), ...(widget.aside ?? [])].flatMap(
         (section) => section.fields,
     );
-    return fields.find((field): field is MediaField => field.id === fieldId && field.type === "media") ?? null;
+    const direct = fields.find((field): field is MediaField => field.id === fieldId && field.type === "media");
+    if (direct) {
+        return { field: direct };
+    }
+    const parent = fields.find(
+        (field): field is Extract<DashboardField, { type: "reorderable-list" }> =>
+            field.id === fieldId && field.type === "reorderable-list",
+    );
+    const nested = parent?.fields.find(
+        (field): field is ReorderableMediaField => field.id === itemFieldId && field.type === "media",
+    );
+    return parent && nested ? { field: nested, parent } : null;
 }
 
 function isDetailSection(item: DetailWidget["main"][number]): item is DashboardSection {

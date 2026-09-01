@@ -64,7 +64,7 @@ export function incoherentNestedEditorCases(): Array<[unknown, RegExp]> {
         ],
         [table({ ...column("value"), editable: true, type: "tokens", options: ["one"] }), /options.*not supported/],
         [table({ ...column("value"), editable: true, value: "list" }), /value.*not supported/],
-        [list({ ...base("value", "tokens") }), /type.*must be text, checkbox, select, combobox/],
+        [list({ ...base("value", "tokens") }), /type.*must be text, checkbox, select, combobox, media/],
         [list({ ...base("value", "text"), options: ["one"] }), /options.*not supported/],
         [list({ ...base("value", "select") }), /options.*required/],
         [list({ ...base("value", "combobox") }), /declare options or lookup/],

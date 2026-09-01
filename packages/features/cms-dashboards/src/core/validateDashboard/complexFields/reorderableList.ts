@@ -2,6 +2,7 @@ import type { Source } from "@bernouy/cms-sources";
 import type { DashboardDto, DashboardField } from "cms-dashboards/interfaces/Dashboard";
 import { DASHBOARD_MAX_NESTED_FIELDS } from "cms-dashboards/interfaces/Dashboard";
 import { validatePath, validateRequiredId, validateRequiredPath } from "../shared";
+import { validateMediaDefinition } from "./media";
 import { validateNestedEditor } from "./nestedEditor";
 
 export function validateReorderableListField(
@@ -34,14 +35,21 @@ export function validateReorderableListField(
             errors.push(`${itemPath}.label is required`);
         }
         validateRequiredPath("path", itemField.path, itemPath, errors);
-        validateNestedEditor(
-            itemField,
-            itemPath,
-            ["text", "checkbox", "select", "combobox"],
-            dashboard,
-            source,
-            errors,
-        );
+        if (itemField.type === "media") {
+            validateMediaDefinition(itemField, itemPath, dashboard, source, errors);
+        } else {
+            validateNestedEditor(
+                itemField,
+                itemPath,
+                ["text", "checkbox", "select", "combobox"],
+                dashboard,
+                source,
+                errors,
+            );
+        }
+    }
+    if (field.layout !== undefined && field.layout !== "rows" && field.layout !== "cards") {
+        errors.push(`${path}.layout must be rows or cards`);
     }
     if (field.minItems !== undefined && (!Number.isInteger(field.minItems) || field.minItems < 0)) {
         errors.push(`${path}.minItems must be a non-negative integer`);

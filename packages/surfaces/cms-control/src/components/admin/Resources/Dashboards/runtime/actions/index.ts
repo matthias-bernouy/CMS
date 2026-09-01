@@ -1,13 +1,21 @@
-import type { DashboardDto } from "@bernouy/cms-dashboards";
+import type { DashboardDto, DashboardEndpointRef } from "@bernouy/cms-dashboards";
 import type { DetailSelection } from "../../domain";
 import type { DashboardSourceGroup } from "../../types";
 import type { WidgetMediaActionDetail } from "../../widgets/shared";
 import type { DashboardMediaItem } from "../../widgets/w-media-field/types";
 import { matchesDashboardVisibility } from "../expressions";
 import { fieldValues } from "../mapping";
+import { mediaValue } from "../media";
 import { fetchSourceJson, itemFrom, sendSourceForm, sendSourceJson } from "../source";
 import { endpointMethod, executeEndpointAction, type DashboardActionResult } from "./endpoint";
 import { findCollectionAction, findDetailWidget, findMediaField, type DetailWidget } from "./widgets";
+
+export type DashboardMediaActionResult = {
+    handled: boolean;
+    nested: boolean;
+    results: unknown[];
+    item?: DashboardMediaItem;
+};
 
 export type { DashboardActionResult } from "./endpoint";
 
@@ -81,43 +89,53 @@ export async function executeDashboardMediaAction(
     media: WidgetMediaActionDetail,
     draft: Record<string, unknown>,
     groups: DashboardSourceGroup[] = [group],
-): Promise<unknown[]> {
+): Promise<DashboardMediaActionResult> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget) {
         throw new Error(`Dashboard media target "${detail.collection}" was not found`);
     }
-    const field = findMediaField(widget, media.field);
-    const ref = field?.actions?.[media.action];
-    if (!field || !ref) {
-        return [];
+    const target = findMediaField(widget, media.field, media.itemField);
+    const actions = target?.field.actions as Partial<Record<WidgetMediaActionDetail["action"], DashboardEndpointRef>>;
+    const ref = actions?.[media.action];
+    if (!target || !ref) {
+        return { handled: false, nested: Boolean(target?.parent), results: [] };
     }
     const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
     const resource = itemFrom(data, widget.source);
     const fields = { ...fieldValues(widget, resource), ...draft };
     const mediaVars = mediaActionVars(media);
     const files = media.files ?? (media.file ? [media.file] : []);
-    if (!files.length) {
-        return [
-            await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
-                resource,
-                fields,
-                media: mediaVars,
-            }),
-        ];
-    }
-    return Promise.all(
-        files.map((file) => {
-            const body = new FormData();
-            body.set("file", file);
-            return sendSourceForm(
-                group.source.id,
-                ref,
-                endpointMethod(group, groups, ref),
-                { resource, fields, media: mediaVars },
-                body,
-            );
-        }),
-    );
+    const results = !files.length
+        ? [
+              await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
+                  resource,
+                  fields,
+                  media: mediaVars,
+              }),
+          ]
+        : await Promise.all(
+              files.map((file) => {
+                  const body = new FormData();
+                  body.set("file", file);
+                  return sendSourceForm(
+                      group.source.id,
+                      ref,
+                      endpointMethod(group, groups, ref),
+                      { resource, fields, media: mediaVars },
+                      body,
+                  );
+              }),
+          );
+    const item = target.parent ? resultMediaItem(results[0], target.field, group.source.id) : undefined;
+    return { handled: true, nested: Boolean(target.parent), results, ...(item ? { item } : {}) };
+}
+
+function resultMediaItem(value: unknown, field: Parameters<typeof mediaValue>[1], sourceId: string) {
+    const candidate =
+        value && typeof value === "object" && !Array.isArray(value) && "media" in value
+            ? (value as Record<string, unknown>).media
+            : value;
+    return mediaValue(candidate, field, sourceId)[0];
 }
 
 async function fetchActionResource(sourceId: string, widget: DetailWidget, row: string): Promise<unknown> {
@@ -135,6 +153,11 @@ function mediaActionVars(media: WidgetMediaActionDetail): Record<string, unknown
         previousItem: media.previousItem,
         value: media.value,
         valueIds: media.value.map(mediaId).filter(Boolean),
+        itemIndex: media.itemIndex,
+        itemKey: media.itemKey,
+        itemField: media.itemField,
+        itemPath: media.itemPath,
+        parentItem: media.parentItem,
     };
 }
 

@@ -1,4 +1,6 @@
 import { valueAt } from "../../runtime/expressions";
+import "../w-media-field/WMediaField";
+import type { DashboardMediaItem } from "../w-media-field/types";
 import type { ReorderableListItem, ReorderableListItemField } from "./state";
 
 type ValueControl = HTMLElement & { value: unknown };
@@ -8,11 +10,12 @@ export function createItemControl(
     index: number,
     field: ReorderableListItemField,
 ): HTMLElement {
-    const input = fieldControl(field, textAt(item, field.path));
+    const input = fieldControl(field, field.type === "media" ? valueAt(item, field.path) : textAt(item, field.path));
     if (input instanceof HTMLInputElement && field.type === "checkbox") {
         input.checked = booleanAt(item, field.path);
     }
     input.dataset.itemIndex = String(index);
+    input.dataset.itemField = field.id;
     input.dataset.itemPath = field.path;
     input.setAttribute("aria-label", field.label);
     if (field.required) {
@@ -31,27 +34,47 @@ export function readItemControl(control: HTMLElement): string | boolean {
     return "value" in control ? String((control as ValueControl).value ?? "") : "";
 }
 
-function fieldControl(field: ReorderableListItemField, value: string): HTMLElement {
+function fieldControl(field: ReorderableListItemField, value: unknown): HTMLElement {
+    if (field.type === "media") {
+        const control = document.createElement("cms-dashboard-w-media-field") as HTMLElement & {
+            items: DashboardMediaItem[];
+        };
+        const resolved = valueAtValue(value);
+        control.setAttribute("label", field.label);
+        control.setAttribute("layout", "card");
+        control.setAttribute("accept", "image/*");
+        control.items = resolved ? [resolved] : [];
+        return control;
+    }
     if (field.type === "select" || field.type === "combobox") {
         const control = document.createElement(field.type === "select" ? "p9r-select" : "p9r-combobox") as ValueControl;
         control.setAttribute("aria-label", field.label);
-        control.setAttribute("value", value);
+        const text = value === null || value === undefined ? "" : String(value);
+        control.setAttribute("value", text);
         control.replaceChildren(
             ...(field.options ?? []).map((option) => {
                 const element = document.createElement("option");
                 element.value = option.value;
                 element.textContent = option.label;
-                element.selected = option.value === value;
+                element.selected = option.value === text;
                 return element;
             }),
         );
-        control.value = value;
+        control.value = text;
         return control;
     }
     const input = document.createElement("input");
     input.type = field.type ?? "text";
-    input.value = value;
+    input.value = value === null || value === undefined ? "" : String(value);
     return input;
+}
+
+function valueAtValue(value: unknown): DashboardMediaItem | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return null;
+    }
+    const item = value as Record<string, unknown>;
+    return typeof item.id === "string" && typeof item.url === "string" ? (item as unknown as DashboardMediaItem) : null;
 }
 
 function textAt(value: unknown, path: string): string {

@@ -19,6 +19,11 @@ export type DashboardMediaActionDetail = {
     previousItem?: DashboardMediaItem;
     file?: File;
     files?: File[];
+    itemIndex?: number;
+    itemKey?: string;
+    itemField?: string;
+    itemPath?: string;
+    parentItem?: Record<string, unknown>;
 };
 
 export const W_MEDIA_FIELD_ACTION_EVENT = "cms-dashboard-w-media-field:action";

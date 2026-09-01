@@ -6,16 +6,18 @@ export type ReorderableListItemField = {
     id: string;
     label: string;
     path: string;
-    type?: "text" | "checkbox" | "select" | "combobox";
+    type?: "text" | "checkbox" | "select" | "combobox" | "media";
     options?: Array<{ label: string; value: string }>;
     required?: boolean;
     placeholder?: string;
+    secondary?: boolean;
 };
 
 export type ReorderableListData = {
     items: ReorderableListItem[];
     itemKey: string;
     positionPath?: string;
+    layout?: "rows" | "cards";
     fields: ReorderableListItemField[];
     addLabel?: string;
     minItems?: number;

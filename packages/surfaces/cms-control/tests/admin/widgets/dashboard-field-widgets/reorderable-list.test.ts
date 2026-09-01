@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import "../../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
 import type { DashboardWReorderableList } from "../../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
+import {
+    W_MEDIA_FIELD_ACTION_EVENT,
+    type DashboardMediaActionDetail,
+} from "../../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/types";
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -86,5 +90,57 @@ describe("dashboard reorderable list widget", () => {
         expect(list.items).toEqual([{}]);
         expect(list.shadowRoot!.querySelector<HTMLElement>(".row")?.dataset.itemKey).toBe("0");
         expect((Object.prototype as Record<string, unknown>).dashboardPolluted).toBeUndefined();
+    });
+
+    test("renders media choices as cards and scopes nested media actions", () => {
+        const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
+        list.data = {
+            items: [
+                {
+                    key: "ocean",
+                    label: "Ocean",
+                    image: { id: "12", url: "/media/ocean.webp", alt: "Ocean dining room" },
+                },
+            ],
+            itemKey: "key",
+            layout: "cards",
+            fields: [
+                { id: "image", label: "Image", path: "image", type: "media" },
+                { id: "label", label: "Label", path: "label" },
+                { id: "key", label: "Stable key", path: "key", secondary: true },
+            ],
+        };
+        document.body.append(list);
+
+        const root = list.shadowRoot!;
+        expect(root.querySelector(".reorderable-list")?.getAttribute("data-layout")).toBe("cards");
+        expect(root.querySelector(".card-toolbar code")?.textContent).toBe("ocean");
+        expect(root.querySelector(".card-details")?.textContent).toContain("Stable key");
+        const media = root.querySelector<HTMLElement>("cms-dashboard-w-media-field")!;
+        let detail: DashboardMediaActionDetail | undefined;
+        list.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, (event) => {
+            detail = (event as CustomEvent<DashboardMediaActionDetail>).detail;
+        });
+        media.dispatchEvent(
+            new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    action: "replace",
+                    value: [{ id: "13", url: "/media/new-ocean.webp" }],
+                    previousItem: { id: "12", url: "/media/ocean.webp" },
+                    file: new File(["image"], "ocean.webp", { type: "image/webp" }),
+                },
+            }),
+        );
+
+        expect(list.items[0]?.image).toEqual({ id: "13", url: "/media/new-ocean.webp" });
+        expect(detail).toMatchObject({
+            action: "replace",
+            itemIndex: 0,
+            itemKey: "ocean",
+            itemField: "image",
+            itemPath: "image",
+        });
     });
 });

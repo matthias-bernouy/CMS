@@ -105,7 +105,11 @@ export class DashboardView extends DashboardViewController {
             showToast(`Media ${event.detail.action} event captured`, { type: "success" });
             return;
         }
-        void runDashboardMediaAction(this.actionContext(), event.detail);
+        void runDashboardMediaAction(
+            this.actionContext(),
+            event.detail,
+            event.target instanceof HTMLElement ? event.target : undefined,
+        );
     };
 
     private onWidgetFilterChange = (event: CustomEvent<WidgetFilterChangeDetail>): void => {

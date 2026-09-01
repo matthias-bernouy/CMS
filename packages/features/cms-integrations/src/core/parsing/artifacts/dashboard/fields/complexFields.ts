@@ -10,6 +10,7 @@ import { IntegrationInputError } from "../../../../errors";
 import { isRecord } from "../../../definition/values";
 import { optionalBoolean, optionalFiniteNumber, optionalText, requiredText } from "../../common";
 import { parseColumn } from "../columns";
+import { parseNestedMediaField } from "./mediaFields";
 import { parseNestedEditor } from "./nestedEditors";
 
 export function parseTableField(
@@ -42,6 +43,11 @@ export function parseReorderableListField(
     const maxItems = parseItemCount(value.maxItems, `${name}.maxItems`, 1);
     const positionPath = optionalText(value.positionPath, `${name}.positionPath`);
     const addLabel = optionalText(value.addLabel, `${name}.addLabel`);
+    const layoutValue = optionalText(value.layout, `${name}.layout`);
+    const layout = layoutValue === "rows" || layoutValue === "cards" ? layoutValue : undefined;
+    if (layoutValue && !layout) {
+        throw new IntegrationInputError(`${name}.layout`, "must be rows or cards");
+    }
     if (minItems !== undefined && maxItems !== undefined && minItems > maxItems) {
         throw new IntegrationInputError(`${name}.minItems`, "cannot exceed maxItems");
     }
@@ -51,6 +57,7 @@ export function parseReorderableListField(
         itemKey: requiredText(value.itemKey, `${name}.itemKey`),
         ...(positionPath ? { positionPath } : {}),
         fields,
+        ...(layout ? { layout } : {}),
         ...(addLabel ? { addLabel } : {}),
         ...(minItems !== undefined ? { minItems } : {}),
         ...(maxItems !== undefined ? { maxItems } : {}),
@@ -107,13 +114,25 @@ function parseReorderableFields(value: unknown, name: string): DashboardReordera
         rejectDuplicateId(id, ids, `${path}.id`);
         const required = optionalBoolean(entry.required, `${path}.required`);
         const placeholder = optionalText(entry.placeholder, `${path}.placeholder`);
+        const secondary = optionalBoolean(entry.secondary, `${path}.secondary`);
+        const editor = parseNestedEditor(entry, path, ["text", "checkbox", "select", "combobox", "media"]);
+        if (editor.type === "media") {
+            return parseNestedMediaField(entry, path, {
+                id,
+                label: requiredText(entry.label, `${path}.label`),
+                path: requiredText(entry.path, `${path}.path`),
+                ...(required ? { required } : {}),
+                ...(secondary ? { secondary } : {}),
+            });
+        }
         return {
             id,
             label: requiredText(entry.label, `${path}.label`),
             path: requiredText(entry.path, `${path}.path`),
             ...(required ? { required } : {}),
             ...(placeholder ? { placeholder } : {}),
-            ...parseNestedEditor(entry, path, ["text", "checkbox", "select", "combobox"]),
+            ...(secondary ? { secondary } : {}),
+            ...editor,
         } as DashboardReorderableListItemField;
     });
 }

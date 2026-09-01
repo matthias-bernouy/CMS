@@ -23159,7 +23159,8 @@ w13c-lateral-menu-item {
 
   // src/components/admin/Resources/Dashboards/runtime/media.ts
   function mediaValue(value2, field2, sourceId) {
-    return (Array.isArray(value2) ? value2 : arrayAt({ value: value2 }, "value")).map((item) => {
+    const values = Array.isArray(value2) ? value2 : value2 !== null && typeof value2 === "object" ? [value2] : arrayAt({ value: value2 }, "value");
+    return values.map((item) => {
       const source2 = sourceMediaItem(item, field2, sourceId);
       return source2.id && source2.url ? source2 : normalizedMediaItem(item) ?? source2;
     }).filter((item) => item.id && item.url);
@@ -23416,7 +23417,8 @@ w13c-lateral-menu-item {
       label: field2.label,
       path: field2.path,
       ...field2.required ? { required: true } : {},
-      ...field2.placeholder ? { placeholder: field2.placeholder } : {}
+      ...field2.placeholder ? { placeholder: field2.placeholder } : {},
+      ...field2.secondary ? { secondary: true } : {}
     };
     const type = field2.type ?? "text";
     if (type === "select") {
@@ -23514,9 +23516,10 @@ w13c-lateral-menu-item {
       return {
         ...base,
         input: "reorderable-list",
-        value: tableValue(value2),
+        value: reorderableValue(value2, field2, sourceId),
         itemKey: field2.itemKey,
         ...field2.positionPath ? { positionPath: field2.positionPath } : {},
+        ...field2.layout ? { reorderableLayout: field2.layout } : {},
         reorderableFields: field2.fields.map((item) => reorderableField(field2.id, item, options)),
         ...field2.addLabel ? { addLabel: field2.addLabel } : {},
         ...field2.minItems !== undefined ? { minItems: field2.minItems } : {},
@@ -23534,7 +23537,13 @@ w13c-lateral-menu-item {
       };
     }
     if (field2.type === "media") {
-      return { ...base, input: "media-list", value: mediaValue(value2, field2, sourceId), accept: "image/*" };
+      return {
+        ...base,
+        input: "media-list",
+        value: mediaValue(value2, field2, sourceId),
+        accept: "image/*",
+        multiple: field2.multiple === true
+      };
     }
     if (field2.type === "readonly") {
       if (field2.format === "image") {
@@ -23552,6 +23561,19 @@ w13c-lateral-menu-item {
       return { ...base, input: field2.format === "badge" ? "badge" : "readonly", value: readonlyValue(value2) };
     }
     return { ...base, input: "text", value: textValue(value2) };
+  }
+  function reorderableValue(value2, field2, sourceId) {
+    return tableValue(value2).map((item) => {
+      const next = structuredClone(item);
+      for (const nested of field2.fields) {
+        if (nested.type !== "media") {
+          continue;
+        }
+        const media = mediaValue(valueAt(item, nested.path), nested, sourceId)[0] ?? null;
+        setValueAt(next, nested.path, media);
+      }
+      return next;
+    });
   }
   function detailCurrency(resource, fields, valuePath) {
     const separator = valuePath.lastIndexOf(".");
@@ -23907,6 +23929,27 @@ button {
 .add-tile:hover {
     background: #f6f8f7;
     border-color: #7d8d88;
+}
+
+:host([layout="card"]) {
+    --media-grid-featured-item-max: none;
+    --media-grid-item-max: none;
+}
+
+:host([layout="card"]) .media-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+:host([layout="card"]) .media-tile:first-child {
+    grid-column: auto;
+    grid-row: auto;
+    max-width: none;
+}
+
+:host([layout="card"]) .media-tile,
+:host([layout="card"]) .add-tile {
+    aspect-ratio: 4 / 3;
+    max-width: none;
 }
 
 @media (max-width: 720px) {
@@ -24579,7 +24622,7 @@ button {
       this.preview = new MediaPreviewController(this.shadowRoot, () => this.currentItems);
     }
     static get observedAttributes() {
-      return ["label", "accept"];
+      return ["label", "accept", "layout", "multiple"];
     }
     connectedCallback() {
       this.query("[data-file]").addEventListener("change", this.onFileChange);
@@ -24621,7 +24664,8 @@ button {
     }
     renderGrid() {
       const grid = this.query("[data-grid]");
-      grid.replaceChildren(...this.currentItems.map(renderMediaTile), renderAddTile());
+      const add = this.hasAttribute("multiple") || this.currentItems.length === 0 ? [renderAddTile()] : [];
+      grid.replaceChildren(...this.currentItems.map(renderMediaTile), ...add);
     }
     onClick = (event) => {
       const button = event.target?.closest("[data-media-action]");
@@ -24646,7 +24690,7 @@ button {
       this.pendingPick = pick;
       input.value = "";
       input.accept = this.getAttribute("accept") ?? "image/*";
-      input.multiple = pick.action === "upload";
+      input.multiple = pick.action === "upload" && this.hasAttribute("multiple");
       input.click();
     }
     onFileChange = (event) => {
@@ -24659,7 +24703,7 @@ button {
       if (!file) {
         return;
       }
-      this.pendingPick.action === "replace" ? this.replace(this.pendingPick.index, file) : this.upload(files);
+      this.pendingPick.action === "replace" ? this.replace(this.pendingPick.index, file) : this.upload(this.hasAttribute("multiple") ? files : [file]);
     };
     upload(files) {
       const inserted = files.map((file) => this.localFiles.create(file));
@@ -24716,6 +24760,7 @@ button {
     const input = document.createElement("cms-dashboard-w-media-field");
     input.setAttribute("label", field2.label);
     input.setAttribute("accept", field2.accept ?? "image/*");
+    input.toggleAttribute("multiple", field2.multiple === true);
     input.items = mediaValue2(field2.value);
     input.dataset.fieldControl = field2.id;
     return input;
@@ -25150,11 +25195,12 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/controls.ts
   function createItemControl(item, index, field2) {
-    const input = fieldControl(field2, textAt2(item, field2.path));
+    const input = fieldControl(field2, field2.type === "media" ? valueAt(item, field2.path) : textAt2(item, field2.path));
     if (input instanceof HTMLInputElement && field2.type === "checkbox") {
       input.checked = booleanAt(item, field2.path);
     }
     input.dataset.itemIndex = String(index);
+    input.dataset.itemField = field2.id;
     input.dataset.itemPath = field2.path;
     input.setAttribute("aria-label", field2.label);
     if (field2.required) {
@@ -25172,24 +25218,41 @@ button {
     return "value" in control ? String(control.value ?? "") : "";
   }
   function fieldControl(field2, value2) {
+    if (field2.type === "media") {
+      const control = document.createElement("cms-dashboard-w-media-field");
+      const resolved = valueAtValue(value2);
+      control.setAttribute("label", field2.label);
+      control.setAttribute("layout", "card");
+      control.setAttribute("accept", "image/*");
+      control.items = resolved ? [resolved] : [];
+      return control;
+    }
     if (field2.type === "select" || field2.type === "combobox") {
       const control = document.createElement(field2.type === "select" ? "p9r-select" : "p9r-combobox");
       control.setAttribute("aria-label", field2.label);
-      control.setAttribute("value", value2);
+      const text4 = value2 === null || value2 === undefined ? "" : String(value2);
+      control.setAttribute("value", text4);
       control.replaceChildren(...(field2.options ?? []).map((option2) => {
         const element = document.createElement("option");
         element.value = option2.value;
         element.textContent = option2.label;
-        element.selected = option2.value === value2;
+        element.selected = option2.value === text4;
         return element;
       }));
-      control.value = value2;
+      control.value = text4;
       return control;
     }
     const input = document.createElement("input");
     input.type = field2.type ?? "text";
-    input.value = value2;
+    input.value = value2 === null || value2 === undefined ? "" : String(value2);
     return input;
+  }
+  function valueAtValue(value2) {
+    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
+      return null;
+    }
+    const item = value2;
+    return typeof item.id === "string" && typeof item.url === "string" ? item : null;
   }
   function textAt2(value2, path) {
     const resolved = valueAt(value2, path);
@@ -25262,19 +25325,52 @@ button {
     return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
   }
 
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/mediaAction.ts
+  function scopeMediaAction(value2, event) {
+    const control = event.composedPath().find((target2) => target2 instanceof HTMLElement && target2.matches("[data-item-index][data-item-path]"));
+    if (!control?.dataset.itemField) {
+      return null;
+    }
+    const itemIndex = Number(control.dataset.itemIndex);
+    const itemPath = control.dataset.itemPath ?? "";
+    if (!updateItem(value2, itemIndex, itemPath, event.detail.value[0] ?? null)) {
+      return null;
+    }
+    const parentItem = structuredClone(value2.items[itemIndex] ?? {});
+    return {
+      ...event.detail,
+      itemIndex,
+      itemKey: String(valueAt(parentItem, value2.itemKey) ?? itemIndex),
+      itemField: control.dataset.itemField,
+      itemPath,
+      parentItem
+    };
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/view.ts
   function renderList2(root, value2) {
-    query5(root, "[data-rows]").replaceChildren(...value2.items.map((item, index) => renderRow(value2, item, index)));
+    query5(root, ".reorderable-list").dataset.layout = value2.layout ?? "rows";
+    query5(root, "[data-rows]").replaceChildren(...value2.items.map((item, index) => renderItem(value2, item, index)));
     renderHeader2(root, value2);
     const add = query5(root, "[data-add]");
     add.textContent = value2.addLabel ?? "Add item";
     add.disabled = value2.maxItems !== undefined && value2.items.length >= value2.maxItems;
   }
-  function renderedRows(root) {
-    return Array.from(root.querySelectorAll(".row"));
+  function draggedRow(event) {
+    return event.target?.closest(".row[data-index]") ?? null;
+  }
+  function markDropTarget(root, target2) {
+    renderedRows(root).forEach((row) => row.toggleAttribute("data-drop-target", row === target2));
+  }
+  function clearDragState(root) {
+    renderedRows(root).forEach((row) => {
+      row.removeAttribute("data-dragging");
+      row.removeAttribute("data-drop-target");
+    });
   }
   function renderHeader2(root, value2) {
     const header = query5(root, "[data-header]");
+    header.hidden = value2.layout === "cards";
     header.style.setProperty("--reorderable-columns", columns(value2));
     const cells = [document.createElement("span")];
     for (const field2 of value2.fields) {
@@ -25285,25 +25381,70 @@ button {
     cells.push(document.createElement("span"));
     header.replaceChildren(...cells);
   }
+  function renderItem(value2, item, index) {
+    return value2.layout === "cards" ? renderCard(value2, item, index) : renderRow(value2, item, index);
+  }
   function renderRow(value2, item, index) {
-    const row = document.createElement("div");
-    row.className = "row";
-    row.dataset.index = String(index);
-    row.dataset.itemKey = String(valueAt(item, value2.itemKey) ?? index);
+    const row = itemRoot(value2, item, index);
     row.style.setProperty("--reorderable-columns", columns(value2));
+    row.append(dragHandle());
+    for (const field2 of value2.fields) {
+      row.append(fieldRoot(item, index, field2, false));
+    }
+    row.append(removeButton2(value2, index));
+    return row;
+  }
+  function renderCard(value2, item, index) {
+    const card = itemRoot(value2, item, index);
+    const toolbar = document.createElement("header");
+    toolbar.className = "card-toolbar";
+    const identity = document.createElement("code");
+    identity.textContent = String(valueAt(item, value2.itemKey) ?? `Item ${index + 1}`);
+    toolbar.append(dragHandle(), identity, removeButton2(value2, index));
+    card.append(toolbar);
+    for (const field2 of value2.fields.filter((candidate) => !candidate.secondary)) {
+      card.append(fieldRoot(item, index, field2, true));
+    }
+    const secondary = value2.fields.filter((field2) => field2.secondary);
+    if (secondary.length) {
+      const details = document.createElement("details");
+      details.className = "card-details";
+      const summary = document.createElement("summary");
+      summary.textContent = "Choice settings";
+      details.append(summary, ...secondary.map((field2) => fieldRoot(item, index, field2, true)));
+      card.append(details);
+    }
+    return card;
+  }
+  function itemRoot(value2, item, index) {
+    const root = document.createElement("article");
+    root.className = "row";
+    root.dataset.index = String(index);
+    root.dataset.itemKey = String(valueAt(item, value2.itemKey) ?? index);
+    return root;
+  }
+  function fieldRoot(item, index, field2, labelled) {
+    const root = document.createElement("div");
+    root.className = `field field-${field2.type ?? "text"}`;
+    if (labelled && field2.type !== "media") {
+      const label2 = document.createElement("span");
+      label2.className = "field-label";
+      label2.textContent = field2.label;
+      root.append(label2);
+    }
+    root.append(createItemControl(item, index, field2));
+    return root;
+  }
+  function dragHandle() {
     const handle = document.createElement("span");
     handle.className = "handle";
     handle.title = "Drag to reorder";
     handle.setAttribute("aria-label", "Drag to reorder");
     handle.draggable = true;
     handle.textContent = "⠿";
-    row.append(handle);
-    for (const field2 of value2.fields) {
-      const fieldRoot = document.createElement("div");
-      fieldRoot.className = "field";
-      fieldRoot.append(createItemControl(item, index, field2));
-      row.append(fieldRoot);
-    }
+    return handle;
+  }
+  function removeButton2(value2, index) {
     const remove = document.createElement("button");
     remove.className = "remove";
     remove.type = "button";
@@ -25312,14 +25453,16 @@ button {
     remove.setAttribute("aria-label", "Remove item");
     remove.title = "Remove item";
     remove.textContent = "×";
-    row.append(remove);
-    return row;
+    return remove;
   }
   function columns(value2) {
     return ["24px", ...value2.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" ");
   }
   function query5(root, selector) {
     return root.querySelector(selector);
+  }
+  function renderedRows(root) {
+    return Array.from(root.querySelectorAll(".row"));
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/style.css
@@ -25340,6 +25483,8 @@ button {
     padding: 0 8px;
     text-transform: uppercase;
 }
+
+.header[hidden] { display: none; }
 
 .row {
     align-items: end;
@@ -25384,10 +25529,78 @@ button {
 
 .add { border: 1px dashed #aab6b2; justify-self: start; padding: 0 12px; }
 
+.reorderable-list[data-layout="cards"] .rows {
+    grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
+    gap: 12px;
+}
+
+.reorderable-list[data-layout="cards"] .row {
+    align-content: start;
+    align-items: stretch;
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px;
+}
+
+.reorderable-list[data-layout="cards"] .row[data-drop-target] {
+    transform: translateY(-2px);
+}
+
+.card-toolbar {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 32px;
+}
+
+.card-toolbar code {
+    color: var(--text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.field-label {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 750;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.field-media { min-height: 0; }
+
+.card-details {
+    border-top: 1px solid var(--border-default);
+    display: grid;
+    gap: 10px;
+    padding-top: 9px;
+}
+
+.card-details summary {
+    color: #42514c;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    list-style-position: inside;
+}
+
+.card-details[open] summary { margin-bottom: 2px; }
+
+.reorderable-list[data-layout="cards"] .add {
+    min-height: 42px;
+    width: 100%;
+}
+
 @media (max-width: 720px) {
-    .row { align-items: center; grid-template-columns: 24px minmax(0, 1fr) 32px; }
+    .reorderable-list:not([data-layout="cards"]) .row {
+        align-items: center;
+        grid-template-columns: 24px minmax(0, 1fr) 32px;
+    }
     .header { display: none; }
-    .field { grid-column: 2 / -1; }
+    .reorderable-list:not([data-layout="cards"]) .field { grid-column: 2 / -1; }
 }
 `;
 
@@ -25410,6 +25623,7 @@ button {
       this.shadowRoot.addEventListener("click", this.onClick);
       this.shadowRoot.addEventListener("input", this.onInput);
       this.shadowRoot.addEventListener("change", this.onInput);
+      this.shadowRoot.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
       this.shadowRoot.addEventListener("dragstart", this.onDragStart);
       this.shadowRoot.addEventListener("dragover", this.onDragOver);
       this.shadowRoot.addEventListener("drop", this.onDrop);
@@ -25420,6 +25634,7 @@ button {
       this.shadowRoot?.removeEventListener("click", this.onClick);
       this.shadowRoot?.removeEventListener("input", this.onInput);
       this.shadowRoot?.removeEventListener("change", this.onInput);
+      this.shadowRoot?.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
       this.shadowRoot?.removeEventListener("dragstart", this.onDragStart);
       this.shadowRoot?.removeEventListener("dragover", this.onDragOver);
       this.shadowRoot?.removeEventListener("drop", this.onDrop);
@@ -25455,14 +25670,30 @@ button {
       if (!input) {
         return;
       }
+      if (this.value.fields.some((field2) => field2.id === input.dataset.itemField && field2.type === "media")) {
+        return;
+      }
       const index = Number(input.dataset.itemIndex);
       if (updateItem(this.value, index, input.dataset.itemPath ?? "", readItemControl(input))) {
         this.commit(false);
       }
     };
+    onMediaAction = (event) => {
+      const detail = scopeMediaAction(this.value, event);
+      if (!detail) {
+        return;
+      }
+      event.stopPropagation();
+      this.commit(false);
+      this.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, {
+        bubbles: true,
+        composed: true,
+        detail
+      }));
+    };
     onDragStart = (event) => {
       const handle = event.target?.closest(".handle");
-      const row = handle?.closest(".row[data-index]");
+      const row = handle ? draggedRow(event) : null;
       if (!row) {
         return;
       }
@@ -25474,18 +25705,18 @@ button {
       }
     };
     onDragOver = (event) => {
-      const row = event.target?.closest(".row[data-index]");
+      const row = draggedRow(event);
       if (!row || this.draggingIndex === null) {
         return;
       }
       event.preventDefault();
-      this.rows().forEach((candidate) => candidate.toggleAttribute("data-drop-target", candidate === row));
+      markDropTarget(this.shadowRoot, row);
       if (event.dataTransfer) {
         event.dataTransfer.dropEffect = "move";
       }
     };
     onDrop = (event) => {
-      const row = event.target?.closest(".row[data-index]");
+      const row = draggedRow(event);
       if (!row || this.draggingIndex === null) {
         return;
       }
@@ -25515,13 +25746,7 @@ button {
     }
     clearDragState() {
       this.draggingIndex = null;
-      this.rows().forEach((row) => {
-        row.removeAttribute("data-dragging");
-        row.removeAttribute("data-drop-target");
-      });
-    }
-    rows() {
-      return renderedRows(this.shadowRoot);
+      clearDragState(this.shadowRoot);
     }
   }
   if (!customElements.get("cms-dashboard-w-reorderable-list")) {
@@ -25619,6 +25844,7 @@ button {
       items: tableRows(field2.value),
       itemKey: field2.itemKey ?? "id",
       ...field2.positionPath ? { positionPath: field2.positionPath } : {},
+      ...field2.reorderableLayout ? { layout: field2.reorderableLayout } : {},
       fields: (field2.reorderableFields ?? []).map((item) => ({ ...item })),
       ...field2.addLabel ? { addLabel: field2.addLabel } : {},
       ...field2.minItems !== undefined ? { minItems: field2.minItems } : {},
@@ -28498,9 +28724,15 @@ slot {
     }
     return null;
   }
-  function findMediaField(widget, fieldId) {
+  function findMediaField(widget, fieldId, itemFieldId) {
     const fields = [...widget.main.filter(isDetailSection4), ...widget.aside ?? []].flatMap((section2) => section2.fields);
-    return fields.find((field2) => field2.id === fieldId && field2.type === "media") ?? null;
+    const direct = fields.find((field2) => field2.id === fieldId && field2.type === "media");
+    if (direct) {
+      return { field: direct };
+    }
+    const parent = fields.find((field2) => field2.id === fieldId && field2.type === "reorderable-list");
+    const nested = parent?.fields.find((field2) => field2.id === itemFieldId && field2.type === "media");
+    return parent && nested ? { field: nested, parent } : null;
   }
   function isDetailSection4(item) {
     return !("widget" in item);
@@ -28554,30 +28786,34 @@ slot {
     if (!widget) {
       throw new Error(`Dashboard media target "${detail.collection}" was not found`);
     }
-    const field2 = findMediaField(widget, media2.field);
-    const ref = field2?.actions?.[media2.action];
-    if (!field2 || !ref) {
-      return [];
+    const target2 = findMediaField(widget, media2.field, media2.itemField);
+    const actions = target2?.field.actions;
+    const ref = actions?.[media2.action];
+    if (!target2 || !ref) {
+      return { handled: false, nested: Boolean(target2?.parent), results: [] };
     }
     const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
     const resource = itemFrom(data, widget.source);
     const fields = { ...fieldValues(widget, resource), ...draft };
     const mediaVars = mediaActionVars(media2);
     const files = media2.files ?? (media2.file ? [media2.file] : []);
-    if (!files.length) {
-      return [
-        await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
-          resource,
-          fields,
-          media: mediaVars
-        })
-      ];
-    }
-    return Promise.all(files.map((file) => {
+    const results = !files.length ? [
+      await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
+        resource,
+        fields,
+        media: mediaVars
+      })
+    ] : await Promise.all(files.map((file) => {
       const body = new FormData;
       body.set("file", file);
       return sendSourceForm(group.source.id, ref, endpointMethod(group, groups, ref), { resource, fields, media: mediaVars }, body);
     }));
+    const item = target2.parent ? resultMediaItem(results[0], target2.field, group.source.id) : undefined;
+    return { handled: true, nested: Boolean(target2.parent), results, ...item ? { item } : {} };
+  }
+  function resultMediaItem(value2, field2, sourceId) {
+    const candidate = value2 && typeof value2 === "object" && !Array.isArray(value2) && "media" in value2 ? value2.media : value2;
+    return mediaValue(candidate, field2, sourceId)[0];
   }
   async function fetchActionResource(sourceId, widget, row) {
     const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
@@ -28592,7 +28828,12 @@ slot {
       item: media2.item,
       previousItem: media2.previousItem,
       value: media2.value,
-      valueIds: media2.value.map(mediaId).filter(Boolean)
+      valueIds: media2.value.map(mediaId).filter(Boolean),
+      itemIndex: media2.itemIndex,
+      itemKey: media2.itemKey,
+      itemField: media2.itemField,
+      itemPath: media2.itemPath,
+      parentItem: media2.parentItem
     };
   }
   function mediaId(item) {
@@ -28692,20 +28933,92 @@ slot {
   }
 
   // src/components/admin/Resources/Dashboards/view/actions/media.ts
-  async function runDashboardMediaAction(context, media2) {
+  async function runDashboardMediaAction(context, media2, widget) {
     const { group, dashboard, detail } = context;
     if (!group || !dashboard || !detail) {
       return;
     }
     const key = detailKey(detail.collection, detail.row);
     try {
-      await executeDashboardMediaAction(group, dashboard, detail, media2, context.drafts.get(key) ?? {}, context.groups ?? [group]);
+      const result = await executeDashboardMediaAction(group, dashboard, detail, media2, context.drafts.get(key) ?? {}, context.groups ?? [group]);
+      if (result.nested) {
+        if (result.handled && (media2.action === "upload" || media2.action === "replace") && !result.item) {
+          throw new Error("The media endpoint returned no usable media item");
+        }
+        const items = updateNestedDraft(context.drafts, key, media2, result.item);
+        Rp(`Media ${media2.action} completed`, { type: "success" });
+        if (!syncNestedMediaControl(widget, media2.field, items)) {
+          context.render();
+        }
+        return;
+      }
       removeDraftField(context.drafts, key, media2.field);
       Rp(`Media ${media2.action} completed`, { type: "success" });
       context.reload(detail.collection, detail.row);
     } catch (error) {
+      if (media2.itemField) {
+        const items = restoreNestedDraft(context.drafts, detailKey(detail.collection, detail.row), media2);
+        if (!syncNestedMediaControl(widget, media2.field, items)) {
+          context.render();
+        }
+      }
       Rp(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }
+  }
+  function updateNestedDraft(drafts, key, media2, item) {
+    const draft = { ...drafts.get(key) ?? {} };
+    const items = cloneItems2(draft[media2.field]);
+    const parent = nestedMediaParent(items, media2);
+    if (!parent || !media2.itemPath) {
+      throw new Error("The media choice no longer exists");
+    }
+    if (media2.action === "upload" || media2.action === "replace") {
+      const local = media2.value[0];
+      setValueAt(parent, media2.itemPath, item ? { ...item, ...local?.alt ? { alt: local.alt } : {} } : null);
+    }
+    draft[media2.field] = items;
+    drafts.set(key, draft);
+    return items;
+  }
+  function restoreNestedDraft(drafts, key, media2) {
+    const draft = { ...drafts.get(key) ?? {} };
+    const items = cloneItems2(draft[media2.field]);
+    const parent = nestedMediaParent(items, media2);
+    if (!parent || !media2.itemPath) {
+      return items;
+    }
+    const restored = media2.action === "replace" ? media2.previousItem : media2.action === "remove" ? media2.item : null;
+    setValueAt(parent, media2.itemPath, restored ?? null);
+    draft[media2.field] = items;
+    drafts.set(key, draft);
+    return items;
+  }
+  function syncNestedMediaControl(widget, field2, items) {
+    const control = Array.from(widget?.shadowRoot?.querySelectorAll("[data-field-control]") ?? []).find((candidate) => candidate.dataset.fieldControl === field2);
+    if (!control?.data) {
+      return false;
+    }
+    control.data = { ...control.data, items: structuredClone(items) };
+    return true;
+  }
+  function cloneItems2(value2) {
+    return Array.isArray(value2) ? structuredClone(value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item))) : [];
+  }
+  function nestedMediaParent(items, media2) {
+    const pendingId = media2.value[0]?.id;
+    if (pendingId && media2.itemPath) {
+      const pending = items.find((item) => mediaItemId(valueAt(item, media2.itemPath)) === pendingId);
+      if (pending) {
+        return pending;
+      }
+    }
+    return items[media2.itemIndex ?? -1];
+  }
+  function mediaItemId(value2) {
+    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
+      return;
+    }
+    return typeof value2.id === "string" ? value2.id : undefined;
   }
   function removeDraftField(drafts, key, field2) {
     const draft = { ...drafts.get(key) ?? {} };
@@ -30161,7 +30474,7 @@ p {
         Rp(`Media ${event.detail.action} event captured`, { type: "success" });
         return;
       }
-      runDashboardMediaAction(this.actionContext(), event.detail);
+      runDashboardMediaAction(this.actionContext(), event.detail, event.target instanceof HTMLElement ? event.target : undefined);
     };
     onWidgetFilterChange = (event) => {
       if (this.isExampleMode()) {
@@ -36757,7 +37070,7 @@ button:hover {
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
     if (options2.canRemove) {
-      footer.append(removeButton2(options2.onRemove));
+      footer.append(removeButton3(options2.onRemove));
     }
     footer.append(insertButton(options2.onSelect));
     container.append(scroll, footer);
@@ -36776,7 +37089,7 @@ button:hover {
     insert.addEventListener("click", onSelect);
     return insert;
   }
-  function removeButton2(onRemove) {
+  function removeButton3(onRemove) {
     const remove = document.createElement("button");
     remove.className = "remove-source";
     remove.type = "button";

@@ -50,6 +50,7 @@ type DashboardReorderableListItemFieldBase = {
     path: string;
     required?: boolean;
     placeholder?: string;
+    secondary?: boolean;
 };
 
 export type DashboardReorderableListItemField = DashboardReorderableListItemFieldBase &
@@ -58,6 +59,17 @@ export type DashboardReorderableListItemField = DashboardReorderableListItemFiel
         | { type: "checkbox"; options?: never; lookup?: never }
         | { type: "select"; options: DashboardOption[]; lookup?: never }
         | { type: "combobox"; options?: DashboardOption[]; lookup?: DashboardEmbeddedLookupRef }
+        | {
+              type: "media";
+              options?: never;
+              lookup?: never;
+              item: {
+                  idPath?: string;
+                  urlPath: string;
+                  altPath?: string;
+              };
+              actions?: Partial<Record<"upload" | "replace" | "remove", DashboardEndpointRef>>;
+          }
     );
 
 export type DashboardSchemaExclusion = {
@@ -97,6 +109,7 @@ export type DashboardField =
           type: "reorderable-list";
           itemKey: string;
           positionPath?: string;
+          layout?: "rows" | "cards";
           fields: DashboardReorderableListItemField[];
           addLabel?: string;
           minItems?: number;

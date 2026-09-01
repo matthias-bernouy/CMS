@@ -43,11 +43,12 @@ type WDetailReorderableListFieldBase = {
     path: string;
     required?: boolean;
     placeholder?: string;
+    secondary?: boolean;
 };
 
 export type WDetailReorderableListField = WDetailReorderableListFieldBase &
     (
-        | { type: "text" | "checkbox"; options?: never }
+        | { type: "text" | "checkbox" | "media"; options?: never }
         | { type: "select"; options: WDetailOption[] }
         | { type: "combobox"; options: WDetailOption[] }
     );
@@ -88,12 +89,14 @@ export type WDetailField = {
     derive?: WDetailTableDerive;
     itemKey?: string;
     positionPath?: string;
+    reorderableLayout?: "rows" | "cards";
     reorderableFields?: WDetailReorderableListField[];
     schemaDefinitions?: WDetailSchemaDefinition[];
     schemaStatus?: "loading" | "ready" | "error";
     addLabel?: string;
     minItems?: number;
     maxItems?: number;
+    multiple?: boolean;
     editable?: boolean;
     required?: boolean;
     invalid?: boolean;

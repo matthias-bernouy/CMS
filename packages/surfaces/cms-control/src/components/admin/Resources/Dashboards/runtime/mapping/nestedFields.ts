@@ -45,6 +45,7 @@ export function reorderableField(
         path: field.path,
         ...(field.required ? { required: true } : {}),
         ...(field.placeholder ? { placeholder: field.placeholder } : {}),
+        ...(field.secondary ? { secondary: true } : {}),
     };
     const type = field.type ?? "text";
     if (type === "select") {

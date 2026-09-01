@@ -1,4 +1,4 @@
-import type { DashboardField, DashboardFieldBase } from "@bernouy/cms-dashboards";
+import type { DashboardField, DashboardFieldBase, DashboardReorderableListItemField } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../../errors";
 import { isRecord, text } from "../../../definition/values";
 import { optionalBoolean, requiredText } from "../../common";
@@ -32,7 +32,7 @@ export function parseReadonlyFormat(
     throw new IntegrationInputError(name, "must be date, money, badge, text, image, or url");
 }
 
-function parseMediaItem(value: unknown, name: string): Extract<DashboardField, { type: "media" }>["item"] {
+export function parseMediaItem(value: unknown, name: string): Extract<DashboardField, { type: "media" }>["item"] {
     if (!isRecord(value)) {
         throw new IntegrationInputError(name, "must be an object");
     }
@@ -43,7 +43,7 @@ function parseMediaItem(value: unknown, name: string): Extract<DashboardField, {
     };
 }
 
-function parseMediaActions(value: unknown, name: string): Extract<DashboardField, { type: "media" }>["actions"] {
+export function parseMediaActions(value: unknown, name: string): Extract<DashboardField, { type: "media" }>["actions"] {
     if (!isRecord(value)) {
         throw new IntegrationInputError(name, "must be an object");
     }
@@ -57,4 +57,20 @@ function parseMediaActions(value: unknown, name: string): Extract<DashboardField
         }
     }
     return actions;
+}
+
+export function parseNestedMediaField(
+    value: Record<string, unknown>,
+    name: string,
+    base: Pick<DashboardReorderableListItemField, "id" | "label" | "path" | "required" | "secondary">,
+): DashboardReorderableListItemField {
+    if (isRecord(value.actions) && value.actions.reorder !== undefined) {
+        throw new IntegrationInputError(`${name}.actions.reorder`, "is not supported for nested media");
+    }
+    return {
+        ...base,
+        type: "media",
+        item: parseMediaItem(value.item, `${name}.item`),
+        ...(value.actions !== undefined ? { actions: parseMediaActions(value.actions, `${name}.actions`) } : {}),
+    } as DashboardReorderableListItemField;
 }

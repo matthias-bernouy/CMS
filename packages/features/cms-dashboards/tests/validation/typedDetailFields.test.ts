@@ -128,6 +128,13 @@ describe("typed dashboard detail fields", () => {
                         type: "combobox",
                         lookup: { ...embeddedLookup(), create: null },
                     },
+                    {
+                        id: "media",
+                        label: "Media",
+                        path: "media",
+                        type: "media",
+                        item: { urlPath: "__proto__.url" },
+                    },
                 ],
             },
             {
@@ -161,6 +168,7 @@ describe("typed dashboard detail fields", () => {
         expect(errors).toContain("fields.0.type is not supported");
         expect(errors).toContain("lookup is only supported for combobox editors");
         expect(errors).toContain("lookup.create is not supported");
+        expect(errors).toContain("item.urlPath must be a safe dotted data path");
         expect(errors).toContain('duplicate field id "same"');
     });
 

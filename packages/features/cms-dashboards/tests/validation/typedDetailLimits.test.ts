@@ -21,7 +21,15 @@ describe("typed dashboard detail field limits", () => {
             { id: "check", label: "Check", path: "check", type: "checkbox" },
             { id: "select", label: "Select", path: "select", type: "select", options: options(1) },
             { id: "combo", label: "Combo", path: "combo", type: "combobox", lookup: embeddedLookup() },
-            ...nestedFields(DASHBOARD_MAX_NESTED_FIELDS - 4, 4),
+            {
+                id: "image",
+                label: "Image",
+                path: "image",
+                type: "media",
+                item: { idPath: "id", urlPath: "url", altPath: "alt" },
+                actions: { upload: { endpoint: "upload" } },
+            },
+            ...nestedFields(DASHBOARD_MAX_NESTED_FIELDS - 5, 5),
         ];
         const fields = [
             { id: "quantity", label: "Quantity", path: "quantity", type: "number", min: 0, max: 10, step: 0.5 },
@@ -42,6 +50,7 @@ describe("typed dashboard detail field limits", () => {
                 path: "variantAxes",
                 type: "reorderable-list",
                 itemKey: "id",
+                layout: "cards",
                 fields: itemFields,
             },
             {

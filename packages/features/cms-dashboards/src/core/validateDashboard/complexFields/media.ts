@@ -10,6 +10,16 @@ export function validateMediaField(
     source: Source | null,
     errors: string[],
 ): void {
+    validateMediaDefinition(field, path, dashboard, source, errors);
+}
+
+export function validateMediaDefinition(
+    field: Pick<Extract<DashboardField, { type: "media" }>, "item" | "actions">,
+    path: string,
+    dashboard: DashboardDto,
+    source: Source | null,
+    errors: string[],
+): void {
     validatePath("item.idPath", field.item.idPath, path, errors);
     validateRequiredPath("item.urlPath", field.item.urlPath, path, errors);
     validatePath("item.altPath", field.item.altPath, path, errors);

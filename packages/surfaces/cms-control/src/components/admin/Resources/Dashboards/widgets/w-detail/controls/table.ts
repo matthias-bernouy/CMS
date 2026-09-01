@@ -47,6 +47,7 @@ export function createReorderableListControl(field: WDetailField): HTMLElement {
         items: tableRows(field.value),
         itemKey: field.itemKey ?? "id",
         ...(field.positionPath ? { positionPath: field.positionPath } : {}),
+        ...(field.reorderableLayout ? { layout: field.reorderableLayout } : {}),
         fields: (field.reorderableFields ?? []).map((item) => ({ ...item })),
         ...(field.addLabel ? { addLabel: field.addLabel } : {}),
         ...(field.minItems !== undefined ? { minItems: field.minItems } : {}),
