@@ -24057,6 +24057,10 @@ button {
     padding: 12px 16px;
 }
 
+.preview-figure {
+    grid-column: 2;
+}
+
 .preview-nav {
     align-self: center;
     background: rgb(255 255 255 / 10%);

@@ -98,6 +98,7 @@ describe("dashboard media field preview", () => {
         expect(dialog.open).toBe(true);
         expect(root.querySelector<HTMLButtonElement>("[data-preview-action='previous']")?.hidden).toBe(true);
         expect(root.querySelector<HTMLElement>("[data-preview-strip]")?.hidden).toBe(true);
+        expect(getComputedStyle(root.querySelector<HTMLElement>(".preview-figure")!).gridColumn).toBe("2");
         expect(root.querySelector("[data-preview-status]")?.textContent).toBe("Loading image…");
 
         previewImage.dispatchEvent(new Event("error"));
