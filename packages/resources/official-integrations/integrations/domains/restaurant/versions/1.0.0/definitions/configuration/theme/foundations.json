@@ -1,0 +1,93 @@
+{
+    "id": "foundations",
+    "label": "Restaurant foundations",
+    "description": "Shared colors, typography, and dimensions for restaurant headers and heroes.",
+    "tokens": [
+        {
+            "id": "background",
+            "label": "Background",
+            "type": "color",
+            "defaults": {
+                "light": "#15171a",
+                "dark": "#15171a"
+            }
+        },
+        {
+            "id": "surface",
+            "label": "Surface",
+            "type": "color",
+            "defaults": {
+                "light": "#1d2124",
+                "dark": "#1d2124"
+            }
+        },
+        {
+            "id": "text",
+            "label": "Text",
+            "type": "color",
+            "defaults": {
+                "light": "#fffaf0",
+                "dark": "#fffaf0"
+            }
+        },
+        {
+            "id": "muted-text",
+            "label": "Muted text",
+            "type": "color",
+            "defaults": {
+                "light": "#d0cbc1",
+                "dark": "#d0cbc1"
+            }
+        },
+        {
+            "id": "accent",
+            "label": "Accent",
+            "type": "color",
+            "defaults": {
+                "light": "#39ad65",
+                "dark": "#39ad65"
+            }
+        },
+        {
+            "id": "rating",
+            "label": "Rating accent",
+            "type": "color",
+            "defaults": {
+                "light": "#e4b45d",
+                "dark": "#e4b45d"
+            }
+        },
+        {
+            "id": "font-heading",
+            "label": "Heading font",
+            "type": "font-family",
+            "defaults": {
+                "light": "Georgia, 'Times New Roman', serif"
+            }
+        },
+        {
+            "id": "font-body",
+            "label": "Body font",
+            "type": "font-family",
+            "defaults": {
+                "light": "Inter, system-ui, sans-serif"
+            }
+        },
+        {
+            "id": "content-width",
+            "label": "Content width",
+            "type": "length",
+            "defaults": {
+                "light": "90rem"
+            }
+        },
+        {
+            "id": "header-height",
+            "label": "Header height",
+            "type": "length",
+            "defaults": {
+                "light": "4.25rem"
+            }
+        }
+    ]
+}

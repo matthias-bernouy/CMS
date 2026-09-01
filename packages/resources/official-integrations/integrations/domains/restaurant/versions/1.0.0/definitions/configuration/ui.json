@@ -1,0 +1,43 @@
+{
+    "mark": "R",
+    "markClass": "content",
+    "emit": "bloc:updated",
+    "instructions": [
+        [
+            "Install restaurant blocs",
+            "CmsCore imports a configurable header and three restaurant hero layouts."
+        ],
+        [
+            "Choose a hero structure",
+            "Use the gallery, split, or cover hero according to the page's media hierarchy."
+        ]
+    ],
+    "scopes": [
+        "Bloc source write",
+        "Editor catalog update"
+    ],
+    "checks": [
+        "The Basic Blocs integration is installed.",
+        "Every hero keeps one semantic H1 and alternative text for meaningful images.",
+        "Existing restaurant blocs require force when re-importing."
+    ],
+    "resources": [
+        [
+            "Blocs",
+            "One restaurant header and three responsive restaurant hero layouts"
+        ]
+    ],
+    "review": [
+        "Keep the header independent from the selected hero so it can be reused on inner pages.",
+        "Replace all placeholder media before publishing."
+    ],
+    "sync": [
+        "Validate restaurant bloc sources",
+        "Install restaurant-header",
+        "Install restaurant-hero-gallery",
+        "Install restaurant-hero-split",
+        "Install restaurant-hero-cover",
+        "Refresh Blocs"
+    ],
+    "syncNote": "This integration installs only bloc artifacts and restaurant theme tokens."
+}

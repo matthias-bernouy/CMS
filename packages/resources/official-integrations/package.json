@@ -41,6 +41,7 @@
         "./integrations/mondial-relay/*": "./integrations/providers/mondial-relay/*",
         "./integrations/newsletter/*": "./integrations/domains/newsletter/*",
         "./integrations/photo-albums/*": "./integrations/domains/photo-albums/*",
+        "./integrations/restaurant/*": "./integrations/domains/restaurant/*",
         "./integrations/sales-configurator/*": "./integrations/domains/sales-configurator/*",
         "./integrations/stripe-connect/*": "./integrations/providers/stripe-connect/*",
         "./integrations/user-account/*": "./integrations/domains/user-account/*"

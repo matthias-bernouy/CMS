@@ -1,0 +1,42 @@
+@media (max-width: 560px) {
+    [part="section"] { min-height: 100svh; }
+    [part="body"],
+    :host([height="screen"]) [part="body"] { min-height: 100svh; }
+
+    [part="shade"] {
+        background:
+            linear-gradient(90deg, color-mix(in srgb, var(--_background) 84%, transparent), transparent 100%),
+            linear-gradient(0deg, color-mix(in srgb, var(--_background) 88%, transparent), transparent 55%);
+    }
+
+    [part="content"] { align-content: end; padding: 3rem 1.25rem; transform: none; }
+    [part="emblem"] { width: 1.35rem; height: 1.35rem; margin-block-end: 1rem; }
+    [part="emblem"] { margin-inline-start: 0; }
+    [part="gallery"] {
+        display: flex;
+        box-sizing: border-box;
+        padding: .5rem;
+        margin-block-end: 0;
+        overflow-x: auto;
+        gap: .5rem;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+    }
+    [part="gallery"]::-webkit-scrollbar { display: none; }
+
+    ::slotted(h1[slot="brand"]) { font-size: clamp(2rem, 8.5vw, 2.75rem); letter-spacing: .08em; }
+    ::slotted(a[slot="actions"]) { min-width: 0; padding: .7rem .6rem; }
+    ::slotted([slot="details"]) { font-size: 1rem; }
+    ::slotted(img[slot="media"]) {
+        width: 100%;
+        height: 100%;
+        margin-block-start: 0;
+        object-fit: cover;
+    }
+    ::slotted(img[slot="gallery"]) { flex: 0 0 8rem; width: 8rem; scroll-snap-align: center; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    ::slotted(a[slot="actions"]) { transition: background 160ms ease, color 160ms ease; }
+    ::slotted(a[slot="actions"]:hover) { background: color-mix(in srgb, var(--_accent) 78%, white); }
+}

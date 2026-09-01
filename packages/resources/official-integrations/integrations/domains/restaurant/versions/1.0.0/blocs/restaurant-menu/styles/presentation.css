@@ -1,0 +1,32 @@
+:host([presentation="curtain"]) [part="panel"],
+:host(:not([presentation])) [part="panel"] {
+    inset: 0;
+    transform: translateY(-100%);
+}
+
+:host([presentation="curtain"][open]) [part="panel"],
+:host(:not([presentation])[open]) [part="panel"] { transform: translateY(0); }
+
+:host([presentation="drawer"]) [part="panel"] {
+    inset: 0 0 0 auto;
+    width: min(92vw, 40rem);
+    transform: translateX(100%);
+}
+
+:host([presentation="drawer"][open]) [part="panel"] { transform: translateX(0); }
+:host([presentation="drawer"]) [part="layout"] { grid-template-columns: minmax(0, 1fr); }
+:host([presentation="drawer"]) [part="primary"] { align-content: start; }
+:host([presentation="drawer"]) [part="media"] { display: none; }
+:host([presentation="drawer"]) ::slotted(a[slot="navigation"]) { font-size: clamp(2.25rem, 8vw, 4.5rem); }
+
+:host([presentation="panel"]) [part="panel"] {
+    inset: clamp(1rem, 5vw, 4rem);
+    width: min(calc(100% - 2rem), 72rem);
+    height: min(calc(100% - 2rem), 50rem);
+    margin: auto;
+    border: 1px solid color-mix(in srgb, var(--_color) 20%, transparent);
+    opacity: 0;
+    transform: translateY(1rem) scale(.97);
+}
+
+:host([presentation="panel"][open]) [part="panel"] { opacity: 1; transform: translateY(0) scale(1); }

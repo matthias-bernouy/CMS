@@ -1,0 +1,30 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "restaurant",
+    "label": "Restaurant",
+    "version": "1.0.0",
+    "category": "Blocks",
+    "description": "Install editorial headers, configurable navigation overlays, and image-led hero blocs for restaurant websites.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": [],
+    "dependencies": {
+        "$include": "configuration/dependencies.json"
+    },
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "theme": {
+        "$include": "configuration/theme.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/blocs/restaurant-header.json",
+            "artifacts/blocs/restaurant-menu.json",
+            "artifacts/blocs/restaurant-hero-gallery.json",
+            "artifacts/blocs/restaurant-hero-split.json",
+            "artifacts/blocs/restaurant-hero-cover.json"
+        ]
+    }
+}

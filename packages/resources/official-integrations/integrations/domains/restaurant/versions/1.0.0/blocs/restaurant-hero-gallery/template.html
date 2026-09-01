@@ -1,0 +1,19 @@
+<section part="section">
+    <div part="content">
+        <div part="brand"><slot name="brand"></slot></div>
+        <div part="title"><slot name="title"></slot></div>
+        <div part="subtitle"><slot name="subtitle"></slot></div>
+        <div part="actions"><slot name="actions"></slot></div>
+        <div part="details"><slot name="details"></slot></div>
+    </div>
+    <div part="visual">
+        <div part="media">
+            <slot name="media"></slot>
+            <span part="progress" aria-hidden="true"><span part="progress-value"></span></span>
+        </div>
+        <div part="rail">
+            <div part="gallery gallery-start"><slot name="gallery-start"></slot></div>
+            <div part="gallery gallery-end"><slot name="gallery-end"></slot></div>
+        </div>
+    </div>
+</section>

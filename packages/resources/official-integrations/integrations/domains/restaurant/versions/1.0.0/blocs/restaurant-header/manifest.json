@@ -1,0 +1,10 @@
+{
+    "default-tag": "restaurant-header",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Restaurant header",
+        "description": "Reusable restaurant header with utility and compact layouts."
+    }
+}

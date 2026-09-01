@@ -1,0 +1,190 @@
+:host {
+    --_accent: var(--integration-restaurant-accent, #39ad65);
+    --_background: var(--integration-restaurant-background, #15171a);
+    --_color: var(--integration-restaurant-text, #fffaf0);
+    --_max-width: var(--integration-restaurant-content-width, 90rem);
+
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    color: var(--_color);
+    font-family: var(--integration-restaurant-font-body, system-ui, sans-serif);
+}
+
+:host([hidden]) { display: none !important; }
+:host([position="overlay"]) { position: absolute; z-index: 20; inset: 0 0 auto; }
+:host([position="sticky"]) { position: sticky; z-index: 20; top: 0; }
+:host([width="full"]) { --_max-width: none; }
+
+[part="header"] {
+    box-sizing: border-box;
+    width: 100%;
+    color: inherit;
+}
+
+:host([appearance="solid"]) [part="header"] { background: var(--_background); }
+
+:host([appearance="blurred"]) [part="header"] {
+    background: color-mix(in srgb, var(--_background) 76%, transparent);
+    backdrop-filter: blur(1rem);
+}
+
+[part="bar"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    box-sizing: border-box;
+    width: min(100%, var(--_max-width));
+    min-height: var(--integration-restaurant-header-height, 4.25rem);
+    margin-inline: auto;
+    padding: .55rem clamp(1rem, 3vw, 2rem);
+    gap: 1rem;
+}
+
+[part="start"],
+[part="end"],
+[part="navigation"],
+[part="menu"],
+[part="status"] {
+    display: flex;
+    align-items: center;
+}
+
+[part="start"] { gap: clamp(.75rem, 2vw, 2rem); }
+[part="end"] { justify-content: flex-end; gap: clamp(1rem, 2vw, 2rem); }
+[part="navigation"] { gap: 1rem; }
+[part="brand"] { min-width: 0; text-align: center; }
+[part="locale"] { min-width: 0; }
+
+[part="status"] {
+    width: max-content;
+}
+
+::slotted(basic-badge[slot="status"]) {
+    --integration-basic-blocs-success-base: var(--integration-restaurant-accent, #39ad65);
+    --integration-basic-blocs-success-foreground: var(--integration-restaurant-text, #fffaf0);
+    --integration-basic-blocs-success-muted: color-mix(in srgb, var(--integration-restaurant-accent, #39ad65) 16%, transparent);
+    --integration-basic-blocs-success-contrasted: var(--integration-restaurant-text, #fffaf0);
+    --basic-badge-dot-color: var(--integration-restaurant-accent, #39ad65);
+}
+
+[part="menu"] {
+    justify-content: flex-end;
+    min-width: 5.5rem;
+    min-height: 2.75rem;
+    padding: .35rem .55rem;
+    border-radius: .2rem;
+    gap: .55rem;
+    text-shadow: 0 1px .2rem #000;
+    cursor: pointer;
+}
+
+:host([menu-style="outline"]) [part="menu"] {
+    padding: .55rem .75rem;
+    border: 1px solid currentColor;
+}
+
+[part="menu-icon"] {
+    display: grid;
+    position: relative;
+    width: 1.45rem;
+    gap: .3rem;
+}
+
+[part="menu-icon"] i {
+    display: block;
+    height: 1px;
+    background: currentColor;
+    transition: transform 220ms ease, width 220ms ease;
+}
+
+[part="menu-icon"] i:last-child { width: 72%; justify-self: end; }
+:host([menu-icon="none"]) [part="menu-icon"] { display: none; }
+
+:host([menu-icon="plus"]) [part="menu-icon"] { display: block; height: 1.45rem; }
+:host([menu-icon="plus"]) [part="menu-icon"] i { position: absolute; top: 50%; width: 100%; }
+:host([menu-icon="plus"]) [part="menu-icon"] i:last-child { transform: rotate(90deg); }
+:host([menu-open]) [part="menu-icon"] i:first-child { transform: translateY(.15rem) rotate(45deg); }
+:host([menu-open]) [part="menu-icon"] i:last-child { width: 100%; transform: translateY(-.15rem) rotate(-45deg); }
+
+::slotted(a) {
+    color: inherit;
+    font-size: 1rem;
+    text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+    text-underline-offset: .22em;
+}
+
+::slotted(basic-select[slot="locale"]) {
+    --cms-field-gap: 0;
+    --cms-focus-color: var(--_accent);
+    --cms-input-background: color-mix(in srgb, var(--_background) 82%, transparent);
+    --cms-input-border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    --cms-input-color: inherit;
+    --cms-input-height: 2.75rem;
+    --cms-input-padding: .5rem .7rem;
+    --cms-input-radius: .75rem;
+    --cms-select-shadow: 0 .8rem 2.4rem #0008;
+
+    width: 10.5rem;
+    min-width: 0;
+    color: inherit;
+    font-size: 1rem;
+}
+
+::slotted(button) {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+::slotted(basic-menu[slot="menu"]) {
+    --basic-menu-accent: var(--integration-restaurant-accent, #39ad65);
+    --basic-menu-background: var(--integration-restaurant-background, #15171a);
+    --basic-menu-color: var(--integration-restaurant-text, #fffaf0);
+    --basic-menu-muted: var(--integration-restaurant-muted-text, #d0cbc1);
+    --integration-basic-blocs-action-min-height: 2.75rem;
+    --integration-basic-blocs-focus-color: var(--integration-restaurant-accent, #39ad65);
+    --integration-basic-blocs-surface-text: var(--integration-restaurant-text, #fffaf0);
+}
+
+::slotted([slot="brand"]) {
+    overflow: hidden;
+    color: inherit;
+    font-family: var(--integration-restaurant-font-heading, Georgia, serif);
+    font-size: 1.25rem;
+    letter-spacing: .18em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+::slotted([slot="menu"]) {
+    color: inherit;
+    font-size: 1rem;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+:host([menu-style="underline"]) ::slotted([slot="menu"]) {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+    text-underline-offset: .22em;
+}
+
+::slotted([slot="menu"]:focus-visible) { outline: none; }
+[part="menu"]:focus-within { outline: 2px solid var(--_accent); outline-offset: .15rem; }
+
+:host([layout="compact"]) [part="bar"] {
+    display: flex;
+}
+
+:host([width="full"]) [part="bar"] { padding-inline: clamp(1rem, 2vw, 2rem); }
+
+:host([layout="compact"]) [part="brand"] {
+    order: -1;
+    margin-inline-end: auto;
+    text-align: start;
+}

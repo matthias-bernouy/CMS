@@ -1,0 +1,10 @@
+{
+    "default-tag": "restaurant-hero-gallery",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Restaurant hero · Gallery",
+        "description": "Centered restaurant introduction framed by a main image and two image galleries."
+    }
+}
