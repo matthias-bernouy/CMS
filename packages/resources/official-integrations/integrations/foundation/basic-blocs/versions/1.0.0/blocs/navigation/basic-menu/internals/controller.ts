@@ -62,7 +62,6 @@ export class BasicMenuController {
         const closeLabel = this.host.getAttribute("close-label")?.trim() || "Close";
         this.host.shadowRoot?.querySelector("[data-close-label]")?.replaceChildren(closeLabel);
         if (trigger) {
-            trigger.setAttribute("aria-controls", panelId);
             trigger.setAttribute("aria-expanded", String(open));
             trigger.setAttribute("aria-haspopup", "dialog");
             this.linkAriaControl(trigger, panel);
@@ -153,9 +152,20 @@ export class BasicMenuController {
     }
 
     linkAriaControl(trigger, panel) {
-        if (panel && "ariaControlsElements" in trigger) {
-            trigger.ariaControlsElements = [panel];
+        if (!panel) {
+            trigger.removeAttribute("aria-controls");
+            return;
         }
+        if ("ariaControlsElements" in trigger) {
+            trigger.ariaControlsElements = [panel];
+            if (trigger.ariaControlsElements?.includes(panel)) {
+                return;
+            }
+        }
+        // ID references cannot cross every Shadow DOM implementation. In that
+        // case, expose the controlled menu host, which remains in the trigger's
+        // document tree and owns the open state and dialog panel.
+        trigger.setAttribute("aria-controls", this.host.id);
     }
 
     lockScroll() {

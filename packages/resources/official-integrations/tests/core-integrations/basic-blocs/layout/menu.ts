@@ -44,7 +44,7 @@ export function registerMenuTest(): void {
         document.body.append(menu);
         const trigger = menu.querySelector("button")!;
 
-        expect(trigger.getAttribute("aria-controls")).toBe("test-menu-panel");
+        expect(trigger.getAttribute("aria-controls")).toBe("test-menu");
         expect(trigger.getAttribute("aria-expanded")).toBe("false");
         expect(trigger.getAttribute("aria-haspopup")).toBe("dialog");
         trigger.click();
