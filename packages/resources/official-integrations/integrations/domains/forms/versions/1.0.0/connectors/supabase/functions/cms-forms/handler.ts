@@ -2,11 +2,19 @@ import { requireCmsRequest } from "./auth.ts";
 import { handleError, json, optionsResponse } from "./http.ts";
 import { handleAdminRoute } from "./routes/admin.ts";
 import { handleBuilderRoute } from "./routes/builder.ts";
+import { handleMediaRoute } from "./routes/media/index.ts";
 import { handleSubmissionRoute } from "./routes/submissions.ts";
 import { handleSystemRoute } from "./routes/system.ts";
 import { handleVisitorRoute } from "./routes/visitor.ts";
 
-const handlers = [handleVisitorRoute, handleBuilderRoute, handleSubmissionRoute, handleAdminRoute, handleSystemRoute];
+const handlers = [
+    handleMediaRoute,
+    handleVisitorRoute,
+    handleBuilderRoute,
+    handleSubmissionRoute,
+    handleAdminRoute,
+    handleSystemRoute,
+];
 
 export async function handleFormsRequest(request: Request): Promise<Response> {
     try {

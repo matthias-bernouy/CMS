@@ -3,7 +3,7 @@
     "target": {
         "kind": "forms",
         "version": "1.0.0",
-        "packageDigest": "258d20aa25942c605932a6fd3b40c0da6777ebb1a0e60fcaa291cedb352e46c8"
+        "packageDigest": "654acca034862af2306fc58deedc2ee087ee8c3dfc693c6f91202addae82afd1"
     },
     "manifest": {
         "runnerRequirements": [
@@ -24,7 +24,7 @@
     "files": {
         "suites/forms-storage-boundary.ts": {
             "encoding": "utf8",
-            "content": "import { defineSuite, expect, test } from \"@bernouy/cms-integration-verification/sdk/v1\";\n\nexport default defineSuite({\n    tests: [\n        test(\"declares operations while denying raw form writes\", async ({ query }) => {\n            const operations = await query(\n                \"select to_regprocedure('forms.save_form_draft(text,text,text,text,jsonb,text)') is not null as save_draft, to_regprocedure('forms.submit_form(text,integer,text,uuid,jsonb,text,jsonb)') is not null as submit_form, c.relrowsecurity as rls_enabled, c.relforcerowsecurity as rls_forced from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid = c.relnamespace where n.nspname = 'forms' and c.relname = 'forms'\",\n            );\n            expect(operations).toEqual([{ save_draft: true, submit_form: true, rls_enabled: true, rls_forced: true }]);\n\n            let rawWriteRejected = false;\n            try {\n                await query(\n                    \"insert into forms.forms (form_key, title, access_mode, draft_definition) values ('verification-contact', 'Verification contact', 'public', '{\\\"schemaVersion\\\":1,\\\"fields\\\":[]}'::jsonb)\",\n                );\n            } catch {\n                rawWriteRejected = true;\n            }\n            expect(rawWriteRejected).toBe(true);\n        }),\n    ],\n});\n"
+            "content": "import { defineSuite, expect, test } from \"@bernouy/cms-integration-verification/sdk/v1\";\n\nexport default defineSuite({\n    tests: [\n        test(\"declares operations while denying raw form writes\", async ({ query }) => {\n            const operations = await query(\n                \"select to_regprocedure('forms.save_form_draft(text,text,text,text,jsonb,text)') is not null as save_draft, to_regprocedure('forms.submit_form(text,integer,text,uuid,jsonb,text,jsonb)') is not null as submit_form, to_regprocedure('forms.create_media(text,text,text,text,bigint,integer,integer,text,text)') is not null as create_media, c.relrowsecurity as rls_enabled, c.relforcerowsecurity as rls_forced, media.relrowsecurity and media.relforcerowsecurity as media_rls from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid = c.relnamespace join pg_catalog.pg_class media on media.relnamespace = n.oid and media.relname = 'media' where n.nspname = 'forms' and c.relname = 'forms'\",\n            );\n            expect(operations).toEqual([{ save_draft: true, submit_form: true, create_media: true, rls_enabled: true, rls_forced: true, media_rls: true }]);\n\n            let rawWriteRejected = false;\n            try {\n                await query(\n                    \"insert into forms.forms (form_key, title, access_mode, draft_definition) values ('verification-contact', 'Verification contact', 'public', '{\\\"schemaVersion\\\":1,\\\"fields\\\":[]}'::jsonb)\",\n                );\n            } catch {\n                rawWriteRejected = true;\n            }\n            expect(rawWriteRejected).toBe(true);\n        }),\n    ],\n});\n"
         }
     }
 }

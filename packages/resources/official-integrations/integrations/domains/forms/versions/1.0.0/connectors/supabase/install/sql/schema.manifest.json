@@ -4,7 +4,9 @@
     "entries": [
         { "file": "model/namespace.sql" },
         { "file": "model/forms.sql" },
+        { "file": "model/media.sql" },
         { "file": "model/submissions.sql" },
+        { "file": "operations/media.sql" },
         { "file": "operations/public-read.sql" },
         { "file": "operations/form-read.sql" },
         { "file": "operations/form-write.sql" },

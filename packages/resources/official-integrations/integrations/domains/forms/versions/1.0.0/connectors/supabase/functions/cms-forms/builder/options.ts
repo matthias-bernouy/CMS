@@ -9,13 +9,11 @@ export function normalizedOptions(value: unknown, imagesRequired: boolean): Reco
             throw new HttpError(422, `option key "${key}" is duplicated`);
         }
         keys.add(key);
-        const imageUrl = normalizedImageUrl(option.imageUrl, imagesRequired);
-        const imageAlt = optionalText(option.imageAlt, 240);
+        const image = normalizedImage(option, imagesRequired);
         return {
             key,
             label: requiredText(option.label, "option label", 160),
-            ...(imageUrl ? { imageUrl } : {}),
-            ...(imageAlt ? { imageAlt } : {}),
+            ...image,
         };
     });
     if (options.length === 0) {
@@ -30,7 +28,14 @@ export function optionItems(value: unknown): Record<string, unknown>[] {
     }
     return value.filter(isRecord).map((option, index) => {
         const key = optionKey(option, false) || `option-${index + 1}`;
-        return { ...option, key, id: key, position: index };
+        const legacyUrl = normalizedImageUrl(option.imageUrl, false);
+        const legacyAlt = optionalText(option.imageAlt, 240);
+        const image = isRecord(option.image)
+            ? option.image
+            : legacyUrl
+              ? { url: legacyUrl, ...(legacyAlt ? { alt: legacyAlt } : {}) }
+              : undefined;
+        return { ...option, ...(image ? { image } : {}), key, id: key, position: index };
     });
 }
 
@@ -57,7 +62,7 @@ function normalizedImageUrl(value: unknown, required: boolean): string | undefin
     const imageUrl = optionalText(value, 2048);
     if (!imageUrl) {
         if (required) {
-            throw new HttpError(422, "every image choice needs an image URL");
+            throw new HttpError(422, "every image choice needs an image");
         }
         return undefined;
     }
@@ -72,4 +77,16 @@ function normalizedImageUrl(value: unknown, required: boolean): string | undefin
         // Report the same bounded validation error below.
     }
     throw new HttpError(422, "image URLs must use HTTPS or a CMS-relative /path");
+}
+
+function normalizedImage(option: Record<string, unknown>, required: boolean): Record<string, unknown> {
+    const value = isRecord(option.image) ? option.image : {};
+    const rawId = value.mediaId ?? value.id;
+    const mediaId = String(rawId ?? "").trim();
+    const alt = optionalText(value.alt ?? option.imageAlt, 240);
+    if (/^[1-9][0-9]{0,18}$/.test(mediaId)) {
+        return { image: { mediaId, ...(alt ? { alt } : {}) } };
+    }
+    const imageUrl = normalizedImageUrl(value.url ?? option.imageUrl, required);
+    return imageUrl ? { imageUrl, ...(alt ? { imageAlt: alt } : {}) } : {};
 }

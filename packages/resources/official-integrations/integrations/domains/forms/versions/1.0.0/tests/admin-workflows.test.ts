@@ -64,7 +64,7 @@ beforeEach(() => {
     };
     globalThis.fetch = async (_input, init) => {
         const url = String(_input);
-        const body = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+        const body = typeof init?.body === "string" ? (JSON.parse(init.body) as Record<string, unknown>) : {};
         if (url.endsWith("/rpc/get_managed_form")) {
             return response(managed);
         }
@@ -125,15 +125,18 @@ describe("Forms admin workflows", () => {
                         id: "inside",
                         key: "inside",
                         label: "Inside",
-                        imageUrl: "/media/inside.webp",
-                        imageAlt: "Dining room",
+                        image: {
+                            id: "101",
+                            url: "/.cms/sources/forms/choiceImage?id=101",
+                            alt: "Dining room",
+                        },
                         position: 0,
                     },
                     {
                         id: "terrace",
                         key: "terrace",
                         label: "Terrace",
-                        imageUrl: "https://images.example.test/terrace.webp",
+                        image: { id: "102", url: "/.cms/sources/forms/choiceImage?id=102" },
                         position: 1,
                     },
                 ],
@@ -147,8 +150,8 @@ describe("Forms admin workflows", () => {
             type: "choice",
             presentation: "image-grid",
             options: [
-                { key: "inside", label: "Inside", imageUrl: "/media/inside.webp" },
-                { key: "terrace", label: "Terrace", imageUrl: "https://images.example.test/terrace.webp" },
+                { key: "inside", label: "Inside", image: { mediaId: "101", alt: "Dining room" } },
+                { key: "terrace", label: "Terrace", image: { mediaId: "102" } },
             ],
         });
         const duplicateKey = await handleFormsRequest(
@@ -158,7 +161,7 @@ describe("Forms admin workflows", () => {
                 label: "Preferred atmosphere",
                 type: "choice",
                 presentation: "image-grid",
-                imageOptions: [{ key: "inside", label: "Inside", imageUrl: "/media/inside.webp" }],
+                imageOptions: [{ key: "inside", label: "Inside", image: { id: "101" } }],
             }),
         );
         expect(duplicateKey.status).toBe(422);

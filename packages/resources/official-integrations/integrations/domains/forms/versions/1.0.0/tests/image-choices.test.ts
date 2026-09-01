@@ -6,18 +6,19 @@ describe("Forms image choices", () => {
     test("prepares image cards from stable keys and safe image sources", () => {
         const field = imageChoiceDefinition().steps[0]!.fields[0]!;
 
-        expect(imageChoiceItems(field, "bright")).toEqual([
+        const source = (mediaId: string) => `/.cms/sources/forms/formImagePublic?id=${mediaId}`;
+        expect(imageChoiceItems(field, "bright", source)).toEqual([
             {
                 key: "warm",
                 label: "Warm",
-                imageUrl: "/media/warm.webp",
+                imageUrl: "/.cms/sources/forms/formImagePublic?id=17",
                 imageAlt: "Warm dining room",
                 selected: false,
             },
             {
                 key: "bright",
                 label: "Bright",
-                imageUrl: "https://images.example.test/bright.webp",
+                imageUrl: "/.cms/sources/forms/formImagePublic?id=18",
                 imageAlt: "",
                 selected: true,
             },
@@ -44,13 +45,12 @@ function imageChoiceDefinition(): FormDefinition {
                             {
                                 key: "warm",
                                 label: "Warm",
-                                imageUrl: "/media/warm.webp",
-                                imageAlt: "Warm dining room",
+                                image: { mediaId: "17", alt: "Warm dining room" },
                             },
                             {
                                 key: "bright",
                                 label: "Bright",
-                                imageUrl: "https://images.example.test/bright.webp",
+                                image: { mediaId: "18" },
                             },
                         ],
                     },

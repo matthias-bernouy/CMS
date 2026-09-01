@@ -1,5 +1,5 @@
 import { optionKey, type FormAnswers, type FormDefinition, type FormField } from "../definition";
-import { imageChoiceControl } from "./imageChoice";
+import { imageChoiceControl, type ImageSource } from "./imageChoice";
 
 export function formsRoot(host: HTMLElement): HTMLElement {
     let root = host.querySelector<HTMLElement>("[data-forms-root]");
@@ -23,7 +23,7 @@ function setOptional(element: HTMLElement, name: string, value: string | undefin
     }
 }
 
-function controlFor(field: FormField, saved: string | string[] | undefined): HTMLElement {
+function controlFor(field: FormField, saved: string | string[] | undefined, imageSource?: ImageSource): HTMLElement {
     if (field.type === "textarea") {
         return standardControl("basic-textarea", field, saved);
     }
@@ -39,7 +39,7 @@ function controlFor(field: FormField, saved: string | string[] | undefined): HTM
     }
     if (field.type === "choice") {
         if (field.presentation === "image-grid") {
-            return imageChoiceControl(field, saved);
+            return imageChoiceControl(field, saved, imageSource);
         }
         const group = standardControl("basic-chip-group", field, saved);
         group.setAttribute("mode", field.multiple ? "multiple" : "single");
@@ -95,6 +95,7 @@ export function renderStep(
     stepIndex: number,
     values: FormAnswers,
     actions: StepViewActions,
+    imageSource?: ImageSource,
 ): void {
     const step = definition.steps[stepIndex];
     const form = document.createElement("form");
@@ -123,7 +124,7 @@ export function renderStep(
     const fields = document.createElement("div");
     fields.className = "forms-fields";
     for (const field of step.fields) {
-        fields.append(controlFor(field, values[field.key]));
+        fields.append(controlFor(field, values[field.key], imageSource));
     }
     const honeypot = document.createElement("input");
     honeypot.className = "forms-trap";

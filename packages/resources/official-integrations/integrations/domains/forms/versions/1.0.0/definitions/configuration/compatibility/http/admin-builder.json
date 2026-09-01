@@ -82,5 +82,19 @@
         "requiredInputs": ["ref"],
         "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
         "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/form/image",
+        "method": "GET",
+        "requiredInputs": ["id"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }]
+    },
+    {
+        "route": "/admin/form/image",
+        "method": "POST",
+        "requiredInputs": ["ref"],
+        "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
     }
 ]

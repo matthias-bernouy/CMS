@@ -72,16 +72,23 @@ export class FormsRenderer extends HTMLElement {
         const root = formsRoot(this);
         const maximum = this.published.definition.steps.length - 1;
         this.draft.step = Math.min(Math.max(this.draft.step, 0), maximum);
-        renderStep(root, this.published.definition, this.draft.step, this.draft.answers, {
-            back: () => {
-                if (this.draft) {
-                    this.draft.step -= 1;
-                    this.persistDraft();
-                    this.render();
-                }
+        renderStep(
+            root,
+            this.published.definition,
+            this.draft.step,
+            this.draft.answers,
+            {
+                back: () => {
+                    if (this.draft) {
+                        this.draft.step -= 1;
+                        this.persistDraft();
+                        this.render();
+                    }
+                },
+                submit: (form) => this.advance(form),
             },
-            submit: (form) => this.advance(form),
-        });
+            (mediaId) => this.imageUrl(mediaId),
+        );
     }
 
     /** @param {HTMLFormElement} form */
@@ -143,6 +150,20 @@ export class FormsRenderer extends HTMLElement {
 
     sourceId() {
         return this.getAttribute("source-id") || "forms";
+    }
+
+    /** @param {string} mediaId */
+    imageUrl(mediaId) {
+        if (!this.published) {
+            return "";
+        }
+        const endpoint = this.getAttribute("access") === "authenticated" ? "formImageAuthenticated" : "formImagePublic";
+        const params = new URLSearchParams({
+            key: this.published.key,
+            version: String(this.published.version),
+            id: mediaId,
+        });
+        return `${sourceBase(this)}/${endpoint}?${params}`;
     }
 
     persistDraft() {

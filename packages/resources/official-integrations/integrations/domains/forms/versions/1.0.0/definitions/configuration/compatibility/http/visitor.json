@@ -14,6 +14,13 @@
         "responses": [{ "status": "202" }, { "status": "default" }]
     },
     {
+        "route": "/authenticated/form/image",
+        "method": "GET",
+        "requiredInputs": ["id", "key", "version"],
+        "requiredHeaders": ["authorization", "x-cms-user-id"],
+        "responses": [{ "status": "200" }]
+    },
+    {
         "route": "/public/form",
         "method": "GET",
         "requiredInputs": ["key"],
@@ -26,5 +33,12 @@
         "requiredInputs": ["answers", "idempotencyKey", "key", "sessionId", "version"],
         "requiredHeaders": ["authorization"],
         "responses": [{ "status": "202" }, { "status": "default" }]
+    },
+    {
+        "route": "/public/form/image",
+        "method": "GET",
+        "requiredInputs": ["id", "key", "version"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }]
     }
 ]

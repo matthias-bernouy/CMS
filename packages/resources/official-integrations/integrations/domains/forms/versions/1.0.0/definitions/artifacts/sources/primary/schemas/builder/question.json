@@ -23,6 +23,15 @@
                     "id": { "type": "string" },
                     "key": { "type": "string" },
                     "label": { "type": "string" },
+                    "image": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "mediaId": { "type": "string", "nullable": true },
+                            "url": { "type": "string", "nullable": true },
+                            "alt": { "type": "string", "nullable": true }
+                        }
+                    },
                     "imageUrl": { "type": "string", "nullable": true },
                     "imageAlt": { "type": "string", "nullable": true },
                     "position": { "type": "number" }

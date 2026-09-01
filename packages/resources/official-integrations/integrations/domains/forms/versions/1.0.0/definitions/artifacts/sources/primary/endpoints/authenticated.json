@@ -76,5 +76,20 @@
                 }
             }
         ]
+    },
+    {
+        "endpointId": "formImageAuthenticated",
+        "method": "GET",
+        "access": "auth",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/authenticated/form/image",
+        "params": [
+            { "name": "key", "in": "query", "type": "string", "required": true },
+            { "name": "version", "in": "query", "type": "number", "required": true },
+            { "name": "id", "in": "query", "type": "string", "required": true }
+        ],
+        "headers": { "$include": "../shared/actor-headers.json" },
+        "responseKind": "file",
+        "mediaType": "image/*",
+        "output": [{ "status": "200" }]
     }
 ]

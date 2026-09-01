@@ -8,18 +8,28 @@ export interface ImageChoiceItem {
     selected: boolean;
 }
 
-export function imageChoiceItems(field: FormField, saved: string | string[] | undefined): ImageChoiceItem[] {
+export type ImageSource = (mediaId: string) => string;
+
+export function imageChoiceItems(
+    field: FormField,
+    saved: string | string[] | undefined,
+    imageSource?: ImageSource,
+): ImageChoiceItem[] {
     const selected = new Set(Array.isArray(saved) ? saved : saved ? [saved] : []);
     return (field.options ?? []).map((option) => ({
         key: optionKey(option),
         label: option.label,
-        imageUrl: safeImageSource(option.imageUrl),
-        imageAlt: option.imageAlt ?? "",
+        imageUrl: option.image ? (imageSource?.(String(option.image.mediaId)) ?? "") : safeImageSource(option.imageUrl),
+        imageAlt: option.image?.alt ?? option.imageAlt ?? "",
         selected: selected.has(optionKey(option)),
     }));
 }
 
-export function imageChoiceControl(field: FormField, saved: string | string[] | undefined): HTMLElement {
+export function imageChoiceControl(
+    field: FormField,
+    saved: string | string[] | undefined,
+    imageSource?: ImageSource,
+): HTMLElement {
     const fieldset = document.createElement("fieldset");
     fieldset.className = "forms-image-choice";
     const legend = document.createElement("legend");
@@ -36,7 +46,7 @@ export function imageChoiceControl(field: FormField, saved: string | string[] | 
 
     const grid = document.createElement("div");
     grid.className = "forms-image-choice-grid";
-    const inputs = imageChoiceItems(field, saved).map((option) => {
+    const inputs = imageChoiceItems(field, saved, imageSource).map((option) => {
         const label = document.createElement("label");
         label.className = "forms-image-choice-option";
         const input = document.createElement("input");

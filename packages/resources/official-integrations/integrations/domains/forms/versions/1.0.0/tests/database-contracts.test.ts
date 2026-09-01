@@ -13,6 +13,10 @@ test("Forms SQL stays private, versioned, indexed, and batch-safe", async () => 
     const retention = await Bun.file(
         new URL("connectors/supabase/install/sql/operations/retention.sql", versionRoot),
     ).text();
+    const media = await Bun.file(new URL("connectors/supabase/install/sql/model/media.sql", versionRoot)).text();
+    const mediaOperations = await Bun.file(
+        new URL("connectors/supabase/install/sql/operations/media.sql", versionRoot),
+    ).text();
 
     expect(privileges).toContain("force row level security");
     expect(privileges).toContain("revoke all on schema forms from public, anon, authenticated, service_role");
@@ -24,4 +28,8 @@ test("Forms SQL stays private, versioned, indexed, and batch-safe", async () => 
     expect(submissions).toContain("submissions_form_version_idx");
     expect(submissions).toContain("submissions_retention_idx");
     expect(retention).toContain("for update skip locked");
+    expect(media).toContain("forms_media_immutable");
+    expect(media).toContain("'forms-media', 'forms-media', false");
+    expect(mediaOperations).toContain("form_version_media");
+    expect(mediaOperations).toContain("definition_media_ids");
 });

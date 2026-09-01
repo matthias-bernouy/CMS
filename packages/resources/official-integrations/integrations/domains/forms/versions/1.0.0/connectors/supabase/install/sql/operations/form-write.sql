@@ -11,6 +11,8 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+    saved_form_id bigint;
 begin
     if jsonb_typeof(p_definition) <> 'object' then
         raise exception 'validation: definition must be an object';
@@ -26,7 +28,9 @@ begin
         access_mode = excluded.access_mode,
         draft_definition = excluded.draft_definition,
         lifecycle_status = 'active',
-        updated_by = excluded.updated_by;
+        updated_by = excluded.updated_by
+    returning id into saved_form_id;
+    perform forms.sync_draft_media(saved_form_id, p_definition);
     return forms.get_managed_form(p_form_key);
 end;
 $$;
@@ -62,6 +66,10 @@ begin
         locked_form.draft_definition,
         p_actor_id
     );
+    insert into forms.form_version_media (form_id, version_number, media_id)
+    select locked_form.id, next_version, media_id
+    from forms.form_draft_media
+    where form_id = locked_form.id;
     update forms.forms set
         published_version = next_version,
         lifecycle_status = 'active',

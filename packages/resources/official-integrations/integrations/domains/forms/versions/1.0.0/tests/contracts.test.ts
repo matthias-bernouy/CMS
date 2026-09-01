@@ -49,11 +49,16 @@ describe("Forms 1.0.0 contracts", () => {
         )) as Array<Record<string, unknown>>;
 
         expect(dependencies).toEqual([{ name: "basicBlocs", kind: "basic-blocs", versionRange: "^1.0.0" }]);
-        expect(publicEndpoints.map((endpoint) => endpoint.endpointId)).toEqual(["formPublic", "submitPublic"]);
+        expect(publicEndpoints.map((endpoint) => endpoint.endpointId)).toEqual([
+            "formPublic",
+            "submitPublic",
+            "formImagePublic",
+        ]);
         expect(publicEndpoints.every((endpoint) => endpoint.access === "public")).toBe(true);
         expect(authenticatedEndpoints.map((endpoint) => endpoint.endpointId)).toEqual([
             "formAuthenticated",
             "submitAuthenticated",
+            "formImageAuthenticated",
         ]);
         expect(authenticatedEndpoints.every((endpoint) => endpoint.access === "auth")).toBe(true);
     });
@@ -108,13 +113,13 @@ describe("Forms 1.0.0 contracts", () => {
         ).toMatchObject({ restaurantName: "Maison Sépia", consent: "true" });
     });
 
-    test("validates stable image-choice keys and safe image URLs", () => {
+    test("validates stable image-choice keys and private Forms media identifiers", () => {
         const definition = structuredClone(restaurantPreview.definition) as any;
         const mood = definition.steps[1].fields[1];
         mood.presentation = "image-grid";
         mood.options = [
-            { key: "warm", label: "Warm", imageUrl: "/media/warm.webp" },
-            { key: "bright", label: "Bright", imageUrl: "https://images.example.test/bright.webp" },
+            { key: "warm", label: "Warm", image: { mediaId: "17", alt: "Warm room" } },
+            { key: "bright", label: "Bright", image: { mediaId: "18" } },
         ];
 
         expect(formDefinition(definition)).toBe(definition);
@@ -132,8 +137,8 @@ describe("Forms 1.0.0 contracts", () => {
         mood.options[1].key = "warm";
         expect(() => formDefinition(definition)).toThrow("duplicate option keys");
         mood.options[1].key = "bright";
-        mood.options[1].imageUrl = "javascript:alert(1)";
-        expect(() => formDefinition(definition)).toThrow("image choices need HTTPS");
+        mood.options[1].image.mediaId = "not-an-id";
+        expect(() => formDefinition(definition)).toThrow("image choices need a Forms image");
     });
 
     test("serves a published form and submits through mocked PostgREST", async () => {

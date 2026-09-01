@@ -1,0 +1,40 @@
+[
+    {
+        "endpointId": "choiceImage",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/image",
+        "params": [{ "name": "id", "in": "query", "type": "string", "required": true }],
+        "headers": { "$include": "../../shared/admin-headers.json" },
+        "responseKind": "file",
+        "mediaType": "image/*",
+        "output": [{ "status": "200" }]
+    },
+    {
+        "endpointId": "uploadChoiceImage",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/image",
+        "params": [{ "name": "ref", "in": "query", "type": "string", "required": true }],
+        "headers": { "$include": "../../shared/admin-headers.json" },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "ok": { "type": "boolean" },
+                        "mediaId": { "type": "number" },
+                        "mimeType": { "type": "string" },
+                        "fileSize": { "type": "number" },
+                        "width": { "type": "number" },
+                        "height": { "type": "number" },
+                        "originalFilename": { "type": "string" }
+                    },
+                    "required": ["ok", "mediaId", "mimeType", "fileSize", "width", "height"]
+                }
+            },
+            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+        ]
+    }
+]

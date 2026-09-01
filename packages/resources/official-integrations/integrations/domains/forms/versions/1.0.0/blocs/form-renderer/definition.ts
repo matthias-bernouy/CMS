@@ -15,6 +15,10 @@ export interface FormOption {
     label: string;
     key?: string;
     value?: string;
+    image?: {
+        mediaId: string;
+        alt?: string;
+    };
     imageUrl?: string;
     imageAlt?: string;
 }
@@ -118,8 +122,8 @@ function assertField(field: unknown): asserts field is FormField {
         if (!isRecord(option) || typeof option.label !== "string" || !optionKey(option as FormOption)) {
             throw new Error("A form option is invalid.");
         }
-        if (field.presentation === "image-grid" && !safeImageSource(option.imageUrl)) {
-            throw new Error("An image choice has an invalid image URL.");
+        if (field.presentation === "image-grid" && !validImageOption(option as FormOption)) {
+            throw new Error("An image choice has an invalid image.");
         }
     }
     if (field.presentation !== undefined && (field.type !== "choice" || field.presentation !== "image-grid")) {
@@ -144,4 +148,13 @@ export function safeImageSource(value: unknown): string {
     } catch {
         return "";
     }
+}
+
+function validImageOption(option: FormOption): boolean {
+    if (option.image && typeof option.image.mediaId === "string" && /^[1-9][0-9]{0,18}$/.test(option.image.mediaId)) {
+        return (
+            option.image.alt === undefined || (typeof option.image.alt === "string" && option.image.alt.length <= 240)
+        );
+    }
+    return Boolean(safeImageSource(option.imageUrl));
 }

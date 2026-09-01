@@ -84,8 +84,8 @@ function validateField(value: unknown, keys: Set<string>): void {
                 throw new HttpError(422, `${value.key} contains duplicate option keys`);
             }
             optionKeys.add(key);
-            if (value.presentation === "image-grid" && !validImageUrl(option.imageUrl)) {
-                throw new HttpError(422, `${value.key} image choices need HTTPS or CMS-relative image URLs`);
+            if (value.presentation === "image-grid" && !validImage(option)) {
+                throw new HttpError(422, `${value.key} image choices need a Forms image`);
             }
         }
     }
@@ -168,6 +168,19 @@ function validImageUrl(value: unknown): boolean {
     } catch {
         return false;
     }
+}
+
+function validImage(option: Record<string, unknown>): boolean {
+    if (isRecord(option.image)) {
+        const mediaId = option.image.mediaId;
+        if (typeof mediaId === "string" && /^[1-9][0-9]{0,18}$/.test(mediaId)) {
+            return (
+                option.image.alt === undefined ||
+                (typeof option.image.alt === "string" && option.image.alt.length <= 240)
+            );
+        }
+    }
+    return validImageUrl(option.imageUrl);
 }
 
 function parseJson(value: string): unknown {

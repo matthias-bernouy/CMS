@@ -129,6 +129,7 @@
                         "label": "Image choices",
                         "path": "options",
                         "type": "reorderable-list",
+                        "layout": "cards",
                         "itemKey": "key",
                         "positionPath": "position",
                         "addLabel": "Add image choice",
@@ -140,16 +141,38 @@
                             ]
                         },
                         "fields": [
-                            { "id": "key", "label": "Stable key", "path": "key", "required": true },
+                            {
+                                "id": "image",
+                                "label": "Image",
+                                "path": "image",
+                                "type": "media",
+                                "required": true,
+                                "item": { "idPath": "mediaId", "urlPath": "url", "altPath": "alt" },
+                                "actions": {
+                                    "upload": {
+                                        "endpoint": "uploadChoiceImage",
+                                        "params": { "ref": "$resource.ref" }
+                                    },
+                                    "replace": {
+                                        "endpoint": "uploadChoiceImage",
+                                        "params": { "ref": "$resource.ref" }
+                                    }
+                                }
+                            },
                             { "id": "label", "label": "Label", "path": "label", "required": true },
                             {
-                                "id": "imageUrl",
-                                "label": "Image URL",
-                                "path": "imageUrl",
+                                "id": "key",
+                                "label": "Stable key",
+                                "path": "key",
                                 "required": true,
-                                "placeholder": "https://… or /media/…"
+                                "secondary": true
                             },
-                            { "id": "imageAlt", "label": "Image alt text", "path": "imageAlt" }
+                            {
+                                "id": "imageAlt",
+                                "label": "Image alt text",
+                                "path": "image.alt",
+                                "secondary": true
+                            }
                         ]
                     },
                     {
