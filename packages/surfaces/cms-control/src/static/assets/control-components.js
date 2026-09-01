@@ -402,6 +402,50 @@
     }
     return [...byTag.values()];
   }
+  // ../../features/cms-content/src/core/utils/sanitizeSvgTree.ts
+  var DANGEROUS_SVG_TAGS = new Set([
+    "ANIMATE",
+    "ANIMATECOLOR",
+    "ANIMATEMOTION",
+    "ANIMATETRANSFORM",
+    "DISCARD",
+    "FOREIGNOBJECT",
+    "SCRIPT",
+    "SET"
+  ]);
+  var SVG_URL_ATTRS = new Set(["href", "xlink:href"]);
+  function sanitizeSvgTree(root) {
+    const elements = [
+      ...(root.tagName || "").toUpperCase() === "SVG" ? [root] : [],
+      ...Array.from(root.querySelectorAll("svg, svg *"))
+    ];
+    for (const el of elements) {
+      if (DANGEROUS_SVG_TAGS.has((el.tagName || "").toUpperCase())) {
+        el.remove();
+        continue;
+      }
+      for (const name of el.getAttributeNames()) {
+        const lower = name.toLowerCase();
+        if (lower.startsWith("on")) {
+          el.removeAttribute(name);
+          continue;
+        }
+        if (SVG_URL_ATTRS.has(lower)) {
+          const value = el.getAttribute(name);
+          if (value && !isSafeSvgUrl(value)) {
+            el.removeAttribute(name);
+          }
+        }
+      }
+    }
+  }
+  function isSafeSvgUrl(value) {
+    const v = value.replace(/[\u0000-\u0020]/g, "").toLowerCase();
+    if (v.startsWith("data:image/svg")) {
+      return false;
+    }
+    return v.startsWith("#") || v.startsWith("/") && !v.startsWith("//") || v.startsWith("./") || v.startsWith("../") || v.startsWith("data:image/") || v.startsWith("http:") || v.startsWith("https:");
+  }
   // ../../foundation/components/dist/index.js
   class l extends HTMLElement {
     _rawStyles = "";
@@ -47049,22 +47093,100 @@ label {
     return element.hasAttribute(f2) ? element.getAttribute(f2) || undefined : element.getAttribute("slot") ?? undefined;
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Content/inlineSvg.ts
+  var ALLOWED_INLINE_SVG_TAGS = new Set([
+    "circle",
+    "clippath",
+    "defs",
+    "desc",
+    "ellipse",
+    "feblend",
+    "fecolormatrix",
+    "fecomponenttransfer",
+    "fecomposite",
+    "feconvolvematrix",
+    "fediffuselighting",
+    "fedisplacementmap",
+    "fedistantlight",
+    "feflood",
+    "fefunca",
+    "fefuncb",
+    "fefuncg",
+    "fefuncr",
+    "fegaussianblur",
+    "feimage",
+    "femerge",
+    "femergenode",
+    "femorphology",
+    "feoffset",
+    "fepointlight",
+    "fespecularlighting",
+    "fespotlight",
+    "fetile",
+    "feturbulence",
+    "filter",
+    "g",
+    "line",
+    "lineargradient",
+    "marker",
+    "mask",
+    "path",
+    "pattern",
+    "polygon",
+    "polyline",
+    "radialgradient",
+    "rect",
+    "stop",
+    "svg",
+    "symbol",
+    "text",
+    "title",
+    "tspan",
+    "use"
+  ]);
+  function parseInlineSvg(document2, source2) {
+    const Parser = document2.defaultView?.DOMParser;
+    if (!Parser) {
+      return null;
+    }
+    const parsed = new Parser().parseFromString(source2, "image/svg+xml");
+    if (parsed.querySelector("parsererror")) {
+      return null;
+    }
+    const root = parsed.documentElement;
+    if (root.localName.toLowerCase() !== "svg") {
+      return null;
+    }
+    sanitizeSvgTree(root);
+    removeUnsupportedElements(root);
+    const imported = document2.importNode(root, true);
+    return imported;
+  }
+  function removeUnsupportedElements(root) {
+    for (const element of Array.from(root.querySelectorAll("*"))) {
+      if (!ALLOWED_INLINE_SVG_TAGS.has(element.localName.toLowerCase())) {
+        element.remove();
+      }
+    }
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/media.ts
   function openMediaPicker(frameDocument, accept, options2, onSelect) {
     const center = new FilesCenter;
     const cleanup = () => center.remove();
     center.addEventListener("close", cleanup, { once: true });
-    center.addEventListener("select-file", (event) => {
+    center.addEventListener("select-file", async (event) => {
       const detail = event.detail;
-      const element = createMediaElement(frameDocument, detail);
+      const element = await createMediaElement(frameDocument, detail, accept);
       if (!element) {
         return;
       }
       onSelect([element]);
     }, { once: true });
-    center.addEventListener("select-files", (event) => {
+    center.addEventListener("select-files", async (event) => {
       const detail = event.detail;
-      const elements = detail.files.map((file) => createMediaElement(frameDocument, file)).filter((element) => Boolean(element));
+      const resolved = await Promise.all(detail.files.map((file) => createMediaElement(frameDocument, file, accept)));
+      const elements = resolved.filter((element) => Boolean(element));
       onSelect(elements);
     }, { once: true });
     document.body.append(center);
@@ -47075,9 +47197,20 @@ label {
       maxSelection: options2.maxSelection
     });
   }
-  function createMediaElement(document2, detail) {
+  async function createMediaElement(document2, detail, accept) {
     if (!document2) {
       return null;
+    }
+    if (accept?.includes("svg") && normalizedMimeType(detail.mimeType) === "image/svg+xml") {
+      try {
+        const response = await fetch(detail.src);
+        if (!response.ok) {
+          return null;
+        }
+        return parseInlineSvg(document2, await response.text());
+      } catch {
+        return null;
+      }
     }
     if (detail.mimeType?.startsWith("image/") ?? true) {
       const image2 = document2.createElement("img");
@@ -47109,6 +47242,9 @@ label {
     link.setAttribute("href", detail.src);
     link.textContent = detail.label;
     return link;
+  }
+  function normalizedMimeType(mimeType) {
+    return mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Content/reloadFrameDocument.ts
@@ -47228,12 +47364,16 @@ label {
       if (!canReplaceNodeCount(parent, editor, slot, [editor.target])) {
         return;
       }
+      const className = editor.target.getAttribute("class");
       openMediaPicker(this.context.frameDocument(), item.accept, { multiple: false }, (elements) => {
         const element = elements[0];
         if (!element) {
           return;
         }
         applySlot(element, slotName);
+        if (className) {
+          element.setAttribute("class", className);
+        }
         if (sourceStatusConditions2?.length) {
           applySourceStatusConditions(element, sourceStatusConditions2);
         }
@@ -50641,6 +50781,9 @@ label {
   // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
   class BindingCoreEditor extends Editor {
   }
+  // src/core/editorSystemV2/builtInEditors/SvgEditor.ts
+  class SvgEditor extends Editor {
+  }
   // src/core/editorSystemV2/builtInEditors/SiteSlotPlaceholderEditor.ts
   var SITE_SLOT_PLACEHOLDER_TAG = "cms-site-slot-placeholder";
 
@@ -50733,6 +50876,15 @@ label {
         category: "Runtime",
         bloc: pd,
         editor: BindingCoreEditor
+      },
+      {
+        tag: "svg",
+        label: "SVG",
+        description: "Inline SVG selected from the CMS media library.",
+        icon: "image",
+        category: "Runtime",
+        bloc: HTMLElement,
+        editor: SvgEditor
       }
     ];
   }

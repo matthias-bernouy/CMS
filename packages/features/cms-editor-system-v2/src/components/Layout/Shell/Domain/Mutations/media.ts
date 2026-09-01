@@ -5,6 +5,7 @@ import {
     type FilesCenterSelectDetail,
     type FilesCenterSelectManyDetail,
 } from "../../../../Controls/Pickers/FilesCenter/FilesCenter";
+import { parseInlineSvg } from "./Content/inlineSvg";
 
 export function openMediaPicker(
     frameDocument: Document | null,
@@ -17,9 +18,9 @@ export function openMediaPicker(
     center.addEventListener("close", cleanup, { once: true });
     center.addEventListener(
         "select-file",
-        (event) => {
+        async (event) => {
             const detail = (event as CustomEvent<FilesCenterSelectDetail>).detail;
-            const element = createMediaElement(frameDocument, detail);
+            const element = await createMediaElement(frameDocument, detail, accept);
             if (!element) {
                 return;
             }
@@ -29,11 +30,12 @@ export function openMediaPicker(
     );
     center.addEventListener(
         "select-files",
-        (event) => {
+        async (event) => {
             const detail = (event as CustomEvent<FilesCenterSelectManyDetail>).detail;
-            const elements = detail.files
-                .map((file) => createMediaElement(frameDocument, file))
-                .filter((element): element is HTMLElement => Boolean(element));
+            const resolved = await Promise.all(
+                detail.files.map((file) => createMediaElement(frameDocument, file, accept)),
+            );
+            const elements = resolved.filter((element): element is HTMLElement => Boolean(element));
             onSelect(elements);
         },
         { once: true },
@@ -48,9 +50,25 @@ export function openMediaPicker(
     });
 }
 
-function createMediaElement(document: Document | null, detail: FilesCenterSelectDetail): HTMLElement | null {
+async function createMediaElement(
+    document: Document | null,
+    detail: FilesCenterSelectDetail,
+    accept: MediaAccept[] | undefined,
+): Promise<HTMLElement | null> {
     if (!document) {
         return null;
+    }
+
+    if (accept?.includes("svg") && normalizedMimeType(detail.mimeType) === "image/svg+xml") {
+        try {
+            const response = await fetch(detail.src);
+            if (!response.ok) {
+                return null;
+            }
+            return parseInlineSvg(document, await response.text());
+        } catch {
+            return null;
+        }
     }
 
     if (detail.mimeType?.startsWith("image/") ?? true) {
@@ -90,4 +108,8 @@ function createMediaElement(document: Document | null, detail: FilesCenterSelect
     link.setAttribute("href", detail.src);
     link.textContent = detail.label;
     return link;
+}
+
+function normalizedMimeType(mimeType: string | undefined): string {
+    return mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
 }

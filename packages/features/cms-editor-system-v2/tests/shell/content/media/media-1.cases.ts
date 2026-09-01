@@ -27,34 +27,45 @@ import {
 } from "../../support/shellTestSupport";
 
 describe("Shell", () => {
-    test("shell inserts media into content slots as native image elements", async () => {
+    test("shell inserts sanitized SVG media as an inline SVG element", async () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;
 
-        globalThis.fetch = (async () =>
-            new Response(
-                JSON.stringify({
-                    items: [
-                        {
-                            id: "photo",
-                            name: "Photo.png",
-                            parentId: null,
-                            type: "file",
-                            mimeType: "image/png",
-                        },
-                        {
-                            id: "logo",
-                            name: "Logo.svg",
-                            parentId: null,
-                            type: "file",
-                            mimeType: "image/svg+xml",
-                        },
-                    ],
-                }),
-                {
-                    headers: { "Content-Type": "application/json" },
-                },
-            )) as typeof fetch;
+        globalThis.fetch = (async (input) => {
+            const url = String(input);
+            if (url.includes("/api/files?")) {
+                return new Response(
+                    JSON.stringify({
+                        items: [
+                            {
+                                id: "photo",
+                                name: "Photo.png",
+                                parentId: null,
+                                type: "file",
+                                mimeType: "image/png",
+                            },
+                            {
+                                id: "logo",
+                                name: "Logo.svg",
+                                parentId: null,
+                                type: "file",
+                                mimeType: "image/svg+xml",
+                            },
+                        ],
+                    }),
+                    { headers: { "Content-Type": "application/json" } },
+                );
+            }
+            return new Response(
+                `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" onload="alert(1)">
+                    <title>Menu</title>
+                    <path d="M2 6h20" fill="currentColor" onclick="alert(1)" />
+                    <script>alert(1)</script>
+                    <foreignObject><div>unsafe</div></foreignObject>
+                </svg>`,
+                { headers: { "Content-Type": "image/svg+xml" } },
+            );
+        }) as typeof fetch;
 
         const { Shell } = await import("../../../../src/exports");
 
@@ -78,6 +89,7 @@ describe("Shell", () => {
             </html>
         `);
         const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
         const contentRoot = frameDocument.createElement("div");
         contentRoot.setAttribute("data-cms-content", "");
         const figure = frameDocument.createElement("demo-figure");
@@ -97,6 +109,12 @@ describe("Shell", () => {
                 label: "Figure",
                 bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: FigureEditor,
+            },
+            {
+                tag: "svg",
+                label: "SVG",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: Editor,
             },
         ]);
         setShellFrameDocument(shell, frameDocument);
@@ -125,17 +143,36 @@ describe("Shell", () => {
 
         items[0]!.click();
         center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
-        const image = figure.querySelector("img")!;
-        expect(image.getAttribute("slot")).toBe("cover");
-        expect(image.getAttribute("src")).toBe("/cms/.cms/files/by-id/logo");
-        expect(image.getAttribute("alt")).toBe("Logo.svg");
+        const svg = figure.querySelector("svg")!;
+        expect(figure.querySelector("img")).toBeNull();
+        expect(svg.ownerDocument).toBe(frameDocument);
+        expect(svg.getAttribute("slot")).toBe("cover");
+        expect(svg.getAttribute("viewBox")).toBe("0 0 24 24");
+        expect(svg.getAttribute("onload")).toBeNull();
+        expect(svg.querySelector("path")?.getAttribute("fill")).toBe("currentColor");
+        expect(svg.querySelector("path")?.getAttribute("onclick")).toBeNull();
+        expect(svg.querySelector("script")).toBeNull();
+        expect(svg.querySelector("foreignObject")).toBeNull();
 
-        Object.defineProperty(image, "naturalWidth", { value: 320, configurable: true });
-        Object.defineProperty(image, "naturalHeight", { value: 180, configurable: true });
-        image.dispatchEvent(new Event("load"));
+        svg.setAttribute("class", "button-icon");
+        const svgEditor = shellState(shell).runtime!.getEditor(svg as unknown as HTMLElement)!;
+        shellParts(shell).mutations.replaceEditor(
+            svgEditor,
+            { kind: "media", label: "Media", accept: ["svg"] },
+            "cover",
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
-        expect(image.getAttribute("width")).toBe("320");
-        expect(image.getAttribute("height")).toBe("180");
+        const replacementCenter = document.body.querySelector("cms-editor-v2-files-center")!;
+        replacementCenter.shadowRoot!.querySelector<HTMLButtonElement>(".item")!.click();
+        replacementCenter.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const replacement = figure.querySelector("svg")!;
+        expect(replacement).not.toBe(svg);
+        expect(replacement.getAttribute("slot")).toBe("cover");
+        expect(replacement.getAttribute("class")).toBe("button-icon");
     });
 });

@@ -123,6 +123,7 @@ describe("Shell", () => {
         items[1]!.click();
         items[2]!.click();
         center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         const images = Array.from(gallery.querySelectorAll("img"));
         expect(images.map((image) => image.getAttribute("src"))).toEqual([

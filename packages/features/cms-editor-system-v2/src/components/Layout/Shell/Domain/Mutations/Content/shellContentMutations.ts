@@ -95,7 +95,6 @@ export class ShellContentMutations {
         if (!insertion) {
             return;
         }
-
         editor.target.replaceWith(insertion.fragment);
         reloadFrameDocument(this.context, insertion.selectionTarget);
     }
@@ -161,12 +160,16 @@ export class ShellContentMutations {
         if (!canReplaceNodeCount(parent, editor, slot, [editor.target])) {
             return;
         }
+        const className = editor.target.getAttribute("class");
         openMediaPicker(this.context.frameDocument(), item.accept, { multiple: false }, (elements) => {
             const element = elements[0];
             if (!element) {
                 return;
             }
             applySlot(element, slotName);
+            if (className) {
+                element.setAttribute("class", className);
+            }
             if (sourceStatusConditions?.length) {
                 applySourceStatusConditions(element, sourceStatusConditions);
             }

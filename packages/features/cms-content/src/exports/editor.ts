@@ -110,3 +110,5 @@ export {
     createEditorCatalogEntry,
     mergeEditorCatalogs,
 } from "../core/editor/EditorCatalog";
+
+export { sanitizeSvgTree } from "../core/utils/sanitizeSvgTree";
