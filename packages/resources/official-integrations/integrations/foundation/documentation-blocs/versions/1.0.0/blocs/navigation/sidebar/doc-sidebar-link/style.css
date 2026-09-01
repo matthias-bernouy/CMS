@@ -1,6 +1,6 @@
 :host {
-    --accent: var(--primary, #6366f1);
-    --duration: 180ms;
+    --accent: var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #6366f1));
+    --duration: var(--integration-documentation-blocs-motion-duration, 180ms);
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
     display: block;
 }

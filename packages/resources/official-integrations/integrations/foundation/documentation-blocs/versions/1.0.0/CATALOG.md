@@ -1,5 +1,12 @@
 # Documentation Blocs Catalog
 
+## Theme contract
+
+Documentation Blocs depends on `basic-blocs@^1.0.0`. Its theme defaults inherit
+the Basic Blocs brand, surface, typography, shape, shadow, and feedback tokens.
+The integration adds only documentation-specific controls for the navigation
+shell, code and terminal surfaces, HTTP methods, and callouts.
+
 ## API reference
 
 | Tag | Purpose |

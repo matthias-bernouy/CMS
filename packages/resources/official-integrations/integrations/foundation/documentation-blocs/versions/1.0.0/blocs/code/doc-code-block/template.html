@@ -2,13 +2,13 @@
     <header class="header" part="header">
         <span class="filename" part="filename"><slot name="filename"></slot></span>
         <span class="lang" part="lang"></span>
-        <button class="copy" type="button" part="copy">
+        <button class="copy" type="button" part="copy" aria-label="Copy code">
             <span class="copy-label">Copy</span>
-            <span class="copy-done">Copied</span>
+            <span class="copy-done" role="status">Copied</span>
         </button>
     </header>
     <div class="code-frame">
         <span class="line-numbers" aria-hidden="true"></span>
-        <pre class="code" part="code"><code><slot></slot></code></pre>
+        <pre class="code" part="code"><code><span class="source"></span><slot hidden></slot></code></pre>
     </div>
 </figure>

@@ -1,0 +1,52 @@
+{
+    "id": "code",
+    "label": "Code and terminal",
+    "description": "Technical content surfaces that remain distinct from regular documentation panels.",
+    "tokens": [
+        {
+            "id": "code-background",
+            "label": "Code background",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-surface-text)",
+                "dark": "var(--integration-basic-blocs-surface-background)"
+            }
+        },
+        {
+            "id": "code-header-background",
+            "label": "Code header background",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-body-text)",
+                "dark": "var(--integration-basic-blocs-subtle-background)"
+            }
+        },
+        {
+            "id": "code-text",
+            "label": "Code text",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-page-background)",
+                "dark": "var(--integration-basic-blocs-surface-text)"
+            }
+        },
+        {
+            "id": "code-muted-text",
+            "label": "Muted code text",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-secondary-base)",
+                "dark": "var(--integration-basic-blocs-surface-muted-text)"
+            }
+        },
+        {
+            "id": "terminal-prompt",
+            "label": "Terminal prompt",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-success-base)",
+                "dark": "var(--integration-basic-blocs-success-base)"
+            }
+        }
+    ]
+}

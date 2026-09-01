@@ -1,10 +1,10 @@
 :host {
-    --step-accent: var(--primary, #4f46e5);
-    --step-muted: #94a3b8;
-    --step-fg: #0f172a;
+    --step-accent: var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #4f46e5));
+    --step-muted: var(--integration-documentation-blocs-muted-text, var(--integration-basic-blocs-surface-muted-text, #94a3b8));
+    --step-fg: var(--integration-documentation-blocs-heading-text, var(--integration-basic-blocs-surface-text, #0f172a));
     --step-size: 2rem;
     display: block;
-    font-family: system-ui, sans-serif;
+    font-family: var(--integration-documentation-blocs-font-body, var(--integration-basic-blocs-font-body, system-ui, sans-serif));
     counter-increment: step;
 }
 .step {
@@ -20,7 +20,7 @@
     top: var(--step-size);
     bottom: -1.5rem;
     width: 2px;
-    background: #e2e8f0;
+    background: var(--integration-documentation-blocs-border, var(--integration-basic-blocs-surface-border, #e2e8f0));
     transform: translateX(-50%);
 }
 :host(:last-child) .step::before { display: none; }
@@ -29,7 +29,7 @@
     height: var(--step-size);
     border-radius: 50%;
     background: var(--step-accent);
-    color: #fff;
+    color: var(--integration-basic-blocs-primary-foreground, #fff);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -48,12 +48,12 @@
 }
 :host-context(doc-steps[variant="bulleted"]) .marker::before { content: ""; }
 :host([status="pending"]) .marker { background: var(--step-muted); }
-:host([status="done"]) .marker { background: #10b981; }
+:host([status="done"]) .marker { background: var(--integration-documentation-blocs-api-post, var(--integration-basic-blocs-success-base, #10b981)); }
 :host([status="done"]) .marker::before { content: "\2713"; }
 :host([status="current"]) .marker { box-shadow: 0 0 0 4px color-mix(in srgb, var(--step-accent) 25%, transparent); }
 .body { padding-top: .25rem; min-width: 0; }
 .title { font-weight: 700; font-size: 1.05rem; color: var(--step-fg); margin-bottom: .25rem; line-height: 1.4; }
 .title ::slotted(*) { margin: 0; font: inherit; color: inherit; }
-.content { color: #475569; line-height: 1.6; }
+.content { color: var(--integration-documentation-blocs-text, var(--integration-basic-blocs-body-text, #475569)); line-height: 1.6; }
 .content ::slotted(*) { margin: 0 0 .5rem; }
 .content ::slotted(*:last-child) { margin-bottom: 0; }

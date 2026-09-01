@@ -94,6 +94,17 @@ describe("documentation-blocs 1.0.0 catalogue", () => {
     test("force-refreshes every owned bloc when the installation is re-run", async () => {
         const definition = await loadDefinition();
         const installations = new InMemoryIntegrationInstallationRepository();
+        await installations.create({
+            id: "basic-blocs",
+            label: "Basic Blocs",
+            definitionVersion: "1.0.0",
+            status: "success",
+            answersSnapshot: {},
+            secretRefs: {},
+            secretInputs: [],
+            artifacts: [],
+            runs: [],
+        });
         const calls: Array<{ tag: string; force: boolean }> = [];
         const deps = {
             sources: new InMemorySourceRepository(),

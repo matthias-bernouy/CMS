@@ -1,9 +1,9 @@
 :host {
-    --inline-bg: color-mix(in srgb, var(--primary, #4f46e5) 8%, transparent);
-    --inline-fg: var(--primary, #4f46e5);
-    --inline-radius: 5px;
+    --inline-bg: color-mix(in srgb, var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #4f46e5)) 8%, transparent);
+    --inline-fg: var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #4f46e5));
+    --inline-radius: var(--integration-documentation-blocs-radius-control, var(--integration-basic-blocs-radius-control, .375rem));
     display: inline;
-    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-family: var(--integration-documentation-blocs-font-mono, var(--integration-basic-blocs-font-mono, ui-monospace, monospace));
 }
 .inline {
     display: inline;
@@ -17,10 +17,10 @@
 }
 .inline ::slotted(*) { font: inherit; color: inherit; }
 :host([variant="accent"]) {
-    --inline-bg: color-mix(in srgb, #06b6d4 12%, transparent);
-    --inline-fg: #0e7490;
+    --inline-bg: color-mix(in srgb, var(--integration-documentation-blocs-api-get) 12%, transparent);
+    --inline-fg: var(--integration-documentation-blocs-info-text);
 }
 :host([variant="danger"]) {
-    --inline-bg: color-mix(in srgb, #ef4444 12%, transparent);
-    --inline-fg: #b91c1c;
+    --inline-bg: var(--integration-documentation-blocs-danger-background);
+    --inline-fg: var(--integration-documentation-blocs-danger-text);
 }

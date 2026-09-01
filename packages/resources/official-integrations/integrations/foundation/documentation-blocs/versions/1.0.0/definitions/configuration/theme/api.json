@@ -1,0 +1,70 @@
+{
+    "id": "api",
+    "label": "API reference",
+    "description": "Semantic colors for HTTP method badges and API contracts.",
+    "tokens": [
+        {
+            "id": "api-get",
+            "label": "GET method",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-info-base)",
+                "dark": "var(--integration-basic-blocs-info-base)"
+            }
+        },
+        {
+            "id": "api-post",
+            "label": "POST method",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-success-base)",
+                "dark": "var(--integration-basic-blocs-success-base)"
+            }
+        },
+        {
+            "id": "api-put",
+            "label": "PUT method",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-warning-base)",
+                "dark": "var(--integration-basic-blocs-warning-base)"
+            }
+        },
+        {
+            "id": "api-patch",
+            "label": "PATCH method",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-primary-base)",
+                "dark": "var(--integration-basic-blocs-primary-base)"
+            }
+        },
+        {
+            "id": "api-delete",
+            "label": "DELETE method",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-danger-base)",
+                "dark": "var(--integration-basic-blocs-danger-base)"
+            }
+        },
+        {
+            "id": "api-neutral",
+            "label": "Neutral method",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-surface-muted-text)",
+                "dark": "var(--integration-basic-blocs-surface-muted-text)"
+            }
+        },
+        {
+            "id": "api-method-text",
+            "label": "Method badge text",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-primary-foreground)",
+                "dark": "var(--integration-basic-blocs-primary-foreground)"
+            }
+        }
+    ]
+}

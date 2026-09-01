@@ -3,7 +3,8 @@
         <circle cx="11" cy="11" r="7"/>
         <path d="m21 21-4.3-4.3"/>
     </svg>
-    <input class="input" type="search" part="input" />
+    <input class="input" type="search" part="input" autocomplete="off" role="combobox" aria-label="Search documentation" aria-controls="doc-search-results" aria-autocomplete="list" aria-expanded="false" />
     <kbd class="shortcut" part="shortcut">&#8984;K</kbd>
     <slot name="placeholder" hidden></slot>
+    <div id="doc-search-results" class="results" role="listbox" aria-label="Search results"></div>
 </div>

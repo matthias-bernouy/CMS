@@ -9,8 +9,14 @@
         "path": "assets/icon.svg"
     },
     "inputs": [],
+    "dependencies": {
+        "$include": "configuration/dependencies.json"
+    },
     "ui": {
         "$include": "configuration/ui.json"
+    },
+    "theme": {
+        "$include": "configuration/theme.json"
     },
     "artifacts": {
         "$files": [

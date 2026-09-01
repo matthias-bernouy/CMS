@@ -9,8 +9,7 @@ export class BlocEditor extends Editor {
                 "label": "Title",
                 "accepts": [
                     {
-                        "kind": "component",
-                        "tag": "doc-sidebar-link",
+                        "kind": "any-component",
                     },
                 ],
                 "slot": "title",
@@ -21,7 +20,8 @@ export class BlocEditor extends Editor {
                 "label": "Links",
                 "accepts": [
                     {
-                        "kind": "any-component",
+                        "kind": "component",
+                        "tag": "doc-sidebar-link",
                     },
                 ],
                 "min": 1,

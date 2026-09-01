@@ -1,16 +1,6 @@
-import {
-    Editor,
-    registerEditor,
-    type SettingSection,
-    type ContentSlot,
-    type TextCapability,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type SettingSection, type ContentSlot } from "@bernouy/cms-content/editor";
 
 export class BlocEditor extends Editor {
-    protected override textCapability(): TextCapability {
-        return { format: "text", dynamic: true };
-    }
-
     // -- Generated from legacy editor metadata --
 
     protected override settings(): SettingSection[] {
@@ -19,6 +9,11 @@ export class BlocEditor extends Editor {
                 "kind": "self",
                 "label": "Style",
                 "settings": [
+                    {
+                        "type": "textarea",
+                        "label": "Commands",
+                        "attribute": "commands",
+                    },
                     {
                         "type": "select",
                         "label": "Prompt",

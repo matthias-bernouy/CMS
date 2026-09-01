@@ -1,10 +1,11 @@
 :host {
-    --vs-bg: #ffffff;
-    --vs-border: #e2e8f0;
-    --vs-accent: var(--primary, #4f46e5);
-    --vs-fg: #0f172a;
+    --vs-bg: var(--integration-documentation-blocs-surface, var(--integration-basic-blocs-surface-background, #fff));
+    --vs-border: var(--integration-documentation-blocs-border, var(--integration-basic-blocs-surface-border, #e2e8f0));
+    --vs-accent: var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #4f46e5));
+    --vs-fg: var(--integration-documentation-blocs-heading-text, var(--integration-basic-blocs-surface-text, #0f172a));
+    --vs-duration: var(--integration-documentation-blocs-motion-duration, 180ms);
     display: inline-block;
-    font-family: system-ui, sans-serif;
+    font-family: var(--integration-documentation-blocs-font-body, var(--integration-basic-blocs-font-body, system-ui, sans-serif));
     position: relative;
 }
 .switcher { position: relative; }
@@ -21,11 +22,12 @@
     font-size: .88rem;
     font-weight: 600;
     color: var(--vs-fg);
-    transition: border-color 160ms ease;
+    transition: border-color var(--vs-duration) ease;
 }
 .trigger:hover { border-color: var(--vs-accent); }
+.trigger:focus-visible { outline: 2px solid var(--vs-accent); outline-offset: 2px; }
 .current ::slotted(*) { font: inherit; color: inherit; margin: 0; }
-.caret { font-size: .7rem; color: #64748b; transition: transform 200ms ease; }
+.caret { font-size: .7rem; color: var(--integration-documentation-blocs-muted-text, var(--integration-basic-blocs-surface-muted-text, #64748b)); transition: transform var(--integration-documentation-blocs-motion-duration, 180ms) ease; }
 :host([open]) .caret { transform: rotate(180deg); }
 .panel {
     position: absolute;
@@ -35,7 +37,7 @@
     background: var(--vs-bg);
     border: 1px solid var(--vs-border);
     border-radius: 8px;
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,.15);
+    box-shadow: var(--integration-documentation-blocs-shadow, 0 10px 30px -10px rgb(0 0 0 / 15%));
     padding: .25rem;
     display: none;
     z-index: 10;
@@ -49,8 +51,10 @@
     color: var(--vs-fg);
     text-decoration: none;
     border-radius: 4px;
-    transition: background 120ms ease;
+    transition: background var(--vs-duration) ease;
 }
-::slotted(*:hover) { background: #f1f5f9; }
+::slotted(*:hover) { background: var(--integration-documentation-blocs-subtle-surface, var(--integration-basic-blocs-subtle-background, #f1f5f9)); }
+::slotted(*:focus-visible) { outline: 2px solid var(--vs-accent); outline-offset: 1px; }
 :host([variant="inline"]) .panel { position: static; display: flex; gap: .25rem; border: none; box-shadow: none; padding: 0; }
 :host([variant="inline"]) .trigger { display: none; }
+@media (prefers-reduced-motion: reduce) { :host { --vs-duration: 0ms; } }

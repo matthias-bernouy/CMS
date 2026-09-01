@@ -11,10 +11,14 @@ export class BlocEditor extends Editor {
                 "settings": [
                     {
                         "type": "segmented",
-                        "label": "Theme",
-                        "attribute": "variant",
-                        "defaultValue": "light",
+                        "label": "Color theme",
+                        "attribute": "theme",
+                        "defaultValue": "system",
                         "options": [
+                            {
+                                "label": "System",
+                                "value": "system",
+                            },
                             {
                                 "label": "Light",
                                 "value": "light",
@@ -22,6 +26,54 @@ export class BlocEditor extends Editor {
                             {
                                 "label": "Dark",
                                 "value": "dark",
+                            },
+                        ],
+                    },
+                    {
+                        "type": "segmented",
+                        "label": "Content width",
+                        "attribute": "content-width",
+                        "defaultValue": "article",
+                        "options": [
+                            {
+                                "label": "Article",
+                                "value": "article",
+                            },
+                            {
+                                "label": "Wide",
+                                "value": "wide",
+                            },
+                        ],
+                    },
+                    {
+                        "type": "segmented",
+                        "label": "Search",
+                        "attribute": "search",
+                        "defaultValue": "true",
+                        "options": [
+                            {
+                                "label": "Show",
+                                "value": "true",
+                            },
+                            {
+                                "label": "Hide",
+                                "value": "false",
+                            },
+                        ],
+                    },
+                    {
+                        "type": "segmented",
+                        "label": "Page outline",
+                        "attribute": "toc",
+                        "defaultValue": "true",
+                        "options": [
+                            {
+                                "label": "Show",
+                                "value": "true",
+                            },
+                            {
+                                "label": "Hide",
+                                "value": "false",
                             },
                         ],
                     },
@@ -79,6 +131,15 @@ export class BlocEditor extends Editor {
                     },
                 ],
                 "min": 1,
+            },
+            {
+                "label": "Page aside",
+                "accepts": [
+                    {
+                        "kind": "any-component",
+                    },
+                ],
+                "slot": "aside",
             },
         ];
     }

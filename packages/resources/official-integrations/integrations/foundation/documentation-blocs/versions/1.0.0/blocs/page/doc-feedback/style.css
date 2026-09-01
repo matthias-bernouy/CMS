@@ -1,11 +1,12 @@
 :host {
-    --fb-bg: #f8fafc;
-    --fb-border: #e2e8f0;
-    --fb-fg: #0f172a;
-    --fb-accent: var(--primary, #4f46e5);
-    --fb-radius: 10px;
+    --fb-bg: var(--integration-documentation-blocs-subtle-surface, var(--integration-basic-blocs-subtle-background, #f8fafc));
+    --fb-border: var(--integration-documentation-blocs-border, var(--integration-basic-blocs-surface-border, #e2e8f0));
+    --fb-fg: var(--integration-documentation-blocs-heading-text, var(--integration-basic-blocs-surface-text, #0f172a));
+    --fb-accent: var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #4f46e5));
+    --fb-radius: var(--integration-documentation-blocs-radius-panel, var(--integration-basic-blocs-radius-card, .5rem));
+    --fb-duration: var(--integration-documentation-blocs-motion-duration, 180ms);
     display: block;
-    font-family: system-ui, sans-serif;
+    font-family: var(--integration-documentation-blocs-font-body, var(--integration-basic-blocs-font-body, system-ui, sans-serif));
     margin: 1.5rem 0;
 }
 .feedback {
@@ -24,18 +25,20 @@
     cursor: pointer;
     padding: .4rem 1rem;
     border-radius: 999px;
-    background: #fff;
+    background: var(--integration-documentation-blocs-surface, var(--integration-basic-blocs-surface-background, #fff));
     border: 1px solid var(--fb-border);
     font-size: .88rem;
     font-weight: 600;
     color: var(--fb-fg);
-    transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+    transition: border-color var(--fb-duration) ease, transform var(--fb-duration) ease, background var(--fb-duration) ease;
 }
 .btn:hover { border-color: var(--fb-accent); transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
+.btn:focus-visible { outline: 2px solid var(--fb-accent); outline-offset: 2px; }
 .thanks { font-size: .95rem; color: var(--fb-fg); font-weight: 600; display: none; }
 .thanks ::slotted(*) { margin: 0; font: inherit; color: inherit; }
 :host([state="thanks"]) .prompt { display: none; }
 :host([state="thanks"]) .thanks { display: block; }
 :host([variant="compact"]) .feedback { padding: .5rem 1rem; }
 :host([variant="compact"]) .prompt { flex-direction: row; gap: 1rem; }
+@media (prefers-reduced-motion: reduce) { :host { --fb-duration: 0ms; } }

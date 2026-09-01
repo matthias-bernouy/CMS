@@ -1,7 +1,7 @@
 :host {
     --steps-gap: 1.5rem;
     display: block;
-    font-family: system-ui, sans-serif;
+    font-family: var(--integration-documentation-blocs-font-body, var(--integration-basic-blocs-font-body, system-ui, sans-serif));
     margin: 1rem 0;
     counter-reset: step;
 }

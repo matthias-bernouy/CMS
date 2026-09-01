@@ -1,0 +1,41 @@
+{
+    "id": "navigation",
+    "label": "Documentation navigation",
+    "description": "Layout dimensions and surfaces for the documentation shell.",
+    "tokens": [
+        {
+            "id": "topbar-height",
+            "label": "Top bar height",
+            "type": "length",
+            "defaults": {
+                "light": "3.5rem"
+            }
+        },
+        {
+            "id": "sidebar-width",
+            "label": "Sidebar width",
+            "type": "length",
+            "defaults": {
+                "light": "16.25rem"
+            }
+        },
+        {
+            "id": "topbar-background",
+            "label": "Top bar background",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-surface-background)",
+                "dark": "var(--integration-basic-blocs-surface-background)"
+            }
+        },
+        {
+            "id": "sidebar-background",
+            "label": "Sidebar background",
+            "type": "color",
+            "defaults": {
+                "light": "var(--integration-basic-blocs-subtle-background)",
+                "dark": "var(--integration-basic-blocs-subtle-background)"
+            }
+        }
+    ]
+}

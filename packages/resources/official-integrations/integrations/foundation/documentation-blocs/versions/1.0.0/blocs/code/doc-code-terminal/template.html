@@ -4,6 +4,7 @@
         <span class="dot yellow"></span>
         <span class="dot green"></span>
         <span class="title" part="title"><slot name="title"></slot></span>
+        <button class="copy" type="button" aria-label="Copy commands"><span>Copy</span><span class="copied" role="status">Copied</span></button>
     </header>
-    <pre class="body" part="body"><code><span class="prompt" aria-hidden="true"></span><slot></slot></code></pre>
+    <pre class="body" part="body"><code><span class="prompt" aria-hidden="true"></span><span class="source"></span><slot hidden></slot></code></pre>
 </div>

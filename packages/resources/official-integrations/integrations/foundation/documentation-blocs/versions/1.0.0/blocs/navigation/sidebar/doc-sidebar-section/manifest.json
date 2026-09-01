@@ -6,7 +6,7 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Sidebar section",
-        "description": "Titled group of sidebar links.",
+        "description": "Collapsible, keyboard-accessible group of sidebar links.",
         "categories": [
             "navigation"
         ]

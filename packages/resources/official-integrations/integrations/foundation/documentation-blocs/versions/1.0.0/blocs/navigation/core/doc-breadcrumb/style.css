@@ -1,10 +1,11 @@
 :host {
-    --bc-fg: #0f172a;
-    --bc-muted: #64748b;
-    --bc-accent: var(--primary, #4f46e5);
+    --bc-fg: var(--integration-documentation-blocs-heading-text, var(--integration-basic-blocs-surface-text, #0f172a));
+    --bc-muted: var(--integration-documentation-blocs-muted-text, var(--integration-basic-blocs-surface-muted-text, #64748b));
+    --bc-accent: var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #4f46e5));
+    --bc-duration: var(--integration-documentation-blocs-motion-duration, 180ms);
     --bc-sep: "/";
     display: block;
-    font-family: system-ui, sans-serif;
+    font-family: var(--integration-documentation-blocs-font-body, var(--integration-basic-blocs-font-body, system-ui, sans-serif));
     font-size: .88rem;
 }
 .crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; color: var(--bc-muted); }
@@ -13,9 +14,10 @@
     align-items: center;
     color: var(--bc-muted);
     text-decoration: none;
-    transition: color 160ms ease;
+    transition: color var(--bc-duration) ease;
 }
 ::slotted(a:hover) { color: var(--bc-accent); }
+::slotted(a:focus-visible) { outline: 2px solid var(--bc-accent); outline-offset: 2px; }
 ::slotted(*:last-child) { color: var(--bc-fg); font-weight: 600; }
 ::slotted(*) + ::slotted(*)::before {
     content: var(--bc-sep);
@@ -25,3 +27,4 @@
 }
 :host([separator="chevron"]) { --bc-sep: "\203A"; }
 :host([separator="dot"]) { --bc-sep: "\2022"; }
+@media (prefers-reduced-motion: reduce) { :host { --bc-duration: 0ms; } }

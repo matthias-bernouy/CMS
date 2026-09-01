@@ -1,8 +1,9 @@
 :host {
-    --ah-accent: var(--primary, #4f46e5);
-    --ah-fg: #0f172a;
+    --ah-accent: var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #4f46e5));
+    --ah-fg: var(--integration-documentation-blocs-heading-text, var(--integration-basic-blocs-surface-text, #0f172a));
+    --ah-duration: var(--integration-documentation-blocs-motion-duration, 180ms);
     display: block;
-    font-family: system-ui, sans-serif;
+    font-family: var(--integration-documentation-blocs-font-heading, var(--integration-basic-blocs-font-heading, system-ui, sans-serif));
     margin: 1.5rem 0 .75rem;
     scroll-margin-top: 5rem;
 }
@@ -21,7 +22,7 @@
     color: var(--ah-accent);
     text-decoration: none;
     font-weight: 400;
-    transition: opacity 160ms ease;
+    transition: opacity var(--ah-duration) ease;
 }
 .heading:hover ::slotted(a[slot="navigation"]),
 ::slotted(a[slot="navigation"]:focus-visible) { opacity: 1; }
@@ -33,3 +34,4 @@
 :host([level="4"]) .heading { font-size: 1.15rem; }
 :host([level="5"]) .heading { font-size: 1rem; }
 :host([level="6"]) .heading { font-size: .9rem; text-transform: uppercase; letter-spacing: .06em; }
+@media (prefers-reduced-motion: reduce) { :host { --ah-duration: 0ms; } }

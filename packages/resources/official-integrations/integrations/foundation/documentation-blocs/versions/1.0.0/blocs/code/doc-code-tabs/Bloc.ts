@@ -2,11 +2,17 @@ import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 
+let instanceCount = 0;
+
 export class Bloc extends Component {
+    _panelId = "";
     _slot = null;
     _tabs = null;
     constructor() {
         super({ css, template });
+        instanceCount += 1;
+        this._panelId = `code-tab-panel-${instanceCount}`;
+        this.shadowRoot?.querySelector(".panel")?.setAttribute("id", this._panelId);
     }
     connectedCallback() {
         this._slot = this.shadowRoot?.querySelector("slot") ?? null;
@@ -37,12 +43,15 @@ export class Bloc extends Component {
             btn.type = "button";
             btn.className = "tab";
             btn.setAttribute("role", "tab");
+            btn.id = `${this._panelId}-tab-${i}`;
+            btn.setAttribute("aria-controls", this._panelId);
             btn.setAttribute("aria-selected", String(i === 0));
             btn.tabIndex = i === 0 ? 0 : -1;
             btn.dataset.index = String(i);
             btn.textContent = label;
             if (i === 0) {
                 btn.classList.add("active");
+                this.shadowRoot?.querySelector(".panel")?.setAttribute("aria-labelledby", btn.id);
             }
             this._tabs.appendChild(btn);
             el.style.display = i === 0 ? "" : "none";
@@ -91,6 +100,9 @@ export class Bloc extends Component {
             tab.tabIndex = active ? 0 : -1;
             if (active && focus) {
                 tab.focus();
+            }
+            if (active) {
+                this.shadowRoot?.querySelector(".panel")?.setAttribute("aria-labelledby", tab.id);
             }
         });
         const children = this._slot?.assignedElements() ?? [];

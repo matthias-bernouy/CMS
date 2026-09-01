@@ -1,13 +1,13 @@
 :host {
-    --kbd-bg: #f8fafc;
-    --kbd-fg: #0f172a;
-    --kbd-border: #cbd5e1;
-    --kbd-radius: 5px;
+    --kbd-bg: var(--integration-documentation-blocs-subtle-surface, var(--integration-basic-blocs-subtle-background, #f8fafc));
+    --kbd-fg: var(--integration-documentation-blocs-heading-text, var(--integration-basic-blocs-surface-text, #0f172a));
+    --kbd-border: var(--integration-documentation-blocs-border, var(--integration-basic-blocs-surface-border, #cbd5e1));
+    --kbd-radius: var(--integration-documentation-blocs-radius-control, var(--integration-basic-blocs-radius-control, .375rem));
     display: inline-flex;
     align-items: center;
     gap: .25rem;
     vertical-align: middle;
-    font-family: system-ui, sans-serif;
+    font-family: var(--integration-documentation-blocs-font-body, var(--integration-basic-blocs-font-body, system-ui, sans-serif));
 }
 .kbd-group { display: inline-flex; align-items: center; gap: .25rem; }
 ::slotted(*) {
@@ -21,14 +21,14 @@
     border: 1px solid var(--kbd-border);
     border-radius: var(--kbd-radius);
     box-shadow: 0 1px 0 rgba(0,0,0,.12), inset 0 -1px 0 rgba(0,0,0,.04);
-    font-family: ui-monospace, "SF Mono", monospace;
+    font-family: var(--integration-documentation-blocs-font-mono, var(--integration-basic-blocs-font-mono, ui-monospace, monospace));
     font-size: .82em;
     font-weight: 600;
     line-height: 1;
 }
 ::slotted(*:not(:first-child))::before {
     content: "+";
-    color: #94a3b8;
+    color: var(--integration-documentation-blocs-muted-text, var(--integration-basic-blocs-surface-muted-text, #94a3b8));
     margin-right: .25em;
     font-weight: 400;
 }
@@ -36,8 +36,8 @@
 :host([size="lg"]) ::slotted(*) { padding: .2em .65em; font-size: .95em; }
 :host([variant="outlined"]) ::slotted(*) { background: transparent; box-shadow: none; }
 :host([variant="filled"]) ::slotted(*) {
-    background: #0f172a;
-    color: #f8fafc;
-    border-color: #0f172a;
+    background: var(--integration-documentation-blocs-code-background);
+    color: var(--integration-documentation-blocs-code-text);
+    border-color: var(--integration-documentation-blocs-code-background);
     box-shadow: 0 1px 0 rgba(255,255,255,.1);
 }

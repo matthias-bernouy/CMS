@@ -35,11 +35,51 @@ describe("documentation-blocs runtime contracts", () => {
         expect(feedback).toContain('removeEventListener("click", this._voteNo)');
     });
 
+    test("lets layout actions shrink without overflowing narrow viewports", async () => {
+        const layout = decodeSource((await loadBloc("doc-layout")).source?.["style.css"]);
+        const search = decodeSource((await loadBloc("doc-search")).source?.["style.css"]);
+
+        expect(layout).toContain("flex: 0 1 auto;");
+        expect(layout).toContain(".top-actions ::slotted(*) { min-width: 0; max-width: 100%; }");
+        expect(layout).toContain("@media (max-width: 600px)");
+        expect(layout).toContain(".top-links { display: none; }");
+        expect(search).toContain("@media (max-width: 480px) { .shortcut { display: none; } }");
+    });
+
+    test("keeps mobile navigation accessible and visibly interactive", async () => {
+        const bloc = await loadBloc("doc-layout");
+        const runtime = decodeSource(bloc.source?.["Bloc.ts"]);
+        const style = decodeSource(bloc.source?.["style.css"]);
+        const template = decodeSource(bloc.source?.["template.html"]);
+
+        expect(runtime).toContain('event.key === "Escape"');
+        expect(runtime).toContain('setAttribute("aria-expanded"');
+        expect(runtime).toContain('document.addEventListener("keydown"');
+        expect(style).toContain("min-inline-size: 2.75rem;");
+        expect(style).toContain("var(--topbar-fg) 70%");
+        expect(style).toContain("visibility 0s linear var(--duration)");
+        expect(template).toContain('aria-controls="documentation-sidebar"');
+        expect(template).toContain('aria-expanded="false"');
+    });
+
+    test("clamps glossary tooltips to the current viewport", async () => {
+        const glossary = await loadBloc("doc-glossary-term");
+        const runtime = decodeSource(glossary.source?.["Bloc.ts"]);
+        const style = decodeSource(glossary.source?.["style.css"]);
+
+        expect(runtime).toContain("document.documentElement.clientWidth");
+        expect(runtime).toContain("requestAnimationFrame(this._positionTooltip)");
+        expect(runtime).toContain('--gt-viewport-shift", `${Math.round(shift)}px`');
+        expect(style).toContain("translateX(calc(-50% + var(--gt-viewport-shift)))");
+    });
+
     test("ships functional defaults for endpoint and command blocs", async () => {
         const endpoint = await loadBloc("doc-api-endpoint");
         const terminal = await loadBloc("doc-code-terminal");
 
         expect(decodeSource(endpoint.source?.["default.html"])).toContain('method="GET"');
+        expect(decodeSource(endpoint.source?.["Bloc.ts"])).toContain('static observedAttributes = ["method"]');
+        expect(decodeSource(endpoint.source?.["Bloc.ts"])).toContain("method.textContent =");
         expect(decodeSource(terminal.source?.["template.html"])).toContain('class="prompt"');
         expect(decodeSource(terminal.source?.["style.css"])).toContain(".prompt::before");
     });

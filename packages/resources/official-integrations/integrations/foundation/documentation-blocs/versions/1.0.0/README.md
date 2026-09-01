@@ -3,8 +3,13 @@
 Official documentation primitives for CmsCore websites.
 
 The integration installs 29 editable blocs grouped around API reference,
-callouts, code examples, rich content, navigation, and page utilities. It owns
-bloc source only: it does not install a source, connector, dashboard, secret, or
+callouts, code examples, rich content, navigation, and page utilities. It also
+contributes a documentation theme whose shared defaults reference the
+`basic-blocs` design tokens. Install `basic-blocs@^1.0.0` first; documentation
+sites can then override documentation-specific code, navigation, API, and
+callout tokens without duplicating the foundation palette.
+
+The integration does not install a source, connector, dashboard, secret, or
 site-specific content.
 
 The package is versioned as an official integration. A site can re-run its

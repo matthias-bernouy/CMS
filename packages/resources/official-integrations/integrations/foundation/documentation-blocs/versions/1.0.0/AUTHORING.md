@@ -2,10 +2,17 @@
 
 ## Installation and updates
 
-Install `documentation-blocs` from the integration catalogue. The integration
-has no inputs and owns only bloc artifacts. Re-running its installation imports
-all owned sources with force, so sites receive the selected integration
-release without manually copying bloc directories.
+Install `basic-blocs@^1.0.0`, then install `documentation-blocs` from the
+integration catalogue. Documentation Blocs has no inputs and contributes its
+owned Bloc artifacts plus a namespaced theme catalogue. Re-running its
+installation imports all owned sources with force, so sites receive the
+selected integration release without manually copying Bloc directories.
+
+Shared documentation defaults reference Basic Blocs tokens for brand colors,
+surfaces, text, borders, typography, shape, shadows, and feedback states. Change
+those foundations in the Basic Blocs theme when the whole site should follow;
+override the Documentation Blocs theme only for documentation-specific code,
+navigation, API, or callout treatment.
 
 Published version directories are immutable. Changes belong in a new semantic
 version directory, followed by an update of the `stable` or `latest` pointer in

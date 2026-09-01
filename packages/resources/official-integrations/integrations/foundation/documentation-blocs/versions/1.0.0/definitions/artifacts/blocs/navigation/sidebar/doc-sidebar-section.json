@@ -1,1 +1,1 @@
-{"type":"bloc","bloc":{"tag":"doc-sidebar-section","name":"Sidebar section","group":"Documentation · Navigation","description":"Titled group of documentation sidebar links.","path":"blocs/navigation/sidebar/doc-sidebar-section"}}
+{"type":"bloc","bloc":{"tag":"doc-sidebar-section","name":"Sidebar section","group":"Documentation · Navigation","description":"Collapsible, keyboard-accessible group of documentation sidebar links.","path":"blocs/navigation/sidebar/doc-sidebar-section"}}

@@ -1,14 +1,43 @@
 :host {
+    --accent: var(--integration-documentation-blocs-accent, var(--integration-basic-blocs-primary-base, #4f46e5));
+    --muted: var(--integration-documentation-blocs-muted-text, var(--integration-basic-blocs-surface-muted-text, #64748b));
+    --duration: var(--integration-documentation-blocs-motion-duration, 180ms);
     display: block;
-    margin: 0 0 1rem;
+    margin: 0 0 .65rem;
+    color: var(--integration-documentation-blocs-text, var(--integration-basic-blocs-body-text, inherit));
+    font-family: var(--integration-documentation-blocs-font-body, var(--integration-basic-blocs-font-body, system-ui, sans-serif));
 }
+.sec { display: grid; }
 .title {
-    font-size: .72rem;
-    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 2.25rem;
+    padding: .45rem .6rem;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: .4rem;
+    font: inherit;
+    font-size: .7rem;
+    font-weight: 750;
+    letter-spacing: .075em;
+    text-align: left;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    color: color-mix(in srgb, currentColor 55%, transparent);
-    padding: .5rem .6rem .35rem;
+    cursor: pointer;
+    transition: color var(--duration) ease, background var(--duration) ease;
 }
-.title ::slotted(*) { margin: 0; font: inherit; color: inherit; }
-.items { display: flex; flex-direction: column; gap: 2px; }
+.title:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.title:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.title svg { flex: 0 0 auto; transition: transform var(--duration) ease; }
+.title ::slotted(*) { margin: 0; color: inherit; font: inherit; }
+.items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+}
+.collapsed .items { display: none; }
+.collapsed .title svg { transform: rotate(-90deg); }
+@media (prefers-reduced-motion: reduce) { :host { --duration: 0ms; } }

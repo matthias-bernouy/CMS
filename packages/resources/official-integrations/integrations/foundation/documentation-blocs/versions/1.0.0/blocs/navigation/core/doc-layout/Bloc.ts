@@ -1,32 +1,50 @@
-import template from "./template.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
+import { DiscoveryController } from "./discovery";
+import { LayoutController } from "./layout-controller";
+import css from "./style.css" with { type: "text" };
+import template from "./template.html" with { type: "text" };
 
 export class Bloc extends Component {
-    static observedAttributes = ["sidebar-open"];
-    _toggle = null;
-    _backdrop = null;
+    static observedAttributes = ["sidebar-open", "theme"];
+    discovery = null;
+    layout = null;
+
     constructor() {
         super({ css, template });
+        this.layout = new LayoutController(this);
+        this.discovery = new DiscoveryController(this);
     }
+
     connectedCallback() {
-        this._toggle = this.shadowRoot?.querySelector(".toggle") ?? null;
-        this._backdrop = this.shadowRoot?.querySelector(".backdrop") ?? null;
-        this._toggle?.addEventListener("click", this._onToggle);
-        this._backdrop?.addEventListener("click", this._onClose);
+        this.layout.connect();
+        this.discovery.connect();
+        document.addEventListener("keydown", this.onDocumentKeydown);
+        this.syncExpanded();
     }
+
     disconnectedCallback() {
-        this._toggle?.removeEventListener("click", this._onToggle);
-        this._backdrop?.removeEventListener("click", this._onClose);
+        this.layout.disconnect();
+        this.discovery.disconnect();
+        document.removeEventListener("keydown", this.onDocumentKeydown);
     }
-    _onToggle = () => {
-        if (this.hasAttribute("sidebar-open")) {
-            this.removeAttribute("sidebar-open");
-        } else {
-            this.setAttribute("sidebar-open", "");
+
+    attributeChangedCallback() {
+        this.layout.sync();
+        this.syncExpanded();
+    }
+
+    onDocumentKeydown = (event) => {
+        if (event.key === "Escape" && this.hasAttribute("sidebar-open")) {
+            event.preventDefault();
+            this.layout.close(true);
         }
     };
-    _onClose = () => this.removeAttribute("sidebar-open");
+
+    syncExpanded() {
+        this.shadowRoot
+            ?.querySelector(".toggle")
+            ?.setAttribute("aria-expanded", String(this.hasAttribute("sidebar-open")));
+    }
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", Bloc);
