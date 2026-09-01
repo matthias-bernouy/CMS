@@ -64,6 +64,7 @@ export class DetailView {
     private renderField(field: WDetailField): HTMLElement {
         const node = this.template("field");
         setText(node, "[data-field-label]", field.label);
+        node.toggleAttribute("data-required", field.required === true);
         node.toggleAttribute("data-internal-label", fieldUsesInternalLabel(field));
         node.querySelector<HTMLElement>("[data-field-value]")!.append(createFieldControl(field));
         return node;

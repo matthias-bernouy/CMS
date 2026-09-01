@@ -1,6 +1,6 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import { valueAt } from "../../../runtime/expressions";
-import { readFieldControlValue } from "../controls";
+import { invalidFieldControl, readFieldControlValue } from "../controls";
 import type { WDetailData, WDetailField } from "../types";
 
 export type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
@@ -77,9 +77,7 @@ export class DetailFieldState {
                 continue;
             }
             this.syncRequiredValidity(field, control, values[field.id]);
-            if (!invalid && control.hasAttribute("invalid")) {
-                invalid = control;
-            }
+            invalid ??= invalidFieldControl(field, control);
         }
         invalid ??= this.root.querySelector<HTMLElement>("[data-field-control][invalid]");
         invalid?.focus();

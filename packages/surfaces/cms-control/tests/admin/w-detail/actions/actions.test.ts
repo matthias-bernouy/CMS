@@ -48,6 +48,8 @@ describe("dashboard detail widget actions", () => {
             shadowRoot: ShadowRoot;
         };
         const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement;
+        expect(input.getAttribute("label")).toBe("Display name");
+        expect(input.hasAttribute("required")).toBeTrue();
         input.value = "   ";
         save.click();
 

@@ -7,6 +7,7 @@ type MediaControl = HTMLElement & { items: DashboardMediaItem[] };
 export function mediaList(field: WDetailField): HTMLElement {
     const input = document.createElement("cms-dashboard-w-media-field") as MediaControl;
     input.setAttribute("label", field.label);
+    input.toggleAttribute("required", field.required === true);
     input.setAttribute("accept", field.accept ?? "image/*");
     input.toggleAttribute("multiple", field.multiple === true);
     input.items = mediaValue(field.value);

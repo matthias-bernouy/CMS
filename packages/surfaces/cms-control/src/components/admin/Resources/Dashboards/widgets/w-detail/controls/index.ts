@@ -1,7 +1,7 @@
 import type { WDetailField, WDetailFieldValue } from "../types";
 import { isMediaControl, mediaList } from "../mediaControl";
 import { createBasicControl, fieldUsesBasicInternalLabel, readBasicControlValue } from "./basic";
-import { createSchemaControl, readSchemaControlValue } from "./schema";
+import { createSchemaControl, readSchemaControlValue, validateSchemaControl } from "./schema";
 import {
     createReorderableListControl,
     createTableControl,
@@ -49,6 +49,13 @@ export function readFieldControlValue(field: WDetailField, control: HTMLElement)
         return readSchemaControlValue(field, control);
     }
     return readBasicControlValue(field, control);
+}
+
+export function invalidFieldControl(field: WDetailField, control: HTMLElement): HTMLElement | null {
+    if (field.input === "schema") {
+        return validateSchemaControl(field, control) ?? (control.hasAttribute("invalid") ? control : null);
+    }
+    return control.hasAttribute("invalid") ? control : null;
 }
 
 export { tableRow };

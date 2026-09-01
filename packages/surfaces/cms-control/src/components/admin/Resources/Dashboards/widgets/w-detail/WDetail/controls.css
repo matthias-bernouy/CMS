@@ -15,6 +15,30 @@
     align-items: end;
 }
 
+.detail-schema-checkbox {
+    align-items: center;
+    color: #16231f;
+    display: flex;
+    font-size: 13px;
+    font-weight: 650;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.detail-schema-checkbox[data-required]::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    margin-inline-start: auto;
+}
+
+.detail-schema-checkbox[data-required]:has([invalid])::after {
+    color: var(--danger-base, #dc2626);
+}
+
 .detail-schema-unit {
     align-items: center;
     background: #f3f7f5;

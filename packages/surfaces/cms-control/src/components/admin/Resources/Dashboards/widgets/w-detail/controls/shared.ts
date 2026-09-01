@@ -15,6 +15,19 @@ export function optionElement(option: { label: string; value: string }, value: s
     return element;
 }
 
+export function selectOptionElements(
+    options: Array<{ label: string; value: string }>,
+    value: string,
+): HTMLOptionElement[] {
+    const elements = options.map((option) => optionElement(option, value));
+    if (value !== "" || options.some((option) => option.value === "")) {
+        return elements;
+    }
+    const placeholder = optionElement({ label: "Select an option", value: "" }, value);
+    placeholder.disabled = true;
+    return [placeholder, ...elements];
+}
+
 export function isValueControl(control: HTMLElement): control is ValueControl {
     return "value" in control && typeof (control as ValueControl).value === "string";
 }

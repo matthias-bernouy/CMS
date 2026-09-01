@@ -59,6 +59,7 @@ describe("dashboard CMS user fields", () => {
         expect(input.getAttribute("role")).toBe("combobox");
         expect(input.getAttribute("aria-autocomplete")).toBe("list");
         expect(input.labels?.[0]?.textContent).toBe("CMS user");
+        expect(combobox.hasAttribute("required")).toBeTrue();
 
         detail.shadowRoot!.querySelector<HTMLElement>("p9r-button")!.click();
         expect(actions).toEqual([]);

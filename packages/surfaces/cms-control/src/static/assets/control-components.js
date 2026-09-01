@@ -2485,6 +2485,27 @@ input:focus-visible ~ .custom-box {
     text-transform: uppercase;
 }
 
+:host([required]) .label {
+    display: flex;
+    flex: 1;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+:host([required]) .label::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+:host([required][invalid]) .label::after {
+    color: var(--danger-base, #dc2626);
+}
+
 .label[hidden] {
     display: none;
 }
@@ -3280,6 +3301,27 @@ input:disabled {
     color: var(--text-muted, #94a3b8);
 }
 
+:host([required]) .label {
+    display: flex;
+    flex: 1;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+:host([required]) .label::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+:host([required][invalid]) .label::after {
+    color: var(--danger-base, #dc2626);
+}
+
 .label[hidden] {
     display: none;
 }
@@ -4051,6 +4093,26 @@ input:disabled {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-muted, #94a3b8);
+}
+
+:host([required]) .label {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+:host([required]) .label::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+:host([required][invalid]) .label::after {
+    color: var(--danger-base, #dc2626);
 }
 
 .label[hidden] {
@@ -5438,6 +5500,26 @@ p9r-tag:hover {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted, #94a3b8);
+}
+
+:host([required]) .label {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+:host([required]) .label::after {
+  color: var(--text-muted, #94a3b8);
+  content: "* Required";
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+:host([required][invalid]) .label::after {
+  color: var(--danger-base, #dc2626);
 }
 
 .label[hidden] { display: none; }
@@ -23790,6 +23872,21 @@ w13c-lateral-menu-item {
     text-transform: uppercase;
 }
 
+:host([required]) .label-row::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    margin-inline-start: auto;
+    text-transform: none;
+}
+
+:host([required][invalid]) .label-row::after {
+    color: var(--danger-base, #dc2626);
+}
+
 .preview-trigger {
     background: var(--bg-surface, #fff);
     color: var(--text-main, #17211e);
@@ -24763,6 +24860,7 @@ button {
   function mediaList(field2) {
     const input = document.createElement("cms-dashboard-w-media-field");
     input.setAttribute("label", field2.label);
+    input.toggleAttribute("required", field2.required === true);
     input.setAttribute("accept", field2.accept ?? "image/*");
     input.toggleAttribute("multiple", field2.multiple === true);
     input.items = mediaValue2(field2.value);
@@ -24839,6 +24937,15 @@ button {
     element.selected = option2.value === value2;
     return element;
   }
+  function selectOptionElements(options, value2) {
+    const elements = options.map((option2) => optionElement(option2, value2));
+    if (value2 !== "" || options.some((option2) => option2.value === "")) {
+      return elements;
+    }
+    const placeholder = optionElement({ label: "Select an option", value: "" }, value2);
+    placeholder.disabled = true;
+    return [placeholder, ...elements];
+  }
   function isValueControl(control) {
     return "value" in control && typeof control.value === "string";
   }
@@ -24902,7 +25009,7 @@ button {
     if (field2.required) {
       input.setAttribute("required", "");
     }
-    input.replaceChildren(...(field2.options ?? []).map((option2) => optionElement(option2, String(field2.value))));
+    input.replaceChildren(...selectOptionElements(field2.options ?? [], String(field2.value)));
     bindFieldControl(input, field2);
     return input;
   }
@@ -25083,26 +25190,7 @@ button {
     return field2.value.filter((item) => typeof item === "string");
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema.ts
-  function createSchemaControl(field2) {
-    const root = document.createElement("div");
-    root.className = "detail-schema";
-    bindFieldControl(root, field2);
-    root.addEventListener("input", markDirty);
-    root.addEventListener("change", markDirty);
-    const definitions = field2.schemaDefinitions ?? [];
-    if (field2.schemaStatus !== "ready") {
-      root.append(statusMessage(field2.schemaStatus));
-      return root;
-    }
-    if (definitions.length === 0) {
-      root.append(statusMessage("empty"));
-      return root;
-    }
-    const values = recordValue2(field2.value);
-    root.append(...definitions.map((definition) => schemaRow(definition, values[definition.id])));
-    return root;
-  }
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/runtime.ts
   function readSchemaControlValue(field2, control) {
     const result = recordValue2(field2.value);
     if (field2.schemaStatus !== "ready") {
@@ -25112,58 +25200,42 @@ button {
     for (const element of Array.from(control.querySelectorAll("[data-schema-key]"))) {
       const key = element.dataset.schemaKey ?? "";
       const definition = definitions.get(key);
-      if (!definition || element.dataset.schemaDirty !== "true") {
+      if (!definition || !shouldReadSchemaValue(definition, element, result)) {
         continue;
       }
       result[key] = readSchemaValue(definition, element);
     }
     return result;
   }
-  function schemaRow(definition, value2) {
-    const row = document.createElement("div");
-    row.className = "detail-schema-row";
-    const control = schemaInput(definition, value2);
-    control.dataset.schemaKey = definition.id;
-    row.append(control);
-    if (definition.unit) {
-      const unit = document.createElement("span");
-      unit.className = "detail-schema-unit";
-      unit.textContent = definition.unit;
-      row.append(unit);
+  function validateSchemaControl(field2, control) {
+    if (field2.schemaStatus !== "ready") {
+      return null;
     }
-    return row;
-  }
-  function schemaInput(definition, value2) {
-    if (definition.type === "boolean") {
-      const input2 = document.createElement("input");
-      input2.type = "checkbox";
-      input2.className = "detail-checkbox";
-      input2.checked = value2 === true;
-      input2.required = definition.required === true;
-      input2.setAttribute("aria-label", definition.label);
-      return input2;
-    }
-    if (definition.options?.length) {
-      const input2 = document.createElement("p9r-select");
-      const selected2 = textValue2(value2);
-      input2.setAttribute("label", definition.label);
-      input2.setAttribute("value", selected2);
-      if (definition.required) {
-        input2.setAttribute("required", "");
+    const definitions = new Map((field2.schemaDefinitions ?? []).map((definition) => [definition.id, definition]));
+    let invalid2 = null;
+    for (const element of Array.from(control.querySelectorAll("[data-schema-key]"))) {
+      const definition = definitions.get(element.dataset.schemaKey ?? "");
+      if (!definition) {
+        continue;
       }
-      input2.replaceChildren(...definition.options.map((option2) => optionElement(option2, selected2)));
-      input2.value = selected2;
-      return input2;
+      syncSchemaRequiredValidity(definition, element);
+      if (!invalid2 && element.hasAttribute("invalid")) {
+        invalid2 = element;
+      }
     }
-    const input = document.createElement("p9r-input");
-    input.setAttribute("label", definition.label);
-    input.setAttribute("type", definition.type === "number" ? "number" : "text");
-    input.setAttribute("value", textValue2(value2));
-    if (definition.required) {
-      input.setAttribute("required", "");
+    return invalid2;
+  }
+  function updateSchemaControl(field2, event) {
+    const control = event.target?.closest("[data-schema-key]");
+    const definition = (field2.schemaDefinitions ?? []).find((item) => item.id === control?.dataset.schemaKey);
+    if (!control || !definition) {
+      return;
     }
-    input.value = textValue2(value2);
-    return input;
+    control.dataset.schemaDirty = "true";
+    syncSchemaRequiredValidity(definition, control);
+  }
+  function recordValue2(value2) {
+    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? { ...value2 } : {};
   }
   function readSchemaValue(definition, control) {
     if (definition.type === "boolean" && control instanceof HTMLInputElement) {
@@ -25178,20 +25250,122 @@ button {
     const value2 = Number(control.value);
     return Number.isFinite(value2) ? value2 : "";
   }
-  function markDirty(event) {
-    const control = event.target?.closest("[data-schema-key]");
-    if (control) {
-      control.dataset.schemaDirty = "true";
+  function shouldReadSchemaValue(definition, control, values) {
+    return control.dataset.schemaDirty === "true" || !Object.hasOwn(values, definition.id) && definition.required === true && definition.type === "boolean";
+  }
+  function syncSchemaRequiredValidity(definition, control) {
+    if (!definition.required || !missingRequiredValue(readSchemaValue(definition, control))) {
+      clearSchemaRequiredError(control);
+      return;
     }
+    control.dataset.dashboardSchemaRequiredInvalid = "true";
+    control.setAttribute("invalid", "");
+    control.setAttribute("aria-invalid", "true");
+    control.setAttribute("hint", "This field is required.");
+    control.setAttribute("hint-level", "error");
+  }
+  function missingRequiredValue(value2) {
+    return value2 === null || value2 === undefined || typeof value2 === "string" && value2.trim() === "";
+  }
+  function clearSchemaRequiredError(control) {
+    if (control.dataset.dashboardSchemaRequiredInvalid !== "true") {
+      return;
+    }
+    delete control.dataset.dashboardSchemaRequiredInvalid;
+    control.removeAttribute("invalid");
+    control.removeAttribute("aria-invalid");
+    control.removeAttribute("hint");
+    control.removeAttribute("hint-level");
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/index.ts
+  function createSchemaControl(field2) {
+    const root = document.createElement("div");
+    root.className = "detail-schema";
+    bindFieldControl(root, field2);
+    root.addEventListener("input", (event) => updateSchemaControl(field2, event));
+    root.addEventListener("change", (event) => updateSchemaControl(field2, event));
+    const definitions = field2.schemaDefinitions ?? [];
+    if (field2.schemaStatus !== "ready") {
+      root.append(statusMessage(field2.schemaStatus));
+      return root;
+    }
+    if (definitions.length === 0) {
+      root.append(statusMessage("empty"));
+      return root;
+    }
+    const values = recordValue2(field2.value);
+    root.append(...definitions.map((definition) => schemaRow(definition, values[definition.id])));
+    return root;
+  }
+  function schemaRow(definition, value2) {
+    const row = document.createElement("div");
+    row.className = "detail-schema-row";
+    const control = schemaInput(definition, value2);
+    control.dataset.schemaKey = definition.id;
+    row.append(definition.type === "boolean" ? checkboxLabel(definition, control) : control);
+    if (definition.unit) {
+      const unit = document.createElement("span");
+      unit.className = "detail-schema-unit";
+      unit.textContent = definition.unit;
+      row.append(unit);
+    }
+    return row;
+  }
+  function schemaInput(definition, value2) {
+    if (definition.type === "boolean") {
+      return schemaCheckbox(definition, value2);
+    }
+    if (definition.options?.length) {
+      return schemaSelect(definition, value2);
+    }
+    const input = document.createElement("p9r-input");
+    input.setAttribute("label", definition.label);
+    input.setAttribute("type", definition.type === "number" ? "number" : "text");
+    input.setAttribute("value", textValue2(value2));
+    if (definition.required) {
+      input.setAttribute("required", "");
+    }
+    input.value = textValue2(value2);
+    return input;
+  }
+  function schemaCheckbox(definition, value2) {
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.className = "detail-checkbox";
+    input.checked = value2 === true;
+    input.setAttribute("aria-label", definition.label);
+    if (definition.required) {
+      input.setAttribute("aria-required", "true");
+    }
+    return input;
+  }
+  function schemaSelect(definition, value2) {
+    const input = document.createElement("p9r-select");
+    const selected2 = textValue2(value2);
+    input.setAttribute("label", definition.label);
+    input.setAttribute("value", selected2);
+    if (definition.required) {
+      input.setAttribute("required", "");
+    }
+    input.replaceChildren(...selectOptionElements(definition.options ?? [], selected2));
+    input.value = selected2;
+    return input;
+  }
+  function checkboxLabel(definition, control) {
+    const label2 = document.createElement("label");
+    label2.className = "detail-schema-checkbox";
+    label2.toggleAttribute("data-required", definition.required);
+    const text4 = document.createElement("span");
+    text4.textContent = definition.label;
+    label2.append(control, text4);
+    return label2;
   }
   function statusMessage(status) {
     const message = document.createElement("span");
     message.className = `detail-schema-status detail-schema-status-${status ?? "loading"}`;
     message.textContent = status === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
     return message;
-  }
-  function recordValue2(value2) {
-    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? { ...value2 } : {};
   }
   function textValue2(value2) {
     return value2 === null || value2 === undefined ? "" : String(value2);
@@ -25987,6 +26161,12 @@ button {
     }
     return readBasicControlValue(field2, control);
   }
+  function invalidFieldControl(field2, control) {
+    if (field2.input === "schema") {
+      return validateSchemaControl(field2, control) ?? (control.hasAttribute("invalid") ? control : null);
+    }
+    return control.hasAttribute("invalid") ? control : null;
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/detailView.ts
   class DetailView {
@@ -26044,6 +26224,7 @@ button {
     renderField(field2) {
       const node = this.template("field");
       setText(node, "[data-field-label]", field2.label);
+      node.toggleAttribute("data-required", field2.required === true);
       node.toggleAttribute("data-internal-label", fieldUsesInternalLabel(field2));
       node.querySelector("[data-field-value]").append(createFieldControl(field2));
       return node;
@@ -26153,9 +26334,7 @@ button {
           continue;
         }
         this.syncRequiredValidity(field2, control, values[field2.id]);
-        if (!invalid2 && control.hasAttribute("invalid")) {
-          invalid2 = control;
-        }
+        invalid2 ??= invalidFieldControl(field2, control);
       }
       invalid2 ??= this.root.querySelector("[data-field-control][invalid]");
       invalid2?.focus();
@@ -26176,7 +26355,7 @@ button {
         clearRequiredError(control);
         return;
       }
-      if (missingRequiredValue(value2, field2.input)) {
+      if (missingRequiredValue2(value2, field2.input)) {
         control.dataset.dashboardRequiredInvalid = "true";
         control.setAttribute("invalid", "");
         control.setAttribute("aria-invalid", "true");
@@ -26187,7 +26366,7 @@ button {
       clearRequiredError(control);
     }
   }
-  function missingRequiredValue(value2, input) {
+  function missingRequiredValue2(value2, input) {
     if (input === "checkbox") {
       return value2 !== true;
     }
@@ -26363,6 +26542,27 @@ dt {
     text-transform: uppercase;
 }
 
+.w-detail-field[data-required]:not([data-internal-label]) dt {
+    align-items: baseline;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.w-detail-field[data-required]:not([data-internal-label]) dt::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.w-detail-field[data-required]:not([data-internal-label]):has([invalid]) dt::after {
+    color: var(--danger-base, #dc2626);
+}
+
 dd {
     margin: 0;
     min-width: 0;
@@ -26426,6 +26626,30 @@ p9r-token-input {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     align-items: end;
+}
+
+.detail-schema-checkbox {
+    align-items: center;
+    color: #16231f;
+    display: flex;
+    font-size: 13px;
+    font-weight: 650;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.detail-schema-checkbox[data-required]::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    margin-inline-start: auto;
+}
+
+.detail-schema-checkbox[data-required]:has([invalid])::after {
+    color: var(--danger-base, #dc2626);
 }
 
 .detail-schema-unit {

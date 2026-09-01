@@ -17,6 +17,26 @@
     color: var(--text-muted, #94a3b8);
 }
 
+:host([required]) .label {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+:host([required]) .label::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+:host([required][invalid]) .label::after {
+    color: var(--danger-base, #dc2626);
+}
+
 .label[hidden] {
     display: none;
 }

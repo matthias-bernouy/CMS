@@ -91,6 +91,27 @@ dt {
     text-transform: uppercase;
 }
 
+.w-detail-field[data-required]:not([data-internal-label]) dt {
+    align-items: baseline;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.w-detail-field[data-required]:not([data-internal-label]) dt::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.w-detail-field[data-required]:not([data-internal-label]):has([invalid]) dt::after {
+    color: var(--danger-base, #dc2626);
+}
+
 dd {
     margin: 0;
     min-width: 0;

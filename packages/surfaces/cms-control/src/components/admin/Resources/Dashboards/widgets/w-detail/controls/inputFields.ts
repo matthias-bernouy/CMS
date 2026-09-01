@@ -1,6 +1,6 @@
 import type { WDetailField } from "../types";
 import { formatMinorUnits } from "../../../runtime/mapping/money";
-import { bindFieldControl, optionElement, type TokenControl, type ValueControl } from "./shared";
+import { bindFieldControl, optionElement, selectOptionElements, type TokenControl, type ValueControl } from "./shared";
 
 export function textInput(field: WDetailField): HTMLElement {
     const input = document.createElement("p9r-input") as ValueControl;
@@ -61,7 +61,7 @@ export function select(field: WDetailField): HTMLElement {
     if (field.required) {
         input.setAttribute("required", "");
     }
-    input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
+    input.replaceChildren(...selectOptionElements(field.options ?? [], String(field.value)));
     bindFieldControl(input, field);
     return input;
 }
