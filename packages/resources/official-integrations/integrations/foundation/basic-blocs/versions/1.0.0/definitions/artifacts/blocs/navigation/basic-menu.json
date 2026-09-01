@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-menu",
+        "name": "Menu",
+        "group": "Basic Navigation",
+        "description": "Accessible navigation overlay with an editable button trigger.",
+        "path": "blocs/navigation/basic-menu"
+    }
+}

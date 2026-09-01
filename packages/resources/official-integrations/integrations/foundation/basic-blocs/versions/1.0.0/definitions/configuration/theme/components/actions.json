@@ -39,6 +39,13 @@
             "defaults": { "light": "var(--integration-basic-blocs-primary-contrasted)" }
         },
         {
+            "id": "action-min-height",
+            "label": "Action minimum height",
+            "description": "Minimum interactive height for buttons and action controls.",
+            "type": "length",
+            "defaults": { "light": "2.5rem" }
+        },
+        {
             "id": "action-radius",
             "label": "Action radius",
             "description": "Default rounding for buttons and selectable controls.",

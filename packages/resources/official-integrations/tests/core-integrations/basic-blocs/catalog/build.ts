@@ -32,6 +32,7 @@ export function registerBuildTest(): void {
             "basic-hero",
             "basic-input",
             "basic-media-section",
+            "basic-menu",
             "basic-navbar",
             "basic-option",
             "basic-pagination",

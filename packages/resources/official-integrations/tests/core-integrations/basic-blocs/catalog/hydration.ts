@@ -167,7 +167,8 @@ export function registerHydrationTest(): void {
         expect(button.bloc.editorJS).toContain('{ kind: "component", tag: "button" }');
         expect(button.bloc.editorJS).toContain('attribute: "tone"');
         expect(button.bloc.editorJS).toContain('attribute: "appearance"');
-        expect(button.bloc.editorJS).not.toContain('slot: "icon-left"');
+        expect(button.bloc.editorJS).toContain('slot: "icon-start"');
+        expect(button.bloc.editorJS).toContain('slot: "icon-end"');
         expect(decodeSource(button.bloc.source?.["colorSchemes.ts"])).toContain('role("action-background"');
         expect(decodeSource(button.bloc.source?.["style.css"])).toContain("--_button-background: var(--_tone-base)");
         expect(button.bloc.viewJS).not.toContain("requestFormSubmit");

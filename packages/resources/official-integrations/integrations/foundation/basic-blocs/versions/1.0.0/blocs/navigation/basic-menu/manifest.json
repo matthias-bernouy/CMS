@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-menu",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Menu",
+        "description": "Accessible navigation overlay with an editable button trigger."
+    }
+}

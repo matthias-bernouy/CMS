@@ -75,12 +75,24 @@ export class BasicButtonEditor extends Editor {
     protected override contentSlots(): ContentSlot[] {
         return [
             {
+                label: "Leading icon",
+                slot: "icon-start",
+                accepts: [{ kind: "media", accept: ["svg"] }],
+                max: 1,
+            },
+            {
                 label: "Interactive control",
                 accepts: [
                     { kind: "component", tag: "a" },
                     { kind: "component", tag: "button" },
                 ],
                 min: 1,
+                max: 1,
+            },
+            {
+                label: "Trailing icon",
+                slot: "icon-end",
+                accepts: [{ kind: "media", accept: ["svg"] }],
                 max: 1,
             },
         ];

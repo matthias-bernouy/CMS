@@ -58,6 +58,7 @@
             "artifacts/blocs/layout/sections/basic-media-section.json",
             "artifacts/blocs/layout/sections/basic-site-footer.json",
             "artifacts/blocs/media/basic-image.json",
+            "artifacts/blocs/navigation/basic-menu.json",
             "artifacts/blocs/navigation/basic-navbar.json",
             "artifacts/blocs/navigation/basic-pagination.json",
             "artifacts/blocs/basic/basic-redirect.json",

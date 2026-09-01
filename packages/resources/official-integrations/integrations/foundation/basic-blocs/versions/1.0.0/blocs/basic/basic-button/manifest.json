@@ -5,6 +5,6 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Basic button",
-        "description": "Presentation wrapper for a direct native anchor or button child."
+        "description": "Presentation wrapper for a native anchor or button with optional inline SVG icons."
     }
 }

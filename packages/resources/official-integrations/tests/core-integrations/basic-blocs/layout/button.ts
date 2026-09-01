@@ -39,12 +39,24 @@ export function registerButtonTest(): void {
         expect(settings.map(({ attribute }) => attribute)).toEqual(["tone", "appearance", "size", "width", "align"]);
         expect(editor.getContentSlots()).toEqual([
             {
+                label: "Leading icon",
+                slot: "icon-start",
+                accepts: [{ kind: "media", accept: ["svg"] }],
+                max: 1,
+            },
+            {
                 label: "Interactive control",
                 accepts: [
                     { kind: "component", tag: "a" },
                     { kind: "component", tag: "button" },
                 ],
                 min: 1,
+                max: 1,
+            },
+            {
+                label: "Trailing icon",
+                slot: "icon-end",
+                accepts: [{ kind: "media", accept: ["svg"] }],
                 max: 1,
             },
         ]);
@@ -62,13 +74,19 @@ export function registerButtonTest(): void {
         nativeButton.name = "subscribed";
         nativeButton.value = "true";
         nativeButton.textContent = "Save";
-        wrapper.append(nativeButton);
+        const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        icon.setAttribute("slot", "icon-end");
+        wrapper.append(nativeButton, icon);
         form.append(wrapper);
         document.body.append(form);
 
         expect(wrapper.shadowRoot?.querySelectorAll("button, a")).toHaveLength(0);
-        expect(wrapper.shadowRoot?.querySelector("slot")).not.toBeNull();
+        expect(wrapper.shadowRoot?.querySelector('slot[name="icon-start"]')).not.toBeNull();
+        expect(wrapper.shadowRoot?.querySelector('slot[name="icon-end"]')).not.toBeNull();
         expect(wrapper.querySelector(":scope > button")).toBe(nativeButton);
+        expect(wrapper.querySelector(':scope > svg[slot="icon-end"]')).toBe(icon);
+        expect(icon.getAttribute("aria-hidden")).toBe("true");
+        expect(icon.getAttribute("focusable")).toBe("false");
         expect(nativeButton.type).toBe("submit");
         expect(nativeButton.name).toBe("subscribed");
         expect(nativeButton.value).toBe("true");
@@ -88,8 +106,13 @@ export function registerButtonTest(): void {
         expect(styles).toContain("text-decoration: none !important");
         expect(styles).toContain("var(--cms-button-background, var(--_tone-base)) 88%");
         expect(styles).toContain("var(--cms-button-color, var(--_button-color)) 10%");
+        expect(styles).toContain(
+            "var(--cms-button-min-height, var(--integration-basic-blocs-action-min-height, 2.5rem))",
+        );
         expect(styles).toContain(':host([appearance="soft"])');
         expect(styles).toContain("prefers-reduced-motion: reduce");
+        expect(styles).toContain('::slotted(svg[slot="icon-start"])');
+        expect(styles).toContain(":host([has-icon-end]) ::slotted(button)");
         expect(styles).not.toContain("--primary-base");
         form.remove();
     });

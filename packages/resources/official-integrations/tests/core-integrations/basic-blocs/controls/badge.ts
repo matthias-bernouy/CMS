@@ -54,6 +54,9 @@ export function registerBadgeTest(): void {
             expect(styles).toContain(`:host([appearance="${appearance}"])`);
         }
         expect(styles).toContain(':host([dot]:not([dot="false"]))');
+        expect(styles).toContain("var(--basic-badge-dot-color, currentColor)");
+        expect(styles).toContain("--basic-badge-font-size: .875rem");
+        expect(styles).toContain("--basic-badge-font-size: 1rem");
 
         const registration = executeEditorBundle(built.editorJS);
         const editor = new registration.editor!(badge);

@@ -1,5 +1,10 @@
 # Basic Blocs 1.0.0
 
+This release keeps styled actions semantic by wrapping exactly one native
+Light DOM `a` or `button`, with optional leading and trailing inline SVG icons.
+It also installs the native button editor required to author either control and
+adds the accessible `basic-menu` overlay.
+
 Small neutral blocs intended as official UI building blocks.
 
 The form layer keeps submission in the native `<form>` element so the CMS

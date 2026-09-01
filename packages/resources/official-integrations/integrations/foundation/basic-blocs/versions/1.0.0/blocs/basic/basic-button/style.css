@@ -14,6 +14,43 @@
     );
 }
 
+[part="control"] {
+    display: inline-grid;
+    position: relative;
+    align-items: center;
+    max-width: 100%;
+}
+
+slot[name="icon-start"],
+slot[name="icon-end"] {
+    display: inline-flex;
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    align-items: center;
+    justify-content: center;
+    color: var(--cms-button-color, var(--_button-color));
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+slot[name="icon-start"] {
+    inset-inline-start: var(--cms-button-icon-offset, 1rem);
+}
+
+slot[name="icon-end"] {
+    inset-inline-end: var(--cms-button-icon-offset, 1rem);
+}
+
+::slotted(svg[slot="icon-start"]),
+::slotted(svg[slot="icon-end"]) {
+    display: block;
+    width: var(--cms-button-icon-size, 1.15em);
+    height: var(--cms-button-icon-size, 1.15em);
+    color: inherit;
+    pointer-events: none;
+}
+
 ::slotted(a),
 ::slotted(button) {
     box-sizing: border-box;
@@ -21,7 +58,7 @@
     align-items: center;
     justify-content: var(--cms-button-alignment, center);
     gap: var(--cms-button-gap, .5rem);
-    min-height: var(--cms-button-min-height, 2.5rem);
+    min-height: var(--cms-button-min-height, var(--integration-basic-blocs-action-min-height, 2.5rem));
     margin: 0;
     padding: var(--cms-button-padding, .625rem 1rem);
     border: var(--cms-button-border, 1px solid var(--cms-button-border-color, var(--_button-border)));
@@ -96,7 +133,18 @@
 :host([size="xl"]) ::slotted(a),
 :host([size="xl"]) ::slotted(button) { min-height: 3.4rem; padding: 1rem 2rem; font-size: 1.15rem; }
 
+:host([has-icon-start]) ::slotted(a),
+:host([has-icon-start]) ::slotted(button) {
+    padding-inline-start: var(--cms-button-icon-padding, 2.75rem);
+}
+
+:host([has-icon-end]) ::slotted(a),
+:host([has-icon-end]) ::slotted(button) {
+    padding-inline-end: var(--cms-button-icon-padding, 2.75rem);
+}
+
 :host([width="full"]) { display: block; }
+:host([width="full"]) [part="control"] { display: grid; width: 100%; }
 :host([width="full"]) ::slotted(a),
 :host([width="full"]) ::slotted(button) { display: flex; width: 100%; }
 :host([align="left"]) { --cms-button-alignment: flex-start; }
