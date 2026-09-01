@@ -1,4 +1,9 @@
-import type { DashboardEmbeddedLookupRef, DashboardField, DashboardWidget } from "@bernouy/cms-dashboards";
+import type {
+    DashboardEmbeddedLookupRef,
+    DashboardField,
+    DashboardSection,
+    DashboardWidget,
+} from "@bernouy/cms-dashboards";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type LookupField = Extract<DashboardField, { type: "combobox" | "tokens" }>;
@@ -71,5 +76,9 @@ export function isLookupField(field: DashboardField): field is LookupField {
 }
 
 function detailFields(widget: DetailWidget): DashboardField[] {
-    return [...widget.main, ...(widget.aside ?? [])].flatMap((section) => section.fields);
+    return [...widget.main.filter(isDetailSection), ...(widget.aside ?? [])].flatMap((section) => section.fields);
+}
+
+function isDetailSection(item: DetailWidget["main"][number]): item is DashboardSection {
+    return !("widget" in item);
 }

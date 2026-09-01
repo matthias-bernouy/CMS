@@ -2,16 +2,9 @@ import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DashboardRuntimeWidget, DetailSelection, RenderContext } from "../../domain";
 import "./../../widgets/w-section/WSection";
 import "./../../widgets/w-table/WTable";
-import "./../../widgets/w-navigation-list/WNavigationList";
 import { detailElement } from "./detail";
-import {
-    appendSourceContent,
-    jsonAttr,
-    navigationItemsTemplate,
-    requiredSourceParams,
-    sourceWrapper,
-    tableRowsTemplate,
-} from "./mountSource";
+import { navigationListElement, selectionVars } from "./navigation";
+import { appendSourceContent, jsonAttr, requiredSourceParams, sourceWrapper, tableRowsTemplate } from "./mountSource";
 
 export function mountDashboardWidgets(
     root: HTMLElement,
@@ -131,38 +124,4 @@ function tableElement(
     element.append(tableRowsTemplate(widget));
     appendSourceContent(wrapper, element);
     return wrapper;
-}
-
-function navigationListElement(
-    widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>,
-    context: RenderContext,
-    detail: DetailSelection | null,
-): HTMLElement {
-    const wrapper = sourceWrapper(
-        context.dashboard.source,
-        widget.source,
-        selectionVars(detail),
-        "dashboardData",
-        requiredSourceParams(context, widget.source),
-    );
-    const element = document.createElement("cms-dashboard-w-navigation-list");
-    element.setAttribute("data-config-json", jsonAttr(widget));
-    element.append(navigationItemsTemplate(widget));
-    appendSourceContent(wrapper, element);
-    return wrapper;
-}
-
-function selectionVars(detail: DetailSelection | null): {
-    selection?: Record<string, unknown>;
-} {
-    if (!detail) {
-        return {};
-    }
-    const selected = { id: detail.row };
-    return {
-        selection: {
-            ...selected,
-            [detail.collection]: selected,
-        },
-    };
 }

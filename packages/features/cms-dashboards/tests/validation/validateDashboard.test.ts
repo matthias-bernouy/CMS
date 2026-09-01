@@ -52,6 +52,29 @@ describe("validateDashboard", () => {
         expect(validateDashboard(dashboard, { source })).toContain('duplicate widget id "productsTable"');
     });
 
+    test("validates navigation lists embedded in detail main content", () => {
+        const dashboard = validDashboard();
+        const detail = dashboard.views[1];
+        if (detail?.widget !== "w-detail") {
+            throw new Error("Detail fixture is missing");
+        }
+        const navigation = {
+            widget: "w-navigation-list" as const,
+            id: "productNavigation",
+            source: { endpoint: "listProducts", itemsPath: "items" },
+            rowKey: "id",
+            item: { title: { path: "title" } },
+            selection: { opens: "productDetail" },
+        };
+        detail.main.push(navigation);
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+        navigation.selection.opens = "missingDetail";
+        expect(validateDashboard(dashboard, { source })).toContain(
+            'views.1.main.2.selection.opens references unknown widget "missingDetail"',
+        );
+    });
+
     test("rejects source endpoint references that do not exist", () => {
         const dashboard = validDashboard();
         const table = dashboard.views[0] as Extract<Dashboard["views"][number], { widget: "w-table" }>;

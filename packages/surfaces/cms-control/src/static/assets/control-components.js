@@ -22155,7 +22155,7 @@ w13c-lateral-menu-item {
   // src/components/admin/Resources/Dashboards/domain/selection.ts
   function widgetsForSelection(dashboard, detail, projections = []) {
     if (!detail) {
-      return mainWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
+      return rootWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
     }
     const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
     const details = detailWidgetsFor(dashboard.views, detail.collection).map((widget) => relationWidgets.length ? { ...widget, relationWidgets } : widget);
@@ -22167,7 +22167,7 @@ w13c-lateral-menu-item {
   function validDetailSelection(dashboard, detail) {
     return detail && detailWidgetsFor(dashboard.views, detail.collection).length ? detail : null;
   }
-  function mainWidgetsFor(widgets, detailTargets) {
+  function rootWidgetsFor(widgets, detailTargets) {
     return widgets.flatMap((widget) => {
       if (isDetailWidget(widget)) {
         return detailTargets.has(widget.id) ? [] : [widget];
@@ -22176,10 +22176,10 @@ w13c-lateral-menu-item {
         return [];
       }
       if (widget.widget === "w-section") {
-        return sectionWithChildren(widget, mainWidgetsFor(widget.children, detailTargets));
+        return sectionWithChildren(widget, rootWidgetsFor(widget.children, detailTargets));
       }
       if (widget.widget === "w-tabs") {
-        return tabsWithChildren(widget, (tab) => mainWidgetsFor(tab.children, detailTargets));
+        return tabsWithChildren(widget, (tab) => rootWidgetsFor(tab.children, detailTargets));
       }
       return [widget];
     });
@@ -22215,6 +22215,14 @@ w13c-lateral-menu-item {
     return targets;
   }
   function collectDetailTargets(widget, targets) {
+    if (widget.widget === "w-detail") {
+      for (const mainItem of widget.main) {
+        if ("widget" in mainItem) {
+          collectDetailTargets(mainItem, targets);
+        }
+      }
+      return;
+    }
     if (widget.widget === "w-table" || widget.widget === "w-navigation-list") {
       if (widget.selection?.opens) {
         targets.add(widget.selection.opens);
@@ -23326,7 +23334,10 @@ w13c-lateral-menu-item {
     return (field2.type === "combobox" || field2.type === "tokens") && Boolean(field2.lookup);
   }
   function detailFields(widget) {
-    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    return [...widget.main.filter(isDetailSection), ...widget.aside ?? []].flatMap((section) => section.fields);
+  }
+  function isDetailSection(item) {
+    return !("widget" in item);
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/nestedFields.ts
@@ -23516,20 +23527,26 @@ w13c-lateral-menu-item {
       title: textAt(scope, widget.title?.path, widget.title?.fallback ?? widget.id),
       status: widget.status ? textAt(scope, widget.status.path, widget.status.fallback) : undefined,
       actions: (widget.actions ?? []).filter((action) => matchesDashboardVisibility(action.visibleWhen, { fields, resource })).map(actionData),
-      main: sections(widget.main, resource, fields, options, sourceId, schemas),
+      main: widget.main.map((item, index) => ("widget" in item) ? { title: "", fields: [], widgetSlot: `main-widget-${index}` } : section(item, resource, fields, options, sourceId, schemas)),
       aside: sections(widget.aside ?? [], resource, fields, options, sourceId, schemas)
     };
   }
   function fieldValues(widget, resource) {
-    const all = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    const all = [...widget.main.filter(isDetailSection2), ...widget.aside ?? []].flatMap((section) => section.fields);
     return Object.fromEntries(all.map((field2) => [field2.id, valueAt(resource, field2.path)]));
   }
   function sections(sections2, resource, fields, options, sourceId, schemas) {
-    return sections2.map((section) => ({
-      title: section.title,
-      ...section.description ? { description: section.description } : {},
-      fields: section.fields.filter((field2) => matchesDashboardVisibility(field2.visibleWhen, { fields, resource })).map((field2) => detailField(field2, resource, fields, options, sourceId, schemas))
-    }));
+    return sections2.map((item) => section(item, resource, fields, options, sourceId, schemas));
+  }
+  function section(section2, resource, fields, options, sourceId, schemas) {
+    return {
+      title: section2.title,
+      ...section2.description ? { description: section2.description } : {},
+      fields: section2.fields.filter((field2) => matchesDashboardVisibility(field2.visibleWhen, { fields, resource })).map((field2) => detailField(field2, resource, fields, options, sourceId, schemas))
+    };
+  }
+  function isDetailSection2(item) {
+    return !("widget" in item);
   }
   function actionData(action) {
     return {
@@ -23651,12 +23668,12 @@ w13c-lateral-menu-item {
     const menu = document.createElement("p9r-action-menu");
     menu.setAttribute("label", "More actions");
     for (const [label2, sectionActions] of groupedSections(actions)) {
-      const section = document.createElement("p9r-action-menu-section");
-      section.setAttribute("label", label2);
+      const section2 = document.createElement("p9r-action-menu-section");
+      section2.setAttribute("label", label2);
       for (const action of sectionActions) {
-        section.append(renderMenuItem(action));
+        section2.append(renderMenuItem(action));
       }
-      menu.append(section);
+      menu.append(section2);
     }
     return menu;
   }
@@ -25719,19 +25736,27 @@ button {
       this.query("[data-actions]").replaceChildren(...renderDetailActions(actions));
     }
     renderSections(root, sections2, density) {
-      root.replaceChildren(...sections2.map((section) => this.renderSection(section, density)));
+      root.replaceChildren(...sections2.map((section2) => this.renderMainItem(section2, density)));
       root.hidden = sections2.length === 0;
     }
-    renderSection(section, density) {
+    renderMainItem(section2, density) {
+      if (!section2.widgetSlot) {
+        return this.renderSection(section2, density);
+      }
+      const slot = document.createElement("slot");
+      slot.setAttribute("name", section2.widgetSlot);
+      return slot;
+    }
+    renderSection(section2, density) {
       const node = this.template("section");
-      node.setAttribute("heading", section.title);
-      if (section.description) {
-        node.setAttribute("description", section.description);
+      node.setAttribute("heading", section2.title);
+      if (section2.description) {
+        node.setAttribute("description", section2.description);
       }
       if (density) {
         node.setAttribute("density", density);
       }
-      node.querySelector("[data-fields]").replaceChildren(...section.fields.map((field2) => this.renderField(field2)));
+      node.querySelector("[data-fields]").replaceChildren(...section2.fields.map((field2) => this.renderField(field2)));
       return node;
     }
     renderField(field2) {
@@ -25772,9 +25797,9 @@ button {
     if (current.length !== next.length) {
       return false;
     }
-    return current.every((section, sectionIndex) => {
+    return current.every((section2, sectionIndex) => {
       const nextSection = next[sectionIndex];
-      return nextSection !== undefined && section.fields.length === nextSection.fields.length && section.fields.every((field2, fieldIndex) => sameFieldShape(field2, nextSection.fields[fieldIndex]));
+      return nextSection !== undefined && section2.widgetSlot === nextSection.widgetSlot && section2.fields.length === nextSection.fields.length && section2.fields.every((field2, fieldIndex) => sameFieldShape(field2, nextSection.fields[fieldIndex]));
     });
   }
   function sameFieldShape(current, next) {
@@ -25821,7 +25846,7 @@ button {
     }
     fields() {
       const data = this.readData();
-      return [...data.main, ...data.aside].flatMap((section) => section.fields);
+      return [...data.main, ...data.aside].flatMap((section2) => section2.fields);
     }
     currentResource() {
       return readDetailBinding(this.dataset)?.resource;
@@ -25978,6 +26003,17 @@ cms-shell-detail {
     display: grid;
     gap: 16px;
     min-width: 0;
+}
+
+.w-detail-main > slot {
+    display: contents;
+}
+
+.w-detail-main > slot::slotted(*) {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
 }
 
 .w-detail-actions p9r-button {
@@ -26807,13 +26843,13 @@ p9r-token-input {
       }
       return {
         ...value2,
-        main: value2.main.map((section) => ({
-          ...section,
-          fields: section.fields.map((field2) => field2.input === "cms-user" && this.cmsUserErrors.has(field2.id) ? { ...field2, invalid: true, hint: CMS_USER_LOAD_ERROR, hintLevel: "error" } : field2)
+        main: value2.main.map((section2) => ({
+          ...section2,
+          fields: section2.fields.map((field2) => field2.input === "cms-user" && this.cmsUserErrors.has(field2.id) ? { ...field2, invalid: true, hint: CMS_USER_LOAD_ERROR, hintLevel: "error" } : field2)
         })),
-        aside: value2.aside.map((section) => ({
-          ...section,
-          fields: section.fields.map((field2) => field2.input === "cms-user" && this.cmsUserErrors.has(field2.id) ? { ...field2, invalid: true, hint: CMS_USER_LOAD_ERROR, hintLevel: "error" } : field2)
+        aside: value2.aside.map((section2) => ({
+          ...section2,
+          fields: section2.fields.map((field2) => field2.input === "cms-user" && this.cmsUserErrors.has(field2.id) ? { ...field2, invalid: true, hint: CMS_USER_LOAD_ERROR, hintLevel: "error" } : field2)
         }))
       };
     }
@@ -27070,7 +27106,10 @@ p9r-token-input {
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/dependencies.ts
   function schemaFields(widget) {
-    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields).filter((field2) => field2.type === "schema");
+    return [...widget.main.filter(isDetailSection3), ...widget.aside ?? []].flatMap((section2) => section2.fields).filter((field2) => field2.type === "schema");
+  }
+  function isDetailSection3(item) {
+    return !("widget" in item);
   }
   function schemaKeysDependingOn(widget, fieldId) {
     return new Set(schemaFields(widget).filter((field2) => Object.values(field2.schema.params ?? {}).some((expression) => expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`))).map((field2) => field2.id));
@@ -28406,12 +28445,21 @@ slot {
           }
         }
       }
+      if (widget.widget === "w-detail") {
+        const found = findCollectionAction(widget.main.filter((item) => ("widget" in item)), actionId, widgetId);
+        if (found) {
+          return found;
+        }
+      }
     }
     return null;
   }
   function findMediaField(widget, fieldId) {
-    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    const fields = [...widget.main.filter(isDetailSection4), ...widget.aside ?? []].flatMap((section2) => section2.fields);
     return fields.find((field2) => field2.id === fieldId && field2.type === "media") ?? null;
+  }
+  function isDetailSection4(item) {
+    return !("widget" in item);
   }
 
   // src/components/admin/Resources/Dashboards/runtime/actions/index.ts
@@ -28438,7 +28486,7 @@ slot {
       fields
     });
   }
-  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value2, groups = [group], filters = {}) {
+  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value2, groups = [group], filters = {}, detail) {
     const action = findCollectionAction(dashboard.views, actionId, widgetId);
     if (!action) {
       throw new Error(`Dashboard table action "${actionId}" was not found`);
@@ -28446,7 +28494,16 @@ slot {
     if (!action.endpoint) {
       throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
-    return executeEndpointAction(group, groups, action, { filters: { ...filters }, value: value2 });
+    return executeEndpointAction(group, groups, action, {
+      filters: { ...filters },
+      value: value2,
+      ...detail ? {
+        selection: {
+          id: detail.row,
+          [detail.collection]: { id: detail.row }
+        }
+      } : {}
+    });
   }
   async function executeDashboardMediaAction(group, dashboard, detail, media2, draft, groups = [group]) {
     const widget = findDetailWidget(dashboard.views, detail.collection);
@@ -28618,14 +28675,14 @@ slot {
     if (!group || !dashboard) {
       return;
     }
-    const actionDetail = detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
+    const actionDetail = action.detail ? action.widget ? { collection: action.widget, row: action.row ?? detail?.row ?? "" } : detail : action.widget ? null : detail;
     const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
     const finishAction = once(context.actionCoordinator?.beginAction());
     try {
       const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, {
         ...context.drafts.get(key) ?? {},
         ...action.fields ?? {}
-      }, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group], context.filters?.get(action.widget ?? "") ?? {});
+      }, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group], context.filters?.get(action.widget ?? "") ?? {}, detail ?? undefined);
       if (actionDetail) {
         context.drafts.delete(key);
       }
@@ -28700,6 +28757,191 @@ slot {
   }
   function encodePart(value2) {
     return encodeURIComponent(value2);
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/mounting/mountSource.ts
+  function sourceWrapper(sourceId, ref, vars, alias, requiredParams = []) {
+    const params = resolveParams(ref.params, vars);
+    if (requiredParams.some((name) => params[name] === undefined)) {
+      return pendingSourceWrapper();
+    }
+    return urlSourceWrapper(sourceUrl2(sourceId, ref, vars), alias);
+  }
+  function requiredSourceParams(context, ref) {
+    const sourceId = ref.sourceId ?? context.dashboard.source;
+    const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
+    return group?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.params.filter((param) => param.required).map((param) => param.name) ?? [];
+  }
+  function urlSourceWrapper(url, alias) {
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("cms-source", `${url} as ${alias}`);
+    wrapper.append(sourceLoadingState(), sourceErrorState());
+    wrapper.addEventListener("click", retrySource);
+    return wrapper;
+  }
+  function pendingSourceWrapper() {
+    const wrapper = document.createElement("div");
+    wrapper.dataset.dashboardSourcePending = "true";
+    return wrapper;
+  }
+  function appendSourceContent(wrapper, content) {
+    content.setAttribute("cms-condition", "$source.loaded || $source.empty");
+    wrapper.append(content);
+  }
+  function jsonAttr(value2) {
+    return JSON.stringify(value2);
+  }
+  function tableRowsTemplate(widget) {
+    const row = document.createElement("cms-dashboard-w-row");
+    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
+    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
+    if (widget.selection?.opens) {
+      row.setAttribute("collection", widget.selection.opens);
+    }
+    for (const column of widget.columns) {
+      const cell = document.createElement("cms-dashboard-w-cell");
+      cell.setAttribute("column", column.id);
+      if (column.primary) {
+        cell.toggleAttribute("primary", true);
+      }
+      if (column.primary) {
+        cell.setAttribute("meta", "{{ row.id }}");
+      }
+      if (column.format === "badge") {
+        cell.setAttribute("tone", "badge");
+      }
+      if (column.format === "date" || column.format === "money") {
+        cell.dataset.displayFormat = column.format;
+        cell.dataset.displayValue = bindingPath("row", column.path);
+        if (column.format === "money") {
+          cell.dataset.displayCurrency = bindingPath("row", "currency");
+        }
+      }
+      cell.textContent = bindingPath("row", column.path);
+      row.append(cell);
+    }
+    return row;
+  }
+  function navigationItemsTemplate(widget) {
+    const item = document.createElement("cms-dashboard-w-navigation-item");
+    item.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
+    item.setAttribute("row-key", bindingPath("row", widget.rowKey));
+    item.setAttribute("title", bindingPath("row", widget.item.title.path));
+    if (widget.item.subtitle) {
+      item.setAttribute("subtitle", bindingPath("row", widget.item.subtitle.path));
+    }
+    if (widget.item.icon) {
+      item.setAttribute("icon", widget.item.icon);
+    }
+    if (widget.item.badge) {
+      item.setAttribute("badge", bindingPath("row", widget.item.badge.path));
+    }
+    if (widget.selection?.opens) {
+      item.setAttribute("collection", widget.selection.opens);
+    }
+    if (widget.reorderable) {
+      item.toggleAttribute("reorderable", true);
+    }
+    return item;
+  }
+  function sourceUrl2(sourceId, ref, vars) {
+    const targetSourceId = ref.sourceId ?? sourceId;
+    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
+      url.searchParams.set(key, value2);
+    }
+    return `${url.pathname}${url.search}`;
+  }
+  function repeatPath(alias, path) {
+    return path ? `${alias}.${path}` : alias;
+  }
+  function bindingPath(alias, path) {
+    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
+  }
+  function sourceLoadingState() {
+    const state = document.createElement("div");
+    state.className = "dashboard-source-state dashboard-source-loading";
+    state.setAttribute("cms-condition", "$source.loading");
+    state.setAttribute("role", "status");
+    state.textContent = "Loading data…";
+    return state;
+  }
+  function sourceErrorState() {
+    const state = document.createElement("div");
+    state.className = "dashboard-source-state dashboard-source-error";
+    state.setAttribute("cms-condition", "$source.error");
+    state.setAttribute("role", "alert");
+    const copy = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = "Unable to load this data";
+    const message = document.createElement("span");
+    message.textContent = "Nothing can be changed until the data is available.";
+    const detail = document.createElement("small");
+    detail.textContent = "{{ $source.message }}";
+    copy.append(title, message, detail);
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.dataset.dashboardSourceRetry = "true";
+    retry.textContent = "Retry";
+    state.append(copy, retry);
+    return state;
+  }
+  function retrySource(event) {
+    const target2 = event.target;
+    if (!(target2 instanceof Element) || !target2.closest("[data-dashboard-source-retry]")) {
+      return;
+    }
+    target2.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/mounting/mountRelations.ts
+  function relationDetailSectionElement(widget) {
+    const section2 = document.createElement("cms-detail-section");
+    section2.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
+    section2.setAttribute("heading", widget.title ?? "Related items");
+    if (widget.placement === "aside") {
+      section2.setAttribute("density", "compact");
+    }
+    section2.append(relationTableElement(widget));
+    return section2;
+  }
+  function relationTableElement(widget) {
+    const tableWidget = {
+      widget: "w-table",
+      id: widget.id,
+      source: {
+        endpoint: widget.relationId,
+        itemsPath: "items"
+      },
+      rowKey: widget.rowKey,
+      columns: widget.columns,
+      ...widget.pageSize ? { pageSize: widget.pageSize } : {},
+      ...widget.actions?.length ? { actions: widget.actions.map(tableAction) } : {}
+    };
+    const wrapper = urlSourceWrapper(relationPageUrl(widget), "dashboardData");
+    const element = document.createElement("cms-dashboard-w-table");
+    element.setAttribute("data-config-json", jsonAttr(tableWidget));
+    element.toggleAttribute("embedded", true);
+    element.append(tableRowsTemplate(tableWidget));
+    appendSourceContent(wrapper, element);
+    return wrapper;
+  }
+  function tableAction(action) {
+    return {
+      id: action.id,
+      label: action.label,
+      ...action.icon ? { icon: action.icon } : {},
+      ...action.tone ? { tone: action.tone } : {},
+      ...action.placement ? { placement: action.placement } : {}
+    };
+  }
+  function relationPageUrl(widget) {
+    const url = new URL(route2("/api/relations/page"), window.location.origin);
+    url.searchParams.set("relation", widget.relationId);
+    url.searchParams.set("fromId", widget.fromId);
+    url.searchParams.set("limit", String(widget.pageSize ?? 25));
+    url.searchParams.set("offset", "0");
+    return `${url.pathname}${url.search}`;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationItem.ts
@@ -29039,189 +29281,29 @@ slot { display: contents; }
     customElements.define("cms-dashboard-w-navigation-list", DashboardWNavigationList);
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/mounting/mountSource.ts
-  function sourceWrapper(sourceId, ref, vars, alias, requiredParams = []) {
-    const params = resolveParams(ref.params, vars);
-    if (requiredParams.some((name) => params[name] === undefined)) {
-      return pendingSourceWrapper();
+  // src/components/admin/Resources/Dashboards/runtime/mounting/navigation.ts
+  function navigationListElement(widget, context, detail, slot) {
+    const wrapper = sourceWrapper(context.dashboard.source, widget.source, selectionVars(detail), "dashboardData", requiredSourceParams(context, widget.source));
+    if (slot) {
+      wrapper.setAttribute("slot", slot);
     }
-    return urlSourceWrapper(sourceUrl2(sourceId, ref, vars), alias);
-  }
-  function requiredSourceParams(context, ref) {
-    const sourceId = ref.sourceId ?? context.dashboard.source;
-    const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
-    return group?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.params.filter((param) => param.required).map((param) => param.name) ?? [];
-  }
-  function urlSourceWrapper(url, alias) {
-    const wrapper = document.createElement("div");
-    wrapper.setAttribute("cms-source", `${url} as ${alias}`);
-    wrapper.append(sourceLoadingState(), sourceErrorState());
-    wrapper.addEventListener("click", retrySource);
-    return wrapper;
-  }
-  function pendingSourceWrapper() {
-    const wrapper = document.createElement("div");
-    wrapper.dataset.dashboardSourcePending = "true";
-    return wrapper;
-  }
-  function appendSourceContent(wrapper, content) {
-    content.setAttribute("cms-condition", "$source.loaded || $source.empty");
-    wrapper.append(content);
-  }
-  function jsonAttr(value2) {
-    return JSON.stringify(value2);
-  }
-  function tableRowsTemplate(widget) {
-    const row = document.createElement("cms-dashboard-w-row");
-    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    if (widget.selection?.opens) {
-      row.setAttribute("collection", widget.selection.opens);
-    }
-    for (const column of widget.columns) {
-      const cell = document.createElement("cms-dashboard-w-cell");
-      cell.setAttribute("column", column.id);
-      if (column.primary) {
-        cell.toggleAttribute("primary", true);
-      }
-      if (column.primary) {
-        cell.setAttribute("meta", "{{ row.id }}");
-      }
-      if (column.format === "badge") {
-        cell.setAttribute("tone", "badge");
-      }
-      if (column.format === "date" || column.format === "money") {
-        cell.dataset.displayFormat = column.format;
-        cell.dataset.displayValue = bindingPath("row", column.path);
-        if (column.format === "money") {
-          cell.dataset.displayCurrency = bindingPath("row", "currency");
-        }
-      }
-      cell.textContent = bindingPath("row", column.path);
-      row.append(cell);
-    }
-    return row;
-  }
-  function navigationItemsTemplate(widget) {
-    const item = document.createElement("cms-dashboard-w-navigation-item");
-    item.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    item.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    item.setAttribute("title", bindingPath("row", widget.item.title.path));
-    if (widget.item.subtitle) {
-      item.setAttribute("subtitle", bindingPath("row", widget.item.subtitle.path));
-    }
-    if (widget.item.icon) {
-      item.setAttribute("icon", widget.item.icon);
-    }
-    if (widget.item.badge) {
-      item.setAttribute("badge", bindingPath("row", widget.item.badge.path));
-    }
-    if (widget.selection?.opens) {
-      item.setAttribute("collection", widget.selection.opens);
-    }
-    if (widget.reorderable) {
-      item.toggleAttribute("reorderable", true);
-    }
-    return item;
-  }
-  function sourceUrl2(sourceId, ref, vars) {
-    const targetSourceId = ref.sourceId ?? sourceId;
-    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
-      url.searchParams.set(key, value2);
-    }
-    return `${url.pathname}${url.search}`;
-  }
-  function repeatPath(alias, path) {
-    return path ? `${alias}.${path}` : alias;
-  }
-  function bindingPath(alias, path) {
-    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
-  }
-  function sourceLoadingState() {
-    const state = document.createElement("div");
-    state.className = "dashboard-source-state dashboard-source-loading";
-    state.setAttribute("cms-condition", "$source.loading");
-    state.setAttribute("role", "status");
-    state.textContent = "Loading data…";
-    return state;
-  }
-  function sourceErrorState() {
-    const state = document.createElement("div");
-    state.className = "dashboard-source-state dashboard-source-error";
-    state.setAttribute("cms-condition", "$source.error");
-    state.setAttribute("role", "alert");
-    const copy = document.createElement("div");
-    const title = document.createElement("strong");
-    title.textContent = "Unable to load this data";
-    const message = document.createElement("span");
-    message.textContent = "Nothing can be changed until the data is available.";
-    const detail = document.createElement("small");
-    detail.textContent = "{{ $source.message }}";
-    copy.append(title, message, detail);
-    const retry = document.createElement("button");
-    retry.type = "button";
-    retry.dataset.dashboardSourceRetry = "true";
-    retry.textContent = "Retry";
-    state.append(copy, retry);
-    return state;
-  }
-  function retrySource(event) {
-    const target2 = event.target;
-    if (!(target2 instanceof Element) || !target2.closest("[data-dashboard-source-retry]")) {
-      return;
-    }
-    target2.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/mountRelations.ts
-  function relationDetailSectionElement(widget) {
-    const section = document.createElement("cms-detail-section");
-    section.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
-    section.setAttribute("heading", widget.title ?? "Related items");
-    if (widget.placement === "aside") {
-      section.setAttribute("density", "compact");
-    }
-    section.append(relationTableElement(widget));
-    return section;
-  }
-  function relationTableElement(widget) {
-    const tableWidget = {
-      widget: "w-table",
-      id: widget.id,
-      source: {
-        endpoint: widget.relationId,
-        itemsPath: "items"
-      },
-      rowKey: widget.rowKey,
-      columns: widget.columns,
-      ...widget.pageSize ? { pageSize: widget.pageSize } : {},
-      ...widget.actions?.length ? { actions: widget.actions.map(tableAction) } : {}
-    };
-    const wrapper = urlSourceWrapper(relationPageUrl(widget), "dashboardData");
-    const element = document.createElement("cms-dashboard-w-table");
-    element.setAttribute("data-config-json", jsonAttr(tableWidget));
-    element.toggleAttribute("embedded", true);
-    element.append(tableRowsTemplate(tableWidget));
+    const element = document.createElement("cms-dashboard-w-navigation-list");
+    element.setAttribute("data-config-json", jsonAttr(widget));
+    element.append(navigationItemsTemplate(widget));
     appendSourceContent(wrapper, element);
     return wrapper;
   }
-  function tableAction(action) {
+  function selectionVars(detail) {
+    if (!detail) {
+      return {};
+    }
+    const selected2 = { id: detail.row };
     return {
-      id: action.id,
-      label: action.label,
-      ...action.icon ? { icon: action.icon } : {},
-      ...action.tone ? { tone: action.tone } : {},
-      ...action.placement ? { placement: action.placement } : {}
+      selection: {
+        ...selected2,
+        [detail.collection]: selected2
+      }
     };
-  }
-  function relationPageUrl(widget) {
-    const url = new URL(route2("/api/relations/page"), window.location.origin);
-    url.searchParams.set("relation", widget.relationId);
-    url.searchParams.set("fromId", widget.fromId);
-    url.searchParams.set("limit", String(widget.pageSize ?? 25));
-    url.searchParams.set("offset", "0");
-    return `${url.pathname}${url.search}`;
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mounting/detail.ts
@@ -29255,6 +29337,12 @@ slot { display: contents; }
     }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
+    const selection = { collection: widget.id, row: rowKey };
+    for (const [index, mainItem] of widget.main.entries()) {
+      if ("widget" in mainItem) {
+        element.append(navigationListElement(mainItem, context, selection, `main-widget-${index}`));
+      }
+    }
     for (const relationWidget of widget.relationWidgets ?? []) {
       element.append(relationDetailSectionElement(relationWidget));
     }
@@ -29337,26 +29425,6 @@ slot { display: contents; }
     element.append(tableRowsTemplate(widget));
     appendSourceContent(wrapper, element);
     return wrapper;
-  }
-  function navigationListElement(widget, context, detail) {
-    const wrapper = sourceWrapper(context.dashboard.source, widget.source, selectionVars(detail), "dashboardData", requiredSourceParams(context, widget.source));
-    const element = document.createElement("cms-dashboard-w-navigation-list");
-    element.setAttribute("data-config-json", jsonAttr(widget));
-    element.append(navigationItemsTemplate(widget));
-    appendSourceContent(wrapper, element);
-    return wrapper;
-  }
-  function selectionVars(detail) {
-    if (!detail) {
-      return {};
-    }
-    const selected2 = { id: detail.row };
-    return {
-      selection: {
-        ...selected2,
-        [detail.collection]: selected2
-      }
-    };
   }
 
   // src/components/admin/Resources/Dashboards/view/rendering.ts
@@ -29686,8 +29754,11 @@ slot { display: contents; }
     return typeof value2 === "string" ? value2.split(",").map((item) => item.trim()).filter(Boolean) : [];
   }
   function lookupField(widget, fieldId) {
-    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    const fields = [...widget.main.filter(isDetailSection5), ...widget.aside ?? []].flatMap((section2) => section2.fields);
     return fields.find((field2) => (field2.type === "combobox" || field2.type === "tokens") && field2.id === fieldId) ?? null;
+  }
+  function isDetailSection5(item) {
+    return !("widget" in item);
   }
   function endpointMethod2(group, groups, ref) {
     const sourceId = ref.sourceId ?? group.source.id;
@@ -30318,10 +30389,10 @@ p {
     return wrap;
   }
   function detailSection(slot, heading) {
-    const section = document.createElement("cms-detail-section");
-    section.slot = slot;
-    section.setAttribute("heading", heading);
-    return section;
+    const section2 = document.createElement("cms-detail-section");
+    section2.slot = slot;
+    section2.setAttribute("heading", heading);
+    return section2;
   }
   function fieldWrap(titleText, control, hint) {
     control.id ||= `function-field-${++fieldId}`;
@@ -30676,12 +30747,12 @@ pre {
     return wrap;
   }
   function inputsSection(detail, draft, onInputChange) {
-    const section = detailSection("main", "Inputs");
-    section.append(executeFields(detail, draft, onInputChange));
-    return section;
+    const section2 = detailSection("main", "Inputs");
+    section2.append(executeFields(detail, draft, onInputChange));
+    return section2;
   }
   function resultSection() {
-    const section = detailSection("main", "Result");
+    const section2 = detailSection("main", "Result");
     const status = div("status", "Not executed");
     const message = div("result-message empty", "Run the function to see its result.");
     const raw = document.createElement("details");
@@ -30690,12 +30761,12 @@ pre {
     raw.className = "raw-result";
     raw.append(summary("Raw response"), pre(""));
     raw.querySelector("pre").dataset.role = "result-body";
-    section.append(div("result-header", status), message, raw);
-    return section;
+    section2.append(div("result-header", status), message, raw);
+    return section2;
   }
   function functionSummarySection(detail) {
-    const section = detailSection("aside", "Function");
-    section.append(keyValues([
+    const section2 = detailSection("aside", "Function");
+    section2.append(keyValues([
       ["Id", detail.id],
       ["Method", detail.method],
       ["Access", detail.access],
@@ -30703,14 +30774,14 @@ pre {
       ["Steps", detail.stepsLabel],
       ["Return", detail.returnLabel]
     ]));
-    return section;
+    return section2;
   }
   function contractSection(detail) {
-    const section = detailSection("aside", "Contract");
+    const section2 = detailSection("aside", "Contract");
     const details = document.createElement("details");
     details.append(summary("Schemas"), schemaBlock("Params", detail.params ?? null), schemaBlock("Body", detail.body ?? null), schemaBlock("Output", detail.output ?? null));
-    section.append(details);
-    return section;
+    section2.append(details);
+    return section2;
   }
   function summary(text5) {
     const element = document.createElement("summary");
@@ -36483,12 +36554,12 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRenderer.ts
   function renderBindingConfig(source2, initialBinding) {
-    const section = document.createElement("section");
-    section.className = "binding-config";
-    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
-    renderRequestParams(section, source2, initialBinding);
-    renderRequestBody(section, source2, initialBinding);
-    return section;
+    const section2 = document.createElement("section");
+    section2.className = "binding-config";
+    section2.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
+    renderRequestParams(section2, source2, initialBinding);
+    renderRequestBody(section2, source2, initialBinding);
+    return section2;
   }
   function renderAliasInput(value3) {
     const aliasLabel = document.createElement("label");
@@ -36513,15 +36584,15 @@ button:hover {
   function defaultTrigger(source2) {
     return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
   }
-  function renderRequestParams(section, source2, initialBinding) {
+  function renderRequestParams(section2, source2, initialBinding) {
     const params = source2.params ?? [];
     if (params.length === 0) {
       return;
     }
-    section.append(renderBindingHeading("Request params"));
+    section2.append(renderBindingHeading("Request params"));
     const initialParams = paramsForBinding(source2, initialBinding);
     for (const param of params) {
-      section.append(renderBindingRow({
+      section2.append(renderBindingRow({
         kind: "param",
         name: param.name,
         location: param.in,
@@ -36531,14 +36602,14 @@ button:hover {
       }, initialParams[param.name]));
     }
   }
-  function renderRequestBody(section, source2, initialBinding) {
+  function renderRequestBody(section2, source2, initialBinding) {
     const fields2 = bodyBindingFields(source2.body?.fields ?? []);
     if (fields2.length === 0) {
       return;
     }
-    section.append(renderBindingHeading("Request body"));
+    section2.append(renderBindingHeading("Request body"));
     for (const field3 of fields2) {
-      section.append(renderBindingRow({
+      section2.append(renderBindingRow({
         kind: "body",
         name: field3.name,
         location: "body",
@@ -37747,19 +37818,19 @@ textarea { min-height: 92px; resize: vertical; }
     return conditions2;
   }
   function renderSource(source2, options2) {
-    const section = document.createElement("section");
-    section.className = "source";
-    section.append(textBlock2("source-title", source2.label));
+    const section2 = document.createElement("section");
+    section2.className = "source";
+    section2.append(textBlock2("source-title", source2.label));
     if (source2.sourceName) {
-      section.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
+      section2.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
     }
     const states3 = document.createElement("div");
     states3.className = "states";
     for (const state2 of STATES) {
       states3.append(renderState2(source2, state2, options2));
     }
-    section.append(states3);
-    return section;
+    section2.append(states3);
+    return section2;
   }
   function renderState2(source2, state2, options2) {
     const key = sourceStateKey(options2.sources, source2.editor, state2);
@@ -39624,9 +39695,9 @@ dd {
     return true;
   }
   function filterSettingSections(policy, sections2) {
-    return sections2.flatMap((section) => {
-      const settings = section.settings.flatMap((setting) => filterSetting(policy, setting));
-      return settings.length > 0 ? [{ ...section, settings }] : [];
+    return sections2.flatMap((section2) => {
+      const settings = section2.settings.flatMap((setting) => filterSetting(policy, setting));
+      return settings.length > 0 ? [{ ...section2, settings }] : [];
     });
   }
   function filterSetting(policy, setting) {
@@ -44994,8 +45065,8 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
   function renderSettingsStates(states3, onToggle) {
-    const section = document.createElement("cms-editor-v2-section");
-    section.setAttribute("label", "States");
+    const section2 = document.createElement("cms-editor-v2-section");
+    section2.setAttribute("label", "States");
     for (const state2 of states3) {
       const button2 = document.createElement("button");
       button2.className = "state-button";
@@ -45009,14 +45080,14 @@ input {
       description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
       button2.append(label3, description);
       button2.addEventListener("click", () => onToggle(state2));
-      section.append(button2);
+      section2.append(button2);
     }
-    return section;
+    return section2;
   }
-  function renderSettingSection(section, controls) {
+  function renderSettingSection(section2, controls) {
     const element = document.createElement("cms-editor-v2-section");
-    element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
-    const settings = visibleSettings(section.settings);
+    element.setAttribute("label", section2.kind === "surcharge" ? `${section2.label} override` : section2.label);
+    const settings = visibleSettings(section2.settings);
     if (settings.length === 0) {
       const empty4 = document.createElement("div");
       empty4.className = "section-empty";
@@ -45032,8 +45103,8 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts
   function renderTextCapability(capability, value3, dataScopes2, emitContentChange) {
-    const section = document.createElement("cms-editor-v2-section");
-    section.setAttribute("label", "Content");
+    const section2 = document.createElement("cms-editor-v2-section");
+    section2.setAttribute("label", "Content");
     const setting = {
       type: "text",
       label: capability.format === "richtext" ? "Rich text" : "Text",
@@ -45052,8 +45123,8 @@ input {
       }
       wireContentControl(control2, "input", (content) => emitContentChange(content, "text"));
     }
-    section.append(control2);
-    return section;
+    section2.append(control2);
+    return section2;
   }
   function formatTextCapability(capability) {
     const options2 = [
@@ -45374,7 +45445,7 @@ cms-editor-v2-segmented-control button svg:only-child {
       this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
-      const visibleSections = sections2.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
+      const visibleSections = sections2.filter((section2) => mode === "settings" ? section2.kind === "self" : section2.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
       const shouldRenderStates = mode === "settings" && states3.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
@@ -45390,8 +45461,8 @@ cms-editor-v2-segmented-control button svg:only-child {
       if (shouldRenderStates) {
         view.append(renderSettingsStates(states3, (state2) => this._emitStateToggle(state2)));
       }
-      for (const section of visibleSections) {
-        view.append(renderSettingSection(section, this._settingControls));
+      for (const section2 of visibleSections) {
+        view.append(renderSettingSection(section2, this._settingControls));
       }
     }
     _emitStateToggle(state2) {
@@ -48021,8 +48092,8 @@ label {
     return true;
   }
   function settingsWithParamSync(editor, sections2) {
-    const section = paramSyncSettings(editor);
-    return section ? [...sections2, section] : sections2;
+    const section2 = paramSyncSettings(editor);
+    return section2 ? [...sections2, section2] : sections2;
   }
   function paramSyncSettings(editor) {
     const target2 = editor.target;
@@ -48111,8 +48182,8 @@ label {
     return true;
   }
   function settingsWithPageState(editor, sections2) {
-    const section = pageStateSettings(editor);
-    return section ? [...sections2, section] : sections2;
+    const section2 = pageStateSettings(editor);
+    return section2 ? [...sections2, section2] : sections2;
   }
   function pageStateSettings(editor) {
     const target2 = editor.target;
@@ -48161,9 +48232,9 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingsValues.ts
   function resolveSettingsValues(editor, sections2) {
-    return sections2.map((section) => ({
-      ...section,
-      settings: section.settings.map((setting) => resolveSetting(editor, setting))
+    return sections2.map((section2) => ({
+      ...section2,
+      settings: section2.settings.map((setting) => resolveSetting(editor, setting))
     }));
   }
   function getTextValue(editor, format) {

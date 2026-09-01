@@ -146,4 +146,63 @@ describe("dashboard table actions", () => {
         expect(requests[0]!.url).toBe("http://localhost:4999/.cms/sources/newsletter/clearQueue");
         expect(renderCount).toBe(1);
     });
+
+    test("routes collection actions with the active detail selection", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input, init) => {
+            const request = new Request(input, init);
+            requests.push(request);
+            return Response.json({ ref: "question-2" });
+        }) as typeof fetch;
+        const activeDashboard = tableActionDashboard();
+        activeDashboard.views = [
+            {
+                widget: "w-detail",
+                id: "queueDetail",
+                source: { endpoint: "queueItem" },
+                main: [
+                    {
+                        widget: "w-navigation-list",
+                        id: "queueNavigation",
+                        source: { endpoint: "listQueue", itemsPath: "items" },
+                        rowKey: "id",
+                        item: { title: { path: "id" } },
+                        actions: [
+                            {
+                                id: "clearQueue",
+                                label: "Clear queue",
+                                endpoint: {
+                                    endpoint: "clearQueue",
+                                    body: { context: "$selection.queueDetail.id" },
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
+        ];
+
+        await runDashboardWidgetAction(
+            {
+                group: tableActionGroup(),
+                dashboard: activeDashboard,
+                detail: { collection: "queueDetail", row: "queue-1" },
+                drafts: new Map(),
+                render() {},
+                reload() {
+                    throw new Error("reload should not run");
+                },
+                clearDetail() {
+                    throw new Error("clearDetail should not run");
+                },
+                openDetail() {
+                    throw new Error("openDetail should not run");
+                },
+            },
+            { action: "clearQueue", widget: "queueNavigation" },
+        );
+
+        expect(requests).toHaveLength(1);
+        expect(await requests[0]!.json()).toEqual({ context: "queue-1" });
+    });
 });

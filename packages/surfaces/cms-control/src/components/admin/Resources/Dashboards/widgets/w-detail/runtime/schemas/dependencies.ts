@@ -1,11 +1,15 @@
-import type { DashboardField } from "@bernouy/cms-dashboards";
+import type { DashboardField, DashboardSection } from "@bernouy/cms-dashboards";
 import { resolveExpression } from "../../../../runtime/expressions";
 import type { DetailWidget } from "../fieldState";
 
 export function schemaFields(widget: DetailWidget): Array<Extract<DashboardField, { type: "schema" }>> {
-    return [...widget.main, ...(widget.aside ?? [])]
+    return [...widget.main.filter(isDetailSection), ...(widget.aside ?? [])]
         .flatMap((section) => section.fields)
         .filter((field): field is Extract<DashboardField, { type: "schema" }> => field.type === "schema");
+}
+
+function isDetailSection(item: DetailWidget["main"][number]): item is DashboardSection {
+    return !("widget" in item);
 }
 
 export function schemaKeysDependingOn(widget: DetailWidget, fieldId: string): Set<string> {

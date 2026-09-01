@@ -1,5 +1,12 @@
 import type { Source } from "@bernouy/cms-sources";
-import type { DashboardColumn, DashboardDto, DashboardFilter, DashboardWidget } from "../../interfaces/Dashboard";
+import type {
+    DashboardColumn,
+    DashboardDetailMainItem,
+    DashboardDto,
+    DashboardFilter,
+    DashboardSection,
+    DashboardWidget,
+} from "../../interfaces/Dashboard";
 import { validateAction } from "./actions";
 import { validateDataRef } from "./endpointRefs";
 import { validateSection } from "./fields";
@@ -44,6 +51,7 @@ export function validateDetailWidget(
     path: string,
     dashboard: DashboardDto,
     source: Source | null,
+    widgetIds: Set<string>,
     errors: string[],
 ): void {
     validateDataRef(dashboard, widget.source, `${path}.source`, source, errors);
@@ -54,13 +62,38 @@ export function validateDetailWidget(
         validateAction(action, `${path}.actions.${index}`, dashboard, source, errors, visibilityFieldIds),
     );
     if (!Array.isArray(widget.main) || widget.main.length === 0) {
-        errors.push(`${path}.main must contain at least one section`);
+        errors.push(`${path}.main must contain at least one item`);
     }
     const fieldIds = new Set<string>();
     if (Array.isArray(widget.main)) {
-        widget.main.forEach((section, index) =>
-            validateSection(section, `${path}.main.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds),
-        );
+        widget.main.forEach((item, index) => {
+            const itemPath = `${path}.main.${index}`;
+            const discriminator = (item as { widget?: unknown })?.widget;
+            if (discriminator !== undefined) {
+                if (discriminator !== "w-navigation-list") {
+                    errors.push(`${itemPath}.widget must be w-navigation-list`);
+                    return;
+                }
+                validateNavigationListWidget(
+                    item as Extract<DashboardWidget, { widget: "w-navigation-list" }>,
+                    itemPath,
+                    dashboard,
+                    source,
+                    widgetIds,
+                    errors,
+                );
+                return;
+            }
+            validateSection(
+                item as DashboardSection,
+                itemPath,
+                dashboard,
+                source,
+                fieldIds,
+                errors,
+                visibilityFieldIds,
+            );
+        });
     }
     if (Array.isArray(widget.aside)) {
         widget.aside.forEach((section, index) =>
@@ -76,10 +109,15 @@ function detailFieldIds(widget: Extract<DashboardWidget, { widget: "w-detail" }>
     ];
     return new Set(
         sections
+            .filter(isDetailSection)
             .flatMap((section) => (Array.isArray(section?.fields) ? section.fields : []))
             .map((field) => field?.id)
             .filter(Boolean),
     );
+}
+
+function isDetailSection(item: DashboardDetailMainItem | DashboardSection): item is DashboardSection {
+    return (item as { widget?: unknown })?.widget === undefined;
 }
 
 export function validateNavigationListWidget(

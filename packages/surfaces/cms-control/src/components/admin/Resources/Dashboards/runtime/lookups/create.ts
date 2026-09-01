@@ -1,4 +1,10 @@
-import type { DashboardDto, DashboardField, DashboardOption, DashboardWidget } from "@bernouy/cms-dashboards";
+import type {
+    DashboardDto,
+    DashboardField,
+    DashboardOption,
+    DashboardSection,
+    DashboardWidget,
+} from "@bernouy/cms-dashboards";
 import type { DetailSelection } from "../../domain";
 import type { DashboardSourceGroup } from "../../types";
 import { valueAt } from "../expressions";
@@ -86,13 +92,19 @@ function arrayValue(value: unknown): string[] {
 }
 
 function lookupField(widget: DetailWidget, fieldId: string): LookupField | null {
-    const fields = [...widget.main, ...(widget.aside ?? [])].flatMap((section) => section.fields);
+    const fields = [...widget.main.filter(isDetailSection), ...(widget.aside ?? [])].flatMap(
+        (section) => section.fields,
+    );
     return (
         fields.find(
             (field): field is LookupField =>
                 (field.type === "combobox" || field.type === "tokens") && field.id === fieldId,
         ) ?? null
     );
+}
+
+function isDetailSection(item: DetailWidget["main"][number]): item is DashboardSection {
+    return !("widget" in item);
 }
 
 function endpointMethod(

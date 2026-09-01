@@ -1,7 +1,7 @@
-import type { DashboardAction, DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardAction, DashboardField, DashboardSection, DashboardWidget } from "@bernouy/cms-dashboards";
 
 export type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
-export type MediaField = DetailWidget["main"][number]["fields"][number] & { type: "media" };
+export type MediaField = Extract<DashboardField, { type: "media" }>;
 
 export function findDetailWidget(widgets: DashboardWidget[], id: string): DetailWidget | null {
     for (const widget of widgets) {
@@ -55,11 +55,29 @@ export function findCollectionAction(
                 }
             }
         }
+        if (widget.widget === "w-detail") {
+            const found = findCollectionAction(
+                widget.main.filter(
+                    (item): item is Extract<DashboardWidget, { widget: "w-navigation-list" }> => "widget" in item,
+                ),
+                actionId,
+                widgetId,
+            );
+            if (found) {
+                return found;
+            }
+        }
     }
     return null;
 }
 
 export function findMediaField(widget: DetailWidget, fieldId: string): MediaField | null {
-    const fields = [...widget.main, ...(widget.aside ?? [])].flatMap((section) => section.fields);
+    const fields = [...widget.main.filter(isDetailSection), ...(widget.aside ?? [])].flatMap(
+        (section) => section.fields,
+    );
     return fields.find((field): field is MediaField => field.id === fieldId && field.type === "media") ?? null;
+}
+
+function isDetailSection(item: DetailWidget["main"][number]): item is DashboardSection {
+    return !("widget" in item);
 }

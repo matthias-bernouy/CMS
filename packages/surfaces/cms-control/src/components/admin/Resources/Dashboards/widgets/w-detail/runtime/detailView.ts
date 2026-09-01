@@ -33,8 +33,17 @@ export class DetailView {
     }
 
     private renderSections(root: HTMLElement, sections: WDetailSection[], density?: string): void {
-        root.replaceChildren(...sections.map((section) => this.renderSection(section, density)));
+        root.replaceChildren(...sections.map((section) => this.renderMainItem(section, density)));
         root.hidden = sections.length === 0;
+    }
+
+    private renderMainItem(section: WDetailSection, density?: string): HTMLElement {
+        if (!section.widgetSlot) {
+            return this.renderSection(section, density);
+        }
+        const slot = document.createElement("slot");
+        slot.setAttribute("name", section.widgetSlot);
+        return slot;
     }
 
     private renderSection(section: WDetailSection, density?: string): HTMLElement {
@@ -105,6 +114,7 @@ function sameSectionFields(current: WDetailSection[], next: WDetailSection[]): b
         const nextSection = next[sectionIndex];
         return (
             nextSection !== undefined &&
+            section.widgetSlot === nextSection.widgetSlot &&
             section.fields.length === nextSection.fields.length &&
             section.fields.every((field, fieldIndex) => sameFieldShape(field, nextSection.fields[fieldIndex]))
         );

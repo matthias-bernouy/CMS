@@ -24,8 +24,13 @@ export async function runDashboardWidgetAction(
     if (!group || !dashboard) {
         return;
     }
-    const actionDetail =
-        detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
+    const actionDetail = action.detail
+        ? action.widget
+            ? { collection: action.widget, row: action.row ?? detail?.row ?? "" }
+            : detail
+        : action.widget
+          ? null
+          : detail;
     const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
     const finishAction = once(context.actionCoordinator?.beginAction());
     try {
@@ -50,6 +55,7 @@ export async function runDashboardWidgetAction(
                   action.value,
                   context.groups ?? [group],
                   context.filters?.get(action.widget ?? "") ?? {},
+                  detail ?? undefined,
               );
         if (actionDetail) {
             context.drafts.delete(key);

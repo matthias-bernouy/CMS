@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import type { DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardSection, DashboardWidget } from "@bernouy/cms-dashboards";
 import { detailLookupOptions } from "cms-control/components/admin/Resources/Dashboards/runtime/lookups";
 
 const realFetch = globalThis.fetch;
@@ -134,9 +134,7 @@ describe("dashboard runtime lookup contracts", () => {
     });
 });
 
-function offerDetailWidget(
-    fields: Extract<DashboardWidget, { widget: "w-detail" }>["main"][number]["fields"],
-): Extract<DashboardWidget, { widget: "w-detail" }> {
+function offerDetailWidget(fields: DashboardSection["fields"]): Extract<DashboardWidget, { widget: "w-detail" }> {
     return {
         widget: "w-detail",
         id: "offerDetail",

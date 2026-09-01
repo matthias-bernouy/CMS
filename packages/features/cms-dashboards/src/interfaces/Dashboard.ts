@@ -34,7 +34,9 @@ export {
 export type {
     Dashboard,
     DashboardAction,
+    DashboardDetailMainItem,
     DashboardDefinition,
     DashboardDto,
+    DashboardNavigationListWidget,
     DashboardWidget,
 } from "./dashboard/widgets";

@@ -9,7 +9,7 @@ export function widgetsForSelection(
     projections: readonly DashboardRelationProjection[] = [],
 ): DashboardRuntimeWidget[] {
     if (!detail) {
-        return mainWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
+        return rootWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
     }
     const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
     const details = detailWidgetsFor(dashboard.views, detail.collection).map((widget) =>
@@ -26,7 +26,7 @@ export function validDetailSelection(dashboard: DashboardDto, detail: DetailSele
     return detail && detailWidgetsFor(dashboard.views, detail.collection).length ? detail : null;
 }
 
-function mainWidgetsFor(widgets: DashboardWidget[], detailTargets: ReadonlySet<string>): DashboardWidget[] {
+function rootWidgetsFor(widgets: DashboardWidget[], detailTargets: ReadonlySet<string>): DashboardWidget[] {
     return widgets.flatMap((widget) => {
         if (isDetailWidget(widget)) {
             return detailTargets.has(widget.id) ? [] : [widget];
@@ -35,10 +35,10 @@ function mainWidgetsFor(widgets: DashboardWidget[], detailTargets: ReadonlySet<s
             return [];
         }
         if (widget.widget === "w-section") {
-            return sectionWithChildren(widget, mainWidgetsFor(widget.children, detailTargets));
+            return sectionWithChildren(widget, rootWidgetsFor(widget.children, detailTargets));
         }
         if (widget.widget === "w-tabs") {
-            return tabsWithChildren(widget, (tab) => mainWidgetsFor(tab.children, detailTargets));
+            return tabsWithChildren(widget, (tab) => rootWidgetsFor(tab.children, detailTargets));
         }
         return [widget];
     });
@@ -81,6 +81,14 @@ function detailTargetsFor(widgets: DashboardWidget[]): Set<string> {
 }
 
 function collectDetailTargets(widget: DashboardWidget, targets: Set<string>): void {
+    if (widget.widget === "w-detail") {
+        for (const mainItem of widget.main) {
+            if ("widget" in mainItem) {
+                collectDetailTargets(mainItem, targets);
+            }
+        }
+        return;
+    }
     if (widget.widget === "w-table" || widget.widget === "w-navigation-list") {
         if (widget.selection?.opens) {
             targets.add(widget.selection.opens);

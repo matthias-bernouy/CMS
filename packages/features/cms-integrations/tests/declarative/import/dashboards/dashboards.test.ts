@@ -14,6 +14,29 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         expect(definition.artifacts?.[1]).toEqual(EXPECTED_DELIVERY_DASHBOARD);
     });
 
+    test("parses navigation lists embedded in detail main content", () => {
+        const definition = structuredClone(DELIVERY_DEFINITION) as any;
+        definition.artifacts[1].dashboard.views[0].main.push({
+            widget: "w-navigation-list",
+            id: "relayNavigation",
+            source: { endpoint: "relayPoints", itemsPath: "items" },
+            rowKey: "number",
+            item: { title: { path: "name" } },
+        });
+
+        const parsed = parseIntegrationDefinition(definition);
+        expect((parsed.artifacts?.[1] as any).dashboard.views[0].main[1].widget).toBe("w-navigation-list");
+
+        definition.artifacts[1].dashboard.views[0].main[1] = {
+            widget: "w-table",
+            id: "relayTable",
+            source: { endpoint: "relayPoints", itemsPath: "items" },
+            rowKey: "number",
+            columns: [{ id: "name", label: "Name", path: "name" }],
+        };
+        expect(() => parseIntegrationDefinition(definition)).toThrow(/main\.1\.widget.*w-navigation-list/);
+    });
+
     test("parses safe post-action result resource contracts", () => {
         for (const after of [
             { resource: "$result" },

@@ -31,6 +31,25 @@ export type DashboardAction = {
     visibleWhen?: DashboardVisibilityRule;
 };
 
+export type DashboardNavigationListWidget = {
+    widget: "w-navigation-list";
+    id: string;
+    title?: string;
+    source: DashboardDataRef;
+    rowKey: string;
+    item: {
+        title: DashboardBinding;
+        subtitle?: DashboardBinding;
+        icon?: string;
+        badge?: DashboardBinding;
+    };
+    selection?: { opens?: string };
+    reorderable?: { action: string };
+    actions?: DashboardAction[];
+};
+
+export type DashboardDetailMainItem = DashboardSection | DashboardNavigationListWidget;
+
 export type DashboardWidget =
     | {
           widget: "w-table";
@@ -51,25 +70,10 @@ export type DashboardWidget =
           title?: DashboardBinding;
           status?: DashboardBinding;
           actions?: DashboardAction[];
-          main: DashboardSection[];
+          main: DashboardDetailMainItem[];
           aside?: DashboardSection[];
       }
-    | {
-          widget: "w-navigation-list";
-          id: string;
-          title?: string;
-          source: DashboardDataRef;
-          rowKey: string;
-          item: {
-              title: DashboardBinding;
-              subtitle?: DashboardBinding;
-              icon?: string;
-              badge?: DashboardBinding;
-          };
-          selection?: { opens?: string };
-          reorderable?: { action: string };
-          actions?: DashboardAction[];
-      }
+    | DashboardNavigationListWidget
     | {
           widget: "w-section";
           id: string;

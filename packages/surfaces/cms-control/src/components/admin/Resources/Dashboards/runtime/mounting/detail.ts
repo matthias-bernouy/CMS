@@ -3,6 +3,7 @@ import "../../widgets/w-detail/WDetail";
 import { detailReloadEvent } from "../reload";
 import { relationDetailSectionElement } from "./mountRelations";
 import { appendSourceContent, jsonAttr, requiredSourceParams, sourceWrapper } from "./mountSource";
+import { navigationListElement } from "./navigation";
 
 export function detailElement(
     widget: RuntimeDetailWidget,
@@ -56,6 +57,12 @@ function detailContent(
     }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
+    const selection = { collection: widget.id, row: rowKey };
+    for (const [index, mainItem] of widget.main.entries()) {
+        if ("widget" in mainItem) {
+            element.append(navigationListElement(mainItem, context, selection, `main-widget-${index}`));
+        }
+    }
     for (const relationWidget of widget.relationWidgets ?? []) {
         element.append(relationDetailSectionElement(relationWidget));
     }

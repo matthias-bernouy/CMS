@@ -4,11 +4,12 @@ import {
     type SourceOverlayDashboardField,
     type SourceOverlayField,
 } from "@bernouy/cms-sources";
-import type { DashboardAction, DashboardField, DashboardWidget } from "../../interfaces/Dashboard";
+import type { DashboardAction, DashboardField, DashboardSection, DashboardWidget } from "../../interfaces/Dashboard";
 import { dashboardField, editableFields, joinedPath, normalizedTargetPath, overlayFieldId } from "./fieldHelpers";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
-type DetailSections = DetailWidget["main"];
+type DetailMain = DetailWidget["main"];
+type DetailSections = DashboardSection[];
 
 export function applyDetailSourceOverlay(
     widget: DetailWidget,
@@ -21,7 +22,7 @@ export function applyDetailSourceOverlay(
     );
     let next: DetailWidget = {
         ...widget,
-        main: widget.main.map((section) => ({ ...section, fields: [...section.fields] })),
+        main: widget.main.map((item) => (isDetailSection(item) ? { ...item, fields: [...item.fields] } : item)),
         ...(widget.aside
             ? { aside: widget.aside.map((section) => ({ ...section, fields: [...section.fields] })) }
             : {}),
@@ -32,15 +33,15 @@ export function applyDetailSourceOverlay(
         main: addOverlayDetailTargets(next.main, overlay, outputTargets, inputTargets),
         ...(next.aside ? { aside: applyDashboardFieldOverrides(next.aside, overlay, dashboardId, widget.id) } : {}),
     };
-    return { ...next, main: applyDashboardFieldOverrides(next.main, overlay, dashboardId, widget.id) };
+    return { ...next, main: applyMainFieldOverrides(next.main, overlay, dashboardId, widget.id) };
 }
 
 function addOverlayDetailTargets(
-    sections: DetailSections,
+    sections: DetailMain,
     overlay: SourceOverlay,
     outputTargets: NonNullable<SourceOverlay["output"]>,
     inputTargets: NonNullable<SourceOverlay["input"]>,
-): DetailSections {
+): DetailMain {
     let next = sections;
     for (const target of outputTargets) {
         const pathPrefix = normalizedTargetPath(target.path);
@@ -56,11 +57,11 @@ function addOverlayDetailTargets(
 }
 
 function addOverlayDetailFields(
-    sections: DetailSections,
+    sections: DetailMain,
     overlay: SourceOverlay,
     pathPrefix: string,
     readonly: boolean,
-): DetailSections {
+): DetailMain {
     const fields = readonly ? overlay.fields : overlay.fields.filter((field) => field.adminEditable !== false);
     if (!fields.length) {
         return sections;
@@ -68,14 +69,16 @@ function addOverlayDetailFields(
 
     let next = sections;
     for (const section of groupedDashboardFields(overlay, fields, pathPrefix, readonly)) {
-        const existing = next.find((candidate) => candidate.id === section.id);
+        const existing = next.find(
+            (candidate): candidate is DashboardSection => isDetailSection(candidate) && candidate.id === section.id,
+        );
         if (!existing) {
             next = [...next, section];
             continue;
         }
         const seen = new Set(existing.fields.map((field) => field.id));
         next = next.map((candidate) =>
-            candidate.id === section.id
+            isDetailSection(candidate) && candidate.id === section.id
                 ? {
                       ...candidate,
                       fields: [...candidate.fields, ...section.fields.filter((field) => !seen.has(field.id))],
@@ -84,6 +87,21 @@ function addOverlayDetailFields(
         );
     }
     return next;
+}
+
+function applyMainFieldOverrides(
+    main: DetailMain,
+    overlay: SourceOverlay,
+    dashboardId: string,
+    viewId: string,
+): DetailMain {
+    return main.map((item) =>
+        isDetailSection(item) ? applyDashboardFieldOverrides([item], overlay, dashboardId, viewId)[0]! : item,
+    );
+}
+
+function isDetailSection(item: DetailMain[number]): item is DashboardSection {
+    return !("widget" in item);
 }
 
 function groupedDashboardFields(

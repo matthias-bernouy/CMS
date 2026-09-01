@@ -1,4 +1,4 @@
-import type { DashboardAction, DashboardField, DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardAction, DashboardField, DashboardSection, DashboardWidget } from "@bernouy/cms-dashboards";
 import type { WDetailData, WDetailSection } from "../../widgets/w-detail/types";
 import { matchesDashboardVisibility, textAt, valueAt } from "../expressions";
 import { detailField } from "./fields";
@@ -25,31 +25,50 @@ export function detailData(
         actions: (widget.actions ?? [])
             .filter((action) => matchesDashboardVisibility(action.visibleWhen, { fields, resource }))
             .map(actionData),
-        main: sections(widget.main, resource, fields, options, sourceId, schemas),
+        main: widget.main.map((item, index) =>
+            "widget" in item
+                ? { title: "", fields: [], widgetSlot: `main-widget-${index}` }
+                : section(item, resource, fields, options, sourceId, schemas),
+        ),
         aside: sections(widget.aside ?? [], resource, fields, options, sourceId, schemas),
     };
 }
 
 export function fieldValues(widget: DetailWidget, resource: unknown): Record<string, unknown> {
-    const all = [...widget.main, ...(widget.aside ?? [])].flatMap((section) => section.fields);
+    const all = [...widget.main.filter(isDetailSection), ...(widget.aside ?? [])].flatMap((section) => section.fields);
     return Object.fromEntries(all.map((field) => [field.id, valueAt(resource, field.path)]));
 }
 
 function sections(
-    sections: DetailWidget["main"],
+    sections: DashboardSection[],
     resource: unknown,
     fields: Record<string, unknown>,
     options: DetailOptions,
     sourceId: string,
     schemas: DetailSchemas,
 ): WDetailSection[] {
-    return sections.map((section) => ({
+    return sections.map((item) => section(item, resource, fields, options, sourceId, schemas));
+}
+
+function section(
+    section: DashboardSection,
+    resource: unknown,
+    fields: Record<string, unknown>,
+    options: DetailOptions,
+    sourceId: string,
+    schemas: DetailSchemas,
+): WDetailSection {
+    return {
         title: section.title,
         ...(section.description ? { description: section.description } : {}),
         fields: section.fields
             .filter((field) => matchesDashboardVisibility(field.visibleWhen, { fields, resource }))
             .map((field) => detailField(field, resource, fields, options, sourceId, schemas)),
-    }));
+    };
+}
+
+function isDetailSection(item: DetailWidget["main"][number]): item is DashboardSection {
+    return !("widget" in item);
 }
 
 function actionData(action: DashboardAction): WDetailData["actions"][number] {

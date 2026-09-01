@@ -1,11 +1,11 @@
-import type { DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardDetailMainItem, DashboardWidget } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../definition/values";
 import { requiredText } from "../common";
 import { parseActions, parseSelection } from "./actions";
 import { parseColumns, parseFilters } from "./columns";
 import { parseDataRef } from "./refs";
-import { parseSections } from "./fields";
+import { parseSection, parseSections } from "./fields";
 
 export function parseWidget(value: unknown, name: string): DashboardWidget {
     if (!isRecord(value)) {
@@ -59,7 +59,7 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
             ...(isRecord(value.title) ? { title: parseBinding(value.title, `${name}.title`) } : {}),
             ...(isRecord(value.status) ? { status: parseBinding(value.status, `${name}.status`) } : {}),
             ...(value.actions !== undefined ? { actions: parseActions(value.actions, `${name}.actions`) } : {}),
-            main: parseSections(value.main, `${name}.main`),
+            main: parseDetailMain(value.main, `${name}.main`),
             ...(value.aside !== undefined ? { aside: parseSections(value.aside, `${name}.aside`) } : {}),
         };
     }
@@ -85,6 +85,23 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
         };
     }
     throw new IntegrationInputError(`${name}.widget`, "must be a supported dashboard widget");
+}
+
+function parseDetailMain(value: unknown, name: string): DashboardDetailMainItem[] {
+    if (!Array.isArray(value)) {
+        throw new IntegrationInputError(name, "must be an array");
+    }
+    return value.map((entry, index) => {
+        const itemName = `${name}.${index}`;
+        if (!isRecord(entry) || entry.widget === undefined) {
+            return parseSection(entry, itemName);
+        }
+        const widget = parseWidget(entry, itemName);
+        if (widget.widget !== "w-navigation-list") {
+            throw new IntegrationInputError(`${itemName}.widget`, "must be w-navigation-list");
+        }
+        return widget;
+    });
 }
 
 function parseWidgetArray(value: unknown, name: string): DashboardWidget[] {

@@ -35,7 +35,7 @@ export function parseFields(value: unknown, name: string): DashboardField[] {
     return fields;
 }
 
-function parseSection(value: unknown, name: string): DashboardSection {
+export function parseSection(value: unknown, name: string): DashboardSection {
     if (!isRecord(value)) {
         throw new IntegrationInputError(name, "must be an object");
     }

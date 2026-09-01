@@ -9,23 +9,30 @@ export function collectWidgetIds(
     widgetIds: Set<string>,
     errors: string[],
 ): void {
-    widgets.forEach((widget, index) => {
-        const widgetPath = `${path}.${index}`;
-        validateRequiredId(`${widgetPath}.id`, widget.id, errors);
-        if (widget.id) {
-            if (widgetIds.has(widget.id)) {
-                errors.push(`duplicate widget id "${widget.id}"`);
+    widgets.forEach((widget, index) => collectWidgetId(widget, `${path}.${index}`, widgetIds, errors));
+}
+
+function collectWidgetId(widget: DashboardWidget, path: string, widgetIds: Set<string>, errors: string[]): void {
+    validateRequiredId(`${path}.id`, widget.id, errors);
+    if (widget.id) {
+        if (widgetIds.has(widget.id)) {
+            errors.push(`duplicate widget id "${widget.id}"`);
+        }
+        widgetIds.add(widget.id);
+    }
+    if (widget.widget === "w-section") {
+        collectWidgetIds(widget.children, `${path}.children`, widgetIds, errors);
+    } else if (widget.widget === "w-tabs") {
+        widget.tabs.forEach((tab, tabIndex) =>
+            collectWidgetIds(tab.children, `${path}.tabs.${tabIndex}.children`, widgetIds, errors),
+        );
+    } else if (widget.widget === "w-detail" && Array.isArray(widget.main)) {
+        widget.main.forEach((item, index) => {
+            if ((item as { widget?: unknown })?.widget !== undefined) {
+                collectWidgetId(item as DashboardWidget, `${path}.main.${index}`, widgetIds, errors);
             }
-            widgetIds.add(widget.id);
-        }
-        if (widget.widget === "w-section") {
-            collectWidgetIds(widget.children, `${widgetPath}.children`, widgetIds, errors);
-        } else if (widget.widget === "w-tabs") {
-            widget.tabs.forEach((tab, tabIndex) =>
-                collectWidgetIds(tab.children, `${widgetPath}.tabs.${tabIndex}.children`, widgetIds, errors),
-            );
-        }
-    });
+        });
+    }
 }
 
 export function validateWidget(
@@ -53,6 +60,7 @@ export function validateWidget(
                 path,
                 dashboard,
                 source,
+                widgetIds,
                 errors,
             );
             break;

@@ -115,6 +115,7 @@ export type WDetailSection = {
     title: string;
     description?: string;
     fields: WDetailField[];
+    widgetSlot?: string;
 };
 
 export type WDetailData = {

@@ -89,7 +89,7 @@ describe("dashboard visibility", () => {
         const dashboard = detailDashboard({ value: "$field.mode", equals: "advanced" });
         (dashboard.views[0] as unknown as { main: unknown }).main = {};
 
-        expect(validateDashboard(dashboard)).toContain("views.0.main must contain at least one section");
+        expect(validateDashboard(dashboard)).toContain("views.0.main must contain at least one item");
     });
 
     test("evaluates expressions strictly and fails closed", () => {

@@ -15,6 +15,17 @@ cms-shell-detail {
     min-width: 0;
 }
 
+.w-detail-main > slot {
+    display: contents;
+}
+
+.w-detail-main > slot::slotted(*) {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+}
+
 .w-detail-actions p9r-button {
     --_btn-padding-y: 0.48rem;
     --_btn-padding-x: 0.82rem;

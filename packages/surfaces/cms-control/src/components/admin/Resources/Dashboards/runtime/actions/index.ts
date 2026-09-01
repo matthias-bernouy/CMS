@@ -51,6 +51,7 @@ export async function executeDashboardTableAction(
     value?: unknown,
     groups: DashboardSourceGroup[] = [group],
     filters: Readonly<Record<string, string>> = {},
+    detail?: DetailSelection,
 ): Promise<DashboardActionResult> {
     const action = findCollectionAction(dashboard.views, actionId, widgetId);
     if (!action) {
@@ -59,7 +60,18 @@ export async function executeDashboardTableAction(
     if (!action.endpoint) {
         throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
-    return executeEndpointAction(group, groups, action, { filters: { ...filters }, value });
+    return executeEndpointAction(group, groups, action, {
+        filters: { ...filters },
+        value,
+        ...(detail
+            ? {
+                  selection: {
+                      id: detail.row,
+                      [detail.collection]: { id: detail.row },
+                  },
+              }
+            : {}),
+    });
 }
 
 export async function executeDashboardMediaAction(
