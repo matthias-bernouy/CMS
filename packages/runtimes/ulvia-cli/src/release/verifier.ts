@@ -1,4 +1,5 @@
 import type { LocalReleaseVerificationInput, LocalReleaseVerifier } from "./types";
+import { runAuthorTests } from "./author-tests";
 import { runReleaseScenario } from "./sandbox/scenario";
 
 export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
@@ -7,6 +8,9 @@ export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
     async verify(input: LocalReleaseVerificationInput): Promise<void> {
         const packages = [input.candidate, ...input.baselines, ...input.availablePackages];
         const coordinate = `${input.candidate.package.envelope.kind}@${input.candidate.package.envelope.version}`;
+        if (await runAuthorTests(input.sourceRoot)) {
+            this.log(`✓ source tests passed for ${coordinate}`);
+        }
         this.log(`… verifying fresh installation of ${coordinate}`);
         await runReleaseScenario({ target: input.candidate, packages });
         for (const baseline of input.baselines) {

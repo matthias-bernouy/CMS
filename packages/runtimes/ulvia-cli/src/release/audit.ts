@@ -89,6 +89,11 @@ export async function auditPreparedLocalRelease(
         dependencies.remote,
         dependencies.log,
     );
-    await dependencies.verifier.verify({ candidate, baselines, availablePackages });
+    await dependencies.verifier.verify({
+        candidate,
+        sourceRoot: candidate.integrationRoot,
+        baselines,
+        availablePackages,
+    });
     return { prepared, compatibility, scenarioCount: 1 + baselines.length };
 }

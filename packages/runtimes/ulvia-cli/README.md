@@ -23,17 +23,18 @@ bun run ulvia -- dev stop
 
 `audit` discovers integration sources below the working directory (or `--root`),
 builds canonical packages, and compares them with immutable repository
-baselines. It verifies a fresh installation and an upgrade from each older,
-installable version in disposable CMS, MongoDB, and Supabase services. Required
-legacy connector baselines are explicitly adopted before migration. `audit`
-never stores the candidate package. It may pull missing immutable baselines and
+baselines. It first runs the integration-owned Bun suites under `tests/`, then
+verifies a fresh installation and an upgrade from each older, installable
+version in disposable CMS, MongoDB, and Supabase services. Required legacy
+connector baselines are explicitly adopted before migration. `audit` never
+stores the candidate package. It may pull missing immutable baselines and
 dependencies into the persistent local repository.
 
-This runtime audit currently proves package compatibility plus real resource
-application, fresh installation, and upgrades. General workspace unit tests are
-not copied into the local repository, and author-owned business verification
-suites are not yet part of this command. Those suites need a separate immutable
-verification bundle bound to the package and baseline digests.
+This audit proves package compatibility, integration-owned source behavior,
+real resource application, fresh installation, and upgrades. Source tests are
+authoring inputs: they are executed from the current source tree but never
+copied into runtime package bytes. Persisting their exact release evidence as a
+separate immutable verification bundle remains a later publication milestone.
 
 `release` uses the same audit engine and stores the candidate only after every
 scenario succeeds. A source coordinate already present locally or remotely is a
@@ -45,13 +46,12 @@ immutable `kind@version` references make corruption or coordinate reuse visible.
 
 ## Source history transition
 
-Source discovery still accepts the existing versioned integration indexes. The
-target layout is one current authoring tree per integration, while immutable
-local and remote repositories retain released history. Historical source
-directories must not be removed until their published package digests are
-recoverable and the authoring manifest can live outside the packaged bytes.
-Moving files alone must preserve the package digest and never justify a SemVer
-bump.
+Source discovery accepts both legacy versioned indexes and one current
+authoring tree per integration. A current tree uses `path: "."`; its
+`integration.json`, `tests/`, and `.registry/` roots are excluded from runtime
+package bytes. Immutable local and remote repositories retain released history.
+A historical source directory can be removed only after its exact package is
+recoverable from a repository.
 
 ## Persistent data
 

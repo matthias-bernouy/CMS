@@ -6,6 +6,7 @@ export type CommandResult = Readonly<{
 
 export type RunCommandOptions = Readonly<{
     cwd?: string;
+    env?: Record<string, string | undefined>;
     inherit?: boolean;
     allowFailure?: boolean;
 }>;
@@ -21,6 +22,7 @@ export async function runCommand(command: readonly string[], options: RunCommand
     const inherit = options.inherit ?? false;
     const subprocess = Bun.spawn([...command], {
         ...(options.cwd ? { cwd: options.cwd } : {}),
+        ...(options.env ? { env: options.env } : {}),
         stdin: inherit ? "inherit" : "ignore",
         stdout: inherit ? "inherit" : "pipe",
         stderr: inherit ? "inherit" : "pipe",

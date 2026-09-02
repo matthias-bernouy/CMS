@@ -29,27 +29,18 @@ describe("official integration Theme contracts", () => {
     });
 
     test("binds Photo Albums card settings to namespaced Theme variables", async () => {
-        const legacy = await repository().get("photo-albums", "1.0.0");
-        const target = await repository().get("photo-albums", "1.1.0");
-        const legacyTokens = legacy?.theme?.categories.flatMap((category) => category.tokens) ?? [];
-        const targetTokens = target?.theme?.categories.flatMap((category) => category.tokens) ?? [];
-        const legacyList = await resource("domains/photo-albums/versions/1.0.0/blocs/photo-album-list/default.html");
-        const legacyGallery = await resource(
-            "domains/photo-albums/versions/1.0.0/blocs/photo-album-gallery/default.html",
-        );
-        const list = await resource("domains/photo-albums/versions/1.1.0/blocs/photo-album-list/default.html");
-        const gallery = await resource("domains/photo-albums/versions/1.1.0/blocs/photo-album-gallery/default.html");
+        const definition = await repository().get("photo-albums");
+        const tokens = definition?.theme?.categories.flatMap((category) => category.tokens) ?? [];
+        const list = await resource("domains/photo-albums/blocs/photo-album-list/default.html");
+        const gallery = await resource("domains/photo-albums/blocs/photo-album-gallery/default.html");
 
-        expect(targetTokens).toEqual(legacyTokens);
-        expect(list).toBe(legacyList);
-        expect(gallery).toBe(legacyGallery);
-        expect(targetTokens.map((token) => token.id)).toEqual([
+        expect(tokens.map((token) => token.id)).toEqual([
             "card-background",
             "card-border",
             "card-text",
             "card-muted-text",
         ]);
-        expect(targetTokens.every((token) => token.defaults.light.startsWith("var(--"))).toBeTrue();
+        expect(tokens.every((token) => token.defaults.light.startsWith("var(--"))).toBeTrue();
         expect(list).toContain('background-color="var(--integration-photo-albums-card-background');
         expect(list).toContain('muted-text-color="var(--integration-photo-albums-card-muted-text');
         expect(gallery).toContain('background-color="var(--integration-photo-albums-card-background');

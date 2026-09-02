@@ -8,6 +8,7 @@ export type LocalReleasePackage = Readonly<{
 
 export type LocalReleaseVerificationInput = Readonly<{
     candidate: LocalReleasePackage;
+    sourceRoot: string;
     baselines: readonly LocalReleasePackage[];
     availablePackages: readonly LocalReleasePackage[];
 }>;

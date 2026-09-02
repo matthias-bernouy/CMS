@@ -1,8 +1,0 @@
-{
-    "$files": [
-        "albums/root.json",
-        "categories/root.json",
-        "media/root.json",
-        "settings.json"
-    ]
-}

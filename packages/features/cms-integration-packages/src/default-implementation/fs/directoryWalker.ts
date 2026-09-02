@@ -5,6 +5,7 @@ import { isAbsolute, join, relative, sep } from "node:path";
 import type { IntegrationPackageFileV1, IntegrationPackageLimits } from "../../interfaces/envelope";
 import type { CanonicalFile, CanonicalFileSet, CanonicalFileSetLimits } from "../../interfaces/fileSet";
 import { readBoundedRegularFile } from "./boundedFile";
+import { assertPackagePathSegment, validateRootExclusions } from "./pathValidation";
 
 type WalkState = {
     decodedBytes: number;
@@ -13,19 +14,25 @@ type WalkState = {
     output: CanonicalFileSet;
 };
 
+export type ReadCanonicalFileSetDirectoryOptions = Readonly<{
+    excludeRootEntries?: readonly string[];
+}>;
+
 const utf8 = new TextEncoder();
 const strictUtf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
 export async function readIntegrationPackageFiles(
     requestedRoot: string,
     limits: Readonly<IntegrationPackageLimits>,
+    options: ReadCanonicalFileSetDirectoryOptions = {},
 ): Promise<Record<string, IntegrationPackageFileV1>> {
-    return readCanonicalFileSetDirectory(requestedRoot, limits);
+    return readCanonicalFileSetDirectory(requestedRoot, limits, options);
 }
 
 export async function readCanonicalFileSetDirectory(
     requestedRoot: string,
     limits: Readonly<CanonicalFileSetLimits>,
+    options: ReadCanonicalFileSetDirectoryOptions = {},
 ): Promise<CanonicalFileSet> {
     const rootStats = await lstat(requestedRoot);
     if (rootStats.isSymbolicLink()) {
@@ -43,7 +50,8 @@ export async function readCanonicalFileSetDirectory(
         files: 0,
         output: Object.create(null) as CanonicalFileSet,
     };
-    await walkDirectory(root, root, "", 0, state, limits);
+    const excludedRootEntries = validateRootExclusions(options.excludeRootEntries, limits);
+    await walkDirectory(root, root, "", 0, state, limits, excludedRootEntries);
     assertStableEntry(canonicalRootStats, await lstat(root), ".");
     return state.output;
 }
@@ -55,6 +63,7 @@ async function walkDirectory(
     depth: number,
     state: WalkState,
     limits: Readonly<IntegrationPackageLimits>,
+    excludedRootEntries: ReadonlySet<string>,
 ): Promise<void> {
     const canonicalDirectory = await realpath(directory);
     assertWithinRoot(root, canonicalDirectory, prefix || ".");
@@ -64,7 +73,10 @@ async function walkDirectory(
     }
     const entries = await readBoundedEntries(canonicalDirectory, state, limits);
     for (const entry of entries) {
-        assertSegment(entry.name, limits);
+        assertPackagePathSegment(entry.name, limits);
+        if (depth === 0 && excludedRootEntries.has(entry.name)) {
+            continue;
+        }
         const entryDepth = depth + 1;
         if (entryDepth > limits.maxDepth) {
             throw new Error(
@@ -88,7 +100,7 @@ async function walkDirectory(
             if (state.directories > limits.maxDirectories) {
                 throw new Error(`Integration package exceeds ${limits.maxDirectories} directories: ${packagePath}`);
             }
-            await walkDirectory(root, canonicalEntry, packagePath, entryDepth, state, limits);
+            await walkDirectory(root, canonicalEntry, packagePath, entryDepth, state, limits, excludedRootEntries);
             continue;
         }
         state.files += 1;
@@ -124,15 +136,6 @@ function encodeFile(bytes: Uint8Array): CanonicalFile {
         return { encoding: "utf8", content: strictUtf8.decode(bytes) };
     } catch {
         return { encoding: "base64", content: Buffer.from(bytes).toString("base64") };
-    }
-}
-
-function assertSegment(segment: string, limits: Readonly<IntegrationPackageLimits>): void {
-    if (!segment || segment === "." || segment === ".." || segment.includes("\\") || segment.includes("\0")) {
-        throw new Error(`Invalid integration package path segment: ${JSON.stringify(segment)}`);
-    }
-    if (utf8.encode(segment).byteLength > limits.maxSegmentBytes) {
-        throw new Error(`Integration package path segment exceeds ${limits.maxSegmentBytes} UTF-8 bytes: ${segment}`);
     }
 }
 

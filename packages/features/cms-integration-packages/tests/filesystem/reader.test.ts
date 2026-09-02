@@ -103,4 +103,20 @@ describe("filesystem integration package reader", () => {
         expect(result.envelope.files.__proto__).toEqual({ encoding: "utf8", content: "safe prototype" });
         expect(result.envelope.files.constructor).toEqual({ encoding: "utf8", content: "safe constructor" });
     });
+
+    test("excludes explicitly selected authoring roots from runtime bytes", async () => {
+        const root = createVersionRoot();
+        writeText(root, "integration.json", '{"kind":"demo"}');
+        writeText(root, "tests/checks/runtime.test.ts", "throw new Error('authoring only');");
+
+        const result = await readIntegrationPackageDirectory({
+            ...readerOptions(root),
+            excludeRootEntries: ["integration.json", "tests"],
+        });
+
+        expect(Object.keys(result.envelope.files)).toEqual(["definition.json", "release-notes.md"]);
+        await expect(
+            readIntegrationPackageDirectory({ ...readerOptions(root), excludeRootEntries: ["../tests"] }),
+        ).rejects.toThrow(/single path segment/);
+    });
 });

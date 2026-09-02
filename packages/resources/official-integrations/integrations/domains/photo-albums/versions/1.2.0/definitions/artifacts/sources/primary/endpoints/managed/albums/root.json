@@ -1,8 +1,0 @@
-{
-    "$files": [
-        "list.json",
-        "detail.json",
-        "upsert.json",
-        "lifecycle.json"
-    ]
-}

@@ -1,0 +1,14 @@
+Photo Albums 2.0.0
+
+Uploads and replacements now declare their public image outputs to CmsCore, so
+the persistent image worker prepares every bounded responsive WebP variant
+before the first gallery visit. Removal responses and the replacement request's
+previous photo identity invalidate the corresponding media index entries.
+
+This release includes the optional photo attribution storage introduced in
+1.1.0. Existing installations therefore keep the same additive migration path,
+with no destructive schema change and no client-side service credential.
+
+The major version records the newly declared Basic Blocs dependency. Runtime
+resources now live directly in the integration source directory; immutable
+release history remains the responsibility of the integration repository.

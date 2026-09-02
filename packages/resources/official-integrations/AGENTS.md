@@ -1,20 +1,22 @@
 # @bernouy/cms-official-integrations
 
-Local repository of official CmsCore integration resources.
+Authoring sources for official CmsCore integrations.
 
 ## Boundaries
 
-- This package stores versioned integration resource files: manifests, source
-  contracts, typed declarative definitions, connector blueprints, SQL, Edge
-  Functions, and docs. The root `index.ts` may expose resource path constants
-  only.
+- Each integration directory owns its current runtime resources, manifest,
+  release notes, and release verification tests. The root `index.ts` may expose
+  resource path constants only.
 - This package may depend on feature contracts to express resources, but it must
   not import surfaces or runtimes.
 - Do not add runtime installation logic, HTTP handlers, database adapters, or
   surface imports here.
-- Keep provider-specific assets under `versions/<semver>/connectors/<provider>/`.
-- Keep cross-version metadata at the integration root. Keep version-specific
-  assets under `versions/<semver>/`.
+- Keep provider-specific assets under `connectors/<provider>/`.
+- Keep immutable historical versions in integration repositories, not in the
+  authoring source tree.
+- Keep release-owned tests under the integration's `tests/` directory. Those
+  tests, `integration.json`, and `.registry/` are authoring inputs and must not
+  enter runtime package bytes.
 
 ## Rules
 

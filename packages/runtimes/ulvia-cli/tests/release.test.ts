@@ -7,7 +7,12 @@ import { parseIntegrationDefinition } from "@bernouy/cms-integrations";
 import { runCli } from "../src/cli";
 import { assertLocalCompatibility, evaluateLocalCompatibility } from "../src/release/compatibility";
 import type { LocalReleasePackage, LocalReleaseVerifier } from "../src/release/types";
-import { integrationDefinition, removeReadonlyTree, writeIntegrationSource } from "./fixtures";
+import {
+    integrationDefinition,
+    removeReadonlyTree,
+    writeDirectIntegrationSource,
+    writeIntegrationSource,
+} from "./fixtures";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -81,6 +86,30 @@ describe("local integration releases", () => {
 
         expect(verified).toEqual(["alpha", "beta"]);
         expect(await Bun.file(join(data, "repository", "catalog.json")).exists()).toBeFalse();
+    });
+
+    test("packages a direct source tree without authoring metadata or tests", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        await writeDirectIntegrationSource(source);
+        let files: readonly string[] = [];
+
+        await runCli(["audit", "demo"], {
+            environment: {
+                ULVIA_DATA_DIR: join(root, "data"),
+                ULVIA_REPOSITORY_URL: "http://repository.example.test/.cms/repository",
+            },
+            cwd: source,
+            repositoryFetch: emptyRemote,
+            releaseVerifier: {
+                verify: async ({ candidate }) => {
+                    files = Object.keys(candidate.package.envelope.files);
+                },
+            },
+            log: () => undefined,
+        });
+
+        expect(files).toEqual(["definition.json", "release-notes.txt"]);
     });
 
     test("rejects a breaking patch before runtime verification", async () => {

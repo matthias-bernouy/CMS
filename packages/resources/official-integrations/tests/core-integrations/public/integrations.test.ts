@@ -18,7 +18,7 @@ import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
 import { stripeWebhookProvisioner } from "../../helpers/stripeWebhookProvisioner";
 
-describe("public integrations 1.0.0", () => {
+describe("public integrations", () => {
     test.each([
         {
             kind: "consent",
@@ -326,6 +326,11 @@ export async function importScenario(kind: string, answers: Record<string, Integ
             sourceOverlays,
             installations,
             connectorDeployers: [deployer],
+            connectorInstanceIds: Object.fromEntries(
+                (definition.connectors ?? [])
+                    .filter((connector) => connector.migration)
+                    .map((connector, index) => [connector.connectorKey ?? connector.provider, `${kind}-test-${index}`]),
+            ),
             provisioners: [stripeWebhookProvisioner()],
             blocs: {
                 async importBloc(artifact) {

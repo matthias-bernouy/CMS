@@ -1,7 +1,0 @@
-{
-    "$files": [
-        "endpoints/public/root.json",
-        "endpoints/managed/root.json",
-        "endpoints/system.json"
-    ]
-}

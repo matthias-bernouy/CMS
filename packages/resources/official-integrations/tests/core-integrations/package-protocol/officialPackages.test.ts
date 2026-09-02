@@ -23,6 +23,7 @@ describe("official integration package protocol", () => {
                     version: entry.version,
                     definition,
                     releaseNotes,
+                    ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
                 });
                 const second = await readIntegrationPackageDirectory({
                     root: versionRoot,
@@ -30,6 +31,7 @@ describe("official integration package protocol", () => {
                     version: entry.version,
                     definition,
                     releaseNotes,
+                    ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
                 });
 
                 expect(first.envelope).toMatchObject({
@@ -46,8 +48,8 @@ describe("official integration package protocol", () => {
         }
 
         expect(indexPaths).toHaveLength(19);
-        expect(versions).toBe(22);
-        expect(digests.size).toBe(22);
+        expect(versions).toBe(20);
+        expect(digests.size).toBe(20);
     });
 });
 

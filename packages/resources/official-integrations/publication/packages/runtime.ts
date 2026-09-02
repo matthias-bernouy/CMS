@@ -44,6 +44,7 @@ export async function buildOfficialIntegrationPackages(
                 version: entry.version,
                 definition: portableRelative(versionRoot, definitionPath),
                 releaseNotes: await officialReleaseNotesPath(versionRoot),
+                ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
             });
             const definition = await definitions.get(index.kind, entry.version);
             if (!definition) {

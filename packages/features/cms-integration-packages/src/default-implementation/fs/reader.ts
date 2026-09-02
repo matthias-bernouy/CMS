@@ -24,6 +24,8 @@ export type ReadIntegrationPackageDirectoryOptions = {
      * while still comparing every decoded byte with the directory contents.
      */
     expectedEnvelope?: IntegrationPackageEnvelopeV1;
+    /** Authoring-only root entries which must not become runtime package bytes. */
+    excludeRootEntries?: readonly string[];
     limits?: Partial<IntegrationPackageLimits>;
 };
 
@@ -40,7 +42,9 @@ export async function readIntegrationPackageDirectory(
         throw new Error("Integration package release notes are required unless the package is marked as legacy");
     }
     const limits = resolveIntegrationPackageLimits(options.limits);
-    const files = await readIntegrationPackageFiles(options.root, limits);
+    const files = await readIntegrationPackageFiles(options.root, limits, {
+        excludeRootEntries: options.excludeRootEntries,
+    });
     const envelope = options.expectedEnvelope
         ? validateExpectedEnvelope(options, files, limits)
         : validateIntegrationPackageEnvelope(

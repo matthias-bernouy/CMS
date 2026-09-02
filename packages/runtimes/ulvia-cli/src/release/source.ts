@@ -49,6 +49,7 @@ export async function readLocalReleaseSource(
         version: entry.version,
         definition,
         releaseNotes,
+        ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
     });
     const parsedDefinition = await new FsIntegrationDefinitionRepository(await realpath(searchRoot)).get(
         kind,
