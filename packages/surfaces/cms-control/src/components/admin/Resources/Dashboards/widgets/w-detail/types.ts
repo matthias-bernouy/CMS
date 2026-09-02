@@ -9,6 +9,11 @@ type WDetailNestedFieldBase = {
     path: string;
     width?: string;
     format?: "text" | "badge" | "date" | "money";
+    lookupKey?: string;
+    remoteSearch?: boolean;
+    remotePagination?: boolean;
+    lookupLoading?: boolean;
+    lookupHasMore?: boolean;
 };
 
 export type WDetailTableColumn = WDetailNestedFieldBase &
@@ -44,6 +49,11 @@ type WDetailReorderableListFieldBase = {
     required?: boolean;
     placeholder?: string;
     secondary?: boolean;
+    lookupKey?: string;
+    remoteSearch?: boolean;
+    remotePagination?: boolean;
+    lookupLoading?: boolean;
+    lookupHasMore?: boolean;
 };
 
 export type WDetailReorderableListField = WDetailReorderableListFieldBase &
@@ -112,6 +122,11 @@ export type WDetailField = {
     allowDecimals?: boolean;
     creatable?: boolean;
     accept?: string;
+    lookupKey?: string;
+    remoteSearch?: boolean;
+    remotePagination?: boolean;
+    lookupLoading?: boolean;
+    lookupHasMore?: boolean;
 };
 
 export type WDetailSection = {

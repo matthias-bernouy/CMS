@@ -24,11 +24,13 @@ export function tableColumn(
         return { ...base, editable: true, type, options: (column.options ?? []).map(optionData) };
     }
     if (type === "combobox") {
+        const key = nestedLookupKey(fieldId, column.id);
         return {
             ...base,
             editable: true,
             type,
-            options: optionList(column.options, options[nestedLookupKey(fieldId, column.id)] ?? []),
+            options: optionList(column.options, options[key] ?? []),
+            ...lookupMetadata(key, column.lookup),
         };
     }
     return { ...base, editable: true, type };
@@ -52,7 +54,34 @@ export function reorderableField(
         return { ...base, type, options: (field.options ?? []).map(optionData) };
     }
     if (type === "combobox") {
-        return { ...base, type, options: optionList(field.options, options[nestedLookupKey(fieldId, field.id)] ?? []) };
+        const key = nestedLookupKey(fieldId, field.id);
+        return {
+            ...base,
+            type,
+            options: optionList(field.options, options[key] ?? []),
+            ...lookupMetadata(key, field.lookup),
+        };
     }
     return { ...base, type };
+}
+
+function lookupMetadata(
+    lookupKey: string,
+    lookup: { params?: Record<string, string> } | undefined,
+): {
+    lookupKey?: string;
+    remoteSearch?: boolean;
+    remotePagination?: boolean;
+} {
+    if (!lookup) {
+        return {};
+    }
+    const expressions = Object.values(lookup.params ?? {});
+    const remoteSearch = expressions.includes("$search");
+    const remotePagination = expressions.includes("$limit") && expressions.includes("$offset");
+    return {
+        lookupKey,
+        ...(remoteSearch ? { remoteSearch: true } : {}),
+        ...(remotePagination ? { remotePagination: true } : {}),
+    };
 }

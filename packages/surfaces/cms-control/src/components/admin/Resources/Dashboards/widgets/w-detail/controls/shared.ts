@@ -7,6 +7,19 @@ export function bindFieldControl(control: HTMLElement, field: WDetailField): voi
     control.dataset.fieldControl = field.id;
 }
 
+export function applyRemoteLookupMetadata(
+    control: HTMLElement,
+    field: Pick<WDetailField, "lookupKey" | "remoteSearch" | "remotePagination" | "lookupLoading" | "lookupHasMore">,
+): void {
+    if (field.lookupKey) {
+        control.dataset.lookupTarget = field.lookupKey;
+    }
+    control.toggleAttribute("remote-search", field.remoteSearch === true);
+    control.toggleAttribute("remote-pagination", field.remotePagination === true);
+    control.toggleAttribute("loading", field.lookupLoading === true);
+    control.toggleAttribute("has-more", field.lookupHasMore === true);
+}
+
 export function optionElement(option: { label: string; value: string }, value: string): HTMLOptionElement {
     const element = document.createElement("option");
     element.value = option.value;

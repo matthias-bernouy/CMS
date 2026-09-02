@@ -35,6 +35,8 @@ export class DetailEvents {
         this.root.addEventListener("focusin", this.onFocusIn);
         this.root.addEventListener("input", this.onInput);
         this.root.addEventListener("change", this.onChange);
+        this.root.addEventListener("combobox-search", this.onComboboxSearch as EventListener);
+        this.root.addEventListener("combobox-load-more", this.onComboboxLoadMore);
         this.root.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
         this.bound = true;
     }
@@ -44,6 +46,8 @@ export class DetailEvents {
         this.root.removeEventListener("focusin", this.onFocusIn);
         this.root.removeEventListener("input", this.onInput);
         this.root.removeEventListener("change", this.onChange);
+        this.root.removeEventListener("combobox-search", this.onComboboxSearch as EventListener);
+        this.root.removeEventListener("combobox-load-more", this.onComboboxLoadMore);
         this.root.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
         this.bound = false;
     }
@@ -122,6 +126,21 @@ export class DetailEvents {
         this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
         updateDerivedTables(control.dataset.fieldControl ?? "", this.fields);
         this.afterFieldChange(control.dataset.fieldControl ?? "");
+    };
+
+    private onComboboxSearch = (event: CustomEvent<{ query?: unknown }>): void => {
+        const control = findEventTarget(event, "[data-lookup-target]");
+        const query = typeof event.detail?.query === "string" ? event.detail.query.slice(0, 200) : "";
+        if (control?.dataset.lookupTarget) {
+            this.lookups.search(control.dataset.lookupTarget, query, control);
+        }
+    };
+
+    private onComboboxLoadMore = (event: Event): void => {
+        const control = findEventTarget(event, "[data-lookup-target]");
+        if (control?.dataset.lookupTarget) {
+            this.lookups.loadMore(control.dataset.lookupTarget, control);
+        }
     };
 
     private onMediaAction = (event: CustomEvent<DashboardMediaActionDetail>): void => {

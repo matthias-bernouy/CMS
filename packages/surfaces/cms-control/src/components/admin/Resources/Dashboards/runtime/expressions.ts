@@ -12,6 +12,9 @@ export type RuntimeVars = {
     media?: unknown;
     value?: unknown;
     result?: unknown;
+    search?: string;
+    limit?: number;
+    offset?: number;
 };
 
 const DASHBOARD_PLACEHOLDER = /^\$[A-Za-z_][A-Za-z0-9_]*(?:\.|$)/;
@@ -79,7 +82,13 @@ export function arrayAt(value: unknown, path: string | undefined): unknown[] {
 
 export function resolveExpression(expression: string, vars: RuntimeVars): unknown {
     if (expression === "$search") {
-        return undefined;
+        return vars.search;
+    }
+    if (expression === "$limit") {
+        return vars.limit;
+    }
+    if (expression === "$offset") {
+        return vars.offset;
     }
     if (expression.startsWith("$selection.")) {
         return valueAt(vars.selection, expression.slice("$selection.".length));

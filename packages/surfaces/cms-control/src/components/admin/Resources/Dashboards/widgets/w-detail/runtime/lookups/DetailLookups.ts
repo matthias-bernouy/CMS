@@ -1,15 +1,18 @@
-import { detailData, type DetailOptions, type DetailSchemas } from "../../../runtime/mapping";
+import { detailData, type DetailOptions, type DetailSchemas } from "../../../../runtime/mapping";
 import {
     allLookupTargetKeys,
     cmsUserTarget,
+    detailLookupTargets,
     loadDetailLookupOptions,
     lookupTargetKeysDependingOn,
-} from "../../../runtime/lookups";
-import { dashboardUserOptions, fetchDashboardUsers } from "../../../api";
-import { matchesDashboardVisibility } from "../../../runtime/expressions";
-import type { WDetailData } from "../types";
-import { DetailFieldState, readDetailBinding, type DetailWidget } from "./fieldState";
-import { DetailRequestCoordinator, DetailRequestTargets } from "./requests";
+    type DetailLookupPage,
+} from "../../../../runtime/lookups";
+import { dashboardUserOptions, fetchDashboardUsers } from "../../../../api";
+import { matchesDashboardVisibility } from "../../../../runtime/expressions";
+import type { WDetailData, WDetailField } from "../../types";
+import { DetailFieldState, readDetailBinding, type DetailWidget } from "../fieldState";
+import { DetailRequestCoordinator, DetailRequestTargets } from "../requests";
+import { RemoteDetailLookups, type RemoteLookupMode } from "./RemoteDetailLookups";
 
 type LookupCallbacks = {
     setData(value: WDetailData): void;
@@ -23,6 +26,8 @@ type TargetLoad = {
     key: string;
     generation: number;
     options: DetailOptions[string];
+    page?: DetailLookupPage;
+    remote?: RemoteLookupMode;
 };
 const CMS_USER_LOAD_ERROR = "Unable to load CMS users. Focus or click to retry.";
 
@@ -36,6 +41,7 @@ export class DetailLookups {
     private readonly pendingTargetKeys = new Set<string>();
     private readonly retryingCmsUserTargetKeys = new Set<string>();
     private readonly targets: DetailRequestTargets;
+    private readonly remote: RemoteDetailLookups;
 
     constructor(
         private readonly dataset: DOMStringMap,
@@ -44,6 +50,12 @@ export class DetailLookups {
         private readonly callbacks: LookupCallbacks,
     ) {
         this.targets = new DetailRequestTargets(requests);
+        this.remote = new RemoteDetailLookups(dataset, fields, requests, this.targets, {
+            get: () => this.currentOptions,
+            set: (options) => {
+                this.currentOptions = options;
+            },
+        });
     }
 
     get options(): DetailOptions {
@@ -51,27 +63,16 @@ export class DetailLookups {
     }
 
     decorate(value: WDetailData): WDetailData {
-        if (this.cmsUserErrors.size === 0) {
-            return value;
-        }
+        const field = (item: WDetailField): WDetailField => {
+            const decorated = this.remote.decorateField(item);
+            return decorated.input === "cms-user" && this.cmsUserErrors.has(decorated.id)
+                ? { ...decorated, invalid: true, hint: CMS_USER_LOAD_ERROR, hintLevel: "error" }
+                : decorated;
+        };
         return {
             ...value,
-            main: value.main.map((section) => ({
-                ...section,
-                fields: section.fields.map((field) =>
-                    field.input === "cms-user" && this.cmsUserErrors.has(field.id)
-                        ? { ...field, invalid: true, hint: CMS_USER_LOAD_ERROR, hintLevel: "error" as const }
-                        : field,
-                ),
-            })),
-            aside: value.aside.map((section) => ({
-                ...section,
-                fields: section.fields.map((field) =>
-                    field.input === "cms-user" && this.cmsUserErrors.has(field.id)
-                        ? { ...field, invalid: true, hint: CMS_USER_LOAD_ERROR, hintLevel: "error" as const }
-                        : field,
-                ),
-            })),
+            main: value.main.map((section) => ({ ...section, fields: section.fields.map(field) })),
+            aside: value.aside.map((section) => ({ ...section, fields: section.fields.map(field) })),
         };
     }
 
@@ -115,17 +116,16 @@ export class DetailLookups {
             }
             if (result.cmsUser) {
                 const hadError = this.cmsUserErrors.has(result.key);
-                if (result.failed) {
-                    this.cmsUserErrors.add(result.key);
-                } else {
-                    this.cmsUserErrors.delete(result.key);
-                }
+                result.failed ? this.cmsUserErrors.add(result.key) : this.cmsUserErrors.delete(result.key);
                 stateChanged ||= hadError !== result.failed;
             }
             if (result.failed && Object.hasOwn(this.currentOptions, result.key)) {
                 continue;
             }
             next[result.key] = result.options;
+            if (result.page && result.remote && (result.remote.search || result.remote.pagination)) {
+                this.remote.acceptInitial(result.key, result.page, result.remote);
+            }
             accepted = true;
         }
         if (!accepted && !stateChanged) {
@@ -167,26 +167,7 @@ export class DetailLookups {
             this.invalidateTarget(key);
         }
         this.cancelReloadTimer();
-        this.reloadTimer = setTimeout(() => {
-            this.reloadTimer = null;
-            const targetedKeys = new Set(this.pendingTargetKeys);
-            this.pendingTargetKeys.clear();
-            const latest = readDetailBinding(this.dataset);
-            if (!latest?.sourceId) {
-                return;
-            }
-            void this.load(
-                latest.widget,
-                latest.resource,
-                latest.rowKey,
-                latest.sourceId,
-                this.fields.currentFields(),
-                {
-                    targetKeys: targetedKeys,
-                    useLatestFields: true,
-                },
-            );
-        }, 250);
+        this.reloadTimer = setTimeout(() => this.runScheduledLoad(), 250);
     }
 
     retryCmsUser(fieldId: string): void {
@@ -219,6 +200,14 @@ export class DetailLookups {
         });
     }
 
+    search(key: string, query: string, control: HTMLElement): void {
+        this.remote.search(key, query, control);
+    }
+
+    loadMore(key: string, control: HTMLElement): void {
+        this.remote.loadMore(key, control);
+    }
+
     clear(): void {
         this.scopeGeneration += 1;
         this.targets.clear();
@@ -227,6 +216,7 @@ export class DetailLookups {
         this.userOptionsRequest = null;
         this.cmsUserErrors.clear();
         this.retryingCmsUserTargetKeys.clear();
+        this.remote.clear();
     }
 
     private async loadTarget(
@@ -239,22 +229,16 @@ export class DetailLookups {
         const consumer = this.targets.consumer(key);
         const generation = this.targets.invalidate(key);
         const cmsUser = Boolean(cmsUserTarget(widget, key));
+        const lookup = detailLookupTargets(widget).find((target) => target.key === key)?.lookup;
+        const remote = this.remote.mode(lookup);
         try {
             if (cmsUser) {
-                const request = (this.userOptionsRequest ??= fetchDashboardUsers().then(dashboardUserOptions));
-                try {
-                    const options = preserveCmsUserSelection(await request, fields[key]);
-                    return { cmsUser, failed: false, key, generation, options };
-                } catch (error) {
-                    if (this.userOptionsRequest === request) {
-                        this.userOptionsRequest = null;
-                    }
-                    throw error;
-                }
+                return await this.loadCmsUser(key, generation, fields[key]);
             }
             const result = await loadDetailLookupOptions(sourceId, widget, resource, fields, {
                 targetKeys: new Set([key]),
                 loadData: (targetSourceId, ref, vars) => this.requests.load(consumer, targetSourceId, ref, vars),
+                vars: this.remote.initialVars(remote),
             });
             return {
                 cmsUser,
@@ -262,10 +246,43 @@ export class DetailLookups {
                 key,
                 generation,
                 options: result.options[key] ?? [],
+                page: result.pages[key],
+                remote,
             };
         } catch {
             return { cmsUser, failed: true, key, generation, options: [] };
         }
+    }
+
+    private async loadCmsUser(key: string, generation: number, selected: unknown): Promise<TargetLoad> {
+        const request = (this.userOptionsRequest ??= fetchDashboardUsers().then(dashboardUserOptions));
+        try {
+            const options = preserveCmsUserSelection(await request, selected);
+            return { cmsUser: true, failed: false, key, generation, options };
+        } catch (error) {
+            if (this.userOptionsRequest === request) {
+                this.userOptionsRequest = null;
+            }
+            throw error;
+        }
+    }
+
+    private runScheduledLoad(): void {
+        this.reloadTimer = null;
+        const targetKeys = new Set(this.pendingTargetKeys);
+        this.pendingTargetKeys.clear();
+        const binding = readDetailBinding(this.dataset);
+        if (!binding?.sourceId) {
+            return;
+        }
+        void this.load(
+            binding.widget,
+            binding.resource,
+            binding.rowKey,
+            binding.sourceId,
+            this.fields.currentFields(),
+            { targetKeys, useLatestFields: true },
+        );
     }
 
     private invalidateTarget(key: string): number {
