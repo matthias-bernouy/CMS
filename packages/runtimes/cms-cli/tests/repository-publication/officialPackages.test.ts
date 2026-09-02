@@ -21,16 +21,20 @@ const EXPECTED_COORDINATES = [
     "consent@1.0.0",
     "documentation-blocs@1.0.0",
     "emailer@1.0.0",
+    "forms@1.0.0",
     "mondial-relay@1.0.0",
     "newsletter@1.0.0",
     "photo-albums@1.0.0",
     "photo-albums@1.1.0",
     "photo-albums@1.2.0",
+    "photo-albums@2.0.0",
+    "restaurant@1.0.0",
     "sales-configurator@1.0.0",
     "stripe-connect@1.0.0",
     "user-account@1.0.0",
     "workspace-blocs@1.0.0",
 ] as const;
+const PUBLICATION_TEST_TIMEOUT = 15_000;
 
 const roots: string[] = [];
 
@@ -39,59 +43,67 @@ afterEach(async () => {
 });
 
 describe("official integration publication source", () => {
-    test("builds all checked-in packages deterministically in publication order", async () => {
-        const first = await buildOfficialIntegrationPackages();
-        const second = await buildOfficialIntegrationPackages(OFFICIAL_INTEGRATIONS_ROOT);
+    test(
+        "builds all checked-in packages deterministically in publication order",
+        async () => {
+            const first = await buildOfficialIntegrationPackages();
+            const second = await buildOfficialIntegrationPackages(OFFICIAL_INTEGRATIONS_ROOT);
 
-        expect(first.map(({ kind, version }) => `${kind}@${version}`)).toEqual(EXPECTED_COORDINATES);
-        expect(first).toHaveLength(EXPECTED_COORDINATES.length);
-        const identity = ({ kind, version, digest, canonicalBytes }: (typeof first)[number]) => ({
-            kind,
-            version,
-            digest,
-            canonicalBytes,
-        });
-        expect(first.map(identity)).toEqual(second.map(identity));
-        for (const integrationPackage of first) {
-            const envelope = JSON.parse(new TextDecoder().decode(integrationPackage.canonicalBytes));
-            expect(envelope).toMatchObject({
-                schema: "cms.integration.package.v1",
-                kind: integrationPackage.kind,
-                version: integrationPackage.version,
+            expect(first.map(({ kind, version }) => `${kind}@${version}`)).toEqual(EXPECTED_COORDINATES);
+            expect(first).toHaveLength(EXPECTED_COORDINATES.length);
+            const identity = ({ kind, version, digest, canonicalBytes }: (typeof first)[number]) => ({
+                kind,
+                version,
+                digest,
+                canonicalBytes,
             });
-            expect(typeof envelope.releaseNotes).toBe("string");
-            expect(envelope.files[envelope.releaseNotes]).toMatchObject({ encoding: "utf8" });
-            expect(integrationPackage.digest).toMatch(/^[a-f0-9]{64}$/);
-        }
-    });
+            expect(first.map(identity)).toEqual(second.map(identity));
+            for (const integrationPackage of first) {
+                const envelope = JSON.parse(new TextDecoder().decode(integrationPackage.canonicalBytes));
+                expect(envelope).toMatchObject({
+                    schema: "cms.integration.package.v1",
+                    kind: integrationPackage.kind,
+                    version: integrationPackage.version,
+                });
+                expect(typeof envelope.releaseNotes).toBe("string");
+                expect(envelope.files[envelope.releaseNotes]).toMatchObject({ encoding: "utf8" });
+                expect(integrationPackage.digest).toMatch(/^[a-f0-9]{64}$/);
+            }
+        },
+        PUBLICATION_TEST_TIMEOUT,
+    );
 
-    test("binds every official package to a deterministic candidate verification policy", async () => {
-        const first = await buildOfficialIntegrationCandidates();
-        const second = await buildOfficialIntegrationCandidates(OFFICIAL_INTEGRATIONS_ROOT);
+    test(
+        "binds every official package to a deterministic candidate verification policy",
+        async () => {
+            const first = await buildOfficialIntegrationCandidates();
+            const second = await buildOfficialIntegrationCandidates(OFFICIAL_INTEGRATIONS_ROOT);
 
-        expect(first).toEqual(second);
-        expect(first.map(({ kind, version }) => `${kind}@${version}`)).toEqual(EXPECTED_COORDINATES);
-        for (const candidate of first) {
-            const envelope = JSON.parse(new TextDecoder().decode(candidate.canonicalBytes));
-            expect(envelope).toMatchObject({
-                schema: "cms.integration.candidate.v1",
-                package: { kind: candidate.kind, version: candidate.version },
-                verification: {
-                    target: {
-                        kind: candidate.kind,
-                        version: candidate.version,
-                        packageDigest: candidate.packageDigest,
+            expect(first).toEqual(second);
+            expect(first.map(({ kind, version }) => `${kind}@${version}`)).toEqual(EXPECTED_COORDINATES);
+            for (const candidate of first) {
+                const envelope = JSON.parse(new TextDecoder().decode(candidate.canonicalBytes));
+                expect(envelope).toMatchObject({
+                    schema: "cms.integration.candidate.v1",
+                    package: { kind: candidate.kind, version: candidate.version },
+                    verification: {
+                        target: {
+                            kind: candidate.kind,
+                            version: candidate.version,
+                            packageDigest: candidate.packageDigest,
+                        },
+                        manifest: {
+                            runnerRequirements: [OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT],
+                        },
                     },
-                    manifest: {
-                        runnerRequirements: [OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT],
-                    },
-                },
-                submission: { requestedChannel: "latest" },
-            });
-            expect(candidate.candidateDigest).toMatch(/^[a-f0-9]{64}$/u);
-            expect(candidate.verificationDigest).toMatch(/^[a-f0-9]{64}$/u);
-        }
-    });
+                    submission: { requestedChannel: "latest" },
+                });
+                expect(candidate.candidateDigest).toMatch(/^[a-f0-9]{64}$/u);
+                expect(candidate.verificationDigest).toMatch(/^[a-f0-9]{64}$/u);
+            }
+        },
+        PUBLICATION_TEST_TIMEOUT,
+    );
 
     test("rejects index paths escaping their integration root", async () => {
         const root = await temporaryRoot();

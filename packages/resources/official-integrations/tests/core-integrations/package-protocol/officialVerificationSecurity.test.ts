@@ -88,6 +88,9 @@ async function temporaryRoot(label: string): Promise<string> {
     for (const group of ["domains", "extensions", "foundation", "providers"]) {
         await cp(join(OFFICIAL_INTEGRATIONS_ROOT, group), join(root, group), { recursive: true });
     }
+    await cp(join(OFFICIAL_INTEGRATIONS_ROOT, ".registry", "packages"), join(root, ".registry", "packages"), {
+        recursive: true,
+    });
     return root;
 }
 

@@ -29,7 +29,7 @@ describe("official verification backfill artifacts", () => {
             const historicalBefore = selectOfficialVerificationBackfillPackages(before, committed.index);
             const historicalAfter = selectOfficialVerificationBackfillPackages(after, committed.index);
 
-            expect(before).toHaveLength(22);
+            expect(before).toHaveLength(23);
             expect(generated.verifications).toHaveLength(14);
             expect(committed.verifications).toHaveLength(14);
             expect(committed.index.verificationPolicy).toEqual(OFFICIAL_INTEGRATION_VERIFICATION_POLICY);

@@ -70,7 +70,7 @@ export type OfficialIntegrationPackage = Readonly<{
 }>;
 
 export type BuiltOfficialIntegrationPackage = OfficialIntegrationPackage &
-    Readonly<{ package: ResolvedIntegrationPackage; definition: IntegrationDefinition }>;
+    Readonly<{ package: ResolvedIntegrationPackage; definition: IntegrationDefinition; sourceRoot?: string }>;
 
 export type OfficialRepositoryBootstrapEvidenceV1 = Readonly<{
     schema: "cms.integration.official-bootstrap-evidence.v1";

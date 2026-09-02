@@ -29,6 +29,9 @@ export async function walkResourceTree(root: string): Promise<ResourceTree> {
         for (const entry of entries) {
             const path = resolve(directory, entry.name);
             if (entry.isDirectory()) {
+                if (entry.name === ".registry") {
+                    continue;
+                }
                 directories.push(path);
                 await walk(path);
             } else {

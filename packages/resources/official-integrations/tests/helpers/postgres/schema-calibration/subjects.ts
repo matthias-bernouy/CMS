@@ -6,7 +6,7 @@ import {
     resolveOfficialIntegrationDependencies,
 } from "@bernouy/cms-official-integrations/publication";
 import { type DeclarativeConnectorTemplate, type IntegrationDefinition } from "@bernouy/cms-integrations";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { materializeOfficialIntegrationPackage } from "../../materializedPackage";
 
 export const OFFICIAL_SQL_INTEGRATION_KINDS = Object.freeze(
     OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS.map(({ kind }) => kind),
@@ -76,7 +76,6 @@ async function loadSchemaCalibrationSubjects(
     root: string,
     targets: readonly OfficialSchemaCalibrationTarget[],
 ): Promise<readonly OfficialSchemaCalibrationSubject[]> {
-    const repository = new FsIntegrationDefinitionRepository(root);
     const packages = await buildOfficialIntegrationPackages(root);
     const packageByIdentity = new Map(packages.map((entry) => [identity(entry.kind, entry.version), entry]));
     const targetVersions = new Map(targets.map(({ kind, version }) => [kind, version]));
@@ -86,11 +85,7 @@ async function loadSchemaCalibrationSubjects(
     });
     const definitions = new Map<string, IntegrationDefinition>();
     for (const entry of packages) {
-        const definition = await repository.get(entry.kind, entry.version);
-        if (!definition) {
-            throw new Error(`Official package definition disappeared: ${entry.kind}@${entry.version}`);
-        }
-        definitions.set(identity(entry.kind, entry.version), definition);
+        definitions.set(identity(entry.kind, entry.version), entry.definition);
     }
     const sqlKinds = new Set(
         [...definitions.values()]
@@ -109,10 +104,6 @@ async function loadSchemaCalibrationSubjects(
         if (!connector) {
             throw new Error(`Official SQL integration has no SQL connector: ${kind}`);
         }
-        const location = await repository.locateExactVersion(entry.kind, entry.version);
-        if (!location) {
-            throw new Error(`Official package location disappeared: ${entry.kind}@${entry.version}`);
-        }
         const dependencies = resolveOfficialIntegrationDependencies(definition, dependencyPackages);
         subjects.push({
             kind: entry.kind,
@@ -123,7 +114,7 @@ async function loadSchemaCalibrationSubjects(
             lineageId: target.lineageId,
             namespaces: expectedNamespaces(target, connector),
             package: entry.package,
-            root: location.root,
+            root: await materializeOfficialIntegrationPackage(entry),
             dependencies,
             sqlInstallationOrder: dependencies.filter((dependency) => sqlKinds.has(dependency.kind)),
         });

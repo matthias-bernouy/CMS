@@ -20,6 +20,7 @@ export {
     INTEGRATION_REGISTRY_VERSION_MANIFEST_SCHEMA,
     type IntegrationRegistryVersionManifestV1,
 } from "../default-implementation/fs/manifest/contract";
+export { loadIntegrationDefinitionFromPackageEnvelope } from "../default-implementation/fs/manifest/definition";
 export {
     INTEGRATION_REGISTRY_INTERNAL_DIRECTORY,
     INTEGRATION_REGISTRY_MANIFEST_DIRECTORY,

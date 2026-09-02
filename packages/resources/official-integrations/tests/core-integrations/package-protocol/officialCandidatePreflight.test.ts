@@ -12,6 +12,7 @@ const EXPECTED_POST_BOOTSTRAP_RELEASES = [
     "documentation-blocs@1.0.0",
     "photo-albums@1.1.0",
     "photo-albums@1.2.0",
+    "photo-albums@2.0.0",
     "workspace-blocs@1.0.0",
 ];
 const DEDICATED_RELEASE_PREFLIGHTS = new Set(["commerce@1.1.0"]);

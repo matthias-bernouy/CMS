@@ -25,6 +25,12 @@ The directory name must match the integration `kind`. The authoring tree owns
 only the current version. Released history is immutable repository data and is
 not copied into source version directories.
 
+The checked-in `.registry/packages/` tree is the bootstrap seed for historical
+official releases. Its digest-addressed canonical envelopes are repository data,
+not authoring sources; extracted files are materialized in an external local
+cache only when needed. A developer's pulled local repository remains outside
+Git.
+
 `integration.json` declares the integration kind, display metadata, current
 version, and `path: "."`. It is authoring metadata and is excluded from the
 runtime package, as are `tests/` and `.registry/`.

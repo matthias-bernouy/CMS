@@ -4,7 +4,6 @@ import type {
     IntegrationConnectorBaselineAdoptionContext,
     IntegrationConnectorMigrationDeployment,
 } from "@bernouy/cms-integrations";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import {
     loadSupabaseMigrationAssets,
     loadSupabaseRepeatableAssets,
@@ -14,6 +13,7 @@ import {
     buildOfficialIntegrationPackages,
     type BuiltOfficialIntegrationPackage,
 } from "@bernouy/cms-official-integrations/publication";
+import { materializeOfficialIntegrationPackage } from "../../../../materializedPackage";
 
 export const PHOTO_ALBUMS_KIND = "photo-albums";
 export const PHOTO_ALBUMS_SOURCE_VERSION = "1.0.0";
@@ -36,14 +36,12 @@ export async function loadPhotoAlbumsReleaseContext(officialRoot: string) {
     ) {
         throw new Error("Photo Albums target connector is not migration-aware");
     }
-    const repository = new FsIntegrationDefinitionRepository(officialRoot);
-    const sourceLocation = await repository.locateExactVersion(PHOTO_ALBUMS_KIND, PHOTO_ALBUMS_SOURCE_VERSION);
-    const targetLocation = await repository.locateExactVersion(PHOTO_ALBUMS_KIND, PHOTO_ALBUMS_TARGET_VERSION);
-    if (!sourceLocation || !targetLocation) {
-        throw new Error("Photo Albums release package location is missing");
-    }
-    const sourceRoot = resolve(sourceLocation.root, sourceConnector.root ?? ".");
-    const targetRoot = resolve(targetLocation.root, targetConnector.root ?? ".");
+    const [sourcePackageRoot, targetPackageRoot] = await Promise.all([
+        materializeOfficialIntegrationPackage(source),
+        materializeOfficialIntegrationPackage(target),
+    ]);
+    const sourceRoot = resolve(sourcePackageRoot, sourceConnector.root ?? ".");
+    const targetRoot = resolve(targetPackageRoot, targetConnector.root ?? ".");
     const [sourceSchemas, targetSchemas, migrations, repeatables] = await Promise.all([
         loadSupabaseSqlSchemas(sourceRoot, sourceConnector.schemas ?? []),
         loadSupabaseSqlSchemas(targetRoot, targetConnector.schemas ?? []),

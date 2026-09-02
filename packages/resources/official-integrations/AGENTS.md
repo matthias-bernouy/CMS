@@ -14,6 +14,8 @@ Authoring sources for official CmsCore integrations.
 - Keep provider-specific assets under `connectors/<provider>/`.
 - Keep immutable historical versions in integration repositories, not in the
   authoring source tree.
+- Treat `.registry/packages/` as digest-addressed official repository seed data;
+  never edit an existing object in place.
 - Keep release-owned tests under the integration's `tests/` directory. Those
   tests, `integration.json`, and `.registry/` are authoring inputs and must not
   enter runtime package bytes.

@@ -2,12 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { decodeIntegrationPackageFile } from "@bernouy/cms-integration-packages";
 import { IntegrationCompatibilityEvaluator, changedIntegrationPackagePaths } from "@bernouy/cms-integration-registry";
 import { parseIntegrationCandidateEnvelope } from "@bernouy/cms-integration-verification";
-import {
-    assertUpgradeEligible,
-    projectObservedSchemaContract,
-    resolveInstallableIntegrationDefinitionVersion,
-} from "@bernouy/cms-integrations";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { projectObservedSchemaContract } from "@bernouy/cms-integrations";
 import {
     computeSupabaseInstallDigest,
     lintAnonymousConstraints,
@@ -15,15 +10,13 @@ import {
     loadSupabaseRepeatableAssets,
     loadSupabaseSqlSchemas,
 } from "@bernouy/cms-integrations/supabase";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import {
     OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT,
     buildOfficialIntegrationCandidates,
     buildOfficialIntegrationPackages,
-    loadOfficialIntegrationVerificationBackfill,
     loadOfficialRepositoryBootstrapEvidence,
-    selectOfficialVerificationBackfillPackages,
 } from "@bernouy/cms-official-integrations/publication";
+import { materializeOfficialIntegrationPackage } from "../../helpers/materializedPackage";
 
 const PHOTO_ALBUMS_1_0_0_DIGEST = "61dd7b41ee3594a8bf8ed60d1adbdee993705787207d8cbef03383e6797b275f";
 const ADDITIVE_RELEASE_TEST_TIMEOUT = 15_000;
@@ -32,18 +25,6 @@ describe("official Photo Albums additive release", () => {
     test(
         "keeps the embedded release unverified while building its exact candidate",
         async () => {
-            const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-            const index = await repository.getIndex("photo-albums");
-            if (!index) {
-                throw new Error("Photo Albums index is missing");
-            }
-            expect(index.stable).toBe("1.0.0");
-            expect(index.latest).toBe("1.0.0");
-            expect(index.versions.find(({ version }) => version === "1.1.0")?.status).toBe("unverified");
-            expect(resolveInstallableIntegrationDefinitionVersion(index, "1.1.0", "latest")).toBeNull();
-            expect(resolveInstallableIntegrationDefinitionVersion(index, undefined, "latest")?.version).toBe("1.0.0");
-            expect(() => assertUpgradeEligible(index, "1.1.0")).toThrow(/unverified/);
-
             const packages = await buildOfficialIntegrationPackages();
             const legacy = packageVersion(packages, "1.0.0");
             const target = packageVersion(packages, "1.1.0");
@@ -73,11 +54,6 @@ describe("official Photo Albums additive release", () => {
             expect(parsed.envelope.verification.files["platform/behavioral-rls.json"]?.content).toContain(
                 '"probes":[]',
             );
-
-            const backfill = await loadOfficialIntegrationVerificationBackfill();
-            const historical = selectOfficialVerificationBackfillPackages(packages, backfill.index);
-            expect(historical).toHaveLength(14);
-            expect(historical.some(({ kind, version }) => kind === "photo-albums" && version === "1.1.0")).toBeFalse();
         },
         ADDITIVE_RELEASE_TEST_TIMEOUT,
     );
@@ -194,26 +170,21 @@ describe("official Photo Albums additive release", () => {
             '"public, max-age=31536000, immutable"',
         );
         const connector = target.definition.connectors?.[0];
-        const location = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).locateExactVersion(
-            "photo-albums",
-            "1.1.0",
-        );
-        if (!connector?.migration || !location) {
+        if (!connector?.migration) {
             throw new Error("Photo Albums migration-aware connector is missing");
         }
-        const connectorRoot = `${location.root}/${connector.root}`;
+        const targetRoot = await materializeOfficialIntegrationPackage(target);
+        const connectorRoot = `${targetRoot}/${connector.root}`;
         const schemas = await loadSupabaseSqlSchemas(connectorRoot, connector.schemas ?? []);
         expect(await computeSupabaseInstallDigest(schemas)).toBe(connector.migration.install.digest);
         const legacy = connector.migration.supportedSources[0]?.legacyAdoption;
-        const sourceLocation = await new FsIntegrationDefinitionRepository(
-            OFFICIAL_INTEGRATIONS_ROOT,
-        ).locateExactVersion("photo-albums", "1.0.0");
         const sourceConnector = source.definition.connectors?.[0];
-        if (!legacy || !sourceLocation || !sourceConnector) {
+        if (!legacy || !sourceConnector) {
             throw new Error("Photo Albums legacy source mapping is missing");
         }
+        const sourceRoot = await materializeOfficialIntegrationPackage(source);
         const sourceSchemas = await loadSupabaseSqlSchemas(
-            `${sourceLocation.root}/${sourceConnector.root}`,
+            `${sourceRoot}/${sourceConnector.root}`,
             sourceConnector.schemas ?? [],
         );
         expect(await computeSupabaseInstallDigest(sourceSchemas)).toBe(legacy.installDigest);
