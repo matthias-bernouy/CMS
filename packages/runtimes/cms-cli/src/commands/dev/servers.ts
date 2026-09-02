@@ -73,6 +73,8 @@ export async function startLocalServers(options: ServerOptions) {
             integrationConnectorDeployers: services.integrationConnectorDeployers,
             integrationProvisioners: services.integrationProvisioners,
             dashboards: services.dashboards,
+            dashboardViews: services.dashboardViews,
+            dashboardAssignments: services.dashboardAssignments,
             relations: services.relations,
             functions: services.functions,
             triggers: services.triggers,

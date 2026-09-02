@@ -17,7 +17,11 @@ import type { BuiltBloc } from "../../dev-server/bloc-build/index";
 import { createDevSources, GENERATED_BLOCS_DIR, seedDevSourceAccess } from "../../dev-server/integrations";
 import { LocalFsCmsRepository } from "../../dev-server/repo/LocalFsCmsRepository";
 import { createDevAuth } from "../../dev-server/runtime/auth";
-import { LocalFsDashboardRepository } from "../../dev-server/stores/dashboards";
+import {
+    LocalFsDashboardAssignmentRepository,
+    LocalFsDashboardRepository,
+    LocalFsDashboardViewRepository,
+} from "../../dev-server/stores/dashboards";
 import { LocalFsFunctionRepository } from "../../dev-server/stores/functions";
 import { LocalFsIntegrationInstallationRepository } from "../../dev-server/stores/integrationInstallations";
 import { LocalFsRelationRepository } from "../../dev-server/stores/relations";
@@ -56,6 +60,8 @@ export async function createLocalServices(options: ServiceOptions) {
     );
     const integrationInstallations = new LocalFsIntegrationInstallationRepository(options.siteDir);
     const dashboards = new LocalFsDashboardRepository(options.siteDir);
+    const dashboardViews = new LocalFsDashboardViewRepository(options.siteDir);
+    const dashboardAssignments = new LocalFsDashboardAssignmentRepository(options.siteDir);
     const relations = new LocalFsRelationRepository(options.siteDir);
     const functions = new LocalFsFunctionRepository(options.siteDir);
     const triggers = new LocalFsTriggerRepository(options.siteDir);
@@ -113,6 +119,8 @@ export async function createLocalServices(options: ServiceOptions) {
         ...integrations,
         integrationInstallations,
         dashboards,
+        dashboardViews,
+        dashboardAssignments,
         relations,
         functions,
         triggers,

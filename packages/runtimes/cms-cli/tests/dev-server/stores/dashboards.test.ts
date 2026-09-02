@@ -1,41 +1,90 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsDashboardRepository } from "cms-cli/dev-server/stores/dashboards";
-import type { Dashboard } from "@bernouy/cms-dashboards";
+import {
+    DASHBOARD_SCHEMA_VERSION,
+    normalizeLegacyDashboardView,
+    type Dashboard,
+    type DashboardDefinition,
+} from "@bernouy/cms-dashboards";
+import {
+    LocalFsDashboardAssignmentRepository,
+    LocalFsDashboardRepository,
+    LocalFsDashboardViewRepository,
+} from "cms-cli/dev-server/stores/dashboards";
 
-describe("LocalFsDashboardRepository", () => {
-    test("persists dashboards across repository instances", async () => {
-        const siteDir = await mkdtemp(join(tmpdir(), "p9r-dashboards-"));
+describe("local dashboard stores", () => {
+    test("persists composed dashboards across repository instances", async () => {
+        const siteDir = await temporarySite();
         const first = new LocalFsDashboardRepository(siteDir);
-
-        await first.createDashboard(testDashboard("orders", "commerce"));
+        await first.createDashboard(composedDashboard());
 
         const second = new LocalFsDashboardRepository(siteDir);
-        expect(await second.getDashboard("orders")).toEqual(testDashboard("orders", "commerce"));
-        expect(await second.getDashboardsForSource("commerce")).toEqual([testDashboard("orders", "commerce")]);
-        expect(await second.getAllDashboards()).toEqual([testDashboard("orders", "commerce")]);
+        expect(await second.getDashboard("support")).toEqual(composedDashboard());
+        expect(await second.getAllDashboards()).toEqual([composedDashboard()]);
+        expect(await second.updateDashboard({ ...composedDashboard(), meta: { name: "Support desk" } })).toMatchObject({
+            meta: { name: "Support desk" },
+        });
+        expect(await second.deleteDashboard("support")).toBe(true);
+        expect(await second.getAllDashboards()).toEqual([]);
     });
 
-    test("updates and deletes dashboards", async () => {
-        const siteDir = await mkdtemp(join(tmpdir(), "p9r-dashboards-"));
-        const repo = new LocalFsDashboardRepository(siteDir);
+    test("persists V2 views and reads the legacy file without writing it", async () => {
+        const siteDir = await temporarySite();
+        const generated = join(siteDir, ".p9r/generated");
+        await mkdir(generated, { recursive: true });
+        await writeFile(join(generated, "dashboards.json"), JSON.stringify([legacyDashboard()]));
+        const views = new LocalFsDashboardViewRepository(siteDir);
+        expect(await views.getView("orders")).toEqual(normalizeLegacyDashboardView(legacyDashboard()));
 
-        await repo.createDashboard(testDashboard("orders", "commerce"));
-        await repo.updateDashboard(testDashboard("orders", "crm"));
+        const normalized = { ...normalizeLegacyDashboardView(legacyDashboard()), revision: "view-1" };
+        await views.updateView(normalized);
+        const reloaded = new LocalFsDashboardViewRepository(siteDir);
+        expect(await reloaded.getView("orders")).toEqual(normalized);
+        expect(await reloaded.getViewsForSource("commerce")).toEqual([normalized]);
+    });
 
-        expect(await repo.getDashboardsForSource("commerce")).toEqual([]);
-        expect(await repo.getDashboardsForSource("crm")).toEqual([testDashboard("orders", "crm")]);
-        expect(await repo.deleteDashboard("orders")).toBe(true);
-        expect(await repo.getAllDashboards()).toEqual([]);
+    test("persists idempotent assignments and supports bounded membership reads", async () => {
+        const siteDir = await temporarySite();
+        const assignments = new LocalFsDashboardAssignmentRepository(siteDir);
+        await assignments.assign({ subjectId: "support-1", dashboardId: "support" });
+        await assignments.assign({ subjectId: "support-1", dashboardId: "support" });
+        await assignments.assign({ subjectId: "support-2", dashboardId: "support" });
+        await assignments.assign({ subjectId: "support-1", dashboardId: "sales" });
+
+        const reloaded = new LocalFsDashboardAssignmentRepository(siteDir);
+        expect(await reloaded.getDashboardIdsForSubject("support-1")).toEqual(["sales", "support"]);
+        expect(await reloaded.getSubjectIdsForDashboard("support")).toEqual(["support-1", "support-2"]);
+        expect(await reloaded.getAssignedSubjectIds("support", ["missing", "support-2"])).toEqual(["support-2"]);
+        expect(await reloaded.countForDashboard("support")).toBe(2);
+        expect(await reloaded.deleteForSubject("support-1")).toBe(2);
+        expect(await reloaded.deleteForDashboard("support")).toBe(1);
+        expect(await reloaded.hasAssignment("support-2", "support")).toBe(false);
     });
 });
 
-function testDashboard(id: string, source: string): Dashboard {
+async function temporarySite(): Promise<string> {
+    return await mkdtemp(join(tmpdir(), "p9r-dashboards-"));
+}
+
+function composedDashboard(): DashboardDefinition {
     return {
-        id,
-        source,
+        schemaVersion: DASHBOARD_SCHEMA_VERSION,
+        id: "support",
+        meta: { name: "Support" },
+        homeView: "orders",
+        views: [{ id: "orders", use: "orders", revision: "view-1" }],
+        origin: { kind: "site", createdBy: "admin-1" },
+        status: "published",
+        revision: "2",
+    };
+}
+
+function legacyDashboard(): Dashboard {
+    return {
+        id: "orders",
+        source: "commerce",
         views: [
             {
                 widget: "w-table",
