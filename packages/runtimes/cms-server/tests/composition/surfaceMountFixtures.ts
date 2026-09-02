@@ -77,6 +77,7 @@ export function surfaceMountFixtures() {
             repositoryUrl: "https://repository.example.test/.cms/repository",
             integrationCatalog: token("integration-catalog"),
             integrationPackageResolver: token("package-resolver"),
+            integrationUpgradeReleases: token("upgrade-releases"),
             integrationConnectorDeployers: [token("deployer")],
             integrationConnectorMigrationAdapters: [token("migration-adapter")],
             integrationFunctionMigrationHandler: token("function-migration-handler"),

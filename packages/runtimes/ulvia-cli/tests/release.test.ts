@@ -1,0 +1,88 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import { mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { canonicalJsonBytes, sha256Hex, validateIntegrationPackageEnvelope } from "@bernouy/cms-integration-packages";
+import { parseIntegrationDefinition } from "@bernouy/cms-integrations";
+import { runCli } from "../src/cli";
+import { assertLocalCompatibility, evaluateLocalCompatibility } from "../src/release/compatibility";
+import type { LocalReleasePackage, LocalReleaseVerifier } from "../src/release/types";
+import { integrationDefinition, removeReadonlyTree, writeIntegrationSource } from "./fixtures";
+
+const roots: string[] = [];
+afterEach(async () => {
+    await Promise.all(roots.splice(0).map(removeReadonlyTree));
+});
+
+describe("local integration releases", () => {
+    test("verifies before storing and treats an identical release as a no-op", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        const data = join(root, "data");
+        const definitionPath = await writeIntegrationSource(source, "1.0.0");
+        let verifications = 0;
+        const verifier: LocalReleaseVerifier = {
+            verify: async ({ candidate, baselines }) => {
+                verifications += 1;
+                expect(candidate.package.envelope.kind).toBe("demo");
+                expect(baselines).toEqual([]);
+            },
+        };
+        const options = {
+            environment: {
+                ULVIA_DATA_DIR: data,
+                ULVIA_REPOSITORY_URL: "http://repository.example.test/.cms/repository",
+            },
+            cwd: source,
+            repositoryFetch: emptyRemote,
+            releaseVerifier: verifier,
+            log: () => undefined,
+        };
+
+        await runCli(["release", "demo"], options);
+        await runCli(["release", "demo"], options);
+        expect(verifications).toBe(1);
+        const catalog = await Bun.file(join(data, "repository", "catalog.json")).json();
+        expect(catalog.packages).toHaveLength(1);
+        expect(catalog.packages[0]).toMatchObject({ kind: "demo", version: "1.0.0" });
+
+        await writeFile(
+            definitionPath,
+            JSON.stringify(integrationDefinition("demo", "1.0.0", { description: "Changed" })),
+        );
+        await expect(runCli(["release", "demo"], options)).rejects.toThrow(/different digest/);
+        expect(verifications).toBe(1);
+    });
+
+    test("rejects a breaking patch before runtime verification", async () => {
+        const baseline = await releasePackage("1.0.0");
+        const candidate = await releasePackage("1.0.1", {
+            inputs: [{ name: "account", label: "Account", type: "text", required: true }],
+        });
+        const result = evaluateLocalCompatibility(candidate, [baseline]);
+
+        expect(result).toMatchObject({ contractAdmissible: false, requiredReleaseLevel: "major" });
+        expect(() => assertLocalCompatibility(result)).toThrow(/requires a major version/);
+    });
+});
+
+async function temporaryRoot(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-release-test-"));
+    roots.push(root);
+    return root;
+}
+
+async function releasePackage(version: string, overrides: Record<string, unknown> = {}): Promise<LocalReleasePackage> {
+    const parsed = parseIntegrationDefinition(integrationDefinition("demo", version, overrides));
+    const envelope = validateIntegrationPackageEnvelope({
+        schema: "cms.integration.package.v1",
+        kind: "demo",
+        version,
+        definition: "definition.json",
+        files: { "definition.json": { encoding: "utf8", content: JSON.stringify(parsed) } },
+    });
+    const canonicalBytes = canonicalJsonBytes(envelope);
+    return { package: { envelope, canonicalBytes, digest: await sha256Hex(canonicalBytes) }, definition: parsed };
+}
+
+const emptyRemote: typeof fetch = async () => Response.json({ error: "not found" }, { status: 404 });

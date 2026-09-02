@@ -1,7 +1,8 @@
 import { canonicalJsonBytes, sha256Hex, validateIntegrationPackageEnvelope } from "@bernouy/cms-integration-packages";
-import { chmod, lstat, opendir, rm, unlink } from "node:fs/promises";
+import { chmod, lstat, mkdir, opendir, rm, unlink, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
-export function integrationDefinition(kind = "demo", version = "1.0.0") {
+export function integrationDefinition(kind = "demo", version = "1.0.0", overrides: Record<string, unknown> = {}) {
     return {
         kind,
         label: "Demo integration",
@@ -9,6 +10,7 @@ export function integrationDefinition(kind = "demo", version = "1.0.0") {
         category: "tests",
         description: "Local repository fixture",
         inputs: [],
+        ...overrides,
     };
 }
 
@@ -31,6 +33,26 @@ export async function integrationPackage(kind = "demo", version = "1.0.0") {
 export async function removeReadonlyTree(root: string): Promise<void> {
     await makeOwnerWritable(root);
     await rm(root, { recursive: true, force: true });
+}
+
+export async function writeIntegrationSource(root: string, version = "1.0.0"): Promise<string> {
+    const versionRoot = join(root, "integrations", "demo", "versions", version);
+    await mkdir(versionRoot, { recursive: true });
+    await writeFile(
+        join(root, "integrations", "demo", "integration.json"),
+        JSON.stringify({
+            schema: "cms.integration.index.v1",
+            kind: "demo",
+            label: "Demo",
+            latest: version,
+            stable: version,
+            versions: [{ version, path: `versions/${version}`, definition: `versions/${version}/definition.json` }],
+        }),
+    );
+    const definitionPath = join(versionRoot, "definition.json");
+    await writeFile(definitionPath, JSON.stringify(integrationDefinition("demo", version)));
+    await writeFile(join(versionRoot, "release-notes.txt"), "Initial local release.\n");
+    return definitionPath;
 }
 
 async function makeOwnerWritable(path: string): Promise<void> {

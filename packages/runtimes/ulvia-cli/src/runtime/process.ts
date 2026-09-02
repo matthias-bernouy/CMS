@@ -12,6 +12,9 @@ export type RunCommandOptions = Readonly<{
 
 export type SpawnCommandOptions = Readonly<{
     cwd?: string;
+    env?: Record<string, string | undefined>;
+    inherit?: boolean;
+    ignore?: boolean;
 }>;
 
 export async function runCommand(command: readonly string[], options: RunCommandOptions = {}): Promise<CommandResult> {
@@ -41,11 +44,14 @@ export function requireExecutable(name: string): void {
 }
 
 export function spawnCommand(command: readonly string[], options: SpawnCommandOptions = {}) {
+    const inherit = options.inherit ?? false;
+    const output = inherit ? "inherit" : options.ignore ? "ignore" : "pipe";
     return Bun.spawn([...command], {
         ...(options.cwd ? { cwd: options.cwd } : {}),
-        stdin: "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
+        ...(options.env ? { env: options.env } : {}),
+        stdin: inherit ? "inherit" : "ignore",
+        stdout: output,
+        stderr: output,
     });
 }
 

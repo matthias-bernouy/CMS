@@ -10,11 +10,16 @@ export type LocalMongo = Readonly<{
     port: number;
 }>;
 
-export async function startLocalMongo(dataRoot: string, port: number): Promise<LocalMongo> {
+export async function startLocalMongo(
+    dataRoot: string,
+    port: number,
+    options: Readonly<{ ephemeral?: boolean }> = {},
+): Promise<LocalMongo> {
     requireExecutable("docker");
     const name = containerName(dataRoot);
     const status = await containerStatus(name);
     if (status === null) {
+        const persistence = options.ephemeral ? [] : ["--mount", `type=bind,source=${dataRoot},target=/data/db`];
         await runCommand(
             [
                 "docker",
@@ -24,11 +29,10 @@ export async function startLocalMongo(dataRoot: string, port: number): Promise<L
                 name,
                 "--publish",
                 `127.0.0.1:${port}:27017`,
-                "--mount",
-                `type=bind,source=${dataRoot},target=/data/db`,
+                ...persistence,
                 MONGO_IMAGE,
             ],
-            { inherit: true },
+            { inherit: !options.ephemeral },
         );
     } else if (status !== "running") {
         await runCommand(["docker", "start", name], { inherit: true });
@@ -49,6 +53,16 @@ export async function stopLocalMongo(dataRoot: string): Promise<boolean> {
         return false;
     }
     await runCommand(["docker", "stop", name], { inherit: true });
+    return true;
+}
+
+export async function destroyLocalMongo(dataRoot: string): Promise<boolean> {
+    requireExecutable("docker");
+    const name = containerName(dataRoot);
+    if ((await containerStatus(name)) === null) {
+        return false;
+    }
+    await runCommand(["docker", "rm", "--force", name]);
     return true;
 }
 

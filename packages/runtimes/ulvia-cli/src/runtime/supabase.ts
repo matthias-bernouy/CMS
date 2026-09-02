@@ -15,12 +15,20 @@ export type LocalSupabaseEnvironment = Readonly<{
     databaseUrl: string;
 }>;
 
-export async function startLocalSupabase(projectRoot: string): Promise<LocalSupabaseEnvironment> {
+export async function initializeLocalSupabase(projectRoot: string): Promise<void> {
     requireExecutable("bunx");
     if (!(await exists(join(projectRoot, "supabase", "config.toml")))) {
         await requiredSupabaseCommand(projectRoot, ["init"]);
     }
-    await requiredSupabaseCommand(projectRoot, ["start"]);
+}
+
+export async function startLocalSupabase(
+    projectRoot: string,
+    options: Readonly<{ exclude?: readonly string[] }> = {},
+): Promise<LocalSupabaseEnvironment> {
+    await initializeLocalSupabase(projectRoot);
+    const excluded = options.exclude?.length ? ["--exclude", options.exclude.join(",")] : [];
+    await requiredSupabaseCommand(projectRoot, ["start", ...excluded]);
     const environment = await readLocalSupabaseEnvironment(projectRoot);
     if (!environment) {
         throw new Error("Supabase started without reporting its local service endpoints");
@@ -50,9 +58,12 @@ export function parseLocalSupabaseEnvironment(output: string): LocalSupabaseEnvi
     return apiUrl && functionsUrl && databaseUrl ? { apiUrl, functionsUrl, databaseUrl } : null;
 }
 
-export async function stopLocalSupabase(projectRoot: string): Promise<boolean> {
+export async function stopLocalSupabase(
+    projectRoot: string,
+    options: Readonly<{ destroy?: boolean }> = {},
+): Promise<boolean> {
     requireExecutable("bunx");
-    const result = await runSupabase(projectRoot, ["stop"]);
+    const result = await runSupabase(projectRoot, ["stop", ...(options.destroy ? ["--no-backup"] : [])]);
     return result.exitCode === 0;
 }
 

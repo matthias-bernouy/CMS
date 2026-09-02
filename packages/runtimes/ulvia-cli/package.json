@@ -17,6 +17,7 @@
     ],
     "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
         "semver": "^7.8.2",

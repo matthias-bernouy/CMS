@@ -10,6 +10,7 @@ export async function statusCommand(
     log(`Data directory: ${paths.data}`);
     log(`Local repository: ${records.length} package${records.length === 1 ? "" : "s"}`);
     for (const record of records) {
-        log(`  ${record.kind}@${record.version}  sha256:${record.digest.slice(0, 12)}`);
+        const origin = record.source.startsWith("local:") ? "released" : "pulled";
+        log(`  ${record.kind}@${record.version}  sha256:${record.digest.slice(0, 12)}  ${origin}`);
     }
 }

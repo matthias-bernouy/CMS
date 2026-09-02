@@ -127,6 +127,7 @@ describe("production surface mounting", () => {
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
             integrationCatalog: options.integrations.integrationCatalog,
             integrationPackageResolver: options.integrations.integrationPackageResolver,
+            integrationUpgradeReleases: options.integrations.integrationUpgradeReleases,
             integrationMigrationRuntime: expect.any(ProductionIntegrationMigrationRuntime),
             integrationConnectorBaselineAdopters: options.integrations.integrationConnectorBaselineAdopters,
             publicAuth: {

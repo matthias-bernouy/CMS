@@ -11,6 +11,7 @@
     "include": ["src/**/*.ts"],
     "references": [
         { "path": "../../features/cms-integration-packages" },
+        { "path": "../../features/cms-integration-registry" },
         { "path": "../../features/cms-integrations" },
         { "path": "../cms-server" }
     ]

@@ -3,6 +3,7 @@ import type { LocalMongo } from "./mongo";
 import type { DevRuntimeConfig } from "./config";
 import type { UlviaPaths } from "./paths";
 import type { LocalSupabaseEnvironment } from "./supabase";
+import { spawnCommand } from "./process";
 
 export type DevPorts = Readonly<{
     control: number;
@@ -15,6 +16,7 @@ export type DevPorts = Readonly<{
 export type LocalSupabaseCmsConfig = Readonly<{
     managementUrl: string;
     accessToken: string;
+    projectRef: string;
     environment: LocalSupabaseEnvironment;
 }>;
 
@@ -27,14 +29,15 @@ export async function startLocalCms(
     repositoryUrl: string,
     supabase: LocalSupabaseCmsConfig,
     ports: DevPorts,
+    options: Readonly<{ inheritOutput?: boolean }> = {},
 ): Promise<CmsProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
     const controlUrl = `http://127.0.0.1:${ports.control}`;
     const deliveryUrl = `http://127.0.0.1:${ports.delivery}`;
-    const cms = Bun.spawn([process.execPath, entrypoint], {
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
+    const inheritOutput = options.inheritOutput ?? true;
+    const cms = spawnCommand([process.execPath, entrypoint], {
+        inherit: inheritOutput,
+        ignore: !inheritOutput,
         env: {
             ...process.env,
             MODE: "DEV",
@@ -61,7 +64,7 @@ export async function startLocalCms(
             P9R_INTEGRATION_REPOSITORY_URL: repositoryUrl,
             CMS_LOCAL_SUPABASE_MANAGEMENT_URL: supabase.managementUrl,
             CMS_LOCAL_SUPABASE_FUNCTIONS_URL: supabase.environment.functionsUrl,
-            CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
+            CMS_LOCAL_SUPABASE_PROJECT_REF: supabase.projectRef,
             CMS_LOCAL_SUPABASE_ACCESS_TOKEN: supabase.accessToken,
         },
     });

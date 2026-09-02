@@ -10,6 +10,8 @@ bun run ulvia -- pull commerce
 bun run ulvia -- pull commerce --version 1.0.0
 bun run ulvia -- pull commerce --all-versions
 bun run ulvia -- pull --all
+bun run ulvia -- release commerce
+bun run ulvia -- release commerce --version 1.1.0 --root ./integrations
 bun run ulvia -- status
 bun run ulvia -- dev
 bun run ulvia -- dev status
@@ -17,10 +19,16 @@ bun run ulvia -- dev credentials
 bun run ulvia -- dev stop
 ```
 
-`push` is deliberately disabled. The local repository contains only packages
-that were explicitly pulled. Exact package bytes are stored by SHA-256 digest,
-and immutable `kind@version` references make corruption or coordinate reuse
-visible.
+`release` discovers the integration source below the working directory (or
+`--root`), builds its canonical package, and compares it with immutable
+repository baselines. It verifies a fresh installation and an upgrade from each
+older version in disposable CMS, MongoDB, and Supabase services. Required legacy
+connector baselines are explicitly adopted before migration. The package enters
+the persistent local repository only after every scenario succeeds.
+
+Existing remote coordinates cannot be reused with different bytes. `push` is
+deliberately disabled. Exact package bytes are stored by SHA-256 digest, and
+immutable `kind@version` references make corruption or coordinate reuse visible.
 
 ## Persistent data
 

@@ -1,6 +1,9 @@
 import { devCommand } from "./commands/dev";
 import { pullCommand } from "./commands/pull";
+import { releaseCommand } from "./commands/release";
 import { statusCommand } from "./commands/status";
+import type { LocalReleaseVerifier } from "./release/types";
+import { RuntimeLocalReleaseVerifier } from "./release/verifier";
 import { LocalIntegrationRepository } from "./repository/local";
 import { DEFAULT_REPOSITORY_URL, RemoteIntegrationRepository } from "./repository/remote";
 import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";
@@ -10,11 +13,13 @@ const HELP = `Ulvia local-first developer CLI
 Usage:
   ulvia pull <integration> [--version <version> | --all-versions]
   ulvia pull --all
+  ulvia release <integration> [--version <version>] [--root <directory>]
   ulvia status
   ulvia dev [status | credentials | stop]
 
 Commands:
   pull       Store immutable integration packages in the local repository
+  release    Build and verify an immutable package in disposable local services
   status     Show the persistent data directory and locally available packages
   dev        Run or inspect the persistent local development stack
   push       Disabled while the local workflow is under construction
@@ -29,6 +34,8 @@ export type CliOptions = Readonly<{
     home?: string;
     log?: (message: string) => void;
     repositoryFetch?: typeof fetch;
+    cwd?: string;
+    releaseVerifier?: LocalReleaseVerifier;
 }>;
 
 export async function runCli(args: readonly string[], options: CliOptions = {}): Promise<void> {
@@ -45,10 +52,6 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     if (command === "push") {
         throw new Error("push is disabled: this milestone never writes to a remote repository");
     }
-    if (command === "release") {
-        throw new Error("release is not available yet; the local verification pipeline is the next milestone");
-    }
-
     const environment = options.environment ?? process.env;
     const paths = resolveUlviaPaths(environment, options.home);
     await ensureUlviaPaths(paths);
@@ -62,6 +65,18 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     if (command === "pull") {
         const remote = new RemoteIntegrationRepository(repositoryUrl(environment), options.repositoryFetch);
         await pullCommand(args.slice(1), local, remote, log);
+        return;
+    }
+    if (command === "release") {
+        const remote = new RemoteIntegrationRepository(repositoryUrl(environment), options.repositoryFetch);
+        await releaseCommand(
+            args.slice(1),
+            options.cwd ?? process.cwd(),
+            local,
+            remote,
+            options.releaseVerifier ?? new RuntimeLocalReleaseVerifier(log),
+            log,
+        );
         return;
     }
     if (command === "dev") {

@@ -79,6 +79,7 @@ async function runDev(
             {
                 managementUrl: supabaseManagement.url,
                 accessToken: supabaseToken,
+                projectRef: "local",
                 environment: supabaseEnvironment,
             },
             PORTS,
