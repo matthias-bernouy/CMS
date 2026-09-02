@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v1",
     "kind": "basic-blocs",
     "label": "Basic Blocs",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "category": "Blocks",
     "description": "Install neutral official UI blocs used by other integrations.",
     "icon": {

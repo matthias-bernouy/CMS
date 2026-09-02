@@ -19,6 +19,7 @@ describe("official package history", () => {
 
         expect(packages.map(({ kind, version }) => `${kind}@${version}`)).toEqual([
             "basic-blocs@1.0.0",
+            "basic-blocs@2.0.0",
             "photo-albums@1.0.0",
             "photo-albums@1.1.0",
             "photo-albums@1.2.0",

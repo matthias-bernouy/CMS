@@ -12,6 +12,7 @@ import {
 const EXPECTED_COORDINATES = [
     "ban@1.0.0",
     "basic-blocs@1.0.0",
+    "basic-blocs@2.0.0",
     "commerce@1.0.0",
     "commerce@1.1.0",
     "commerce-mondial-relay-delivery@1.0.0",

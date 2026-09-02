@@ -1,4 +1,8 @@
-# Basic Blocs 1.0.0
+# Basic Blocs 2.0.0
+
+This major release records the current public Bloc contracts against the
+immutable 1.0.0 repository baseline. It also moves authoring to one current
+source tree and keeps its contract tests beside that source.
 
 This release keeps styled actions semantic by wrapping exactly one native
 Light DOM `a` or `button`, with optional leading and trailing inline SVG icons.

@@ -33,6 +33,27 @@ describe("integration-owned release tests", () => {
 
         expect(await runAuthorTests(root)).toBeTrue();
     });
+
+    test("uses the nearest parent Bun test configuration", async () => {
+        const workspace = await temporaryRoot();
+        const root = join(workspace, "integrations", "example");
+        const tests = join(root, "tests");
+        await mkdir(tests, { recursive: true });
+        await writeFile(join(workspace, "bunfig.toml"), '[test]\npreload = ["./preload.ts"]\n');
+        await writeFile(join(workspace, "preload.ts"), "globalThis.__ULVIA_AUTHOR_PRELOAD__ = true;\n");
+        await writeFile(
+            join(tests, "configured.test.ts"),
+            [
+                'import { expect, test } from "bun:test";',
+                'test("loads the parent configuration", () => {',
+                "    expect(globalThis.__ULVIA_AUTHOR_PRELOAD__).toBeTrue();",
+                `    expect(process.cwd()).toBe(${JSON.stringify(workspace)});`,
+                "});",
+            ].join("\n"),
+        );
+
+        expect(await runAuthorTests(root)).toBeTrue();
+    });
 });
 
 async function temporaryRoot(): Promise<string> {

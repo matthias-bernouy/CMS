@@ -7,6 +7,7 @@ import {
 } from "@bernouy/cms-official-integrations/publication";
 
 const EXPECTED_POST_BOOTSTRAP_RELEASES = [
+    "basic-blocs@2.0.0",
     "commerce@1.1.0",
     "consent@1.0.0",
     "documentation-blocs@1.0.0",

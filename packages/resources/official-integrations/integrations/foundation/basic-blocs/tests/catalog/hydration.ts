@@ -9,7 +9,7 @@ export function registerHydrationTest(): void {
         const definition = await repo.get("basic-blocs");
 
         expect(definition?.kind).toBe("basic-blocs");
-        expect(definition?.version).toBe("1.0.0");
+        expect(definition?.version).toBe("2.0.0");
 
         const artifacts = definition?.artifacts ?? [];
         const button = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-button");

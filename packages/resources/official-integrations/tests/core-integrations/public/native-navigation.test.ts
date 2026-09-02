@@ -76,11 +76,11 @@ describe("native light-DOM navigation", () => {
 
         const redirect = resolve(
             OFFICIAL_INTEGRATIONS_ROOT,
-            "foundation/basic-blocs/versions/1.0.0/blocs/basic/basic-redirect/Bloc.ts",
+            "foundation/basic-blocs/blocs/basic/basic-redirect/Bloc.ts",
         );
         const headerCell = resolve(
             OFFICIAL_INTEGRATIONS_ROOT,
-            "foundation/basic-blocs/versions/1.0.0/blocs/data-display/table/basic-table-header-cell/template.html",
+            "foundation/basic-blocs/blocs/data-display/table/basic-table-header-cell/template.html",
         );
         expect(readFileSync(redirect, "utf8")).toContain("<a hidden></a>");
         expect(readFileSync(headerCell, "utf8")).toContain("<a data-navigation hidden></a>");
@@ -159,7 +159,7 @@ function htmlFiles(): string[] {
 }
 
 function integrationFiles(pattern: string): string[] {
-    return glob(OFFICIAL_INTEGRATIONS_ROOT, pattern);
+    return glob(OFFICIAL_INTEGRATIONS_ROOT, pattern).filter((file) => !file.includes(`${sep}tests${sep}`));
 }
 
 function sitePages(scope: string): string[] {
