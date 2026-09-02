@@ -6,3 +6,11 @@ export {
     MongoDashboardRepository,
     type MongoDashboardRepositoryConfig,
 } from "../default-implementation/MongoDashboardRepository";
+export {
+    MongoDashboardViewRepository,
+    type MongoDashboardViewRepositoryConfig,
+} from "../default-implementation/MongoDashboardViewRepository";
+export {
+    MongoDashboardAssignmentRepository,
+    type MongoDashboardAssignmentRepositoryConfig,
+} from "../default-implementation/MongoDashboardAssignmentRepository";

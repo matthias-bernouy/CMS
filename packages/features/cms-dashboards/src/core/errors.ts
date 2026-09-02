@@ -4,3 +4,10 @@ export class DuplicateDashboardError extends Error {
         this.name = "DuplicateDashboardError";
     }
 }
+
+export class DuplicateDashboardViewError extends Error {
+    constructor(readonly viewId: string) {
+        super(`duplicate dashboard view: ${viewId}`);
+        this.name = "DuplicateDashboardViewError";
+    }
+}

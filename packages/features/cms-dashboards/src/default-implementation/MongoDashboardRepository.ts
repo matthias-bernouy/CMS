@@ -1,13 +1,13 @@
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import { DuplicateDashboardError } from "../core/errors";
-import type { Dashboard } from "../interfaces/Dashboard";
+import type { DashboardDefinition } from "../interfaces/Dashboard";
 import type { DashboardRepository } from "../interfaces/DashboardRepository";
 
 export type MongoDashboardRepositoryConfig = {
     collectionPrefix?: string;
 };
 
-type DashboardDoc = Omit<Dashboard, "id"> & { _id: string };
+type DashboardDoc = Omit<DashboardDefinition, "id"> & { _id: string };
 
 export class MongoDashboardRepository implements DashboardRepository {
     private readonly prefix: string;
@@ -20,14 +20,17 @@ export class MongoDashboardRepository implements DashboardRepository {
     }
 
     async init(): Promise<void> {
-        await this.dashboards.createIndex({ source: 1 });
+        await Promise.all([
+            this.dashboards.createIndex({ "origin.kind": 1 }),
+            this.dashboards.createIndex({ status: 1 }),
+        ]);
     }
 
     private get dashboards(): Collection<DashboardDoc> {
         return this.db.collection<DashboardDoc>(this.prefix + "dashboards");
     }
 
-    async createDashboard(dashboard: Dashboard): Promise<Dashboard> {
+    async createDashboard(dashboard: DashboardDefinition): Promise<DashboardDefinition> {
         try {
             await this.dashboards.insertOne(toDoc(dashboard) as OptionalUnlessRequiredId<DashboardDoc>);
         } catch (error) {
@@ -39,7 +42,7 @@ export class MongoDashboardRepository implements DashboardRepository {
         return structuredClone(dashboard);
     }
 
-    async updateDashboard(dashboard: Dashboard): Promise<Dashboard | null> {
+    async updateDashboard(dashboard: DashboardDefinition): Promise<DashboardDefinition | null> {
         const { id: _id, ...rest } = dashboard;
         const doc = await this.dashboards.findOneAndReplace({ _id }, rest, { returnDocument: "after" });
         return fromDoc(doc);
@@ -50,27 +53,22 @@ export class MongoDashboardRepository implements DashboardRepository {
         return result.deletedCount > 0;
     }
 
-    async getDashboard(id: string): Promise<Dashboard | null> {
+    async getDashboard(id: string): Promise<DashboardDefinition | null> {
         return fromDoc(await this.dashboards.findOne({ _id: id }));
     }
 
-    async getDashboardsForSource(sourceId: string): Promise<Dashboard[]> {
-        const docs = await this.dashboards.find({ source: sourceId }).toArray();
-        return docs.map((doc) => fromDoc(doc)!);
-    }
-
-    async getAllDashboards(): Promise<Dashboard[]> {
+    async getAllDashboards(): Promise<DashboardDefinition[]> {
         const docs = await this.dashboards.find().toArray();
         return docs.map((doc) => fromDoc(doc)!);
     }
 }
 
-function toDoc(dashboard: Dashboard): DashboardDoc {
+function toDoc(dashboard: DashboardDefinition): DashboardDoc {
     const { id, ...rest } = dashboard;
     return { _id: id, ...rest };
 }
 
-function fromDoc(doc: DashboardDoc | null): Dashboard | null {
+function fromDoc(doc: DashboardDoc | null): DashboardDefinition | null {
     if (!doc) {
         return null;
     }

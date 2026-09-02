@@ -1,5 +1,5 @@
 import { makeSourceUrn, type Source } from "@bernouy/cms-sources";
-import type { DashboardDto } from "../interfaces/Dashboard";
+import type { DashboardDto, DashboardViewDefinition } from "../interfaces/Dashboard";
 import { validateRequiredId } from "./validateDashboard/shared";
 import { collectWidgetIds, validateWidget } from "./validateDashboard/widgets";
 
@@ -27,4 +27,22 @@ export function validateDashboard(dashboard: DashboardDto, options: ValidateDash
         validateWidget(widget, `views.${index}`, dashboard, source, widgetIds, errors),
     );
     return errors;
+}
+
+export {
+    normalizeLegacyDashboardView,
+    validateDashboardStructure,
+    validateDashboardViewStructure,
+} from "./validateDashboard/shared/v2Validation";
+export { resolveDashboardViews } from "./validateDashboard/shared/viewResolution";
+export { compileDashboardExecutionPlan } from "./validateDashboard/shared/executionPlan";
+
+export function dashboardViewAsLegacyDashboard(view: DashboardViewDefinition): DashboardDto {
+    return {
+        id: view.id,
+        source: view.source,
+        meta: view.meta,
+        views: view.view.widgets,
+        ...(view.requires ? { requires: view.requires } : {}),
+    };
 }

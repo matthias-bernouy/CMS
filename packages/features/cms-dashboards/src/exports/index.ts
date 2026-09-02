@@ -7,10 +7,12 @@ export type {
     DashboardAction,
     DashboardBinding,
     DashboardColumn,
+    ComposedDashboard,
     DashboardDataRef,
     DashboardDetailMainItem,
     DashboardDefinition,
     DashboardDto,
+    DashboardExecutionPlan,
     DashboardEmbeddedLookupRef,
     DashboardEndpointRef,
     DashboardExpr,
@@ -34,21 +36,46 @@ export type {
     DashboardVisibilityCondition,
     DashboardVisibilityValue,
     DashboardWidget,
+    DashboardAllowedCall,
+    DashboardOrigin,
+    DashboardViewAvailability,
+    DashboardViewDefinition,
+    DashboardViewMount,
+    DashboardViewNode,
+    DashboardViewOrigin,
+    LegacyDashboardDefinition,
+    ResolvedDashboard,
+    ResolvedDashboardView,
 } from "../interfaces/Dashboard";
 export {
+    DASHBOARD_MAX_VIEW_DEPTH,
     DASHBOARD_MAX_NESTED_FIELDS,
     DASHBOARD_MAX_OPTIONS,
+    DASHBOARD_SCHEMA_VERSION,
 } from "../interfaces/Dashboard";
 export type { DashboardRepository } from "../interfaces/DashboardRepository";
+export type { DashboardViewRepository } from "../interfaces/DashboardViewRepository";
+export type {
+    DashboardAssignment,
+    DashboardAssignmentRepository,
+} from "../interfaces/DashboardAssignmentRepository";
 export { InMemoryDashboardRepository } from "../default-implementation/InMemoryDashboardRepository";
-export { DuplicateDashboardError } from "../core/errors";
+export { InMemoryDashboardViewRepository } from "../default-implementation/InMemoryDashboardViewRepository";
+export { InMemoryDashboardAssignmentRepository } from "../default-implementation/InMemoryDashboardAssignmentRepository";
+export { DuplicateDashboardError, DuplicateDashboardViewError } from "../core/errors";
 export {
     flattenDataShape,
     type FlattenedDataShapeField,
     type FlattenedInputType,
 } from "../core/flattenDataShape";
 export {
+    compileDashboardExecutionPlan,
+    dashboardViewAsLegacyDashboard,
+    normalizeLegacyDashboardView,
+    resolveDashboardViews,
     validateDashboard,
+    validateDashboardStructure,
+    validateDashboardViewStructure,
     type ValidateDashboardOptions,
 } from "../core/validateDashboard";
 export {
