@@ -34,6 +34,7 @@ import type {
     SourceOverlayRepository,
     SourceRepository,
     SourceRequestTelemetryOptions,
+    SourceTargetUrlValidationOptions,
 } from "@bernouy/cms-sources";
 import type { ScheduledTriggerRunResult, TriggerRepository } from "@bernouy/cms-triggers";
 import type { Cache, Runner } from "@bernouy/http-runner";
@@ -76,6 +77,7 @@ export type ControlCmsOptions = Configuration & {
     /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to true. */
     responsivePrivateSourceImagesEnabled?: boolean;
     sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
+    sourceTargetValidation?: SourceTargetUrlValidationOptions;
     integrationBlocRepository?: CmsRepository;
 };
 

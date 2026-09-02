@@ -3,7 +3,10 @@ import { HTTP_METHODS, MAX_SOURCE_ENDPOINT_TIMEOUT_MS, RESPONSE_KINDS } from "cm
 import { isSourceEndpointAccessMode } from "cms-sources/core/execution/access";
 import { dataShapeAtPath } from "cms-sources/core/validation/parseDataShape";
 import { validateTriggerResponse } from "cms-sources/core/response-projection/validateTriggerResponse";
-import { validateSourceTargetUrl } from "cms-sources/core/upstream/sourceTargetUrl";
+import {
+    type SourceTargetUrlValidationOptions,
+    validateSourceTargetUrl,
+} from "cms-sources/core/upstream/sourceTargetUrl";
 import { validateHeaders, validateParams } from "cms-sources/core/validation/sourceRequestValidation";
 
 const RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
@@ -12,13 +15,17 @@ export function isValidResponseStatus(status: string): boolean {
     return status === "default" || RESPONSE_STATUS.test(status);
 }
 
-export function validateEndpoint(endpoint: SourceEndpoint, errors: string[]): void {
+export function validateEndpoint(
+    endpoint: SourceEndpoint,
+    errors: string[],
+    targetOptions: SourceTargetUrlValidationOptions = {},
+): void {
     if (!(HTTP_METHODS as readonly string[]).includes(endpoint.method)) {
         errors.push(`invalid method for "${endpoint.urn}": "${endpoint.method}"`);
     }
     validateTimeout(endpoint, errors);
     validateAccess(endpoint, errors);
-    const target = validateSourceTargetUrl(endpoint.targetUrl);
+    const target = validateSourceTargetUrl(endpoint.targetUrl, targetOptions);
     if (!target.ok) {
         errors.push(`invalid targetUrl for "${endpoint.urn}": ${target.reason}`);
     }

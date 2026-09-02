@@ -72,6 +72,9 @@ export async function mountProductionSurfaces(
         connectorDeployers: integrations.integrationConnectorDeployers,
         provisioners: integrations.integrationProvisioners,
         sourceExecutorDeps: { resolveSecret: features.resolveSecret, identities: features.identities },
+        ...(env.localSupabase
+            ? { sourceTargetValidation: { allowBlockedTargetUrlPrefixes: [env.localSupabase.functionsBaseUrl] } }
+            : {}),
     };
     const cmsBindingMigration = new CmsSourceBindingMigrationHandler(cmsBindingDeps);
     const integrationMigrationRuntime = new ProductionIntegrationMigrationRuntime({
@@ -162,6 +165,9 @@ export async function mountProductionSurfaces(
             responsivePublicSourceImagesEnabled,
             responsivePrivateSourceImagesEnabled,
             sourceTrustedConnectorTarget: trustedConnectorTarget,
+            ...(env.localSupabase
+                ? { sourceTargetValidation: { allowBlockedTargetUrlPrefixes: [env.localSupabase.functionsBaseUrl] } }
+                : {}),
             publicAuth: {
                 ...authentication.publicAuthBase,
                 emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,

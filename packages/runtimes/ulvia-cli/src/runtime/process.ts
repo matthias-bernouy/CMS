@@ -10,6 +10,10 @@ export type RunCommandOptions = Readonly<{
     allowFailure?: boolean;
 }>;
 
+export type SpawnCommandOptions = Readonly<{
+    cwd?: string;
+}>;
+
 export async function runCommand(command: readonly string[], options: RunCommandOptions = {}): Promise<CommandResult> {
     const inherit = options.inherit ?? false;
     const subprocess = Bun.spawn([...command], {
@@ -34,6 +38,15 @@ export function requireExecutable(name: string): void {
     if (!Bun.which(name)) {
         throw new Error(`${name} is required but was not found in PATH`);
     }
+}
+
+export function spawnCommand(command: readonly string[], options: SpawnCommandOptions = {}) {
+    return Bun.spawn([...command], {
+        ...(options.cwd ? { cwd: options.cwd } : {}),
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+    });
 }
 
 async function readStream(stream: ReadableStream<Uint8Array> | number | undefined): Promise<string> {

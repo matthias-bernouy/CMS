@@ -31,7 +31,7 @@ be committed to a project repository.
 
 `ulvia dev` starts a persistent local Supabase project, a persistent MongoDB
 container, an internal loopback-only repository bridge, and the current CMS
-runtime. The CMS sees only locally pulled integrations. Supabase is prepared as
-local infrastructure; wiring connector deployment and migrations to it is the
-next milestone, so Supabase-backed integration installs are not yet claimed as
-fully local.
+runtime. The CMS sees only locally pulled integrations. Supabase connector SQL,
+Data API schema configuration, Storage bucket migrations, function secrets, and
+Edge Function bundles are applied to that local project. The local management
+bridge exists only while `ulvia dev` is running and never accepts remote hosts.

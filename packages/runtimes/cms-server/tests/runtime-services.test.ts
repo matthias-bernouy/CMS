@@ -110,6 +110,10 @@ describe("production runtime services", () => {
                 SMTP_PASSWORD: " secret ",
                 UNRELATED_SECRET: "must-not-leak",
             },
+            supabase: {
+                apiBaseUrl: "http://127.0.0.1:5103",
+                functionsBaseUrl: "http://127.0.0.1:54321/functions/v1",
+            },
         });
 
         expect(services.integrationCatalog).toBeInstanceOf(HttpIntegrationDefinitionRepository);
@@ -145,6 +149,12 @@ describe("production runtime services", () => {
         ).toEqual({
             SMTP_HOST: "smtp.example.test",
             SMTP_PASSWORD: "secret",
+        });
+        expect(
+            (deployer as unknown as { config: { apiBaseUrl: string; functionsBaseUrl: string } }).config,
+        ).toMatchObject({
+            apiBaseUrl: "http://127.0.0.1:5103",
+            functionsBaseUrl: "http://127.0.0.1:54321/functions/v1",
         });
     });
 });

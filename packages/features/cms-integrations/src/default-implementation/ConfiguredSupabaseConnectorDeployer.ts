@@ -16,6 +16,7 @@ export type ConfiguredSupabaseConnectorDeployerConfig = {
     providerRepository: IntegrationConnectorProviderRepository;
     secrets: SecretReader;
     apiBaseUrl?: string;
+    functionsBaseUrl?: string;
     fetch?: typeof fetch;
     functionSecrets?: SupabaseConnectorFunctionSecrets;
 };
@@ -32,7 +33,7 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
 
     async previewOutputs(): Promise<Record<string, string>> {
         const projectRef = await this.readProjectRef();
-        return { functionsBaseUrl: `https://${projectRef}.supabase.co/functions/v1` };
+        return { functionsBaseUrl: this.functionsBaseUrl(projectRef) };
     }
 
     async deploy(
@@ -49,6 +50,7 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
             projectRef,
             accessToken,
             ...(this.config.apiBaseUrl !== undefined ? { apiBaseUrl: this.config.apiBaseUrl } : {}),
+            ...(this.config.functionsBaseUrl !== undefined ? { functionsBaseUrl: this.config.functionsBaseUrl } : {}),
             ...(this.config.fetch !== undefined ? { fetch: this.config.fetch } : {}),
             ...(this.config.functionSecrets !== undefined ? { functionSecrets: this.config.functionSecrets } : {}),
         });
@@ -58,6 +60,10 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
         } catch (error) {
             throw redactAccessToken(error, accessToken);
         }
+    }
+
+    private functionsBaseUrl(projectRef: string): string {
+        return (this.config.functionsBaseUrl ?? `https://${projectRef}.supabase.co/functions/v1`).replace(/\/+$/, "");
     }
 
     private async readProjectRef(): Promise<string> {

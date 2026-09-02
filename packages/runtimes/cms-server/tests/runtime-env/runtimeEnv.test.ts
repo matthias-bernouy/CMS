@@ -165,4 +165,43 @@ describe("runtime env validation", () => {
             }),
         ).toThrow(/CMS_REPOSITORY_HUB_FACADE_ENABLED must be true or false/);
     });
+
+    test("accepts a complete loopback-only Supabase connector in development", () => {
+        expect(
+            readRuntimeEnv({
+                ...validEnv(),
+                MODE: "DEV",
+                CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "http://127.0.0.1:5103",
+                CMS_LOCAL_SUPABASE_FUNCTIONS_URL: "http://localhost:54321/functions/v1/",
+                CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
+                CMS_LOCAL_SUPABASE_ACCESS_TOKEN: "local-management-token-at-least-24",
+            }).localSupabase,
+        ).toEqual({
+            managementApiUrl: "http://127.0.0.1:5103",
+            functionsBaseUrl: "http://localhost:54321/functions/v1",
+            projectRef: "local",
+            accessToken: "local-management-token-at-least-24",
+        });
+    });
+
+    test("rejects incomplete, remote, or production local Supabase configuration", () => {
+        const local = {
+            CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "http://127.0.0.1:5103",
+            CMS_LOCAL_SUPABASE_FUNCTIONS_URL: "http://127.0.0.1:54321/functions/v1",
+            CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
+            CMS_LOCAL_SUPABASE_ACCESS_TOKEN: "local-management-token-at-least-24",
+        };
+        expect(() => readRuntimeEnv({ ...validEnv(), ...local })).toThrow(/only when MODE=DEV/);
+        expect(() =>
+            readRuntimeEnv({ ...validEnv(), ...local, MODE: "DEV", CMS_LOCAL_SUPABASE_FUNCTIONS_URL: undefined }),
+        ).toThrow(/CMS_LOCAL_SUPABASE_FUNCTIONS_URL missing/);
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                ...local,
+                MODE: "DEV",
+                CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "https://api.supabase.com",
+            }),
+        ).toThrow(/loopback host/);
+    });
 });

@@ -8,6 +8,7 @@ export type SupabaseConnectorDeployerConfig = {
     projectRef: string;
     accessToken: string;
     apiBaseUrl?: string;
+    functionsBaseUrl?: string;
     fetch?: typeof fetch;
     functionSecrets?: SupabaseConnectorFunctionSecrets;
 };

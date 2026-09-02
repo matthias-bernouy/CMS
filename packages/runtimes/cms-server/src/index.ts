@@ -1,4 +1,5 @@
 import { createProductionAuth } from "./runtime/auth";
+import { SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY } from "@bernouy/cms-integrations";
 import { createProductionIntegrationServices } from "./runtime/integrations";
 import { mountProductionSurfaces } from "./runtime/mountSurfaces";
 import { createIntegrationPackageCacheObserver } from "./runtime/sourceTelemetry";
@@ -15,7 +16,18 @@ await validateCmsStorageRoots(env.CMS_FILES_DIR, env.CMS_INTEGRATION_PACKAGE_CAC
 const core = await createCoreStores(env);
 const features = await createFeatureStores(core.db, core.secrets, {
     endpointPerformanceEnabled: env.ENDPOINT_PERFORMANCE_ENABLED,
+    ...(env.localSupabase
+        ? { sourceTargetValidation: { allowBlockedTargetUrlPrefixes: [env.localSupabase.functionsBaseUrl] } }
+        : {}),
 });
+if (env.localSupabase) {
+    await features.integrationConnectorProviders.upsert({
+        provider: "supabase",
+        enabled: true,
+        projectRef: env.localSupabase.projectRef,
+    });
+    await core.secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, env.localSupabase.accessToken);
+}
 const integrations = createProductionIntegrationServices({
     providerRepository: features.integrationConnectorProviders,
     secrets: core.secrets,
@@ -23,6 +35,14 @@ const integrations = createProductionIntegrationServices({
     packageCacheDir: env.CMS_INTEGRATION_PACKAGE_CACHE_DIR,
     packageCacheObserve: createIntegrationPackageCacheObserver(),
     environment: process.env,
+    ...(env.localSupabase
+        ? {
+              supabase: {
+                  apiBaseUrl: env.localSupabase.managementApiUrl,
+                  functionsBaseUrl: env.localSupabase.functionsBaseUrl,
+              },
+          }
+        : {}),
 });
 await integrations.integrationPackageCache.init();
 const authentication = await createProductionAuth(env, core);

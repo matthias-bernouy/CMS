@@ -48,9 +48,17 @@ export type RuntimeEnv = {
     CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: number;
     CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: number;
     CMS_REPOSITORY_HUB_FACADE_ENABLED: boolean;
+    localSupabase?: LocalSupabaseRuntimeConfig;
     repositoryManagementGateway?: RepositoryManagementGatewayRuntimeConfig;
     integrationRepository: Readonly<{ url: string }>;
 };
+
+export type LocalSupabaseRuntimeConfig = Readonly<{
+    managementApiUrl: string;
+    functionsBaseUrl: string;
+    projectRef: string;
+    accessToken: string;
+}>;
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const CONTROL_PORT = parsePort(source.CONTROL_PORT, "CONTROL_PORT", 3000);
@@ -62,6 +70,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const CONTROL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
     const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
     const clientAddress = parseClientAddressConfig(source);
+    const localSupabase = parseLocalSupabase(source);
     const repositoryManagementGateway = parseRepositoryManagementGatewayConfig(source);
 
     return {
@@ -159,9 +168,48 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             "CMS_REPOSITORY_HUB_FACADE_ENABLED",
             false,
         ),
+        ...(localSupabase ? { localSupabase } : {}),
         ...(repositoryManagementGateway ? { repositoryManagementGateway } : {}),
         integrationRepository: parseIntegrationRepository(source),
     };
+}
+
+function parseLocalSupabase(source: RuntimeEnvSource): LocalSupabaseRuntimeConfig | undefined {
+    const names = [
+        "CMS_LOCAL_SUPABASE_MANAGEMENT_URL",
+        "CMS_LOCAL_SUPABASE_FUNCTIONS_URL",
+        "CMS_LOCAL_SUPABASE_PROJECT_REF",
+        "CMS_LOCAL_SUPABASE_ACCESS_TOKEN",
+    ] as const;
+    if (!names.some((name) => source[name]?.trim())) {
+        return undefined;
+    }
+    if (source.MODE?.trim() !== "DEV") {
+        throw new Error("CMS_LOCAL_SUPABASE_* is available only when MODE=DEV");
+    }
+    const managementApiUrl = parseLoopbackUrl(requiredEnv(source, names[0]), names[0], false);
+    const functionsBaseUrl = parseLoopbackUrl(requiredEnv(source, names[1]), names[1], true);
+    const projectRef = requiredEnv(source, names[2]);
+    if (!/^[a-z0-9][a-z0-9-]{0,62}$/u.test(projectRef)) {
+        throw new Error(`${names[2]} must be a lowercase project identifier`);
+    }
+    const accessToken = requiredEnv(source, names[3]);
+    if (accessToken.length < 24 || accessToken.length > 256) {
+        throw new Error(`${names[3]} must contain between 24 and 256 characters`);
+    }
+    return Object.freeze({ managementApiUrl, functionsBaseUrl, projectRef, accessToken });
+}
+
+function parseLoopbackUrl(value: string, name: string, allowPath: boolean): string {
+    const url = new URL(parseHttpUrl(value, name));
+    if (url.hostname !== "127.0.0.1" && url.hostname !== "localhost" && url.hostname !== "[::1]") {
+        throw new Error(`${name} must use a loopback host`);
+    }
+    if (url.username || url.password || url.search || url.hash || (!allowPath && url.pathname !== "/")) {
+        throw new Error(`${name} contains unsupported URL components`);
+    }
+    url.pathname = url.pathname.replace(/\/+$/u, "") || "/";
+    return url.href.replace(/\/$/u, "");
 }
 
 function parseIntegrationRepository(source: RuntimeEnvSource): RuntimeEnv["integrationRepository"] {

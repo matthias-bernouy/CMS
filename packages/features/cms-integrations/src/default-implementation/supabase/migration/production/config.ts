@@ -10,6 +10,7 @@ export type ConfiguredSupabaseMigrationServicesConfig = {
     providerRepository: IntegrationConnectorProviderRepository;
     secrets: SecretReader;
     apiBaseUrl?: string;
+    functionsBaseUrl?: string;
     fetch?: typeof fetch;
 };
 
@@ -45,7 +46,10 @@ export async function resolveSupabaseMigrationConfig(
     return {
         projectRef,
         accessToken,
-        functionsBaseUrl: `https://${projectRef}.supabase.co/functions/v1`,
+        functionsBaseUrl: (config.functionsBaseUrl ?? `https://${projectRef}.supabase.co/functions/v1`).replace(
+            /\/+$/,
+            "",
+        ),
         ...(config.apiBaseUrl !== undefined ? { apiBaseUrl: config.apiBaseUrl } : {}),
         ...(config.fetch !== undefined ? { fetch: config.fetch } : {}),
     };

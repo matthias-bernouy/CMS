@@ -17,10 +17,11 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
         const deployer = new ConfiguredSupabaseConnectorDeployer({
             providerRepository,
             secrets: new InMemorySecretStore(),
+            functionsBaseUrl: "http://127.0.0.1:54321/functions/v1/",
         });
 
         expect(await deployer.previewOutputs()).toEqual({
-            functionsBaseUrl: "https://project-one.supabase.co/functions/v1",
+            functionsBaseUrl: "http://127.0.0.1:54321/functions/v1",
         });
     });
 

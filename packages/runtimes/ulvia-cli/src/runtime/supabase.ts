@@ -9,18 +9,45 @@ export type LocalSupabaseStatus = Readonly<{
     studioUrl?: string;
 }>;
 
-export async function startLocalSupabase(projectRoot: string): Promise<void> {
+export type LocalSupabaseEnvironment = Readonly<{
+    apiUrl: string;
+    functionsUrl: string;
+    databaseUrl: string;
+}>;
+
+export async function startLocalSupabase(projectRoot: string): Promise<LocalSupabaseEnvironment> {
     requireExecutable("bunx");
     if (!(await exists(join(projectRoot, "supabase", "config.toml")))) {
         await requiredSupabaseCommand(projectRoot, ["init"]);
     }
     await requiredSupabaseCommand(projectRoot, ["start"]);
+    const environment = await readLocalSupabaseEnvironment(projectRoot);
+    if (!environment) {
+        throw new Error("Supabase started without reporting its local service endpoints");
+    }
+    return environment;
 }
 
 export async function localSupabaseStatus(projectRoot: string): Promise<LocalSupabaseStatus | null> {
     requireExecutable("bunx");
     const result = await runSupabase(projectRoot, ["status", "--output", "json"]);
     return result.exitCode === 0 ? safeStatus(result.stdout) : null;
+}
+
+async function readLocalSupabaseEnvironment(projectRoot: string): Promise<LocalSupabaseEnvironment | null> {
+    const result = await runSupabase(projectRoot, ["status", "--output", "json"]);
+    if (result.exitCode !== 0) {
+        return null;
+    }
+    return parseLocalSupabaseEnvironment(result.stdout);
+}
+
+export function parseLocalSupabaseEnvironment(output: string): LocalSupabaseEnvironment | null {
+    const value = parseStatusOutput(output);
+    const apiUrl = localHttpUrl(value?.API_URL);
+    const functionsUrl = localHttpUrl(value?.FUNCTIONS_URL) ?? (apiUrl ? `${apiUrl}/functions/v1` : undefined);
+    const databaseUrl = localDatabaseUrl(value?.DB_URL);
+    return apiUrl && functionsUrl && databaseUrl ? { apiUrl, functionsUrl, databaseUrl } : null;
 }
 
 export async function stopLocalSupabase(projectRoot: string): Promise<boolean> {
@@ -50,13 +77,22 @@ async function exists(path: string): Promise<boolean> {
 }
 
 function safeStatus(output: string): LocalSupabaseStatus {
+    const value = parseStatusOutput(output);
+    const apiUrl = localHttpUrl(value?.API_URL);
+    const studioUrl = localHttpUrl(value?.STUDIO_URL);
+    return { ...(apiUrl ? { apiUrl } : {}), ...(studioUrl ? { studioUrl } : {}) };
+}
+
+function parseStatusOutput(output: string): Record<string, unknown> | undefined {
+    const start = output.indexOf("{");
+    const end = output.lastIndexOf("}");
+    if (start < 0 || end <= start) {
+        return undefined;
+    }
     try {
-        const value = JSON.parse(output) as Record<string, unknown>;
-        const apiUrl = localHttpUrl(value.API_URL);
-        const studioUrl = localHttpUrl(value.STUDIO_URL);
-        return { ...(apiUrl ? { apiUrl } : {}), ...(studioUrl ? { studioUrl } : {}) };
+        return JSON.parse(output.slice(start, end + 1)) as Record<string, unknown>;
     } catch {
-        return {};
+        return undefined;
     }
 }
 
@@ -68,5 +104,16 @@ function localHttpUrl(value: unknown): string | undefined {
     return (url.protocol === "http:" || url.protocol === "https:") &&
         (url.hostname === "127.0.0.1" || url.hostname === "localhost")
         ? url.href.replace(/\/$/u, "")
+        : undefined;
+}
+
+function localDatabaseUrl(value: unknown): string | undefined {
+    if (typeof value !== "string") {
+        return undefined;
+    }
+    const url = new URL(value);
+    return (url.protocol === "postgres:" || url.protocol === "postgresql:") &&
+        (url.hostname === "127.0.0.1" || url.hostname === "localhost")
+        ? url.href
         : undefined;
 }

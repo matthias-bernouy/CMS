@@ -16,7 +16,7 @@ export async function buildSourceWrites(
         }
         seen.add(source.urn);
 
-        const errors = validateSource(source);
+        const errors = validateSource(source, deps.sourceTargetValidation);
         if (errors.length) {
             throw new IntegrationInputError("artifacts", errors.join("; "));
         }

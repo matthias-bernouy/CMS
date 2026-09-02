@@ -3,7 +3,12 @@ import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { TriggerRepository } from "@bernouy/cms-triggers";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import type { ExecutorDeps, SourceOverlayRepository, SourceRepository } from "@bernouy/cms-sources";
+import type {
+    ExecutorDeps,
+    SourceOverlayRepository,
+    SourceRepository,
+    SourceTargetUrlValidationOptions,
+} from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { IntegrationAnswerValue, IntegrationDefinition } from "./Integration";
 import type { IntegrationInstallationRepository } from "./IntegrationInstallationRepository";
@@ -124,6 +129,7 @@ export type IntegrationImportDeps = {
     connectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
     provisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     sourceExecutorDeps?: ExecutorDeps;
+    sourceTargetValidation?: SourceTargetUrlValidationOptions;
     packageRoot?: string;
     packageDigest?: string;
     connectorInstanceIds?: Record<string, string>;

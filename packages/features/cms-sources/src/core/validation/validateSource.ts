@@ -2,6 +2,7 @@ import type { Source } from "cms-sources/interfaces/Source";
 import { isEndpointUrn, isSourceUrn, sourceUrnOf } from "cms-sources/core/system/urn";
 import { isSystemSourceUrn } from "cms-sources/core/system/systemSources";
 import { isValidResponseStatus, validateEndpoint } from "./sourceEndpointValidation";
+import type { SourceTargetUrlValidationOptions } from "cms-sources/core/upstream/sourceTargetUrl";
 import { validateSourceMediaEffects } from "./sourceMediaEffectValidation";
 import { validateSourceIndexing } from "./indexing";
 export {
@@ -30,7 +31,7 @@ export function isParsableUrl(value: string): boolean {
  * Pure — no I/O. Enforced unbypassably by `ValidatingSourceRepository`; callers
  * that want to fail a whole batch before writing (seed) call it directly.
  */
-export function validateSource(source: Source): string[] {
+export function validateSource(source: Source, targetOptions: SourceTargetUrlValidationOptions = {}): string[] {
     const errors: string[] = [];
 
     if (!isSourceUrn(source.urn)) {
@@ -42,7 +43,7 @@ export function validateSource(source: Source): string[] {
     const seen = new Set<string>();
     for (const endpoint of source.endpoints) {
         validateEndpointIdentity(endpoint, source.urn, seen, errors);
-        validateEndpoint(endpoint, errors);
+        validateEndpoint(endpoint, errors, targetOptions);
     }
     validateSourceIndexing(source, errors);
     validateSourceMediaEffects(source, errors);

@@ -2,12 +2,20 @@ import { fileURLToPath } from "node:url";
 import type { LocalMongo } from "./mongo";
 import type { DevRuntimeConfig } from "./config";
 import type { UlviaPaths } from "./paths";
+import type { LocalSupabaseEnvironment } from "./supabase";
 
 export type DevPorts = Readonly<{
     control: number;
     delivery: number;
     repository: number;
+    supabaseManagement: number;
     mongo: number;
+}>;
+
+export type LocalSupabaseCmsConfig = Readonly<{
+    managementUrl: string;
+    accessToken: string;
+    environment: LocalSupabaseEnvironment;
 }>;
 
 export type CmsProcess = ReturnType<typeof Bun.spawn>;
@@ -17,6 +25,7 @@ export async function startLocalCms(
     config: DevRuntimeConfig,
     mongo: LocalMongo,
     repositoryUrl: string,
+    supabase: LocalSupabaseCmsConfig,
     ports: DevPorts,
 ): Promise<CmsProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
@@ -50,6 +59,10 @@ export async function startLocalCms(
             CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
             CMS_REPOSITORY_HUB_FACADE_ENABLED: "false",
             P9R_INTEGRATION_REPOSITORY_URL: repositoryUrl,
+            CMS_LOCAL_SUPABASE_MANAGEMENT_URL: supabase.managementUrl,
+            CMS_LOCAL_SUPABASE_FUNCTIONS_URL: supabase.environment.functionsUrl,
+            CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
+            CMS_LOCAL_SUPABASE_ACCESS_TOKEN: supabase.accessToken,
         },
     });
     try {

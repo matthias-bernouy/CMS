@@ -62,6 +62,14 @@ describe("validateSource target URLs", () => {
         expect(validateSourceTargetUrl("http://127.0.0.1/x", { allowBlockedTargetHosts: ["127.0.0.1"] }).ok).toBe(true);
     });
 
+    test("allows only the configured subtree when a blocked URL prefix is trusted", () => {
+        const options = { allowBlockedTargetUrlPrefixes: ["http://127.0.0.1:54321/functions/v1"] };
+
+        expect(validateSourceTargetUrl("http://127.0.0.1:54321/functions/v1/demo/health", options).ok).toBe(true);
+        expect(validateSourceTargetUrl("http://127.0.0.1:54321/storage/v1/object", options).ok).toBe(false);
+        expect(validateSourceTargetUrl("http://127.0.0.1:54322/functions/v1/demo", options).ok).toBe(false);
+    });
+
     test("checks whether an endpoint belongs to a source", () => {
         expect(endpointBelongsToSource("urn:shop:getCart", "urn:shop")).toBe(true);
         expect(endpointBelongsToSource("urn:other:getCart", "urn:shop")).toBe(false);

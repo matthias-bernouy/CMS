@@ -1,6 +1,8 @@
 export type SourceTargetUrlValidationOptions = {
     /** Explicit escape hatch for local/private targets in trusted deployments. */
     allowBlockedTargetHosts?: readonly string[];
+    /** Narrower escape hatch for a trusted URL subtree on a blocked host. */
+    allowBlockedTargetUrlPrefixes?: readonly string[];
 };
 
 type TargetUrlVerdict = { ok: true } | { ok: false; reason: string };
@@ -26,7 +28,7 @@ export function validateSourceTargetUrl(value: string, opts: SourceTargetUrlVali
         return { ok: false, reason: "targetUrl host is required" };
     }
     const allowlist = new Set((opts.allowBlockedTargetHosts ?? []).map(normalizeHostname));
-    if (allowlist.has(hostname)) {
+    if (allowlist.has(hostname) || matchesAllowedPrefix(url, opts.allowBlockedTargetUrlPrefixes ?? [])) {
         return { ok: true };
     }
     if (hostname === "localhost" || hostname.endsWith(".localhost")) {
@@ -44,6 +46,24 @@ export function validateSourceTargetUrl(value: string, opts: SourceTargetUrlVali
     }
 
     return { ok: true };
+}
+
+function matchesAllowedPrefix(url: URL, values: readonly string[]): boolean {
+    return values.some((value) => {
+        try {
+            const prefix = new URL(value);
+            const path = prefix.pathname.replace(/\/+$/u, "") || "/";
+            return (
+                !hasUrlCredentials(prefix) &&
+                !prefix.search &&
+                !prefix.hash &&
+                url.origin === prefix.origin &&
+                (url.pathname === path || url.pathname.startsWith(`${path}/`))
+            );
+        } catch {
+            return false;
+        }
+    });
 }
 
 export function isAllowedSourceTargetUrl(value: string, opts?: SourceTargetUrlValidationOptions): boolean {

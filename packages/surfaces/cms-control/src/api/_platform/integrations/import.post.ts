@@ -44,6 +44,7 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
         connectorDeployers: cms.integrationConnectorDeployers,
         provisioners: cms.integrationProvisioners,
         sourceExecutorDeps: cms.sourceExecutorDeps,
+        sourceTargetValidation: cms.config.sourceTargetValidation,
         resolvePublishedPage: publishedPageResolver(cms.repository, cms.config?.deliveryUrl),
     };
     try {

@@ -13,6 +13,7 @@ import {
     CompositeSourceRepository,
     SourceOverlaySourceRepository,
     SYSTEM_SOURCES,
+    type SourceTargetUrlValidationOptions,
     ValidatingSourceRepository,
 } from "@bernouy/cms-sources";
 import { MongoSourceOverlayRepository, MongoSourceRepository } from "@bernouy/cms-sources/mongo";
@@ -21,12 +22,16 @@ import type { Db } from "mongodb";
 
 type FeatureStoreOptions = {
     endpointPerformanceEnabled?: boolean;
+    sourceTargetValidation?: SourceTargetUrlValidationOptions;
 };
 
 export async function createFeatureStores(db: Db, secrets: SecretStore, options: FeatureStoreOptions = {}) {
     const mongoSources = new MongoSourceRepository(db);
     await mongoSources.init();
-    const sources = new CompositeSourceRepository(new ValidatingSourceRepository(mongoSources), SYSTEM_SOURCES);
+    const sources = new CompositeSourceRepository(
+        new ValidatingSourceRepository(mongoSources, options.sourceTargetValidation),
+        SYSTEM_SOURCES,
+    );
     const sourceOverlays = new MongoSourceOverlayRepository(db);
     await sourceOverlays.init();
 

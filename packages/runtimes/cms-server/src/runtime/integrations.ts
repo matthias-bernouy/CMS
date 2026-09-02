@@ -34,6 +34,7 @@ type IntegrationServiceOptions = {
     definitionFetch?: typeof fetch;
     packageFetch?: typeof fetch;
     environment: Record<string, string | undefined>;
+    supabase?: Readonly<{ apiBaseUrl: string; functionsBaseUrl: string }>;
     packageCacheObserve?: (event: IntegrationPackageCacheEvent) => void;
 };
 
@@ -60,11 +61,23 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
             providerRepository: options.providerRepository,
             secrets: options.secrets,
             functionSecrets: readSupabaseFunctionSecrets(options.environment),
+            ...(options.supabase
+                ? {
+                      apiBaseUrl: options.supabase.apiBaseUrl,
+                      functionsBaseUrl: options.supabase.functionsBaseUrl,
+                  }
+                : {}),
         }),
     ];
     const supabaseMigrationConfig = {
         providerRepository: options.providerRepository,
         secrets: options.secrets,
+        ...(options.supabase
+            ? {
+                  apiBaseUrl: options.supabase.apiBaseUrl,
+                  functionsBaseUrl: options.supabase.functionsBaseUrl,
+              }
+            : {}),
     };
     const integrationConnectorMigrationAdapters: IntegrationConnectorMigrationAdapter[] = [
         new ConfiguredSupabaseConnectorMigrationAdapter(supabaseMigrationConfig),

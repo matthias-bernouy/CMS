@@ -2,6 +2,7 @@ import type { SourceRepository, SourceSchemaInvalidationScope } from "cms-source
 import type { Source, SourceEndpoint } from "cms-sources/interfaces/Source";
 import { validateSource } from "cms-sources/core/validation/validateSource";
 import { SourceValidationError } from "cms-sources/core/model/errors";
+import type { SourceTargetUrlValidationOptions } from "cms-sources/core/upstream/sourceTargetUrl";
 
 /**
  * Decorator that runs `validateSource` on every write before delegating — the
@@ -14,7 +15,10 @@ export class ValidatingSourceRepository implements SourceRepository {
     readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
     readonly invalidateSchema?: (scope?: SourceSchemaInvalidationScope) => void;
 
-    constructor(private readonly inner: SourceRepository) {
+    constructor(
+        private readonly inner: SourceRepository,
+        private readonly targetOptions: SourceTargetUrlValidationOptions = {},
+    ) {
         if (inner.getEndpointForAuthorization) {
             this.getEndpointForAuthorization = (urn: string) => inner.getEndpointForAuthorization!(urn);
         }
@@ -34,7 +38,7 @@ export class ValidatingSourceRepository implements SourceRepository {
     }
 
     private validate(source: Source): void {
-        const errors = validateSource(source);
+        const errors = validateSource(source, this.targetOptions);
         if (errors.length) {
             throw new SourceValidationError("source", errors.join("; "));
         }

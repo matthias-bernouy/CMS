@@ -36,6 +36,7 @@ export function integrationInstallationDeps(cms: ControlCms): IntegrationImportD
         ...(cms.integrationMigrationRuntime ? { migrationRuntime: cms.integrationMigrationRuntime } : {}),
         provisioners: cms.integrationProvisioners,
         sourceExecutorDeps: cms.sourceExecutorDeps,
+        sourceTargetValidation: cms.config.sourceTargetValidation,
         resolvePublishedPage: publishedPageResolver(cms.repository, cms.config?.deliveryUrl),
     };
 }

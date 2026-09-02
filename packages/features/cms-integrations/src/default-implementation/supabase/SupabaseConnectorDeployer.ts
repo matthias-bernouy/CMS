@@ -22,12 +22,16 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
     readonly provider = "supabase";
 
     private readonly projectRef: string;
+    private readonly functionsBaseUrl: string;
     private readonly functionSecrets?: SupabaseConnectorFunctionSecrets;
     private readonly client: SupabaseManagementClient;
 
     constructor(config: SupabaseConnectorDeployerConfig) {
         this.projectRef = requiredText(config.projectRef, "projectRef");
         const accessToken = requiredText(config.accessToken, "accessToken");
+        this.functionsBaseUrl = (
+            config.functionsBaseUrl ?? `https://${this.projectRef}.supabase.co/functions/v1`
+        ).replace(/\/+$/, "");
         this.functionSecrets = config.functionSecrets;
         this.client = new SupabaseManagementClient({
             projectRef: this.projectRef,
@@ -38,7 +42,7 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
     }
 
     async previewOutputs(): Promise<Record<string, string>> {
-        return { functionsBaseUrl: `https://${this.projectRef}.supabase.co/functions/v1` };
+        return { functionsBaseUrl: this.functionsBaseUrl };
     }
 
     async deploy(
@@ -109,7 +113,7 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
                       connectorInstanceId: deployment.migration.connectorInstanceId,
                   }
                 : {}),
-            outputs: { functionsBaseUrl: `https://${this.projectRef}.supabase.co/functions/v1` },
+            outputs: { functionsBaseUrl: this.functionsBaseUrl },
             resources,
         };
     }
