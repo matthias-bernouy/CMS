@@ -31,7 +31,7 @@ describe("release coordinate immutability", () => {
                 releaseVerifier: { verify: async () => void (verified = true) },
                 log: () => undefined,
             }),
-        ).rejects.toThrow(/different immutable digest/);
+        ).rejects.toThrow(/immutable.*patch release.*demo@1\.0\.1/);
         expect(verified).toBeFalse();
     });
 });

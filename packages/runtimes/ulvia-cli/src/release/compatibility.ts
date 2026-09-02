@@ -1,5 +1,5 @@
 import { changedIntegrationPackagePaths, IntegrationCompatibilityEvaluator } from "@bernouy/cms-integration-registry";
-import { major, rcompare } from "semver";
+import { inc, major, rcompare } from "semver";
 import type { LocalReleasePackage } from "./types";
 
 export type LocalCompatibilityResult = ReturnType<IntegrationCompatibilityEvaluator["evaluate"]>;
@@ -55,4 +55,32 @@ export function assertLocalCompatibility(result: LocalCompatibilityResult): void
     throw new Error(
         `Release ${result.kind}@${result.version} requires a ${result.requiredReleaseLevel} version, not ${result.releaseLevel}.${detail}`,
     );
+}
+
+export function describeImmutableCoordinateChange(
+    candidate: LocalReleasePackage,
+    baseline: LocalReleasePackage,
+): Readonly<{ requiredReleaseLevel: string; suggestedVersion: string }> {
+    const version = candidate.package.envelope.version;
+    const hypotheticalVersion = inc(version, "patch");
+    if (!hypotheticalVersion) {
+        throw new Error(`Cannot calculate a release after ${version}`);
+    }
+    const hypothetical: LocalReleasePackage = {
+        package: {
+            ...candidate.package,
+            envelope: { ...candidate.package.envelope, version: hypotheticalVersion },
+        },
+        definition: { ...candidate.definition, version: hypotheticalVersion },
+    };
+    const result = evaluateLocalCompatibility(hypothetical, [baseline]);
+    const requiredReleaseLevel = result.requiredReleaseLevel;
+    if (requiredReleaseLevel !== "patch" && requiredReleaseLevel !== "minor" && requiredReleaseLevel !== "major") {
+        throw new Error(`Changed package ${candidate.definition.kind}@${version} has no valid release level`);
+    }
+    const suggestedVersion = inc(version, requiredReleaseLevel);
+    if (!suggestedVersion) {
+        throw new Error(`Cannot calculate the required ${requiredReleaseLevel} release after ${version}`);
+    }
+    return { requiredReleaseLevel, suggestedVersion };
 }

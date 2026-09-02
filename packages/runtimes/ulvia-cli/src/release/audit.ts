@@ -2,10 +2,15 @@ import type { IntegrationDefinitionVersion } from "@bernouy/cms-integrations";
 import type { LocalIntegrationRepository, PulledPackage } from "../repository/local";
 import type { LocalPackageRecord } from "../repository/manifest";
 import type { RemoteIntegrationRepository } from "../repository/remote";
-import { assertLocalCompatibility, evaluateLocalCompatibility, type LocalCompatibilityResult } from "./compatibility";
+import {
+    assertLocalCompatibility,
+    describeImmutableCoordinateChange,
+    evaluateLocalCompatibility,
+    type LocalCompatibilityResult,
+} from "./compatibility";
 import { ensureLocalBaselines, loadLocalReleasePackages, resolveRequiredPackages } from "./packages";
 import { readLocalReleaseSource, type LocalReleaseSource } from "./source";
-import type { LocalReleaseVerifier } from "./types";
+import type { LocalReleasePackage, LocalReleaseVerifier } from "./types";
 
 export type PreparedLocalRelease = Readonly<{
     candidate: LocalReleaseSource;
@@ -49,7 +54,8 @@ export async function prepareLocalRelease(
     const { kind, version } = candidate.package.envelope;
     const existing = await local.getRecord(kind, version);
     if (existing && existing.digest !== candidate.package.digest) {
-        throw new Error(`Local package coordinate ${kind}@${version} already has a different digest`);
+        const baseline = { package: await local.getPackage(existing), definition: existing.definition };
+        throw immutableCoordinateError("Local", candidate, baseline);
     }
     if (existing && options.skipRemoteWhenLocal) {
         return { candidate, existing, published: null, publishedVersions: [] };
@@ -58,9 +64,22 @@ export async function prepareLocalRelease(
     const publishedEntry = publishedVersions.find((entry) => entry.version === version);
     const published = publishedEntry ? await remote.pull(kind, version) : null;
     if (published && published.package.digest !== candidate.package.digest) {
-        throw new Error(`Remote package coordinate ${kind}@${version} already has a different immutable digest`);
+        throw immutableCoordinateError("Remote", candidate, published);
     }
     return { candidate, existing, published, publishedVersions };
+}
+
+function immutableCoordinateError(
+    source: "Local" | "Remote",
+    candidate: LocalReleaseSource,
+    baseline: LocalReleasePackage,
+): Error {
+    const { kind, version } = candidate.package.envelope;
+    const change = describeImmutableCoordinateChange(candidate, baseline);
+    return new Error(
+        `${source} package coordinate ${kind}@${version} is immutable and has different bytes; ` +
+            `this change requires a ${change.requiredReleaseLevel} release, so bump the source to ${kind}@${change.suggestedVersion}`,
+    );
 }
 
 export async function auditPreparedLocalRelease(

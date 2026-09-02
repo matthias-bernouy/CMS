@@ -59,7 +59,7 @@ describe("local integration releases", () => {
             definitionPath,
             JSON.stringify(integrationDefinition("demo", "1.0.0", { description: "Changed" })),
         );
-        await expect(runCli(["release", "demo"], options)).rejects.toThrow(/different digest/);
+        await expect(runCli(["release", "demo"], options)).rejects.toThrow(/immutable.*patch release.*demo@1\.0\.1/);
         expect(verifications).toBe(2);
     });
 

@@ -17,13 +17,14 @@ Usage:
   ulvia audit <integration> [--version <version>] [--root <directory>]
   ulvia audit --all [--root <directory>]
   ulvia release <integration> [--version <version>] [--root <directory>]
+  ulvia release --all [--root <directory>]
   ulvia status
   ulvia dev [status | credentials | stop]
 
 Commands:
   pull       Store immutable integration packages in the local repository
   audit      Verify source compatibility, fresh installs, and every supported upgrade
-  release    Build and verify an immutable package in disposable local services
+  release    Build and verify changed packages in disposable local services
   status     Show the persistent data directory and locally available packages
   dev        Run or inspect the persistent local development stack
   push       Disabled while the local workflow is under construction

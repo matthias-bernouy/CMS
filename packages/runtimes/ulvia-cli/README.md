@@ -13,6 +13,7 @@ bun run ulvia -- pull --all
 bun run ulvia -- audit commerce
 bun run ulvia -- audit --all --root ./integrations
 bun run ulvia -- release commerce
+bun run ulvia -- release --all --root ./integrations
 bun run ulvia -- release commerce --version 1.1.0 --root ./integrations
 bun run ulvia -- status
 bun run ulvia -- dev
@@ -39,6 +40,9 @@ separate immutable verification bundle remains a later publication milestone.
 `release` uses the same audit engine and stores the candidate only after every
 scenario succeeds. A source coordinate already present locally or remotely is a
 no-op when its digest is identical and an error when its digest differs.
+`release --all` processes every discovered integration in deterministic order:
+unchanged local coordinates are no-ops, while changed sources are audited and
+stored. Failures are reported per integration and make the batch fail.
 
 Existing remote coordinates cannot be reused with different bytes. `push` is
 deliberately disabled. Exact package bytes are stored by SHA-256 digest, and

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { INTEGRATION_PACKAGE_DIGEST_HEADER } from "@bernouy/cms-integration-packages";
 import { runCli } from "../src/cli";
 import { RemoteIntegrationRepository } from "../src/repository/remote";
-import { integrationDefinition, integrationPackage, removeReadonlyTree } from "./fixtures";
+import { integrationDefinition, integrationPackage, removeReadonlyTree, writeIntegrationSource } from "./fixtures";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -55,6 +55,35 @@ describe("Ulvia CLI", () => {
         expect(await remote.versions("demo")).toEqual(["1.0.0"]);
         expect(await remote.versionEntries("demo")).toHaveLength(2);
     });
+
+    test("releases every changed source and skips unchanged local coordinates", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        await writeIntegrationSource(source, "1.0.0", "alpha");
+        await writeIntegrationSource(source, "1.0.0", "beta");
+        const verified: string[] = [];
+        const options = {
+            environment: {
+                ULVIA_DATA_DIR: join(root, "data"),
+                ULVIA_REPOSITORY_URL: "http://repository.example.test/.cms/repository",
+            },
+            cwd: source,
+            repositoryFetch: emptyRemote,
+            releaseVerifier: {
+                verify: async ({ candidate }: { candidate: { package: { envelope: { kind: string } } } }) => {
+                    verified.push(candidate.package.envelope.kind);
+                },
+            },
+            log: () => undefined,
+        };
+
+        await runCli(["release", "--all"], options);
+        await runCli(["release", "--all"], options);
+
+        expect(verified).toEqual(["alpha", "beta"]);
+        const catalog = await Bun.file(join(root, "data", "repository", "catalog.json")).json();
+        expect(catalog.packages.map(({ kind }: { kind: string }) => kind)).toEqual(["alpha", "beta"]);
+    });
 });
 
 async function temporaryRoot(): Promise<string> {
@@ -93,3 +122,5 @@ function remoteFixture(resolved: Awaited<ReturnType<typeof integrationPackage>>)
         return Response.json({ error: "not found" }, { status: 404, headers });
     };
 }
+
+const emptyRemote: typeof fetch = async () => Response.json({ error: "not found" }, { status: 404 });

@@ -2,6 +2,7 @@ import { compare } from "semver";
 import type { LocalIntegrationRepository } from "../repository/local";
 import type { RemoteIntegrationRepository } from "../repository/remote";
 import { auditPreparedLocalRelease, prepareLocalRelease } from "../release/audit";
+import { listLocalReleaseKinds } from "../release/source";
 import type { LocalReleaseVerifier } from "../release/types";
 import { parseSourceCommandFlags } from "./source-flags";
 
@@ -13,8 +14,35 @@ export async function releaseCommand(
     verifier: LocalReleaseVerifier,
     log: (message: string) => void,
 ): Promise<void> {
-    const flags = parseSourceCommandFlags("release", args, cwd, { allowAll: false });
-    const prepared = await prepareLocalRelease(flags.root, flags.kind!, flags.version, local, remote, {
+    const flags = parseSourceCommandFlags("release", args, cwd, { allowAll: true });
+    const kinds = flags.all ? await listLocalReleaseKinds(flags.root) : [flags.kind!];
+    const failures: { kind: string; error: unknown }[] = [];
+    for (const kind of kinds) {
+        try {
+            await releaseOne(flags.root, kind, flags.version, local, remote, verifier, log);
+        } catch (error) {
+            if (!flags.all) {
+                throw error;
+            }
+            failures.push({ kind, error });
+            log(`✗ ${kind}: ${errorMessage(error)}`);
+        }
+    }
+    if (failures.length) {
+        throw new Error(`Release failed for ${failures.length} of ${kinds.length} integration(s)`);
+    }
+}
+
+async function releaseOne(
+    root: string,
+    requestedKind: string,
+    requestedVersion: string | undefined,
+    local: LocalIntegrationRepository,
+    remote: RemoteIntegrationRepository,
+    verifier: LocalReleaseVerifier,
+    log: (message: string) => void,
+): Promise<void> {
+    const prepared = await prepareLocalRelease(root, requestedKind, requestedVersion, local, remote, {
         skipRemoteWhenLocal: true,
     });
     const { candidate, existing, published, publishedVersions } = prepared;
@@ -43,6 +71,10 @@ export async function releaseCommand(
         source: `local:${candidate.integrationRoot}`,
     });
     log(`+ ${kind}@${version} released locally (${shortDigest(stored.record.digest)})`);
+}
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
 }
 
 function shortDigest(digest: string): string {
