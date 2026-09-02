@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-code-terminal",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Terminal",
+        "description": "Terminal window simulation with command prompt.",
+        "categories": [
+            "content"
+        ]
+    }
+}

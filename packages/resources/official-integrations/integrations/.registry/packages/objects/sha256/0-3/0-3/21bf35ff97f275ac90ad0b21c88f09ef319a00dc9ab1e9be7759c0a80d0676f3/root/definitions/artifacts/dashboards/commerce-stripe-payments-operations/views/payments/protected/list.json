@@ -1,0 +1,88 @@
+[
+    {
+        "widget": "w-table",
+        "id": "protectedPaymentsTable",
+        "title": "Protected payments",
+        "source": {
+            "endpoint": "protectedPayments",
+            "params": {
+                "q": "$filter.q",
+                "paymentStatus": "$filter.paymentStatus",
+                "settlementStatus": "$filter.settlementStatus",
+                "limit": "100",
+                "offset": "0"
+            },
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "orderId",
+        "filters": [
+            {
+                "id": "q",
+                "label": "Search",
+                "param": "q",
+                "type": "text",
+                "placeholder": "Order, buyer, or seller"
+            },
+            {
+                "id": "paymentStatus",
+                "label": "Payment",
+                "param": "paymentStatus",
+                "type": "text"
+            },
+            {
+                "id": "settlementStatus",
+                "label": "Settlement",
+                "param": "settlementStatus",
+                "type": "text"
+            }
+        ],
+        "columns": [
+            {
+                "id": "orderNumber",
+                "label": "Order",
+                "path": "orderNumber",
+                "primary": true
+            },
+            {
+                "id": "buyerTotalAmount",
+                "label": "Amount",
+                "path": "buyerTotalAmount",
+                "format": "money"
+            },
+            {
+                "id": "paymentStatus",
+                "label": "Payment",
+                "path": "paymentStatus",
+                "format": "badge"
+            },
+            {
+                "id": "settlementStatus",
+                "label": "Settlement",
+                "path": "settlementStatus",
+                "format": "badge"
+            },
+            {
+                "id": "fulfillmentStatus",
+                "label": "Fulfillment",
+                "path": "fulfillmentStatus",
+                "format": "badge"
+            },
+            {
+                "id": "claimStatus",
+                "label": "Claim",
+                "path": "claimStatus",
+                "format": "badge"
+            },
+            {
+                "id": "updatedAt",
+                "label": "Updated",
+                "path": "updatedAt",
+                "format": "date"
+            }
+        ],
+        "selection": {
+            "opens": "protectedPaymentDetail"
+        }
+    }
+]

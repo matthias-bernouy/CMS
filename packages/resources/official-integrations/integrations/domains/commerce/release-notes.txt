@@ -1,0 +1,19 @@
+# Commerce 2.0.0
+
+This major release reconciles the current implementation with the immutable
+1.0.0 repository baseline. Authoring now uses one current source tree with its
+release tests beside it; the published 1.0.0 package remains available for
+upgrade verification.
+
+The previously unreleased 1.1 source changes are included: product and offer
+indexing capabilities now expose stable numeric or slug identities without
+changing the Commerce database schema, Edge Function behavior, or existing
+source endpoint contracts.
+
+## Indexing capabilities
+
+Pages may bind either the numeric ID or the slug accepted by the existing
+public detail endpoints. Matching discovery strategies enumerate the same
+identity through the existing offset-paginated product and offer collections,
+with updated timestamps and SEO template variables exposed to future page
+indexing configuration.

@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-api-endpoint",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "API endpoint",
+        "description": "HTTP method + path + description for API documentation.",
+        "categories": [
+            "content"
+        ]
+    }
+}

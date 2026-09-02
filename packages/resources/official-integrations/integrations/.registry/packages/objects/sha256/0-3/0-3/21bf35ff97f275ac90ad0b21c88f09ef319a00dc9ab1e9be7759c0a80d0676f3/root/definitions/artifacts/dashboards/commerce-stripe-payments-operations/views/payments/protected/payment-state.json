@@ -1,0 +1,100 @@
+[
+    {
+        "id": "paymentState",
+        "title": "Payment and settlement",
+        "fields": [
+            {
+                "id": "orderId",
+                "label": "Order id",
+                "path": "orderId",
+                "type": "readonly"
+            },
+            {
+                "id": "orderPublicId",
+                "label": "Order public id",
+                "path": "orderPublicId",
+                "type": "readonly"
+            },
+            {
+                "id": "buyerCmsUserId",
+                "label": "Buyer",
+                "path": "buyerCmsUserId",
+                "type": "readonly"
+            },
+            {
+                "id": "sellerId",
+                "label": "Seller",
+                "path": "sellerId",
+                "type": "readonly"
+            },
+            {
+                "id": "buyerTotalAmount",
+                "label": "Buyer total",
+                "path": "buyerTotalAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "sellerProceedsAmount",
+                "label": "Seller proceeds",
+                "path": "sellerProceedsAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "platformRetainedAmount",
+                "label": "Platform retained",
+                "path": "platformRetainedAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "currency",
+                "label": "Currency",
+                "path": "currency",
+                "type": "readonly"
+            },
+            {
+                "id": "paymentStatus",
+                "label": "Payment status",
+                "path": "paymentStatus",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "settlementStatus",
+                "label": "Settlement status",
+                "path": "settlementStatus",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "fulfillmentStatus",
+                "label": "Fulfillment status",
+                "path": "fulfillmentStatus",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "claimStatus",
+                "label": "Claim status",
+                "path": "claimStatus",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "financialTermsHash",
+                "label": "Financial terms hash",
+                "path": "financialTermsHash",
+                "type": "readonly"
+            },
+            {
+                "id": "paymentUpdatedAt",
+                "label": "Projection updated",
+                "path": "updatedAt",
+                "type": "readonly",
+                "format": "date"
+            }
+        ]
+    }
+]

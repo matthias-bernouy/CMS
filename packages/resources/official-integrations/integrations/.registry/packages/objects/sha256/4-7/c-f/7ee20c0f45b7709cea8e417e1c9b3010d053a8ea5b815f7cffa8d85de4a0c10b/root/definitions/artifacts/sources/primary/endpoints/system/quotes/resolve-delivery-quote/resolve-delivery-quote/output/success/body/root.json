@@ -1,0 +1,27 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties.json"
+    },
+    "required": [
+        "quoteId",
+        "externalOrderId",
+        "orderVersion",
+        "revision",
+        "selectedForCmsUserId",
+        "relayLocation",
+        "country",
+        "number",
+        "name",
+        "postalCode",
+        "city",
+        "weightGrams",
+        "shippingAmount",
+        "currency",
+        "merchandiseSubtotalMinorAmount",
+        "quotedAt",
+        "expiresAt",
+        "recipientSnapshot",
+        "sellerFulfillmentSnapshot"
+    ]
+}

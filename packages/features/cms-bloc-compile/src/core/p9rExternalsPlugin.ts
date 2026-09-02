@@ -1,5 +1,32 @@
 import type { BunPlugin } from "bun";
 
+const LEGACY_COMPOSITION_EXTERNAL = `
+const LegacyComposition = window.p9r.Composition ?? class extends HTMLElement {
+    constructor(metadata) {
+        super();
+        this.templateSource = metadata?.template ?? "";
+    }
+    connectedCallback() {
+        if (this.hasAttribute("data-p9r-legacy-composition")) {
+            return;
+        }
+        this.setAttribute("data-p9r-legacy-composition", "");
+        this.style.display = "contents";
+        const input = this.ownerDocument.createElement("template");
+        input.setAttribute("data-p9r-composition-input", "");
+        input.content.append(...Array.from(this.childNodes));
+        const template = this.ownerDocument.createElement("template");
+        template.innerHTML = this.templateSource;
+        const output = this.ownerDocument.createElement("p9r-composition-output");
+        output.setAttribute("data-p9r-composition-output", "");
+        output.style.display = "contents";
+        output.append(template.content.cloneNode(true));
+        this.replaceChildren(input, output);
+    }
+};
+export const Composition = LegacyComposition;
+`;
+
 /**
  * Bloc bundles must not re-bundle component/editor base classes. The view side
  * reads the view bases from `window.p9r`; the editor catalog side reads the stable
@@ -34,7 +61,10 @@ export const p9rExternalsPlugin: BunPlugin = {
                 args.path === "@bernouy/cms/component" ||
                 args.path === "@bernouy/cms-control/component"
             ) {
-                return { contents: `export const Component = window.p9r.Component;`, loader: "js" };
+                return {
+                    contents: `export const Component = window.p9r.Component;\n${LEGACY_COMPOSITION_EXTERNAL}`,
+                    loader: "js",
+                };
             }
             return {
                 contents:

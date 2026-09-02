@@ -1,0 +1,11 @@
+{
+    "id": "{{answers.id}}",
+    "meta": {
+        "name": "Emailer",
+        "description": "Supabase-backed transactional email templates and system sends.",
+        "icon": "mail"
+    },
+    "endpoints": {
+        "$include": "endpoints.json"
+    }
+}

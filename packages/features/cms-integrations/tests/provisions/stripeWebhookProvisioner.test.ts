@@ -8,6 +8,7 @@ describe("StripeWebhookProvisioner", () => {
         let v1Create = 0;
         const provisioner = new StripeWebhookProvisioner({
             apiBaseUrl: "https://stripe.test",
+            allowInsecureLoopbackWebhooks: true,
             fetch: async (input, init) => {
                 const request = await capturedRequest(input, init);
                 requests.push(request);
@@ -28,7 +29,11 @@ describe("StripeWebhookProvisioner", () => {
             },
         });
 
-        const result = await provisioner.provision(stripeWebhookDeployment(), { existingOutputs: {}, env: {} });
+        const deployment = stripeWebhookDeployment();
+        for (const destination of deployment.configuration.destinations as Array<Record<string, unknown>>) {
+            destination.url = "http://127.0.0.1/functions/v1/webhook";
+        }
+        const result = await provisioner.provision(deployment, { existingOutputs: {}, env: {} });
 
         expect(result.outputs).toEqual({
             platform: "whsec_v1_1",

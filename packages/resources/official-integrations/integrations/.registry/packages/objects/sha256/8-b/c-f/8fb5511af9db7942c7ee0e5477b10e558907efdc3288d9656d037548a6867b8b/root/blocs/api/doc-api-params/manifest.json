@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-api-params",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "API parameters",
+        "description": "Table of parameters (path, query, body, header, response).",
+        "categories": [
+            "content"
+        ]
+    }
+}

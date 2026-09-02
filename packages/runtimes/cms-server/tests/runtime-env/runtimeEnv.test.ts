@@ -175,12 +175,14 @@ describe("runtime env validation", () => {
                 CMS_LOCAL_SUPABASE_FUNCTIONS_URL: "http://localhost:54321/functions/v1/",
                 CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
                 CMS_LOCAL_SUPABASE_ACCESS_TOKEN: "local-management-token-at-least-24",
+                CMS_LOCAL_STRIPE_API_URL: "http://127.0.0.1:5103/_stripe/",
             }).localSupabase,
         ).toEqual({
             managementApiUrl: "http://127.0.0.1:5103",
             functionsBaseUrl: "http://localhost:54321/functions/v1",
             projectRef: "local",
             accessToken: "local-management-token-at-least-24",
+            stripeApiUrl: "http://127.0.0.1:5103/_stripe",
         });
     });
 

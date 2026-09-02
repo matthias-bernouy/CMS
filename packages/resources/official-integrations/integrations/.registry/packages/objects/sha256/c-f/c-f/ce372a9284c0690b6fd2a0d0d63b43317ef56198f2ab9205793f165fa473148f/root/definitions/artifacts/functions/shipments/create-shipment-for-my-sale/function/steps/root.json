@@ -1,0 +1,105 @@
+[
+    {
+        "id": "sale",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "getOrderShipmentCreationSellerContext",
+            "params": {
+                "orderId": "$input.body.orderId"
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "equals": [
+                    "$steps.sale.sellerId",
+                    "$ctx.user.id"
+                ]
+            },
+            "failure": {
+                "status": 403,
+                "error": "Fulfillment authorization belongs to another seller"
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "equals": [
+                    "$steps.sale.allowed",
+                    true
+                ]
+            },
+            "failure": {
+                "status": 409,
+                "error": "Commerce has not authorized shipment creation"
+            }
+        }
+    },
+    {
+        "id": "authorization",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "reserveOrderShipmentCreation",
+            "body": {
+                "orderPublicId": "$steps.sale.publicId",
+                "workerId": {
+                    "$concat": [
+                        "seller-request:",
+                        "$ctx.user.id"
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "equals": [
+                    "$steps.authorization.sellerId",
+                    "$ctx.user.id"
+                ]
+            },
+            "failure": {
+                "status": 403,
+                "error": "Shipment creation reservation belongs to another seller"
+            }
+        }
+    },
+    {
+        "id": "quote",
+        "call": {
+            "source": "{{dependencies.delivery.sourceId}}",
+            "endpoint": "resolveDeliveryQuote",
+            "body": {
+                "quoteId": "$steps.authorization.deliveryQuoteId",
+                "externalOrderId": "$steps.sale.publicId",
+                "selectedForCmsUserId": "$steps.authorization.buyerCmsUserId",
+                "merchandiseSubtotalMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+                "currency": "$steps.authorization.currency",
+                "purpose": "fulfillment"
+            }
+        }
+    },
+    {
+        "$include": "shipment.json"
+    },
+    {
+        "id": "commerceFulfillment",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "completeOrderShipmentCreation",
+            "body": {
+                "operationId": "$steps.authorization.operationId",
+                "claimToken": "$steps.authorization.claimToken",
+                "providerReference": "$steps.shipment.expeditionNumber",
+                "providerShipmentId": "$steps.shipment.id",
+                "providerSnapshot": {
+                    "status": "$steps.shipment.status",
+                    "createdAt": "$steps.shipment.createdAt"
+                }
+            }
+        }
+    }
+]

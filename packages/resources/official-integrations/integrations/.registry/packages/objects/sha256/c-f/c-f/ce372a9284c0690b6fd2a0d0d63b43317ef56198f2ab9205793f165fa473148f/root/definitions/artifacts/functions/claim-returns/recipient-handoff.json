@@ -1,0 +1,124 @@
+{
+    "type": "function",
+    "function": {
+        "id": "recordMondialRelayClaimReturnRecipientHandoff",
+        "method": "POST",
+        "access": {
+            "mode": "system"
+        },
+        "meta": {
+            "name": "Record claim return recipient handoff",
+            "description": "Refresh a claim-bound Mondial Relay return and unlock monetary resolution only after provider-confirmed handoff to the seller."
+        },
+        "input": {
+            "body": {
+                "type": "object",
+                "properties": {
+                    "claimId": {
+                        "type": "number"
+                    },
+                    "expeditionNumber": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "claimId",
+                    "expeditionNumber"
+                ]
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "deliveryContext",
+                "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "shipmentTrackingContext",
+                    "params": {
+                        "expeditionNumber": "$input.body.expeditionNumber",
+                        "expectedExternalOrderId": {
+                            "$concat": [
+                                "claim-return:",
+                                "$input.body.claimId"
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "assert": {
+                    "condition": {
+                        "equals": [
+                            "$steps.deliveryContext.shipment.externalOrderId",
+                            {
+                                "$concat": [
+                                    "claim-return:",
+                                    "$input.body.claimId"
+                                ]
+                            }
+                        ]
+                    },
+                    "failure": {
+                        "status": 409,
+                        "error": "Shipment is not bound to this marketplace claim return"
+                    }
+                }
+            },
+            {
+                "assert": {
+                    "condition": {
+                        "notEquals": [
+                            "$steps.deliveryContext.tracking.recipientHandoffAt",
+                            null
+                        ]
+                    },
+                    "failure": {
+                        "status": 409,
+                        "error": "Return has not been handed to the seller by the carrier"
+                    }
+                }
+            },
+            {
+                "id": "commerceClaim",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "recordClaimReturnDelivery",
+                    "body": {
+                        "claimId": "$input.body.claimId",
+                        "providerEventId": {
+                            "$concat": [
+                                "mondial-relay-return|",
+                                "$input.body.expeditionNumber",
+                                "|recipient_handoff|",
+                                "$steps.deliveryContext.tracking.recipientHandoffAt"
+                            ]
+                        },
+                        "providerReference": "$input.body.expeditionNumber",
+                        "normalizedStatus": "recipient_handoff",
+                        "occurredAt": "$steps.deliveryContext.tracking.recipientHandoffAt",
+                        "providerEvidence": {
+                            "provider": "mondial-relay",
+                            "shipmentId": "$steps.deliveryContext.shipment.id",
+                            "providerStatus": "$steps.deliveryContext.tracking.status"
+                        }
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": {
+                "shipment": "$steps.deliveryContext.shipment",
+                "tracking": "$steps.deliveryContext.tracking",
+                "claim": "$steps.commerceClaim"
+            }
+        }
+    }
+}

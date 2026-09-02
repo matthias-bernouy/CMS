@@ -1,0 +1,125 @@
+[
+    {
+        "endpointId": "shipmentForExternalOrder",
+        "method": "GET",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipment-for-external-order",
+        "params": [
+            {
+                "name": "externalOrderId",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "expeditionNumber": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "trackingUrl": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "deliveryRelayLocation": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "latestEventLabel": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "latestEventAt": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "carrierAcceptedAt": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "sellerHandoffDeclaredAt": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "recipientHandoffAt": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "createdAt": {
+                                        "type": "string"
+                                    },
+                                    "events": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "eventLabel": {
+                                                    "type": "string"
+                                                },
+                                                "eventDate": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "eventTime": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "normalizedStatus": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "occurredAt": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "location": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "id",
+                                    "status",
+                                    "createdAt",
+                                    "events"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "items"
+                    ]
+                }
+            }
+        ]
+    }
+]

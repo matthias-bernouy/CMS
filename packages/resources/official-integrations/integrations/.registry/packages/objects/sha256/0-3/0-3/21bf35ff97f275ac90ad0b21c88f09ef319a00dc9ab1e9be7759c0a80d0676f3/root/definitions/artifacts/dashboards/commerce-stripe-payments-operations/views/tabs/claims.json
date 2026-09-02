@@ -1,0 +1,7 @@
+{
+    "id": "claims",
+    "label": "Marketplace Claims",
+    "children": {
+        "$include": "../claims/views.json"
+    }
+}

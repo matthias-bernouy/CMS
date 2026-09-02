@@ -1,0 +1,53 @@
+{
+    "id": "claimMaterializedResolution",
+    "title": "Materialized resolution allocation",
+    "fields": [
+        {
+            "id": "resolutionMerchandiseRefund",
+            "label": "Merchandise refund",
+            "path": "resolutionRefund.merchandiseRefundAmount",
+            "type": "readonly",
+            "format": "money"
+        },
+        {
+            "id": "resolutionShippingRefund",
+            "label": "Shipping refund",
+            "path": "resolutionRefund.shippingRefundAmount",
+            "type": "readonly",
+            "format": "money"
+        },
+        {
+            "id": "resolutionProtectionFeeRefund",
+            "label": "Protection fee refund",
+            "path": "resolutionRefund.protectionFeeRefundAmount",
+            "type": "readonly",
+            "format": "money"
+        },
+        {
+            "id": "resolutionSellerRecovery",
+            "label": "Seller entitlement reduction",
+            "path": "resolutionRefund.sellerRecoveryAmount",
+            "type": "readonly",
+            "format": "money"
+        },
+        {
+            "id": "resolutionPlatformContribution",
+            "label": "Platform contribution",
+            "path": "resolutionRefund.platformContributionAmount",
+            "type": "readonly",
+            "format": "money"
+        },
+        {
+            "id": "resolutionAllocationVersion",
+            "label": "Allocation version",
+            "path": "resolutionRefund.allocationVersion",
+            "type": "readonly"
+        },
+        {
+            "id": "resolutionRefundApproval",
+            "label": "Refund authorization",
+            "path": "resolutionRefund",
+            "type": "readonly"
+        }
+    ]
+}

@@ -4,13 +4,13 @@
     "label": "Documentation Blocs",
     "category": "Blocks",
     "description": "Install official blocs for documentation websites and technical reference content.",
-    "stable": "1.0.0",
-    "latest": "1.0.0",
+    "stable": "2.0.0",
+    "latest": "2.0.0",
     "versions": [
         {
-            "version": "1.0.0",
-            "path": "versions/1.0.0",
-            "definition": "versions/1.0.0/definition.json"
+            "version": "2.0.0",
+            "path": ".",
+            "definition": "definition.json"
         }
     ]
 }

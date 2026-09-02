@@ -1,0 +1,142 @@
+[
+    {
+        "status": "200",
+        "body": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "number"
+                },
+                "publicId": {
+                    "type": "string"
+                },
+                "orderNumber": {
+                    "type": "string"
+                },
+                "checkoutGroupId": {
+                    "type": "string"
+                },
+                "sellerId": {
+                    "type": "number"
+                },
+                "buyerCmsUserId": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "subtotalAmount": {
+                    "type": "number"
+                },
+                "totalAmount": {
+                    "type": "number"
+                },
+                "shippingAddress": {
+                    "type": "object"
+                },
+                "billingAddress": {
+                    "type": "object"
+                },
+                "metadata": {
+                    "type": "object"
+                },
+                "idempotencyKey": {
+                    "type": "string"
+                },
+                "idempotentReplay": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "number"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "publicId",
+                "status",
+                "currency",
+                "subtotalAmount",
+                "totalAmount"
+            ]
+        }
+    },
+    {
+        "status": "400",
+        "body": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "error"
+            ]
+        }
+    },
+    {
+        "status": "403",
+        "body": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "error"
+            ]
+        }
+    },
+    {
+        "status": "404",
+        "body": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "error"
+            ]
+        }
+    },
+    {
+        "status": "409",
+        "body": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "error"
+            ]
+        }
+    },
+    {
+        "status": "422",
+        "body": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "error"
+            ]
+        }
+    }
+]

@@ -13,6 +13,7 @@ import { startLocalSupabaseManagementServer, type LocalSupabaseManagementServer 
 import { startLocalSupabase, stopLocalSupabase } from "../../runtime/supabase";
 import type { LocalReleasePackage } from "../types";
 import { adoptRequiredLegacyBaselines } from "./adoption";
+import { sandboxAnswers } from "./answers";
 import { ReleaseSandboxClient } from "./client";
 import { installRequiredDependencies } from "./dependencies";
 import { removeReleaseSandbox } from "./filesystem";
@@ -64,16 +65,26 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
             config,
             mongo,
             repositoryServer.url,
-            { managementUrl: management.url, accessToken, projectRef, environment: supabase },
+            {
+                managementUrl: management.url,
+                stripeApiUrl: management.stripeApiUrl,
+                accessToken,
+                projectRef,
+                environment: supabase,
+            },
             ports.cms,
-            { inheritOutput: false },
+            { inheritOutput: process.env.ULVIA_DEBUG === "1" },
         );
         const client = new ReleaseSandboxClient(`http://127.0.0.1:${ports.cms.control}`, config);
         await client.login();
         const installed = new Map<string, string>();
         const initial = scenario.baseline ?? scenario.target;
         await installRequiredDependencies(initial, scenario.packages, installed, client);
-        await client.install(initial.package.envelope.kind, initial.package.envelope.version);
+        await client.install(
+            initial.package.envelope.kind,
+            initial.package.envelope.version,
+            sandboxAnswers(initial.definition),
+        );
         installed.set(initial.package.envelope.kind, initial.package.envelope.version);
         if (scenario.baseline) {
             await installRequiredDependencies(scenario.target, scenario.packages, installed, client);

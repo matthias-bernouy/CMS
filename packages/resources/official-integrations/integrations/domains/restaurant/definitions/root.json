@@ -1,0 +1,35 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "restaurant",
+    "label": "Restaurant",
+    "version": "2.0.0",
+    "category": "Blocks",
+    "description": "Install editorial headers, navigation, menus, contact information, and image-led heroes for restaurant websites.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": [],
+    "dependencies": {
+        "$include": "configuration/dependencies.json"
+    },
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "theme": {
+        "$include": "configuration/theme.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/blocs/restaurant-header.json",
+            "artifacts/blocs/restaurant-menu.json",
+            "artifacts/blocs/restaurant-hero-gallery.json",
+            "artifacts/blocs/restaurant-hero-split.json",
+            "artifacts/blocs/restaurant-hero-cover.json",
+            "artifacts/blocs/menu/restaurant-menu-catalog.json",
+            "artifacts/blocs/menu/restaurant-menu-section.json",
+            "artifacts/blocs/menu/restaurant-menu-item.json",
+            "artifacts/blocs/contact/restaurant-contact-card.json",
+            "artifacts/blocs/contact/restaurant-contact-item.json"
+        ]
+    }
+}

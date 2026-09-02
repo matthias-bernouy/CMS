@@ -16,6 +16,7 @@ const HISTORY_INDEX_SCHEMA = "cms.integration.official-package-history.v1";
 const HISTORY_INDEX_PATH = ".registry/packages/index.v1.json";
 const MAX_HISTORY_INDEX_BYTES = 256 * 1_024;
 const MAX_HISTORY_ENTRIES = 512;
+const SHA256_PATTERN = /^[a-f0-9]{64}$/u;
 
 type HistoryEntry = Readonly<{ kind: string; version: string; digest: string }>;
 
@@ -39,7 +40,7 @@ export async function loadOfficialIntegrationPackageHistory(
 
 async function loadHistoryEntry(requestedRoot: string, entry: HistoryEntry): Promise<BuiltOfficialIntegrationPackage> {
     const limits = resolveIntegrationPackageLimits();
-    const objectRoot = joinWithin(requestedRoot, `.registry/packages/objects/sha256/${entry.digest}`);
+    const objectRoot = joinWithin(requestedRoot, officialPackageObjectRelativePath(entry.digest));
     const objectStats = await lstat(objectRoot);
     if (objectStats.isSymbolicLink() || !objectStats.isDirectory()) {
         throw new Error("Official historical package object must be a non-symlink directory");
@@ -64,6 +65,13 @@ async function loadHistoryEntry(requestedRoot: string, entry: HistoryEntry): Pro
         package: { envelope, canonicalBytes, digest: entry.digest },
         definition: loadIntegrationDefinitionFromPackageEnvelope(envelope, limits),
     });
+}
+
+export function officialPackageObjectRelativePath(digest: string): string {
+    if (!SHA256_PATTERN.test(digest)) {
+        throw new Error("Official package object digest must be a lowercase SHA-256 digest");
+    }
+    return `.registry/packages/objects/sha256/${quartet(digest[0]!)}/${quartet(digest[1]!)}/${digest}`;
 }
 
 function parseHistoryIndex(value: unknown): readonly HistoryEntry[] {
@@ -94,10 +102,16 @@ function parseHistoryEntry(value: unknown): HistoryEntry {
     const record = exactRecord(value, ["digest", "kind", "version"], "Official package history entry");
     const kind = assertIntegrationPackageKind(record.kind);
     const version = assertIntegrationPackageVersion(record.version);
-    if (typeof record.digest !== "string" || !/^[a-f0-9]{64}$/u.test(record.digest)) {
+    if (typeof record.digest !== "string" || !SHA256_PATTERN.test(record.digest)) {
         throw new Error("Official package history digest must be a lowercase SHA-256 digest");
     }
     return Object.freeze({ digest: record.digest, kind, version });
+}
+
+function quartet(nibble: string): string {
+    const value = Number.parseInt(nibble, 16);
+    const first = Math.floor(value / 4) * 4;
+    return `${first.toString(16)}-${(first + 3).toString(16)}`;
 }
 
 function exactRecord(value: unknown, keys: readonly string[], source: string): Record<string, unknown> {

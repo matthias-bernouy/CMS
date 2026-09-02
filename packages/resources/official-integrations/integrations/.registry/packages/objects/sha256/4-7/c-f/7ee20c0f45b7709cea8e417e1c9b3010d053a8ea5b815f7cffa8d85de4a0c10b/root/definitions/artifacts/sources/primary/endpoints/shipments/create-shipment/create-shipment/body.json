@@ -1,0 +1,147 @@
+{
+    "type": "object",
+    "properties": {
+        "externalOrderId": {
+            "type": "string"
+        },
+        "sellerCmsUserId": {
+            "type": "string",
+            "semantic": {
+                "kind": "user-id",
+                "authority": "cms"
+            }
+        },
+        "deliveryQuoteId": {
+            "type": "string"
+        },
+        "quoteExternalOrderId": {
+            "type": "string"
+        },
+        "quotePurpose": {
+            "type": "string"
+        },
+        "selectedForCmsUserId": {
+            "type": "string",
+            "semantic": {
+                "kind": "user-id",
+                "authority": "cms"
+            }
+        },
+        "modeCollection": {
+            "type": "string"
+        },
+        "modeDelivery": {
+            "type": "string"
+        },
+        "senderName": {
+            "type": "string"
+        },
+        "senderFirstName": {
+            "type": "string"
+        },
+        "senderLastName": {
+            "type": "string"
+        },
+        "senderEmail": {
+            "type": "string"
+        },
+        "senderPhone": {
+            "type": "string"
+        },
+        "senderAddressLine1": {
+            "type": "string"
+        },
+        "senderAddressLine2": {
+            "type": "string"
+        },
+        "senderAddressLine3": {
+            "type": "string"
+        },
+        "senderPostalCode": {
+            "type": "string"
+        },
+        "senderCity": {
+            "type": "string"
+        },
+        "senderCountry": {
+            "type": "string"
+        },
+        "recipientName": {
+            "type": "string"
+        },
+        "recipientFirstName": {
+            "type": "string"
+        },
+        "recipientLastName": {
+            "type": "string"
+        },
+        "recipientEmail": {
+            "type": "string"
+        },
+        "recipientPhone": {
+            "type": "string"
+        },
+        "recipientAddressLine1": {
+            "type": "string"
+        },
+        "recipientAddressLine2": {
+            "type": "string"
+        },
+        "recipientAddressLine3": {
+            "type": "string"
+        },
+        "recipientPostalCode": {
+            "type": "string"
+        },
+        "recipientCity": {
+            "type": "string"
+        },
+        "recipientCountry": {
+            "type": "string"
+        },
+        "weightGrams": {
+            "type": "number"
+        },
+        "packageCount": {
+            "type": "number"
+        },
+        "lengthCm": {
+            "type": "number"
+        },
+        "instructions": {
+            "type": "string"
+        },
+        "deliveryRelayLocation": {
+            "type": "string"
+        },
+        "widthCm": {
+            "type": "number"
+        },
+        "heightCm": {
+            "type": "number"
+        },
+        "content": {
+            "type": "string"
+        },
+        "declaredValueMinorAmount": {
+            "type": "number"
+        },
+        "declaredCurrency": {
+            "type": "string"
+        },
+        "metadata": {
+            "type": "object"
+        }
+    },
+    "required": [
+        "externalOrderId",
+        "sellerCmsUserId",
+        "declaredValueMinorAmount",
+        "declaredCurrency",
+        "recipientName",
+        "recipientAddressLine1",
+        "recipientPostalCode",
+        "recipientCity",
+        "deliveryRelayLocation"
+    ]
+}

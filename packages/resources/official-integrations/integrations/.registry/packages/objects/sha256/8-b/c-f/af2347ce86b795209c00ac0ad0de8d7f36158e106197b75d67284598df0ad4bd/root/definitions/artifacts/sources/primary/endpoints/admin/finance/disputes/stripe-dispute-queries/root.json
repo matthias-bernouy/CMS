@@ -1,0 +1,148 @@
+[
+    {
+        "$include": "list-stripe-disputes/root.json"
+    },
+    {
+        "endpointId": "getStripeDispute",
+        "method": "GET",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/disputes/dispute",
+        "params": [
+            {
+                "name": "disputeId",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "paymentId": {
+                            "type": "number"
+                        },
+                        "providerPaymentId": {
+                            "type": "number"
+                        },
+                        "clientReferenceId": {
+                            "type": "string"
+                        },
+                        "stripeChargeId": {
+                            "type": "string"
+                        },
+                        "amount": {
+                            "type": "number"
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "reason": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "evidenceStatus": {
+                            "type": "string"
+                        },
+                        "evidenceDueBy": {
+                            "type": "string"
+                        },
+                        "isChargeRefundable": {
+                            "type": "boolean"
+                        },
+                        "fundsWithdrawn": {
+                            "type": "boolean"
+                        },
+                        "balanceTransactionIds": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "stagedEvidenceOperationId": {
+                            "type": "string"
+                        },
+                        "stagedEvidenceAt": {
+                            "type": "string"
+                        },
+                        "pendingApprovalAction": {
+                            "type": "string"
+                        },
+                        "firstApprovedBy": {
+                            "type": "string"
+                        },
+                        "firstApprovedAt": {
+                            "type": "string"
+                        },
+                        "evidenceSubmissionCount": {
+                            "type": "number"
+                        },
+                        "createdAt": {
+                            "type": "string"
+                        },
+                        "updatedAt": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "paymentId",
+                        "providerPaymentId",
+                        "clientReferenceId",
+                        "amount",
+                        "currency",
+                        "status",
+                        "evidenceStatus",
+                        "evidenceSubmissionCount",
+                        "updatedAt"
+                    ]
+                }
+            },
+            {
+                "status": "403",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "404",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    }
+]

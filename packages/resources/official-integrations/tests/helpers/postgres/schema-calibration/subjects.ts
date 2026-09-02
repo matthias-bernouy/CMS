@@ -2,8 +2,10 @@ import { resolve } from "node:path";
 import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
 import {
     buildOfficialIntegrationPackages,
+    loadOfficialVerificationBackfillIndex,
     OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS,
     resolveOfficialIntegrationDependencies,
+    selectOfficialVerificationBackfillPackages,
 } from "@bernouy/cms-official-integrations/publication";
 import { type DeclarativeConnectorTemplate, type IntegrationDefinition } from "@bernouy/cms-integrations";
 import { materializeOfficialIntegrationPackage } from "../../materializedPackage";
@@ -55,12 +57,16 @@ export type OfficialSchemaCalibrationSubject = SchemaCalibrationPackage &
 export async function loadOfficialSchemaCalibrationSubjects(
     root: string,
 ): Promise<readonly OfficialSchemaCalibrationSubject[]> {
+    const packages = await buildOfficialIntegrationPackages(root);
+    const backfill = await loadOfficialVerificationBackfillIndex(root);
     return loadSchemaCalibrationSubjects(
         root,
         OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS.map((target) => ({
             ...target,
             namespaces: EXPECTED_NAMESPACES[target.kind],
         })),
+        packages,
+        selectOfficialVerificationBackfillPackages(packages, backfill.index),
     );
 }
 
@@ -68,21 +74,23 @@ export async function loadOfficialSchemaCalibrationRelease(
     root: string,
     target: OfficialSchemaCalibrationTarget,
 ): Promise<OfficialSchemaCalibrationSubject> {
-    const subjects = await loadSchemaCalibrationSubjects(root, [target]);
+    const packages = await buildOfficialIntegrationPackages(root);
+    const subjects = await loadSchemaCalibrationSubjects(
+        root,
+        [target],
+        packages,
+        releaseDependencyPackages(packages, [target]),
+    );
     return subjects[0]!;
 }
 
 async function loadSchemaCalibrationSubjects(
     root: string,
     targets: readonly OfficialSchemaCalibrationTarget[],
+    packages: Awaited<ReturnType<typeof buildOfficialIntegrationPackages>>,
+    dependencyPackages: Awaited<ReturnType<typeof buildOfficialIntegrationPackages>>,
 ): Promise<readonly OfficialSchemaCalibrationSubject[]> {
-    const packages = await buildOfficialIntegrationPackages(root);
     const packageByIdentity = new Map(packages.map((entry) => [identity(entry.kind, entry.version), entry]));
-    const targetVersions = new Map(targets.map(({ kind, version }) => [kind, version]));
-    const dependencyPackages = packages.filter((entry) => {
-        const targetVersion = targetVersions.get(entry.kind);
-        return targetVersion === undefined || entry.version === targetVersion;
-    });
     const definitions = new Map<string, IntegrationDefinition>();
     for (const entry of packages) {
         definitions.set(identity(entry.kind, entry.version), entry.definition);
@@ -120,6 +128,17 @@ async function loadSchemaCalibrationSubjects(
         });
     }
     return Object.freeze(subjects);
+}
+
+function releaseDependencyPackages(
+    packages: Awaited<ReturnType<typeof buildOfficialIntegrationPackages>>,
+    targets: readonly OfficialSchemaCalibrationTarget[],
+): Awaited<ReturnType<typeof buildOfficialIntegrationPackages>> {
+    const targetVersions = new Map(targets.map(({ kind, version }) => [kind, version]));
+    return packages.filter((entry) => {
+        const targetVersion = targetVersions.get(entry.kind);
+        return targetVersion === undefined || entry.version === targetVersion;
+    });
 }
 
 function sqlConnector(definition: IntegrationDefinition): DeclarativeConnectorTemplate | null {

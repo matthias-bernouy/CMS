@@ -1,0 +1,38 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "stripe-connect",
+    "label": "Stripe Connect C2C protected payments",
+    "version": "2.0.0",
+    "category": "Payments",
+    "description": "Onboard C2C recipients and execute protected platform charges, separate Transfers, Reversals, Refunds, Stripe disputes, signed webhooks, and reconciliation.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": {
+        "$include": "configuration/inputs.json"
+    },
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "security": {
+        "$include": "configuration/security.json"
+    },
+    "secrets": {
+        "$include": "configuration/secrets.json"
+    },
+    "generatedSecrets": {
+        "$include": "configuration/generated-secrets.json"
+    },
+    "provisions": {
+        "$include": "configuration/provisions.json"
+    },
+    "connectors": {
+        "$include": "configuration/connectors.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/sources/primary/definition.json",
+            "artifacts/blocs/stripe-connect-onboarding.json"
+        ]
+    }
+}

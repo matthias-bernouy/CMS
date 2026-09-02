@@ -1,0 +1,41 @@
+{
+    "endpointId": "cancelCampaign",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-broadcast/campaign/cancel",
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.broadcastApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {}
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "campaign": {
+                        "type": "object"
+                    }
+                }
+            }
+        }
+    ]
+}

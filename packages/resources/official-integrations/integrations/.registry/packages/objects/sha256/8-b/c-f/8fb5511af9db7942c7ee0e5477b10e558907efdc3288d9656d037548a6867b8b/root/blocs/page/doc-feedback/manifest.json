@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-feedback",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Feedback",
+        "description": "\"Was this page helpful?\" thumbs up/down prompt.",
+        "categories": [
+            "content"
+        ]
+    }
+}

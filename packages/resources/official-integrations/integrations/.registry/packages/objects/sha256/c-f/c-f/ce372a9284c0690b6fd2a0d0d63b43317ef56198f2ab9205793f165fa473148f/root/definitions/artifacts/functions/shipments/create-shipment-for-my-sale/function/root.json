@@ -1,0 +1,44 @@
+{
+    "id": "createShipmentForMySale",
+    "method": "POST",
+    "access": {
+        "mode": "auth"
+    },
+    "meta": {
+        "name": "Create shipment for my sale",
+        "description": "Create one idempotent 24R shipment after Commerce authorizes the seller fulfillment."
+    },
+    "input": {
+        "body": {
+            "type": "object",
+            "properties": {
+                "orderId": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "orderId"
+            ]
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object"
+            }
+        }
+    ],
+    "steps": {
+        "$include": "steps/root.json"
+    },
+    "return": {
+        "status": 200,
+        "body": {
+            "orderId": "$steps.sale.id",
+            "orderPublicId": "$steps.sale.publicId",
+            "shipment": "$steps.shipment",
+            "fulfillment": "$steps.commerceFulfillment"
+        }
+    }
+}

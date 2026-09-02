@@ -1,0 +1,40 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "forms",
+    "label": "Forms",
+    "version": "2.0.0",
+    "category": "Content",
+    "description": "Build versioned multi-step forms, publish them through CMS Sources, and review their submissions.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": {
+        "$include": "configuration/inputs.json"
+    },
+    "dependencies": {
+        "$include": "configuration/dependencies.json"
+    },
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "theme": {
+        "$include": "configuration/theme.json"
+    },
+    "generatedSecrets": {
+        "$include": "configuration/generated-secrets.json"
+    },
+    "connectors": {
+        "$include": "configuration/connectors.json"
+    },
+    "afterInstallation": {
+        "$include": "configuration/after-installation.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/sources/primary/definition.json",
+            "artifacts/blocs/form-renderer.json",
+            "artifacts/dashboards/forms.json",
+            "artifacts/dashboards/submissions.json"
+        ]
+    }
+}

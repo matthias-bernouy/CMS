@@ -58,6 +58,7 @@ export type LocalSupabaseRuntimeConfig = Readonly<{
     functionsBaseUrl: string;
     projectRef: string;
     accessToken: string;
+    stripeApiUrl?: string;
 }>;
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
@@ -180,6 +181,7 @@ function parseLocalSupabase(source: RuntimeEnvSource): LocalSupabaseRuntimeConfi
         "CMS_LOCAL_SUPABASE_FUNCTIONS_URL",
         "CMS_LOCAL_SUPABASE_PROJECT_REF",
         "CMS_LOCAL_SUPABASE_ACCESS_TOKEN",
+        "CMS_LOCAL_STRIPE_API_URL",
     ] as const;
     if (!names.some((name) => source[name]?.trim())) {
         return undefined;
@@ -197,7 +199,14 @@ function parseLocalSupabase(source: RuntimeEnvSource): LocalSupabaseRuntimeConfi
     if (accessToken.length < 24 || accessToken.length > 256) {
         throw new Error(`${names[3]} must contain between 24 and 256 characters`);
     }
-    return Object.freeze({ managementApiUrl, functionsBaseUrl, projectRef, accessToken });
+    const stripeApiUrl = source.CMS_LOCAL_STRIPE_API_URL?.trim();
+    return Object.freeze({
+        managementApiUrl,
+        functionsBaseUrl,
+        projectRef,
+        accessToken,
+        ...(stripeApiUrl ? { stripeApiUrl: parseLoopbackUrl(stripeApiUrl, "CMS_LOCAL_STRIPE_API_URL", true) } : {}),
+    });
 }
 
 function parseLoopbackUrl(value: string, name: string, allowPath: boolean): string {

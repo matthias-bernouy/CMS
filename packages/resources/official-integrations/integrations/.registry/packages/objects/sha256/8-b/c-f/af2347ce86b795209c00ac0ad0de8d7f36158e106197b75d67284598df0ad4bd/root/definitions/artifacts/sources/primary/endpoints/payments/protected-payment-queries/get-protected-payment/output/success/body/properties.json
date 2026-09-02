@@ -1,0 +1,137 @@
+{
+    "paymentId": {
+        "type": "number"
+    },
+    "providerPaymentId": {
+        "type": "number"
+    },
+    "clientReferenceId": {
+        "type": "string"
+    },
+    "financialTermsHash": {
+        "type": "string"
+    },
+    "financialRevision": {
+        "type": "number"
+    },
+    "buyerUserId": {
+        "type": "string",
+        "semantic": {
+            "kind": "user-id",
+            "authority": "cms"
+        }
+    },
+    "sellerUserId": {
+        "type": "string",
+        "semantic": {
+            "kind": "user-id",
+            "authority": "cms"
+        }
+    },
+    "stripePaymentIntentId": {
+        "type": "string",
+        "nullable": true
+    },
+    "stripeChargeId": {
+        "type": "string",
+        "nullable": true
+    },
+    "providerEventId": {
+        "type": "string",
+        "nullable": true
+    },
+    "transferGroup": {
+        "type": "string"
+    },
+    "currency": {
+        "type": "string"
+    },
+    "amountTotal": {
+        "type": "number"
+    },
+    "sellerTransferAmount": {
+        "type": "number"
+    },
+    "platformRetainedAmount": {
+        "type": "number"
+    },
+    "refundedAmount": {
+        "type": "number"
+    },
+    "transferredAmount": {
+        "type": "number"
+    },
+    "reversedAmount": {
+        "type": "number"
+    },
+    "stripeChargeBalanceTransactionId": {
+        "type": "string",
+        "nullable": true
+    },
+    "actualStripeChargeFeeAmount": {
+        "type": "number"
+    },
+    "actualStripeRefundFeeAmount": {
+        "type": "number"
+    },
+    "actualStripeProcessingFeeAmount": {
+        "type": "number"
+    },
+    "actualStripeChargeNetAmount": {
+        "type": "number",
+        "nullable": true
+    },
+    "actualStripeFeeCurrency": {
+        "type": "string",
+        "nullable": true
+    },
+    "actualStripeChargeFeeDetails": {
+        "type": "array",
+        "items": {
+            "type": "object"
+        }
+    },
+    "actualPlatformMarginAfterStripeAmount": {
+        "type": "number"
+    },
+    "paymentStatus": {
+        "type": "string"
+    },
+    "commercePaymentStatus": {
+        "type": "string"
+    },
+    "settlementStatus": {
+        "type": "string"
+    },
+    "disputeStatus": {
+        "type": "string"
+    },
+    "reconciliationPending": {
+        "type": "boolean"
+    },
+    "manualReviewReason": {
+        "type": "string",
+        "nullable": true
+    },
+    "paidAt": {
+        "type": "string",
+        "nullable": true
+    },
+    "cancelledAt": {
+        "type": "string",
+        "nullable": true
+    },
+    "lastProviderSyncAt": {
+        "type": "string",
+        "nullable": true
+    },
+    "occurredAt": {
+        "type": "string"
+    },
+    "createdAt": {
+        "type": "string"
+    },
+    "updatedAt": {
+        "type": "string"
+    }
+}

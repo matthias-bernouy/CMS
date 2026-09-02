@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}-offers",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Offers",
+        "icon": {
+            "path": "assets/dashboards/offers.svg"
+        }
+    },
+    "views": {
+        "$include": "views.json"
+    }
+}

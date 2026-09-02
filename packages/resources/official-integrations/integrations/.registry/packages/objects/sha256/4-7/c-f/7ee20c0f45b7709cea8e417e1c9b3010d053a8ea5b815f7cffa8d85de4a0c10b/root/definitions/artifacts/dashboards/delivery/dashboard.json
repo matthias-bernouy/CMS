@@ -1,0 +1,11 @@
+{
+    "id": "{{answers.id}}-delivery",
+    "meta": {
+        "name": "Delivery",
+        "icon": "truck"
+    },
+    "source": "{{answers.id}}",
+    "views": {
+        "$include": "views.json"
+    }
+}

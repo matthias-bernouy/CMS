@@ -1,0 +1,104 @@
+[
+    {
+        "id": "refundState",
+        "title": "Commerce refund authorization",
+        "fields": [
+            {
+                "id": "amount",
+                "label": "Buyer refund",
+                "path": "requestedAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "merchandiseRefundAmount",
+                "label": "Merchandise refund",
+                "path": "merchandiseRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "shippingRefundAmount",
+                "label": "Shipping refund",
+                "path": "shippingRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "protectionFeeRefundAmount",
+                "label": "Protection fee refund",
+                "path": "protectionFeeRefundAmount",
+                "type": "readonly",
+                "format": "money"
+            },
+            {
+                "id": "allocationVersion",
+                "label": "Allocation version",
+                "path": "allocationVersion",
+                "type": "readonly"
+            },
+            {
+                "id": "reason",
+                "label": "Reason",
+                "path": "reason",
+                "type": "readonly"
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "requiresFinanceApproval",
+                "label": "Finance approval required",
+                "path": "requiresFinanceApproval",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "dualApprovalRequired",
+                "label": "Dual approval required",
+                "path": "dualApprovalRequired",
+                "type": "readonly",
+                "format": "badge"
+            },
+            {
+                "id": "firstApprovedBy",
+                "label": "First finance approver",
+                "path": "firstApprovedBy",
+                "type": "readonly"
+            },
+            {
+                "id": "firstApprovedAt",
+                "label": "First approval",
+                "path": "firstApprovedAt",
+                "type": "readonly",
+                "format": "date"
+            },
+            {
+                "id": "secondApprovedBy",
+                "label": "Second finance approver",
+                "path": "secondApprovedBy",
+                "type": "readonly"
+            },
+            {
+                "id": "secondApprovedAt",
+                "label": "Second approval",
+                "path": "secondApprovedAt",
+                "type": "readonly",
+                "format": "date"
+            },
+            {
+                "id": "decisionReason",
+                "label": "Decision audit reason",
+                "path": "decisionReason",
+                "type": "readonly"
+            }
+        ]
+    },
+    {
+        "$include": "stripe-buyer-refund-facts.json"
+    }
+]

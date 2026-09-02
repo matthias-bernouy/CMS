@@ -1,0 +1,27 @@
+{
+    "$files": [
+        "endpoints/health/health.json",
+        "endpoints/configuration/sync-marketplace-terms.json",
+        "endpoints/accounts/account-configuration-and-status/root.json",
+        "endpoints/accounts/seller-onboarding/root.json",
+        "endpoints/accounts/create-onboarding-session.json",
+        "endpoints/payments/protected-payment-creation/root.json",
+        "endpoints/payments/protected-payment-queries/root.json",
+        "endpoints/admin/accounts/get-seller-provider-risk/root.json",
+        "endpoints/admin/accounts/seller-account-onboarding-and-payouts/root.json",
+        "endpoints/operations/payments/payment-cancellation-and-settlement/root.json",
+        "endpoints/operations/payments/transfer-reversal-and-refund/root.json",
+        "endpoints/reconciliation/reconcile-provider-payment.json",
+        "endpoints/reconciliation/run-provider-reconciliation.json",
+        "endpoints/reconciliation/commerce-projection-results.json",
+        "endpoints/admin/operations/configure-platform-payout-controls/root.json",
+        "endpoints/admin/finance/payments/list-provider-payments/root.json",
+        "endpoints/admin/finance/payments/get-provider-payment/root.json",
+        "endpoints/admin/finance/refunds/provider-refund-queries.json",
+        "endpoints/admin/finance/disputes/stripe-dispute-queries/root.json",
+        "endpoints/admin/finance/disputes/stripe-dispute-evidence/root.json",
+        "endpoints/admin/finance/disputes/accept-stripe-dispute.json",
+        "endpoints/admin/reconciliation/provider-exception-management/root.json",
+        "endpoints/admin/operations/list-financial-operations/root.json"
+    ]
+}

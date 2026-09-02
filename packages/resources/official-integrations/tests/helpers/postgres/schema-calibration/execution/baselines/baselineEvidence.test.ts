@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { appendFile, cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import {
-    buildOfficialIntegrationPackages,
     buildOfficialRepositoryBootstrapPlan,
     loadOfficialRepositoryBootstrapEvidence,
+    officialPackageObjectRelativePath,
     OFFICIAL_REPOSITORY_BOOTSTRAP_EVIDENCE_PATH,
     OFFICIAL_REPOSITORY_SQL_BASELINE_TARGETS,
     OFFICIAL_SCHEMA_BASELINE_ENVIRONMENT_DIGEST,
@@ -15,7 +15,6 @@ import {
     OFFICIAL_SCHEMA_BASELINE_GENERATOR_IMAGE,
     OFFICIAL_SCHEMA_BASELINE_POSTGRES_VERSION,
 } from "@bernouy/cms-official-integrations/publication";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { schemaCalibrationEnvironmentIdentity } from "../../environment/manifest";
 
 const temporaryRoots: string[] = [];
@@ -95,13 +94,17 @@ describe("official reviewed schema baseline evidence", () => {
             const changedRoot = await copiedOfficialRoot();
             const changedEvidence = await loadOfficialRepositoryBootstrapEvidence(changedRoot);
             const approved = changedEvidence.anonymousConstraintGrandfathering[0]!;
-            const packages = await buildOfficialIntegrationPackages(changedRoot);
-            const integrationPackage = packages.find(({ digest }) => digest === approved.packageDigest)!;
-            const versionRoot = await new FsIntegrationDefinitionRepository(changedRoot).locateExactVersion(
-                integrationPackage.kind,
-                integrationPackage.version,
+            const objectPath = join(
+                changedRoot,
+                officialPackageObjectRelativePath(approved.packageDigest),
+                "package.json",
             );
-            await appendFile(join(versionRoot!.root, approved.path), "\n-- package digest changed\n");
+            const packageDocument = JSON.parse(await readFile(objectPath, "utf8")) as {
+                files: Record<string, { content: string }>;
+            };
+            packageDocument.files[approved.path]!.content += "\n-- package digest changed\n";
+            await chmod(objectPath, 0o600);
+            await writeFile(objectPath, canonicalJsonBytes(packageDocument));
             await expect(buildOfficialRepositoryBootstrapPlan(changedRoot)).rejects.toThrow(
                 /package digest|absent package|verification backfill/,
             );

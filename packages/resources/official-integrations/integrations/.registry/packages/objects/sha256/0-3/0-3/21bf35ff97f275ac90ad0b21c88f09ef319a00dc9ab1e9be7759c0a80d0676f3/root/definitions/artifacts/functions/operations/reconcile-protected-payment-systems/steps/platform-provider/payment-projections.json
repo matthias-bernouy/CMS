@@ -1,0 +1,61 @@
+{
+    "id": "paymentProjections",
+    "forEach": {
+        "items": "$steps.providerRun.payments",
+        "max": 5,
+        "continueOnError": true,
+        "steps": [
+            {
+                "id": "commercePayment",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "recordOrderPayment",
+                    "body": {
+                        "orderPublicId": "$item.clientReferenceId",
+                        "providerEventId": "$item.providerEventId",
+                        "providerPaymentId": "$item.paymentId",
+                        "status": "$item.commercePaymentStatus",
+                        "amount": "$item.amountTotal",
+                        "currency": "$item.currency",
+                        "financialTermsHash": "$item.financialTermsHash",
+                        "occurredAt": "$item.occurredAt",
+                        "providerChargeId": "$item.stripeChargeId",
+                        "providerPaymentIntentId": "$item.stripePaymentIntentId",
+                        "providerSnapshot": "$item"
+                    }
+                }
+            },
+            {
+                "id": "acknowledgePaymentProjection",
+                "call": {
+                    "source": "{{dependencies.stripe.sourceId}}",
+                    "endpoint": "acknowledgeCommerceProjection",
+                    "body": {
+                        "projectionId": "$item.projectionId",
+                        "claimToken": "$item.projectionClaimToken"
+                    }
+                }
+            }
+        ],
+        "yield": "$steps.commercePayment",
+        "onError": [
+            {
+                "id": "failPaymentProjection",
+                "call": {
+                    "source": "{{dependencies.stripe.sourceId}}",
+                    "endpoint": "failCommerceProjection",
+                    "body": {
+                        "projectionId": "$item.projectionId",
+                        "claimToken": "$item.projectionClaimToken",
+                        "error": "Commerce payment projection failed"
+                    }
+                }
+            }
+        ],
+        "errorYield": {
+            "projectionId": "$item.projectionId",
+            "projectionFailed": true,
+            "failure": "$steps.failPaymentProjection"
+        }
+    }
+}

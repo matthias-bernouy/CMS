@@ -1,0 +1,139 @@
+{
+    "id": "createPaymentForOrder",
+    "method": "POST",
+    "access": {
+        "mode": "auth"
+    },
+    "meta": {
+        "name": "Create payment for order",
+        "description": "Lock authenticated Commerce terms and strictly create or replay a protected Stripe platform payment."
+    },
+    "input": {
+        "body": {
+            "type": "object",
+            "properties": {
+                "orderId": {
+                    "type": "number"
+                },
+                "acceptedLegalDocumentVersionIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "orderId"
+            ]
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "paymentId": {
+                        "type": "number"
+                    },
+                    "stripePaymentIntentId": {
+                        "type": "string"
+                    },
+                    "clientSecret": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "paymentStatus": {
+                        "type": "string"
+                    },
+                    "commercePaymentStatus": {
+                        "type": "string"
+                    },
+                    "settlementStatus": {
+                        "type": "string"
+                    },
+                    "disputeStatus": {
+                        "type": "string"
+                    },
+                    "refundedAmount": {
+                        "type": "number"
+                    },
+                    "amountTotal": {
+                        "type": "number"
+                    },
+                    "buyerTotalAmount": {
+                        "type": "number"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "financialTermsHash": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "paymentId",
+                    "clientSecret",
+                    "status",
+                    "paymentStatus",
+                    "commercePaymentStatus",
+                    "amountTotal",
+                    "buyerTotalAmount",
+                    "currency",
+                    "financialTermsHash"
+                ]
+            }
+        },
+        {
+            "status": "409",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "422",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        }
+    ],
+    "steps": {
+        "$include": "steps.json"
+    },
+    "return": {
+        "status": 200,
+        "body": {
+            "paymentId": "$steps.payment.paymentId",
+            "stripePaymentIntentId": "$steps.payment.stripePaymentIntentId",
+            "clientSecret": "$steps.payment.clientSecret",
+            "status": "$steps.payment.commercePaymentStatus",
+            "paymentStatus": "$steps.payment.paymentStatus",
+            "commercePaymentStatus": "$steps.payment.commercePaymentStatus",
+            "settlementStatus": "$steps.payment.settlementStatus",
+            "disputeStatus": "$steps.payment.disputeStatus",
+            "refundedAmount": "$steps.payment.refundedAmount",
+            "amountTotal": "$steps.terms.buyerTotalAmount",
+            "buyerTotalAmount": "$steps.terms.buyerTotalAmount",
+            "currency": "$steps.terms.currency",
+            "financialTermsHash": "$steps.terms.financialTermsHash"
+        }
+    }
+}

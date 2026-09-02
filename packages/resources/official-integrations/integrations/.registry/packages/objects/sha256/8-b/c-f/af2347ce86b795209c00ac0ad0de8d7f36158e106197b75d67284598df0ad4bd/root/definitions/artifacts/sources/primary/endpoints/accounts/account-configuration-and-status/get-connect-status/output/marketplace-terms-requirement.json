@@ -1,0 +1,48 @@
+{
+    "type": "object",
+    "nullable": true,
+    "properties": {
+        "mode": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        },
+        "hash": {
+            "type": "string"
+        },
+        "documentKey": {
+            "type": "string"
+        },
+        "label": {
+            "type": "string"
+        },
+        "consentText": {
+            "type": "string"
+        },
+        "page": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "path",
+                "title"
+            ]
+        }
+    },
+    "required": [
+        "mode",
+        "version",
+        "hash"
+    ]
+}

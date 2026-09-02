@@ -1,0 +1,5 @@
+[
+    {
+        "$include": "get-seller-provider-risk/root.json"
+    }
+]

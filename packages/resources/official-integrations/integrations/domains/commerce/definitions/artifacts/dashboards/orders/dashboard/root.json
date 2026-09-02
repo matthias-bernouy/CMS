@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}-orders",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Orders",
+        "icon": {
+            "path": "assets/dashboards/orders.svg"
+        }
+    },
+    "views": {
+        "$include": "views/root.json"
+    }
+}

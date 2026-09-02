@@ -1,0 +1,56 @@
+[
+    {
+        "id": "platformPayoutControls",
+        "call": {
+            "source": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "configurePlatformPayoutControls",
+            "body": {
+                "platformPayoutControlChangeId": {
+                    "$concat": [
+                        "commerce-payment:",
+                        "$steps.terms.financialTermsHash"
+                    ]
+                },
+                "minimumBalanceEur": "$steps.terms.platformRequiredMinimumBalanceAmount",
+                "liabilityRevision": "$steps.terms.platformLiabilityRevision",
+                "decreaseAuthorizationId": "$steps.terms.platformPayoutDecreaseAuthorizationId",
+                "delayDaysOverride": "$steps.terms.payoutDelayDays",
+                "reason": "Commerce protected seller liabilities"
+            },
+            "onError": {
+                "propagate": [
+                    {
+                        "sourceStatus": 409,
+                        "status": 409
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "id": "platformPayoutControlReceipt",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "recordPlatformPayoutLiabilityApplied",
+            "body": {
+                "liabilityRevision": "$steps.platformPayoutControls.liabilityRevision",
+                "appliedMinimumAmount": "$steps.platformPayoutControls.appliedMinimumBalanceEur",
+                "decreaseAuthorizationId": "$steps.platformPayoutControls.decreaseAuthorizationId"
+            }
+        }
+    },
+    {
+        "assert": {
+            "condition": {
+                "equals": [
+                    "$steps.platformPayoutControlReceipt.accepted",
+                    true
+                ]
+            },
+            "failure": {
+                "status": 409,
+                "error": "Platform payout liability changed while applying provider controls; retry safely"
+            }
+        }
+    }
+]

@@ -1,0 +1,23 @@
+{
+    "type": "trigger",
+    "trigger": {
+        "id": "schedule-reconcile-protected-payment-systems",
+        "label": "Reconcile protected payment systems",
+        "critical": true,
+        "event": {
+            "kind": "schedule",
+            "intervalMs": 15000,
+            "initialDelayMs": 5000,
+            "timeoutMs": 120000
+        },
+        "mode": "async",
+        "failureMode": "ignore",
+        "function": {
+            "id": "reconcileProtectedPaymentSystems",
+            "body": {
+                "runKey": "$schedule.runKey",
+                "limit": 5
+            }
+        }
+    }
+}

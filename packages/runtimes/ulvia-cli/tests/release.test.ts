@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { canonicalJsonBytes, sha256Hex, validateIntegrationPackageEnvelope } from "@bernouy/cms-integration-packages";
 import { parseIntegrationDefinition } from "@bernouy/cms-integrations";
 import { runCli } from "../src/cli";
 import { assertLocalCompatibility, evaluateLocalCompatibility } from "../src/release/compatibility";
+import { sandboxAnswers } from "../src/release/sandbox/answers";
 import type { LocalReleasePackage, LocalReleaseVerifier } from "../src/release/types";
 import {
     integrationDefinition,
@@ -20,6 +21,52 @@ afterEach(async () => {
 });
 
 describe("local integration releases", () => {
+    test("synthesizes non-secret and secret answers required by a release sandbox", () => {
+        const definition = parseIntegrationDefinition(
+            integrationDefinition("demo", "1.0.0", {
+                inputs: [
+                    { name: "id", label: "Id", type: "text", required: true, defaultValue: "demo" },
+                    { name: "account", label: "Account", type: "text", required: true },
+                    { name: "apiSecret", label: "Secret", type: "password", required: true, secret: true },
+                    {
+                        name: "stripeSecretKey",
+                        label: "Stripe secret",
+                        type: "password",
+                        required: true,
+                        secret: true,
+                    },
+                    { name: "termsHash", label: "Hash", type: "text", required: true },
+                    {
+                        name: "region",
+                        label: "Region",
+                        type: "select",
+                        required: true,
+                        options: [{ label: "France", value: "fr" }],
+                    },
+                    { name: "optional", label: "Optional", type: "text" },
+                ],
+            }),
+        );
+
+        expect(sandboxAnswers(definition)).toEqual({
+            account: "ulvia-audit-account",
+            apiSecret: "ulvia-audit-apiSecret-secret",
+            stripeSecretKey: "sk_test_ulvia_audit",
+            termsHash: "a".repeat(64),
+            region: "fr",
+        });
+
+        expect(
+            sandboxAnswers(
+                parseIntegrationDefinition(
+                    integrationDefinition("consent", "1.0.0", {
+                        inputs: [{ name: "enabled", label: "Enabled", type: "boolean", defaultValue: true }],
+                    }),
+                ),
+            ),
+        ).toEqual({ enabled: false });
+    });
+
     test("audits without storing, then verifies before storing a release", async () => {
         const root = await temporaryRoot();
         const source = join(root, "source");
@@ -88,10 +135,11 @@ describe("local integration releases", () => {
         expect(await Bun.file(join(data, "repository", "catalog.json")).exists()).toBeFalse();
     });
 
-    test("packages a direct source tree without authoring metadata or tests", async () => {
+    test("packages a direct source tree from a workspace containing unrelated symlinks", async () => {
         const root = await temporaryRoot();
         const source = join(root, "source");
         await writeDirectIntegrationSource(source);
+        await symlink(root, join(source, "workspace-link"), "dir");
         let files: readonly string[] = [];
 
         await runCli(["audit", "demo"], {

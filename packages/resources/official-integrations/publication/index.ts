@@ -14,7 +14,7 @@ export {
     type OfficialRepositoryBootstrapEvidenceV1,
 } from "./contracts";
 export { buildOfficialRepositoryBootstrapPlan, loadOfficialRepositoryBootstrapEvidence } from "./evidence";
-export { buildOfficialIntegrationPackages } from "./packages";
+export { buildOfficialIntegrationPackages, officialPackageObjectRelativePath } from "./packages";
 export {
     OFFICIAL_INTEGRATION_VERIFICATION_POLICY,
     OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT,

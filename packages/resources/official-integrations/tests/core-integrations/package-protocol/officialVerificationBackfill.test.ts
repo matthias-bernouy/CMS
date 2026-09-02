@@ -29,7 +29,7 @@ describe("official verification backfill artifacts", () => {
             const historicalBefore = selectOfficialVerificationBackfillPackages(before, committed.index);
             const historicalAfter = selectOfficialVerificationBackfillPackages(after, committed.index);
 
-            expect(before).toHaveLength(24);
+            expect(before).toHaveLength(40);
             expect(generated.verifications).toHaveLength(14);
             expect(committed.verifications).toHaveLength(14);
             expect(committed.index.verificationPolicy).toEqual(OFFICIAL_INTEGRATION_VERIFICATION_POLICY);
@@ -72,64 +72,72 @@ describe("official verification backfill artifacts", () => {
         BACKFILL_TEST_TIMEOUT,
     );
 
-    test("records Photo Albums legacy test ownership without claiming execution", async () => {
-        const packages = await buildOfficialIntegrationPackages();
-        const committed = await loadOfficialIntegrationVerificationBackfill();
-        const photoPackage = packages.find(({ kind }) => kind === "photo-albums");
-        const photoVerification = committed.verifications.find(({ kind }) => kind === "photo-albums");
-        expect(photoPackage).toBeDefined();
-        expect(photoVerification).toBeDefined();
-        expect(photoVerification?.envelope.manifest.contracts).toEqual([]);
-        expect(photoVerification?.envelope.manifest.conformance).toEqual([]);
-        expect(photoVerification?.envelope.manifest.fixtures).toEqual(["fixtures/legacy-test-ownership.v1.json"]);
+    test(
+        "records Photo Albums legacy test ownership without claiming execution",
+        async () => {
+            const packages = await buildOfficialIntegrationPackages();
+            const committed = await loadOfficialIntegrationVerificationBackfill();
+            const photoPackage = packages.find(({ kind }) => kind === "photo-albums");
+            const photoVerification = committed.verifications.find(({ kind }) => kind === "photo-albums");
+            expect(photoPackage).toBeDefined();
+            expect(photoVerification).toBeDefined();
+            expect(photoVerification?.envelope.manifest.contracts).toEqual([]);
+            expect(photoVerification?.envelope.manifest.conformance).toEqual([]);
+            expect(photoVerification?.envelope.manifest.fixtures).toEqual(["fixtures/legacy-test-ownership.v1.json"]);
 
-        const descriptorFile = photoVerification?.envelope.files["fixtures/legacy-test-ownership.v1.json"];
-        expect(descriptorFile?.encoding).toBe("utf8");
-        const descriptor = parseStrictJsonDocument(descriptorFile?.content ?? "", 64 * 1_024) as LegacyDescriptor;
-        expect(descriptor).toMatchObject({
-            schema: "cms.integration.verification.legacy-test-ownership.v1",
-            disposition: "documented-not-executed",
-            publishedPackageBytes: "retained",
-        });
-        expect(descriptor.suites.map(({ sourcePath }) => sourcePath)).toEqual([
-            "tests/blocs.test.ts",
-            "tests/definition.test.ts",
-        ]);
-        for (const suite of descriptor.suites) {
-            const source = photoPackage?.package.envelope.files[suite.sourcePath];
-            if (!source) {
-                throw new Error(`Photo Albums package test disappeared: ${suite.sourcePath}`);
+            const descriptorFile = photoVerification?.envelope.files["fixtures/legacy-test-ownership.v1.json"];
+            expect(descriptorFile?.encoding).toBe("utf8");
+            const descriptor = parseStrictJsonDocument(descriptorFile?.content ?? "", 64 * 1_024) as LegacyDescriptor;
+            expect(descriptor).toMatchObject({
+                schema: "cms.integration.verification.legacy-test-ownership.v1",
+                disposition: "documented-not-executed",
+                publishedPackageBytes: "retained",
+            });
+            expect(descriptor.suites.map(({ sourcePath }) => sourcePath)).toEqual([
+                "tests/blocs.test.ts",
+                "tests/definition.test.ts",
+            ]);
+            for (const suite of descriptor.suites) {
+                const source = photoPackage?.package.envelope.files[suite.sourcePath];
+                if (!source) {
+                    throw new Error(`Photo Albums package test disappeared: ${suite.sourcePath}`);
+                }
+                expect(suite.portability).toBe("workspace-coupled");
+                expect(suite.blockers).toEqual(["package-relative-runtime-assets", "workspace-package-imports"]);
+                expect(suite.sourceDigest).toBe(await sha256Hex(decodeIntegrationPackageFile(source)));
             }
-            expect(suite.portability).toBe("workspace-coupled");
-            expect(suite.blockers).toEqual(["package-relative-runtime-assets", "workspace-package-imports"]);
-            expect(suite.sourceDigest).toBe(await sha256Hex(decodeIntegrationPackageFile(source)));
-        }
-    });
+        },
+        BACKFILL_TEST_TIMEOUT,
+    );
 
-    test("keeps the immutable legacy inventory closed when newer packages exist", async () => {
-        const packages = await buildOfficialIntegrationPackages();
-        const committed = await loadOfficialIntegrationVerificationBackfill();
-        const source = packages.find(({ kind }) => kind === "newsletter");
-        if (!source) {
-            throw new Error("Newsletter package is missing");
-        }
-        const future = {
-            ...source,
-            version: "1.1.0",
-            digest: "f".repeat(64),
-        };
+    test(
+        "keeps the immutable legacy inventory closed when newer packages exist",
+        async () => {
+            const packages = await buildOfficialIntegrationPackages();
+            const committed = await loadOfficialIntegrationVerificationBackfill();
+            const source = packages.find(({ kind }) => kind === "newsletter");
+            if (!source) {
+                throw new Error("Newsletter package is missing");
+            }
+            const future = {
+                ...source,
+                version: "1.1.0",
+                digest: "f".repeat(64),
+            };
 
-        const selected = selectOfficialVerificationBackfillPackages([...packages, future], committed.index);
+            const selected = selectOfficialVerificationBackfillPackages([...packages, future], committed.index);
 
-        expect(selected).toHaveLength(14);
-        expect(selected.some(({ version }) => version === "1.1.0")).toBeFalse();
-        expect(() =>
-            selectOfficialVerificationBackfillPackages(
-                packages.filter(({ kind }) => kind !== "newsletter"),
-                committed.index,
-            ),
-        ).toThrow("exact published package set");
-    });
+            expect(selected).toHaveLength(14);
+            expect(selected.some(({ version }) => version === "1.1.0")).toBeFalse();
+            expect(() =>
+                selectOfficialVerificationBackfillPackages(
+                    packages.filter(({ kind }) => kind !== "newsletter"),
+                    committed.index,
+                ),
+            ).toThrow("exact published package set");
+        },
+        BACKFILL_TEST_TIMEOUT,
+    );
 });
 
 type LegacyDescriptor = {

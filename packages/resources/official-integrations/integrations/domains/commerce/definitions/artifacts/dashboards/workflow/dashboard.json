@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}-workflow",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Workflow",
+        "icon": {
+            "path": "assets/dashboards/workflow.svg"
+        }
+    },
+    "views": {
+        "$include": "views.json"
+    }
+}

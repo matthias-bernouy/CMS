@@ -1,0 +1,25 @@
+:host {
+    --mmd-bg: #f8fafc;
+    --mmd-border: #e2e8f0;
+    --mmd-fg: #0f172a;
+    --mmd-radius: 10px;
+    display: block;
+    margin: 1rem 0;
+    font-family: ui-monospace, "SF Mono", monospace;
+}
+.mermaid {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    background: var(--mmd-bg);
+    color: var(--mmd-fg);
+    border: 1px solid var(--mmd-border);
+    border-radius: var(--mmd-radius);
+    font-size: .85rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+.mermaid ::slotted(*) { font: inherit; color: inherit; margin: 0; }
+:host([theme="dark"]) { --mmd-bg: #0f172a; --mmd-border: #1e293b; --mmd-fg: #f8fafc; }
+:host([theme="forest"]) { --mmd-bg: #f0fdf4; --mmd-border: #bbf7d0; --mmd-fg: #14532d; }
+:host([theme="neutral"]) { --mmd-bg: #fafafa; --mmd-border: #e5e5e5; --mmd-fg: #27272a; }

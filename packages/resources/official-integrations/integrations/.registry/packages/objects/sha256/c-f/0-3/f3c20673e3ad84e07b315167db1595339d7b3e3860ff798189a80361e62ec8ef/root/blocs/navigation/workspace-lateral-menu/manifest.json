@@ -1,0 +1,13 @@
+{
+    "default-tag": "workspace-lateral-menu",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Workspace lateral menu",
+        "description": "Design-system lateral navigation with editable header, items, and footer.",
+        "categories": [
+            "navigation"
+        ]
+    }
+}

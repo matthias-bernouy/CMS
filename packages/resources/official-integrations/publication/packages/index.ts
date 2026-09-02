@@ -1,4 +1,5 @@
 export { buildOfficialIntegrationPackages } from "./runtime";
+export { officialPackageObjectRelativePath } from "./history";
 export {
     OFFICIAL_INTEGRATION_VERIFICATION_POLICY,
     OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT,

@@ -1,0 +1,71 @@
+[
+    {
+        "name": "id",
+        "label": "Source id",
+        "type": "text",
+        "required": true,
+        "defaultValue": "delivery"
+    },
+    {
+        "name": "mondialRelayConnectEndpoint",
+        "label": "Mondial Relay Connect endpoint",
+        "type": "select",
+        "required": true,
+        "defaultValue": "https://connect-api-sandbox.mondialrelay.com/api/shipment",
+        "options": [
+            {
+                "label": "Sandbox",
+                "value": "https://connect-api-sandbox.mondialrelay.com/api/shipment"
+            },
+            {
+                "label": "Production",
+                "value": "https://connect-api.mondialrelay.com/api/shipment"
+            }
+        ]
+    },
+    {
+        "name": "mondialRelayConnectLogin",
+        "label": "Mondial Relay Connect login",
+        "type": "text",
+        "required": true
+    },
+    {
+        "name": "mondialRelayConnectPassword",
+        "label": "Mondial Relay Connect password",
+        "type": "password",
+        "required": true,
+        "secret": true
+    },
+    {
+        "name": "mondialRelayConnectCustomerId",
+        "label": "Mondial Relay Connect customer id",
+        "type": "text",
+        "required": true
+    },
+    {
+        "name": "mondialRelayTrackingEndpoint",
+        "label": "Mondial Relay tracking WebService endpoint",
+        "type": "select",
+        "required": true,
+        "defaultValue": "https://api.mondialrelay.com/WebService.asmx",
+        "options": [
+            {
+                "label": "Production WebService",
+                "value": "https://api.mondialrelay.com/WebService.asmx"
+            }
+        ]
+    },
+    {
+        "name": "mondialRelayTrackingBrand",
+        "label": "Mondial Relay WebService brand",
+        "type": "text",
+        "required": true
+    },
+    {
+        "name": "mondialRelayTrackingPrivateKey",
+        "label": "Mondial Relay WebService private key",
+        "type": "password",
+        "required": true,
+        "secret": true
+    }
+]

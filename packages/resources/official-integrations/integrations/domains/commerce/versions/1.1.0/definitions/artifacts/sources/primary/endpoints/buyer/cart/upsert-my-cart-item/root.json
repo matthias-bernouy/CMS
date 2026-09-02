@@ -1,5 +1,0 @@
-[
-    {
-        "$include": "upsert-my-cart-item/root.json"
-    }
-]

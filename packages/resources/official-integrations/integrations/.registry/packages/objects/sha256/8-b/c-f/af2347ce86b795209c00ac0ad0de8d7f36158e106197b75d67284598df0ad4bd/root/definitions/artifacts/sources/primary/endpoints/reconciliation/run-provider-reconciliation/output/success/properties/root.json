@@ -1,0 +1,126 @@
+{
+    "runId": {
+        "type": "number"
+    },
+    "runKey": {
+        "type": "string"
+    },
+    "status": {
+        "type": "string"
+    },
+    "scannedCount": {
+        "type": "number"
+    },
+    "repairedCount": {
+        "type": "number"
+    },
+    "exceptionCount": {
+        "type": "number"
+    },
+    "details": {
+        "type": "object"
+    },
+    "startedAt": {
+        "type": "string"
+    },
+    "finishedAt": {
+        "type": "string"
+    },
+    "payments": {
+        "$include": "../payments/root.json"
+    },
+    "operations": {
+        "$include": "operations.json"
+    },
+    "commerceOperations": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "orderPublicId": {
+                    "type": "string"
+                },
+                "paymentId": {
+                    "type": "number"
+                },
+                "providerPaymentId": {
+                    "type": "number"
+                },
+                "providerOperationId": {
+                    "type": "number"
+                },
+                "providerEventId": {
+                    "type": "string"
+                },
+                "operationType": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "releaseAuthorizationId": {
+                    "type": "string"
+                },
+                "refundRequestId": {
+                    "type": "string"
+                },
+                "commerceRefundRequestId": {
+                    "type": "number"
+                },
+                "providerSnapshot": {
+                    "type": "object"
+                },
+                "projectionId": {
+                    "type": "number"
+                },
+                "projectionClaimToken": {
+                    "type": "string"
+                },
+                "projectionAttemptCount": {
+                    "type": "number"
+                },
+                "recoveryKey": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "causalSequence": {
+                    "type": "number"
+                },
+                "occurredAt": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "orderPublicId",
+                "providerPaymentId",
+                "providerOperationId",
+                "providerEventId",
+                "operationType",
+                "status",
+                "amount",
+                "currency",
+                "providerSnapshot",
+                "projectionId",
+                "projectionClaimToken",
+                "projectionAttemptCount",
+                "causalSequence",
+                "occurredAt"
+            ]
+        }
+    },
+    "disputes": {
+        "$include": "disputes.json"
+    }
+}

@@ -1,0 +1,82 @@
+[
+    {
+        "endpointId": "recoverUnknownShipment",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/admin/shipments/recover",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "shipmentId": {
+                    "type": "string"
+                },
+                "externalOrderId": {
+                    "type": "string"
+                },
+                "expeditionNumber": {
+                    "type": "string"
+                },
+                "labelUrl": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "shipmentId",
+                "externalOrderId",
+                "expeditionNumber",
+                "reason"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "externalOrderId": {
+                            "type": "string"
+                        },
+                        "expeditionNumber": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "idempotentReplay": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "externalOrderId",
+                        "status"
+                    ]
+                }
+            }
+        ]
+    }
+]

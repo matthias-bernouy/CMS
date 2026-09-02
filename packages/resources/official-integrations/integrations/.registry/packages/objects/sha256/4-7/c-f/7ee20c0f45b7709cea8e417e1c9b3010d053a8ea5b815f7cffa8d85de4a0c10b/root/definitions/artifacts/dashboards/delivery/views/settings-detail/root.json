@@ -1,0 +1,65 @@
+{
+    "widget": "w-detail",
+    "id": "settingsDetail",
+    "source": {
+        "endpoint": "setting",
+        "params": {
+            "id": "default"
+        }
+    },
+    "title": {
+        "path": "senderName",
+        "fallback": "Delivery settings"
+    },
+    "actions": [
+        {
+            "id": "saveSettings",
+            "label": "Edit settings",
+            "tone": "primary",
+            "placement": "primary",
+            "endpoint": {
+                "endpoint": "setSettings",
+                "params": {
+                    "id": "default"
+                },
+                "body": {
+                    "modeCollection": "$field.modeCollection",
+                    "modeDelivery": "$field.modeDelivery",
+                    "senderName": "$field.senderName",
+                    "senderFirstName": "$field.senderFirstName",
+                    "senderLastName": "$field.senderLastName",
+                    "senderAddressLine1": "$field.senderAddressLine1",
+                    "senderAddressLine2": "$field.senderAddressLine2",
+                    "senderAddressLine3": "$field.senderAddressLine3",
+                    "senderPostalCode": "$field.senderPostalCode",
+                    "senderCity": "$field.senderCity",
+                    "senderCountry": "$field.senderCountry",
+                    "senderPhone": "$field.senderPhone",
+                    "senderMobile": "$field.senderMobile",
+                    "senderEmail": "$field.senderEmail",
+                    "defaultWeightGrams": "$field.defaultWeightGrams",
+                    "defaultPackageCount": "$field.defaultPackageCount",
+                    "defaultLengthCm": "$field.defaultLengthCm",
+                    "defaultWidthCm": "$field.defaultWidthCm",
+                    "defaultHeightCm": "$field.defaultHeightCm",
+                    "defaultContent": "$field.defaultContent",
+                    "defaultShippingAmount": "$field.defaultShippingAmount",
+                    "declaredCurrency": "$field.declaredCurrency",
+                    "connectCulture": "$field.connectCulture",
+                    "connectVersionApi": "$field.connectVersionApi",
+                    "connectOutputFormat": "$field.connectOutputFormat",
+                    "connectOutputType": "$field.connectOutputType"
+                }
+            },
+            "after": {
+                "resource": "$result"
+            }
+        }
+    ],
+    "main": {
+        "$include": "main.json"
+    },
+    "aside": {
+        "$include": "aside.json"
+    }
+}

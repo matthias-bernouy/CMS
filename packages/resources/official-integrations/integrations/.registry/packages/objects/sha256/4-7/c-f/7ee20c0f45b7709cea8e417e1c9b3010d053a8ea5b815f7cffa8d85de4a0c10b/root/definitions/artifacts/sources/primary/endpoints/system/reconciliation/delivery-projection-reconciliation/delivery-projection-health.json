@@ -1,0 +1,88 @@
+{
+    "endpointId": "deliveryProjectionHealth",
+    "method": "GET",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/projection-health",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "checkedAt": {
+                        "type": "string"
+                    },
+                    "pendingProjectionCount": {
+                        "type": "number"
+                    },
+                    "manualReviewCount": {
+                        "type": "number"
+                    },
+                    "trackingErrorCount": {
+                        "type": "number"
+                    },
+                    "orders": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "externalOrderId": {
+                                    "type": "string"
+                                },
+                                "shipmentId": {
+                                    "type": "string"
+                                },
+                                "providerReference": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "shipmentStatus": {
+                                    "type": "string"
+                                },
+                                "pendingProjectionCount": {
+                                    "type": "number"
+                                },
+                                "manualReviewCount": {
+                                    "type": "number"
+                                },
+                                "trackingErrorCount": {
+                                    "type": "number"
+                                },
+                                "trackingCheckedAt": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            },
+                            "required": [
+                                "externalOrderId",
+                                "shipmentId",
+                                "shipmentStatus",
+                                "pendingProjectionCount",
+                                "manualReviewCount",
+                                "trackingErrorCount"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "checkedAt",
+                    "pendingProjectionCount",
+                    "manualReviewCount",
+                    "trackingErrorCount",
+                    "orders"
+                ]
+            }
+        }
+    ]
+}

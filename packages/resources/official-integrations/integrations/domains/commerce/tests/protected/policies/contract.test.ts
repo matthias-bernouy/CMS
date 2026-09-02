@@ -1,0 +1,73 @@
+import { describe, expect, test } from "bun:test";
+import {
+    registerRefundAllocationsTest,
+    registerPayoutControlsTest,
+    registerSellerReserveTest,
+    registerClaimEntitlementTest,
+    registerRefundBoundariesTest,
+    registerAuditedFeePolicyTest,
+    registerSellerRiskTest,
+    registerSellerDebtTest,
+    registerProviderReplayTest,
+    registerCancellationReplayTest,
+    registerPaymentRecoveryTest,
+    registerAdminHeadersTest,
+    registerPolicyDashboardTest,
+    registerPolicySerializationTest,
+    registerPolicySubsidyTest,
+    registerProviderAbsentCancellationTest,
+    registerLatePaymentRefundTerminalizationTest,
+    registerShipmentReservationTest,
+    registerSellerLabelTest,
+} from "./contracts";
+import { loadIntegrationDefinition } from "../../../../../../tests/helpers/integrationDefinition";
+import { loadSupabaseSchemaSql } from "../../../../../../tests/helpers/supabaseSql";
+
+describe("protected C2C financial policy contract", () => {
+    registerRefundAllocationsTest();
+    registerPayoutControlsTest();
+    registerSellerReserveTest();
+    registerClaimEntitlementTest();
+    registerRefundBoundariesTest();
+    registerAuditedFeePolicyTest();
+    registerSellerRiskTest();
+    registerSellerDebtTest();
+    registerProviderReplayTest();
+    registerCancellationReplayTest();
+    registerPaymentRecoveryTest();
+    registerAdminHeadersTest();
+    registerPolicyDashboardTest();
+    registerPolicySerializationTest();
+    registerPolicySubsidyTest();
+    registerProviderAbsentCancellationTest();
+    registerLatePaymentRefundTerminalizationTest();
+    test("keeps claim evidence private and requires carrier proof before resolving a required return", async () => {
+        const schema = await loadSupabaseSchemaSql(new URL("../../..", import.meta.url));
+        const definition = await loadIntegrationDefinition<Record<string, unknown>>(
+            new URL("../../../definition.json", import.meta.url),
+        );
+        const serialized = JSON.stringify(definition);
+
+        expect(schema).toContain("'commerce-claim-evidence', 'commerce-claim-evidence', false");
+        expect(schema).toContain("attach_marketplace_claim_evidence");
+        expect(schema).toContain("required return needs trusted recipient handoff before monetary resolution");
+        expect(schema).toContain("record_claim_return_delivery");
+        expect(serialized).toContain("uploadMyOrderClaimEvidence");
+        expect(serialized).toContain("uploadMySaleClaimEvidence");
+        expect(serialized).toContain("claimEvidenceFile");
+        expect(serialized).toContain("recordClaimReturnDelivery");
+        const sourceArtifact = (definition.artifacts as Array<Record<string, unknown>>).find(
+            (artifact) => artifact.type === "source",
+        ) as { source?: { endpoints?: Array<Record<string, unknown>> } } | undefined;
+        const claimEndpoint = sourceArtifact?.source?.endpoints?.find((endpoint) => endpoint.endpointId === "claim");
+        expect(JSON.stringify(claimEndpoint)).not.toContain("storagePath");
+        const evidenceEndpoints = sourceArtifact?.source?.endpoints?.filter((endpoint) =>
+            String(endpoint.endpointId ?? "")
+                .toLowerCase()
+                .includes("claimevidence"),
+        );
+        expect(JSON.stringify(evidenceEndpoints)).not.toContain("storagePath");
+    });
+    registerShipmentReservationTest();
+    registerSellerLabelTest();
+});

@@ -1,0 +1,35 @@
+[
+    {
+        "endpointId": "syncContext",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/context/sync",
+        "meta": {
+            "name": "Synchronize consent context",
+            "description": "Materialize trusted page-link configuration into immutable versions."
+        },
+        "params": [],
+        "headers": {
+            "$include": "../../shared/service-header.json"
+        },
+        "body": { "$include": "../../shared/sync-context-request.json" },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "contextKey": { "type": "string" },
+                        "enabled": { "type": "boolean" },
+                        "documentCount": { "type": "number" }
+                    },
+                    "required": ["contextKey", "enabled", "documentCount"]
+                }
+            },
+            {
+                "status": "default",
+                "body": { "$include": "../../shared/error.json" }
+            }
+        ]
+    }
+]

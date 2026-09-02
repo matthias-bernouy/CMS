@@ -3,7 +3,10 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { LocalSupabaseDatabase } from "../src/runtime/supabase-local/database";
-import type { LocalSupabaseFunctionsRuntime } from "../src/runtime/supabase-local/functions-runtime";
+import {
+    inspectFunctionsRuntimeOutput,
+    type LocalSupabaseFunctionsRuntime,
+} from "../src/runtime/supabase-local/functions-runtime";
 import { createLocalSupabaseManagementHandler } from "../src/runtime/supabase-local";
 import { parseLocalSupabaseEnvironment } from "../src/runtime/supabase";
 import { removeReadonlyTree } from "./fixtures";
@@ -14,6 +17,16 @@ afterEach(async () => {
 });
 
 describe("local Supabase management bridge", () => {
+    test("detects readiness before retaining only the bounded output tail", () => {
+        const observation = inspectFunctionsRuntimeOutput(
+            "prefix",
+            `Serving functions on http://local\n${"x".repeat(512)}`,
+        );
+
+        expect(observation.ready).toBe(true);
+        expect(observation.tail).toBe("x".repeat(256));
+    });
+
     test("reads noisy Supabase status output and derives the Functions URL", () => {
         expect(
             parseLocalSupabaseEnvironment(
@@ -115,6 +128,27 @@ describe("local Supabase management bridge", () => {
             expect(config).toContain("verify_jwt = false");
             expect(await (await request("/functions/demo-function")).json()).toMatchObject({ status: "ACTIVE" });
             expect(reloads).toBe(1);
+
+            const stripeCreate = await handler.fetch(
+                new Request("http://127.0.0.1/_stripe/v1/webhook_endpoints", {
+                    method: "POST",
+                    headers: { authorization: "Bearer sk_test_local" },
+                    body: new URLSearchParams({
+                        api_version: "2026-02-25.clover",
+                        "metadata[cmscore_integration]": "stripe-connect",
+                    }),
+                }),
+            );
+            expect(await stripeCreate.json()).toMatchObject({
+                id: expect.stringMatching(/^we_local_/),
+                secret: expect.any(String),
+            });
+            const stripeList = await handler.fetch(
+                new Request("http://127.0.0.1/_stripe/v1/webhook_endpoints", {
+                    headers: { authorization: "Bearer sk_test_local" },
+                }),
+            );
+            expect(await stripeList.json()).toMatchObject({ data: [{ api_version: "2026-02-25.clover" }] });
         } finally {
             await handler.close();
         }

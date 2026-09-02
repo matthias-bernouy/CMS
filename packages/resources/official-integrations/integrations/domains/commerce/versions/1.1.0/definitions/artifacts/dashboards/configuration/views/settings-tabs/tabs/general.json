@@ -1,7 +1,0 @@
-{
-    "id": "general",
-    "label": "General",
-    "children": {
-        "$include": "../../commerce-settings/root.json"
-    }
-}

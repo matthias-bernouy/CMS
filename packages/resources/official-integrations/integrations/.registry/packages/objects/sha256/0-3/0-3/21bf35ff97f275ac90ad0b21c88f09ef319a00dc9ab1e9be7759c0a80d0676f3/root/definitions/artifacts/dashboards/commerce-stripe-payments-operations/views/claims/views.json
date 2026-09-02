@@ -1,0 +1,7 @@
+{
+    "$files": [
+        "list.json",
+        "detail/root.json",
+        "evidence.json"
+    ]
+}

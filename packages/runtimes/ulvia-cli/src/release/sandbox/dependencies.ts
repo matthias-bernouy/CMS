@@ -2,6 +2,7 @@ import { integrationVersionSatisfies } from "@bernouy/cms-integrations";
 import { compare, rcompare } from "semver";
 import type { LocalReleasePackage } from "../types";
 import type { ReleaseSandboxClient } from "./client";
+import { sandboxAnswers } from "./answers";
 
 export async function installRequiredDependencies(
     owner: LocalReleasePackage,
@@ -44,7 +45,7 @@ async function ensureInstalled(
     const { kind, version } = selected.package.envelope;
     const current = installed.get(kind);
     if (!current) {
-        await client.install(kind, version);
+        await client.install(kind, version, sandboxAnswers(selected.definition));
         installed.set(kind, version);
         return;
     }

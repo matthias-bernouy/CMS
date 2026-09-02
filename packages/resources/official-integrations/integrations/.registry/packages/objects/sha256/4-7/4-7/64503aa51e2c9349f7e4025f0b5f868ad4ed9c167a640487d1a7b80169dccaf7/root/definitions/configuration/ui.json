@@ -1,0 +1,32 @@
+{
+    "mark": "Versioned evidence",
+    "instructions": [
+        [
+            "One context per installation",
+            "This first version configures one reusable consent context and the atomic CMS signup adapter."
+        ],
+        [
+            "Published pages",
+            "Every enabled document must reference a published CMS page. Its exact content is preserved with the acceptance."
+        ],
+        [
+            "Signup defaults",
+            "The V1 enforcement adapter targets local CMS account registration."
+        ]
+    ],
+    "scopes": [
+        "Public requirement lookup",
+        "System-only validation and evidence writes",
+        "Administrator audit read"
+    ],
+    "checks": [
+        "The target endpoint emits a private cmsUserId response field",
+        "The consent field is placed inside the target form",
+        "Every enabled legal page is published"
+    ],
+    "resources": [
+        ["source", "Consent API"],
+        ["bloc", "Consent form field"],
+        ["trigger", "Request validation and subject association"]
+    ]
+}

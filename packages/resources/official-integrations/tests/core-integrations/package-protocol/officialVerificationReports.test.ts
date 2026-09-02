@@ -53,23 +53,27 @@ describe("official verification backfill reports", () => {
         REPORT_TEST_TIMEOUT,
     );
 
-    test("only claims SQL install-and-reapply where pinned calibration evidence exists", async () => {
-        const reportSets = await buildOfficialVerificationBackfillReports();
-        const sqlReports = reportSets.filter(({ verification }) => verification.baselines.length > 0);
-        const packageOnlyReports = reportSets.filter(({ verification }) => verification.baselines.length === 0);
+    test(
+        "only claims SQL install-and-reapply where pinned calibration evidence exists",
+        async () => {
+            const reportSets = await buildOfficialVerificationBackfillReports();
+            const sqlReports = reportSets.filter(({ verification }) => verification.baselines.length > 0);
+            const packageOnlyReports = reportSets.filter(({ verification }) => verification.baselines.length === 0);
 
-        expect(sqlReports).toHaveLength(9);
-        expect(packageOnlyReports).toHaveLength(5);
-        for (const { verification } of sqlReports) {
-            expect(verification.results.map(({ suiteId }) => suiteId)).toEqual([
-                "package-contract-validation",
-                "sql-install-and-reapply",
-            ]);
-            expect(verification.provenance.reason).toContain("fresh/fresh");
-        }
-        for (const { verification } of packageOnlyReports) {
-            expect(verification.results.map(({ suiteId }) => suiteId)).toEqual(["package-contract-validation"]);
-            expect(verification.provenance.reason).toContain("only");
-        }
-    });
+            expect(sqlReports).toHaveLength(9);
+            expect(packageOnlyReports).toHaveLength(5);
+            for (const { verification } of sqlReports) {
+                expect(verification.results.map(({ suiteId }) => suiteId)).toEqual([
+                    "package-contract-validation",
+                    "sql-install-and-reapply",
+                ]);
+                expect(verification.provenance.reason).toContain("fresh/fresh");
+            }
+            for (const { verification } of packageOnlyReports) {
+                expect(verification.results.map(({ suiteId }) => suiteId)).toEqual(["package-contract-validation"]);
+                expect(verification.provenance.reason).toContain("only");
+            }
+        },
+        REPORT_TEST_TIMEOUT,
+    );
 });

@@ -34,7 +34,7 @@ type IntegrationServiceOptions = {
     definitionFetch?: typeof fetch;
     packageFetch?: typeof fetch;
     environment: Record<string, string | undefined>;
-    supabase?: Readonly<{ apiBaseUrl: string; functionsBaseUrl: string }>;
+    supabase?: Readonly<{ apiBaseUrl: string; functionsBaseUrl: string; stripeApiUrl?: string }>;
     packageCacheObserve?: (event: IntegrationPackageCacheEvent) => void;
 };
 
@@ -87,7 +87,13 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
     const integrationConnectorBaselineAdopters: IntegrationConnectorBaselineAdopter[] = [
         new ConfiguredSupabaseConnectorBaselineAdopter(supabaseMigrationConfig),
     ];
-    const integrationProvisioners: IntegrationProvisioner[] = [new StripeWebhookProvisioner()];
+    const integrationProvisioners: IntegrationProvisioner[] = [
+        new StripeWebhookProvisioner(
+            options.supabase?.stripeApiUrl
+                ? { apiBaseUrl: options.supabase.stripeApiUrl, allowInsecureLoopbackWebhooks: true }
+                : {},
+        ),
+    ];
     const publicRepositoryCompatibility = new HttpRepositoryCompatibilityReader({
         baseUrl: repositoryUrl,
         ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),

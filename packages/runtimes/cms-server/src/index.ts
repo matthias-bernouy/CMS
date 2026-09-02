@@ -40,6 +40,7 @@ const integrations = createProductionIntegrationServices({
               supabase: {
                   apiBaseUrl: env.localSupabase.managementApiUrl,
                   functionsBaseUrl: env.localSupabase.functionsBaseUrl,
+                  ...(env.localSupabase.stripeApiUrl ? { stripeApiUrl: env.localSupabase.stripeApiUrl } : {}),
               },
           }
         : {}),

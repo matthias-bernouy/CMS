@@ -1,0 +1,78 @@
+[
+    {
+        "$include": "provider-payment-detail.json"
+    },
+    {
+        "widget": "w-table",
+        "id": "providerFinancialOperationsTable",
+        "title": "Stripe financial operations",
+        "source": {
+            "sourceId": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "listFinancialOperations",
+            "params": {
+                "q": "$filter.q",
+                "status": "$filter.status",
+                "limit": "100"
+            },
+            "itemsPath": "operations",
+            "totalPath": "total"
+        },
+        "rowKey": "providerOperationId",
+        "filters": [
+            {
+                "id": "q",
+                "label": "Order or business key",
+                "param": "q",
+                "type": "text"
+            },
+            {
+                "id": "status",
+                "label": "Operation status",
+                "param": "status",
+                "type": "text"
+            }
+        ],
+        "columns": [
+            {
+                "id": "providerOperationId",
+                "label": "Operation",
+                "path": "providerOperationId",
+                "primary": true
+            },
+            {
+                "id": "clientReferenceId",
+                "label": "Order",
+                "path": "clientReferenceId"
+            },
+            {
+                "id": "operationType",
+                "label": "Type",
+                "path": "operationType",
+                "format": "badge"
+            },
+            {
+                "id": "amount",
+                "label": "Amount",
+                "path": "amount",
+                "format": "money"
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "format": "badge"
+            },
+            {
+                "id": "businessKey",
+                "label": "Business key",
+                "path": "businessKey"
+            },
+            {
+                "id": "occurredAt",
+                "label": "Occurred",
+                "path": "occurredAt",
+                "format": "date"
+            }
+        ]
+    }
+]

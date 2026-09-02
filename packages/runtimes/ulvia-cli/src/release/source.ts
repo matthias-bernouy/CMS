@@ -51,10 +51,7 @@ export async function readLocalReleaseSource(
         releaseNotes,
         ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
     });
-    const parsedDefinition = await new FsIntegrationDefinitionRepository(await realpath(searchRoot)).get(
-        kind,
-        entry.version,
-    );
+    const parsedDefinition = await new FsIntegrationDefinitionRepository(integrationRoot).get(kind, entry.version);
     if (!parsedDefinition) {
         throw new Error(`Integration definition disappeared: ${kind}@${entry.version}`);
     }

@@ -1,0 +1,145 @@
+[
+    {
+        "widget": "w-detail",
+        "id": "emailerSettings",
+        "source": {
+            "endpoint": "getSettings"
+        },
+        "title": {
+            "path": "provider",
+            "fallback": "Settings"
+        },
+        "status": {
+            "path": "cmsApiKeyConfigured"
+        },
+        "main": [
+            {
+                "id": "providerSettings",
+                "title": "Provider",
+                "fields": [
+                    {
+                        "id": "provider",
+                        "label": "Provider",
+                        "type": "readonly",
+                        "path": "provider",
+                        "format": "badge"
+                    },
+                    {
+                        "id": "functionName",
+                        "label": "Function",
+                        "type": "readonly",
+                        "path": "functionName"
+                    },
+                    {
+                        "id": "smtpHost",
+                        "label": "SMTP host",
+                        "type": "text",
+                        "path": "smtpHost",
+                        "required": true
+                    },
+                    {
+                        "id": "smtpPort",
+                        "label": "SMTP port",
+                        "type": "text",
+                        "path": "smtpPort",
+                        "required": true
+                    },
+                    {
+                        "id": "smtpSecure",
+                        "label": "SMTP secure",
+                        "type": "select",
+                        "path": "smtpSecure",
+                        "options": [
+                            {
+                                "value": "false",
+                                "label": "No"
+                            },
+                            {
+                                "value": "true",
+                                "label": "Yes"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "smtpUser",
+                        "label": "SMTP user",
+                        "type": "text",
+                        "path": "smtpUser",
+                        "required": true
+                    },
+                    {
+                        "id": "smtpPassword",
+                        "label": "SMTP password",
+                        "type": "text",
+                        "path": "smtpPassword"
+                    },
+                    {
+                        "id": "defaultFrom",
+                        "label": "Default from",
+                        "type": "text",
+                        "path": "defaultFrom",
+                        "required": true
+                    },
+                    {
+                        "id": "defaultReplyTo",
+                        "label": "Default reply-to",
+                        "type": "text",
+                        "path": "defaultReplyTo"
+                    }
+                ]
+            }
+        ],
+        "aside": [
+            {
+                "id": "providerSecrets",
+                "title": "Provider secrets",
+                "fields": [
+                    {
+                        "id": "cmsApiKeyConfigured",
+                        "label": "CMS API key",
+                        "type": "readonly",
+                        "path": "cmsApiKeyConfigured",
+                        "format": "badge"
+                    },
+                    {
+                        "id": "smtpPasswordConfigured",
+                        "label": "SMTP password",
+                        "type": "readonly",
+                        "path": "smtpPasswordConfigured",
+                        "format": "badge"
+                    },
+                    {
+                        "id": "updatedAt",
+                        "label": "Updated",
+                        "type": "readonly",
+                        "path": "updatedAt",
+                        "format": "date"
+                    }
+                ]
+            }
+        ],
+        "actions": [
+            {
+                "id": "saveSettings",
+                "label": "Save settings",
+                "tone": "primary",
+                "placement": "primary",
+                "endpoint": {
+                    "endpoint": "updateSettings",
+                    "body": {
+                        "smtpHost": "$field.smtpHost",
+                        "smtpPort": "$field.smtpPort",
+                        "smtpSecure": "$field.smtpSecure",
+                        "smtpUser": "$field.smtpUser",
+                        "smtpPassword": "$field.smtpPassword",
+                        "defaultFrom": "$field.defaultFrom",
+                        "defaultReplyTo": "$field.defaultReplyTo"
+                    }
+                },
+                "after": {
+                    "resource": "$result"
+                }
+            }
+        ]
+    }
+]

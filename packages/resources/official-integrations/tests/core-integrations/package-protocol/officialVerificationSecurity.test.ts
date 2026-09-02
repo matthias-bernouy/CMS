@@ -85,9 +85,10 @@ function verificationPath(root: string, digest: string): string {
 async function temporaryRoot(label: string): Promise<string> {
     const root = await mkdtemp(join(tmpdir(), `cms-official-verification-${label}-`));
     temporaryRoots.push(root);
-    for (const group of ["domains", "extensions", "foundation", "providers"]) {
-        await cp(join(OFFICIAL_INTEGRATIONS_ROOT, group), join(root, group), { recursive: true });
-    }
+    const source = "commerce-mondial-relay-delivery";
+    await cp(join(OFFICIAL_INTEGRATIONS_ROOT, "extensions", source), join(root, "extensions", source), {
+        recursive: true,
+    });
     await cp(join(OFFICIAL_INTEGRATIONS_ROOT, ".registry", "packages"), join(root, ".registry", "packages"), {
         recursive: true,
     });

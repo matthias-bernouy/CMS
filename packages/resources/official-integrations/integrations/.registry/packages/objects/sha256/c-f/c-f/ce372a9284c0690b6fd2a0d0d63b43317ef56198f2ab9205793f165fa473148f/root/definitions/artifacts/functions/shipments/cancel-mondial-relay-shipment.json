@@ -1,0 +1,81 @@
+{
+    "type": "function",
+    "function": {
+        "id": "cancelMondialRelayShipment",
+        "method": "POST",
+        "access": {
+            "mode": "system"
+        },
+        "meta": {
+            "name": "Cancel Mondial Relay shipment",
+            "description": "Apply an already-authorized pre-carrier cancellation against the same shipment state used by scans."
+        },
+        "input": {
+            "body": {
+                "type": "object",
+                "properties": {
+                    "orderPublicId": {
+                        "type": "string"
+                    },
+                    "providerEventId": {
+                        "type": "string"
+                    },
+                    "occurredAt": {
+                        "type": "string"
+                    },
+                    "trackingUntil": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "orderPublicId",
+                    "providerEventId",
+                    "occurredAt",
+                    "trackingUntil"
+                ]
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "shipment",
+                "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "cancelShipmentReservation",
+                    "body": {
+                        "externalOrderId": "$input.body.orderPublicId",
+                        "trackingUntil": "$input.body.trackingUntil"
+                    }
+                }
+            },
+            {
+                "id": "commerceFulfillment",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "recordOrderFulfillment",
+                    "body": {
+                        "orderPublicId": "$input.body.orderPublicId",
+                        "providerEventId": "$input.body.providerEventId",
+                        "normalizedStatus": "cancelled",
+                        "occurredAt": "$input.body.occurredAt",
+                        "providerReference": "$steps.shipment.expeditionNumber"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": {
+                "shipment": "$steps.shipment",
+                "fulfillment": "$steps.commerceFulfillment"
+            }
+        }
+    }
+}

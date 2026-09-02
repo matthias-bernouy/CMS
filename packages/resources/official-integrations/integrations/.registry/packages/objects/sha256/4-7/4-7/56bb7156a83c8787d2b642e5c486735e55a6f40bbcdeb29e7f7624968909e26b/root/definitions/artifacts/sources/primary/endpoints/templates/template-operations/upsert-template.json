@@ -1,0 +1,86 @@
+{
+    "endpointId": "upsertTemplate",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "key": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "status": {
+                "type": "string"
+            },
+            "fromEmail": {
+                "type": "string"
+            },
+            "replyTo": {
+                "type": "string"
+            },
+            "subject": {
+                "type": "string"
+            },
+            "htmlBody": {
+                "type": "string"
+            },
+            "textBody": {
+                "type": "string"
+            },
+            "requiredTokens": {
+                "type": "array",
+                "items": {
+                    "type": "object"
+                }
+            },
+            "sampleDataJson": {
+                "type": "string"
+            },
+            "metadata": {
+                "type": "object"
+            }
+        },
+        "required": [
+            "key",
+            "name",
+            "subject",
+            "htmlBody"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object"
+            }
+        },
+        {
+            "status": "400",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        }
+    ]
+}

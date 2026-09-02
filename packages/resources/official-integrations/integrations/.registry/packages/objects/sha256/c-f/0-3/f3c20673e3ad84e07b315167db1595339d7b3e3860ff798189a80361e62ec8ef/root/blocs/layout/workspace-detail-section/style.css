@@ -1,0 +1,68 @@
+:host {
+    display: block;
+    --detail-section-padding: 16px;
+    --detail-section-body-start: 14px;
+}
+
+:host([density="compact"]) {
+    --detail-section-padding: 15px;
+    --detail-section-body-start: 12px;
+}
+
+.section {
+    overflow: visible;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    box-shadow:
+        0 1px 0 rgb(15 31 26 / 4%),
+        0 1px 2px rgb(15 31 26 / 5%);
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: var(--detail-section-padding) var(--detail-section-padding) 0;
+}
+
+:host(:not([has-heading])) h4,
+:host(:not([has-description])) p,
+:host(:not([has-actions])) .actions,
+:host(:not([has-heading]):not([has-description]):not([has-actions])) .header {
+    display: none;
+}
+
+.heading {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+h4,
+p {
+    margin: 0;
+}
+
+h4 {
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1.25;
+}
+
+p {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 450;
+    line-height: 1.4;
+}
+
+.body {
+    padding: var(--detail-section-body-start) var(--detail-section-padding) var(--detail-section-padding);
+}
+
+:host(:not([has-heading]):not([has-description]):not([has-actions])) .body {
+    padding-block-start: var(--detail-section-padding);
+}

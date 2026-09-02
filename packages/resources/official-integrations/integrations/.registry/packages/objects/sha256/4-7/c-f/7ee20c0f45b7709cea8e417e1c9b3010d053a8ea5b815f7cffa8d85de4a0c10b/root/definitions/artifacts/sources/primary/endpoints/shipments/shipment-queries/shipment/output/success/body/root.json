@@ -1,0 +1,14 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties.json"
+    },
+    "required": [
+        "id",
+        "status",
+        "recipientName",
+        "recipientPostalCode",
+        "recipientCity",
+        "createdAt"
+    ]
+}

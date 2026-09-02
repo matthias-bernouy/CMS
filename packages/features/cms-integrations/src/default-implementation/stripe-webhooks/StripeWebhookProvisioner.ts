@@ -13,6 +13,7 @@ import { deleteV2Webhook, provisionV2Webhook } from "./v2";
 export type StripeWebhookProvisionerConfig = {
     fetch?: typeof fetch;
     apiBaseUrl?: string;
+    allowInsecureLoopbackWebhooks?: boolean;
 };
 
 export class StripeWebhookProvisioner implements IntegrationProvisioner {
@@ -21,7 +22,9 @@ export class StripeWebhookProvisioner implements IntegrationProvisioner {
     constructor(private readonly config: StripeWebhookProvisionerConfig = {}) {}
 
     async provision(deployment: IntegrationProvisionDeployment, context: IntegrationProvisionContext) {
-        const configuration = parseStripeWebhookConfiguration(deployment);
+        const configuration = parseStripeWebhookConfiguration(deployment, {
+            allowInsecureLoopbackUrls: this.config.allowInsecureLoopbackWebhooks,
+        });
         const client = new StripeProvisioningClient(
             configuration.secretKey,
             this.config.fetch ?? fetch,

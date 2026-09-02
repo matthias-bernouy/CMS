@@ -1,0 +1,33 @@
+{
+    "endpointId": "shipmentTrackingContext",
+    "method": "GET",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipment-tracking-context",
+    "params": [
+        {
+            "name": "expeditionNumber",
+            "in": "query",
+            "type": "string",
+            "required": true
+        },
+        {
+            "name": "expectedExternalOrderId",
+            "in": "query",
+            "type": "string",
+            "required": true
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "output": {
+        "$include": "output/root.json"
+    }
+}

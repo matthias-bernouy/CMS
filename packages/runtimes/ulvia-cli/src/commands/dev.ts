@@ -78,6 +78,7 @@ async function runDev(
             bridge.url,
             {
                 managementUrl: supabaseManagement.url,
+                stripeApiUrl: supabaseManagement.stripeApiUrl,
                 accessToken: supabaseToken,
                 projectRef: "local",
                 environment: supabaseEnvironment,

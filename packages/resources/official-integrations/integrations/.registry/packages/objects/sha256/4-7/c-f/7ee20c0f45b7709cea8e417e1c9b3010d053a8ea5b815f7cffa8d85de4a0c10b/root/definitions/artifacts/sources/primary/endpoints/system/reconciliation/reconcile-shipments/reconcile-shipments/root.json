@@ -1,0 +1,35 @@
+{
+    "endpointId": "reconcileShipments",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/reconcile",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "runKey": {
+                "type": "string"
+            },
+            "limit": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "runKey",
+            "limit"
+        ]
+    },
+    "output": {
+        "$include": "output/root.json"
+    }
+}

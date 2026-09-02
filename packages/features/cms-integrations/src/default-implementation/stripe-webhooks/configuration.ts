@@ -26,12 +26,21 @@ export type StripeWebhookConfiguration = {
     destinations: Array<StripeV1WebhookDestination | StripeV2WebhookDestination>;
 };
 
+export type StripeWebhookConfigurationOptions = Readonly<{
+    allowInsecureLoopbackUrls?: boolean;
+}>;
+
 export function parseStripeWebhookConfiguration(
     deployment: IntegrationProvisionDeployment,
+    options: StripeWebhookConfigurationOptions = {},
 ): StripeWebhookConfiguration {
     const value = deployment.configuration;
     const destinations = array(value.destinations, "destinations").map((entry, index) =>
-        parseDestination(record(entry, `destinations.${index}`), `destinations.${index}`),
+        parseDestination(
+            record(entry, `destinations.${index}`),
+            `destinations.${index}`,
+            options.allowInsecureLoopbackUrls ?? false,
+        ),
     );
     const names = new Set(destinations.map(({ name }) => name));
     if (names.size !== destinations.length) {
@@ -53,11 +62,12 @@ export function parseStripeWebhookConfiguration(
 function parseDestination(
     value: Record<string, IntegrationAnswerValue>,
     name: string,
+    allowInsecureLoopbackUrls: boolean,
 ): StripeV1WebhookDestination | StripeV2WebhookDestination {
     const protocol = string(value.protocol, `${name}.protocol`);
     const common = {
         name: string(value.name, `${name}.name`),
-        url: webhookUrl(value.url, `${name}.url`),
+        url: webhookUrl(value.url, `${name}.url`, allowInsecureLoopbackUrls),
         enabledEvents: stringArray(value.enabledEvents, `${name}.enabledEvents`),
     };
     if (protocol === "v1") {
@@ -76,7 +86,7 @@ function parseDestination(
     fail(`${name}.protocol`, 'must be "v1" or "v2"');
 }
 
-function webhookUrl(value: IntegrationAnswerValue | undefined, name: string): string {
+function webhookUrl(value: IntegrationAnswerValue | undefined, name: string, allowInsecureLoopback: boolean): string {
     const parsed = string(value, name);
     let url: URL;
     try {
@@ -84,7 +94,8 @@ function webhookUrl(value: IntegrationAnswerValue | undefined, name: string): st
     } catch {
         fail(name, "must be an absolute URL");
     }
-    if (url.protocol !== "https:") {
+    const loopback = url.hostname === "127.0.0.1" || url.hostname === "localhost" || url.hostname === "[::1]";
+    if (url.protocol !== "https:" && !(allowInsecureLoopback && url.protocol === "http:" && loopback)) {
         fail(name, "must use HTTPS");
     }
     return url.toString();

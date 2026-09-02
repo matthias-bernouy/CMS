@@ -1,0 +1,10 @@
+[
+    {
+        "name": "commerce",
+        "kind": "commerce"
+    },
+    {
+        "name": "stripe",
+        "kind": "stripe-connect"
+    }
+]

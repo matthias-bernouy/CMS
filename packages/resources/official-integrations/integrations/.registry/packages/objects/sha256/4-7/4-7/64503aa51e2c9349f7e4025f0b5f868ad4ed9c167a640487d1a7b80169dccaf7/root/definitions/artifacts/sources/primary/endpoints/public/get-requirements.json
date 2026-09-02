@@ -1,0 +1,48 @@
+[
+    {
+        "endpointId": "getRequirements",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/requirements",
+        "meta": {
+            "name": "Get consent requirements",
+            "description": "Read the currently materialized public document versions for one context."
+        },
+        "params": [
+            {
+                "name": "context",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": {
+            "$include": "../../shared/service-header.json"
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": { "type": "boolean" },
+                        "contextKey": { "type": "string" },
+                        "documents": {
+                            "type": "array",
+                            "items": {
+                                "$include": "../../shared/requirement-document.json"
+                            }
+                        }
+                    },
+                    "required": ["enabled", "contextKey", "documents"]
+                }
+            },
+            {
+                "status": "default",
+                "body": {
+                    "$include": "../../shared/error.json"
+                }
+            }
+        ]
+    }
+]

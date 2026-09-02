@@ -1,0 +1,50 @@
+[
+    {
+        "endpointId": "deleteSubscription",
+        "method": "DELETE",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscription",
+        "meta": {
+            "name": "Delete subscription",
+            "description": "Delete one newsletter subscription by email."
+        },
+        "params": [
+            {
+                "name": "email",
+                "in": "query",
+                "required": true,
+                "type": "string",
+                "description": "Subscription email."
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "email": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "deleted",
+                        "email"
+                    ]
+                }
+            }
+        ]
+    }
+]

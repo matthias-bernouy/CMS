@@ -1,0 +1,9 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "broadcast-model/broadcast.sql" },
+        { "file": "broadcast-maintenance/set-updated-at.sql" },
+        { "file": "broadcast-access/campaigns.sql" }
+    ]
+}

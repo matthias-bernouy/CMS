@@ -16,7 +16,7 @@ export async function runAuthorTests(sourceRoot: string): Promise<boolean> {
     if (metadata.isSymbolicLink() || !metadata.isDirectory()) {
         throw new Error("Integration tests must be a non-symlink directory");
     }
-    await runCommand([process.execPath, "--no-env-file", "test", tests], {
+    await runCommand([process.execPath, "--no-env-file", "test", "--max-concurrency=1", tests], {
         cwd: await testWorkspace(sourceRoot),
         inherit: true,
         env: authorTestEnvironment(),

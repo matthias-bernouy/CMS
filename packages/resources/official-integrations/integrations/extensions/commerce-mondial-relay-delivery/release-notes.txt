@@ -1,0 +1,30 @@
+Ulvia 2.0.0
+
+- Migrated authoring to the direct current-source layout.
+- Retained the exact 1.0.0 package in immutable repository history.
+
+# Commerce Mondial Relay Delivery
+
+This linking integration verifies that the authenticated buyer owns a Commerce
+order in `awaiting_quote`, then asks Delivery to create an immutable Mondial
+Relay quote. The browser supplies only the order id and relay search choice; it
+never supplies price, weight, currency, recipient data, seller data, or
+Commerce financial terms.
+
+Before quote creation, Commerce returns the trusted order version, merchandise
+subtotal, currency, recipient snapshot, and seller CMS identity. The link loads
+the seller fulfillment profile from User Account. Delivery validates both
+French addresses and phone numbers, revalidates the relay with Mondial Relay,
+and stores a private quote revision with `quoteId`, `quotedAt`, and `expiresAt`.
+An incomplete profile therefore blocks financial locking and payment.
+
+The request key is deterministic for order version and relay selection. A lost
+response can be replayed exactly; changed input under the same key fails. The
+link resolves that exact non-expired quote and calls Commerce
+`lockOrderFinancialTerms`. Competing relay selections may create independent
+quote revisions, but only the quote id that wins the Commerce financial lock
+can authorize the later shipment.
+
+The Mondial Relay picker automatically uses these functions when its optional
+`order-id` binding is present. Install Commerce, Mondial Relay, then this
+integration before publishing that checkout flow.

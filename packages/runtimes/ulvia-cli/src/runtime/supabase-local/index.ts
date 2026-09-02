@@ -2,9 +2,11 @@ import { BunLocalSupabaseDatabase, type LocalSupabaseDatabase } from "./database
 import { SupabaseCliFunctionsRuntime, type LocalSupabaseFunctionsRuntime } from "./functions-runtime";
 import { handleLocalSupabaseManagementRequest } from "./management-handler";
 import { LocalSupabaseProject } from "./project";
+import { LocalStripeApi } from "./stripe-api";
 
 export type LocalSupabaseManagementServer = Readonly<{
     url: string;
+    stripeApiUrl: string;
     stop(): Promise<void>;
 }>;
 
@@ -30,6 +32,7 @@ export async function startLocalSupabaseManagementServer(
     const server = Bun.serve({ hostname: "127.0.0.1", port: options.port, fetch: handler.fetch });
     return {
         url: `http://127.0.0.1:${server.port}`,
+        stripeApiUrl: `http://127.0.0.1:${server.port}/_stripe`,
         stop: async () => {
             await server.stop(true);
             await handler.close();
@@ -43,17 +46,23 @@ export async function createLocalSupabaseManagementHandler(
     const project = await LocalSupabaseProject.open(options.projectRoot);
     const database = options.database ?? new BunLocalSupabaseDatabase(options.databaseUrl);
     const functionsRuntime = options.functionsRuntime ?? new SupabaseCliFunctionsRuntime(options.projectRoot);
+    const stripe = new LocalStripeApi();
     const basePath = `/v1/projects/${options.projectRef}`;
     return {
-        fetch: async (request) =>
-            await handleLocalSupabaseManagementRequest(
+        fetch: async (request) => {
+            const pathname = new URL(request.url).pathname;
+            if (pathname.startsWith("/_stripe/")) {
+                return await stripe.handle(request, "/_stripe");
+            }
+            return await handleLocalSupabaseManagementRequest(
                 request,
                 basePath,
                 options.accessToken,
                 project,
                 database,
                 functionsRuntime,
-            ),
+            );
+        },
         close: async () => {
             try {
                 await functionsRuntime.stop();

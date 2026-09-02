@@ -15,6 +15,7 @@ export type DevPorts = Readonly<{
 
 export type LocalSupabaseCmsConfig = Readonly<{
     managementUrl: string;
+    stripeApiUrl: string;
     accessToken: string;
     projectRef: string;
     environment: LocalSupabaseEnvironment;
@@ -66,6 +67,7 @@ export async function startLocalCms(
             CMS_LOCAL_SUPABASE_FUNCTIONS_URL: supabase.environment.functionsUrl,
             CMS_LOCAL_SUPABASE_PROJECT_REF: supabase.projectRef,
             CMS_LOCAL_SUPABASE_ACCESS_TOKEN: supabase.accessToken,
+            CMS_LOCAL_STRIPE_API_URL: supabase.stripeApiUrl,
         },
     });
     try {

@@ -45,11 +45,12 @@ export class SupabaseCliFunctionsRuntime implements LocalSupabaseFunctionsRuntim
         let isReady = false;
         let outputTail = "";
         const inspect = (output: string) => {
-            outputTail = `${outputTail}${output}`.slice(-256);
-            if (!isReady && outputTail.includes(READY_MARKER)) {
+            const observation = inspectFunctionsRuntimeOutput(outputTail, output);
+            if (!isReady && observation.ready) {
                 isReady = true;
                 ready.resolve();
             }
+            outputTail = observation.tail;
         };
         this.draining = Promise.all([
             drainOutput(subprocess.stdout, inspect),
@@ -57,7 +58,7 @@ export class SupabaseCliFunctionsRuntime implements LocalSupabaseFunctionsRuntim
         ]).then(() => undefined);
         const exitedBeforeReady = subprocess.exited.then(() => {
             if (!isReady) {
-                throw new Error("Local Supabase Edge Functions runtime exited before becoming ready");
+                throw startupError("Local Supabase Edge Functions runtime exited before becoming ready", outputTail);
             }
         });
         try {
@@ -65,7 +66,7 @@ export class SupabaseCliFunctionsRuntime implements LocalSupabaseFunctionsRuntim
                 ready.promise,
                 exitedBeforeReady,
                 Bun.sleep(30_000).then(() => {
-                    throw new Error("Local Supabase Edge Functions runtime did not become ready");
+                    throw startupError("Local Supabase Edge Functions runtime did not become ready", outputTail);
                 }),
             ]);
         } catch (error) {
@@ -95,6 +96,19 @@ export class SupabaseCliFunctionsRuntime implements LocalSupabaseFunctionsRuntim
         }
         await draining;
     }
+}
+
+export function inspectFunctionsRuntimeOutput(previousTail: string, output: string): { ready: boolean; tail: string } {
+    const combined = `${previousTail}${output}`;
+    return { ready: combined.includes(READY_MARKER), tail: combined.slice(-256) };
+}
+
+function startupError(message: string, output: string): TypeError {
+    const detail = output
+        .replace(/[\u0000-\u001f\u007f]+/gu, " ")
+        .trim()
+        .slice(-300);
+    return new TypeError(detail ? `${message}: ${detail}` : message);
 }
 
 async function drainOutput(

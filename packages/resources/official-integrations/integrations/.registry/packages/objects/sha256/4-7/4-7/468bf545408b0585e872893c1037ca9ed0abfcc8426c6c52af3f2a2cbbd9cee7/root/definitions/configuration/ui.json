@@ -1,0 +1,64 @@
+{
+    "mark": "N",
+    "markClass": "newsletter",
+    "emit": "source:updated",
+    "instructions": [
+        [
+            "Deploy connector resources",
+            "Apply the bundled Supabase schema and Edge Function to the configured project."
+        ],
+        [
+            "Generate CMS API key",
+            "Create a dedicated bearer token and install it in both the CMS secret store and the Supabase function secrets."
+        ],
+        [
+            "Connect the CMS",
+            "Install the newsletter source and subscriptions dashboard with the deployed function URL."
+        ]
+    ],
+    "scopes": [
+        "Newsletter subscription creation",
+        "Newsletter subscription reads",
+        "Newsletter subscription updates",
+        "Newsletter subscription deletion",
+        "Backoffice subscriptions dashboard"
+    ],
+    "checks": [
+        "The CMS only stores the source configuration and private API key reference.",
+        "Newsletter requests do not require a CMS user identity.",
+        "The connector schema stays private to anon and authenticated Supabase roles.",
+        "The connector deployer owns Supabase project credentials; the CMS source only stores its generated API key reference."
+    ],
+    "resources": [
+        [
+            "Sources",
+            "Newsletter source contract"
+        ],
+        [
+            "Dashboards",
+            "Newsletter subscriptions dashboard"
+        ],
+        [
+            "Secrets",
+            "Private CMS newsletter API key"
+        ],
+        [
+            "Supabase",
+            "Private newsletter schema and Edge Function"
+        ]
+    ],
+    "review": [
+        "Keep the newsletter schema private to anon and authenticated roles.",
+        "Do not expose Supabase service-role or secret keys to browser code.",
+        "Use the CMS source proxy for all backoffice access."
+    ],
+    "sync": [
+        "Validate answers",
+        "Generate private API key",
+        "Deploy Supabase connector",
+        "Install newsletter source",
+        "Install subscriptions dashboard",
+        "Refresh Sources"
+    ],
+    "syncNote": "This integration creates a stateless CMS source. Supabase owns newsletter subscription rows."
+}

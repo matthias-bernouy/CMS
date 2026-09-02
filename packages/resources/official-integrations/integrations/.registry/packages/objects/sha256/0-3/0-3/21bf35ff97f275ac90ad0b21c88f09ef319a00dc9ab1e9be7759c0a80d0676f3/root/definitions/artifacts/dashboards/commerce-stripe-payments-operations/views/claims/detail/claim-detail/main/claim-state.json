@@ -1,0 +1,78 @@
+{
+    "id": "claimState",
+    "title": "Claim",
+    "fields": [
+        {
+            "id": "reason",
+            "label": "Reason",
+            "path": "reason",
+            "type": "readonly",
+            "format": "badge"
+        },
+        {
+            "id": "status",
+            "label": "Status",
+            "path": "status",
+            "type": "readonly",
+            "format": "badge"
+        },
+        {
+            "id": "description",
+            "label": "Buyer statement",
+            "path": "description",
+            "type": "readonly"
+        },
+        {
+            "id": "buyerRequestedAmount",
+            "label": "Buyer requested",
+            "path": "buyerRequestedAmount",
+            "type": "readonly",
+            "format": "money"
+        },
+        {
+            "id": "evidence",
+            "label": "Private evidence",
+            "path": "evidence",
+            "type": "readonly"
+        },
+        {
+            "id": "events",
+            "label": "Claim timeline",
+            "path": "events",
+            "type": "readonly"
+        },
+        {
+            "id": "returnDeliveryStatus",
+            "label": "Return delivery proof",
+            "path": "returnDeliveryStatus",
+            "type": "readonly",
+            "format": "badge"
+        },
+        {
+            "id": "returnProviderReference",
+            "label": "Return tracking reference",
+            "path": "returnProviderReference",
+            "type": "readonly"
+        },
+        {
+            "id": "returnCarrierAcceptedAt",
+            "label": "Return accepted by carrier",
+            "path": "returnCarrierAcceptedAt",
+            "type": "readonly",
+            "format": "date"
+        },
+        {
+            "id": "returnRecipientHandoffAt",
+            "label": "Return received by seller",
+            "path": "returnRecipientHandoffAt",
+            "type": "readonly",
+            "format": "date"
+        },
+        {
+            "id": "returnEvents",
+            "label": "Trusted return timeline",
+            "path": "returnEvents",
+            "type": "readonly"
+        }
+    ]
+}
