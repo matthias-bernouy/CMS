@@ -15,6 +15,7 @@
             "**/*.cjs",
             "**/*.mts",
             "**/*.cts",
+            "!!packages/resources/official-integrations/integrations/.registry",
             "!!packages/surfaces/cms-control/src/static/assets/control-components.js"
         ]
     },
