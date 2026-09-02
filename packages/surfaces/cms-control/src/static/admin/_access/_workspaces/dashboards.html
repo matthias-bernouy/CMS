@@ -1,0 +1,194 @@
+<w13c-fixed-admin-layout>
+    <cms-dashboard-admin-styles hidden></cms-dashboard-admin-styles>
+
+    <cms-dashboard-admin-nav
+        class="dashboard-admin-nav"
+        slot="secondary-lateral-nav"
+        cms-source="{{BASE_PATH}}/api/dashboard-management?id=#{id}"
+        cms-reload-on="dashboard:created dashboard:updated"
+    >
+        <template>
+            <w13c-lateral-menu aria-label="Dashboards">
+                <span slot="header">Dashboards</span>
+
+                <div class="menu-section">Site</div>
+                <w13c-lateral-menu-item cms-repeat="site" data-dashboard-id="{{ id }}" data-dashboard-href="{{BASE_PATH}}/admin/dashboards?id={{ id }}">
+                    <cms-dashboard-icon slot="icon" icon="{{ icon }}" svg="{{ svg }}"></cms-dashboard-icon>
+                    {{ name }}
+                </w13c-lateral-menu-item>
+                <p9r-open-modal modal-target="create-dashboard-modal">
+                    <button type="button" class="dashboard-new">+ New dashboard</button>
+                </p9r-open-modal>
+
+                <div class="menu-section">Integrations</div>
+                <w13c-lateral-menu-item cms-repeat="integrations" data-dashboard-id="{{ id }}" data-dashboard-href="{{BASE_PATH}}/admin/dashboards?id={{ id }}">
+                    <cms-dashboard-icon slot="icon" icon="{{ icon }}" svg="{{ svg }}"></cms-dashboard-icon>
+                    {{ name }}
+                </w13c-lateral-menu-item>
+            </w13c-lateral-menu>
+        </template>
+    </cms-dashboard-admin-nav>
+
+    <div
+        cms-source="{{BASE_PATH}}/api/dashboard-management?id=#{id}"
+        cms-reload-on="dashboard:created"
+    >
+        <template>
+        <div class="dashboard-configuration" cms-repeat="selected">
+            <cms-shell-detail>
+                <span class="dashboard-detail-title" slot="title">
+                    <cms-dashboard-icon data-dashboard-detail-icon icon="{{ icon }}" svg="{{ svg }}"></cms-dashboard-icon>
+                    <span data-dashboard-detail-name>{{ name }}</span>
+                </span>
+
+                <a slot="actions" cms-repeat="openActions" href="{{BASE_PATH}}/dashboards?id={{ id }}">
+                    <p9r-button type="button" variant="outlined">Open dashboard</p9r-button>
+                </a>
+                <cms-confirm-form
+                    slot="actions"
+                    cms-condition="editable"
+                    target="{{BASE_PATH}}/api/dashboard-management/delete?id={{ id }}"
+                    method="DELETE"
+                    redirect="{{BASE_PATH}}/admin/dashboards"
+                    message="Delete this dashboard?"
+                >
+                    <p9r-button type="button" color="danger" variant="outlined">Delete</p9r-button>
+                </cms-confirm-form>
+                <p9r-button slot="actions" cms-condition="editable" form="dashboard-settings-form" type="submit" color="primary">
+                    Save changes
+                </p9r-button>
+
+                <form
+                    slot="main"
+                    id="dashboard-settings-form"
+                    cms-condition="editable"
+                    cms-source="{{BASE_PATH}}/api/dashboard-management/update as result"
+                    cms-source-trigger="submit"
+                    cms-source-method="PUT"
+                    cms-source-publish="dashboard:updated"
+                    cms-source-success-reset="false"
+                >
+                    <input type="hidden" name="id" value="{{ id }}">
+                    <cms-detail-section heading="General">
+                        <p9r-stack gap="md">
+                            <p9r-input name="name" label="Name" value="{{ name }}" maxlength="16" max-count="16" required></p9r-input>
+                            <p9r-select name="icon" label="Icon" value="{{ icon }}" required>
+                                <option value="database">database</option><option value="map-pin">map pin</option>
+                                <option value="layout">layout</option><option value="search">search</option>
+                                <option value="user">user</option><option value="users">users</option>
+                                <option value="mail">mail</option><option value="send">send</option>
+                                <option value="shopping-bag">shopping bag</option><option value="package">package</option>
+                                <option value="tag">tag</option><option value="receipt">receipt</option>
+                                <option value="settings">settings</option><option value="store">store</option>
+                                <option value="credit-card">credit card</option><option value="truck">truck</option>
+                            </p9r-select>
+                        </p9r-stack>
+                    </cms-detail-section>
+                    <cms-dashboard-navigation-editor
+                        name="views"
+                        value="{{ navigation | jsonurl }}"
+                        views="{{ availableViews | jsonurl }}"
+                    ></cms-dashboard-navigation-editor>
+                </form>
+
+                <cms-dashboard-navigation-editor
+                    slot="main"
+                    cms-condition="managed"
+                    readonly
+                    value="{{ navigation | jsonurl }}"
+                    views="{{ availableViews | jsonurl }}"
+                ></cms-dashboard-navigation-editor>
+
+                <cms-detail-section slot="aside" heading="Metadata">
+                    <div class="dashboard-metadata">
+                        <div class="dashboard-metadata-row"><span>ID</span><strong>{{ id }}</strong></div>
+                        <div class="dashboard-metadata-row"><span>Owner</span><strong>{{ ownerLabel }}</strong></div>
+                    </div>
+                </cms-detail-section>
+
+                <div slot="aside" cms-source="{{BASE_PATH}}/api/dashboard-management/assignments?id={{ id }}&summary=true" cms-reload-on="dashboard-members:changed">
+                    <template>
+                        <cms-detail-section heading="Members">
+                            <div class="dashboard-members-summary">
+                                <p><strong data-dashboard-member-count>{{ count }}</strong> {{ memberLabel }}</p>
+                                <p9r-open-modal modal-target="dashboard-members-modal">
+                                    <p9r-button type="button" color="primary">Manage members</p9r-button>
+                                </p9r-open-modal>
+                            </div>
+                        </cms-detail-section>
+                    </template>
+                </div>
+            </cms-shell-detail>
+
+            <p9r-modal id="dashboard-members-modal" aria-label="Manage dashboard members">
+                <span slot="title">Manage members</span>
+                <cms-dashboard-member-filter class="dashboard-members-modal">
+                    <p9r-input type="search" label="Search by exact email" placeholder="name@example.com" hint="Enter the complete email address." autocomplete="off" cms-page-state="dashboard-member-search" data-dashboard-member-search></p9r-input>
+                    <div cms-source="{{BASE_PATH}}/api/dashboard-management/assignments?id={{ id }}&search=@{dashboard-member-search}&page=@{dashboard-member-page}&limit=25" cms-reload-on="dashboard-members:changed">
+                        <template>
+                            <div class="dashboard-member-list">
+                                <div class="dashboard-member-row" cms-repeat="items" data-dashboard-member-row>
+                                    <div class="dashboard-member-identity"><strong>{{ name }}</strong><span>{{ email }}</span></div>
+                                    <p9r-tag cms-condition="assigned" color="success">Member</p9r-tag>
+                                    <div class="dashboard-member-actions">
+                                        <form cms-repeat="availableActions" data-dashboard-member-assignment cms-source="{{BASE_PATH}}/api/dashboard-management/assignments" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="dashboard-members:changed" cms-source-success-reset="false">
+                                            <input type="hidden" name="dashboardId" value="{{ dashboardId }}">
+                                            <input type="hidden" name="subjectId" value="{{ subjectId }}">
+                                            <p9r-button type="submit" variant="outlined">Add</p9r-button>
+                                        </form>
+                                        <form cms-repeat="assignedActions" data-dashboard-member-assignment cms-source="{{BASE_PATH}}/api/dashboard-management/assignments" cms-source-trigger="submit" cms-source-method="DELETE" cms-source-publish="dashboard-members:changed" cms-source-success-reset="false">
+                                            <input type="hidden" name="dashboardId" value="{{ dashboardId }}">
+                                            <input type="hidden" name="subjectId" value="{{ subjectId }}">
+                                            <p9r-button type="submit" color="danger" variant="outlined">Remove</p9r-button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <p class="dashboard-members-empty" data-dashboard-member-no-results hidden>No user matches this email.</p>
+                            </div>
+                            <p9r-pagination cms-condition="hasMultiplePages" page="{{ page }}" total="{{ pageCount }}" data-dashboard-member-pagination></p9r-pagination>
+                        </template>
+                    </div>
+                </cms-dashboard-member-filter>
+                <p9r-button slot="footer" type="button" color="primary" data-dashboard-close-modal>Done</p9r-button>
+            </p9r-modal>
+        </div>
+
+        <div class="dashboard-admin-empty" cms-repeat="emptyState">
+            No dashboards yet. Create the first site dashboard to get started.
+        </div>
+
+        </template>
+    </div>
+
+    <p9r-modal id="create-dashboard-modal" aria-label="New dashboard">
+            <span slot="title">New dashboard</span>
+            <form
+                id="dashboard-create-form"
+                cms-source="{{BASE_PATH}}/api/dashboard-management/create as result"
+                cms-source-trigger="submit"
+                cms-source-method="POST"
+                cms-source-publish="dashboard:created"
+            >
+                <p9r-stack gap="md">
+                    <p9r-input name="name" label="Name" maxlength="16" max-count="16" required autocomplete="off"></p9r-input>
+                    <p9r-select name="icon" label="Icon" required>
+                        <option value="" disabled selected>Select an icon</option>
+                        <option value="database">database</option><option value="map-pin">map pin</option>
+                        <option value="layout">layout</option><option value="search">search</option>
+                        <option value="user">user</option><option value="users">users</option>
+                        <option value="mail">mail</option><option value="send">send</option>
+                        <option value="shopping-bag">shopping bag</option><option value="package">package</option>
+                        <option value="tag">tag</option><option value="receipt">receipt</option>
+                        <option value="settings">settings</option><option value="store">store</option>
+                        <option value="credit-card">credit card</option><option value="truck">truck</option>
+                    </p9r-select>
+                    <p9r-input name="id" label="ID" max-count="64" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="my-dashboard" hint="Generated from the name. You can adjust it before creation." required></p9r-input>
+                </p9r-stack>
+            </form>
+            <cms-dashboard-create-controller form="dashboard-create-form" hidden></cms-dashboard-create-controller>
+            <div slot="footer" class="dashboard-modal-actions">
+                <p9r-button type="button" variant="outlined" data-dashboard-close-modal>Cancel</p9r-button>
+                <p9r-button type="submit" form="dashboard-create-form" color="primary">Create dashboard</p9r-button>
+            </div>
+    </p9r-modal>
+</w13c-fixed-admin-layout>

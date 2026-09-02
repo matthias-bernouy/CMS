@@ -67,7 +67,12 @@ export function pushSelectionUrl(selection: DashboardSelection): void {
 }
 
 function selectionUrl(selection: DashboardSelection): string {
-    const params = new URLSearchParams();
+    const scoped = Boolean(document.documentElement.dataset.dashboardScope);
+    const target = scoped ? new URL(window.location.href) : new URL(route("/admin/sources"), window.location.origin);
+    const params = target.searchParams;
+    for (const key of ["source", "dashboard", "collection", "row"]) {
+        params.delete(key);
+    }
     if (selection.source) {
         params.set("source", selection.source);
     }
@@ -78,8 +83,8 @@ function selectionUrl(selection: DashboardSelection): string {
         params.set("collection", selection.collection);
         params.set("row", selection.row);
     }
-    const suffix = params.toString() ? `?${params.toString()}` : "";
-    return route(`/admin/sources${suffix}`);
+    target.search = params.toString();
+    return `${target.pathname}${target.search}`;
 }
 
 export function dispatchDashboardSelection(selection: DashboardSelection): void {

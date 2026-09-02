@@ -1,0 +1,71 @@
+<style>
+    .dashboard-profile-hero {
+        align-items: center;
+        background: linear-gradient(180deg,
+            color-mix(in srgb, var(--primary-base, #087f5b) 10%, var(--bg-surface, #fff)) 0%,
+            var(--bg-surface, #fff) 100%);
+        border: 1px solid var(--border-default, #dfe5e2);
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 48px 24px 32px;
+    }
+
+    .dashboard-profile-name {
+        color: var(--text-main, #0f1f1a);
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .dashboard-profile-hero p9r-tag {
+        align-self: center;
+        width: max-content;
+    }
+</style>
+
+<cms-event-toast event="password:changed" message="Password changed" type="success"></cms-event-toast>
+
+<w13c-fixed-admin-layout operator>
+    <cms-dashboard-nav mode="operator" surface="switcher" slot="operator-dashboard-switcher"></cms-dashboard-nav>
+    <cms-dashboard-nav mode="operator" surface="primary" slot="operator-primary-navigation"></cms-dashboard-nav>
+    <cms-dashboard-nav mode="operator" surface="secondary" slot="secondary-lateral-nav" hidden></cms-dashboard-nav>
+    <cms-dashboard-nav mode="operator" surface="profile" slot="operator-profile"></cms-dashboard-nav>
+
+    <span slot="title">Profile</span>
+    <div slot="action" cms-source="{{BASE_PATH}}/api/dashboard-session/profile">
+        <a href="{{ logoutUrl }}">
+            <p9r-button color="danger">Log out</p9r-button>
+        </a>
+    </div>
+
+    <cms-dashboard-workspace mode="operator" profile>
+        <p9r-container size="md" slot="profile">
+            <div cms-source="{{BASE_PATH}}/api/dashboard-session/profile" cms-reload-on="password:changed">
+                <p9r-stack gap="lg">
+                    <div class="dashboard-profile-hero">
+                        <p9r-avatar size="xl" color="primary" name="{{ email }}"></p9r-avatar>
+                        <p9r-stack gap="xs" align="center">
+                            <span class="dashboard-profile-name">{{ email }}</span>
+                            <p9r-tag color="primary">{{ roleLabel }}</p9r-tag>
+                        </p9r-stack>
+                    </div>
+
+                    <p9r-card cms-repeat="passwordCard">
+                        <span slot="header">Security</span>
+                        <form cms-source="{{BASE_PATH}}/api/dashboard-session/profile/password as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="password:changed">
+                            <p9r-stack gap="md">
+                                <p9r-input name="currentPassword" type="password" label="Current password" autocomplete="current-password" required></p9r-input>
+                                <p9r-input name="newPassword" type="password" label="New password" placeholder="At least 8 characters" autocomplete="new-password" required></p9r-input>
+                                <p9r-stack direction="row" justify="end">
+                                    <p9r-button color="primary" type="submit">Change password</p9r-button>
+                                </p9r-stack>
+                            </p9r-stack>
+                        </form>
+                    </p9r-card>
+                </p9r-stack>
+            </div>
+        </p9r-container>
+    </cms-dashboard-workspace>
+</w13c-fixed-admin-layout>

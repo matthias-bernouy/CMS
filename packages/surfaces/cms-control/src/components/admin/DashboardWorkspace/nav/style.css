@@ -1,0 +1,74 @@
+:host {
+    display: block;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+:host([hidden]) {
+    display: none !important;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+w13c-lateral-menu {
+    height: 100%;
+    width: 100%;
+    --menu-brand-mark-display: none;
+    --menu-header-font-size: .875rem;
+    --menu-item-font-size: .875rem;
+    --menu-section-font-size: .6875rem;
+}
+
+.dashboard-switcher,
+.dashboard-switcher p9r-select,
+.dashboard-profile {
+    min-width: 0;
+    width: 100%;
+}
+
+:host([surface="switcher"]) .dashboard-switcher {
+    padding-top: .625rem;
+}
+
+:host([surface="profile"]) {
+    height: auto;
+    overflow: visible;
+}
+
+.dashboard-profile w13c-lateral-menu-item {
+    display: block;
+    width: 100%;
+}
+
+:host(:is([surface="primary"], [surface="secondary"])) w13c-lateral-menu {
+    background: transparent;
+    border: 0;
+    width: 100%;
+}
+
+:host(:is([surface="primary"], [surface="secondary"])) w13c-lateral-menu::part(header) {
+    display: none;
+}
+
+:host(:is([surface="primary"], [surface="secondary"])) w13c-lateral-menu::part(footer) {
+    display: none;
+}
+
+:host([surface="primary"]) w13c-lateral-menu::part(nav) {
+    padding: 0;
+}
+
+:host([surface="primary"]) w13c-lateral-menu {
+    height: auto;
+}
+
+:host([surface="primary"]) w13c-lateral-menu::part(sidebar) {
+    height: auto;
+}
+
+:host([surface="secondary"]) w13c-lateral-menu::part(nav) {
+    padding-top: .625rem;
+}

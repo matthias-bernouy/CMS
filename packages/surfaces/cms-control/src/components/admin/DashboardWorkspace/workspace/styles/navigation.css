@@ -1,0 +1,200 @@
+.dashboard-navigation-list,
+.readonly-navigation {
+    display: grid;
+    gap: .4rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-navigation-node {
+    display: grid;
+    gap: .5rem;
+    min-width: 0;
+}
+
+.dashboard-navigation-row {
+    align-items: center;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: .45rem;
+    cursor: pointer;
+    display: flex;
+    gap: .5rem;
+    min-height: 3.25rem;
+    padding: .4rem .55rem;
+    position: relative;
+}
+
+.dashboard-navigation-row:hover {
+    background: var(--bg-hover, #f5f8f6);
+    border-color: var(--border-strong, #bdc8c3);
+}
+
+.dashboard-navigation-row:focus-visible {
+    outline: 2px solid var(--primary-base, #08745b);
+    outline-offset: 2px;
+}
+
+.dashboard-navigation-handle {
+    align-items: center;
+    align-self: stretch;
+    color: var(--text-muted, #66736f);
+    cursor: grab;
+    display: inline-flex;
+    flex: 0 0 2.25rem;
+    font-size: 1.15rem;
+    justify-content: center;
+    line-height: 1;
+    margin: -.4rem 0 -.4rem -.55rem;
+    min-width: 2.25rem;
+    touch-action: none;
+    user-select: none;
+}
+
+.dashboard-navigation-handle:active {
+    cursor: grabbing;
+}
+
+.dashboard-navigation-handle:focus-visible {
+    border-radius: .25rem;
+    outline: 2px solid var(--primary-base, #08745b);
+    outline-offset: 2px;
+}
+
+.dashboard-navigation-icon {
+    align-items: center;
+    background: var(--primary-muted, #e7f4ee);
+    border-radius: .45rem;
+    color: var(--primary-base, #08745b);
+    display: inline-flex;
+    flex: 0 0 1.75rem;
+    height: 1.75rem;
+    justify-content: center;
+}
+
+.dashboard-navigation-icon :is(svg) {
+    height: 1rem;
+    width: 1rem;
+}
+
+.dashboard-navigation-copy {
+    display: grid;
+    flex: 1 1 auto;
+    gap: .2rem;
+    min-width: 0;
+}
+
+.dashboard-navigation-copy strong,
+.dashboard-navigation-copy span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-navigation-copy strong {
+    color: var(--text-main, #0f1f1a);
+    font-size: .8125rem;
+}
+
+.dashboard-navigation-copy span {
+    color: var(--text-muted, #66736f);
+    font-size: .6875rem;
+}
+
+.dashboard-navigation-row-actions {
+    align-items: center;
+    display: flex;
+    gap: .2rem;
+    flex: 0 0 auto;
+    opacity: 0;
+    transition: opacity .15s ease;
+}
+
+.dashboard-navigation-row:hover .dashboard-navigation-row-actions,
+.dashboard-navigation-row:focus-within .dashboard-navigation-row-actions {
+    opacity: 1;
+}
+
+.dashboard-navigation-row-actions p9r-icon-button {
+    font-size: 1.1rem;
+}
+
+.dashboard-navigation-children {
+    border-left: 1px solid var(--border-strong, #bdc8c3);
+    margin-left: 1.45rem;
+    padding-left: .75rem;
+}
+
+.dashboard-navigation-children:empty {
+    display: none;
+}
+
+.dashboard-navigation-node[data-navigation-dragging] > .dashboard-navigation-row {
+    opacity: .45;
+}
+
+.dashboard-navigation-node[data-navigation-drop="before"] > .dashboard-navigation-row {
+    box-shadow: 0 -3px 0 var(--primary-base, #08745b);
+}
+
+.dashboard-navigation-node[data-navigation-drop="after"] > .dashboard-navigation-row {
+    box-shadow: 0 3px 0 var(--primary-base, #08745b);
+}
+
+.dashboard-navigation-node[data-navigation-drop="inside"] > .dashboard-navigation-row {
+    background: var(--primary-muted, #e7f4ee);
+    outline: 2px solid var(--primary-base, #08745b);
+    outline-offset: -2px;
+}
+
+.readonly-navigation .readonly-navigation {
+    border-left: 1px solid var(--border-default, #dfe5e2);
+    margin-left: .55rem;
+    padding-left: 1rem;
+}
+
+.readonly-navigation li > div {
+    align-items: center;
+    display: flex;
+    gap: .5rem;
+    min-height: 2rem;
+}
+
+.readonly-navigation-icon {
+    display: inline-grid;
+    height: 1.1rem;
+    place-items: center;
+    width: 1.1rem;
+}
+
+.readonly-navigation-icon :is(svg) {
+    height: .9rem;
+    width: .9rem;
+}
+
+@media (max-width: 560px) {
+    .dashboard-navigation-row {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .dashboard-navigation-copy {
+        width: calc(100% - 5rem);
+    }
+
+    .dashboard-navigation-row-actions {
+        margin-left: auto;
+        opacity: 1;
+    }
+}
+
+@media (hover: none) {
+    .dashboard-navigation-row-actions {
+        opacity: 1;
+    }
+
+    .dashboard-navigation-settings {
+        display: none;
+    }
+}

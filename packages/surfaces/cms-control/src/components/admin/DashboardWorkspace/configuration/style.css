@@ -1,0 +1,23 @@
+:host {
+    display: block;
+    min-width: 0;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+p9r-modal {
+    --p9r-modal-width: 620px;
+}
+
+.modal-actions {
+    align-items: center;
+    display: flex;
+    gap: .75rem;
+    justify-content: flex-end;
+}

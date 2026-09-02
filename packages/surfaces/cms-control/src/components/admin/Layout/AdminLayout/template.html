@@ -1,6 +1,9 @@
 <w13c-left-menu-layout>
     <w13c-lateral-menu slot="sidebar" aria-label="Admin navigation" style="--menu-brand-mark: 'C'; --menu-brand-mark-display: grid; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;">
-        <h2 slot="header" data-admin-brand>CmsCore</h2>
+        <h2 slot="header" data-admin-brand data-operator-navigation>CmsCore</h2>
+        <slot name="operator-dashboard-switcher" slot="header" data-operator-navigation hidden></slot>
+
+        <slot name="operator-primary-navigation" data-operator-navigation hidden></slot>
 
         <div class="menu-section">Content</div>
 
@@ -92,7 +95,17 @@
             Sources
         </w13c-lateral-menu-item>
 
-        <div class="menu-section">Workspace</div>
+        <div class="menu-section" data-dashboard-workspace>Workspace</div>
+
+        <w13c-lateral-menu-item data-route="dashboards" data-dashboard-workspace>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="18" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            Dashboards
+        </w13c-lateral-menu-item>
 
         <w13c-lateral-menu-item data-route="integrations">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -132,6 +145,8 @@
             </svg>
             AI Assistant
         </w13c-lateral-menu-item>
+
+        <slot name="operator-profile" slot="footer" data-operator-navigation hidden></slot>
 
         <w13c-lateral-menu-item data-role="profil" data-route="profil" slot="footer">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

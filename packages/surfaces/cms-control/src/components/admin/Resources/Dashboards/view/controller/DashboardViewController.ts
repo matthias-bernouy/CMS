@@ -13,6 +13,10 @@ export class DashboardViewController extends DashboardStateController {
             this.renderDashboard();
             return;
         }
+        if (this.hasAttribute("external")) {
+            this.renderDashboard();
+            return;
+        }
         const source = this.shadowRoot!.querySelector<HTMLElement>("[data-dashboard-list-source]");
         source?.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
         this.observer = new MutationObserver(() => this.readBoundGroups());
@@ -46,6 +50,13 @@ export class DashboardViewController extends DashboardStateController {
             this.groups,
             this.dashboardFilters(),
         );
+    }
+
+    public setExternalContext(groups: DashboardSourceGroup[], selection: DashboardSelection): void {
+        this.groups = structuredClone(groups);
+        this.syncFromSelection(selection);
+        this.ensureDashboardSelection();
+        this.renderDashboard();
     }
 
     protected syncSelectionAndRender(selection: DashboardSelection): void {
