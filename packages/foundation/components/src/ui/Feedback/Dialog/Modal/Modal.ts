@@ -6,6 +6,7 @@ import css from "./style.css" with { type: "text" };
 
 export class Modal extends Component {
     private _dialog: HTMLDialogElement | null = null;
+    private _footerSlot: HTMLSlotElement | null = null;
     private _onBackdrop = (e: MouseEvent) => handleBackdropClick(this, e);
     private _onCancel = (e: Event) => handleCancel(this, e);
     private _onClose = () => handleClose(this);
@@ -20,12 +21,15 @@ export class Modal extends Component {
 
     override connectedCallback() {
         this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null;
+        this._footerSlot ??= this.shadowRoot?.querySelector('slot[name="footer"]') ?? null;
         upgradeProperty(this, "open");
         this._dialog?.addEventListener("click", this._onBackdrop);
         this._dialog?.addEventListener("cancel", this._onCancel);
         this._dialog?.addEventListener("close", this._onClose);
+        this._footerSlot?.addEventListener("slotchange", this._syncFooter);
         this.addEventListener("form:success", this.hide);
         this._syncLabel();
+        this._syncFooter();
         this._syncOpen();
     }
 
@@ -33,6 +37,7 @@ export class Modal extends Component {
         this._dialog?.removeEventListener("click", this._onBackdrop);
         this._dialog?.removeEventListener("cancel", this._onCancel);
         this._dialog?.removeEventListener("close", this._onClose);
+        this._footerSlot?.removeEventListener("slotchange", this._syncFooter);
         this.removeEventListener("form:success", this.hide);
     }
 
@@ -55,6 +60,14 @@ export class Modal extends Component {
             this._dialog?.removeAttribute("aria-label");
         }
     }
+
+    private _syncFooter = () => {
+        const assigned = this._footerSlot?.assignedNodes({ flatten: true }) ?? [];
+        this.toggleAttribute(
+            "has-footer",
+            assigned.some((node) => node.nodeType !== Node.TEXT_NODE || node.textContent?.trim() !== ""),
+        );
+    };
 
     private _syncOpen() {
         if (!this._dialog) {

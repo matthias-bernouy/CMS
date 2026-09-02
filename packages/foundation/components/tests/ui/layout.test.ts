@@ -108,6 +108,31 @@ describe("LeftMenuLayout mobile navigation", () => {
         expect(root.activeElement).toBe(secondaryToggle);
     });
 
+    test("tracks the visible state of dynamically rendered secondary navigation", async () => {
+        const layout = document.createElement("w13c-left-menu-layout-test");
+        const secondaryNavigation = document.createElement("div");
+        secondaryNavigation.slot = "secondary-sidebar";
+        layout.append(secondaryNavigation);
+        document.body.append(layout);
+        await flush();
+
+        const root = layout.shadowRoot!;
+        const sidebar = root.querySelector<HTMLElement>(".secondary-sidebar")!;
+        const toggle = root.querySelector<HTMLButtonElement>('[data-mobile-nav="secondary"]')!;
+        expect(sidebar.hidden).toBe(false);
+        expect(toggle.hidden).toBe(false);
+
+        secondaryNavigation.hidden = true;
+        await flush();
+        expect(sidebar.hidden).toBe(true);
+        expect(toggle.hidden).toBe(true);
+
+        secondaryNavigation.hidden = false;
+        await flush();
+        expect(sidebar.hidden).toBe(false);
+        expect(toggle.hidden).toBe(false);
+    });
+
     test("closes the drawer after a navigation action or Escape", async () => {
         const layout = document.createElement("w13c-left-menu-layout-test");
         const navigation = document.createElement("div");
