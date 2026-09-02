@@ -1,0 +1,31 @@
+{
+    "name": "@bernouy/ulvia-cli",
+    "version": "0.1.0",
+    "description": "Local-first Ulvia CLI for integration packages and CMS development.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "bin": {
+        "ulvia": "./src/index.ts"
+    },
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "files": [
+        "src/",
+        "tsconfig.json",
+        "README.md"
+    ],
+    "dependencies": {
+        "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
+        "@bernouy/cms-server": "workspace:*",
+        "semver": "^7.8.2",
+        "supabase": "2.116.0"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    },
+    "devDependencies": {
+        "@types/semver": "^7.7.1"
+    }
+}

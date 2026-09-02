@@ -13,6 +13,7 @@
         "packages/runtimes/*"
     ],
     "scripts": {
+        "ulvia": "bun run packages/runtimes/ulvia-cli/src/index.ts",
         "build": "bun run build.ts",
         "check:all": "bun run quality/ci/check-all.ts",
         "check:architecture": "bun run quality/architecture/check.ts",
@@ -60,6 +61,7 @@
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
+        "@bernouy/ulvia-cli": "workspace:*",
         "@biomejs/biome": "2.5.4",
         "@types/bun": "1.3.14",
         "bun-types": "1.3.14",

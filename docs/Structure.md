@@ -86,6 +86,9 @@ Runtime packages:
 
 - `@bernouy/cms-cli`: `p9r` CLI for scaffolding, local development, push/pull,
   files reindexing, secrets, and bloc listing.
+- `@bernouy/ulvia-cli`: local-first `ulvia` CLI for the persistent integration
+  package store and isolated CMS development infrastructure. It coexists with
+  `@bernouy/cms-cli` during the migration.
 - `@bernouy/cms-server`: production composition root. It reads environment,
   wires Mongo/local filesystem/crypto/auth/sources/integrations/analytics, and starts
   Control and Delivery runners.

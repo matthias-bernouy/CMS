@@ -1,0 +1,96 @@
+import { canonicalJsonBytes, type ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
+import { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs";
+import { parseIntegrationDefinition, type IntegrationDefinition } from "@bernouy/cms-integrations";
+import { readManifest, type LocalPackageRecord, writeManifest } from "./manifest";
+
+export type PulledPackage = Readonly<{
+    package: ResolvedIntegrationPackage;
+    definition: IntegrationDefinition;
+    source: string;
+}>;
+
+export type StorePackageResult = Readonly<{
+    record: LocalPackageRecord;
+    added: boolean;
+}>;
+
+export class LocalIntegrationRepository {
+    private readonly cache: FsIntegrationPackageCache;
+    private mutation = Promise.resolve();
+
+    constructor(
+        private readonly root: string,
+        packageRoot: string,
+    ) {
+        this.cache = new FsIntegrationPackageCache({ root: packageRoot });
+    }
+
+    async init(): Promise<void> {
+        await this.cache.init();
+        await readManifest(this.root);
+    }
+
+    async list(): Promise<readonly LocalPackageRecord[]> {
+        return (await readManifest(this.root)).packages;
+    }
+
+    async getRecord(kind: string, version: string): Promise<LocalPackageRecord | null> {
+        return (await this.list()).find((record) => record.kind === kind && record.version === version) ?? null;
+    }
+
+    async getPackage(record: LocalPackageRecord): Promise<ResolvedIntegrationPackage> {
+        const materialized = await this.cache.get(record.digest);
+        if (!materialized) {
+            throw new Error(`Local package ${record.kind}@${record.version} is missing for digest ${record.digest}`);
+        }
+        return {
+            envelope: materialized.envelope,
+            digest: materialized.digest,
+            canonicalBytes: canonicalJsonBytes(materialized.envelope),
+        };
+    }
+
+    async store(input: PulledPackage): Promise<StorePackageResult> {
+        const { kind, version } = input.package.envelope;
+        const materialized = await this.cache.materialize(input.package, {
+            kind,
+            version,
+            digest: input.package.digest,
+        });
+        await this.cache.recordReference(kind, version, materialized.digest);
+        return await this.exclusive(async () => {
+            const current = [...(await this.list())];
+            const existing = current.find((record) => record.kind === kind && record.version === version);
+            if (existing) {
+                if (existing.digest !== materialized.digest) {
+                    throw new Error(`Local package coordinate ${kind}@${version} already has a different digest`);
+                }
+                return { record: existing, added: false };
+            }
+            const record: LocalPackageRecord = {
+                kind,
+                version,
+                digest: materialized.digest,
+                source: input.source,
+                pulledAt: new Date().toISOString(),
+                definition: parseIntegrationDefinition(input.definition),
+            };
+            await writeManifest(this.root, [...current, record]);
+            return { record, added: true };
+        });
+    }
+
+    private async exclusive<T>(operation: () => Promise<T>): Promise<T> {
+        const previous = this.mutation;
+        let release!: () => void;
+        this.mutation = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        await previous;
+        try {
+            return await operation();
+        } finally {
+            release();
+        }
+    }
+}

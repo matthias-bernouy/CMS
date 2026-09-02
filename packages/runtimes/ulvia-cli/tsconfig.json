@@ -1,0 +1,17 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "baseUrl": ".",
+        "paths": {
+            "ulvia-cli/*": ["./src/*"]
+        }
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../../features/cms-integration-packages" },
+        { "path": "../../features/cms-integrations" },
+        { "path": "../cms-server" }
+    ]
+}
