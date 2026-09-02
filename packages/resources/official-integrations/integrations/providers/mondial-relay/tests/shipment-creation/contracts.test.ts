@@ -6,7 +6,7 @@ const integrationRoot = resolve(import.meta.dir, "../..");
 
 describe("Mondial Relay shipment creation database contracts", () => {
     test("validates, reserves or replays one shipment atomically without provider work", async () => {
-        const schema = await loadSupabaseSchemaSql(integrationRoot);
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
         const definition = sqlFunction(schema, "delivery.reserve_shipment_creation");
 
         expect(definition).toContain("returns jsonb");
@@ -32,7 +32,7 @@ describe("Mondial Relay shipment creation database contracts", () => {
     });
 
     test("preserves omitted optional columns while retrying a failed reservation", async () => {
-        const schema = await loadSupabaseSchemaSql(integrationRoot);
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
         const definition = sqlFunction(schema, "delivery.retry_shipment_creation");
 
         expect(definition).toContain("jsonb_populate_record(v_existing, p_reservation)");

@@ -43,6 +43,7 @@ export type {
     IntegrationMigrationStepResult,
     IntegrationProviderDirectMigrationAdapter,
 } from "./migrationRuntime";
+export { INTEGRATION_MIGRATION_PHASES } from "./migrationRuntime";
 export type {
     IntegrationConnectorDeployer,
     IntegrationConnectorDeployContext,

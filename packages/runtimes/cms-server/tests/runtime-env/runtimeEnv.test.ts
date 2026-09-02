@@ -167,23 +167,24 @@ describe("runtime env validation", () => {
     });
 
     test("accepts a complete loopback-only Supabase connector in development", () => {
-        expect(
-            readRuntimeEnv({
-                ...validEnv(),
-                MODE: "DEV",
-                CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "http://127.0.0.1:5103",
-                CMS_LOCAL_SUPABASE_FUNCTIONS_URL: "http://localhost:54321/functions/v1/",
-                CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
-                CMS_LOCAL_SUPABASE_ACCESS_TOKEN: "local-management-token-at-least-24",
-                CMS_LOCAL_STRIPE_API_URL: "http://127.0.0.1:5103/_stripe/",
-            }).localSupabase,
-        ).toEqual({
+        const parsed = readRuntimeEnv({
+            ...validEnv(),
+            MODE: "DEV",
+            CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "http://127.0.0.1:5103",
+            CMS_LOCAL_SUPABASE_FUNCTIONS_URL: "http://localhost:54321/functions/v1/",
+            CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
+            CMS_LOCAL_SUPABASE_ACCESS_TOKEN: "local-management-token-at-least-24",
+            CMS_LOCAL_STRIPE_API_URL: "http://127.0.0.1:5103/_stripe/",
+            CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE: "deploy-functions",
+        });
+        expect(parsed.localSupabase).toEqual({
             managementApiUrl: "http://127.0.0.1:5103",
             functionsBaseUrl: "http://localhost:54321/functions/v1",
             projectRef: "local",
             accessToken: "local-management-token-at-least-24",
             stripeApiUrl: "http://127.0.0.1:5103/_stripe",
         });
+        expect(parsed.localMigrationAuditFault).toBe("deploy-functions");
     });
 
     test("rejects incomplete, remote, or production local Supabase configuration", () => {
@@ -205,5 +206,19 @@ describe("runtime env validation", () => {
                 CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "https://api.supabase.com",
             }),
         ).toThrow(/loopback host/);
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                ...local,
+                MODE: "DEV",
+                CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE: "publish",
+            }),
+        ).toThrow(/supported integration migration phase/);
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE: "expand",
+            }),
+        ).toThrow(/requires MODE=DEV and the local Supabase runtime/);
     });
 });

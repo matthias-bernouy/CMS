@@ -1,2 +1,2 @@
-[functions.cms-delivery]
+[functions.cms-delivery-v2]
 verify_jwt = false

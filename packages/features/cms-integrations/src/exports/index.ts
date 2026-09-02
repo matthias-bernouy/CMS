@@ -107,6 +107,7 @@ export type {
     ResolveIntegrationPackageRequest,
     ResolvedIntegrationPackageRoot,
 } from "../interfaces/IntegrationConnectorDeployer";
+export { INTEGRATION_MIGRATION_PHASES } from "../interfaces/IntegrationConnectorDeployer";
 export {
     SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
     type IntegrationConnectorProvider,

@@ -4,7 +4,7 @@ import { pullCommand } from "./commands/pull";
 import { releaseCommand } from "./commands/release";
 import { statusCommand } from "./commands/status";
 import type { LocalReleaseVerifier } from "./release/types";
-import { RuntimeLocalReleaseVerifier } from "./release/verifier";
+import { RuntimeLocalReleaseVerifier } from "./release/verification";
 import { LocalIntegrationRepository } from "./repository/local";
 import { DEFAULT_REPOSITORY_URL, RemoteIntegrationRepository } from "./repository/remote";
 import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";

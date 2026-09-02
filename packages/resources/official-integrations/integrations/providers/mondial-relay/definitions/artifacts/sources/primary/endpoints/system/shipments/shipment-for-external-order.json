@@ -3,7 +3,7 @@
         "endpointId": "shipmentForExternalOrder",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipment-for-external-order",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/shipment-for-external-order",
         "params": [
             {
                 "name": "externalOrderId",

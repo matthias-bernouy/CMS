@@ -2,28 +2,34 @@ import { randomBytes } from "node:crypto";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalRepositoryCatalog } from "../../repository/catalog";
-import { LocalIntegrationRepository } from "../../repository/local";
-import { startLocalRepositoryServer, type LocalRepositoryServer } from "../../repository/server";
-import { startLocalCms, stopLocalCms, type CmsProcess } from "../../runtime/cms";
-import { loadOrCreateDevRuntimeConfig } from "../../runtime/config";
-import { destroyLocalMongo, startLocalMongo } from "../../runtime/mongo";
-import { ensureUlviaPaths, resolveUlviaPaths } from "../../runtime/paths";
-import { startLocalSupabaseManagementServer, type LocalSupabaseManagementServer } from "../../runtime/supabase-local";
-import { startLocalSupabase, stopLocalSupabase } from "../../runtime/supabase";
-import type { LocalReleasePackage } from "../types";
-import { adoptRequiredLegacyBaselines } from "./adoption";
-import { sandboxAnswers } from "./answers";
-import { ReleaseSandboxClient } from "./client";
-import { installRequiredDependencies } from "./dependencies";
-import { removeReleaseSandbox } from "./filesystem";
-import { allocateReleaseSandboxPorts } from "./ports";
-import { prepareSandboxSupabase } from "./supabase-config";
+import type { IntegrationMigrationPhase } from "@bernouy/cms-integrations";
+import { LocalRepositoryCatalog } from "../../../repository/catalog";
+import { LocalIntegrationRepository } from "../../../repository/local";
+import { startLocalRepositoryServer, type LocalRepositoryServer } from "../../../repository/server";
+import { startLocalCms, stopLocalCms, type CmsProcess } from "../../../runtime/cms";
+import { loadOrCreateDevRuntimeConfig } from "../../../runtime/config";
+import { destroyLocalMongo, startLocalMongo } from "../../../runtime/mongo";
+import { ensureUlviaPaths, resolveUlviaPaths } from "../../../runtime/paths";
+import {
+    startLocalSupabaseManagementServer,
+    type LocalSupabaseManagementServer,
+} from "../../../runtime/supabase-local";
+import { startLocalSupabase, stopLocalSupabase } from "../../../runtime/supabase";
+import type { LocalReleasePackage } from "../../types";
+import { adoptRequiredLegacyBaselines } from "../adoption";
+import { sandboxAnswers } from "../answers";
+import { ReleaseSandboxClient } from "../client";
+import { installRequiredDependencies } from "../dependencies";
+import { removeReleaseSandbox } from "../filesystem";
+import { allocateReleaseSandboxPorts } from "../ports";
+import { prepareSandboxSupabase } from "../supabase-config";
+import { verifyMigrationCrashRecovery } from "./resilience";
 
 export type ReleaseScenario = Readonly<{
     target: LocalReleasePackage;
     baseline?: LocalReleasePackage;
     packages: readonly LocalReleasePackage[];
+    faultAfterPhase?: IntegrationMigrationPhase;
 }>;
 
 export async function runReleaseScenario(scenario: ReleaseScenario): Promise<void> {
@@ -60,23 +66,23 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
             port: ports.cms.supabaseManagement,
         });
         const config = await loadOrCreateDevRuntimeConfig(paths.dev);
-        cms = await startLocalCms(
-            paths,
-            config,
-            mongo,
-            repositoryServer.url,
-            {
-                managementUrl: management.url,
-                stripeApiUrl: management.stripeApiUrl,
-                accessToken,
-                projectRef,
-                environment: supabase,
-            },
-            ports.cms,
-            { inheritOutput: process.env.ULVIA_DEBUG === "1" },
-        );
-        const client = new ReleaseSandboxClient(`http://127.0.0.1:${ports.cms.control}`, config);
-        await client.login();
+        const supabaseCmsConfig = {
+            managementUrl: management.url,
+            stripeApiUrl: management.stripeApiUrl,
+            accessToken,
+            projectRef,
+            environment: supabase,
+        };
+        const startCmsClient = async (faultAfterPhase?: IntegrationMigrationPhase) => {
+            cms = await startLocalCms(paths, config, mongo, repositoryServer!.url, supabaseCmsConfig, ports.cms, {
+                inheritOutput: process.env.ULVIA_DEBUG === "1",
+                ...(faultAfterPhase ? { faultAfterMigrationPhase: faultAfterPhase } : {}),
+            });
+            const next = new ReleaseSandboxClient(`http://127.0.0.1:${ports.cms.control}`, config);
+            await next.login();
+            return next;
+        };
+        let client = await startCmsClient(scenario.faultAfterPhase);
         const installed = new Map<string, string>();
         const initial = scenario.baseline ?? scenario.target;
         await installRequiredDependencies(initial, scenario.packages, installed, client);
@@ -89,7 +95,25 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
         if (scenario.baseline) {
             await installRequiredDependencies(scenario.target, scenario.packages, installed, client);
             await adoptRequiredLegacyBaselines(scenario.baseline, scenario.target, client);
-            await client.upgrade(scenario.target.package.envelope.kind, scenario.target.package.envelope.version);
+            if (scenario.faultAfterPhase) {
+                await verifyMigrationCrashRecovery({
+                    client,
+                    kind: scenario.target.package.envelope.kind,
+                    sourceVersion: scenario.baseline.package.envelope.version,
+                    targetVersion: scenario.target.package.envelope.version,
+                    phase: scenario.faultAfterPhase,
+                    restart: async () => {
+                        if (cms) {
+                            await stopLocalCms(cms);
+                            cms = undefined;
+                        }
+                        client = await startCmsClient();
+                        return client;
+                    },
+                });
+            } else {
+                await client.upgrade(scenario.target.package.envelope.kind, scenario.target.package.envelope.version);
+            }
         }
         await assertDatabaseReady(supabase.databaseUrl);
     } catch (error) {

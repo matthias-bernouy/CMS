@@ -8,17 +8,20 @@ import type {
     IntegrationProviderDirectCutover,
 } from "./migrations";
 
-export type IntegrationMigrationPhase =
-    | "expand"
-    | "deploy-functions"
-    | "smoke-target"
-    | "provider-direct-transition"
-    | "switch-cms-binding"
-    | "smoke-cms"
-    | "drain"
-    | "point-of-no-return"
-    | "contract"
-    | "reconcile-declarative";
+export const INTEGRATION_MIGRATION_PHASES = [
+    "expand",
+    "deploy-functions",
+    "smoke-target",
+    "provider-direct-transition",
+    "switch-cms-binding",
+    "smoke-cms",
+    "drain",
+    "point-of-no-return",
+    "contract",
+    "reconcile-declarative",
+] as const;
+
+export type IntegrationMigrationPhase = (typeof INTEGRATION_MIGRATION_PHASES)[number];
 
 export type IntegrationMigrationConnectorTransition = {
     connectorKey: string;

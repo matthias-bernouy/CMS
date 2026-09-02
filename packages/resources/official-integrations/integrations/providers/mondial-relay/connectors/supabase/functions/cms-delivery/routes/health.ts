@@ -1,6 +1,7 @@
 import { envDefault, envText, printableAscii } from "../env.ts";
-import { json, requireCmsRequest } from "../http.ts";
+import { HttpError, json, requireCmsRequest } from "../http.ts";
 import { mondialRelayConnectEndpoint } from "../provider/provider-endpoints.ts";
+import { getOne } from "../shipment/supabase/client.ts";
 
 export function health(request: Request): Response {
     requireCmsRequest(request);
@@ -20,4 +21,17 @@ export function health(request: Request): Response {
             settingsTable: "settings",
         },
     });
+}
+
+export async function migrationHealth(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+    const settings = await getOne("settings", { id: "default" }, "customer_reference,mode_collection");
+    if (
+        typeof settings?.customer_reference !== "string" ||
+        !settings.customer_reference ||
+        (settings.mode_collection !== "REL" && settings.mode_collection !== "CCC")
+    ) {
+        throw new HttpError(409, "migration settings are not ready");
+    }
+    return json({ ok: true });
 }

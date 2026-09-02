@@ -111,7 +111,7 @@ export function registerFoundationTests(): void {
     });
 
     test("claims due tracking rows with a stale lease and skip-locked concurrency", async () => {
-        const schema = await loadSupabaseSchemaSql(integrationRoot);
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
 
         expect(schema).toContain("create or replace function delivery.claim_due_shipments");
         expect(schema).toContain("for update skip locked");
@@ -120,7 +120,7 @@ export function registerFoundationTests(): void {
     });
 
     test("declares durable projection leases, bounded retries, and manual review", async () => {
-        const schema = await loadSupabaseSchemaSql(integrationRoot);
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
 
         expect(schema).toContain("create or replace function delivery.claim_pending_shipment_events");
         expect(schema).toContain("projection_claim_token");

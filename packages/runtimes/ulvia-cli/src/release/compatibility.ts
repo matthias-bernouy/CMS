@@ -20,14 +20,14 @@ export function evaluateLocalCompatibility(
     );
     const sameMajor = ordered.find((entry) => major(entry.package.envelope.version) === major(candidateVersion));
     const previous = ordered[0];
-    const candidateInput = { definition: candidate.definition, packageDigest: candidate.package.digest };
+    const candidateInput = compatibilityPackage(candidate);
     const selected = sameMajor ?? previous;
     const changedPaths = selected
         ? changedIntegrationPackagePaths(selected.package.envelope, candidate.package.envelope)
         : undefined;
     if (sameMajor) {
         return evaluator.evaluate({
-            baseline: { definition: sameMajor.definition, packageDigest: sameMajor.package.digest },
+            baseline: compatibilityPackage(sameMajor),
             candidate: candidateInput,
             changedPaths,
         });
@@ -35,12 +35,20 @@ export function evaluateLocalCompatibility(
     if (previous) {
         return evaluator.evaluate({
             noBaselineReason: "new-major",
-            informationalBaseline: { definition: previous.definition, packageDigest: previous.package.digest },
+            informationalBaseline: compatibilityPackage(previous),
             candidate: candidateInput,
             changedPaths,
         });
     }
     return evaluator.evaluate({ noBaselineReason: "new-kind", candidate: candidateInput });
+}
+
+function compatibilityPackage(input: LocalReleasePackage) {
+    return {
+        definition: input.definition,
+        packageDigest: input.package.digest,
+        ...(input.reviewedSchemaBaselines?.length ? { reviewedSchemaBaselines: input.reviewedSchemaBaselines } : {}),
+    };
 }
 
 export function assertLocalCompatibility(result: LocalCompatibilityResult): void {

@@ -11,6 +11,7 @@ import {
 import { ensureLocalBaselines, loadLocalReleasePackages, resolveRequiredPackages } from "./packages";
 import { readLocalReleaseSource, type LocalReleaseSource } from "./source";
 import type { LocalReleasePackage, LocalReleaseVerifier } from "./types";
+import { assertSafeMigrationReleasePolicy } from "./verification/policy";
 
 export type PreparedLocalRelease = Readonly<{
     candidate: LocalReleaseSource;
@@ -57,8 +58,11 @@ export async function prepareLocalRelease(
         const baseline = { package: await local.getPackage(existing), definition: existing.definition };
         throw immutableCoordinateError("Local", candidate, baseline);
     }
-    if (existing && options.skipRemoteWhenLocal) {
-        return { candidate, existing, published: null, publishedVersions: [] };
+    const localVersions = (await local.list())
+        .filter((record) => record.kind === kind)
+        .map((record) => ({ version: record.version, path: "", definition: "" }));
+    if ((existing && options.skipRemoteWhenLocal) || localVersions.length) {
+        return { candidate, existing, published: null, publishedVersions: localVersions };
     }
     const publishedVersions = await remote.versionEntries(kind);
     const publishedEntry = publishedVersions.find((entry) => entry.version === version);
@@ -96,23 +100,44 @@ export async function auditPreparedLocalRelease(
         dependencies.log,
         publishedVersions,
     );
-    const baselines = await loadLocalReleasePackages(baselineRecords, dependencies.local);
-    const compatibility = evaluateLocalCompatibility(candidate, baselines);
+    const baselines = (await loadLocalReleasePackages(baselineRecords, dependencies.local)).map((baseline) =>
+        attachReviewedSchemaEvidence(baseline, candidate.reviewedSchemaEvidence),
+    );
+    const candidateWithEvidence = attachReviewedSchemaEvidence(candidate, candidate.reviewedSchemaEvidence);
+    const compatibility = evaluateLocalCompatibility(candidateWithEvidence, baselines);
     assertLocalCompatibility(compatibility);
+    assertSafeMigrationReleasePolicy(candidateWithEvidence, compatibility);
     dependencies.log(
         `✓ compatibility: ${compatibility.releaseLevel} release, requires ${compatibility.requiredReleaseLevel}`,
     );
+    dependencies.log("✓ migration policy: stateful changes use staged expand/contract releases");
     const availablePackages = await resolveRequiredPackages(
         [candidate, ...baselines],
         dependencies.local,
         dependencies.remote,
         dependencies.log,
     );
-    await dependencies.verifier.verify({
+    const verification = await dependencies.verifier.verify({
         candidate,
         sourceRoot: candidate.integrationRoot,
         baselines,
         availablePackages,
     });
-    return { prepared, compatibility, scenarioCount: 1 + baselines.length };
+    return { prepared, compatibility, scenarioCount: verification?.scenarioCount ?? 1 + baselines.length };
+}
+
+function attachReviewedSchemaEvidence(
+    releasePackage: LocalReleasePackage,
+    evidence: LocalReleaseSource["reviewedSchemaEvidence"],
+): LocalReleasePackage {
+    const { kind, version } = releasePackage.package.envelope;
+    const matching = evidence
+        .filter(
+            (entry) =>
+                entry.kind === kind &&
+                entry.version === version &&
+                entry.packageDigest === releasePackage.package.digest,
+        )
+        .map((entry) => entry.baseline);
+    return matching.length ? { ...releasePackage, reviewedSchemaBaselines: matching } : releasePackage;
 }

@@ -1,5 +1,5 @@
 import { handleError, json, optionsResponse, routePath } from "./http.ts";
-import { health } from "./routes/health.ts";
+import { health, migrationHealth } from "./routes/health.ts";
 import {
     acknowledgeEvent,
     deliveryProjectionHealth,
@@ -40,6 +40,9 @@ Deno.serve(async (request) => {
         const route = routePath(request);
         if (request.method === "GET" && route === "/health") {
             return health(request);
+        }
+        if (request.method === "GET" && route === "/migration-health") {
+            return await migrationHealth(request);
         }
         if (request.method === "GET" && route === "/shipments") {
             return await shipments(request);

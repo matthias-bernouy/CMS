@@ -4,7 +4,7 @@ describe("production connector provider composition", () => {
     test("resolves Supabase deployment configuration from Mongo and the encrypted secret store", async () => {
         const core = await Bun.file(new URL("../src/runtime/stores/core.ts", import.meta.url)).text();
         const features = await Bun.file(new URL("../src/runtime/stores/features.ts", import.meta.url)).text();
-        const integrations = await Bun.file(new URL("../src/runtime/integrations.ts", import.meta.url)).text();
+        const integrations = await Bun.file(new URL("../src/runtime/integrations/index.ts", import.meta.url)).text();
         const entrypoint = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
 
         expect(features).toMatch(

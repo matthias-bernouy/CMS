@@ -33,9 +33,31 @@ export function buildIntegrationInstallationView(
                       ...audit,
                       adoptedAtLabel: dateTimeLabel(audit.adoptedAt),
                   })),
+                  migrationOperation: installation.migrationOperation
+                      ? migrationOperationView(installation.migrationOperation)
+                      : null,
                   runs: installation.runs.map(runView),
               }
             : {}),
+    };
+}
+
+function migrationOperationView(operation: NonNullable<IntegrationInstallation["migrationOperation"]>) {
+    return {
+        id: operation.id,
+        revision: operation.revision,
+        status: operation.status,
+        currentVersion: operation.currentVersion,
+        targetVersion: operation.targetVersion,
+        startedAt: operation.startedAt,
+        updatedAt: operation.updatedAt,
+        activatedAt: operation.activatedAt,
+        pointOfNoReturnReachedAt: operation.pointOfNoReturnReachedAt,
+        journal: operation.journal.map((entry) => ({
+            phase: entry.phase,
+            status: entry.status,
+            error: entry.error,
+        })),
     };
 }
 

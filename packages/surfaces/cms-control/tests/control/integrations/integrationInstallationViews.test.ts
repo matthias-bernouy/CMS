@@ -9,6 +9,65 @@ import {
 import { makeCms } from "./support/helpers";
 
 describe("buildIntegrationInstallationView", () => {
+    test("exposes resumable migration state only in the authenticated detail view", () => {
+        const now = new Date("2026-01-01T10:00:00Z");
+        const installation = {
+            id: "commerce",
+            label: "Commerce",
+            definitionVersion: "1.0.0",
+            status: "failed",
+            createdAt: now,
+            updatedAt: now,
+            runCount: 1,
+            answersSnapshot: {},
+            secretRefs: {},
+            secretInputs: [],
+            runs: [],
+            artifacts: [],
+            migrationOperation: {
+                id: "migration-1",
+                revision: 2,
+                status: "paused",
+                currentVersion: "1.0.0",
+                targetVersion: "1.1.0",
+                targetPackageDigest: "a".repeat(64),
+                sourceDefinition: { kind: "commerce", name: "Commerce", version: "1.0.0" },
+                targetDefinition: { kind: "commerce", name: "Commerce", version: "1.1.0" },
+                connectors: [],
+                attemptId: "attempt-1",
+                fencingToken: 1,
+                leaseExpiresAt: now,
+                startedAt: now,
+                updatedAt: now,
+                journal: [
+                    {
+                        id: "expand",
+                        phase: "expand",
+                        targetDigest: "b".repeat(64),
+                        idempotencyKey: "c".repeat(64),
+                        status: "failed",
+                        error: { message: "audit fault" },
+                    },
+                ],
+            },
+        } as unknown as IntegrationInstallation;
+        const context = emptyContext();
+
+        expect(buildIntegrationInstallationView(context, installation, false)).not.toHaveProperty("migrationOperation");
+        expect(buildIntegrationInstallationView(context, installation, true).migrationOperation).toEqual({
+            id: "migration-1",
+            revision: 2,
+            status: "paused",
+            currentVersion: "1.0.0",
+            targetVersion: "1.1.0",
+            startedAt: now,
+            updatedAt: now,
+            activatedAt: undefined,
+            pointOfNoReturnReachedAt: undefined,
+            journal: [{ phase: "expand", status: "failed", error: { message: "audit fault" } }],
+        });
+    });
+
     test("marks relation artifacts with their labels and availability", () => {
         const now = new Date("2026-01-01T10:00:00Z");
         const installation = {
@@ -106,3 +165,16 @@ describe("buildIntegrationInstallationView", () => {
         expect(context.triggerIds).toEqual(new Set(["catalog-published"]));
     });
 });
+
+function emptyContext(): IntegrationArtifactContext {
+    return {
+        sourceUrns: new Set(),
+        sourceOverlayIds: new Set(),
+        functionIds: new Set(),
+        dashboardIds: new Set(),
+        relationIds: new Set(),
+        dashboardRelationProjectionIds: new Set(),
+        blocIds: new Set(),
+        triggerIds: new Set(),
+    };
+}

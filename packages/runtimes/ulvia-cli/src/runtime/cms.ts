@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import type { IntegrationMigrationPhase } from "@bernouy/cms-integrations";
 import type { LocalMongo } from "./mongo";
 import type { DevRuntimeConfig } from "./config";
 import type { UlviaPaths } from "./paths";
@@ -30,7 +31,10 @@ export async function startLocalCms(
     repositoryUrl: string,
     supabase: LocalSupabaseCmsConfig,
     ports: DevPorts,
-    options: Readonly<{ inheritOutput?: boolean }> = {},
+    options: Readonly<{
+        inheritOutput?: boolean;
+        faultAfterMigrationPhase?: IntegrationMigrationPhase;
+    }> = {},
 ): Promise<CmsProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
     const controlUrl = `http://127.0.0.1:${ports.control}`;
@@ -68,6 +72,7 @@ export async function startLocalCms(
             CMS_LOCAL_SUPABASE_PROJECT_REF: supabase.projectRef,
             CMS_LOCAL_SUPABASE_ACCESS_TOKEN: supabase.accessToken,
             CMS_LOCAL_STRIPE_API_URL: supabase.stripeApiUrl,
+            CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE: options.faultAfterMigrationPhase ?? "",
         },
     });
     try {

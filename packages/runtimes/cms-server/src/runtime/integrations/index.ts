@@ -21,10 +21,10 @@ import {
 } from "@bernouy/cms-integrations/supabase";
 import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import { HttpRepositoryCompatibilityReader } from "../repositoryCatalog/compatibility/reader";
-import { DEFAULT_REPOSITORY_CATALOG_READER_LIMITS } from "../repositoryCatalog/limits";
-import { HttpRepositoryReleaseReader } from "../repositoryCatalog/release/reader";
-import { HttpRepositoryVerificationBundleReader } from "../repositoryCatalog/release/bundleReader";
+import { HttpRepositoryCompatibilityReader } from "../../repositoryCatalog/compatibility/reader";
+import { DEFAULT_REPOSITORY_CATALOG_READER_LIMITS } from "../../repositoryCatalog/limits";
+import { HttpRepositoryReleaseReader } from "../../repositoryCatalog/release/reader";
+import { HttpRepositoryVerificationBundleReader } from "../../repositoryCatalog/release/bundleReader";
 
 type IntegrationServiceOptions = {
     providerRepository: IntegrationConnectorProviderRepository;

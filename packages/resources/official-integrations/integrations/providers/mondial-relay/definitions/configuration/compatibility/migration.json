@@ -1,0 +1,53 @@
+{
+    "install": {
+        "revision": 1,
+        "digest": "sha256:1afa46be1246b6aeb5c424b9f8d08317e5b5caad1960d86f32d2a55b21ade6f1",
+        "coveredMigrations": [
+            {
+                "id": "add-customer-reference",
+                "checksum": "sha256:6992dca608d258ee4e527bab10307260d47f6615c1c0d9761f19df0f3f6663ba",
+                "revision": 1,
+                "introducedIn": "2.0.0"
+            }
+        ]
+    },
+    "migrations": [
+        {
+            "id": "add-customer-reference",
+            "checksum": "sha256:6992dca608d258ee4e527bab10307260d47f6615c1c0d9761f19df0f3f6663ba",
+            "fromRevision": 0,
+            "toRevision": 1,
+            "introducedIn": "2.0.0",
+            "transaction": "atomic",
+            "phase": "expand",
+            "path": "migrations/add-customer-reference.sql"
+        }
+    ],
+    "supportedSources": [
+        {
+            "range": "1.0.0",
+            "migrationRevision": 0,
+            "legacyAdoption": {
+                "definitionVersion": "1.0.0",
+                "packageDigest": "7ee20c0f45b7709cea8e417e1c9b3010d053a8ea5b815f7cffa8d85de4a0c10b",
+                "installDigest": "sha256:817735fd5c6a2db9d200d51f2eb0cac2dba8b9686e941de88973f4e92cd44b3f",
+                "observedSchema": {
+                    "$include": "legacy-observed-schema.json"
+                },
+                "coveredMigrations": []
+            }
+        }
+    ],
+    "cmsMediated": {
+        "strategy": "binding-switch",
+        "smoke": {
+            "endpointId": "migration-health",
+            "expectedStatus": 200,
+            "expectedBody": {
+                "ok": true
+            }
+        },
+        "drainSeconds": 30
+    },
+    "pointOfNoReturn": "before-contract"
+}

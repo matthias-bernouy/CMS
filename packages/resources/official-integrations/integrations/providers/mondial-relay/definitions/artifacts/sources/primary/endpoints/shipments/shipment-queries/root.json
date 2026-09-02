@@ -3,7 +3,7 @@
         "endpointId": "shipments",
         "method": "GET",
         "access": "admin",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipments",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/shipments",
         "params": [
             {
                 "name": "status",

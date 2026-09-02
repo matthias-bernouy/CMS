@@ -9,6 +9,7 @@ import {
     requiredEnv,
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
+import { INTEGRATION_MIGRATION_PHASES, type IntegrationMigrationPhase } from "@bernouy/cms-integrations";
 import {
     parseRepositoryManagementGatewayConfig,
     type RepositoryManagementGatewayRuntimeConfig,
@@ -50,6 +51,7 @@ export type RuntimeEnv = {
     CMS_REPOSITORY_HUB_FACADE_ENABLED: boolean;
     localSupabase?: LocalSupabaseRuntimeConfig;
     repositoryManagementGateway?: RepositoryManagementGatewayRuntimeConfig;
+    localMigrationAuditFault?: IntegrationMigrationPhase;
     integrationRepository: Readonly<{ url: string }>;
 };
 
@@ -72,6 +74,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
     const clientAddress = parseClientAddressConfig(source);
     const localSupabase = parseLocalSupabase(source);
+    const localMigrationAuditFault = parseLocalMigrationAuditFault(source, localSupabase);
     const repositoryManagementGateway = parseRepositoryManagementGatewayConfig(source);
 
     return {
@@ -171,8 +174,27 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         ),
         ...(localSupabase ? { localSupabase } : {}),
         ...(repositoryManagementGateway ? { repositoryManagementGateway } : {}),
+        ...(localMigrationAuditFault ? { localMigrationAuditFault } : {}),
         integrationRepository: parseIntegrationRepository(source),
     };
+}
+
+function parseLocalMigrationAuditFault(
+    source: RuntimeEnvSource,
+    localSupabase: LocalSupabaseRuntimeConfig | undefined,
+): IntegrationMigrationPhase | undefined {
+    const name = "CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE";
+    const value = source[name]?.trim();
+    if (!value) {
+        return undefined;
+    }
+    if (source.MODE?.trim() !== "DEV" || !localSupabase) {
+        throw new Error(`${name} requires MODE=DEV and the local Supabase runtime`);
+    }
+    if (!INTEGRATION_MIGRATION_PHASES.some((phase) => phase === value)) {
+        throw new Error(`${name} must name a supported integration migration phase`);
+    }
+    return value as IntegrationMigrationPhase;
 }
 
 function parseLocalSupabase(source: RuntimeEnvSource): LocalSupabaseRuntimeConfig | undefined {

@@ -17,6 +17,10 @@ import { productionRepositoryReadConfig } from "./repository";
 import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { createRuntimeSourceImageWorkers } from "./stores/sourceImages";
+import {
+    injectLocalMigrationAuditFault,
+    injectLocalMigrationReconciliationAuditFault,
+} from "./integrations/auditFault";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
 import { createProductionRepositoryCatalogReader } from "../repositoryCatalog";
@@ -39,6 +43,10 @@ export async function mountProductionSurfaces(
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
 ): Promise<ScheduledTriggerRunner> {
     const { env, core, features, integrations, authentication } = options;
+    const integrationInstallations = injectLocalMigrationReconciliationAuditFault(
+        features.integrationInstallations,
+        env.localMigrationAuditFault,
+    );
     const repositoryCatalog = env.CMS_REPOSITORY_HUB_FACADE_ENABLED
         ? createProductionRepositoryCatalogReader(integrations)
         : undefined;
@@ -47,7 +55,7 @@ export async function mountProductionSurfaces(
         sources: features.deliverySources,
         deps: { resolveSecret: features.resolveSecret, identities: features.identities },
         users: core.users,
-        installations: features.integrationInstallations,
+        installations: integrationInstallations,
         triggers: features.triggers,
     });
     await scheduledTriggers.ready;
@@ -66,7 +74,7 @@ export async function mountProductionSurfaces(
         secrets: core.secrets,
         dashboards: features.dashboards,
         relations: features.relations,
-        installations: features.integrationInstallations,
+        installations: integrationInstallations,
         triggers: features.triggers,
         sourceOverlays: features.sourceOverlays,
         connectorDeployers: integrations.integrationConnectorDeployers,
@@ -77,13 +85,16 @@ export async function mountProductionSurfaces(
             : {}),
     };
     const cmsBindingMigration = new CmsSourceBindingMigrationHandler(cmsBindingDeps);
-    const integrationMigrationRuntime = new ProductionIntegrationMigrationRuntime({
-        connectorAdapters: integrations.integrationConnectorMigrationAdapters,
-        functionDeployment: integrations.integrationFunctionMigrationHandler,
-        targetSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "target"),
-        cmsBinding: cmsBindingMigration,
-        cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "stable"),
-    });
+    const integrationMigrationRuntime = injectLocalMigrationAuditFault(
+        new ProductionIntegrationMigrationRuntime({
+            connectorAdapters: integrations.integrationConnectorMigrationAdapters,
+            functionDeployment: integrations.integrationFunctionMigrationHandler,
+            targetSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "target"),
+            cmsBinding: cmsBindingMigration,
+            cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "stable"),
+        }),
+        env.localMigrationAuditFault,
+    );
     const sourceImageWorkers =
         env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && core.sourceImageCache
             ? createRuntimeSourceImageWorkers({
@@ -92,7 +103,7 @@ export async function mountProductionSurfaces(
                   queue: core.sourceImageJobs,
                   index: core.sourceMediaIndex,
                   sources: features.sources,
-                  installations: features.integrationInstallations,
+                  installations: integrationInstallations,
                   reportError: (error) => runtime.reportError("Source image worker failed", error),
               })
             : null;
@@ -145,7 +156,7 @@ export async function mountProductionSurfaces(
             integrationCatalog: integrations.integrationCatalog,
             integrationPackageResolver: integrations.integrationPackageResolver,
             ...(env.localSupabase ? {} : { integrationUpgradeReleases: integrations.integrationUpgradeReleases }),
-            integrationInstallations: features.integrationInstallations,
+            integrationInstallations,
             integrationConnectorProviders: features.integrationConnectorProviders,
             integrationConnectorDeployers: integrations.integrationConnectorDeployers,
             integrationMigrationRuntime,
@@ -216,7 +227,7 @@ export async function mountProductionSurfaces(
         functions: features.functions,
         triggers: features.triggers,
         identities: features.identities,
-        integrationInstallations: features.integrationInstallations,
+        integrationInstallations,
         analyticsVisitorSecret: options.analyticsVisitorSecret,
         analyticsSiteScope: env.DELIVERY_PUBLIC_URL,
         analyticsTrustProxy: env.ANALYTICS_TRUST_PROXY,

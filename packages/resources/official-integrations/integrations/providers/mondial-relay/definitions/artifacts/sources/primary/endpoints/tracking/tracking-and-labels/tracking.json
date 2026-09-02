@@ -2,7 +2,7 @@
     "endpointId": "tracking",
     "method": "GET",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/tracking",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/tracking",
     "params": [
         {
             "name": "expeditionNumber",

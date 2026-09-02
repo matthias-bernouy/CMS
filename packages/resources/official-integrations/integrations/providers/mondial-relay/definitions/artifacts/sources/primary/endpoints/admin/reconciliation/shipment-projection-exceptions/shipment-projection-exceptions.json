@@ -2,7 +2,7 @@
     "endpointId": "shipmentProjectionExceptions",
     "method": "GET",
     "access": "admin",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/admin/projection-exceptions",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/admin/projection-exceptions",
     "params": [
         {
             "name": "limit",

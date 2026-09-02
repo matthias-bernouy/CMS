@@ -3,7 +3,7 @@
         "endpointId": "saveClaimReturnRelaySelection",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/claim-return-relay-selections",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/claim-return-relay-selections",
         "params": [],
         "headers": [
             {

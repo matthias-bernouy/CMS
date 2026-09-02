@@ -3,7 +3,7 @@
         "endpointId": "label",
         "method": "GET",
         "access": "auth",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/label",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/label",
         "responseKind": "file",
         "mediaType": "application/pdf",
         "params": [
@@ -52,7 +52,7 @@
     {
         "endpointId": "parseTrackingLink",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/parse-tracking-link",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/parse-tracking-link",
         "params": [
             {
                 "name": "url",

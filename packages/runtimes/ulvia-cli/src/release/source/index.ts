@@ -5,13 +5,15 @@ import type { Dirent } from "node:fs";
 import { lstat, opendir, readFile, realpath } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { rcompare } from "semver";
-import type { LocalReleasePackage } from "./types";
+import type { LocalReleasePackage, LocalReviewedSchemaEvidence } from "../types";
+import { loadReviewedSchemaEvidence } from "./evidence";
 
 const MAX_DEPTH = 10;
 const MAX_ENTRIES = 50_000;
 const SKIPPED_DIRECTORIES = new Set([".git", ".registry", "dist", "node_modules"]);
 
-export type LocalReleaseSource = LocalReleasePackage & Readonly<{ integrationRoot: string }>;
+export type LocalReleaseSource = LocalReleasePackage &
+    Readonly<{ integrationRoot: string; reviewedSchemaEvidence: readonly LocalReviewedSchemaEvidence[] }>;
 
 export async function listLocalReleaseKinds(searchRoot: string): Promise<readonly string[]> {
     const indexes = await discoverIntegrationIndexes(searchRoot);
@@ -30,6 +32,7 @@ export async function readLocalReleaseSource(
     kind: string,
     version?: string,
 ): Promise<LocalReleaseSource> {
+    const resolvedSearchRoot = await realpath(searchRoot);
     const indexPath = await findIntegrationIndex(searchRoot, kind);
     const integrationRoot = dirname(indexPath);
     const index = parseIntegrationDefinitionIndex(parseJson(await readFile(indexPath)), indexPath);
@@ -59,6 +62,7 @@ export async function readLocalReleaseSource(
         integrationRoot,
         package: packageResult,
         definition: parsedDefinition,
+        reviewedSchemaEvidence: await loadReviewedSchemaEvidence(resolvedSearchRoot, integrationRoot),
     };
 }
 
