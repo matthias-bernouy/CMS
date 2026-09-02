@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { INTEGRATION_PACKAGE_DIGEST_HEADER } from "@bernouy/cms-integration-packages";
 import { runCli } from "../src/cli";
+import { RemoteIntegrationRepository } from "../src/repository/remote";
 import { integrationDefinition, integrationPackage, removeReadonlyTree } from "./fixtures";
 
 const roots: string[] = [];
@@ -36,6 +37,23 @@ describe("Ulvia CLI", () => {
 
     test("refuses remote writes", async () => {
         await expect(runCli(["push"])).rejects.toThrow(/disabled/);
+    });
+
+    test("keeps unverified coordinates out of pullable version lists", async () => {
+        const remote = new RemoteIntegrationRepository("http://repository.example.test/.cms/repository", async () =>
+            Response.json([
+                { version: "1.0.0", path: "versions/1.0.0", definition: "definition.json" },
+                {
+                    version: "1.1.0",
+                    path: "versions/1.1.0",
+                    definition: "definition.json",
+                    status: "unverified",
+                },
+            ]),
+        );
+
+        expect(await remote.versions("demo")).toEqual(["1.0.0"]);
+        expect(await remote.versionEntries("demo")).toHaveLength(2);
     });
 });
 

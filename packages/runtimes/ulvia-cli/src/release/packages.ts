@@ -1,4 +1,8 @@
-import { integrationVersionSatisfies } from "@bernouy/cms-integrations";
+import {
+    integrationVersionSatisfies,
+    isIntegrationDefinitionVersionInstallable,
+    type IntegrationDefinitionVersion,
+} from "@bernouy/cms-integrations";
 import { compare, rcompare } from "semver";
 import type { LocalIntegrationRepository } from "../repository/local";
 import type { LocalPackageRecord } from "../repository/manifest";
@@ -23,12 +27,15 @@ export async function ensureLocalBaselines(
     local: LocalIntegrationRepository,
     remote: RemoteIntegrationRepository,
     log: (message: string) => void,
-    publishedVersions?: readonly string[],
+    publishedVersions?: readonly IntegrationDefinitionVersion[],
 ): Promise<readonly LocalPackageRecord[]> {
-    let records = olderRecords(await local.list(), kind, candidateVersion);
-    const versions = (publishedVersions ?? (await remote.versions(kind))).filter(
-        (version) => compare(version, candidateVersion) < 0,
-    );
+    const published = publishedVersions ?? (await remote.versionEntries(kind));
+    const versions = published
+        .filter(isIntegrationDefinitionVersionInstallable)
+        .map((entry) => entry.version)
+        .filter((version) => compare(version, candidateVersion) < 0);
+    const eligibleVersions = new Set(versions);
+    let records = eligibleOlderRecords(await local.list(), kind, candidateVersion, eligibleVersions);
     for (const version of versions) {
         if (records.some((record) => record.version === version)) {
             continue;
@@ -38,7 +45,7 @@ export async function ensureLocalBaselines(
             log(`↓ ${kind}@${version} baseline pulled`);
         }
     }
-    records = olderRecords(await local.list(), kind, candidateVersion);
+    records = eligibleOlderRecords(await local.list(), kind, candidateVersion, eligibleVersions);
     return records;
 }
 
@@ -110,6 +117,17 @@ function olderRecords(records: readonly LocalPackageRecord[], kind: string, vers
     return records
         .filter((record) => record.kind === kind && compare(record.version, version) < 0)
         .sort((left, right) => compare(left.version, right.version));
+}
+
+function eligibleOlderRecords(
+    records: readonly LocalPackageRecord[],
+    kind: string,
+    version: string,
+    publishedVersions: ReadonlySet<string>,
+): LocalPackageRecord[] {
+    return olderRecords(records, kind, version).filter(
+        (record) => record.source.startsWith("local:") || publishedVersions.has(record.version),
+    );
 }
 
 function coordinate(kind: string, version: string): string {

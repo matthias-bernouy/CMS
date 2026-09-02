@@ -15,7 +15,7 @@ afterEach(async () => {
 });
 
 describe("local integration releases", () => {
-    test("verifies before storing and treats an identical release as a no-op", async () => {
+    test("audits without storing, then verifies before storing a release", async () => {
         const root = await temporaryRoot();
         const source = join(root, "source");
         const data = join(root, "data");
@@ -39,9 +39,13 @@ describe("local integration releases", () => {
             log: () => undefined,
         };
 
-        await runCli(["release", "demo"], options);
-        await runCli(["release", "demo"], options);
+        await runCli(["audit", "demo"], options);
         expect(verifications).toBe(1);
+        expect(await Bun.file(join(data, "repository", "catalog.json")).exists()).toBeFalse();
+
+        await runCli(["release", "demo"], options);
+        await runCli(["release", "demo"], options);
+        expect(verifications).toBe(2);
         const catalog = await Bun.file(join(data, "repository", "catalog.json")).json();
         expect(catalog.packages).toHaveLength(1);
         expect(catalog.packages[0]).toMatchObject({ kind: "demo", version: "1.0.0" });
@@ -51,7 +55,32 @@ describe("local integration releases", () => {
             JSON.stringify(integrationDefinition("demo", "1.0.0", { description: "Changed" })),
         );
         await expect(runCli(["release", "demo"], options)).rejects.toThrow(/different digest/);
-        expect(verifications).toBe(1);
+        expect(verifications).toBe(2);
+    });
+
+    test("audits every discovered source without storing candidates", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        const data = join(root, "data");
+        await writeIntegrationSource(source, "1.0.0", "alpha");
+        await writeIntegrationSource(source, "1.0.0", "beta");
+        const verified: string[] = [];
+
+        await runCli(["audit", "--all"], {
+            environment: {
+                ULVIA_DATA_DIR: data,
+                ULVIA_REPOSITORY_URL: "http://repository.example.test/.cms/repository",
+            },
+            cwd: source,
+            repositoryFetch: emptyRemote,
+            releaseVerifier: {
+                verify: async ({ candidate }) => void verified.push(candidate.package.envelope.kind),
+            },
+            log: () => undefined,
+        });
+
+        expect(verified).toEqual(["alpha", "beta"]);
+        expect(await Bun.file(join(data, "repository", "catalog.json")).exists()).toBeFalse();
     });
 
     test("rejects a breaking patch before runtime verification", async () => {

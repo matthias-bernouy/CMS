@@ -81,7 +81,12 @@ function parsePullFlags(args: readonly string[]): PullFlags {
 
 async function pullTargets(flags: PullFlags, remote: RemoteIntegrationRepository) {
     if (flags.all) {
-        return (await remote.list()).flatMap(({ kind, versions }) => versions.map((version) => ({ kind, version })));
+        const kinds = (await remote.list()).map(({ kind }) => kind);
+        return (
+            await Promise.all(
+                kinds.map(async (kind) => (await remote.versions(kind)).map((version) => ({ kind, version }))),
+            )
+        ).flat();
     }
     const kind = flags.kind!;
     if (flags.version) {

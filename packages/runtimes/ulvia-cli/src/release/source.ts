@@ -13,6 +13,18 @@ const SKIPPED_DIRECTORIES = new Set([".git", ".registry", "dist", "node_modules"
 
 export type LocalReleaseSource = LocalReleasePackage & Readonly<{ integrationRoot: string }>;
 
+export async function listLocalReleaseKinds(searchRoot: string): Promise<readonly string[]> {
+    const indexes = await discoverIntegrationIndexes(searchRoot);
+    if (!indexes.length) {
+        throw new Error(`Could not find integration sources under ${await realpath(searchRoot)}`);
+    }
+    const kinds = indexes.map((entry) => entry.kind);
+    if (new Set(kinds).size !== kinds.length) {
+        throw new Error("Several integration sources declare the same kind");
+    }
+    return kinds.sort((left, right) => left.localeCompare(right));
+}
+
 export async function readLocalReleaseSource(
     searchRoot: string,
     kind: string,
@@ -53,27 +65,31 @@ export async function readLocalReleaseSource(
 }
 
 async function findIntegrationIndex(searchRoot: string, kind: string): Promise<string> {
+    const matches = (await discoverIntegrationIndexes(searchRoot)).filter((entry) => entry.kind === kind);
+    if (matches.length !== 1) {
+        throw new Error(
+            matches.length === 0
+                ? `Could not find integration source ${kind} under ${await realpath(searchRoot)}`
+                : `Several integration sources declare kind ${kind}`,
+        );
+    }
+    return matches[0]!.path;
+}
+
+async function discoverIntegrationIndexes(searchRoot: string): Promise<readonly { kind: string; path: string }[]> {
     const root = await realpath(searchRoot);
     if (!(await lstat(root)).isDirectory()) {
         throw new Error("Release source root must be a directory");
     }
-    const state = { entries: 0, matches: [] as string[] };
-    await walk(root, 0, kind, state);
-    if (state.matches.length !== 1) {
-        throw new Error(
-            state.matches.length === 0
-                ? `Could not find integration source ${kind} under ${root}`
-                : `Several integration sources declare kind ${kind}`,
-        );
-    }
-    return state.matches[0]!;
+    const state = { entries: 0, matches: [] as { kind: string; path: string }[] };
+    await walk(root, 0, state);
+    return state.matches;
 }
 
 async function walk(
     directory: string,
     depth: number,
-    kind: string,
-    state: { entries: number; matches: string[] },
+    state: { entries: number; matches: { kind: string; path: string }[] },
 ): Promise<void> {
     if (depth > MAX_DEPTH) {
         return;
@@ -83,14 +99,12 @@ async function walk(
     if (index) {
         const path = join(directory, index.name);
         const value = parseIntegrationDefinitionIndex(parseJson(await readFile(path)), path);
-        if (value.kind === kind) {
-            state.matches.push(path);
-        }
+        state.matches.push({ kind: value.kind, path });
         return;
     }
     for (const entry of entries) {
         if (entry.isDirectory() && !SKIPPED_DIRECTORIES.has(entry.name)) {
-            await walk(join(directory, entry.name), depth + 1, kind, state);
+            await walk(join(directory, entry.name), depth + 1, state);
         }
     }
 }

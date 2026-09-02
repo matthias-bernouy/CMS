@@ -35,14 +35,14 @@ export async function removeReadonlyTree(root: string): Promise<void> {
     await rm(root, { recursive: true, force: true });
 }
 
-export async function writeIntegrationSource(root: string, version = "1.0.0"): Promise<string> {
-    const versionRoot = join(root, "integrations", "demo", "versions", version);
+export async function writeIntegrationSource(root: string, version = "1.0.0", kind = "demo"): Promise<string> {
+    const versionRoot = join(root, "integrations", kind, "versions", version);
     await mkdir(versionRoot, { recursive: true });
     await writeFile(
-        join(root, "integrations", "demo", "integration.json"),
+        join(root, "integrations", kind, "integration.json"),
         JSON.stringify({
             schema: "cms.integration.index.v1",
-            kind: "demo",
+            kind,
             label: "Demo",
             latest: version,
             stable: version,
@@ -50,7 +50,7 @@ export async function writeIntegrationSource(root: string, version = "1.0.0"): P
         }),
     );
     const definitionPath = join(versionRoot, "definition.json");
-    await writeFile(definitionPath, JSON.stringify(integrationDefinition("demo", version)));
+    await writeFile(definitionPath, JSON.stringify(integrationDefinition(kind, version)));
     await writeFile(join(versionRoot, "release-notes.txt"), "Initial local release.\n");
     return definitionPath;
 }

@@ -1,6 +1,10 @@
 import type { IntegrationPackageSource } from "@bernouy/cms-integration-packages";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
-import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import {
+    isIntegrationDefinitionVersionInstallable,
+    type IntegrationDefinitionRepository,
+    type IntegrationDefinitionVersion,
+} from "@bernouy/cms-integrations";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import type { PulledPackage } from "./local";
 
@@ -29,7 +33,13 @@ export class RemoteIntegrationRepository {
     }
 
     async versions(kind: string): Promise<readonly string[]> {
-        return (await this.definitions.listVersions(kind)).map(({ version }) => version);
+        return (await this.versionEntries(kind))
+            .filter(isIntegrationDefinitionVersionInstallable)
+            .map(({ version }) => version);
+    }
+
+    async versionEntries(kind: string): Promise<readonly IntegrationDefinitionVersion[]> {
+        return await this.definitions.listVersions(kind);
     }
 
     async defaultVersion(kind: string): Promise<string> {

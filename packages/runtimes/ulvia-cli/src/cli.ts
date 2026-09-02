@@ -1,3 +1,4 @@
+import { auditCommand } from "./commands/audit";
 import { devCommand } from "./commands/dev";
 import { pullCommand } from "./commands/pull";
 import { releaseCommand } from "./commands/release";
@@ -13,12 +14,15 @@ const HELP = `Ulvia local-first developer CLI
 Usage:
   ulvia pull <integration> [--version <version> | --all-versions]
   ulvia pull --all
+  ulvia audit <integration> [--version <version>] [--root <directory>]
+  ulvia audit --all [--root <directory>]
   ulvia release <integration> [--version <version>] [--root <directory>]
   ulvia status
   ulvia dev [status | credentials | stop]
 
 Commands:
   pull       Store immutable integration packages in the local repository
+  audit      Verify source compatibility, fresh installs, and every supported upgrade
   release    Build and verify an immutable package in disposable local services
   status     Show the persistent data directory and locally available packages
   dev        Run or inspect the persistent local development stack
@@ -26,7 +30,7 @@ Commands:
 
 Environment:
   ULVIA_DATA_DIR        Absolute persistent data directory override
-  ULVIA_REPOSITORY_URL  Read-only remote repository used only by pull
+  ULVIA_REPOSITORY_URL  Read-only remote repository used by pull, audit, and release
 `;
 
 export type CliOptions = Readonly<{
@@ -70,6 +74,18 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     if (command === "release") {
         const remote = new RemoteIntegrationRepository(repositoryUrl(environment), options.repositoryFetch);
         await releaseCommand(
+            args.slice(1),
+            options.cwd ?? process.cwd(),
+            local,
+            remote,
+            options.releaseVerifier ?? new RuntimeLocalReleaseVerifier(log),
+            log,
+        );
+        return;
+    }
+    if (command === "audit") {
+        const remote = new RemoteIntegrationRepository(repositoryUrl(environment), options.repositoryFetch);
+        await auditCommand(
             args.slice(1),
             options.cwd ?? process.cwd(),
             local,
