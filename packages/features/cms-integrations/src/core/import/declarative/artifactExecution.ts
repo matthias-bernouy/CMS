@@ -13,6 +13,7 @@ import { writeDeclarativeArtifactStack, type DeclarativeArtifactWriteResults } f
 import {
     buildBlocArtifacts,
     buildDashboardArtifacts,
+    buildDashboardViewArtifacts,
     buildDashboardRelationProjectionArtifacts,
     buildFunctionArtifacts,
     buildRelationArtifacts,
@@ -21,7 +22,8 @@ import {
     buildTriggerArtifacts,
 } from "./builders/artifactBuilders";
 import { importBlocArtifacts } from "./builders/artifactWrites/blocImports";
-import { buildDashboardWrites } from "./builders/artifactWrites/dashboardWrites";
+import { buildDashboardWrites, buildSiteDashboardRefreshWrites } from "./builders/artifactWrites/dashboardWrites";
+import { buildDashboardViewWrites } from "./builders/artifactWrites/dashboardViewWrites";
 import { buildFunctionWrites } from "./builders/artifactWrites/functionWrites";
 import { buildSourceWrites } from "./builders/artifactWrites/sourceWrites";
 import { buildDashboardRelationProjectionWrites } from "./builders/dashboardRelationWriteBuilders";
@@ -45,6 +47,8 @@ type PreparedDeclarativeArtifactWrites = {
     sourceWrites: Awaited<ReturnType<typeof buildSourceWrites>>;
     functionWrites: Awaited<ReturnType<typeof buildFunctionWrites>>;
     triggerWrites: Awaited<ReturnType<typeof buildTriggerWrites>>;
+    dashboardViewWrites: Awaited<ReturnType<typeof buildDashboardViewWrites>>;
+    siteDashboardRefreshWrites: Awaited<ReturnType<typeof buildSiteDashboardRefreshWrites>>;
     dashboardWrites: Awaited<ReturnType<typeof buildDashboardWrites>>;
     sourceOverlayWrites: Awaited<ReturnType<typeof buildSourceOverlayWrites>>;
     relationWrites: Awaited<ReturnType<typeof buildRelationWrites>>;
@@ -65,6 +69,8 @@ export async function executeDeclarativeArtifactWrites<T>(input: DeclarativeArti
             sourceResults,
             functionWrites: prepared.functionWrites,
             triggerWrites: prepared.triggerWrites,
+            dashboardViewWrites: prepared.dashboardViewWrites,
+            siteDashboardRefreshWrites: prepared.siteDashboardRefreshWrites,
             dashboardWrites: prepared.dashboardWrites,
             sourceOverlayWrites: prepared.sourceOverlayWrites,
             relationWrites: prepared.relationWrites,
@@ -86,7 +92,8 @@ export async function prepareDeclarativeArtifactWrites(
     const functionArtifacts = buildFunctionArtifacts(input.definition, input.context);
     const accessGrants = buildIntegrationAccessGrants(sourceArtifacts, functionArtifacts);
     const triggerArtifacts = buildTriggerArtifacts(input.definition, input.context);
-    const dashboardArtifacts = buildDashboardArtifacts(input.definition, input.context);
+    const dashboardViewArtifacts = buildDashboardViewArtifacts(input.definition, input.context);
+    const dashboardArtifacts = buildDashboardArtifacts(input.definition, input.context, dashboardViewArtifacts);
     const dependencySourceIds = new Set(
         Object.values(input.context.dependencies ?? {})
             .map((dependency) => dependency.sourceId)
@@ -97,11 +104,17 @@ export async function prepareDeclarativeArtifactWrites(
     const projectionArtifacts = buildDashboardRelationProjectionArtifacts(input.definition, input.context);
     const blocArtifacts = buildBlocArtifacts(input.definition, input.context);
 
+    const dashboardViewWrites = await buildDashboardViewWrites(
+        input.deps,
+        dashboardViewArtifacts,
+        sourceArtifacts,
+        dependencySourceIds,
+        input.options,
+    );
     const dashboardWrites = await buildDashboardWrites(
         input.deps,
         dashboardArtifacts,
-        sourceArtifacts,
-        dependencySourceIds,
+        dashboardViewArtifacts,
         input.options,
     );
     const sourceOverlayWrites = await buildSourceOverlayWrites(input.deps, sourceOverlayArtifacts);
@@ -110,7 +123,13 @@ export async function prepareDeclarativeArtifactWrites(
         input.deps,
         projectionArtifacts,
         relationArtifacts,
-        dashboardArtifacts,
+        dashboardViewArtifacts.map((view) => ({
+            id: view.id,
+            source: view.source,
+            meta: view.meta,
+            views: view.view.widgets,
+            ...(view.requires ? { requires: view.requires } : {}),
+        })),
         input.options,
     );
 
@@ -135,6 +154,13 @@ export async function prepareDeclarativeArtifactWrites(
         sourceWrites,
         functionWrites: await buildFunctionWrites(projectedDeps, functionArtifacts, input.options),
         triggerWrites: await buildTriggerWrites(input.deps, triggerArtifacts, input.options),
+        dashboardViewWrites,
+        siteDashboardRefreshWrites: await buildSiteDashboardRefreshWrites(
+            input.deps,
+            input.definition.kind,
+            dashboardViewArtifacts,
+            projectedDeps.sources,
+        ),
         dashboardWrites,
         sourceOverlayWrites,
         relationWrites,
@@ -162,6 +188,7 @@ async function finishArtifactWrites<T>(
             ...results.sourceResults,
             ...results.functionResults,
             ...results.triggerResults,
+            ...results.dashboardViewResults,
             ...results.dashboardResults,
             ...results.sourceOverlayResults,
             ...results.relationResults,

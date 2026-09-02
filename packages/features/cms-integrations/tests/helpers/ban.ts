@@ -60,38 +60,47 @@ export const BAN_DEFINITION: IntegrationDefinition = {
     artifacts: [
         { type: "source", source: BAN_SOURCE_DTO },
         {
-            type: "dashboard",
-            dashboard: {
+            type: "dashboard-view",
+            view: {
+                schemaVersion: 2,
                 id: "ban-addresses",
                 meta: { name: "Address search", icon: "map-pin" },
                 source: "ban",
-                views: [
-                    {
-                        widget: "w-table",
-                        id: "addressesTable",
-                        source: {
-                            endpoint: "search",
-                            params: { q: "$filter.q" },
-                            itemsPath: "features",
-                        },
-                        rowKey: "properties.label",
-                        filters: [
-                            {
-                                id: "q",
-                                param: "q",
-                                type: "text",
-                                label: "Search",
-                                placeholder: "Search addresses",
+                view: {
+                    id: "addresses",
+                    label: "Address search",
+                    widgets: [
+                        {
+                            widget: "w-table",
+                            id: "addressesTable",
+                            source: {
+                                endpoint: "search",
+                                params: { q: "$filter.q" },
+                                itemsPath: "features",
                             },
-                        ],
-                        columns: [
-                            { id: "address", path: "properties.label", label: "Address", primary: true },
-                            { id: "city", path: "properties.city", label: "City" },
-                            { id: "postcode", path: "properties.postcode", label: "Postcode" },
-                            { id: "score", path: "properties.score", label: "Score" },
-                        ],
-                    },
-                ],
+                            rowKey: "properties.label",
+                            filters: [
+                                {
+                                    id: "q",
+                                    param: "q",
+                                    type: "text",
+                                    label: "Search",
+                                    placeholder: "Search addresses",
+                                },
+                            ],
+                            columns: [
+                                { id: "address", path: "properties.label", label: "Address", primary: true },
+                                { id: "city", path: "properties.city", label: "City" },
+                                { id: "postcode", path: "properties.postcode", label: "Postcode" },
+                                { id: "score", path: "properties.score", label: "Score" },
+                            ],
+                        },
+                    ],
+                },
+                availability: {
+                    catalog: true,
+                    defaultPlacement: { dashboardId: "ban-addresses" },
+                },
             },
         },
     ],

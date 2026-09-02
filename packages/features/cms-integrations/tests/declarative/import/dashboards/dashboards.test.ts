@@ -1,17 +1,29 @@
 import { describe, expect, test } from "bun:test";
 import { importIntegration, parseIntegrationDefinition, type IntegrationDefinition } from "@bernouy/cms-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { sourceArtifact } from "../../../helpers";
-import { DELIVERY_DEFINITION, EXPECTED_DELIVERY_DASHBOARD } from "../fixtures/dashboardDefinitions";
-import { dashboardArtifact, FailingCreateDashboardRepository, overlayLookupDefinition } from "./dashboardImportSupport";
+import { DELIVERY_DEFINITION } from "../fixtures/dashboardDefinitions";
+import {
+    dashboardArtifact,
+    FailingCreateDashboardViewRepository,
+    overlayLookupDefinition,
+} from "./dashboardImportSupport";
 
 describe("@bernouy/cms-integrations declarative imports", () => {
     test("parses dashboard select options and lookup field definitions", () => {
         const definition = parseIntegrationDefinition(DELIVERY_DEFINITION);
 
-        expect(definition.artifacts?.[1]).toEqual(EXPECTED_DELIVERY_DASHBOARD);
+        expect(definition.artifacts?.[1]).toMatchObject({
+            type: "dashboard-view",
+            view: {
+                schemaVersion: 2,
+                id: "delivery",
+                source: "delivery",
+                view: { widgets: [{ widget: "w-detail", id: "shipmentDetail" }] },
+            },
+        });
     });
 
     test("parses navigation lists embedded in detail main content", () => {
@@ -25,7 +37,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         });
 
         const parsed = parseIntegrationDefinition(definition);
-        expect((parsed.artifacts?.[1] as any).dashboard.views[0].main[1].widget).toBe("w-navigation-list");
+        expect((parsed.artifacts?.[1] as any).view.view.widgets[0].main[1].widget).toBe("w-navigation-list");
 
         definition.artifacts[1].dashboard.views[0].main[1] = {
             widget: "w-table",
@@ -45,10 +57,10 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         ]) {
             const definition = parseIntegrationDefinition(deliveryDefinitionWithAfter(after));
             const dashboard = definition.artifacts?.[1];
-            if (dashboard?.type !== "dashboard") {
+            if (dashboard?.type !== "dashboard-view") {
                 throw new Error("dashboard artifact not parsed");
             }
-            const detail = dashboard.dashboard.views[0];
+            const detail = dashboard.view.view.widgets[0];
             if (detail?.widget !== "w-detail") {
                 throw new Error("detail widget not parsed");
             }
@@ -110,6 +122,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const definition: IntegrationDefinition = {
             kind: "source-dashboard",
             label: "Source dashboard",
@@ -118,24 +131,27 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         };
 
         const result = await importIntegration(
-            { sources, secrets, dashboards },
+            { sources, secrets, dashboards, dashboardViews },
             { kind: "source-dashboard", answers: {}, options: {} },
             [definition],
         );
 
         expect(result.artifacts).toEqual([
             { type: "source", id: "urn:items", action: "created" },
+            { type: "dashboard-view", id: "items-dashboard", action: "created" },
             { type: "dashboard", id: "items-dashboard", action: "created" },
         ]);
-        expect(await dashboards.getDashboard("items-dashboard")).toEqual(
-            dashboardArtifact("items-dashboard", "items").dashboard,
-        );
+        expect(await dashboardViews.getView("items-dashboard")).toMatchObject({
+            id: "items-dashboard",
+            source: "items",
+        });
     });
 
     test("rejects dashboards targeting sources not declared by the same integration", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const definition: IntegrationDefinition = {
             kind: "foreign-dashboard",
             label: "Foreign dashboard",
@@ -145,20 +161,21 @@ describe("@bernouy/cms-integrations declarative imports", () => {
 
         await expect(
             importIntegration(
-                { sources, secrets, dashboards },
+                { sources, secrets, dashboards, dashboardViews },
                 { kind: "foreign-dashboard", answers: {}, options: {} },
                 [definition],
             ),
         ).rejects.toThrow(/references source "foreign" not declared by this integration/);
 
         expect(await sources.getSource("urn:owned")).toBeNull();
-        expect(await dashboards.getDashboard("bad-dashboard")).toBeNull();
+        expect(await dashboardViews.getView("bad-dashboard")).toBeNull();
     });
 
     test("rolls back sources when dashboard writes fail", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
-        const dashboards = new FailingCreateDashboardRepository("items-dashboard");
+        const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new FailingCreateDashboardViewRepository("items-dashboard");
         const definition: IntegrationDefinition = {
             kind: "dashboard-fails",
             label: "Dashboard fails",
@@ -167,13 +184,15 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         };
 
         await expect(
-            importIntegration({ sources, secrets, dashboards }, { kind: "dashboard-fails", answers: {}, options: {} }, [
-                definition,
-            ]),
-        ).rejects.toThrow(/dashboard create failed/);
+            importIntegration(
+                { sources, secrets, dashboards, dashboardViews },
+                { kind: "dashboard-fails", answers: {}, options: {} },
+                [definition],
+            ),
+        ).rejects.toThrow(/dashboard view create failed/);
 
         expect(await sources.getSource("urn:items")).toBeNull();
-        expect(await dashboards.getDashboard("items-dashboard")).toBeNull();
+        expect(await dashboardViews.getView("items-dashboard")).toBeNull();
     });
 });
 

@@ -18,14 +18,16 @@ describe("@bernouy/cms-integrations dashboard visibility parsing", () => {
         const artifact = definition.artifacts?.[0];
 
         expect(artifact).toMatchObject({
-            type: "dashboard",
-            dashboard: {
-                views: [
-                    {
-                        actions: [{ visibleWhen }],
-                        main: [{ fields: [{ id: "mode" }, { id: "locale" }, { id: "note", visibleWhen }] }],
-                    },
-                ],
+            type: "dashboard-view",
+            view: {
+                view: {
+                    widgets: [
+                        {
+                            actions: [{ visibleWhen }],
+                            main: [{ fields: [{ id: "mode" }, { id: "locale" }, { id: "note", visibleWhen }] }],
+                        },
+                    ],
+                },
             },
         });
     });

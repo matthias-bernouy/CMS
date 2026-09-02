@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { importIntegration } from "@bernouy/cms-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
     buildUpstreamUrl,
@@ -16,9 +16,10 @@ describe("@bernouy/cms-integrations BAN integration", () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
 
         const result = await importIntegration(
-            { sources, secrets, dashboards },
+            { sources, secrets, dashboards, dashboardViews },
             { kind: "ban", answers: {}, options: {} },
             [BAN_DEFINITION],
         );
@@ -26,11 +27,12 @@ describe("@bernouy/cms-integrations BAN integration", () => {
         expect(result).toEqual({
             artifacts: [
                 { type: "source", id: "urn:ban", action: "created" },
+                { type: "dashboard-view", id: "ban-addresses", action: "created" },
                 { type: "dashboard", id: "ban-addresses", action: "created" },
             ],
         });
         const installed = await sources.getSource("urn:ban");
-        const dashboard = await dashboards.getDashboard("ban-addresses");
+        const dashboard = await dashboardViews.getView("ban-addresses");
         expect(validateSource(installed!)).toEqual([]);
         expect(installed?.meta).toEqual(BAN_SOURCE.meta);
         expect(installed?.endpoints.map((endpoint) => [endpoint.urn, endpoint.targetUrl])).toEqual(
@@ -38,7 +40,7 @@ describe("@bernouy/cms-integrations BAN integration", () => {
         );
         expect(installed?.endpoints[0]?.output).toEqual(BAN_SOURCE.endpoints[0]?.output);
         expect(dashboard?.source).toBe("ban");
-        expect(dashboard?.views[0]).toMatchObject({
+        expect(dashboard?.view.widgets[0]).toMatchObject({
             widget: "w-table",
             id: "addressesTable",
             source: {
@@ -48,7 +50,7 @@ describe("@bernouy/cms-integrations BAN integration", () => {
             },
             rowKey: "properties.label",
         });
-        expect(dashboard?.views[0]).toMatchObject({
+        expect(dashboard?.view.widgets[0]).toMatchObject({
             widget: "w-table",
             filters: [
                 {

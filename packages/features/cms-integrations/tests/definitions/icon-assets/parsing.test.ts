@@ -16,8 +16,8 @@ describe("integration artifact icon parsing", () => {
         const [source, dashboard, semantic] = definition.artifacts ?? [];
 
         expect(source?.type === "source" ? source.source.meta.icon : null).toBe("assets/source.svg");
-        expect(dashboard?.type === "dashboard" ? dashboard.dashboard.meta?.icon : null).toBe("assets/dashboard.svg");
-        expect(semantic?.type === "dashboard" ? semantic.dashboard.meta?.icon : null).toBe("layout");
+        expect(dashboard?.type === "dashboard-view" ? dashboard.view.meta.icon : null).toBe("assets/dashboard.svg");
+        expect(semantic?.type === "dashboard-view" ? semantic.view.meta.icon : null).toBe("layout");
     });
 
     test("rejects structured icon references outside assets or with a raster extension", () => {
@@ -47,7 +47,7 @@ describe("integration artifact icon parsing", () => {
         const [source, dashboard] = definition.artifacts ?? [];
 
         expect(source?.type === "source" ? source.source.meta.svg : null).toBe(svg);
-        expect(dashboard?.type === "dashboard" ? dashboard.dashboard.meta?.svg : null).toBe(svg);
+        expect(dashboard?.type === "dashboard-view" ? dashboard.view.meta.svg : null).toBe(svg);
     });
 });
 

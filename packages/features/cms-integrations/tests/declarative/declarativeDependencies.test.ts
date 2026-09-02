@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     InMemoryIntegrationInstallationRepository,
@@ -113,6 +113,7 @@ describe("@bernouy/cms-integrations dependencies", () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const installations = new InMemoryIntegrationInstallationRepository();
         await sources.createSource(BAN_SOURCE);
         await installations.create({
@@ -131,16 +132,19 @@ describe("@bernouy/cms-integrations dependencies", () => {
             kind: "ban-dashboard",
             label: "BAN dashboard",
             dependencies: [{ name: "ban", kind: "ban" }],
-            artifacts: BAN_DEFINITION.artifacts?.filter((artifact) => artifact.type === "dashboard"),
+            artifacts: BAN_DEFINITION.artifacts?.filter((artifact) => artifact.type === "dashboard-view"),
         };
 
         const result = await importIntegration(
-            { sources, secrets, dashboards, installations },
+            { sources, secrets, dashboards, dashboardViews, installations },
             { kind: "ban-dashboard", answers: {}, options: {} },
             [definition],
         );
 
-        expect(result.artifacts).toEqual([{ type: "dashboard", id: "ban-addresses", action: "created" }]);
+        expect(result.artifacts).toEqual([
+            { type: "dashboard-view", id: "ban-addresses", action: "created" },
+            { type: "dashboard", id: "ban-addresses", action: "created" },
+        ]);
         expect(await dashboards.getDashboard("ban-addresses")).not.toBeNull();
     });
 });

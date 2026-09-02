@@ -2,7 +2,7 @@ import { IntegrationInputError } from "../../errors";
 import type { DeclarativeArtifactTemplate } from "../../../interfaces/Integration";
 import { isRecord, text } from "../definition/values";
 import { parseBlocTemplate } from "./bloc";
-import { parseDashboardTemplate } from "./dashboard";
+import { parseDashboardTemplate, parseDashboardViewTemplate } from "./dashboard";
 import { parseFunctionTemplate } from "./workflows/function";
 import { parseDashboardRelationProjectionTemplate, parseRelationTemplate } from "./relations/relation";
 import { parseSourceTemplate } from "./source";
@@ -34,7 +34,19 @@ function parseArtifactTemplate(value: unknown, name: string): DeclarativeArtifac
         if (!isRecord(value.dashboard)) {
             throw new IntegrationInputError(`${name}.dashboard`, "must be an object");
         }
-        return { type: "dashboard", dashboard: parseDashboardTemplate(value.dashboard, `${name}.dashboard`) };
+        if (value.dashboard.schemaVersion === 2) {
+            return { type: "dashboard", dashboard: parseDashboardTemplate(value.dashboard, `${name}.dashboard`) };
+        }
+        return {
+            type: "dashboard-view",
+            view: parseDashboardViewTemplate(value.dashboard, `${name}.dashboard`),
+        };
+    }
+    if (type === "dashboard-view") {
+        if (!isRecord(value.view)) {
+            throw new IntegrationInputError(`${name}.view`, "must be an object");
+        }
+        return { type: "dashboard-view", view: parseDashboardViewTemplate(value.view, `${name}.view`) };
     }
     if (type === "sourceOverlay") {
         if (!isRecord(value.overlay)) {
@@ -77,6 +89,6 @@ function parseArtifactTemplate(value: unknown, name: string): DeclarativeArtifac
     }
     throw new IntegrationInputError(
         `${name}.type`,
-        "must be source, function, trigger, dashboard, sourceOverlay, relation, dashboardRelation, or bloc",
+        "must be source, function, trigger, dashboard-view, dashboard, sourceOverlay, relation, dashboardRelation, or bloc",
     );
 }
