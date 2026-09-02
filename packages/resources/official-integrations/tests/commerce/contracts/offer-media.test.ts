@@ -44,8 +44,8 @@ describe("commerce offer media contract", () => {
     test("wires the offer image editor to the admin operations", async () => {
         const definition = await loadIntegrationDefinition<RecordValue>(definitionPath);
         const dashboard = definition.artifacts.find((artifact: RecordValue) =>
-            artifact.dashboard?.id.endsWith("-offers"),
-        ).dashboard;
+            artifact.view?.id.endsWith("-offers"),
+        ).view;
         const detail = dashboard.views.find((view: RecordValue) => view.id === "offerDetail");
         const section = detail.main.find((candidate: RecordValue) => candidate.id === "offerMedia");
         const field = section.fields.find((candidate: RecordValue) => candidate.id === "media");

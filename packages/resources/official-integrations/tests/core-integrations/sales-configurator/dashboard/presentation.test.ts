@@ -9,33 +9,33 @@ describe("sales-configurator dashboard presentation", () => {
             "sales-configurator",
         );
         const dashboards =
-            definition?.artifacts.flatMap((artifact) => (artifact.type === "dashboard" ? [artifact.dashboard] : [])) ??
+            definition?.artifacts.flatMap((artifact) => (artifact.type === "dashboard-view" ? [artifact.view] : [])) ??
             [];
         const catalog = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-catalog")!;
         const proposals = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-proposals")!;
         const partners = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-partners")!;
 
-        const variants = table(catalog.views, "variantsTable");
+        const variants = table(catalog.view.widgets, "variantsTable");
         expect(column(variants, "unitAmountCents")).toMatchObject({ format: "money", width: "10rem" });
         expect(column(variants, "name").width).toContain("15rem");
 
-        const modules = table(catalog.views, "modulesTable");
+        const modules = table(catalog.view.widgets, "modulesTable");
         expect(column(modules, "updatedAt")).toMatchObject({ format: "date", width: "12rem" });
         expect(column(modules, "name").width).toContain("16rem");
 
-        const variantFeatures = table(catalog.views, "variantFeaturesTable");
+        const variantFeatures = table(catalog.view.widgets, "variantFeaturesTable");
         expect(column(variantFeatures, "unitAmountCents")).toMatchObject({
             format: "money",
             label: "Amount (EUR)",
             width: "10rem",
         });
 
-        const proposalTable = table(proposals.views, "proposalsTable");
+        const proposalTable = table(proposals.view.widgets, "proposalsTable");
         expect(column(proposalTable, "fixedTotalCents")).toMatchObject({ format: "money", width: "10rem" });
         expect(column(proposalTable, "updatedAt")).toMatchObject({ format: "date", width: "12rem" });
         expect(column(proposalTable, "client").width).toContain("14rem");
 
-        const proposalDetail = detail(proposals.views, "proposalDetail");
+        const proposalDetail = detail(proposals.view.widgets, "proposalDetail");
         const detailFields = [...proposalDetail.main, ...(proposalDetail.aside ?? [])].flatMap(
             (section) => section.fields,
         );
@@ -73,11 +73,11 @@ describe("sales-configurator dashboard presentation", () => {
             });
         }
 
-        const partnerTable = table(partners.views, "partnersTable");
+        const partnerTable = table(partners.view.widgets, "partnersTable");
         expect(column(partnerTable, "contactEmail").width).toContain("16rem");
         expect(column(partnerTable, "updatedAt")).toMatchObject({ format: "date", width: "12rem" });
 
-        const partnerDetail = detail(partners.views, "partnerDetail");
+        const partnerDetail = detail(partners.view.widgets, "partnerDetail");
         const partnerFields = [...partnerDetail.main, ...(partnerDetail.aside ?? [])].flatMap(
             (section) => section.fields,
         );

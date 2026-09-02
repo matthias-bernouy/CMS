@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { loadIntegrationDefinition } from "../../../../helpers/integrationDefinition";
 
 type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape }> };
-type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] }; dashboard?: unknown }> };
+type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] }; view?: unknown }> };
 
 describe("commerce financial operations read contracts", () => {
     test("preserves allocated refund facts in protected-payment timelines", async () => {
@@ -94,7 +94,7 @@ describe("commerce financial operations read contracts", () => {
                 "../../../../../integrations/extensions/commerce-stripe-payments/versions/1.0.0/definition.json",
             ),
         );
-        const serialized = JSON.stringify(definition.artifacts.find((artifact) => artifact.dashboard)?.dashboard);
+        const serialized = JSON.stringify(definition.artifacts.find((artifact) => artifact.view)?.view);
 
         for (const path of [
             "financialTerms.merchandiseSubtotalAmount",

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import {
     InMemoryIntegrationInstallationRepository,
@@ -53,6 +53,7 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
             functions,
             triggers,
             dashboards: new InMemoryDashboardRepository(),
+            dashboardViews: new InMemoryDashboardViewRepository(),
             roles: new InMemoryRolesRepository(),
             relations: new InMemoryRelationRepository(),
             secrets: new InMemorySecretStore(),

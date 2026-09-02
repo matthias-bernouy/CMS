@@ -2,6 +2,7 @@ import {
     JsonRecord,
     connectEndpoint,
     createHarness,
+    dashboardViewAsLegacyDashboard,
     expect,
     test,
     trackingEndpoint,
@@ -14,7 +15,8 @@ export function registerInstallationTests(): void {
     test("installs the Connect source and dashboard with widget-backed relay lookup", async () => {
         const harness = await createHarness();
         const source = await harness.sources.getSource("urn:delivery");
-        const dashboard = await harness.dashboards.getDashboard("delivery-delivery");
+        const view = await harness.dashboardViews.getView("delivery-delivery");
+        const dashboard = view ? dashboardViewAsLegacyDashboard(view) : null;
         const createEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === "urn:delivery:createShipment");
         const createBody = createEndpoint?.input?.body;
         const saveSelection = source?.endpoints.find((endpoint) => endpoint.urn === "urn:delivery:saveRelaySelection");

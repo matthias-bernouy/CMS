@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { applyDashboardSourceOverlays } from "@bernouy/cms-dashboards";
+import { applyDashboardSourceOverlays, dashboardViewAsLegacyDashboard } from "@bernouy/cms-dashboards";
 import { decodeBlocSource } from "../harness/blocs";
 import { createHarness } from "../harness/create";
 import { sourceDelete, sourceJson, sourceRequest } from "../harness/requests";
@@ -104,8 +104,10 @@ export function registerLifecycleTest(): void {
         const deleted = await okJson(
             await sourceDelete(harness, "deleteUserPersonalInformation", { userId: "target-user" }),
         );
-        const installedDashboard = await harness.dashboards.getDashboard("user-account-users");
-        const fieldsDashboard = await harness.dashboards.getDashboard("user-account-fields");
+        const installedView = await harness.dashboardViews.getView("user-account-users");
+        const fieldsView = await harness.dashboardViews.getView("user-account-fields");
+        const installedDashboard = installedView ? dashboardViewAsLegacyDashboard(installedView) : null;
+        const fieldsDashboard = fieldsView ? dashboardViewAsLegacyDashboard(fieldsView) : null;
         const materializedOverlays = await harness.materializedOverlays();
         const dashboard = installedDashboard
             ? applyDashboardSourceOverlays(installedDashboard, materializedOverlays)

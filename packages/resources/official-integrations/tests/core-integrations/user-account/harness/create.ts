@@ -1,4 +1,4 @@
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     InMemoryIntegrationInstallationRepository,
@@ -31,6 +31,7 @@ export async function createHarness() {
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
     await installations.create({
         id: "basic-blocs",
@@ -66,6 +67,7 @@ export async function createHarness() {
             secrets,
             roles,
             dashboards,
+            dashboardViews,
             sourceOverlays,
             installations,
             connectorDeployers: [deployer],
@@ -119,6 +121,7 @@ export async function createHarness() {
         secrets,
         roles,
         dashboards,
+        dashboardViews,
         importedBlocs,
         deployment,
         rest,

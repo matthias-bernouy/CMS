@@ -6,7 +6,7 @@ import {
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
@@ -21,6 +21,7 @@ export async function createHarness(options: HarnessOptions = {}) {
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
     const importedBlocs: IntegrationBlocArtifact[] = [];
     const deployer: IntegrationConnectorDeployer = {
@@ -50,6 +51,7 @@ export async function createHarness(options: HarnessOptions = {}) {
             secrets,
             roles,
             dashboards,
+            dashboardViews,
             connectorDeployers: [deployer],
             blocs: {
                 async importBloc(artifact) {
@@ -82,6 +84,7 @@ export async function createHarness(options: HarnessOptions = {}) {
         secrets,
         roles,
         dashboards,
+        dashboardViews,
         importedBlocs,
         deployment,
         insertedShipments: state.insertedShipments,

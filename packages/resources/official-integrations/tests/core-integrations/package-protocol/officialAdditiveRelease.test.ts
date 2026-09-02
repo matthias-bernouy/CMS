@@ -25,7 +25,7 @@ import {
     selectOfficialVerificationBackfillPackages,
 } from "@bernouy/cms-official-integrations/publication";
 
-const PHOTO_ALBUMS_1_0_0_DIGEST = "61dd7b41ee3594a8bf8ed60d1adbdee993705787207d8cbef03383e6797b275f";
+const PHOTO_ALBUMS_1_0_0_DIGEST = "04289266a7c81b7011d551c9f623349b687d317fa3e300d112dd5d77571c5f8f";
 const ADDITIVE_RELEASE_TEST_TIMEOUT = 15_000;
 
 describe("official Photo Albums additive release", () => {

@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import {
+    InMemoryDashboardRepository,
+    InMemoryDashboardViewRepository,
+    dashboardViewAsLegacyDashboard,
+} from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     type IntegrationBlocArtifact,
@@ -35,6 +39,7 @@ describe("commerce 1.0.0 contract", () => {
         const sources = new InMemorySourceRepository(),
             sourceOverlays = new InMemorySourceOverlayRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const triggers = new InMemoryTriggerRepository();
         const secrets = new InMemorySecretStore(),
             roles = new InMemoryRolesRepository();
@@ -49,6 +54,7 @@ describe("commerce 1.0.0 contract", () => {
                 sources,
                 sourceOverlays,
                 dashboards,
+                dashboardViews,
                 secrets,
                 roles,
                 installations,
@@ -61,7 +67,9 @@ describe("commerce 1.0.0 contract", () => {
         );
         const source = await sources.getSource("urn:commerce");
         const overlays = await sourceOverlays.getAllOverlays();
-        const installedDashboards = await dashboards.getDashboardsForSource("commerce");
+        const installedDashboards = (await dashboardViews.getAllViews())
+            .filter((view) => view.source === "commerce")
+            .map(dashboardViewAsLegacyDashboard);
         const dashboardIds = [
             "commerce-configuration",
             "commerce-metadata",
@@ -99,11 +107,12 @@ describe("commerce 1.0.0 contract", () => {
                     action: "created",
                 })),
                 { type: "sourceOverlay", id: "commerce-product-classification", action: "created" },
-                ...dashboardIds.map((id) => ({ type: "dashboard", id, action: "created" })),
+                ...dashboardIds.map((id) => ({ type: "dashboard-view", id, action: "created" })),
+                { type: "dashboard", id: "commerce", action: "created" },
             ]),
         );
         expect(result.artifacts).not.toContainEqual(
-            expect.objectContaining({ type: "dashboard", id: "commerce-dashboard" }),
+            expect.objectContaining({ type: "dashboard-view", id: "commerce-dashboard" }),
         );
         expect(importedBlocs.map((bloc) => bloc.tag)).toEqual([
             "commerce-offer-list",
@@ -423,7 +432,7 @@ describe("commerce 1.0.0 contract", () => {
                 svg: expect.stringContaining("<svg"),
             });
         }
-        expect(await dashboards.getDashboard("commerce-dashboard")).toBeNull();
+        expect(await dashboardViews.getView("commerce-dashboard")).toBeNull();
         expect(deployment?.dataApiSchemas).toEqual(["commerce"]);
         expect(deployment?.functions.map((fn) => fn.name)).toEqual(["cms-commerce"]);
         expect(String(functionSecrets.CMS_COMMERCE_API_KEY)).toStartWith("cms_co_");

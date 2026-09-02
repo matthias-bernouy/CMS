@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { validateDashboard } from "@bernouy/cms-dashboards";
+import { dashboardViewAsLegacyDashboard, validateDashboard } from "@bernouy/cms-dashboards";
 import { validateSource } from "@bernouy/cms-sources";
 import { createHarness } from "../harness/create";
 
@@ -8,9 +8,12 @@ export function registerInstallationTest(): void {
         const harness = await createHarness();
         const source = await harness.sources.getSource("urn:emailer");
         const broadcastSource = await harness.sources.getSource("urn:emailer-broadcast");
-        const templatesDashboard = await harness.dashboards.getDashboard("emailer-templates");
-        const settingsDashboard = await harness.dashboards.getDashboard("emailer-settings");
-        const campaignsDashboard = await harness.dashboards.getDashboard("emailer-broadcast-campaigns");
+        const templatesView = await harness.dashboardViews.getView("emailer-templates");
+        const settingsView = await harness.dashboardViews.getView("emailer-settings");
+        const campaignsView = await harness.dashboardViews.getView("emailer-broadcast-campaigns");
+        const templatesDashboard = templatesView ? dashboardViewAsLegacyDashboard(templatesView) : null;
+        const settingsDashboard = settingsView ? dashboardViewAsLegacyDashboard(settingsView) : null;
+        const campaignsDashboard = campaignsView ? dashboardViewAsLegacyDashboard(campaignsView) : null;
 
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);

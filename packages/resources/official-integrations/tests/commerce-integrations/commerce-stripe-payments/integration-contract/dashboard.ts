@@ -1,18 +1,20 @@
 import { expect } from "bun:test";
-import { validateDashboard } from "@bernouy/cms-dashboards";
+import { dashboardViewAsLegacyDashboard, validateDashboard } from "@bernouy/cms-dashboards";
 import { validateFunction } from "@bernouy/cms-functions";
 import { validateTrigger } from "@bernouy/cms-triggers";
 import type { IntegrationContractContext } from "./harness";
 
 export async function assertDashboardContracts({
     dashboards,
+    dashboardViews,
     sources,
     triggers,
     enrollmentFn,
     submitPriceFn,
     protectedOrderFn,
 }: IntegrationContractContext): Promise<void> {
-    const operationsDashboard = await dashboards.getDashboard("commerce-stripe-payments-operations");
+    const operationsView = await dashboardViews.getView("commerce-stripe-payments-operations");
+    const operationsDashboard = operationsView ? dashboardViewAsLegacyDashboard(operationsView) : null;
     expect(operationsDashboard).not.toBeNull();
     expect(validateDashboard(operationsDashboard!, { source: (await sources.getSource("urn:commerce"))! })).toEqual([]);
     const operationsDashboardJSON = JSON.stringify(operationsDashboard);

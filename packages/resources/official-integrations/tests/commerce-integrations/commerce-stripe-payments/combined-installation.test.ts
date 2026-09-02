@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { isNativeBlocTag, prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
-import { InMemoryDashboardRepository, validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
+import {
+    InMemoryDashboardRepository,
+    InMemoryDashboardViewRepository,
+    dashboardViewAsLegacyDashboard,
+    validateDashboard,
+    type Dashboard,
+} from "@bernouy/cms-dashboards";
 import { functionEndpointUrn, InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import {
     InMemoryIntegrationInstallationRepository,
@@ -44,6 +50,7 @@ describe("Commerce protected Stripe combined installation", () => {
         const functions = new InMemoryFunctionRepository();
         const triggers = new InMemoryTriggerRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const roles = new InMemoryRolesRepository();
         const relations = new InMemoryRelationRepository();
         const secrets = new InMemorySecretStore();
@@ -69,6 +76,7 @@ describe("Commerce protected Stripe combined installation", () => {
             functions,
             triggers,
             dashboards,
+            dashboardViews,
             roles,
             relations,
             secrets,
@@ -141,6 +149,7 @@ describe("Commerce protected Stripe combined installation", () => {
         expect(linkingResult.artifacts.map((artifact) => artifact.type)).toEqual([
             ...Array(17).fill("function"),
             ...Array(15).fill("trigger"),
+            "dashboard-view",
             "dashboard",
             "bloc",
         ]);
@@ -283,7 +292,8 @@ describe("Commerce protected Stripe combined installation", () => {
             },
         ]);
 
-        const installedDashboards = await dashboards.getAllDashboards();
+        const installedViews = await dashboardViews.getAllViews();
+        const installedDashboards = installedViews.map(dashboardViewAsLegacyDashboard);
         expect(installedDashboards.map((dashboard) => dashboard.id).sort()).toEqual([
             "commerce-configuration",
             "commerce-metadata",
@@ -301,10 +311,11 @@ describe("Commerce protected Stripe combined installation", () => {
             expect(validateDashboard(dashboard, { source })).toEqual([]);
             await assertDashboardEndpointRefs(dashboard, sources);
         }
-        expect(await dashboards.getDashboard("stripe-connect-dashboard")).toBeNull();
-        expect(await dashboards.getDashboardsForSource("stripe-connect")).toEqual([]);
+        expect(await dashboardViews.getView("stripe-connect-dashboard")).toBeNull();
+        expect(installedViews.filter((view) => view.source === "stripe-connect")).toEqual([]);
 
-        const operationsDashboard = await dashboards.getDashboard("commerce-stripe-payments-operations");
+        const operationsView = await dashboardViews.getView("commerce-stripe-payments-operations");
+        const operationsDashboard = operationsView ? dashboardViewAsLegacyDashboard(operationsView) : null;
         if (!operationsDashboard) {
             throw new Error("protected operations dashboard not installed");
         }

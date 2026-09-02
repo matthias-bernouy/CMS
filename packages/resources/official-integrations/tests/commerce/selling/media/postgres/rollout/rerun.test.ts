@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import {
     InMemoryIntegrationConnectorProviderRepository,
     runIntegrationInstallation,
@@ -58,6 +58,7 @@ describe("Commerce media connector rerun", () => {
             sources: new InMemorySourceRepository(),
             sourceOverlays: new InMemorySourceOverlayRepository(),
             dashboards: new InMemoryDashboardRepository(),
+            dashboardViews: new InMemoryDashboardViewRepository(),
             triggers: new InMemoryTriggerRepository(),
             roles: new InMemoryRolesRepository(),
             secrets,

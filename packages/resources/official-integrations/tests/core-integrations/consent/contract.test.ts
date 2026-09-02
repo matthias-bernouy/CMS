@@ -12,7 +12,7 @@ describe("Consent integration contract", () => {
         expect(definition).toMatchObject({ kind: "consent", version: "1.0.0" });
         expect(definition?.artifacts.map((artifact) => artifact.type).sort()).toEqual([
             "bloc",
-            "dashboard",
+            "dashboard-view",
             "function",
             "function",
             "source",

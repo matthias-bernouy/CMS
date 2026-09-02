@@ -77,7 +77,7 @@ export function registerProtectedPaymentCreationScenario(createHarness: CreateHa
                 clientReferenceId: "order-1",
             }),
         );
-        const dashboard = await harness.dashboards.getDashboard("stripe-connect-dashboard");
+        const dashboard = await harness.dashboardViews.getView("stripe-connect-dashboard");
         const userRole = await harness.roles.get(USER_ROLE);
 
         expect(config).toEqual({ publishableKey: "pk_test_123" });

@@ -1,6 +1,6 @@
 {
-    "type": "dashboard",
-    "dashboard": {
+  "type": "dashboard-view",
+  "view": {
         "id": "{{answers.id}}-submissions",
         "source": "{{answers.id}}",
         "meta": { "name": "Form submissions", "icon": "inbox" },

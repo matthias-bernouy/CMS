@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { importIntegration, type IntegrationBlocArtifact } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
@@ -30,6 +30,7 @@ describe("commerce 1.1.0 indexing contract", () => {
                 sources,
                 sourceOverlays: new InMemorySourceOverlayRepository(),
                 dashboards: new InMemoryDashboardRepository(),
+                dashboardViews: new InMemoryDashboardViewRepository(),
                 secrets: new InMemorySecretStore(),
                 roles: new InMemoryRolesRepository(),
                 installations: await installedBasicBlocs(),

@@ -10,7 +10,12 @@ import {
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
+import {
+    InMemoryDashboardRepository,
+    InMemoryDashboardViewRepository,
+    dashboardViewAsLegacyDashboard,
+    validateDashboard,
+} from "@bernouy/cms-dashboards";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
@@ -155,14 +160,16 @@ describe("public integrations 1.0.0", () => {
     ])("installs $kind source, dashboard, connector, and blocs", async (scenario) => {
         const harness = await importScenario(scenario.kind, scenario.answers);
         const source = await harness.sources.getSource(`urn:${scenario.sourceId}`);
-        const dashboard = await harness.dashboards.getDashboard(scenario.dashboardId);
+        const dashboard = await harness.dashboards.getDashboard(scenario.sourceId);
+        const dashboardView = await harness.dashboardViews.getView(scenario.dashboardId);
 
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
         if ("installsDashboard" in scenario && scenario.installsDashboard === false) {
-            expect(dashboard).toBeNull();
+            expect(dashboardView).toBeNull();
         } else {
             expect(dashboard).toBeTruthy();
+            expect(dashboardView).toBeTruthy();
         }
         expect(harness.deployment?.dataApiSchemas).toEqual(scenario.schemas);
         expect(harness.deployment?.functions.map((fn) => fn.name)).toEqual(
@@ -175,15 +182,16 @@ describe("public integrations 1.0.0", () => {
             expect(endpointUrns).toContain(`urn:${scenario.sourceId}:${endpoint}`);
         }
 
-        const dashboardJson = JSON.stringify(dashboard);
+        const legacyDashboard = dashboardView ? dashboardViewAsLegacyDashboard(dashboardView) : null;
+        const dashboardJson = JSON.stringify(legacyDashboard);
         expect(dashboardJson).not.toContain('"widget":"w-create"');
         expect(dashboardJson).not.toContain('"widget":"w-update"');
         expect(dashboardJson).not.toContain('"widget":"w-delete"');
         expect(dashboardJson).not.toContain('"collection"');
 
         if (scenario.kind === "newsletter") {
-            const table = dashboard?.views[0] as Record<string, unknown> | undefined;
-            expect(dashboard?.views).toHaveLength(1);
+            const table = legacyDashboard?.views[0] as Record<string, unknown> | undefined;
+            expect(legacyDashboard?.views).toHaveLength(1);
             expect(table?.widget).toBe("w-table");
             expect(table?.selection).toBeUndefined();
             expect(dashboardJson).not.toContain("subscriptionDetail");
@@ -210,9 +218,10 @@ describe("public integrations 1.0.0", () => {
             ]);
         }
         if (scenario.kind === "emailer") {
-            const settingsDashboard = await harness.dashboards.getDashboard("emailer-settings");
-            expect(settingsDashboard).toBeTruthy();
-            expect(validateDashboard(settingsDashboard!, { source })).toEqual([]);
+            const settingsView = await harness.dashboardViews.getView("emailer-settings");
+            expect(settingsView).toBeTruthy();
+            const settingsDashboard = dashboardViewAsLegacyDashboard(settingsView!);
+            expect(validateDashboard(settingsDashboard, { source })).toEqual([]);
             const settingsJson = JSON.stringify(settingsDashboard);
             expect(dashboardJson).toContain("newTemplate");
             expect(dashboardJson).toContain("sendTestEmail");
@@ -261,6 +270,7 @@ export async function importScenario(kind: string, answers: Record<string, Integ
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     const sourceOverlays = new InMemorySourceOverlayRepository();
     const functions = new InMemoryFunctionRepository();
     const triggers = new InMemoryTriggerRepository();
@@ -321,6 +331,7 @@ export async function importScenario(kind: string, answers: Record<string, Integ
             secrets,
             roles,
             dashboards,
+            dashboardViews,
             functions,
             triggers,
             sourceOverlays,
@@ -338,7 +349,17 @@ export async function importScenario(kind: string, answers: Record<string, Integ
         [definition as IntegrationDefinition],
     );
 
-    return { result, sources, sourceOverlays, secrets, dashboards, triggers, importedBlocs, deployment };
+    return {
+        result,
+        sources,
+        sourceOverlays,
+        secrets,
+        dashboards,
+        dashboardViews,
+        triggers,
+        importedBlocs,
+        deployment,
+    };
 }
 
 function newsletterDependencySource() {

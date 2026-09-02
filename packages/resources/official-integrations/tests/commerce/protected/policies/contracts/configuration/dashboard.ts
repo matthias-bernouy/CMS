@@ -8,8 +8,8 @@ export function registerPolicyDashboardTest(): void {
         const definition = await loadIntegrationDefinition<any>(resolve(integrationRoot, "definition.json"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const dashboard = definition.artifacts.find(
-            (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-configuration",
-        ).dashboard;
+            (artifact: any) => artifact.view?.id === "{{answers.id}}-configuration",
+        ).view;
         const settingsTabs = dashboard.views.find((view: any) => view.id === "settingsTabs");
         const detail = settingsTabs.tabs
             .flatMap((tab: any) => tab.children)

@@ -9,7 +9,12 @@ import {
     type IntegrationConnectorDeployment,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
+import {
+    InMemoryDashboardRepository,
+    InMemoryDashboardViewRepository,
+    dashboardViewAsLegacyDashboard,
+    validateDashboard,
+} from "@bernouy/cms-dashboards";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
@@ -21,6 +26,7 @@ describe("commerce negotiation 1.0.0", () => {
     test("installs a Commerce-backed source, connector, and administration dashboards", async () => {
         const sources = new InMemorySourceRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const secrets = new InMemorySecretStore();
         const installations = new InMemoryIntegrationInstallationRepository();
         const functions = new InMemoryFunctionRepository();
@@ -76,6 +82,7 @@ describe("commerce negotiation 1.0.0", () => {
             {
                 sources,
                 dashboards,
+                dashboardViews,
                 secrets,
                 functions,
                 installations,
@@ -97,13 +104,16 @@ describe("commerce negotiation 1.0.0", () => {
         );
 
         const source = await sources.getSource("urn:commerce-negotiation");
-        const proposals = await dashboards.getDashboard("commerce-negotiation-proposals");
-        const settings = await dashboards.getDashboard("commerce-negotiation-settings");
+        const proposalsView = await dashboardViews.getView("commerce-negotiation-proposals");
+        const settingsView = await dashboardViews.getView("commerce-negotiation-settings");
+        const proposals = proposalsView ? dashboardViewAsLegacyDashboard(proposalsView) : null;
+        const settings = settingsView ? dashboardViewAsLegacyDashboard(settingsView) : null;
         expect(result.artifacts.map((artifact) => artifact.type)).toEqual([
             "source",
             "function",
             "function",
-            "dashboard",
+            "dashboard-view",
+            "dashboard-view",
             "dashboard",
             "bloc",
             "bloc",
