@@ -1,4 +1,8 @@
-import { applyDashboardSourceOverlays, type DashboardDto } from "@bernouy/cms-dashboards";
+import {
+    applyDashboardSourceOverlays,
+    dashboardViewAsLegacyDashboard,
+    type DashboardDto,
+} from "@bernouy/cms-dashboards";
 import { SYSTEM_FUNCTIONS_SOURCE_URN } from "@bernouy/cms-functions";
 import type { DashboardRelationProjection, RelationRepository } from "@bernouy/cms-relations";
 import {
@@ -48,7 +52,7 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
     const relationRepository = extensions.relations;
     const [sources, dashboards, rawSourceOverlays, dashboardRelationProjections] = await Promise.all([
         cms.sources.getAllSources(),
-        cms.dashboards.getAllDashboards(),
+        cms.dashboardViews.getAllViews(),
         extensions.sourceOverlays?.getAllOverlays() ?? Promise.resolve([]),
         relationRepository?.getAllDashboardRelationProjections() ?? Promise.resolve([]),
     ]);
@@ -59,7 +63,8 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
         extensions.sourceOverlays ? sourceOverlaySchemaCacheFor(extensions.sourceOverlays) : undefined,
     );
     const dashboardsBySource = new Map<string, DashboardDto[]>();
-    for (const dashboard of dashboards) {
+    for (const view of dashboards) {
+        const dashboard = dashboardViewAsLegacyDashboard(view);
         const list = dashboardsBySource.get(dashboard.source) ?? [];
         list.push(dashboard);
         dashboardsBySource.set(dashboard.source, list);

@@ -12,6 +12,8 @@ export function integrationInstallationDeps(cms: ControlCms): IntegrationImportD
         roles: cms.roles,
         secrets: cms.secrets,
         dashboards: cms.dashboards,
+        dashboardViews: cms.dashboardViews,
+        dashboardAssignments: cms.dashboardAssignments,
         relations: cms.relations,
         installations: cms.integrationInstallations,
         ...(cms.triggers ? { triggers: cms.triggers } : {}),

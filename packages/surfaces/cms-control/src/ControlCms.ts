@@ -102,6 +102,12 @@ export class ControlCms {
     get dashboards() {
         return controlCmsAccessors.dashboards(this.state);
     }
+    get dashboardViews() {
+        return controlCmsAccessors.dashboardViews(this.state);
+    }
+    get dashboardAssignments() {
+        return controlCmsAccessors.dashboardAssignments(this.state);
+    }
     get relations() {
         return controlCmsAccessors.relations(this.state);
     }

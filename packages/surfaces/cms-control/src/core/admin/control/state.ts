@@ -7,7 +7,11 @@ import type {
 } from "@bernouy/cms-auth";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import {
+    InMemoryDashboardAssignmentRepository,
+    InMemoryDashboardRepository,
+    InMemoryDashboardViewRepository,
+} from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { InMemoryIntegrationConnectorProviderRepository } from "@bernouy/cms-integrations";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
@@ -63,6 +67,8 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         integrationConnectorProviders:
             configuration.integrationConnectorProviders ?? new InMemoryIntegrationConnectorProviderRepository(),
         dashboards: configuration.dashboards ?? new InMemoryDashboardRepository(),
+        dashboardViews: configuration.dashboardViews ?? new InMemoryDashboardViewRepository(),
+        dashboardAssignments: configuration.dashboardAssignments ?? new InMemoryDashboardAssignmentRepository(),
         relations: configuration.relations ?? new InMemoryRelationRepository(),
         functions: configuration.functions ?? null,
         triggers: configuration.triggers ?? null,

@@ -11,6 +11,7 @@ import {
     SubjectResolver,
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
+import { InMemoryDashboardAssignmentRepository } from "@bernouy/cms-dashboards";
 import type { ControlCms } from "cms-control/ControlCms";
 import markVerified from "cms-control/api/_access/users/email-verified.post";
 import resendVerification from "cms-control/api/_access/users/email-verification.post";
@@ -25,6 +26,7 @@ function setup() {
     const pats = new InMemoryPatRepository();
     const tokens = new InMemoryAuthTokenStore();
     const emailer = new InMemoryEmailer();
+    const dashboardAssignments = new InMemoryDashboardAssignmentRepository();
     const local = new LocalAuthentication<CMS_ROLES>({
         providerId: "local",
         loginPagePath: "/login",
@@ -45,8 +47,8 @@ function setup() {
         passwordResetUrl: "http://control.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
     };
-    const cms = { users, credentials, pats, publicAuth } as unknown as ControlCms;
-    return { cms, users, credentials, emailer };
+    const cms = { users, credentials, pats, publicAuth, dashboardAssignments } as unknown as ControlCms;
+    return { cms, users, credentials, emailer, dashboardAssignments };
 }
 
 const req = (body: Record<string, unknown>) =>
@@ -133,7 +135,7 @@ describe("admin user auth actions", () => {
     });
 
     test("deletes a user while protecting the last admin", async () => {
-        const { cms, credentials, users } = setup();
+        const { cms, credentials, users, dashboardAssignments } = setup();
         const admin = await createLocalUser(
             { credentials, users },
             { email: "admin@example.com", password: "password-1", role: "admin" },
@@ -142,12 +144,14 @@ describe("admin user auth actions", () => {
             { credentials, users },
             { email: "member@example.com", password: "password-1", role: "user" },
         );
+        await dashboardAssignments.assign({ subjectId: user.sub, dashboardId: "support" });
 
         const response = await deleteUser(new Request(`http://control/api/users?sub=${user.sub}`), cms);
 
         expect(response.status).toBe(200);
         expect(await users.getBySub(user.sub)).toBeNull();
         expect(await credentials.getByEmail("member@example.com")).toBeNull();
+        expect(await dashboardAssignments.getDashboardIdsForSubject(user.sub)).toEqual([]);
         await expect(deleteUser(new Request(`http://control/api/users?sub=${admin.sub}`), cms)).rejects.toThrow(
             /last admin/,
         );

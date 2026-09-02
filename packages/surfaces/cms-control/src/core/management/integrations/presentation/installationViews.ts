@@ -57,6 +57,9 @@ function artifactExists(context: IntegrationArtifactContext, artifact: Integrati
     if (artifact.type === "dashboard") {
         return context.dashboardIds?.has(artifact.id) ?? "unknown";
     }
+    if (artifact.type === "dashboard-view") {
+        return context.dashboardViewIds?.has(artifact.id) ?? "unknown";
+    }
     if (artifact.type === "sourceOverlay") {
         return context.sourceOverlayIds?.has(artifact.id) ?? "unknown";
     }
@@ -104,6 +107,9 @@ function artifactTypeLabel(type: string): string {
     }
     if (type === "dashboardRelation") {
         return "Dashboard relation";
+    }
+    if (type === "dashboard-view") {
+        return "Dashboard view";
     }
     return type[0]!.toUpperCase() + type.slice(1);
 }

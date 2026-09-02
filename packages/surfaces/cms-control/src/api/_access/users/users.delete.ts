@@ -22,6 +22,16 @@ export default async function deleteUser(req: Request, cms: ControlCms) {
         throw new HttpError(403, "Cannot delete the last admin — promote another admin first.");
     }
 
-    await deleteUserCompletely({ users: cms.users, credentials: cms.credentials, pats: cms.pats }, user);
+    await deleteUserCompletely(
+        {
+            users: cms.users,
+            credentials: cms.credentials,
+            pats: cms.pats,
+            beforeMembershipDelete: async ({ sub: subjectId }) => {
+                await cms.dashboardAssignments.deleteForSubject(subjectId);
+            },
+        },
+        user,
+    );
     return Response.json({ ok: true });
 }

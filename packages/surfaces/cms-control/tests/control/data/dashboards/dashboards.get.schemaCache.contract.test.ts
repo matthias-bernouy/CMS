@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import {
     InMemorySourceOverlayRepository,
     InMemorySourceRepository,
@@ -12,6 +12,7 @@ describe("GET /api/dashboards dynamic overlay schema contract", () => {
         const sources = new InMemorySourceRepository();
         const overlays = new InMemorySourceOverlayRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         let fieldSourceCalls = 0;
         const fetchImpl: typeof fetch = Object.assign(
             async () => {
@@ -54,6 +55,7 @@ describe("GET /api/dashboards dynamic overlay schema contract", () => {
         const response = await listDashboards(new Request("http://localhost/cms/api/dashboards"), {
             sources: overlaySources,
             dashboards,
+            dashboardViews,
             sourceOverlays: overlays,
             sourceExecutorDeps: { fetchImpl },
         } as any);

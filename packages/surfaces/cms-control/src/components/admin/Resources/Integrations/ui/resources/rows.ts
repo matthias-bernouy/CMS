@@ -30,6 +30,13 @@ function artifactRow(artifact: NonNullable<IntegrationDefinition["artifacts"]>[n
             detail: `Dashboard id: ${artifact.dashboard.id}`,
         };
     }
+    if (artifact.type === "dashboard-view") {
+        return {
+            type: "Dashboard view",
+            label: artifact.view.meta.name,
+            detail: `View id: ${artifact.view.id}`,
+        };
+    }
     if (artifact.type === "bloc") {
         return { type: "Bloc", label: artifact.bloc.name, detail: `Tag: ${artifact.bloc.tag}` };
     }

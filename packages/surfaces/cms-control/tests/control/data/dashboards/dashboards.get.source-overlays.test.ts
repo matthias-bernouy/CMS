@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardViewRepository, normalizeLegacyDashboardView } from "@bernouy/cms-dashboards";
 import {
     InMemorySourceOverlayRepository,
     InMemorySourceRepository,
@@ -13,7 +13,7 @@ describe("GET /api/dashboards source overlays", () => {
     test("applies overlays to dashboard groups", async () => {
         const sources = new InMemorySourceRepository();
         const sourceOverlays = new InMemorySourceOverlayRepository();
-        const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         await sources.createSource({
             urn: "urn:user-account",
             endpoints: [
@@ -58,47 +58,49 @@ describe("GET /api/dashboards source overlays", () => {
             output: [{ endpointId: "listAccounts", path: "accounts[]" }, { endpointId: "getAccountByUserId" }],
             fields: [{ id: "company", label: "Company", type: "string", showInDashboardTable: true }],
         });
-        await dashboards.createDashboard({
-            id: "user-account-users",
-            source: "user-account",
-            views: [
-                {
-                    widget: "w-table",
-                    id: "accountsTable",
-                    source: { endpoint: "listAccounts", itemsPath: "accounts" },
-                    rowKey: "userId",
-                    columns: [{ id: "userId", label: "User", path: "userId" }],
-                    selection: { opens: "accountDetail" },
-                },
-                {
-                    widget: "w-detail",
-                    id: "accountDetail",
-                    source: { endpoint: "getAccountByUserId", params: { userId: "$selection.id" } },
-                    actions: [
-                        {
-                            id: "save",
-                            label: "Save",
-                            endpoint: {
-                                endpoint: "createUserPersonalInformation",
-                                body: { displayName: "$field.displayName" },
+        await dashboardViews.createView(
+            normalizeLegacyDashboardView({
+                id: "user-account-users",
+                source: "user-account",
+                views: [
+                    {
+                        widget: "w-table",
+                        id: "accountsTable",
+                        source: { endpoint: "listAccounts", itemsPath: "accounts" },
+                        rowKey: "userId",
+                        columns: [{ id: "userId", label: "User", path: "userId" }],
+                        selection: { opens: "accountDetail" },
+                    },
+                    {
+                        widget: "w-detail",
+                        id: "accountDetail",
+                        source: { endpoint: "getAccountByUserId", params: { userId: "$selection.id" } },
+                        actions: [
+                            {
+                                id: "save",
+                                label: "Save",
+                                endpoint: {
+                                    endpoint: "createUserPersonalInformation",
+                                    body: { displayName: "$field.displayName" },
+                                },
                             },
-                        },
-                    ],
-                    main: [
-                        {
-                            id: "personal",
-                            title: "Personal information",
-                            fields: [{ id: "displayName", label: "Name", path: "displayName", type: "text" }],
-                        },
-                    ],
-                },
-            ],
-        });
+                        ],
+                        main: [
+                            {
+                                id: "personal",
+                                title: "Personal information",
+                                fields: [{ id: "displayName", label: "Name", path: "displayName", type: "text" }],
+                            },
+                        ],
+                    },
+                ],
+            }),
+        );
 
         const body = await (
             await listDashboards(list(), {
                 sources: new SourceOverlaySourceRepository(sources, sourceOverlays),
-                dashboards,
+                dashboardViews,
                 sourceOverlays,
             } as any)
         ).json();
