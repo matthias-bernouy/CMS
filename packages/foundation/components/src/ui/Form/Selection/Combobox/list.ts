@@ -21,6 +21,16 @@ export function comboItemsFor(options: ComboOption[], query: string, creatable =
     return items;
 }
 
+export function remoteComboItemsFor(options: ComboOption[], query: string, creatable = false): ComboItem[] {
+    const items: ComboItem[] = options.map((item) => ({ ...item, kind: "option" }));
+    const needle = query.toLowerCase();
+    const exactMatch = options.some((item) => item.value === query || item.label.toLowerCase() === needle);
+    if (creatable && query && !exactMatch) {
+        items.unshift({ kind: "create", value: query, label: `Add "${query}"`, disabled: false });
+    }
+    return items;
+}
+
 export function renderComboItem(
     item: ComboItem,
     index: number,
@@ -49,6 +59,22 @@ export function emptyItem(): HTMLElement {
     const row = document.createElement("div");
     row.className = "empty";
     row.textContent = "No results";
+    return row;
+}
+
+export function statusItem(label: string, className: "loading" | "load-more", onSelect?: () => void): HTMLElement {
+    const row = document.createElement(onSelect ? "button" : "div");
+    row.className = className;
+    row.textContent = label;
+    if (row instanceof HTMLButtonElement) {
+        row.type = "button";
+        row.addEventListener("mousedown", (event) => {
+            event.preventDefault();
+            onSelect?.();
+        });
+    } else {
+        row.setAttribute("role", "status");
+    }
     return row;
 }
 

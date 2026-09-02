@@ -33,6 +33,30 @@
     padding: 4px 7px;
 }
 
+.loading,
+.load-more {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 30px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted, #94a3b8);
+    font: inherit;
+    font-size: 12px;
+    text-align: center;
+}
+
+.load-more {
+    border-radius: 6px;
+    color: var(--primary-base, #4361ee);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.load-more:hover {
+    background: var(--bg-hover, #f1f4f3);
+}
+
 .option {
     cursor: pointer;
 }

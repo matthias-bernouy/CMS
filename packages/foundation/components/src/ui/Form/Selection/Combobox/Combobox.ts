@@ -2,7 +2,7 @@ import { Component, upgradeProperty } from "@bernouy/components/base";
 import template from "./template.html" with { type: "text" };
 import baseCss from "./base.css" with { type: "text" };
 import listCss from "./list.css" with { type: "text" };
-import { ComboboxKeyboard, comboItemsFor, comboOptionsFrom } from "./list";
+import { ComboboxKeyboard, comboItemsFor, comboOptionsFrom, remoteComboItemsFor } from "./list";
 import type { ComboItem, ComboOption } from "./types";
 import { ComboboxView, type ComboboxHandlers } from "./ComboboxView";
 
@@ -19,6 +19,9 @@ export class Combobox extends Component {
         "hint",
         "hint-level",
         "creatable",
+        "remote-search",
+        "loading",
+        "has-more",
     ];
     private readonly view: ComboboxView;
     private readonly keyboard: ComboboxKeyboard;
@@ -67,6 +70,9 @@ export class Combobox extends Component {
             this.value = value ?? "";
         } else {
             this.syncAttributes();
+            if ((name === "loading" || name === "has-more") && !this.view.listHidden) {
+                this.renderList(this.keyboard.query);
+            }
         }
     }
 
@@ -114,6 +120,15 @@ export class Combobox extends Component {
         input: () => {
             this.view.syncClearButtonForInput();
             this.keyboard.reset();
+            if (this.hasAttribute("remote-search")) {
+                this.dispatchEvent(
+                    new CustomEvent("combobox-search", {
+                        bubbles: true,
+                        composed: true,
+                        detail: { query: this.keyboard.query },
+                    }),
+                );
+            }
             this.renderList(this.keyboard.query);
         },
         keydown: (event) => this.keyboard.handle(event),
@@ -138,6 +153,9 @@ export class Combobox extends Component {
     private syncOptions(): void {
         this.options = comboOptionsFrom(this);
         this.value = this.getAttribute("value") ?? this.selectedValue;
+        if (!this.view.listHidden) {
+            this.renderList(this.keyboard.query);
+        }
     }
 
     private syncDisplay(): void {
@@ -149,8 +167,19 @@ export class Combobox extends Component {
     }
 
     private renderList(query: string): void {
-        this.items = comboItemsFor(this.options, query, this.hasAttribute("creatable"));
-        this.view.renderList(this.items, this.keyboard.activeIndex, this.selectedValue, this.selectItem);
+        this.items = this.hasAttribute("remote-search")
+            ? remoteComboItemsFor(this.options, query, this.hasAttribute("creatable"))
+            : comboItemsFor(this.options, query, this.hasAttribute("creatable"));
+        const remote =
+            this.hasAttribute("remote-search") || this.hasAttribute("has-more")
+                ? {
+                      loading: this.hasAttribute("loading"),
+                      hasMore: this.hasAttribute("has-more"),
+                      loadMore: () =>
+                          this.dispatchEvent(new CustomEvent("combobox-load-more", { bubbles: true, composed: true })),
+                  }
+                : null;
+        this.view.renderList(this.items, this.keyboard.activeIndex, this.selectedValue, this.selectItem, remote);
     }
 
     private readonly selectItem = (item: ComboItem): void => {
