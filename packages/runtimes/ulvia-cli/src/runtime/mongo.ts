@@ -62,7 +62,7 @@ export async function destroyLocalMongo(dataRoot: string): Promise<boolean> {
     if ((await containerStatus(name)) === null) {
         return false;
     }
-    await runCommand(["docker", "rm", "--force", name]);
+    await runCommand(["docker", "rm", "--force", "--volumes", name]);
     return true;
 }
 
