@@ -4,7 +4,7 @@ create table if not exists stripe_connect.payout_events (
     id bigint generated always as identity primary key,
     cms_user_id text references stripe_connect.accounts(cms_user_id) on delete restrict,
     stripe_account_id text not null,
-    stripe_payout_id text not null unique,
+    stripe_payout_id text not null constraint payout_events_stripe_payout_id_key unique,
     amount bigint,
     currency text,
     status text not null,

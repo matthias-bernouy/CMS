@@ -7,7 +7,7 @@ import {
 
 const trackedShipment = defineUpgradeScenario({
     name: "preserves an active shipment and its pending carrier event",
-    from: "^1.0.0",
+    from: ">=1.0.0 <3.0.0",
     async seedBeforeUpgrade(context) {
         const shipmentId = "upgrade-fixture-shipment";
         const orderId = "upgrade-fixture-order";

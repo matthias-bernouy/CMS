@@ -17,7 +17,7 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository, validateSource, type Source } from "@bernouy/cms-sources";
 import { declaredBlocViewSources } from "./support";
 
-describe("commerce negotiation 2.0.0", () => {
+describe("commerce negotiation 2.0.2", () => {
     test("installs a Commerce-backed source, connector, and administration dashboards", async () => {
         const sources = new InMemorySourceRepository();
         const dashboards = new InMemoryDashboardRepository();

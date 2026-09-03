@@ -34,7 +34,7 @@ on conflict (id) do nothing;
 
 create table if not exists commerce_negotiation.proposals (
     id bigint generated always as identity primary key,
-    public_id uuid not null default gen_random_uuid() unique,
+    public_id uuid not null default gen_random_uuid() constraint proposals_public_id_key unique,
     commerce_offer_id bigint not null,
     commerce_offer_slug text not null,
     commerce_offer_title text not null,

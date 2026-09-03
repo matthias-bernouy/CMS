@@ -8,7 +8,7 @@ revoke all on schema broadcast from authenticated;
 
 create table if not exists broadcast.campaigns (
     id uuid primary key default gen_random_uuid(),
-    status text not null default 'draft' check (
+    status text not null default 'draft' constraint campaigns_status_check check (
         status in ('draft', 'scheduled', 'running', 'paused', 'done', 'canceled', 'failed')
     ),
     template_key text not null,
@@ -32,7 +32,7 @@ create table if not exists broadcast.campaign_recipients (
     campaign_id uuid not null references broadcast.campaigns(id) on delete cascade,
     email text not null,
     data jsonb not null default '{}'::jsonb,
-    status text not null default 'pending' check (
+    status text not null default 'pending' constraint campaign_recipients_status_check check (
         status in ('pending', 'sending', 'sent', 'failed', 'skipped')
     ),
     attempts integer not null default 0,
@@ -42,7 +42,7 @@ create table if not exists broadcast.campaign_recipients (
     sent_at timestamptz,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
-    unique (campaign_id, email),
+    constraint campaign_recipients_campaign_id_email_key unique (campaign_id, email),
     constraint campaign_recipients_email_not_blank check (length(btrim(email)) > 0),
     constraint campaign_recipients_email_normalized check (email = lower(btrim(email)))
 );

@@ -2,7 +2,7 @@
 
 create table if not exists stripe_connect.reconciliation_runs (
     id bigint generated always as identity primary key,
-    run_key text not null unique,
+    run_key text not null constraint reconciliation_runs_run_key_key unique,
     status text not null default 'running',
     scanned_count integer not null default 0,
     repaired_count integer not null default 0,

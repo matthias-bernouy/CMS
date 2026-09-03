@@ -4,7 +4,7 @@ create table if not exists stripe_connect.seller_recovery_exposures (
     id bigint generated always as identity primary key,
     seller_cms_user_id text not null references stripe_connect.accounts(cms_user_id) on delete restrict,
     payment_id bigint not null references stripe_connect.payments(id) on delete restrict,
-    recovery_key text not null unique,
+    recovery_key text not null constraint seller_recovery_exposures_recovery_key_key unique,
     exposure_type text not null,
     status text not null,
     amount bigint not null,

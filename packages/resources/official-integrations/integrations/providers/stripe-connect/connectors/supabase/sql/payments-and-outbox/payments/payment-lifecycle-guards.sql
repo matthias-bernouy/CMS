@@ -2,8 +2,8 @@
 
 create table if not exists stripe_connect.payment_lifecycle_guards (
     client_reference_id text primary key,
-    payment_id bigint unique references stripe_connect.payments(id) on delete restrict,
-    cancellation_request_id text unique,
+    payment_id bigint constraint payment_lifecycle_guards_payment_id_key unique references stripe_connect.payments(id) on delete restrict,
+    cancellation_request_id text constraint payment_lifecycle_guards_cancellation_request_id_key unique,
     cancellation_reason text,
     cancellation_requested_at timestamptz,
     payment_linked_at timestamptz,

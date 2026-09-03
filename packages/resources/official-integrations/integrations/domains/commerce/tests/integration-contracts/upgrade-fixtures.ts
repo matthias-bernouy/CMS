@@ -7,7 +7,7 @@ import {
 
 const activeCheckout = defineUpgradeScenario({
     name: "preserves an active offer and its reserved checkout",
-    from: "^1.0.0",
+    from: ">=1.0.0 <3.0.0",
     async seedBeforeUpgrade(context) {
         const [product] = await context.database.query(
             `insert into commerce.products (slug, title, description, status, visibility, metadata)

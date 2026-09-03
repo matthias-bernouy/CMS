@@ -4,7 +4,7 @@ create table if not exists stripe_connect.commerce_projection_outbox (
     id bigint generated always as identity primary key,
     operation_id bigint references stripe_connect.financial_operations(id) on delete restrict,
     payment_id bigint not null references stripe_connect.payments(id) on delete restrict,
-    projection_key text not null unique,
+    projection_key text not null constraint commerce_projection_outbox_projection_key_key unique,
     projection_kind text not null,
     provider_object_id text,
     projection_payload jsonb not null default '{}'::jsonb,

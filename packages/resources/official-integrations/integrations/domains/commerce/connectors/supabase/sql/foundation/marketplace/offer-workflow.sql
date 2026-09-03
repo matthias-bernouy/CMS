@@ -51,7 +51,7 @@ create table if not exists commerce.offers (
     seller_id bigint not null references commerce.sellers(id) on delete restrict,
     product_id bigint not null references commerce.products(id) on delete restrict,
     variant_id bigint,
-    slug text not null unique,
+    slug text not null constraint offers_slug_key unique,
     title text not null,
     description text,
     condition_code text not null references commerce.offer_conditions(code) on delete restrict,

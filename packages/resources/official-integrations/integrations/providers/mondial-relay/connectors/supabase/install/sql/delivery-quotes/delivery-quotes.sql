@@ -5,7 +5,7 @@
 -- ---------------------------------------------------------------------------
 create table if not exists delivery.delivery_quotes (
     quote_id text primary key,
-    request_key text not null unique,
+    request_key text not null constraint delivery_quotes_request_key_key unique,
     external_order_id text not null,
     order_version integer not null,
     revision integer not null,

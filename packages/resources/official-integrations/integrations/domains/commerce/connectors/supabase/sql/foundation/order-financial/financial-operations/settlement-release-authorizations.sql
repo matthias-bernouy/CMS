@@ -3,7 +3,7 @@
 create table if not exists commerce.settlement_release_authorizations (
     id uuid primary key default gen_random_uuid(),
     order_id bigint not null references commerce.orders(id) on delete restrict,
-    business_key text not null unique,
+    business_key text not null constraint settlement_release_authorizations_business_key_key unique,
     release_kind text not null default 'initial',
     recovery_revision integer,
     authorized_amount bigint not null,

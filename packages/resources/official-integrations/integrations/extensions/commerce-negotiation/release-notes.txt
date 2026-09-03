@@ -1,3 +1,13 @@
+# Commerce Negotiation 2.0.2
+
+The explicit proposal constraint name now matches PostgreSQL's historical
+generated name, preserving the reviewed schema identity across upgrades.
+
+# Commerce Negotiation 2.0.1
+
+The proposal public-ID uniqueness constraint now has a stable explicit name
+for deterministic schema migration and rollback operations.
+
 # Commerce Negotiation 2.0.0
 
 This major release reconciles the current implementation with the immutable

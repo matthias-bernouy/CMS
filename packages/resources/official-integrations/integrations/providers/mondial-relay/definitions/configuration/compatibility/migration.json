@@ -1,13 +1,13 @@
 {
     "install": {
         "revision": 1,
-        "digest": "sha256:1afa46be1246b6aeb5c424b9f8d08317e5b5caad1960d86f32d2a55b21ade6f1",
+        "digest": "sha256:bf0027cdfb729556389cfa0a3b320b56b58d1b29df93b041275c6dbdecd9298e",
         "coveredMigrations": [
             {
                 "id": "add-customer-reference",
                 "checksum": "sha256:6992dca608d258ee4e527bab10307260d47f6615c1c0d9761f19df0f3f6663ba",
                 "revision": 1,
-                "introducedIn": "2.0.0"
+                "introducedIn": "2.0.1"
             }
         ]
     },
@@ -17,7 +17,7 @@
             "checksum": "sha256:6992dca608d258ee4e527bab10307260d47f6615c1c0d9761f19df0f3f6663ba",
             "fromRevision": 0,
             "toRevision": 1,
-            "introducedIn": "2.0.0",
+            "introducedIn": "2.0.1",
             "transaction": "atomic",
             "phase": "expand",
             "path": "migrations/add-customer-reference.sql"

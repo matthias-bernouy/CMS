@@ -3,7 +3,7 @@
 create table if not exists stripe_connect.transfer_recovery_requests (
     id bigint generated always as identity primary key,
     payment_id bigint not null references stripe_connect.payments(id) on delete restrict,
-    recovery_request_id text not null unique,
+    recovery_request_id text not null constraint transfer_recovery_requests_recovery_request_id_key unique,
     exposure_type text not null,
     requested_amount bigint not null,
     allocated_amount bigint not null default 0,

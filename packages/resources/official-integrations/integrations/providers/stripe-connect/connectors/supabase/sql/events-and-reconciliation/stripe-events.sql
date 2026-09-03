@@ -17,7 +17,7 @@ create table if not exists stripe_connect.stripe_events (
     last_error text,
     received_at timestamptz not null default now(),
     processed_at timestamptz,
-    unique (stripe_account_id, event_id),
+    constraint stripe_events_stripe_account_id_event_id_key unique (stripe_account_id, event_id),
     constraint stripe_events_event_id_not_blank check (length(btrim(event_id)) > 0),
     constraint stripe_events_event_type_not_blank check (length(btrim(event_type)) > 0),
     constraint stripe_events_payload_hash_format check (payload_sha256 ~ '^[a-f0-9]{64}$'),

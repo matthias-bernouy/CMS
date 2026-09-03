@@ -1,6 +1,6 @@
 # Commerce Integration
 
-Commerce `2.0.0` is a coherent marketplace-capable commerce kernel. It replaces
+Commerce `2.0.2` is a coherent marketplace-capable commerce kernel. It replaces
 the need to compose the standalone Products, Offers, and Orders integrations
 when a project needs transactional rules across those domains.
 

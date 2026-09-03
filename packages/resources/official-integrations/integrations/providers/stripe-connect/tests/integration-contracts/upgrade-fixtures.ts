@@ -7,7 +7,7 @@ import {
 
 const publishedMarketplaceTerms = defineUpgradeScenario({
     name: "preserves published marketplace terms and their acceptance evidence",
-    from: "^1.0.0",
+    from: ">=1.0.0 <3.0.0",
     async seedBeforeUpgrade(context) {
         const sellerId = "upgrade-fixture-seller";
         const contentHash = "c".repeat(64);

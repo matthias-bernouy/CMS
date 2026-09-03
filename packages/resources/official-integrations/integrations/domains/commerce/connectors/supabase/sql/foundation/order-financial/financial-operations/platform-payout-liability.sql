@@ -121,7 +121,7 @@ create table if not exists commerce.platform_payout_liability_revisions (
     change_direction text not null,
     calculation_reason text not null,
     included_prospective_order_id bigint references commerce.orders(id) on delete restrict,
-    decrease_authorization_id uuid unique,
+    decrease_authorization_id uuid constraint platform_payout_liability_revisio_decrease_authorization_id_key unique,
     decrease_authorized_by text,
     decrease_authorized_reason text,
     decrease_authorized_at timestamptz,

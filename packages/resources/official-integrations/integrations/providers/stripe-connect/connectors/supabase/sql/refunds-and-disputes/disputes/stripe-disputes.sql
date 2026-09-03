@@ -3,7 +3,7 @@
 create table if not exists stripe_connect.stripe_disputes (
     id bigint generated always as identity primary key,
     payment_id bigint not null references stripe_connect.payments(id) on delete restrict,
-    stripe_dispute_id text not null unique,
+    stripe_dispute_id text not null constraint stripe_disputes_stripe_dispute_id_key unique,
     stripe_charge_id text not null,
     amount bigint not null,
     currency text not null,

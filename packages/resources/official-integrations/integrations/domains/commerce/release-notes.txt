@@ -1,3 +1,13 @@
+# Commerce 2.0.2
+
+Explicit constraint names now match PostgreSQL's historical generated names,
+preserving the reviewed schema identity across upgrades.
+
+# Commerce 2.0.1
+
+All SQL `CHECK` and `UNIQUE` constraints now have stable explicit names so
+future migrations and rollback procedures can target them deterministically.
+
 # Commerce 2.0.0
 
 This major release reconciles the current implementation with the immutable

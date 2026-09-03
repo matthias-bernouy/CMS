@@ -3,10 +3,10 @@
 create table if not exists stripe_connect.transfers (
     id bigint generated always as identity primary key,
     payment_id bigint not null references stripe_connect.payments(id) on delete restrict,
-    operation_id bigint not null unique references stripe_connect.financial_operations(id) on delete restrict,
-    release_authorization_id text not null unique,
+    operation_id bigint not null constraint transfers_operation_id_key unique references stripe_connect.financial_operations(id) on delete restrict,
+    release_authorization_id text not null constraint transfers_release_authorization_id_key unique,
     release_kind text not null default 'initial',
-    stripe_transfer_id text unique,
+    stripe_transfer_id text constraint transfers_stripe_transfer_id_key unique,
     source_charge_id text,
     destination_account_id text not null,
     transfer_group text not null,

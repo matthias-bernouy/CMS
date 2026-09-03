@@ -1,3 +1,11 @@
+Ulvia 2.0.2
+
+- Aligned explicit constraint names with PostgreSQL's historical names to preserve the reviewed schema identity.
+
+Ulvia 2.0.1
+
+- Named every campaign `CHECK` and `UNIQUE` constraint for deterministic migrations and rollback procedures.
+
 Ulvia 2.0.0
 
 - Migrated authoring to the direct current-source layout.

@@ -4,11 +4,11 @@
     "label": "Commerce",
     "category": "Commerce",
     "description": "Run a catalogue, marketplace, orders, and replaceable buyer notifications from one coherent commerce model.",
-    "stable": "2.0.0",
-    "latest": "2.0.0",
+    "stable": "2.0.2",
+    "latest": "2.0.2",
     "versions": [
         {
-            "version": "2.0.0",
+            "version": "2.0.2",
             "path": ".",
             "definition": "definition.json"
         }

@@ -2,7 +2,7 @@
 
 create table if not exists stripe_connect.irreversible_dispute_action_approvals (
     id bigint generated always as identity primary key,
-    action_key text not null unique,
+    action_key text not null constraint irreversible_dispute_action_approvals_action_key_key unique,
     action_type text not null,
     dispute_id bigint not null references stripe_connect.stripe_disputes(id) on delete restrict,
     amount bigint not null,

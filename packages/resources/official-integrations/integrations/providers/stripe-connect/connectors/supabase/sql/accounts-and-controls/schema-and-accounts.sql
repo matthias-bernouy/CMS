@@ -8,7 +8,7 @@ revoke all on schema stripe_connect from authenticated;
 
 create table if not exists stripe_connect.accounts (
     cms_user_id text primary key,
-    stripe_account_id text unique,
+    stripe_account_id text constraint accounts_stripe_account_id_key unique,
     stripe_account_api_version text not null default 'v1',
     application_controlled_recipient boolean not null default false,
     terms_accepted boolean not null default false,

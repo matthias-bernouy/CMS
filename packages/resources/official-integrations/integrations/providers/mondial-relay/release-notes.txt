@@ -1,3 +1,8 @@
+Ulvia 2.0.1
+
+- Named the delivery-quote request-key constraint for deterministic migrations and rollback procedures.
+- Refreshed the exact install-bundle digest while preserving the reviewed database schema.
+
 Ulvia 2.0.0
 
 - Migrated authoring to the direct current-source layout.

@@ -3,7 +3,7 @@
 create table if not exists stripe_connect.financial_operations (
     id bigint generated always as identity primary key,
     payment_id bigint references stripe_connect.payments(id) on delete restrict,
-    business_key text not null unique,
+    business_key text not null constraint financial_operations_business_key_key unique,
     operation_type text not null,
     status text not null default 'reserved',
     stripe_object_id text,

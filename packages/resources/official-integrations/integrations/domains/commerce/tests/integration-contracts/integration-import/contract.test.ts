@@ -24,7 +24,7 @@ import { expectedEndpointUrns } from "./expectations";
 import { blocImporter, connectorDeployer, installedBasicBlocs } from "./setup";
 import { installCommerceTestEnvironment, supabaseUrl } from "../../harness";
 installCommerceTestEnvironment();
-describe("commerce 2.0.0 contract", () => {
+describe("commerce 2.0.2 contract", () => {
     test("loads and imports the official Commerce contract", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const catalog = await repository.list();
@@ -79,7 +79,7 @@ describe("commerce 2.0.0 contract", () => {
         const functionSecrets = deployment?.functions[0]?.secrets ?? {};
 
         expect(catalog.map((entry) => entry.kind)).toContain("commerce");
-        expect(definition).toMatchObject({ kind: "commerce", version: "2.0.0" });
+        expect(definition).toMatchObject({ kind: "commerce", version: "2.0.2" });
         expect(definition.dependencies).toEqual([
             { name: "basicBlocs", kind: "basic-blocs" },
             { name: "emailer", kind: "emailer", optional: true },

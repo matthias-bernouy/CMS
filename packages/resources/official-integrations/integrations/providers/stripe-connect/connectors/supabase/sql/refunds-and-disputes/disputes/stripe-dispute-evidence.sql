@@ -3,7 +3,7 @@
 create table if not exists stripe_connect.stripe_dispute_evidence (
     id bigint generated always as identity primary key,
     dispute_id bigint not null references stripe_connect.stripe_disputes(id) on delete restrict,
-    evidence_operation_id text not null unique,
+    evidence_operation_id text not null constraint stripe_dispute_evidence_evidence_operation_id_key unique,
     evidence jsonb not null,
     staged_by text not null,
     staged_at timestamptz not null default now(),
