@@ -23,6 +23,9 @@ implementation notes live in each package's `AGENTS.md`.
 
 - [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose
   editor capabilities, bind Sources, design themeable CSS, test, and publish.
+- [Integration development](./integrations/README.md) documents local-first
+  integration versioning, audits, upgrade fixtures, releases, and the remote
+  publication contract.
 - [auth-system-source.md](./auth-system-source.md) documents the readonly
   system auth source exposed through `/.cms/sources/system-auth/*`.
 

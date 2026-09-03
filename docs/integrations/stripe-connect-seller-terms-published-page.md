@@ -1,10 +1,13 @@
 # Stripe Connect seller terms from a published CMS page
 
-`commerce-stripe-payments` can bind its seller agreement to one published CMS
-page. The integration resolver supplies the exact published page snapshot to
-the Stripe Connect provider during installation. The provider never fetches an
-installation-supplied URL: it validates and hashes the trusted resolver payload
-and archives the full page, link label, and consent statement.
+Stripe Connect owns its seller agreement as runtime business state. The
+agreement is no longer an installation answer of `commerce-stripe-payments`.
+An administrator publishes it from the Stripe Connect seller-terms dashboard.
+
+The dashboard accepts a stable document key, public label, exact consent
+statement, and CMS published-page snapshot URL. The management Edge Function
+downloads the public snapshot without forwarding CMS credentials, validates
+its URL and payload, verifies its digest, and archives the page.
 
 The archived revision is append-only. Its public version is
 `cms-page:<revision-sha256>` and its evidence hash is the SHA-256 digest of the
@@ -25,32 +28,43 @@ values before inserting evidence. A publication/configuration change between
 display and submission returns `MARKETPLACE_TERMS_VERSION_CHANGED`; the UI
 reloads the requirement and leaves consent unchecked.
 
-## Configuration and publication lifecycle
+## Runtime publication lifecycle
 
-The optional `sellerTermsDocuments` installation input accepts at most one
-entry with a stable key, public label, exact consent statement, and `page-link`.
-The page must already be published. After changing or republishing it, rerun
-the linking integration so the resolver supplies the new published snapshot.
-That creates a new immutable revision, makes it current, and requires a new
-acceptance. Re-selecting a prior published revision safely reuses its existing
-evidence and existing seller acceptances.
+The initial dashboard revision is `new`. Publication uses optimistic
+concurrency: the submitted `expectedVersion` must still be current. A concurrent
+publication returns `MARKETPLACE_TERMS_VERSION_CHANGED` instead of overwriting
+another administrator's work.
 
-Stable `1.0.0` keeps the required `sellerTermsVersion` and `sellerTermsHash`
-inputs as a rollout fallback. With no selected page, their validated pair
-remains authoritative and existing installed artifacts retain their previous
-behavior. Once a page-backed configuration is current, server state overrides
-that fallback and older clients cannot manufacture acceptance: page-mode
-acceptance requires the displayed compare-and-set pair.
+Publishing or republishing a page creates or reuses its immutable revision and
+makes it current atomically. Sellers who accepted another revision remain
+attached to its evidence and must explicitly accept the new version. Selecting
+a prior revision safely reuses its archived evidence and existing acceptances.
+
+Legacy version/hash configuration remains readable during migration, but new
+configuration is dashboard-owned. `commerce-stripe-payments` only consumes the
+provider's current requirement and forwards the exact seller-visible version
+and hash for compare-and-set acceptance.
+
+An unconfigured provider returns an empty seller-capability snapshot. This lets
+the linking integration install and activate its structural Commerce
+requirement without inventing legal content. Sellers become ready only after
+valid terms are published and accepted.
 
 Recommended rollout order:
 
 1. update the Stripe Connect provider integration;
-2. rerun `commerce-stripe-payments` with valid legacy fallback values and,
-   optionally, the published seller page;
-3. verify `getConnectStatus.marketplaceTermsRequirement`;
-4. exercise both seller forms before enabling protected sales.
+2. open the Stripe Connect seller-terms dashboard and publish the current CMS
+   page snapshot;
+3. install or update `commerce-stripe-payments`;
+4. verify `getConnectStatus.marketplaceTermsRequirement`;
+5. exercise both seller forms before enabling protected sales.
 
-The assembled PostgreSQL contract
-`stripe-connect-marketplace-terms` verifies fresh install, idempotent reapply,
-page-mode compare-and-set rejection, legacy compatibility, immutable evidence,
-forced RLS, and private RPC grants.
+The runtime management boundary is a separate additive Edge Function. The
+existing Stripe payment function and its HTTP contract remain unchanged during
+the rollout, so in-flight payment and onboarding calls do not switch code
+implicitly.
+
+The PostgreSQL and upgrade contracts verify fresh install, idempotent
+publication, concurrent-publish rejection, legacy compatibility, immutable
+evidence, forced RLS, private RPC grants, and preservation of a published page
+and seller acceptance across an upgrade from `1.0.0`.

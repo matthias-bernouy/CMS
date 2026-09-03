@@ -3,6 +3,10 @@
 The new local-first Ulvia CLI. It is intentionally independent from the legacy
 `@bernouy/cms-cli` package, which remains available during the transition.
 
+See the workspace [integration development guide](../../../docs/integrations/README.md)
+for the release workflow, SemVer policy, business upgrade fixtures, and future
+remote publication contract.
+
 ## Commands
 
 ```bash
