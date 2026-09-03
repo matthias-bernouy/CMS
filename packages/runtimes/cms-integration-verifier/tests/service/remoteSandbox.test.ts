@@ -137,6 +137,23 @@ describe("fixed sandbox service", () => {
 });
 
 describe("remote sandbox response limits", () => {
+    test("disables Bun's transport idle timeout while retaining the application deadline", async () => {
+        const input = await sandboxInputFixture();
+        const result = await validSandboxResult(input);
+        const bytes = canonicalJsonBytes(result);
+        let requestInit: RequestInit | undefined;
+        const remote = remoteSandbox(async (_url, init) => {
+            requestInit = init;
+            return new Response(Buffer.from(bytes), {
+                headers: { "content-length": String(bytes.byteLength), "content-type": "application/json" },
+            });
+        }, bytes.byteLength);
+
+        await expect(remote.run(input, new AbortController().signal)).resolves.toEqual(result);
+        expect((requestInit as RequestInit & { timeout?: number | boolean }).timeout).toBe(false);
+        expect(requestInit?.signal).toBeInstanceOf(AbortSignal);
+    });
+
     test("cancels a response that streams beyond its declared bounded length", async () => {
         let cancelled = false;
         const response = new Response(

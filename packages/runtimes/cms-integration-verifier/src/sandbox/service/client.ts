@@ -33,10 +33,11 @@ export function createHttpVerificationSandbox(config: HttpVerificationSandboxCon
             const combined = AbortSignal.any([signal, timeout]);
             let response: Response;
             try {
-                response = await request(new URL("/v1/run", config.origin), {
+                const requestInit = {
                     method: "POST",
                     redirect: "error",
                     signal: combined,
+                    timeout: false,
                     headers: {
                         accept: "application/json",
                         authorization: `Bearer ${authorization}`,
@@ -44,7 +45,8 @@ export function createHttpVerificationSandbox(config: HttpVerificationSandboxCon
                         "content-length": String(body.byteLength),
                     },
                     body: Buffer.from(body),
-                });
+                } satisfies RequestInit & Readonly<{ timeout: false }>;
+                response = await request(new URL("/v1/run", config.origin), requestInit);
             } catch {
                 throw new Error("Remote verification sandbox transport failed");
             }
