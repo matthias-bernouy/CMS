@@ -166,7 +166,7 @@ export class ReleaseSandboxClient {
         );
         const result = await safeBody(response);
         if (!response.ok) {
-            const installation = await this.installation(kind);
+            const installation = await this.readInstallation(kind);
             throw new Error(
                 `Release sandbox rejected ${kind}@${version} with HTTP ${response.status}${errorSuffix(result, installation)}`,
             );
@@ -178,11 +178,22 @@ export class ReleaseSandboxClient {
     }
 
     async installation(kind: string): Promise<ReleaseSandboxInstallation> {
+        const installation = await this.readInstallation(kind);
+        if (!installation) {
+            throw new Error(`Release sandbox could not read installation "${kind}" (HTTP 404)`);
+        }
+        return installation;
+    }
+
+    private async readInstallation(kind: string): Promise<ReleaseSandboxInstallation | undefined> {
         const response = await this.request(
             `${this.baseUrl}/api/integrations/installations?id=${encodeURIComponent(kind)}`,
             { headers: { cookie: this.cookie ?? "" } },
             `installation lookup for ${kind}`,
         );
+        if (response.status === 404) {
+            return undefined;
+        }
         if (!response.ok) {
             throw new Error(`Release sandbox could not read installation "${kind}" (HTTP ${response.status})`);
         }

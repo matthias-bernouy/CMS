@@ -60,7 +60,7 @@ export async function prepareLocalRelease(
         throw immutableCoordinateError("Local", candidate, baseline);
     }
     const localVersions = (await local.list())
-        .filter((record) => record.kind === kind)
+        .filter((record) => record.kind === kind && record.admission?.status !== "rejected")
         .map((record) => ({ version: record.version, path: "", definition: "" }));
     if ((existing && options.skipRemoteWhenLocal) || localVersions.length) {
         return { candidate, existing, published: null, publishedVersions: localVersions };

@@ -44,6 +44,36 @@ describe("local integration repository", () => {
         expect((await fixture.repository.getVerification(first.record))?.digest).toBe(verification.digest);
     });
 
+    test("persists remote admission without mutating immutable package bytes", async () => {
+        const fixture = await repositoryFixture();
+        const resolved = await integrationPackage();
+        const stored = await fixture.repository.store({
+            package: resolved,
+            definition: integrationDefinition(),
+            source: "local:/integration",
+        });
+
+        const updated = await fixture.repository.recordAdmission(
+            stored.record.kind,
+            stored.record.version,
+            stored.record.digest,
+            {
+                status: "rejected",
+                recordedAt: "2026-09-04T12:00:00.000Z",
+                code: "admission_planning_failed",
+            },
+        );
+        const reopened = new LocalIntegrationRepository(
+            join(fixture.root, "repository"),
+            join(fixture.root, "repository", "packages"),
+        );
+        await reopened.init();
+
+        expect((await reopened.list())[0]?.admission).toEqual(updated.admission);
+        expect((await reopened.getPackage(updated)).digest).toBe(resolved.digest);
+        expect(await new LocalRepositoryCatalog(reopened).list()).toEqual([]);
+    });
+
     test("serves the same contracts consumed by a CMS runtime", async () => {
         const fixture = await repositoryFixture();
         const resolved = await integrationPackage();

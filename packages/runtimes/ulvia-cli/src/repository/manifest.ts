@@ -15,7 +15,14 @@ export type LocalPackageRecord = Readonly<{
     verificationDigest?: string;
     source: string;
     pulledAt: string;
+    admission?: LocalPackageAdmission;
     definition: IntegrationDefinition;
+}>;
+
+export type LocalPackageAdmission = Readonly<{
+    status: "published" | "rejected";
+    recordedAt: string;
+    code?: string;
 }>;
 
 type LocalRepositoryManifest = Readonly<{
@@ -81,6 +88,7 @@ function parseRecord(value: unknown): LocalPackageRecord {
         throw new Error("Local repository definition identity does not match its coordinate");
     }
     const verificationDigest = optionalDigest(value.verificationDigest);
+    const admission = optionalAdmission(value.admission);
     return {
         kind,
         version,
@@ -88,7 +96,29 @@ function parseRecord(value: unknown): LocalPackageRecord {
         ...(verificationDigest ? { verificationDigest } : {}),
         source: value.source,
         pulledAt: value.pulledAt,
+        ...(admission ? { admission } : {}),
         definition,
+    };
+}
+
+function optionalAdmission(value: unknown): LocalPackageAdmission | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (!isRecord(value) || (value.status !== "published" && value.status !== "rejected")) {
+        throw new Error("Local repository package admission is invalid");
+    }
+    const recordedAt = new Date(typeof value.recordedAt === "string" ? value.recordedAt : Number.NaN);
+    if (!Number.isFinite(recordedAt.valueOf()) || recordedAt.toISOString() !== value.recordedAt) {
+        throw new Error("Local repository package admission timestamp is invalid");
+    }
+    if (value.code !== undefined && (typeof value.code !== "string" || !/^[a-z0-9_]{1,80}$/u.test(value.code))) {
+        throw new Error("Local repository package admission code is invalid");
+    }
+    return {
+        status: value.status,
+        recordedAt: value.recordedAt,
+        ...(typeof value.code === "string" ? { code: value.code } : {}),
     };
 }
 

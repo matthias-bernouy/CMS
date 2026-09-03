@@ -3,7 +3,7 @@ import { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs"
 import type { StoredIntegrationVerificationBundle } from "@bernouy/cms-integration-registry";
 import { FsIntegrationVerificationBundleStore } from "@bernouy/cms-integration-registry/fs";
 import { parseIntegrationDefinition, type IntegrationDefinition } from "@bernouy/cms-integrations";
-import { readManifest, type LocalPackageRecord, writeManifest } from "./manifest";
+import { readManifest, type LocalPackageAdmission, type LocalPackageRecord, writeManifest } from "./manifest";
 
 export type PulledPackage = Readonly<{
     package: ResolvedIntegrationPackage;
@@ -57,6 +57,27 @@ export class LocalIntegrationRepository {
 
     async getVerification(record: LocalPackageRecord): Promise<StoredIntegrationVerificationBundle | null> {
         return record.verificationDigest ? await this.verifications.get(record.verificationDigest) : null;
+    }
+
+    async recordAdmission(
+        kind: string,
+        version: string,
+        digest: string,
+        admission: LocalPackageAdmission,
+    ): Promise<LocalPackageRecord> {
+        return await this.exclusive(async () => {
+            const current = [...(await this.list())];
+            const existing = current.find((record) => record.kind === kind && record.version === version);
+            if (!existing || existing.digest !== digest) {
+                throw new Error(`Cannot record admission for unknown local package ${kind}@${version}`);
+            }
+            const updated = { ...existing, admission };
+            await writeManifest(
+                this.root,
+                current.map((record) => (record === existing ? updated : record)),
+            );
+            return updated;
+        });
     }
 
     async store(input: PulledPackage): Promise<StorePackageResult> {

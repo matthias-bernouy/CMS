@@ -93,6 +93,7 @@ async function resolveDependency(
             .filter(
                 (record) =>
                     record.kind === kind &&
+                    record.admission?.status !== "rejected" &&
                     (!versionRange || integrationVersionSatisfies(record.version, versionRange)),
             )
             .sort((left, right) => rcompare(left.version, right.version))[0];
@@ -126,7 +127,9 @@ function eligibleOlderRecords(
     publishedVersions: ReadonlySet<string>,
 ): LocalPackageRecord[] {
     return olderRecords(records, kind, version).filter(
-        (record) => record.source.startsWith("local:") || publishedVersions.has(record.version),
+        (record) =>
+            record.admission?.status !== "rejected" &&
+            (record.source.startsWith("local:") || publishedVersions.has(record.version)),
     );
 }
 

@@ -127,6 +127,15 @@ describe("ulvia push", () => {
         expect(inspected).toEqual(["alpha"]);
         expect(output.at(-1)).toContain("failed=1 skipped=1");
         expect(output.join("\n")).not.toContain("pat-not-logged");
+        const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: data });
+        const local = new LocalIntegrationRepository(paths.repository, paths.packages);
+        await local.init();
+        const records = await local.list();
+        expect(records.find((record) => record.kind === "alpha")?.admission).toMatchObject({
+            status: "rejected",
+            code: "integration_version_exists",
+        });
+        expect(records.find((record) => record.kind === "beta")?.admission).toBeUndefined();
     });
 
     test("push --all selects only the latest local release for each integration", async () => {

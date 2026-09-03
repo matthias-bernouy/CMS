@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runCli } from "../../src/cli";
+import { LocalIntegrationRepository } from "../../src/repository/local";
 import type { LocalReleaseVerifier } from "../../src/release/types";
+import { resolveUlviaPaths } from "../../src/runtime/paths";
 import { integrationDefinition, writeIntegrationSource } from "../fixtures";
 import { emptyRemote, temporaryRoot } from "./support";
 
@@ -111,6 +113,42 @@ describe("local integration release commands", () => {
         });
 
         expect(remoteCalls).toBe(0);
+    });
+
+    test("does not require upgrades from a rejected local release", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        const data = join(root, "data");
+        await writeIntegrationSource(source, "1.0.0");
+        const common = {
+            environment: { ULVIA_DATA_DIR: data },
+            cwd: source,
+            repositoryFetch: emptyRemote,
+            log: () => undefined,
+        };
+        await runCli(["release", "demo"], {
+            ...common,
+            releaseVerifier: { verify: async () => undefined },
+        });
+        const paths = resolveUlviaPaths(common.environment);
+        const local = new LocalIntegrationRepository(paths.repository, paths.packages);
+        await local.init();
+        const rejected = (await local.list())[0]!;
+        await local.recordAdmission(rejected.kind, rejected.version, rejected.digest, {
+            status: "rejected",
+            recordedAt: "2026-09-04T12:00:00.000Z",
+            code: "admission_planning_failed",
+        });
+        await writeIntegrationSource(source, "1.1.0");
+
+        await runCli(["audit", "demo"], {
+            ...common,
+            releaseVerifier: {
+                verify: async ({ baselines }) => {
+                    expect(baselines).toEqual([]);
+                },
+            },
+        });
     });
 
     test("releases dependencies before lexically earlier dependents", async () => {

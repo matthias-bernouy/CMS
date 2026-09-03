@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { planReleaseVerification } from "@bernouy/cms-integration-verification";
 import { defineUpgradeScenarios } from "@bernouy/cms-integration-verification/upgrade-fixtures/v1";
 import { executeReleaseVerificationPlan } from "../../src/release/verification/runtime";
+import { ReleaseSandboxClient } from "../../src/release/sandbox/client";
 import { ReleaseScenarioInfrastructureError } from "../../src/release/sandbox/scenario";
 import {
     captureReleaseSandboxDockerVolumes,
@@ -12,6 +13,37 @@ import {
 import { releasePackage } from "./support";
 
 describe("shared release runtime plan execution", () => {
+    test("preserves an installation rejection when no installation record was created", async () => {
+        const server = Bun.serve({
+            port: 0,
+            fetch(request) {
+                const url = new URL(request.url);
+                if (url.pathname === "/auth/login") {
+                    return new Response(null, { status: 302, headers: { "set-cookie": "session=test; Path=/" } });
+                }
+                if (url.pathname === "/api/integrations/import") {
+                    return Response.json({ code: "install_failed", message: "SQL constraint failed" }, { status: 422 });
+                }
+                return Response.json({ error: "not found" }, { status: 404 });
+            },
+        });
+        const client = new ReleaseSandboxClient(`http://127.0.0.1:${server.port}`, {
+            schema: "ulvia.dev-runtime.v1",
+            adminEmail: "dev@ulvia.local",
+            adminPassword: "long-enough-test-password",
+            sessionSecret: "long-enough-session-secret",
+            kekHex: "0".repeat(64),
+            analyticsSecret: "long-enough-analytics-secret",
+        });
+
+        try {
+            await client.login();
+            await expect(client.install("demo", "1.0.0")).rejects.toThrow(/install_failed: SQL constraint failed/u);
+        } finally {
+            await server.stop();
+        }
+    });
+
     test("resolves exact baselines and fixtures for local and remote callers", async () => {
         const candidate = await releasePackage("1.2.0");
         const baseline = await releasePackage("1.0.0");

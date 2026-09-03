@@ -13,13 +13,13 @@ export class LocalRepositoryCatalog {
     constructor(private readonly repository: LocalIntegrationRepository) {}
 
     async list(): Promise<IntegrationDefinitionSummary[]> {
-        const records = await this.repository.list();
+        const records = visible(await this.repository.list());
         const kinds = [...new Set(records.map(({ kind }) => kind))].sort();
         return await Promise.all(kinds.map((kind) => this.summary(kind, records)));
     }
 
     async index(kind: string): Promise<IntegrationDefinitionIndex | null> {
-        const records = (await this.repository.list()).filter((record) => record.kind === kind);
+        const records = visible(await this.repository.list()).filter((record) => record.kind === kind);
         if (!records.length) {
             return null;
         }
@@ -39,9 +39,10 @@ export class LocalRepositoryCatalog {
 
     async record(kind: string, version?: string): Promise<LocalPackageRecord | null> {
         if (version) {
-            return await this.repository.getRecord(kind, version);
+            const record = await this.repository.getRecord(kind, version);
+            return record?.admission?.status === "rejected" ? null : record;
         }
-        const records = (await this.repository.list()).filter((record) => record.kind === kind);
+        const records = visible(await this.repository.list()).filter((record) => record.kind === kind);
         return records.length ? newest(records) : null;
     }
 
@@ -70,6 +71,10 @@ export class LocalRepositoryCatalog {
             versions: selected.sort(byVersion).map(versionEntry),
         };
     }
+}
+
+function visible(records: readonly LocalPackageRecord[]): LocalPackageRecord[] {
+    return records.filter((record) => record.admission?.status !== "rejected");
 }
 
 function newest(records: readonly LocalPackageRecord[]): LocalPackageRecord {

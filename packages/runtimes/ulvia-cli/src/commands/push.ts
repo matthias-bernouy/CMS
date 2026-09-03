@@ -54,6 +54,13 @@ export async function pushCommand(
         const candidate = await buildLocalCandidate(local, record);
         const result = await publishLocalCandidate(config, candidate);
         if (result.outcome === "failed") {
+            if (result.reason === "rejected" || result.reason === "conflict") {
+                await local.recordAdmission(record.kind, record.version, record.digest, {
+                    status: "rejected",
+                    recordedAt: new Date().toISOString(),
+                    ...(result.code ? { code: result.code } : {}),
+                });
+            }
             const skipped = targets.length - index - 1;
             log(
                 `Summary: planned=${targets.length} published=${published} unchanged=${unchanged} failed=1 skipped=${skipped}`,
@@ -61,6 +68,10 @@ export async function pushCommand(
             throw new Error(failureMessage(record, result));
         }
         await verifyPublicRoundTrip(remote, record, options);
+        await local.recordAdmission(record.kind, record.version, record.digest, {
+            status: "published",
+            recordedAt: new Date().toISOString(),
+        });
         if (result.outcome === "published") {
             published += 1;
             log(`PUBLISHED ${coordinate(record)} (${shortDigest(record.digest)}) candidate=${result.candidateId}`);
