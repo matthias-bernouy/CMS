@@ -1,4 +1,5 @@
 import type { IntegrationDefinitionVersion } from "@bernouy/cms-integrations";
+import { prepareFsIntegrationRegistryCandidate } from "@bernouy/cms-integration-registry/fs";
 import type { LocalIntegrationRepository, PulledPackage } from "../repository/local";
 import type { LocalPackageRecord } from "../repository/manifest";
 import type { RemoteIntegrationRepository } from "../repository/remote";
@@ -92,6 +93,8 @@ export async function auditPreparedLocalRelease(
 ): Promise<LocalReleaseAudit> {
     const { candidate, publishedVersions } = prepared;
     const { kind, version } = candidate.package.envelope;
+    await prepareFsIntegrationRegistryCandidate(candidate.package);
+    dependencies.log("✓ repository admission: package and SQL policies passed");
     const baselineRecords = await ensureLocalBaselines(
         kind,
         version,

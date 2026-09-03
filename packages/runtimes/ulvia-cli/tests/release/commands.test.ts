@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runCli } from "../../src/cli";
 import type { LocalReleaseVerifier } from "../../src/release/types";
@@ -66,6 +66,28 @@ describe("local integration release commands", () => {
 
         expect(verified).toEqual(["alpha", "beta"]);
         expect(await Bun.file(join(data, "repository", "catalog.json")).exists()).toBeFalse();
+    });
+
+    test("rejects repository SQL policy violations before runtime verification", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        const data = join(root, "data");
+        await writeIntegrationSource(source);
+        const connectorRoot = join(source, "integrations", "demo", "versions", "1.0.0", "connectors");
+        await mkdir(connectorRoot);
+        await writeFile(connectorRoot + "/schema.sql", "create table demo.items (slug text unique);\n");
+        let verifications = 0;
+
+        await expect(
+            runCli(["audit", "demo"], {
+                environment: { ULVIA_DATA_DIR: data },
+                cwd: source,
+                repositoryFetch: emptyRemote,
+                releaseVerifier: { verify: async () => void (verifications += 1) },
+                log: () => undefined,
+            }),
+        ).rejects.toThrow(/requires explicitly named CHECK and UNIQUE constraints/u);
+        expect(verifications).toBe(0);
     });
 
     test("uses pulled baselines without consulting the remote repository", async () => {
