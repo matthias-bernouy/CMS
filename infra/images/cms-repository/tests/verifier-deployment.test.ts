@@ -86,6 +86,7 @@ describe("integration verifier trust zones", () => {
         expect(docker).toContain("cms_release_runtime_egress: {}");
         expect(docker).not.toContain("cms_repository");
         expect(runtime).toContain("network_mode: service:cms-integration-release-runtime-docker");
+        expect(runtime).toContain("HOME: /tmp");
         expect(runtime).toContain("DOCKER_HOST: tcp://127.0.0.1:2375");
         expect(runtime).toContain("releaseMain.ts");
         expect(runtime).not.toContain("WORKER_TOKEN");

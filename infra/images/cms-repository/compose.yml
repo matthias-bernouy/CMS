@@ -382,6 +382,7 @@ services:
                 condition: service_healthy
         environment:
             NODE_ENV: production
+            HOME: /tmp
             DOCKER_HOST: tcp://127.0.0.1:2375
             CMS_INTEGRATION_VERIFIER_SANDBOX_PORT: "3102"
             CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: /run/configs/cms-integration-release-runtime-verification-key
