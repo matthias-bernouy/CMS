@@ -13,7 +13,7 @@ import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
-import { installedBasicBlocs } from "../../../../contracts/integration-import/setup";
+import { installedBasicBlocs } from "../../../../integration-contracts/integration-import/setup";
 
 type ManagementRequest = { body: BodyInit | null | undefined; method: string; url: string };
 
