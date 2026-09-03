@@ -47,6 +47,29 @@ separate from the drain and point of no return, and that post-activation work is
 resumable. A lost declarative-reconciliation receipt must fail closed and pass
 through the explicit administrator retry protocol before it can continue.
 
+## Business upgrade fixtures
+
+An integration can declare upgrade-specific business state in
+`tests/integration-contracts/upgrade-fixtures.ts`. The module exports a suite
+created with `defineUpgradeScenarios` from
+`@bernouy/cms-integration-verification/upgrade-fixtures/v1`. Each scenario has
+only four authoring fields: `name`, a supported `from` SemVer range, optional
+integration `dependencies`, and the two required hooks `seedBeforeUpgrade` and
+`assertAfterUpgrade`.
+
+The seed hook runs against the installed immutable baseline. Its bounded I-JSON
+return value is snapshotted and passed to the assertion hook after the target
+release is active. The context exposes versioned capabilities for parameterized
+PostgreSQL queries, authenticated local CMS requests, local Auth users, Storage
+objects, and Edge Function invocation. Supabase service credentials remain
+inside the runtime implementation.
+
+When this module exists, every audited immutable baseline must match at least
+one scenario. Matching scenarios run for both the normal upgrade and every
+crash-recovery phase. The fixture source is trusted author code, like the other
+integration-owned Bun tests; the capability contract is an API boundary, not
+an operating-system security sandbox.
+
 Breaking or unproven schema and Function changes require a migration-aware
 connector even for a major release. A release cannot introduce both expansion
 and contraction migrations, and a contraction must refer to an expansion that

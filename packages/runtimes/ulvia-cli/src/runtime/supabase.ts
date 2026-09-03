@@ -13,6 +13,8 @@ export type LocalSupabaseEnvironment = Readonly<{
     apiUrl: string;
     functionsUrl: string;
     databaseUrl: string;
+    publishableKey?: string;
+    secretKey?: string;
 }>;
 
 export async function initializeLocalSupabase(projectRoot: string): Promise<void> {
@@ -55,7 +57,17 @@ export function parseLocalSupabaseEnvironment(output: string): LocalSupabaseEnvi
     const apiUrl = localHttpUrl(value?.API_URL);
     const functionsUrl = localHttpUrl(value?.FUNCTIONS_URL) ?? (apiUrl ? `${apiUrl}/functions/v1` : undefined);
     const databaseUrl = localDatabaseUrl(value?.DB_URL);
-    return apiUrl && functionsUrl && databaseUrl ? { apiUrl, functionsUrl, databaseUrl } : null;
+    const publishableKey = localCredential(value?.PUBLISHABLE_KEY ?? value?.ANON_KEY);
+    const secretKey = localCredential(value?.SECRET_KEY ?? value?.SERVICE_ROLE_KEY);
+    return apiUrl && functionsUrl && databaseUrl
+        ? {
+              apiUrl,
+              functionsUrl,
+              databaseUrl,
+              ...(publishableKey ? { publishableKey } : {}),
+              ...(secretKey ? { secretKey } : {}),
+          }
+        : null;
 }
 
 export async function stopLocalSupabase(
@@ -127,4 +139,8 @@ function localDatabaseUrl(value: unknown): string | undefined {
         (url.hostname === "127.0.0.1" || url.hostname === "localhost")
         ? url.href
         : undefined;
+}
+
+function localCredential(value: unknown): string | undefined {
+    return typeof value === "string" && value.length >= 16 ? value : undefined;
 }

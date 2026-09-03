@@ -3,6 +3,7 @@ import type { LocalReleaseVerificationInput, LocalReleaseVerifier } from "../typ
 import { runAuthorTests } from "../author-tests";
 import { runReleaseScenario } from "../sandbox/scenario";
 import { distinctMigrationBaselines } from "./migrationStates";
+import { loadUpgradeFixtureSuite, upgradeFixturesForBaseline } from "./upgradeFixtures";
 
 export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
     constructor(private readonly log: (message: string) => void) {}
@@ -13,15 +14,27 @@ export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
         if (await runAuthorTests(input.sourceRoot)) {
             this.log(`✓ source tests passed for ${coordinate}`);
         }
+        const fixtures = await loadUpgradeFixtureSuite(input.sourceRoot);
+        if (fixtures) {
+            this.log(`✓ loaded ${fixtures.scenarios.length} integration-owned upgrade fixture(s)`);
+        }
         this.log(`… verifying fresh installation of ${coordinate}`);
         await runReleaseScenario({ target: input.candidate, packages });
+        let nominalScenarioCount = 1;
         for (const baseline of input.baselines) {
             const from = baseline.package.envelope.version;
-            this.log(`… verifying upgrade ${from} → ${input.candidate.package.envelope.version}`);
-            await runReleaseScenario({ target: input.candidate, baseline, packages });
+            const matching = fixtures ? upgradeFixturesForBaseline(fixtures, from) : [undefined];
+            for (const fixture of matching) {
+                this.log(
+                    `… verifying upgrade ${from} → ${input.candidate.package.envelope.version}` +
+                        (fixture ? ` with business fixture "${fixture.name}"` : ""),
+                );
+                await runReleaseScenario({ target: input.candidate, baseline, packages, fixture });
+                nominalScenarioCount += 1;
+            }
         }
-        const resilienceScenarioCount = await this.verifyMigrationResilience(input, packages);
-        const scenarioCount = 1 + input.baselines.length + resilienceScenarioCount;
+        const resilienceScenarioCount = await this.verifyMigrationResilience(input, packages, fixtures);
+        const scenarioCount = nominalScenarioCount + resilienceScenarioCount;
         this.log(
             `✓ runtime verification passed for ${scenarioCount} scenario(s)` +
                 (resilienceScenarioCount ? `, including ${resilienceScenarioCount} crash recoveries` : ""),
@@ -32,6 +45,7 @@ export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
     private async verifyMigrationResilience(
         input: LocalReleaseVerificationInput,
         packages: LocalReleaseVerificationInput["availablePackages"],
+        fixtures: Awaited<ReturnType<typeof loadUpgradeFixtureSuite>>,
     ): Promise<number> {
         if (!input.candidate.definition.connectors?.some((connector) => connector.migration)) {
             return 0;
@@ -45,13 +59,25 @@ export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
             );
         }
         for (const baseline of baselines) {
-            for (const phase of auditedMigrationPhases()) {
-                this.log(
-                    `… verifying crash recovery ${baseline.package.envelope.version} → ` +
-                        `${input.candidate.package.envelope.version} after ${phase}`,
-                );
-                await runReleaseScenario({ target: input.candidate, baseline, packages, faultAfterPhase: phase });
-                count += 1;
+            const matching = fixtures
+                ? upgradeFixturesForBaseline(fixtures, baseline.package.envelope.version)
+                : [undefined];
+            for (const fixture of matching) {
+                for (const phase of auditedMigrationPhases()) {
+                    this.log(
+                        `… verifying crash recovery ${baseline.package.envelope.version} → ` +
+                            `${input.candidate.package.envelope.version} after ${phase}` +
+                            (fixture ? ` with business fixture "${fixture.name}"` : ""),
+                    );
+                    await runReleaseScenario({
+                        target: input.candidate,
+                        baseline,
+                        packages,
+                        faultAfterPhase: phase,
+                        fixture,
+                    });
+                    count += 1;
+                }
             }
         }
         return count;

@@ -42,6 +42,22 @@ describe("local Supabase management bridge", () => {
         });
     });
 
+    test("retains local API capabilities without logging or embedding them in URLs", () => {
+        expect(
+            parseLocalSupabaseEnvironment(
+                JSON.stringify({
+                    API_URL: "http://127.0.0.1:54321",
+                    DB_URL: "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+                    PUBLISHABLE_KEY: "sb_publishable_local_fixture",
+                    SECRET_KEY: "sb_secret_local_fixture",
+                }),
+            ),
+        ).toMatchObject({
+            publishableKey: "sb_publishable_local_fixture",
+            secretKey: "sb_secret_local_fixture",
+        });
+    });
+
     test("applies SQL and materializes secrets and reloadable Function bundles", async () => {
         const root = await projectRoot();
         const queries: string[] = [];

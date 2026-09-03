@@ -7,7 +7,8 @@
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
-        "./sdk/v1": "./src/sdk/v1.ts"
+        "./sdk/v1": "./src/sdk/v1.ts",
+        "./upgrade-fixtures/v1": "./src/sdk/upgrade-fixtures-v1.ts"
     },
     "files": [
         "src/",

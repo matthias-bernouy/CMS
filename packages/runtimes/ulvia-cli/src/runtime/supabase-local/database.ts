@@ -1,7 +1,7 @@
 import { SQL } from "bun";
 
 export interface LocalSupabaseDatabase {
-    query(source: string): Promise<unknown[]>;
+    query(source: string, parameters?: readonly unknown[]): Promise<unknown[]>;
     close(): Promise<void>;
 }
 
@@ -12,9 +12,9 @@ export class BunLocalSupabaseDatabase implements LocalSupabaseDatabase {
         this.connection = new SQL(databaseUrl, { max: 1 });
     }
 
-    async query(source: string): Promise<unknown[]> {
+    async query(source: string, parameters: readonly unknown[] = []): Promise<unknown[]> {
         try {
-            const rows = await this.connection.unsafe(source);
+            const rows = await this.connection.unsafe(source, [...parameters]);
             return jsonValue([...rows]) as unknown[];
         } catch (error) {
             await this.connection.unsafe("ROLLBACK").catch(() => undefined);

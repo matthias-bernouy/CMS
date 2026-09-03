@@ -120,6 +120,19 @@ export class ReleaseSandboxClient {
         );
     }
 
+    async authenticatedRequest(path: string, init: RequestInit = {}): Promise<Response> {
+        if (!this.cookie) {
+            throw new Error("Release sandbox client is not authenticated");
+        }
+        const url = new URL(path, this.baseUrl);
+        if (!path.startsWith("/") || url.origin !== new URL(this.baseUrl).origin) {
+            throw new Error("Release fixture CMS requests must stay on the local CMS origin");
+        }
+        const headers = new Headers(init.headers);
+        headers.set("cookie", this.cookie);
+        return await fetch(url, { ...init, headers });
+    }
+
     private async post(path: string, body: unknown, kind: string, version: string): Promise<void> {
         if (!this.cookie) {
             throw new Error("Release sandbox client is not authenticated");

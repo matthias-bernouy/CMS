@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { UpgradeFixtureScenarioV1 } from "@bernouy/cms-integration-verification/upgrade-fixtures/v1";
 import type { IntegrationMigrationPhase } from "@bernouy/cms-integrations";
 import { LocalRepositoryCatalog } from "../../../repository/catalog";
 import { LocalIntegrationRepository } from "../../../repository/local";
@@ -16,20 +17,18 @@ import {
 } from "../../../runtime/supabase-local";
 import { startLocalSupabase, stopLocalSupabase } from "../../../runtime/supabase";
 import type { LocalReleasePackage } from "../../types";
-import { adoptRequiredLegacyBaselines } from "../adoption";
-import { sandboxAnswers } from "../answers";
 import { ReleaseSandboxClient } from "../client";
-import { installRequiredDependencies } from "../dependencies";
 import { removeReleaseSandbox } from "../filesystem";
 import { allocateReleaseSandboxPorts } from "../ports";
 import { prepareSandboxSupabase } from "../supabase-config";
-import { verifyMigrationCrashRecovery } from "./resilience";
+import { executeInstalledReleaseScenario } from "./fixture/execution";
 
 export type ReleaseScenario = Readonly<{
     target: LocalReleasePackage;
     baseline?: LocalReleasePackage;
     packages: readonly LocalReleasePackage[];
     faultAfterPhase?: IntegrationMigrationPhase;
+    fixture?: UpgradeFixtureScenarioV1;
 }>;
 
 export async function runReleaseScenario(scenario: ReleaseScenario): Promise<void> {
@@ -82,39 +81,19 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
             await next.login();
             return next;
         };
-        let client = await startCmsClient(scenario.faultAfterPhase);
-        const installed = new Map<string, string>();
-        const initial = scenario.baseline ?? scenario.target;
-        await installRequiredDependencies(initial, scenario.packages, installed, client);
-        await client.install(
-            initial.package.envelope.kind,
-            initial.package.envelope.version,
-            sandboxAnswers(initial.definition),
-        );
-        installed.set(initial.package.envelope.kind, initial.package.envelope.version);
-        if (scenario.baseline) {
-            await installRequiredDependencies(scenario.target, scenario.packages, installed, client);
-            await adoptRequiredLegacyBaselines(scenario.baseline, scenario.target, client);
-            if (scenario.faultAfterPhase) {
-                await verifyMigrationCrashRecovery({
-                    client,
-                    kind: scenario.target.package.envelope.kind,
-                    sourceVersion: scenario.baseline.package.envelope.version,
-                    targetVersion: scenario.target.package.envelope.version,
-                    phase: scenario.faultAfterPhase,
-                    restart: async () => {
-                        if (cms) {
-                            await stopLocalCms(cms);
-                            cms = undefined;
-                        }
-                        client = await startCmsClient();
-                        return client;
-                    },
-                });
-            } else {
-                await client.upgrade(scenario.target.package.envelope.kind, scenario.target.package.envelope.version);
-            }
-        }
+        const client = await startCmsClient(scenario.faultAfterPhase);
+        await executeInstalledReleaseScenario({
+            scenario,
+            supabase,
+            client,
+            restart: async () => {
+                if (cms) {
+                    await stopLocalCms(cms);
+                    cms = undefined;
+                }
+                return await startCmsClient();
+            },
+        });
         await assertDatabaseReady(supabase.databaseUrl);
     } catch (error) {
         primaryError = error;
