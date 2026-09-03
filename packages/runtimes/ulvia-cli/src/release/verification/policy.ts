@@ -1,12 +1,15 @@
 import { lt } from "semver";
 import type { LocalCompatibilityResult } from "../compatibility";
 import type { LocalReleasePackage } from "../types";
+import { assertPublishedMigrationHistory } from "./publishedMigrations";
 
 export function assertSafeMigrationReleasePolicy(
     candidate: LocalReleasePackage,
     compatibility: LocalCompatibilityResult,
+    baselines: readonly LocalReleasePackage[] = [],
 ): void {
     assertStatefulChangesUseMigration(candidate, compatibility);
+    assertPublishedMigrationHistory(candidate, baselines);
     assertExpandContractSeparation(candidate);
 }
 
@@ -14,11 +17,7 @@ function assertStatefulChangesUseMigration(
     candidate: LocalReleasePackage,
     compatibility: LocalCompatibilityResult,
 ): void {
-    const stateful = compatibility.evidence.filter(
-        (entry) =>
-            (entry.surface === "schema" || entry.surface === "function") &&
-            (entry.classification === "breaking" || entry.classification === "unknown"),
-    );
+    const stateful = compatibility.evidence.filter(requiresStagedMigration);
     for (const finding of stateful) {
         const connector = (candidate.definition.connectors ?? []).find((entry) =>
             finding.path.startsWith(`connectors.${connectorIdentity(entry)}.`),
@@ -30,6 +29,20 @@ function assertStatefulChangesUseMigration(
             );
         }
     }
+}
+
+function requiresStagedMigration(entry: LocalCompatibilityResult["evidence"][number]): boolean {
+    if (entry.surface === "schema") {
+        return entry.classification !== "compatible";
+    }
+    if (entry.surface !== "function") {
+        return false;
+    }
+    return (
+        entry.code === "function-implementation-changed" ||
+        entry.classification === "breaking" ||
+        entry.classification === "unknown"
+    );
 }
 
 function assertExpandContractSeparation(candidate: LocalReleasePackage): void {

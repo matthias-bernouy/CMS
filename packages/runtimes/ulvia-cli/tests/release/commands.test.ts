@@ -89,4 +89,67 @@ describe("local integration release commands", () => {
 
         expect(remoteCalls).toBe(0);
     });
+
+    test("releases dependencies before lexically earlier dependents", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        const data = join(root, "data");
+        const dependent = await writeIntegrationSource(source, "1.0.0", "alpha");
+        await writeIntegrationSource(source, "1.0.0", "zulu");
+        await writeFile(
+            dependent,
+            JSON.stringify(
+                integrationDefinition("alpha", "1.0.0", {
+                    dependencies: [{ name: "provider", kind: "zulu" }],
+                }),
+            ),
+        );
+        const verified: string[] = [];
+
+        await runCli(["release", "--all"], {
+            environment: { ULVIA_DATA_DIR: data },
+            cwd: source,
+            repositoryFetch: emptyRemote,
+            releaseVerifier: {
+                verify: async ({ candidate, availablePackages }) => {
+                    verified.push(candidate.package.envelope.kind);
+                    if (candidate.package.envelope.kind === "alpha") {
+                        expect(availablePackages.map((entry) => entry.package.envelope.kind)).toContain("zulu");
+                    }
+                },
+            },
+            log: () => undefined,
+        });
+
+        expect(verified).toEqual(["zulu", "alpha"]);
+    });
+
+    test("rejects local dependency cycles before storing any release", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        const data = join(root, "data");
+        const alpha = await writeIntegrationSource(source, "1.0.0", "alpha");
+        const beta = await writeIntegrationSource(source, "1.0.0", "beta");
+        await writeFile(
+            alpha,
+            JSON.stringify(integrationDefinition("alpha", "1.0.0", { dependencies: [{ name: "beta", kind: "beta" }] })),
+        );
+        await writeFile(
+            beta,
+            JSON.stringify(
+                integrationDefinition("beta", "1.0.0", { dependencies: [{ name: "alpha", kind: "alpha" }] }),
+            ),
+        );
+
+        await expect(
+            runCli(["release", "--all"], {
+                environment: { ULVIA_DATA_DIR: data },
+                cwd: source,
+                repositoryFetch: emptyRemote,
+                releaseVerifier: { verify: async () => undefined },
+                log: () => undefined,
+            }),
+        ).rejects.toThrow(/dependency cycle includes alpha → beta → alpha/u);
+        expect(await Bun.file(join(data, "repository", "catalog.json")).exists()).toBeFalse();
+    });
 });

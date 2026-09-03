@@ -106,7 +106,7 @@ export async function auditPreparedLocalRelease(
     const candidateWithEvidence = attachReviewedSchemaEvidence(candidate, candidate.reviewedSchemaEvidence);
     const compatibility = evaluateLocalCompatibility(candidateWithEvidence, baselines);
     assertLocalCompatibility(compatibility);
-    assertSafeMigrationReleasePolicy(candidateWithEvidence, compatibility);
+    assertSafeMigrationReleasePolicy(candidateWithEvidence, compatibility, baselines);
     dependencies.log(
         `✓ compatibility: ${compatibility.releaseLevel} release, requires ${compatibility.requiredReleaseLevel}`,
     );

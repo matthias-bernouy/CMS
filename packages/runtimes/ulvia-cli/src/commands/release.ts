@@ -3,6 +3,7 @@ import type { LocalIntegrationRepository } from "../repository/local";
 import type { RemoteIntegrationRepository } from "../repository/remote";
 import { auditPreparedLocalRelease, prepareLocalRelease } from "../release/audit";
 import { listLocalReleaseKinds } from "../release/source";
+import { orderLocalReleaseKinds } from "../release/source/dependencyOrder";
 import type { LocalReleaseVerifier } from "../release/types";
 import { parseSourceCommandFlags } from "./source-flags";
 
@@ -15,7 +16,8 @@ export async function releaseCommand(
     log: (message: string) => void,
 ): Promise<void> {
     const flags = parseSourceCommandFlags("release", args, cwd, { allowAll: true });
-    const kinds = flags.all ? await listLocalReleaseKinds(flags.root) : [flags.kind!];
+    const discovered = flags.all ? await listLocalReleaseKinds(flags.root) : [flags.kind!];
+    const kinds = flags.all ? await orderLocalReleaseKinds(flags.root, discovered) : discovered;
     const failures: { kind: string; error: unknown }[] = [];
     for (const kind of kinds) {
         try {
