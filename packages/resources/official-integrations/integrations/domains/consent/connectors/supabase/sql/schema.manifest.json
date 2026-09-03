@@ -10,6 +10,7 @@
         { "file": "commands/context/materialize.sql" },
         { "file": "commands/prune-intents.sql" },
         { "file": "commands/context/sync-context.sql" },
+        { "file": "commands/context/management.sql" },
         { "file": "commands/context/refresh-context.sql" },
         { "file": "commands/stage-acceptance.sql" },
         { "file": "commands/commit-acceptance.sql" },

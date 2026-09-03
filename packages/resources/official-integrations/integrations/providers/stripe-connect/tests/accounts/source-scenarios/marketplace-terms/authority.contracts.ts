@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
-import { jsonBody, okJson } from "../../runtime/http";
-import { sourceJsonWithUser, sourceRequestWithUser } from "../../runtime/source-requests";
-import type { JsonRecord } from "../../runtime/types";
-import type { CreateAccountSourceScenarioHarness } from "./harness";
+import { jsonBody, okJson } from "../../../runtime/http";
+import { sourceJsonWithUser, sourceRequestWithUser } from "../../../runtime/source-requests";
+import type { JsonRecord } from "../../../runtime/types";
+import type { CreateAccountSourceScenarioHarness } from "../harness";
 
 const staleVersion = "legacy-client-seller-terms";
 const staleHash = "a".repeat(64);

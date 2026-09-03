@@ -1,4 +1,4 @@
-import type { PostgrestRequestRecord } from "../../dashboard/dashboard-contract-harness";
+import type { PostgrestRequestRecord } from "../../integration-contracts/dashboard/dashboard-contract-harness";
 import type { ProtectedRefundSearchScenario } from "../../provider-boundary/harness";
 import type { ProtectedPaymentProjectionScenario } from "../../provider-boundary/protected-payment/projection-race-harness";
 import type { JsonRecord, StripeRequestRecord } from "../types";

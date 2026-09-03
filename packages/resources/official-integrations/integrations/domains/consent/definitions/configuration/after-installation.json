@@ -1,15 +1,13 @@
 [
     {
-        "id": "sync-consent-context",
+        "id": "bootstrap-consent-context",
         "steps": [
             {
-                "id": "configuration",
+                "id": "bootstrap",
                 "call": {
                     "source": "{{answers.id}}",
-                    "endpoint": "syncContext",
-                    "body": {
-                        "configuration": "{\"enabled\":{{answers.enabled}},\"contextKey\":{{json answers.contextKey}},\"documents\":{{json resolved.documents}}}"
-                    }
+                    "endpoint": "bootstrapContext",
+                    "body": { "contextKey": "{{answers.contextKey}}" }
                 }
             }
         ]

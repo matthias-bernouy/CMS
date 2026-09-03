@@ -1,28 +1,28 @@
 {
-    "mark": "Versioned evidence",
+    "mark": "Runtime legal policies",
     "instructions": [
         [
-            "One context per installation",
-            "This first version configures one reusable consent context and the atomic CMS signup adapter."
+            "Safe installation",
+            "Installation creates the signup context only when it does not exist. Reinstalling never overwrites runtime policy."
         ],
         [
-            "Published pages",
-            "Every enabled document must reference a published CMS page. Its exact content is preserved with the acceptance."
+            "Consent policies dashboard",
+            "Create, disable and publish page-backed legal documents after installation from the CMS dashboard."
         ],
         [
-            "Signup defaults",
-            "The V1 enforcement adapter targets local CMS account registration."
+            "Immutable publication",
+            "Every active document is fetched, verified and stored as an immutable version before the policy changes."
         ]
     ],
     "scopes": [
         "Public requirement lookup",
         "System-only validation and evidence writes",
-        "Administrator audit read"
+        "Administrator policy management and evidence audit"
     ],
     "checks": [
         "The target endpoint emits a private cmsUserId response field",
         "The consent field is placed inside the target form",
-        "Every enabled legal page is published"
+        "Every enabled legal page is published before activating its policy"
     ],
     "resources": [
         ["source", "Consent API"],

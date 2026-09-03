@@ -1,3 +1,9 @@
+Ulvia 2.1.0
+
+- Added an administrator dashboard for publishing seller marketplace terms at runtime.
+- Added optimistic version checks so concurrent publications cannot silently overwrite one another.
+- Kept existing seller acceptances attached to their immutable terms version.
+
 Ulvia 2.0.0
 
 - Migrated authoring to the direct current-source layout.

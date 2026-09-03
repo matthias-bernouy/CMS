@@ -1,4 +1,4 @@
-import type { DashboardTable } from "../../../dashboard/dashboard-contract-harness";
+import type { DashboardTable } from "../../../integration-contracts/dashboard/dashboard-contract-harness";
 import { financialTermsHash } from "../../constants";
 import { same } from "../../records";
 import type { JsonRecord } from "../../types";

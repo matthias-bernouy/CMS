@@ -31,6 +31,19 @@
                     "STRIPE_CONNECT_DEFAULT_CURRENCY": "{{answers.defaultCurrency}}",
                     "STRIPE_CONNECT_SELLER_ACTIVITY_DESCRIPTION": "{{answers.sellerActivityDescription}}"
                 }
+            },
+      {
+        "name": "cms-stripe-connect-management",
+        "directory": "functions/cms-stripe-connect-management",
+        "configPath": "management.config.toml",
+                "secrets": {
+                    "CMS_STRIPE_CONNECT_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/management-http.json"
+                    }
+                }
             }
         ]
     }

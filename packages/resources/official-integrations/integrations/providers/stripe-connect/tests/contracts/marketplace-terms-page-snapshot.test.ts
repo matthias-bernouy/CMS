@@ -8,6 +8,7 @@ import {
     type PublishedPage,
 } from "../../connectors/supabase/functions/cms-stripe-connect/routes/accounts/marketplace-terms/canonical-page";
 import { materializePublishedMarketplaceTerms } from "../../connectors/supabase/functions/cms-stripe-connect/routes/accounts/marketplace-terms/snapshot";
+import { fetchPublishedMarketplaceTermsPage } from "../../connectors/supabase/functions/cms-stripe-connect-management/core/snapshot-fetch";
 import {
     effectiveMarketplaceTermsExpectation,
     type MarketplaceTermsConfiguration,
@@ -79,7 +80,37 @@ describe("Stripe Connect marketplace terms published-page evidence", () => {
         ).rejects.toThrow("MARKETPLACE_TERMS_DOCUMENT_NOT_AVAILABLE");
     });
 
-    test("keeps legacy installations while adding page-link sync and immutable snapshot proof", async () => {
+    test("downloads and verifies runtime CMS snapshots without forwarding credentials", async () => {
+        const page = legalPage("Runtime publication");
+        const contentHash = await publishedPageContentHash(page);
+        const originalFetch = globalThis.fetch;
+        let authorization: string | null = "not-called";
+        globalThis.fetch = async (_input, init) => {
+            authorization = new Headers(init?.headers).get("authorization");
+            return Response.json({ schema: "cms-published-page-snapshot-v1", page, contentHash });
+        };
+        try {
+            expect(
+                await fetchPublishedMarketplaceTermsPage(
+                    "https://delivery.example/.cms/content/published-page-snapshot?id=seller-terms-page",
+                ),
+            ).toEqual({
+                ...page,
+                publishedSnapshotUrl:
+                    "https://delivery.example/.cms/content/published-page-snapshot?id=seller-terms-page",
+            });
+            expect(authorization).toBeNull();
+            await expect(
+                fetchPublishedMarketplaceTermsPage(
+                    "https://169.254.169.254/.cms/content/published-page-snapshot?id=seller-terms-page",
+                ),
+            ).rejects.toThrow("MARKETPLACE_TERMS_DOCUMENT_NOT_AVAILABLE");
+        } finally {
+            globalThis.fetch = originalFetch;
+        }
+    });
+
+    test("keeps immutable seller evidence while moving publication out of installation answers", async () => {
         const inputs = await artifact("extensions/commerce-stripe-payments/definitions/configuration/inputs.json");
         const afterInstallation = await artifact(
             "extensions/commerce-stripe-payments/definitions/configuration/after-installation.json",
@@ -99,16 +130,19 @@ describe("Stripe Connect marketplace terms published-page evidence", () => {
         const enrollment = await artifact(
             "providers/stripe-connect/connectors/supabase/functions/cms-stripe-connect/routes/accounts/enrollment.ts",
         );
-
-        expect(inputs).toContain('"name": "sellerTermsVersion"');
-        expect(inputs).toContain('"name": "sellerTermsHash"');
-        expect(inputs).toContain('"name": "sellerTermsDocuments"');
-        expect(inputs).toContain('"type": "page-link"');
-        expect(inputs.match(/"name": "sellerTerms(?:Version|Hash)"[\s\S]*?"required": true/g)).toHaveLength(2);
-        expect(afterInstallation.indexOf('"id": "termsConfiguration"')).toBeLessThan(
-            afterInstallation.indexOf('"id": "providerSnapshot"'),
+        const providerDefinition = await artifact("providers/stripe-connect/definitions/root.json");
+        const providerEndpoints = await artifact(
+            "providers/stripe-connect/definitions/artifacts/sources/primary/endpoints.json",
         );
-        expect(afterInstallation).toContain('"endpoint": "syncMarketplaceTermsConfiguration"');
+
+        expect(inputs).not.toContain("sellerTermsVersion");
+        expect(inputs).not.toContain("sellerTermsHash");
+        expect(inputs).not.toContain("sellerTermsDocuments");
+        expect(afterInstallation).not.toContain("termsConfiguration");
+        expect(afterInstallation).not.toContain("syncMarketplaceTermsConfiguration");
+        expect(afterInstallation).toContain('"id": "providerSnapshot"');
+        expect(providerDefinition).toContain('"artifacts/dashboards/marketplace-terms.json"');
+        expect(providerEndpoints).toContain('"endpoints/admin/configuration/marketplace-terms.json"');
         expect(schema).toContain("page_snapshot jsonb not null");
         expect(schema).toContain("terms_version_id uuid");
         expect(schema).toContain("marketplace_terms_acceptances_version_evidence_fkey");

@@ -58,6 +58,7 @@
         { "file": "commands/dashboard/read-model-access.sql" },
         { "file": "commands/marketplace-terms/record-acceptance.sql" },
         { "file": "commands/marketplace-terms/sync-configuration.sql" },
+        { "file": "commands/marketplace-terms/publish-configuration.sql" },
         { "file": "commands/marketplace-terms/get-current-configuration.sql" },
         { "file": "commands/marketplace-terms/record-current-acceptance.sql" },
         { "file": "commands/marketplace-terms/immutable-acceptance-trigger.sql" },

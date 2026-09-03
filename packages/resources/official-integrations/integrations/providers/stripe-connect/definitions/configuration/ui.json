@@ -16,7 +16,11 @@
             "The installation creates and configures the platform snapshot webhook, the connected-account snapshot webhook, and the Accounts v2 thin-event destination. Each signing secret is stored automatically."
         ],
         [
-            "Install the composed dashboard",
+            "Publish seller terms",
+            "Use the Seller terms dashboard to publish a verified CMS page before enrolling sellers."
+        ],
+        [
+            "Install the composed operations dashboard",
             "Install Commerce Stripe Payments to obtain the Payments & Disputes operations dashboard."
         ]
     ],
@@ -46,7 +50,7 @@
         "Provision Stripe event destinations and store signing secrets",
         "Deploy Supabase connector",
         "Install protected provider source",
-        "Install seller onboarding bloc",
-        "Refresh Sources"
+        "Install seller onboarding bloc and Seller terms dashboard",
+        "Refresh Sources and Dashboards"
     ]
 }

@@ -24,7 +24,7 @@ describe("official schema calibration subjects", () => {
 
     test("keeps newer SQL packages outside the closed legacy calibration inventory", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-        const consent = await repository.get("consent", "2.0.0");
+        const consent = await repository.get("consent", "3.0.0");
         const subjects = await loadOfficialSchemaCalibrationSubjects(OFFICIAL_INTEGRATIONS_ROOT);
 
         expect(

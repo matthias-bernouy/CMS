@@ -3,18 +3,6 @@
         "id": "activate-protected-sale-capability",
         "steps": [
             {
-                "id": "termsConfiguration",
-                "call": {
-                    "source": "{{dependencies.stripe.sourceId}}",
-                    "endpoint": "syncMarketplaceTermsConfiguration",
-                    "body": {
-                        "documents": "{{json resolved.sellerTermsDocuments}}",
-                        "legacyVersion": "{{json answers.sellerTermsVersion}}",
-                        "legacyHash": "{{json answers.sellerTermsHash}}"
-                    }
-                }
-            },
-            {
                 "id": "providerSnapshot",
                 "call": {
                     "source": "{{dependencies.stripe.sourceId}}",

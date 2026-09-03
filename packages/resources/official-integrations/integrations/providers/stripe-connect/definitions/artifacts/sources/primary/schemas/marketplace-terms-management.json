@@ -1,0 +1,21 @@
+{
+    "type": "object",
+    "properties": {
+        "status": { "type": "string" },
+        "revision": { "type": "string" },
+        "documentKey": { "type": "string" },
+        "label": { "type": "string" },
+        "consentText": { "type": "string" },
+        "publishedSnapshotUrl": { "type": "string" },
+        "updatedAt": { "type": "string", "nullable": true }
+    },
+    "required": [
+        "status",
+        "revision",
+        "documentKey",
+        "label",
+        "consentText",
+        "publishedSnapshotUrl",
+        "updatedAt"
+    ]
+}

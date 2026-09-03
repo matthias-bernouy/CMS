@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
-import { financialTermsHash } from "../runtime/constants";
-import type { StripeConnectHarness } from "../runtime/harness";
-import { okJson } from "../runtime/http";
-import { sourceJson, sourceRequestWithRole } from "../runtime/source-requests";
+import { financialTermsHash } from "../../runtime/constants";
+import type { StripeConnectHarness } from "../../runtime/harness";
+import { okJson } from "../../runtime/http";
+import { sourceJson, sourceRequestWithRole } from "../../runtime/source-requests";
 
 type CreateHarness = () => Promise<StripeConnectHarness>;
 

@@ -28,11 +28,7 @@
         "call": {
             "source": "{{dependencies.stripe.sourceId}}",
             "endpoint": "checkSellerHeldPaymentEligibility",
-            "body": {
-                "sellerUserId": "$steps.sellerContext.sellerCmsUserId",
-                "marketplaceTermsVersion": "{{answers.sellerTermsVersion}}",
-                "marketplaceTermsHash": "{{answers.sellerTermsHash}}"
-      }
+      "body": { "sellerUserId": "$steps.sellerContext.sellerCmsUserId" }
     }
   },
   {

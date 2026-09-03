@@ -9,7 +9,7 @@
         ],
         [
             "Enroll sellers without payout coupling",
-            "A minimal Stripe account with accepted terms can accept held marketplace payments. Bank accounts, Transfers, payouts, and Commerce review remain independent states."
+            "Publish seller terms from the Stripe Connect dashboard. A minimal Stripe account with the current accepted terms can accept held marketplace payments."
         ],
         [
             "Choose the seller bank payout schedule",
@@ -26,6 +26,7 @@
         "CmsCore resolves the opaque seller identity before calling Stripe.",
         "Release and refund operations require immutable Commerce authorization ids.",
         "Seller bank payouts default to daily and never authorize the Commerce Transfer.",
+        "Reloading this linking integration never republishes seller terms.",
         "Marketplace claims and Stripe disputes remain separate."
     ],
     "resources": [
@@ -39,7 +40,7 @@
         ],
         [
             "Dashboard",
-            "Payments, marketplace claims, refunds, Stripe disputes, and exceptions"
+            "Payments, marketplace claims, refunds, Stripe disputes, and exceptions; seller terms live in Stripe Connect"
         ]
     ],
     "sync": [

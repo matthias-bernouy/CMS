@@ -1,0 +1,26 @@
+{
+    "endpoints": [
+        {
+            "route": "/marketplace-terms",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+            "responses": [{ "status": "200" }, { "status": "default" }]
+        },
+        {
+            "route": "/marketplace-terms/publish",
+            "method": "POST",
+            "requiredInputs": ["expectedVersion", "documentKey", "label", "consentText", "publishedSnapshotUrl"],
+            "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
+            "responses": [{ "status": "200" }, { "status": "default" }]
+        },
+        {
+            "route": "/seller-capabilities",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": ["authorization"],
+            "responses": [{ "status": "200" }, { "status": "default" }]
+        }
+    ],
+    "requiredSecrets": ["CMS_STRIPE_CONNECT_API_KEY"]
+}

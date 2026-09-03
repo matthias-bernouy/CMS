@@ -1,7 +1,7 @@
 import { afterAll, describe } from "bun:test";
 import { registerAccountSourceScenarios } from "../accounts/source-scenarios/register";
 import { registerSellerPayoutSourceScenarios } from "../accounts/source-scenarios/payout-schedule/register";
-import { registerFinancialOperationRedactionScenario } from "../dashboard/financial-operation-redaction.contracts";
+import { registerFinancialOperationRedactionScenario } from "../integration-contracts/dashboard/financial-operation-redaction.contracts";
 import { registerPaymentCancellationSourceScenarios } from "../payments/cancellation/source-scenarios";
 import {
     registerProtectedPaymentEligibilitySourceScenarios,

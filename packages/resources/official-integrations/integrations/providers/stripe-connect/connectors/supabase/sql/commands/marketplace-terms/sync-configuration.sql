@@ -30,6 +30,9 @@ begin
     if length(v_actor) < 1 or length(v_actor) > 200 then
         raise exception 'validation: marketplace terms actor is invalid';
     end if;
+    perform pg_catalog.pg_advisory_xact_lock(
+        pg_catalog.hashtextextended('stripe-connect:marketplace-terms', 0)
+    );
 
     if p_document is not null then
         if jsonb_typeof(p_document) <> 'object' then

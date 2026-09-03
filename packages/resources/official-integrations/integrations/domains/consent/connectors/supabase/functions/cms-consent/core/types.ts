@@ -16,3 +16,12 @@ export type VerifiedConsentDocument = {
     page: PublishedPage;
     contentHash: string;
 };
+
+export type ConsentDocumentReference = {
+    key: string;
+    enabled: boolean;
+    label: string;
+    consentText: string;
+    pageId: string;
+    publishedSnapshotUrl: string;
+};

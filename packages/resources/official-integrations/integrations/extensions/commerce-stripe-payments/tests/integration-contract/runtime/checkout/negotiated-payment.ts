@@ -1,7 +1,7 @@
 import { expect } from "bun:test";
 import type { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { executeFunction } from "@bernouy/cms-functions";
-import { type IntegrationContractContext, SELLER_TERMS_HASH, SELLER_TERMS_VERSION } from "../../harness";
+import type { IntegrationContractContext } from "../../harness";
 
 const agreementId = "11111111-1111-4111-8111-111111111111";
 const listingAmount = 11_000;
@@ -76,11 +76,7 @@ export async function assertNegotiatedPaymentCreation(
                     return sellerContext();
                 }
                 if (request.url.startsWith("https://stripe.test/seller-eligibility")) {
-                    expect(await request.json()).toEqual({
-                        sellerUserId: "seller-subject",
-                        marketplaceTermsVersion: SELLER_TERMS_VERSION,
-                        marketplaceTermsHash: SELLER_TERMS_HASH,
-                    });
+                    expect(await request.json()).toEqual({ sellerUserId: "seller-subject" });
                     return Response.json({ eligible: true, reasonCode: "eligible" });
                 }
                 if (request.url.startsWith("https://commerce.test/seller/sale-capability")) {

@@ -26,6 +26,8 @@ export async function assertSellerTermsRenewal(
                 amount: 12000,
                 expectedVersion: 3,
                 sellerTermsAccepted: true,
+                sellerTermsVersion: SELLER_TERMS_VERSION,
+                sellerTermsHash: SELLER_TERMS_HASH,
             }),
         }),
         {
@@ -58,7 +60,7 @@ export async function assertSellerTermsRenewal(
     expect(renewedTermsPrice.status).toBe(200);
     expect(renewedTermsBody).toEqual({
         marketplaceTermsAccepted: true,
-        marketplaceTermsVersion: SELLER_TERMS_VERSION,
-        marketplaceTermsHash: SELLER_TERMS_HASH,
+        expectedMarketplaceTermsVersion: SELLER_TERMS_VERSION,
+        expectedMarketplaceTermsHash: SELLER_TERMS_HASH,
     });
 }

@@ -16,6 +16,7 @@ import { loadEdgeHandler, setActiveEnvironment, setActiveFetch } from "./environ
 import { requestFromFetchInput } from "./http";
 import { StripeConnectMock } from "./mock/stripe-connect";
 import { stripeWebhookProvisioner } from "../../../../../tests/helpers/stripeWebhookProvisioner";
+import { handleMarketplaceTermsManagementRequest } from "../../connectors/supabase/functions/cms-stripe-connect-management/handler";
 
 export async function createStripeConnectHarness() {
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("stripe-connect");
@@ -43,6 +44,7 @@ export async function createStripeConnectHarness() {
                 resources: [
                     { type: "schema", id: "sql/schema.manifest.json", action: "applied" },
                     { type: "function", id: "cms-stripe-connect", action: "deployed" },
+                    { type: "function", id: "cms-stripe-connect-management", action: "deployed" },
                 ],
             };
         },
@@ -104,10 +106,13 @@ export async function createStripeConnectHarness() {
         async sourceFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
             try {
                 const request = requestFromFetchInput(input, init);
-                if (!request.url.startsWith(`${functionsBaseUrl}/cms-stripe-connect/`)) {
-                    throw new Error(`unexpected source proxy fetch: ${request.method} ${request.url}`);
+                if (request.url.startsWith(`${functionsBaseUrl}/cms-stripe-connect-management/`)) {
+                    return await handleMarketplaceTermsManagementRequest(request);
                 }
-                return await handler(request);
+                if (request.url.startsWith(`${functionsBaseUrl}/cms-stripe-connect/`)) {
+                    return await handler(request);
+                }
+                throw new Error(`unexpected source proxy fetch: ${request.method} ${request.url}`);
             } catch (error) {
                 return new Response(error instanceof Error ? (error.stack ?? error.message) : String(error), {
                     status: 599,

@@ -71,7 +71,7 @@
         "endpointId": "listSellerHeldPaymentCapabilities",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/payments/seller-capabilities",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect-management/seller-capabilities",
         "params": [],
         "headers": [
             {

@@ -33,9 +33,6 @@ import { stripeWebhookProvisioner } from "../../../../tests/helpers/stripeWebhoo
 
 const INTEGRATION_KINDS = ["basic-blocs", "commerce", "stripe-connect", "commerce-stripe-payments"] as const;
 
-const SELLER_TERMS_VERSION = "seller-terms-2026-07-13";
-const SELLER_TERMS_HASH = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-
 describe("Commerce protected Stripe combined installation", () => {
     test("installs the real dependency graph with compatible contracts and least-privilege access", async () => {
         const definitions = await loadDefinitions();
@@ -106,11 +103,7 @@ describe("Commerce protected Stripe combined installation", () => {
         );
         const linkingResult = await install(
             "commerce-stripe-payments",
-            {
-                sellerTermsVersion: SELLER_TERMS_VERSION,
-                sellerTermsHash: SELLER_TERMS_HASH,
-                sellerPayoutSchedule: "daily",
-            },
+            { sellerPayoutSchedule: "daily" },
             definitions,
             deps,
             installations,
@@ -134,7 +127,7 @@ describe("Commerce protected Stripe combined installation", () => {
                 integrationKind: "stripe-connect",
                 dataApiSchemas: ["stripe_connect"],
                 schemas: ["sql/schema.manifest.json"],
-                functions: ["cms-stripe-connect"],
+                functions: ["cms-stripe-connect", "cms-stripe-connect-management"],
             },
         ]);
         expect(linkingResult.installation.status).toBe("success");
@@ -294,6 +287,7 @@ describe("Commerce protected Stripe combined installation", () => {
             "commerce-stripe-payments-operations",
             "commerce-taxonomy",
             "commerce-workflow",
+            "stripe-connect-marketplace-terms",
         ]);
         for (const dashboard of installedDashboards) {
             const source = await sources.getSource(makeSourceUrn(dashboard.source));
@@ -301,8 +295,7 @@ describe("Commerce protected Stripe combined installation", () => {
             expect(validateDashboard(dashboard, { source })).toEqual([]);
             await assertDashboardEndpointRefs(dashboard, sources);
         }
-        expect(await dashboards.getDashboard("stripe-connect-dashboard")).toBeNull();
-        expect(await dashboards.getDashboardsForSource("stripe-connect")).toEqual([]);
+        expect(await dashboards.getDashboard("stripe-connect-marketplace-terms")).not.toBeNull();
 
         const operationsDashboard = await dashboards.getDashboard("commerce-stripe-payments-operations");
         if (!operationsDashboard) {
@@ -363,14 +356,7 @@ describe("Commerce protected Stripe combined installation", () => {
 });
 
 function afterInstallationResponse(request: Request): Response {
-    if (request.url.includes("/cms-stripe-connect/configuration/marketplace-terms")) {
-        return Response.json({
-            mode: "legacy",
-            version: SELLER_TERMS_VERSION,
-            hash: SELLER_TERMS_HASH,
-        });
-    }
-    if (request.url.includes("/cms-stripe-connect/payments/seller-capabilities")) {
+    if (request.url.includes("/cms-stripe-connect-management/seller-capabilities")) {
         return Response.json({
             readySellerCmsUserIds: [],
             snapshot: "seller-capabilities:test-empty",

@@ -1,3 +1,10 @@
+Ulvia 3.0.0
+
+- Moved consent documents from installation answers to runtime policy management.
+- Added an administrator dashboard for atomic, page-backed policy publication.
+- Made installation bootstrap non-destructive so reloads preserve live policy.
+- Added optimistic revision checks while retaining immutable historical evidence.
+
 Ulvia 2.0.0
 
 - Migrated authoring to the direct current-source layout.

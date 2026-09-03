@@ -17,8 +17,8 @@ export async function assertSellerEnrollment(
     };
     const assertCurrentTermsQuery = (request: Request) => {
         const url = new URL(request.url);
-        expect(url.searchParams.get("marketplaceTermsVersion")).toBe(SELLER_TERMS_VERSION);
-        expect(url.searchParams.get("marketplaceTermsHash")).toBe(SELLER_TERMS_HASH);
+        expect(url.searchParams.get("marketplaceTermsVersion")).toBeNull();
+        expect(url.searchParams.get("marketplaceTermsHash")).toBeNull();
     };
     const enrollmentResponse = await executeFunction(
         enrollmentFn,

@@ -1,6 +1,6 @@
-import { registerOperationAndExceptionDashboardContracts } from "../../dashboard/operations-exceptions";
-import { registerPaymentDashboardContracts } from "../../dashboard/payments.contracts";
-import { registerRefundAndDisputeDashboardContracts } from "../../dashboard/refunds-disputes";
+import { registerOperationAndExceptionDashboardContracts } from "../../integration-contracts/dashboard/operations-exceptions";
+import { registerPaymentDashboardContracts } from "../../integration-contracts/dashboard/payments.contracts";
+import { registerRefundAndDisputeDashboardContracts } from "../../integration-contracts/dashboard/refunds-disputes";
 import type { BoundaryHarnesses } from "./harnesses";
 
 export function registerDashboardBoundaryContracts(harnesses: BoundaryHarnesses): void {

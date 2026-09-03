@@ -2,7 +2,7 @@ import { requireCmsRequest } from "./core/auth.ts";
 import { handleError, json, withMethod } from "./core/http.ts";
 import { stageAcceptance, commitAcceptance } from "./routes/acceptances.ts";
 import { listAcceptances } from "./routes/audit.ts";
-import { syncContext } from "./routes/configuration.ts";
+import { bootstrapContext, getContext, listContexts, publishContext, syncContext } from "./routes/configuration.ts";
 import { getRequirements } from "./routes/requirements.ts";
 
 export async function handleConsentRequest(request: Request): Promise<Response> {
@@ -17,6 +17,18 @@ export async function handleConsentRequest(request: Request): Promise<Response> 
         }
         if (route === "/context/sync") {
             return await withMethod(request, "POST", () => syncContext(request));
+        }
+        if (route === "/context/bootstrap") {
+            return await withMethod(request, "POST", () => bootstrapContext(request));
+        }
+        if (route === "/admin/contexts") {
+            return await withMethod(request, "GET", () => listContexts());
+        }
+        if (route === "/admin/context") {
+            return await withMethod(request, "GET", () => getContext(request));
+        }
+        if (route === "/admin/context/publish") {
+            return await withMethod(request, "POST", () => publishContext(request));
         }
         if (route === "/acceptances/stage") {
             return await withMethod(request, "POST", () => stageAcceptance(request));

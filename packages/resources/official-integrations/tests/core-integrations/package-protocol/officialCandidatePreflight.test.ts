@@ -13,9 +13,9 @@ const EXPECTED_POST_BOOTSTRAP_RELEASES = [
     "commerce-mondial-relay-delivery@2.0.0",
     "commerce-mondial-relay-fulfillment@2.0.0",
     "commerce-negotiation@2.0.0",
-    "commerce-stripe-payments@2.0.0",
+    "commerce-stripe-payments@3.0.0",
     "consent@1.0.0",
-    "consent@2.0.0",
+    "consent@3.0.0",
     "documentation-blocs@1.0.0",
     "documentation-blocs@2.0.0",
     "emailer@2.0.0",
@@ -29,7 +29,7 @@ const EXPECTED_POST_BOOTSTRAP_RELEASES = [
     "restaurant@1.0.0",
     "restaurant@2.0.0",
     "sales-configurator@2.0.0",
-    "stripe-connect@2.0.0",
+    "stripe-connect@2.1.0",
     "user-account@2.0.0",
     "workspace-blocs@1.0.0",
     "workspace-blocs@2.0.0",
@@ -39,7 +39,7 @@ const DEDICATED_RELEASE_PREFLIGHTS = new Set([
     "commerce-negotiation@2.0.0",
     "emailer@2.0.0",
     "mondial-relay@2.0.0",
-    "stripe-connect@2.0.0",
+    "stripe-connect@2.1.0",
 ]);
 const PREFLIGHT_TEST_TIMEOUT = 15_000;
 

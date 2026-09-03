@@ -28,6 +28,8 @@ export async function assertFirstSellerPrice(
                 expectedVersion: 3,
                 accountToken: "accttok_first",
                 sellerTermsAccepted: true,
+                sellerTermsVersion: SELLER_TERMS_VERSION,
+                sellerTermsHash: SELLER_TERMS_HASH,
             }),
         }),
         {
@@ -71,8 +73,8 @@ export async function assertFirstSellerPrice(
     expect(firstEnrollmentBody).toEqual({
         accountToken: "accttok_first",
         marketplaceTermsAccepted: true,
-        marketplaceTermsVersion: SELLER_TERMS_VERSION,
-        marketplaceTermsHash: SELLER_TERMS_HASH,
+        expectedMarketplaceTermsVersion: SELLER_TERMS_VERSION,
+        expectedMarketplaceTermsHash: SELLER_TERMS_HASH,
     });
     expect(firstPriceBody).toEqual({ amount: 12000, expectedVersion: 3 });
 }

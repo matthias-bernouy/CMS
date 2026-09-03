@@ -1,0 +1,18 @@
+[
+    {
+        "endpointId": "getConsentContext",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/admin/context",
+        "meta": {
+            "name": "Get consent context",
+            "description": "Read one runtime consent policy for administration."
+        },
+        "params": [{ "name": "context", "in": "query", "type": "string" }],
+        "headers": { "$include": "../../shared/service-header.json" },
+        "output": [
+            { "status": "200", "body": { "$include": "../../schemas/context.json" } },
+            { "status": "default", "body": { "$include": "../../shared/error.json" } }
+        ]
+    }
+]

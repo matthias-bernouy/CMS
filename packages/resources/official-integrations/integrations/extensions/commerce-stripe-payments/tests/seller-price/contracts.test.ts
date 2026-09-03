@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { connectStatus, offerResult, sellerCmsUserId, sellerTermsHash, sellerTermsVersion } from "./fixtures";
+import { connectStatus, offerResult, sellerCmsUserId } from "./fixtures";
 import { executeSellerPrice, loadSellerPriceFunction, sellerPriceRequest } from "./harness";
 import { sellerPriceResponder } from "./responders";
 
@@ -16,15 +16,10 @@ describe("Commerce Stripe seller price contracts", () => {
             ["POST", "/seller/sale-capability"],
             ["POST", "/offer/price"],
         ]);
-        expect(Object.fromEntries(calls[1]!.url.searchParams)).toEqual({
-            marketplaceTermsVersion: sellerTermsVersion,
-            marketplaceTermsHash: sellerTermsHash,
-        });
+        expect(Object.fromEntries(calls[1]!.url.searchParams)).toEqual({});
         expect(calls[2]?.body).toEqual({
             accountToken: "accttok_first",
             marketplaceTermsAccepted: true,
-            marketplaceTermsVersion: sellerTermsVersion,
-            marketplaceTermsHash: sellerTermsHash,
         });
         expect(calls[3]?.body).toEqual({
             sellerCmsUserId,
@@ -91,10 +86,7 @@ describe("Commerce Stripe seller price contracts", () => {
 
         expect(alreadyEnrolled.response.status).toBe(200);
         expect(await alreadyEnrolled.response.json()).toEqual(offerResult);
-        expect(alreadyEnrolled.calls[2]?.body).toEqual({
-            marketplaceTermsVersion: sellerTermsVersion,
-            marketplaceTermsHash: sellerTermsHash,
-        });
+        expect(alreadyEnrolled.calls[2]?.body).toEqual({});
     });
 
     test("forwards the exact seller-visible terms identity for provider compare-and-set acceptance", async () => {
@@ -116,8 +108,6 @@ describe("Commerce Stripe seller price contracts", () => {
         expect(result.calls[2]?.body).toEqual({
             accountToken: "accttok_first",
             marketplaceTermsAccepted: true,
-            marketplaceTermsVersion: sellerTermsVersion,
-            marketplaceTermsHash: sellerTermsHash,
             expectedMarketplaceTermsVersion: publishedVersion,
             expectedMarketplaceTermsHash: publishedHash,
         });

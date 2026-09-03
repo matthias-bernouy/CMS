@@ -1,12 +1,7 @@
 import { expect } from "bun:test";
 import type { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { executeFunction } from "@bernouy/cms-functions";
-import {
-    type IntegrationContractContext,
-    resolveCmsApiKey,
-    SELLER_TERMS_HASH,
-    SELLER_TERMS_VERSION,
-} from "../../harness";
+import { type IntegrationContractContext, resolveCmsApiKey } from "../../harness";
 import { connectStatus } from "../../sources/index";
 import type { SellerEnrollmentState } from "./enrollment";
 
@@ -51,8 +46,5 @@ export async function assertSellerPriceReplay(
         },
     );
     expect(replayedPrice.status).toBe(200);
-    expect(replayEnrollmentBody).toEqual({
-        marketplaceTermsVersion: SELLER_TERMS_VERSION,
-        marketplaceTermsHash: SELLER_TERMS_HASH,
-    });
+    expect(replayEnrollmentBody).toEqual({});
 }

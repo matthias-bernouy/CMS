@@ -1,3 +1,9 @@
+Ulvia 3.0.0
+
+- Removed mutable seller terms documents, versions, and hashes from installation answers.
+- Stopped replaying seller terms during installation and reload.
+- Seller terms are now published from the Stripe Connect runtime dashboard.
+
 Ulvia 2.0.0
 
 - Migrated authoring to the direct current-source layout.
@@ -23,19 +29,11 @@ currency, refund, or release decision.
 
 ## Seller sale enrollment
 
-The integration can bind the current seller agreement to one published CMS
-page through the optional `sellerTermsDocuments` input. Each entry supplies a
-stable document key, public link label, exact consent statement, and `page-link`;
-stable `1.0.0` accepts at most one. During installation, the trusted CMS
-resolver supplies the exact published page snapshot to Stripe Connect, which
-archives an immutable revision and makes it authoritative. Republishing the
-page requires rerunning this integration to archive and activate the new
-revision.
-
-The required `sellerTermsVersion` and `sellerTermsHash` inputs remain as a
-backward-compatible rollout fallback when no page is selected. Once a
-page-backed configuration is active, provider state overrides that legacy
-pair. The browser never chooses the current requirement.
+Stripe Connect owns the specialized seller onboarding agreement. An
+administrator publishes it from the provider dashboard using a trusted CMS
+page snapshot URL. Stripe Connect verifies and archives an immutable revision;
+republishing or reloading this linking integration never changes the active
+seller agreement. The browser never chooses the current requirement.
 
 The authenticated `getSellerSaleEnrollment` function returns the provider's
 minimal `marketplaceTermsRequirement`: exact version and hash, consent copy,

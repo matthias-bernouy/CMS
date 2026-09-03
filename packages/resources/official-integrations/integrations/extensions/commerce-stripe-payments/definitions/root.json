@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v1",
     "kind": "commerce-stripe-payments",
     "label": "Commerce Stripe payments",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "category": "Payments",
     "description": "Orchestrate protected Commerce payments, settlements, refunds, and disputes through Stripe Connect.",
     "inputs": {

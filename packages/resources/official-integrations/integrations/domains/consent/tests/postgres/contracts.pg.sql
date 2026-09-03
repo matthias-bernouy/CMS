@@ -344,6 +344,93 @@ begin
 end;
 $ephemeral_staging$;
 
+do $runtime_policy_management$
+declare
+    v_before_revision text;
+    v_published_revision text;
+    v_disabled_revision text;
+    v_before_current_version text;
+    v_page jsonb := jsonb_build_object(
+        'id', 'page-cgu',
+        'path', '/cgu',
+        'title', 'Conditions générales',
+        'description', 'Runtime publication',
+        'content', '<h1>CGU</h1><p>Runtime publication.</p>'
+    );
+    v_documents jsonb;
+    v_result jsonb;
+begin
+    select context.xmin::text || ':' || context.ctid::text, document.current_version_id
+    into strict v_before_revision, v_before_current_version
+    from consent.contexts context
+    join consent.documents document on document.context_key = context.context_key
+    where context.context_key = 'signup' and document.document_key = 'terms';
+
+    v_result := consent.bootstrap_consent_context('signup', 'installation-reload');
+    if v_result->>'revision' <> v_before_revision
+       or not (v_result->>'enabled')::boolean
+       or (select current_version_id from consent.documents
+           where context_key = 'signup' and document_key = 'terms')
+          is distinct from v_before_current_version then
+        raise exception 'consent: bootstrap changed existing runtime policy (revision %, version %): %',
+            v_before_revision, v_before_current_version, v_result;
+    end if;
+
+    v_documents := jsonb_build_array(jsonb_build_object(
+        'key', 'terms',
+        'enabled', true,
+        'label', 'Conditions générales',
+        'consentText', 'J’accepte les Conditions générales de Courtside.',
+        'publishedSnapshotUrl',
+            'https://legal.example.test/.cms/content/published-page-snapshot?id=page-cgu',
+        'page', v_page,
+        'contentHash', consent.published_page_hash(v_page)
+    ));
+    v_result := consent.publish_consent_context(
+        'signup', true, 'https://legal.example.test', v_documents,
+        'admin-42', v_before_revision
+    );
+    v_published_revision := v_result->>'revision';
+    if v_published_revision = v_before_revision
+       or v_result->>'approvedSnapshotOrigin' <> 'https://legal.example.test'
+       or (select configured_by from consent.contexts where context_key = 'signup') <> 'admin-42'
+    then
+        raise exception 'consent: runtime publication was not atomic: %', v_result;
+    end if;
+
+    begin
+        perform consent.publish_consent_context(
+            'signup', true, 'https://legal.example.test', v_documents,
+            'stale-admin', v_before_revision
+        );
+        raise exception 'consent: stale runtime publication was accepted';
+    exception when others then
+        if sqlerrm = 'consent: stale runtime publication was accepted'
+           or sqlerrm <> 'conflict: CONSENT_CONTEXT_REVISION_CHANGED' then raise; end if;
+    end;
+
+    v_before_current_version := v_result->'documents'->0->>'versionId';
+    v_result := consent.disable_consent_context(
+        'signup', 'admin-42', v_published_revision
+    );
+    v_disabled_revision := v_result->>'revision';
+    if (v_result->>'enabled')::boolean
+       or v_disabled_revision = v_published_revision
+       or v_result->'documents'->0->>'versionId' is distinct from v_before_current_version then
+        raise exception 'consent: disabling did not preserve immutable document state: %', v_result;
+    end if;
+
+    v_result := consent.bootstrap_consent_context('signup', 'second-installation-reload');
+    if v_result->>'revision' <> v_disabled_revision
+       or (v_result->>'enabled')::boolean then
+        raise exception 'consent: repeated bootstrap changed disabled runtime policy: %', v_result;
+    end if;
+    if consent.list_consent_contexts()->>'total' is null then
+        raise exception 'consent: runtime policy list projection is invalid';
+    end if;
+end;
+$runtime_policy_management$;
+
 reset role;
 
 do $privacy_and_immutability$

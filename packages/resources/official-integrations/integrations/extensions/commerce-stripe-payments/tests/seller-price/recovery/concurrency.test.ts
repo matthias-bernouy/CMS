@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { connectStatus, offerResult, sellerTermsHash, sellerTermsVersion } from "../fixtures";
+import { connectStatus, offerResult } from "../fixtures";
 import { executeSellerPrice, expectGenericFailure } from "../harness";
 import { privateFailure, sellerPriceResponder } from "../responders";
 
@@ -53,8 +53,6 @@ describe("Commerce Stripe seller price concurrent orchestration", () => {
         expect(results[0]?.calls[2]?.body).toEqual({
             accountToken: "accttok_first",
             marketplaceTermsAccepted: true,
-            marketplaceTermsVersion: sellerTermsVersion,
-            marketplaceTermsHash: sellerTermsHash,
         });
         expect(results[0]?.calls[3]?.body).toEqual(results[1]?.calls[3]?.body);
         expect(results[0]?.calls[3]?.body).toEqual({

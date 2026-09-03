@@ -9,9 +9,10 @@ describe("Consent integration contract", () => {
     test("keeps consent policy in integration artifacts, not an auth-specific bloc", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repository.get("consent");
-        expect(definition).toMatchObject({ kind: "consent", version: "2.0.0" });
+        expect(definition).toMatchObject({ kind: "consent", version: "3.0.0" });
         expect(definition?.artifacts.map((artifact) => artifact.type).sort()).toEqual([
             "bloc",
+            "dashboard",
             "dashboard",
             "function",
             "function",
@@ -23,9 +24,13 @@ describe("Consent integration contract", () => {
         const source = definition?.artifacts.find((artifact) => artifact.type === "source");
         expect(source?.source.endpoints.map((endpoint) => [endpoint.endpointId, endpoint.access])).toEqual([
             ["getRequirements", { mode: "public" }],
+            ["bootstrapContext", { mode: "system" }],
             ["syncContext", { mode: "system" }],
             ["stageAcceptance", { mode: "system" }],
             ["commitAcceptance", { mode: "system" }],
+            ["listConsentContexts", { mode: "admin" }],
+            ["getConsentContext", { mode: "admin" }],
+            ["publishConsentContext", { mode: "admin" }],
             ["listAcceptances", { mode: "admin" }],
             ["health", { mode: "admin" }],
         ]);
@@ -50,6 +55,20 @@ describe("Consent integration contract", () => {
             {
                 method: "POST",
                 route: "/acceptances/stage",
+                requiredInputs: ["contextKey"],
+                requiredHeaders: ["authorization"],
+            },
+            { method: "GET", route: "/admin/context", requiredInputs: [], requiredHeaders: ["authorization"] },
+            {
+                method: "POST",
+                route: "/admin/context/publish",
+                requiredInputs: ["contextKey", "documents", "enabled", "expectedRevision"],
+                requiredHeaders: ["authorization", "x-cms-user-id"],
+            },
+            { method: "GET", route: "/admin/contexts", requiredInputs: [], requiredHeaders: ["authorization"] },
+            {
+                method: "POST",
+                route: "/context/bootstrap",
                 requiredInputs: ["contextKey"],
                 requiredHeaders: ["authorization"],
             },
@@ -119,6 +138,41 @@ describe("Consent integration contract", () => {
         });
         expect(JSON.stringify(stageTrigger)).not.toContain("targetSourceId");
         expect(JSON.stringify(stageTrigger)).not.toContain("targetEndpointId");
+    });
+
+    test("keeps mutable legal policy out of installation answers", async () => {
+        const inputs = await json("definitions/configuration/inputs.json");
+        const afterInstallation = await json("definitions/configuration/after-installation.json");
+        const dashboard = await json("definitions/artifacts/dashboards/contexts.json");
+        const detail = await json("definitions/artifacts/dashboards/contexts/views/context-detail.json");
+        const bootstrap = await text("connectors/supabase/sql/commands/context/management.sql");
+
+        expect(Array.from(inputs as unknown as Array<{ name: string }>, ({ name }) => name)).toEqual([
+            "id",
+            "contextKey",
+        ]);
+        expect(afterInstallation).toEqual([
+            {
+                id: "bootstrap-consent-context",
+                steps: [
+                    {
+                        id: "bootstrap",
+                        call: {
+                            source: "{{answers.id}}",
+                            endpoint: "bootstrapContext",
+                            body: { contextKey: "{{answers.contextKey}}" },
+                        },
+                    },
+                ],
+            },
+        ]);
+        expect(JSON.stringify(afterInstallation)).not.toContain("documents");
+        expect(dashboard).toEqual({ $include: "contexts/root.json" });
+        expect(detail[0]).toMatchObject({ widget: "w-detail", id: "consentContext" });
+        expect(JSON.stringify(detail)).toContain("publishConsentContext");
+        expect(JSON.stringify(detail)).toContain("reorderable-list");
+        expect(bootstrap).toContain("on conflict (context_key) do nothing");
+        expect(bootstrap).toContain("CONSENT_CONTEXT_REVISION_CHANGED");
     });
 
     test("stores keyed subject claims and versioned evidence without raw credentials", async () => {

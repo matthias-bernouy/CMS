@@ -34,6 +34,8 @@ export function stripeAccountEndpoints(): Source["endpoints"] {
                         marketplaceTermsAccepted: { type: "boolean" },
                         marketplaceTermsVersion: { type: "string" },
                         marketplaceTermsHash: { type: "string" },
+                        expectedMarketplaceTermsVersion: { type: "string" },
+                        expectedMarketplaceTermsHash: { type: "string" },
                     },
                 },
             },
@@ -74,7 +76,7 @@ export function stripeAccountEndpoints(): Source["endpoints"] {
                         marketplaceTermsVersion: { type: "string" },
                         marketplaceTermsHash: { type: "string" },
                     },
-                    required: ["sellerUserId", "marketplaceTermsVersion", "marketplaceTermsHash"],
+                    required: ["sellerUserId"],
                 },
             },
             output: [

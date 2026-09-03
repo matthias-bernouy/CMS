@@ -13,6 +13,28 @@ export async function handlePaymentReservationRoutes(
     if (table === "rpc/get_current_marketplace_terms_configuration" && method === "POST") {
         return jsonResponse(mock.currentMarketplaceTermsConfiguration);
     }
+    if (table === "rpc/publish_marketplace_terms_configuration" && method === "POST") {
+        const body = JSON.parse(await request.text()) as JsonRecord;
+        const current = mock.currentMarketplaceTermsConfiguration;
+        if ((current?.version ?? "new") !== body.p_expected_version) {
+            return jsonResponse({ message: "conflict: MARKETPLACE_TERMS_VERSION_CHANGED" }, 400);
+        }
+        const document = asRecord(body.p_document);
+        const configuration = {
+            mode: "published_page",
+            termsVersionId: "terms-version-runtime",
+            version: `cms-page:${document.revisionHash}`,
+            hash: document.contentHash,
+            documentKey: document.documentKey,
+            label: document.label,
+            consentText: document.consentText,
+            page: document.page,
+            publishedSnapshotUrl: document.publishedSnapshotUrl,
+            updatedAt: "2026-07-25T12:00:00.000Z",
+        };
+        mock.setCurrentMarketplaceTermsConfiguration(configuration);
+        return jsonResponse(configuration);
+    }
     if (table === "rpc/record_current_marketplace_terms_acceptance" && method === "POST") {
         const body = JSON.parse(await request.text()) as JsonRecord;
         const userId = String(body.p_cms_user_id);

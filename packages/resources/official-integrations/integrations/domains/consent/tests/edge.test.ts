@@ -127,6 +127,143 @@ describe("Consent Edge Function", () => {
         expect(calls).toHaveLength(1);
     });
 
+    test("bootstraps an inactive context without replaying installation documents", async () => {
+        globalThis.fetch = async (input, init) => {
+            const upstream = new Request(input, init);
+            expect(new URL(upstream.url).pathname).toEndWith("/rpc/bootstrap_consent_context");
+            expect(await upstream.json()).toEqual({
+                p_context_key: "signup",
+                p_actor_id: "cms-integration-bootstrap",
+            });
+            return Response.json(contextProjection({ enabled: true, revision: "17" }));
+        };
+
+        const response = await handleConsentRequest(jsonRequest("/context/bootstrap", { contextKey: "signup" }));
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({ contextKey: "signup", enabled: true, revision: "17" });
+    });
+
+    test("publishes verified runtime documents with administrator identity and optimistic revision", async () => {
+        const page = publishedPage("Runtime policy");
+        const contentHash = await publishedPageContentHash(page);
+        const paths: string[] = [];
+        globalThis.fetch = async (input, init) => {
+            const upstream = new Request(input, init);
+            const path = new URL(upstream.url).pathname;
+            paths.push(path);
+            if (path.endsWith("/.cms/content/published-page-snapshot")) {
+                expect(upstream.redirect).toBe("error");
+                return Response.json({ schema: "cms-published-page-snapshot-v1", page, contentHash });
+            }
+            expect(path).toEndWith("/rpc/publish_consent_context");
+            expect(await upstream.json()).toMatchObject({
+                p_context_key: "signup",
+                p_enabled: true,
+                p_expected_revision: "14",
+                p_actor_id: "admin-42",
+                p_snapshot_origin: "https://delivery.example",
+                p_documents: [
+                    {
+                        key: "terms",
+                        enabled: true,
+                        label: "Conditions",
+                        consentText: "I accept the Conditions",
+                        pageId: "page-cgu",
+                        publishedSnapshotUrl: snapshotUrl("page-cgu"),
+                        page,
+                        contentHash,
+                    },
+                ],
+            });
+            return Response.json(contextProjection({ enabled: true, revision: "15" }));
+        };
+
+        const response = await handleConsentRequest(
+            adminJsonRequest("/admin/context/publish", {
+                contextKey: "signup",
+                enabled: true,
+                expectedRevision: "14",
+                documents: [
+                    {
+                        key: "terms",
+                        enabled: true,
+                        label: "Conditions",
+                        consentText: "I accept the Conditions",
+                        publishedSnapshotUrl: snapshotUrl("page-cgu"),
+                    },
+                ],
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({ enabled: true, revision: "15" });
+        expect(paths).toEqual(["/.cms/content/published-page-snapshot", "/rest/v1/rpc/publish_consent_context"]);
+    });
+
+    test("disables a runtime context without depending on CMS Delivery", async () => {
+        globalThis.fetch = async (input, init) => {
+            const upstream = new Request(input, init);
+            expect(new URL(upstream.url).pathname).toEndWith("/rpc/disable_consent_context");
+            expect(await upstream.json()).toEqual({
+                p_context_key: "signup",
+                p_actor_id: "admin-42",
+                p_expected_revision: "15",
+            });
+            return Response.json(contextProjection({ enabled: false, revision: "16" }));
+        };
+
+        const response = await handleConsentRequest(
+            adminJsonRequest("/admin/context/publish", {
+                contextKey: "signup",
+                enabled: false,
+                expectedRevision: "15",
+                documents: [],
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({ enabled: false, revision: "16" });
+    });
+
+    test("requires a CMS administrator identity before publishing", async () => {
+        let calls = 0;
+        globalThis.fetch = async () => {
+            calls += 1;
+            return Response.json({});
+        };
+        const response = await handleConsentRequest(
+            jsonRequest("/admin/context/publish", {
+                contextKey: "signup",
+                enabled: true,
+                expectedRevision: "11",
+                documents: [],
+            }),
+        );
+
+        expect(response.status).toBe(401);
+        expect(calls).toBe(0);
+    });
+
+    test("surfaces a stale runtime policy revision as a conflict", async () => {
+        globalThis.fetch = async (input, init) => {
+            const upstream = new Request(input, init);
+            expect(new URL(upstream.url).pathname).toEndWith("/rpc/disable_consent_context");
+            return Response.json({ message: "conflict: CONSENT_CONTEXT_REVISION_CHANGED" }, { status: 400 });
+        };
+        const response = await handleConsentRequest(
+            adminJsonRequest("/admin/context/publish", {
+                contextKey: "signup",
+                enabled: false,
+                expectedRevision: "12",
+                documents: [],
+            }),
+        );
+
+        expect(response.status).toBe(409);
+        expect(await response.json()).toEqual({ error: "CONSENT_CONTEXT_REVISION_CHANGED" });
+    });
+
     test("rejects consent copy that does not contain its linked label before storage", async () => {
         let calls = 0;
         globalThis.fetch = async () => {
@@ -343,6 +480,29 @@ function jsonRequest(path: string, body: unknown): Request {
         headers: { authorization: "Bearer cms-consent-test-key", "content-type": "application/json" },
         body: JSON.stringify(body),
     });
+}
+
+function adminJsonRequest(path: string, body: unknown): Request {
+    return new Request(`https://edge.test/cms-consent${path}`, {
+        method: "POST",
+        headers: {
+            authorization: "Bearer cms-consent-test-key",
+            "content-type": "application/json",
+            "x-cms-user-id": "admin-42",
+        },
+        body: JSON.stringify(body),
+    });
+}
+
+function contextProjection(overrides: { enabled: boolean; revision: string }) {
+    return {
+        contextKey: "signup",
+        status: overrides.enabled ? "active" : "inactive",
+        approvedSnapshotOrigin: overrides.enabled ? "https://delivery.example" : null,
+        updatedAt: "2026-09-03T12:00:00Z",
+        documents: [],
+        ...overrides,
+    };
 }
 
 function publishedPage(content: string, id = "page-cgu") {

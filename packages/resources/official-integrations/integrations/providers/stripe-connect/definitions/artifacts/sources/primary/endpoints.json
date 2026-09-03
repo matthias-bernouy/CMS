@@ -9,6 +9,7 @@
         "endpoints/payments/protected-payment-queries/root.json",
         "endpoints/admin/accounts/get-seller-provider-risk/root.json",
         "endpoints/admin/accounts/seller-account-onboarding-and-payouts/root.json",
+        "endpoints/admin/configuration/marketplace-terms.json",
         "endpoints/operations/payments/payment-cancellation-and-settlement/root.json",
         "endpoints/operations/payments/transfer-reversal-and-refund/root.json",
         "endpoints/reconciliation/reconcile-provider-payment.json",

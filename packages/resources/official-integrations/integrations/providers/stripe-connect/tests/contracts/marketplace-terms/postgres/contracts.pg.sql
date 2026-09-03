@@ -39,6 +39,9 @@ begin
            'stripe_connect.sync_marketplace_terms_configuration(jsonb,text,text,text)'
        ) is null
        or pg_catalog.to_regprocedure(
+           'stripe_connect.publish_marketplace_terms_configuration(jsonb,text,text)'
+       ) is null
+       or pg_catalog.to_regprocedure(
            'stripe_connect.record_current_marketplace_terms_acceptance(text,text,text)'
        ) is null then
         raise exception 'marketplace terms: fresh install omitted the evidence model';
@@ -72,7 +75,7 @@ create temporary table marketplace_terms_proof (
 insert into marketplace_terms_proof (key, value)
 values (
     'first',
-    stripe_connect.sync_marketplace_terms_configuration(
+    stripe_connect.publish_marketplace_terms_configuration(
         jsonb_build_object(
             'documentKey', 'seller-conditions',
             'label', 'Conditions vendeur',
@@ -89,9 +92,8 @@ values (
             'contentHash', repeat('1', 64),
             'revisionHash', repeat('a', 64)
         ),
-        null,
-        null,
-        'marketplace-terms-contract'
+        'marketplace-terms-admin',
+        'new'
     )
 );
 
@@ -151,7 +153,7 @@ $first_revision$;
 insert into marketplace_terms_proof (key, value)
 values (
     'second',
-    stripe_connect.sync_marketplace_terms_configuration(
+    stripe_connect.publish_marketplace_terms_configuration(
         jsonb_build_object(
             'documentKey', 'seller-conditions',
             'label', 'Conditions vendeur',
@@ -168,9 +170,8 @@ values (
             'contentHash', repeat('2', 64),
             'revisionHash', repeat('b', 64)
         ),
-        null,
-        null,
-        'marketplace-terms-contract'
+        'marketplace-terms-admin',
+        (select value->>'version' from marketplace_terms_proof where key = 'first')
     )
 );
 
@@ -182,6 +183,35 @@ declare
 begin
     select value into strict v_first from marketplace_terms_proof where key = 'first';
     select value into strict v_second from marketplace_terms_proof where key = 'second';
+
+    begin
+        perform stripe_connect.publish_marketplace_terms_configuration(
+            jsonb_build_object(
+                'documentKey', 'seller-conditions',
+                'label', 'Conditions vendeur',
+                'consentText', 'Je reconnais avoir lu et accepté les conditions vendeur.',
+                'page', jsonb_build_object(
+                    'id', 'page-seller-terms',
+                    'path', '/conditions-vendeur',
+                    'title', 'Conditions vendeur',
+                    'description', 'Publication concurrente',
+                    'content', '<h1>Conditions vendeur</h1><p>Publication concurrente.</p>'
+                ),
+                'publishedSnapshotUrl',
+                    'https://cms.example.test/.cms/content/published-page-snapshot?id=page-seller-terms',
+                'contentHash', repeat('3', 64),
+                'revisionHash', repeat('c', 64)
+            ),
+            'stale-marketplace-terms-admin',
+            v_first->>'version'
+        );
+        raise exception 'marketplace terms: stale runtime publication succeeded';
+    exception when others then
+        if sqlerrm = 'marketplace terms: stale runtime publication succeeded'
+           or sqlerrm <> 'conflict: MARKETPLACE_TERMS_VERSION_CHANGED' then
+            raise;
+        end if;
+    end;
 
     begin
         perform stripe_connect.record_current_marketplace_terms_acceptance(
