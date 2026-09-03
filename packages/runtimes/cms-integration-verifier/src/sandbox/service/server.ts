@@ -11,6 +11,7 @@ export type VerificationSandboxServiceConfig = Readonly<{
     maxInputBytes: number;
     maxOutputBytes: number;
     serverIdleTimeoutSeconds?: number;
+    logFailure?: (message: string) => void;
 }>;
 
 export function startVerificationSandboxService(config: VerificationSandboxServiceConfig): Bun.Server<unknown> {
@@ -60,13 +61,32 @@ export function startVerificationSandboxService(config: VerificationSandboxServi
                         "cache-control": "no-store",
                     },
                 });
-            } catch {
+            } catch (error) {
+                logSandboxFailure(error, config.logFailure ?? console.error);
                 return jsonError(422, "sandbox_failed");
             } finally {
                 busy = false;
             }
         },
     });
+}
+
+function logSandboxFailure(error: unknown, log: (message: string) => void): void {
+    const causes: Array<Readonly<{ name: string; message: string }>> = [];
+    let current = error;
+    while (current instanceof Error && causes.length < 5) {
+        causes.push({ name: current.name.slice(0, 80), message: redactedErrorMessage(current.message) });
+        current = current.cause;
+    }
+    log(JSON.stringify({ event: "integration-verification-sandbox-failed", causes }));
+}
+
+function redactedErrorMessage(message: string): string {
+    return message
+        .replace(/\b(?:https?|postgres(?:ql)?|mongodb):\/\/[^\s"']+/giu, "[redacted-url]")
+        .replace(/\b(?:bearer|password|secret|token)\s*[=:]\s*[^\s,"']+/giu, "[redacted-credential]")
+        .replace(/\b[A-Za-z0-9_-]{48,}\b/gu, "[redacted-value]")
+        .slice(0, 1_024);
 }
 
 async function requestBody(request: Request, limit: number): Promise<Uint8Array | undefined> {

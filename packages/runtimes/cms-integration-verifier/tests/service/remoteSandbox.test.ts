@@ -134,6 +134,44 @@ describe("fixed sandbox service", () => {
         release();
         expect((await first).status).toBe(200);
     });
+
+    test("logs a bounded redacted cause chain without exposing it to the client", async () => {
+        const keys = keyPair();
+        const input = await sandboxInputFixture();
+        const body = canonicalJsonBytes(input);
+        const messages: string[] = [];
+        const server = startVerificationSandboxService({
+            port: 0,
+            verifier: createSandboxCapabilityVerifier(keys.publicKey),
+            sandbox: {
+                identity: runnerFixture(),
+                async run() {
+                    throw new Error("outer", {
+                        cause: new Error(
+                            "Command failed at https://user:password@example.test/path token=abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJ",
+                        ),
+                    });
+                },
+            },
+            maxInputBytes: 4 * 1_048_576,
+            maxOutputBytes: 1_048_576,
+            logFailure: (message) => messages.push(message),
+        });
+        servers.push(server);
+
+        const response = await exactRequest(
+            server,
+            body,
+            await createSandboxCapabilitySigner(keys.privateKey).issue(body),
+        );
+        expect(response.status).toBe(422);
+        expect(await response.json()).toEqual({ code: "sandbox_failed" });
+        expect(messages).toHaveLength(1);
+        expect(messages[0]).toContain("integration-verification-sandbox-failed");
+        expect(messages[0]).toContain("[redacted-url]");
+        expect(messages[0]).not.toContain("password@example.test");
+        expect(messages[0]).not.toContain("abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJ");
+    });
 });
 
 describe("remote sandbox response limits", () => {
