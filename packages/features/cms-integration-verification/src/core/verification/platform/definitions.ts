@@ -98,6 +98,25 @@ export const POSTGRES_PLATFORM_VERIFICATION_SUITES_V1 = Object.freeze([
     ),
 ] satisfies readonly PlatformVerificationSuiteDefinitionV1[]);
 
+export const RELEASE_RUNTIME_PLATFORM_SUITE_ID = "platform-release-runtime" as const;
+
+export const RELEASE_RUNTIME_PLATFORM_VERIFICATION_SUITE_V1 = suite(
+    RELEASE_RUNTIME_PLATFORM_SUITE_ID,
+    "always",
+    ["exact-release-plan", "fresh-install", "historical-upgrades", "business-fixtures", "crash-recovery"],
+    [
+        "The server-owned release plan executes against disposable CMS, MongoDB, Supabase Auth, Storage, PostgreSQL, and Edge Function services.",
+        "Fresh installation and every historical upgrade preserve integration-owned business fixtures.",
+        "Migration phase interruption recovers to the target version for every distinct historical migration state.",
+    ],
+    ["external provider availability", "production credentials", "production data"],
+);
+
+export const PLATFORM_VERIFICATION_SUITES_V1 = Object.freeze([
+    ...POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    RELEASE_RUNTIME_PLATFORM_VERIFICATION_SUITE_V1,
+] satisfies readonly PlatformVerificationSuiteDefinitionV1[]);
+
 export async function identifyPlatformVerificationSuiteDefinition(
     definition: PlatformVerificationSuiteDefinitionV1,
 ): Promise<Readonly<{ definition: PlatformVerificationSuiteDefinitionV1; digest: string }>> {

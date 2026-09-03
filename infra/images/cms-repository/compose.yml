@@ -72,7 +72,7 @@ services:
             CMS_REPOSITORY_CANDIDATE_TERMINAL_RETENTION_MS: "${CMS_REPOSITORY_CANDIDATE_TERMINAL_RETENTION_MS:-604800000}"
             CMS_REPOSITORY_CANDIDATE_PRUNE_AUDIT_RETENTION_MS: "${CMS_REPOSITORY_CANDIDATE_PRUNE_AUDIT_RETENTION_MS:-2592000000}"
             CMS_INTEGRATION_VERIFIER_RUNNER_NAME: cms-postgres
-            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0"
+            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.3.0"
             CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: ${CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST:?CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST must be the deployed sandbox sha256 digest}
 
             # Standard CMS-to-repository calls do not carry X-Forwarded-For.
@@ -139,6 +139,10 @@ services:
                 condition: service_healthy
             cms-integration-verifier-sandbox:
                 condition: service_healthy
+            cms-integration-release-runtime-docker:
+                condition: service_healthy
+            cms-integration-release-runtime:
+                condition: service_healthy
             cms-integration-verifier-postgres:
                 condition: service_healthy
         environment:
@@ -148,13 +152,16 @@ services:
             CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_FILE: /run/secrets/cms-integration-verifier-worker-token
             CMS_INTEGRATION_VERIFIER_SANDBOX_URL: http://cms-integration-verifier-sandbox:3101
             CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_FILE: /run/secrets/cms-integration-verifier-sandbox-signing-key
+            CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_URL: http://cms-integration-release-runtime-docker:3102
+            CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_SIGNING_KEY_FILE: /run/secrets/cms-integration-release-runtime-signing-key
             CMS_INTEGRATION_VERIFIER_SANDBOX_CAPABILITY_LIFETIME_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_CAPABILITY_LIFETIME_MS:-15000}"
             CMS_INTEGRATION_VERIFIER_RUNNER_NAME: cms-postgres
-            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0"
+            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.3.0"
             CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: ${CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST:?CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST must be the deployed sandbox sha256 digest}
             CMS_INTEGRATION_VERIFIER_DEPLOYED_IMAGE_REFERENCE: ${CMS_INTEGRATION_VERIFIER_IMAGE:?CMS_INTEGRATION_VERIFIER_IMAGE must be an immutable digest}
             CMS_INTEGRATION_VERIFIER_HEALTH_PORT: "3100"
             CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS:-600000}"
+            CMS_INTEGRATION_RELEASE_RUNTIME_TIMEOUT_MS: "${CMS_INTEGRATION_RELEASE_RUNTIME_TIMEOUT_MS:-1800000}"
             CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES:-41943040}"
             CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES:-1048576}"
             CMS_INTEGRATION_VERIFIER_POLL_INTERVAL_MS: "${CMS_INTEGRATION_VERIFIER_POLL_INTERVAL_MS:-5000}"
@@ -172,6 +179,8 @@ services:
               target: cms-integration-verifier-worker-token
             - source: cms_integration_verifier_sandbox_signing_key
               target: cms-integration-verifier-sandbox-signing-key
+            - source: cms_integration_release_runtime_signing_key
+              target: cms-integration-release-runtime-signing-key
             - source: cms_integration_verifier_postgres_password
               target: cms-integration-verifier-postgres-password
         read_only: true
@@ -230,7 +239,7 @@ services:
             CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES:-1048576}"
             CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_ERROR_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_ERROR_BYTES:-65536}"
             CMS_INTEGRATION_VERIFIER_RUNNER_NAME: cms-postgres
-            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0"
+            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.3.0"
             CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: ${CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST:?CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST must be the deployed sandbox sha256 digest}
             CMS_INTEGRATION_VERIFIER_DEPLOYED_IMAGE_REFERENCE: ${CMS_INTEGRATION_VERIFIER_IMAGE:?CMS_INTEGRATION_VERIFIER_IMAGE must be an immutable digest}
         configs:
@@ -316,6 +325,108 @@ services:
             start_period: 20s
         stop_grace_period: 15s
 
+    cms-integration-release-runtime-docker:
+        image: docker:28.5.2-dind-alpine3.22@sha256:2a232a42256f70d78e3cc5d2b5d6b3276710a0de0596c145f627ecfae90282ac
+        restart: unless-stopped
+        init: true
+        privileged: true
+        command:
+            - dockerd
+            - --host=tcp://127.0.0.1:2375
+            - --tls=false
+        environment:
+            DOCKER_TLS_CERTDIR: ""
+        read_only: true
+        tmpfs:
+            - /var/lib/docker:rw,nosuid,nodev,size=8g,mode=0700
+            - /run:rw,nosuid,nodev,size=64m,mode=0755
+        volumes:
+            - type: volume
+              source: cms_integration_release_runtime_tmp
+              target: /tmp
+        pids_limit: 1024
+        mem_limit: 6g
+        cpus: "4.0"
+        expose:
+            - "3102"
+        networks:
+            cms_verifier_control:
+                aliases:
+                    - cms-integration-release-runtime-docker
+            cms_release_runtime_egress: {}
+        healthcheck:
+            test:
+                - CMD
+                - docker
+                - --host
+                - tcp://127.0.0.1:2375
+                - info
+            interval: 10s
+            timeout: 5s
+            retries: 12
+            start_period: 20s
+        stop_grace_period: 30s
+
+    cms-integration-release-runtime:
+        image: ${CMS_INTEGRATION_VERIFIER_IMAGE:?CMS_INTEGRATION_VERIFIER_IMAGE must be an immutable digest}
+        restart: unless-stopped
+        init: true
+        user: "1002:1002"
+        network_mode: service:cms-integration-release-runtime-docker
+        command:
+            - bun
+            - run
+            - packages/runtimes/cms-integration-verifier/src/sandbox/service/releaseMain.ts
+        depends_on:
+            cms-integration-release-runtime-docker:
+                condition: service_healthy
+        environment:
+            NODE_ENV: production
+            DOCKER_HOST: tcp://127.0.0.1:2375
+            CMS_INTEGRATION_VERIFIER_SANDBOX_PORT: "3102"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: /run/configs/cms-integration-release-runtime-verification-key
+            CMS_INTEGRATION_VERIFIER_SANDBOX_TMP_ROOT: /tmp/cms-integration-release-runtime
+            CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS: "${CMS_INTEGRATION_RELEASE_RUNTIME_TIMEOUT_MS:-1800000}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_TERMINATION_GRACE_MS: "${CMS_INTEGRATION_VERIFIER_SANDBOX_TERMINATION_GRACE_MS:-2000}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES:-41943040}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES:-1048576}"
+            CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_ERROR_BYTES: "${CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_ERROR_BYTES:-65536}"
+            CMS_INTEGRATION_VERIFIER_RUNNER_NAME: cms-postgres
+            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.3.0"
+            CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: ${CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST:?CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST must be the deployed sandbox sha256 digest}
+            CMS_INTEGRATION_VERIFIER_DEPLOYED_IMAGE_REFERENCE: ${CMS_INTEGRATION_VERIFIER_IMAGE:?CMS_INTEGRATION_VERIFIER_IMAGE must be an immutable digest}
+        configs:
+            - source: cms_integration_release_runtime_verification_key
+              target: /run/configs/cms-integration-release-runtime-verification-key
+        read_only: true
+        volumes:
+            - type: volume
+              source: cms_integration_release_runtime_tmp
+              target: /tmp
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        pids_limit: 256
+        mem_limit: 2g
+        cpus: "2.0"
+        healthcheck:
+            test:
+                - CMD
+                - bun
+                - -e
+                - >-
+                    const response = await fetch("http://127.0.0.1:3102/ready", {
+                      signal: AbortSignal.timeout(4000)
+                    });
+                    if (!response.ok) process.exit(1);
+                    await response.body?.cancel();
+            interval: 15s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+        stop_grace_period: 30s
+
 secrets:
     cms_repository_management_token:
         file: ${CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE:?CMS_REPOSITORY_MANAGEMENT_TOKEN_SECRET_FILE must reference a mode-0600 secret file owned by UID/GID 1000}
@@ -329,6 +440,8 @@ secrets:
         file: ${CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE must reference the matching mode-0600 worker-token copy owned by UID/GID 1001}
     cms_integration_verifier_sandbox_signing_key:
         file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE must reference a mode-0600 Ed25519 private key owned by UID/GID 1001}
+    cms_integration_release_runtime_signing_key:
+        file: ${CMS_INTEGRATION_RELEASE_RUNTIME_SIGNING_KEY_SECRET_FILE:?CMS_INTEGRATION_RELEASE_RUNTIME_SIGNING_KEY_SECRET_FILE must reference a distinct mode-0600 Ed25519 private key owned by UID/GID 1001}
     cms_integration_verifier_postgres_password:
         file: ${CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE:?CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE must reference the mode-0600 verifier Postgres-password copy owned by UID/GID 1001}
     cms_integration_verifier_postgres_server_password:
@@ -337,6 +450,8 @@ secrets:
 configs:
     cms_integration_verifier_sandbox_verification_key:
         file: ${CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE:?CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE must reference the matching Ed25519 public key readable by UID/GID 1002}
+    cms_integration_release_runtime_verification_key:
+        file: ${CMS_INTEGRATION_RELEASE_RUNTIME_VERIFICATION_KEY_FILE:?CMS_INTEGRATION_RELEASE_RUNTIME_VERIFICATION_KEY_FILE must reference the matching Ed25519 public key readable by UID/GID 1002}
     cms_integration_verifier_postgres_init:
         file: ./verifier-postgres-init.sql
 
@@ -350,3 +465,8 @@ networks:
     cms_verifier_database:
         name: ${CMS_INTEGRATION_VERIFIER_DATABASE_NETWORK_NAME:-cms_verifier_database}
         internal: true
+    cms_release_runtime_egress:
+        name: ${CMS_INTEGRATION_RELEASE_RUNTIME_EGRESS_NETWORK_NAME:-cms_release_runtime_egress}
+
+volumes:
+    cms_integration_release_runtime_tmp:

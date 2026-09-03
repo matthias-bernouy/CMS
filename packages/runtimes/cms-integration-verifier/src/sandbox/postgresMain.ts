@@ -8,6 +8,7 @@ export async function runPostgresVerificationSandboxExecutable(
     try {
         await runCanonicalVerificationSandboxProgram(
             async (input, signal) => await runPostgresPlatformVerification(input, adapter, signal),
+            { maxInputBytes: 40 * 1_048_576, validation: "structure" },
         );
     } finally {
         await adapter.dispose?.();

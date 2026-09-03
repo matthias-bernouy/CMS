@@ -22,6 +22,13 @@ export type ReleaseSandboxInstallation = Readonly<{
     }>;
 }>;
 
+export class ReleaseSandboxTransportError extends Error {
+    constructor(operation: string, cause: unknown) {
+        super(`Release sandbox transport failed during ${operation}`, { cause });
+        this.name = "ReleaseSandboxTransportError";
+    }
+}
+
 export class ReleaseSandboxClient {
     private cookie?: string;
 
@@ -31,12 +38,16 @@ export class ReleaseSandboxClient {
     ) {}
 
     async login(): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/auth/login`, {
-            method: "POST",
-            redirect: "manual",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email: this.config.adminEmail, password: this.config.adminPassword }),
-        });
+        const response = await this.request(
+            `${this.baseUrl}/auth/login`,
+            {
+                method: "POST",
+                redirect: "manual",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ email: this.config.adminEmail, password: this.config.adminPassword }),
+            },
+            "login",
+        );
         const cookie = response.headers.get("set-cookie")?.split(";", 1)[0];
         if (response.status !== 302 || !cookie) {
             throw new Error(`Release sandbox login failed with HTTP ${response.status}`);
@@ -71,7 +82,10 @@ export class ReleaseSandboxClient {
     async expectUpgradeAuditFault(kind: string, version: string, phase: string): Promise<void> {
         try {
             await this.upgrade(kind, version);
-        } catch {
+        } catch (error) {
+            if (error instanceof ReleaseSandboxTransportError) {
+                throw error;
+            }
             return;
         }
         throw new Error(`Release sandbox did not inject the requested migration fault after phase "${phase}"`);
@@ -80,7 +94,10 @@ export class ReleaseSandboxClient {
     async expectUpgradeFailure(kind: string, version: string): Promise<void> {
         try {
             await this.upgrade(kind, version);
-        } catch {
+        } catch (error) {
+            if (error instanceof ReleaseSandboxTransportError) {
+                throw error;
+            }
             return;
         }
         throw new Error(`Release sandbox unexpectedly upgraded ${kind}@${version}`);
@@ -93,7 +110,7 @@ export class ReleaseSandboxClient {
         if (!this.cookie) {
             throw new Error("Release sandbox client is not authenticated");
         }
-        const response = await fetch(
+        const response = await this.request(
             `${this.baseUrl}/api/integrations/installations/retry-migration-reconciliation?id=${encodeURIComponent(kind)}`,
             {
                 method: "POST",
@@ -105,6 +122,7 @@ export class ReleaseSandboxClient {
                     confirmation: `retry ambiguous migration reconciliation ${operation.id}`,
                 }),
             },
+            "migration reconciliation authorization",
         );
         if (!response.ok) {
             throw new Error(`Release sandbox could not authorize reconciliation retry (HTTP ${response.status})`);
@@ -130,18 +148,22 @@ export class ReleaseSandboxClient {
         }
         const headers = new Headers(init.headers);
         headers.set("cookie", this.cookie);
-        return await fetch(url, { ...init, headers });
+        return await this.request(url, { ...init, headers }, "fixture CMS request");
     }
 
     private async post(path: string, body: unknown, kind: string, version: string): Promise<void> {
         if (!this.cookie) {
             throw new Error("Release sandbox client is not authenticated");
         }
-        const response = await fetch(`${this.baseUrl}${path}`, {
-            method: "POST",
-            headers: { "content-type": "application/json", cookie: this.cookie },
-            body: JSON.stringify(body),
-        });
+        const response = await this.request(
+            `${this.baseUrl}${path}`,
+            {
+                method: "POST",
+                headers: { "content-type": "application/json", cookie: this.cookie },
+                body: JSON.stringify(body),
+            },
+            `installation request for ${kind}@${version}`,
+        );
         const result = await safeBody(response);
         if (!response.ok) {
             const installation = await this.installation(kind);
@@ -156,13 +178,23 @@ export class ReleaseSandboxClient {
     }
 
     async installation(kind: string): Promise<ReleaseSandboxInstallation> {
-        const response = await fetch(`${this.baseUrl}/api/integrations/installations?id=${encodeURIComponent(kind)}`, {
-            headers: { cookie: this.cookie ?? "" },
-        });
+        const response = await this.request(
+            `${this.baseUrl}/api/integrations/installations?id=${encodeURIComponent(kind)}`,
+            { headers: { cookie: this.cookie ?? "" } },
+            `installation lookup for ${kind}`,
+        );
         if (!response.ok) {
             throw new Error(`Release sandbox could not read installation "${kind}" (HTTP ${response.status})`);
         }
         return (await safeBody(response)) as ReleaseSandboxInstallation;
+    }
+
+    private async request(input: string | URL, init: RequestInit, operation: string): Promise<Response> {
+        try {
+            return await fetch(input, init);
+        } catch (error) {
+            throw new ReleaseSandboxTransportError(operation, error);
+        }
     }
 }
 

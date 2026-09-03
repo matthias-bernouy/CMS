@@ -104,7 +104,7 @@ export function readRepositoryRuntimeEnv(source: RepositoryRuntimeEnvSource): Re
 function readVerifierRunner(source: RepositoryRuntimeEnvSource): PinnedVerificationRunnerIdentity {
     return parsePinnedVerificationRunnerIdentity({
         name: source.CMS_INTEGRATION_VERIFIER_RUNNER_NAME ?? "cms-postgres",
-        version: source.CMS_INTEGRATION_VERIFIER_RUNNER_VERSION ?? "1.2.0",
+        version: source.CMS_INTEGRATION_VERIFIER_RUNNER_VERSION ?? "1.3.0",
         imageDigest:
             source.CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST ??
             "sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",

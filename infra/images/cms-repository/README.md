@@ -48,9 +48,9 @@ esac
 Prepare the deployment directory and every file-backed credential without
 putting secret values in `.env`. The worker token and PostgreSQL password each
 have two byte-identical files because their consumers run under different
-numeric identities; the isolated preflight rejects any mismatch. The Ed25519
-private key signs short-lived sandbox capabilities and only the sandbox receives
-the public key:
+numeric identities; the isolated preflight rejects any mismatch. Each Ed25519
+private key signs short-lived capabilities for one sandbox and only that sandbox
+receives its matching public key:
 
 ```bash
 cd /opt/cms-repository
@@ -70,6 +70,11 @@ openssl pkey \
   -in secrets/verifier-sandbox-ed25519-private.pem \
   -pubout \
   -out secrets/verifier-sandbox-ed25519-public.pem
+openssl genpkey -algorithm Ed25519 -out secrets/release-runtime-ed25519-private.pem
+openssl pkey \
+  -in secrets/release-runtime-ed25519-private.pem \
+  -pubout \
+  -out secrets/release-runtime-ed25519-public.pem
 
 chmod 0600 secrets/*
 sudo chown 1000:1000 \
@@ -80,10 +85,15 @@ sudo chown 1000:1000 \
 sudo chown 1001:1001 \
   secrets/verifier-worker-token \
   secrets/verifier-sandbox-ed25519-private.pem \
+  secrets/release-runtime-ed25519-private.pem \
   secrets/verifier-postgres-password
 sudo chown 70:70 secrets/verifier-postgres-server-password
-sudo chown 1002:1002 secrets/verifier-sandbox-ed25519-public.pem
-sudo chmod 0444 secrets/verifier-sandbox-ed25519-public.pem
+sudo chown 1002:1002 \
+  secrets/verifier-sandbox-ed25519-public.pem \
+  secrets/release-runtime-ed25519-public.pem
+sudo chmod 0444 \
+  secrets/verifier-sandbox-ed25519-public.pem \
+  secrets/release-runtime-ed25519-public.pem
 
 cp .env.example .env
 ```
@@ -92,8 +102,8 @@ Set all three image identities in `.env`: `CMS_REPOSITORY_IMAGE` to the
 repository tag or digest, `CMS_INTEGRATION_VERIFIER_IMAGE` to
 `${VERIFIER_IMAGE}`, and `CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST` to
 `${VERIFIER_DIGEST}`. Keep the secret-file paths from `.env.example`, then
-validate and start the complete repository, verifier, sandbox, and disposable
-PostgreSQL stack:
+validate and start the complete repository, verifier, SQL sandbox, full-stack
+release runtime, and disposable PostgreSQL stack:
 
 ```bash
 docker compose config --quiet
@@ -105,10 +115,13 @@ This prevents Docker from silently creating a root-owned bind directory that
 the UID/GID 1000 runtime cannot write. Run the preparation commands above before
 the first `docker compose up`.
 
-The root filesystem is read-only. The dedicated `./registry` bind mount is the
-only durable writable location; `/tmp` is owned by UID/GID 1000, bounded,
-non-executable, and erased on restart. Back up the registry volume independently
-from CMS media and package caches.
+The application root filesystems are read-only. The dedicated `./registry` bind
+mount is the only state that must be durable or backed up. The full-stack runner
+uses a scratch volume shared only with its private Docker daemon so Supabase bind
+mounts resolve inside that daemon; every scenario removes its containers and
+task directory. The daemon itself stores container state on bounded tmpfs and
+receives no repository or production credential. It is the only privileged
+service and does not mount the host Docker socket.
 
 ## Public repository hub and management CMS connection
 

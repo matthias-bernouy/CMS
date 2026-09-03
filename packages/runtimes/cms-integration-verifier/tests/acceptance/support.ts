@@ -18,8 +18,10 @@ import { startRepositoryServer } from "@bernouy/cms-repository-server/server";
 import { BunRunner } from "@bernouy/http-runner";
 import {
     createHttpCandidateWorkerClient,
+    createCompositeVerificationSandbox,
     createVerificationSupervisor,
     runPostgresPlatformVerification,
+    runReleaseRuntimeVerification,
 } from "../../src";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../src/runtime/providers/postgres";
 import { createPostgresPlatformVerificationAdapter } from "../../src/sandbox/service/postgres";
@@ -124,10 +126,16 @@ export async function startOfficialCandidateAcceptance() {
         const supervisor = createVerificationSupervisor({
             client,
             databases,
-            sandbox: {
-                identity: PRODUCTION_RUNNER,
-                run: async (input, signal) => await runPostgresPlatformVerification(input, adapter, signal),
-            },
+            sandbox: createCompositeVerificationSandbox({
+                platform: {
+                    identity: PRODUCTION_RUNNER,
+                    run: async (input, signal) => await runPostgresPlatformVerification(input, adapter, signal),
+                },
+                releaseRuntime: {
+                    identity: PRODUCTION_RUNNER,
+                    run: async (input, signal) => await runReleaseRuntimeVerification(input, signal),
+                },
+            }),
             jobListLimit: 1,
             leaseRenewalIntervalMs: 30_000,
         });

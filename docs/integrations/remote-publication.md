@@ -73,28 +73,31 @@ attestation, is not sufficient for publication. The remote worker must execute
 the plan again and bind its result to the package, verification bundle, upgrade
 baselines, dependencies, admission plan, runner image, and policy digests.
 
-The existing remote PostgreSQL verifier does not yet provide a disposable CMS,
-MongoDB, Supabase Auth, Storage, and Edge Functions environment. The protocol
-and immutable workload are prepared, but remote runtime execution and `ulvia
-push` remain disabled until that server-owned capability exists. The production
-runner must not gain a host Docker socket; use a dedicated, resettable service
-stack or an equally isolated worker boundary.
+The remote verifier now composes two independently bounded proofs. The existing
+PostgreSQL sandbox checks static, SQL, schema, RLS, grant, author-suite, and
+migration contracts. A dedicated release runtime executes the mandatory
+`platform-release-runtime` suite against disposable CMS, MongoDB, Supabase Auth,
+Storage, PostgreSQL, and Edge Function services. The supervisor accepts only the
+complete joined result and validates it against the original admission plan.
+
+The release runtime uses the same `executeReleaseVerificationPlan` and scenario
+implementation as local `ulvia release`; it is not a second upgrade algorithm.
+It controls a private disposable Docker daemon and never receives the repository
+worker credential, production credentials, production data, or the host Docker
+socket. `ulvia push` remains disabled until the client-side upload and recovery
+workflow is implemented and exercised against this admission path.
 
 ## Implementation sequence
 
-1. Provision the server-owned disposable CMS, MongoDB, Supabase Auth, Storage,
-   and Edge Functions execution adapter behind the existing worker boundary.
-2. Make the mandatory platform suite execute the shared canonical release plan
-   and reject publication when any scenario is missing or fails.
-3. Enable strict rollback, cutover, and delayed-cleanup policy flags only when
+1. Enable strict rollback, cutover, and delayed-cleanup policy flags only when
    the runner emits the corresponding evidence.
-4. Add conflict, interruption, retry, and concurrent-push tests on the server.
-5. Implement single-coordinate push using the existing candidate protocol,
+2. Add conflict, interruption, retry, and concurrent-push tests on the server.
+3. Implement single-coordinate push using the existing candidate protocol,
    then
    verify remote pull round-trips the same
    digest.
-6. Implement dependency-ordered `push --all`.
-7. Enable the command only after end-to-end staging and recovery tests pass.
+4. Implement dependency-ordered `push --all`.
+5. Enable the command only after end-to-end staging and recovery tests pass.
 
 ZIP archives may exist as transport or download conveniences, but they are not
 the source of truth. The canonical content-addressed package and its digest are.

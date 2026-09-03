@@ -6,8 +6,11 @@ export type IntegrationVerifierRemoteSandboxEnv = IntegrationVerifierRuntimeEnv 
     Readonly<{
         sandboxOrigin: string;
         sandboxSigningKeyFile: string;
+        releaseRuntimeOrigin: string;
+        releaseRuntimeSigningKeyFile: string;
         sandboxCapabilityLifetimeMs: number;
         sandboxTimeoutMs: number;
+        releaseRuntimeTimeoutMs: number;
         sandboxMaxInputBytes: number;
         sandboxMaxOutputBytes: number;
         runnerIdentity: PinnedVerificationRunnerIdentity;
@@ -27,6 +30,14 @@ export function readIntegrationVerifierRemoteSandboxEnv(
             source.CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_FILE,
             "CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_FILE",
         ),
+        releaseRuntimeOrigin: repositoryOriginNamed(
+            source.CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_URL,
+            "CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_URL",
+        ),
+        releaseRuntimeSigningKeyFile: absolutePath(
+            source.CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_SIGNING_KEY_FILE,
+            "CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_SIGNING_KEY_FILE",
+        ),
         sandboxCapabilityLifetimeMs: boundedInteger(
             source.CMS_INTEGRATION_VERIFIER_SANDBOX_CAPABILITY_LIFETIME_MS,
             "CMS_INTEGRATION_VERIFIER_SANDBOX_CAPABILITY_LIFETIME_MS",
@@ -38,6 +49,13 @@ export function readIntegrationVerifierRemoteSandboxEnv(
             source.CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS,
             "CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS",
             600_000,
+            1_000,
+            3_600_000,
+        ),
+        releaseRuntimeTimeoutMs: boundedInteger(
+            source.CMS_INTEGRATION_RELEASE_RUNTIME_TIMEOUT_MS,
+            "CMS_INTEGRATION_RELEASE_RUNTIME_TIMEOUT_MS",
+            1_800_000,
             1_000,
             3_600_000,
         ),

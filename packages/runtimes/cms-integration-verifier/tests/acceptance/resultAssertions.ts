@@ -70,6 +70,8 @@ export async function assertExactSubmission(
             name: "postgres-image",
             version: "postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
         },
+        { name: "release-runtime-contract", version: "1.0.0" },
+        { name: "supabase-cli", version: "2.116.0" },
     ]);
     expect(trace.result.verification.bindings.dependencyDigests).toEqual([basicBlocsDigest]);
     for (const suite of admission.suites) {
@@ -80,6 +82,7 @@ export async function assertExactSubmission(
     expect(trace.submitted.status).toBe("published");
     expect(suiteOutcome(trace, "platform-package-materialization")).toBe("passed");
     expect(suiteOutcome(trace, "platform-postgres-rls-behavior")).toBe("passed");
+    expect(suiteOutcome(trace, "platform-release-runtime")).toBe("passed");
     await assertMigrationResult(trace);
 }
 

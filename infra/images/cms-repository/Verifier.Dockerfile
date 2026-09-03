@@ -12,7 +12,10 @@ RUN bun run build
 FROM build AS runtime-source
 RUN rm -rf /app/node_modules /app/packages/*/*/node_modules
 
-FROM oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0 AS runtime
+FROM docker:28.5.2-cli-alpine3.22@sha256:625d9431a9f54c5a2bc90f24f0e1c3d55b1349fd857dd85035f98c2c9acbdd4d AS docker-cli
+
+# The downloaded Supabase CLI binary targets glibc, so the execution image must remain Debian-based.
+FROM oven/bun:1.3.14-slim@sha256:d56a2534ffd262e92c12fd3249d3924d296d97086da773f821d7d0477435ea04 AS runtime
 
 ARG IMAGE_VERSION=dev
 ARG VCS_REF=unknown
@@ -22,12 +25,13 @@ LABEL org.opencontainers.image.title="@bernouy/cms-integration-verifier" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}"
 
-RUN addgroup -S -g 1001 verifier \
-    && adduser -S -D -H -u 1001 -G verifier verifier \
-    && addgroup -S -g 1002 verifier-sandbox \
-    && adduser -S -D -H -u 1002 -G verifier-sandbox verifier-sandbox
+RUN groupadd -g 1001 verifier \
+    && useradd -u 1001 -g verifier -M -d /nonexistent -s /usr/sbin/nologin verifier \
+    && groupadd -g 1002 verifier-sandbox \
+    && useradd -u 1002 -g verifier-sandbox -M -d /nonexistent -s /usr/sbin/nologin verifier-sandbox
 
 WORKDIR /app
+COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 COPY --chown=verifier:verifier --from=runtime-source /app/package.json /app/bun.lock /app/tsconfig.base.json /app/tsconfig.json ./
 COPY --chown=verifier:verifier --from=runtime-source /app/packages/ ./packages/
 
@@ -39,7 +43,7 @@ RUN bun install --frozen-lockfile --production --omit=peer --filter=@bernouy/cms
 ENV NODE_ENV=production \
     CMS_INTEGRATION_VERIFIER_HEALTH_PORT=3100
 
-EXPOSE 3100 3101
+EXPOSE 3100 3101 3102
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD ["bun", "-e", "const response = await fetch('http://127.0.0.1:3100/ready', { signal: AbortSignal.timeout(4000) }); if (!response.ok) process.exit(1); await response.body?.cancel();"]

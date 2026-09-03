@@ -21,7 +21,8 @@
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
-        "@bernouy/cms-repository-management": "workspace:*"
+        "@bernouy/cms-repository-management": "workspace:*",
+        "@bernouy/ulvia-cli": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"

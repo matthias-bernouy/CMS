@@ -1,6 +1,6 @@
 import { readIntegrationVerifierKey, readIntegrationVerifierRemoteSandboxEnv } from "../config";
 import { createHttpVerificationSandbox, createSandboxCapabilitySigner } from "../sandbox";
-import type { VerificationSandbox } from "../supervisor";
+import { createCompositeVerificationSandbox, type VerificationSandbox } from "../supervisor";
 import { startVerifierHealthServer, VerificationRuntimeHealth } from "./health";
 import { createProductionIntegrationVerifier } from "./production";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "./providers/postgres";
@@ -9,12 +9,20 @@ import { runVerificationPullLoop } from "./pullLoop";
 export async function runIntegrationVerifierExecutable(
     source: Record<string, string | undefined> = process.env,
 ): Promise<void> {
-    if (!source.CMS_INTEGRATION_VERIFIER_SANDBOX_URL) {
-        throw new Error("Integration verification requires the isolated remote sandbox service");
+    if (!source.CMS_INTEGRATION_VERIFIER_SANDBOX_URL || !source.CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_URL) {
+        throw new Error("Integration verification requires the isolated platform and release runtime services");
     }
     const env = readIntegrationVerifierRemoteSandboxEnv(source);
     const databases = await createDisposableVerificationDatabaseProviderFromEnv(source);
-    const sandbox = await remoteSandbox(env);
+    const sandbox = createCompositeVerificationSandbox({
+        platform: await remoteSandbox(env.sandboxOrigin, env.sandboxSigningKeyFile, env.sandboxTimeoutMs, env),
+        releaseRuntime: await remoteSandbox(
+            env.releaseRuntimeOrigin,
+            env.releaseRuntimeSigningKeyFile,
+            env.releaseRuntimeTimeoutMs,
+            env,
+        ),
+    });
     const supervisor = await createProductionIntegrationVerifier({ env: source, sandbox, databases });
     const healthState = new VerificationRuntimeHealth();
     const health = startVerifierHealthServer(env.healthPort, healthState);
@@ -42,14 +50,17 @@ export async function runIntegrationVerifierExecutable(
 }
 
 async function remoteSandbox(
+    origin: string,
+    signingKeyFile: string,
+    timeoutMs: number,
     env: ReturnType<typeof readIntegrationVerifierRemoteSandboxEnv>,
 ): Promise<VerificationSandbox> {
-    const privateKey = await readIntegrationVerifierKey(env.sandboxSigningKeyFile, "sandbox signing-key");
+    const privateKey = await readIntegrationVerifierKey(signingKeyFile, "sandbox signing-key");
     return createHttpVerificationSandbox({
         identity: env.runnerIdentity,
-        origin: env.sandboxOrigin,
+        origin,
         signer: createSandboxCapabilitySigner(privateKey, env.sandboxCapabilityLifetimeMs),
-        timeoutMs: env.sandboxTimeoutMs,
+        timeoutMs,
         maxInputBytes: env.sandboxMaxInputBytes,
         maxOutputBytes: env.sandboxMaxOutputBytes,
     });

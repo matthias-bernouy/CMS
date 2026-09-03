@@ -17,7 +17,7 @@ import {
 } from "../../../runtime/supabase-local";
 import { startLocalSupabase, stopLocalSupabase } from "../../../runtime/supabase";
 import type { LocalReleasePackage } from "../../types";
-import { ReleaseSandboxClient } from "../client";
+import { ReleaseSandboxClient, ReleaseSandboxTransportError } from "../client";
 import { removeReleaseSandbox } from "../filesystem";
 import { allocateReleaseSandboxPorts } from "../ports";
 import { prepareSandboxSupabase } from "../supabase-config";
@@ -31,6 +31,13 @@ export type ReleaseScenario = Readonly<{
     fixture?: UpgradeFixtureScenarioV1;
 }>;
 
+export class ReleaseScenarioInfrastructureError extends Error {
+    constructor(cause: unknown) {
+        super("Release scenario infrastructure failed", { cause });
+        this.name = "ReleaseScenarioInfrastructureError";
+    }
+}
+
 export async function runReleaseScenario(scenario: ReleaseScenario): Promise<void> {
     const root = await mkdtemp(join(tmpdir(), "ulvia-release-"));
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: join(root, "data") }, root);
@@ -40,6 +47,7 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
     let management: LocalSupabaseManagementServer | undefined;
     let supabasePrepared = false;
     let mongoRequested = false;
+    let phase: "infrastructure" | "scenario" = "infrastructure";
     let primaryError: unknown;
     try {
         await ensureUlviaPaths(paths);
@@ -82,21 +90,30 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
             return next;
         };
         const client = await startCmsClient(scenario.faultAfterPhase);
+        phase = "scenario";
         await executeInstalledReleaseScenario({
             scenario,
             supabase,
             client,
             restart: async () => {
-                if (cms) {
-                    await stopLocalCms(cms);
-                    cms = undefined;
+                try {
+                    if (cms) {
+                        await stopLocalCms(cms);
+                        cms = undefined;
+                    }
+                    return await startCmsClient();
+                } catch (error) {
+                    throw infrastructureFailure(error);
                 }
-                return await startCmsClient();
             },
         });
+        phase = "infrastructure";
         await assertDatabaseReady(supabase.databaseUrl);
     } catch (error) {
-        primaryError = error;
+        primaryError =
+            phase === "infrastructure" || error instanceof ReleaseSandboxTransportError
+                ? infrastructureFailure(error)
+                : error;
     } finally {
         const cleanup = await Promise.allSettled([
             cms ? stopLocalCms(cms) : Promise.resolve(),
@@ -111,13 +128,17 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
         const cleanupError = [...cleanup, ...infrastructure, ...filesystem].find(
             (result): result is PromiseRejectedResult => result.status === "rejected",
         )?.reason;
-        if (!primaryError && cleanupError) {
-            primaryError = cleanupError;
+        if (cleanupError) {
+            primaryError = infrastructureFailure(cleanupError);
         }
     }
     if (primaryError) {
         throw primaryError;
     }
+}
+
+function infrastructureFailure(error: unknown): ReleaseScenarioInfrastructureError {
+    return error instanceof ReleaseScenarioInfrastructureError ? error : new ReleaseScenarioInfrastructureError(error);
 }
 
 async function storePackages(

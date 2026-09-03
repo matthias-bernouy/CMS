@@ -18,7 +18,7 @@ const postgresTest = disposablePostgresAvailable ? test : test.skip;
 
 describe("official candidate release acceptance", () => {
     postgresTest(
-        "admits the real additive Photo Albums release through HTTP and PostgreSQL verification",
+        "admits the real additive Photo Albums release through HTTP, PostgreSQL, and full-stack verification",
         async () => {
             const fixture = await startOfficialCandidateAcceptance();
             try {
@@ -87,6 +87,6 @@ describe("official candidate release acceptance", () => {
                 await fixture.cleanup();
             }
         },
-        120_000,
+        1_800_000,
     );
 });

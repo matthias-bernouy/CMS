@@ -64,7 +64,7 @@ function assertProcessConfig(config: ProcessVerificationSandboxConfig): void {
         throw new TypeError("Verification sandbox arguments are invalid");
     }
     for (const [name, value] of Object.entries(config.environment ?? {})) {
-        if (!/^(?:PATH|LANG|LC_ALL|TZ)$/u.test(name) || value.includes("\0") || value.length > 4_096) {
+        if (!/^(?:PATH|LANG|LC_ALL|TZ|DOCKER_HOST)$/u.test(name) || value.includes("\0") || value.length > 4_096) {
             throw new TypeError("Verification sandbox environment contains a forbidden entry");
         }
     }

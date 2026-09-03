@@ -8,7 +8,8 @@
         "ulvia": "./src/index.ts"
     },
     "exports": {
-        ".": "./src/index.ts"
+        ".": "./src/index.ts",
+        "./release-runtime": "./src/release/verification/runtime.ts"
     },
     "files": [
         "src/",

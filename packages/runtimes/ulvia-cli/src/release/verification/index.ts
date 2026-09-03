@@ -2,13 +2,12 @@ import { identifyReleaseMigrationStateKey, planReleaseVerification } from "@bern
 import { loadUpgradeFixtureSuiteFromVerification } from "@bernouy/cms-integration-verification/bun";
 import type { LocalReleaseVerificationInput, LocalReleaseVerifier } from "../types";
 import { runAuthorTests } from "../author-tests";
-import { runReleaseScenario } from "../sandbox/scenario";
+import { executeReleaseVerificationPlan } from "./runtime";
 
 export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
     constructor(private readonly log: (message: string) => void) {}
 
     async verify(input: LocalReleaseVerificationInput) {
-        const packages = [input.candidate, ...input.baselines, ...input.availablePackages];
         const coordinate = `${input.candidate.package.envelope.kind}@${input.candidate.package.envelope.version}`;
         if (await runAuthorTests(input.sourceRoot)) {
             this.log(`✓ source tests passed for ${coordinate}`);
@@ -40,28 +39,16 @@ export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
                     `selected from ${input.baselines.length} historical baselines`,
             );
         }
-        for (const scenario of plan.scenarios) {
-            const baseline =
-                scenario.type === "fresh-install"
-                    ? undefined
-                    : input.baselines.find(
-                          (entry) =>
-                              entry.package.envelope.version === scenario.baseline.version &&
-                              entry.package.digest === scenario.baseline.packageDigest,
-                      );
-            const fixture =
-                scenario.type === "fresh-install" || !scenario.fixtureName
-                    ? undefined
-                    : fixtures?.scenarios.find(({ name }) => name === scenario.fixtureName);
-            this.log(description(coordinate, input.candidate.package.envelope.version, scenario));
-            await runReleaseScenario({
-                target: input.candidate,
-                packages,
-                ...(baseline ? { baseline } : {}),
-                ...(fixture ? { fixture } : {}),
-                ...(scenario.type === "crash-recovery" ? { faultAfterPhase: scenario.phase } : {}),
-            });
-        }
+        await executeReleaseVerificationPlan({
+            candidate: input.candidate,
+            baselines: input.baselines,
+            availablePackages: input.availablePackages,
+            plan,
+            fixtures,
+            onScenario: (scenario) => {
+                this.log(description(coordinate, input.candidate.package.envelope.version, scenario));
+            },
+        });
         const scenarioCount = plan.scenarios.length;
         this.log(
             `✓ runtime verification passed for ${scenarioCount} scenario(s)` +

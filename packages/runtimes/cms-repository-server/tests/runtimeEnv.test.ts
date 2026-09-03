@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     identifyMigrationVerificationEnvironment,
-    POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    PLATFORM_VERIFICATION_SUITES_V1,
     validateReleaseAdmissionPolicySnapshot,
 } from "@bernouy/cms-integration-verification";
 import {
@@ -32,7 +32,7 @@ describe("readRepositoryRuntimeEnv", () => {
             candidatePruneAuditRetentionMs: 2_592_000_000,
             verifierRunner: {
                 name: "cms-postgres",
-                version: "1.2.0",
+                version: "1.3.0",
                 imageDigest: "sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",
             },
             clientAddressMode: "disabled",
@@ -129,9 +129,9 @@ describe("readRepositoryRuntimeEnv", () => {
 
         await expect(validateReleaseAdmissionPolicySnapshot(policy)).resolves.toBeDefined();
         expect(policy.platformRequiredSuites.map((suite) => suite.suiteId)).toEqual(
-            POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.map((suite) => suite.suiteId),
+            PLATFORM_VERIFICATION_SUITES_V1.map((suite) => suite.suiteId),
         );
-        expect(policy.platformRequiredSuites.every((suite) => suite.runner.version === "1.2.0")).toBeTrue();
+        expect(policy.platformRequiredSuites.every((suite) => suite.runner.version === "1.3.0")).toBeTrue();
         expect(policy.platformRequiredSuites.every((suite) => suite.suiteDigest.length === 64)).toBeTrue();
     });
 
@@ -143,9 +143,9 @@ describe("readRepositoryRuntimeEnv", () => {
 
         expect(environment.runner.identity).toEqual(runner);
         expect(environment.postgres.imageDigest).toStartWith("sha256:");
-        expect(policy.identity).toEqual({ name: "repository-admission", version: "1.6.0" });
+        expect(policy.identity).toEqual({ name: "repository-admission", version: "1.7.0" });
         expect(policy.staticEvaluator).toEqual({ name: "repository-static-compatibility", version: "1.1.0" });
-        expect(policy.verificationPolicy).toEqual({ name: "repository-verification", version: "1.4.0" });
+        expect(policy.verificationPolicy).toEqual({ name: "repository-verification", version: "1.5.0" });
         expect(policy.migrationPolicy).toEqual({ name: "repository-migration", version: "1.1.0" });
         expect(environment.policy).toEqual(policy.migrationPolicy);
         expect(policy.migrationEvidence.approvedEnvironmentDigests).toEqual([identified.digest]);

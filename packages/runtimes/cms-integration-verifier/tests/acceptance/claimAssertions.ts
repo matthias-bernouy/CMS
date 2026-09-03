@@ -20,14 +20,14 @@ export async function assertExactClaim(
         throw new Error("Official candidate was not claimed through the worker protocol");
     }
     expect(claimed.workload.verification.manifest.runnerRequirements).toEqual([OFFICIAL_CANDIDATE_RUNNER_REQUIREMENT]);
-    expect(claimed.workload.policy.identity).toEqual({ name: "repository-admission", version: "1.6.0" });
+    expect(claimed.workload.policy.identity).toEqual({ name: "repository-admission", version: "1.7.0" });
     expect(claimed.workload.policy.staticEvaluator).toEqual({
         name: "repository-static-compatibility",
         version: "1.1.0",
     });
     expect(claimed.workload.policy.verificationPolicy).toEqual({
         name: "repository-verification",
-        version: "1.4.0",
+        version: "1.5.0",
     });
     expect(claimed.workload.admission.selectedRunner).toEqual(PRODUCTION_RUNNER);
     expect(await computeIntegrationPackageDigest(claimed.workload.package)).toBe(targetDigest);
@@ -60,6 +60,26 @@ export async function assertExactClaim(
         connectorKey: "primary",
         lineageId: "photo-albums-supabase-v1",
     });
+    expect(claimed.workload.admission.releaseVerificationPlan?.plan.baselines).toEqual([
+        expect.objectContaining({ version: "1.0.0", packageDigest: sourceDigest }),
+    ]);
+    expect(
+        claimed.workload.upgradePackages.map(({ kind, version, packageDigest, envelope }) => ({
+            kind,
+            version,
+            packageDigest,
+            envelopeKind: envelope.kind,
+            envelopeVersion: envelope.version,
+        })),
+    ).toEqual([
+        {
+            kind: "photo-albums",
+            version: "1.0.0",
+            packageDigest: sourceDigest,
+            envelopeKind: "photo-albums",
+            envelopeVersion: "1.0.0",
+        },
+    ]);
     const expectedDependencies = [
         { selection: "minimum" as const, kind: "basic-blocs", version: "1.0.0", packageDigest: basicBlocsDigest },
         { selection: "stable" as const, kind: "basic-blocs", version: "1.0.0", packageDigest: basicBlocsDigest },

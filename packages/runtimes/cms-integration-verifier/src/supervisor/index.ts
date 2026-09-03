@@ -1,4 +1,5 @@
 export { createVerificationSupervisor } from "./execution/coordinator";
+export { createCompositeVerificationSandbox } from "./composite";
 export {
     VerificationSupervisorError,
     type VerificationSupervisorErrorCode,

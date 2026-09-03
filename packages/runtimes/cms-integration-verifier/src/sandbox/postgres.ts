@@ -2,6 +2,8 @@ import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages
 import {
     identifyAdmissionInputSnapshot,
     parsePlatformVerificationEvidence,
+    POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    RELEASE_RUNTIME_PLATFORM_SUITE_ID,
     type BehavioralRlsPlanV1,
     type CandidateAdmissionJobResultV1,
     type MigrationJobResultV1,
@@ -9,6 +11,7 @@ import {
     type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import type { VerificationSandboxInput } from "../supervisor";
+import { verificationResultBindings } from "./release/bindings";
 
 export type PostgresPlatformVerificationEvidence = Readonly<{
     durationMs: number;
@@ -66,8 +69,18 @@ export async function runPostgresPlatformVerification(
     adapter: PostgresPlatformVerificationAdapter,
     signal: AbortSignal,
 ): Promise<CandidateAdmissionJobResultV1> {
+    const postgresSuiteIds = new Set(POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.map((entry) => entry.suiteId));
+    const unknownPlatform = input.workload.admission.suites.find(
+        (entry) =>
+            entry.source === "platform" &&
+            entry.suiteId !== RELEASE_RUNTIME_PLATFORM_SUITE_ID &&
+            !postgresSuiteIds.has(entry.suiteId),
+    );
+    if (unknownPlatform) {
+        throw new TypeError(`PostgreSQL verification adapter cannot execute ${unknownPlatform.suiteId}`);
+    }
     const plannedPlatform = input.workload.admission.suites
-        .filter((entry) => entry.source === "platform")
+        .filter((entry) => entry.source === "platform" && postgresSuiteIds.has(entry.suiteId))
         .map((entry) => ({
             suiteId: entry.suiteId,
             suiteDigest: entry.contentDigest,
@@ -112,56 +125,60 @@ export async function runPostgresPlatformVerification(
         schema: "cms.integration.verification-job-result.v1",
         candidateId: input.workload.admission.candidate.candidateId,
         ...input.workload.attempt,
-        bindings: resultBindings(input, admissionDigest),
+        bindings: verificationResultBindings(input, admissionDigest),
         runner: input.workload.admission.selectedRunner,
         environment: {
             digest: await sha256Hex(canonicalJsonBytes(environmentVersions)),
             versions: environmentVersions,
         },
         results: await Promise.all(
-            input.workload.admission.suites.map(async (planned) => {
-                if (planned.source !== "platform") {
-                    const proof = authorEvidence.get(planned.suiteId);
+            input.workload.admission.suites
+                .filter(
+                    (planned) => planned.source !== "platform" || planned.suiteId !== RELEASE_RUNTIME_PLATFORM_SUITE_ID,
+                )
+                .map(async (planned) => {
+                    if (planned.source !== "platform") {
+                        const proof = authorEvidence.get(planned.suiteId);
+                        if (
+                            !proof ||
+                            proof.suiteDigest !== planned.contentDigest ||
+                            ((proof.outcome === "passed" || proof.outcome === "failed") && !proof.evidenceDigest) ||
+                            (proof.outcome === "infrastructure-failure" && !proof.diagnosticCode)
+                        ) {
+                            throw new TypeError(
+                                `PostgreSQL author verification evidence does not match ${planned.suiteId}`,
+                            );
+                        }
+                        return {
+                            suiteId: planned.suiteId,
+                            outcome: proof.outcome,
+                            durationMs: proof.durationMs,
+                            attempts: 1,
+                            cacheHit: false,
+                            evidenceDigests: proof.evidenceDigest ? [proof.evidenceDigest] : [],
+                            diagnostics: authorDiagnostics(proof),
+                        };
+                    }
+                    const proof = evidence.get(planned.suiteId);
                     if (
                         !proof ||
                         proof.suiteDigest !== planned.contentDigest ||
-                        ((proof.outcome === "passed" || proof.outcome === "failed") && !proof.evidenceDigest) ||
-                        (proof.outcome === "infrastructure-failure" && !proof.diagnosticCode)
+                        (proof.outcome === "not-applicable") !== (planned.applicable === false)
                     ) {
-                        throw new TypeError(
-                            `PostgreSQL author verification evidence does not match ${planned.suiteId}`,
-                        );
+                        throw new TypeError(`PostgreSQL verification evidence does not match ${planned.suiteId}`);
                     }
+                    const evidenceDigest = await sha256Hex(canonicalJsonBytes(proof));
                     return {
                         suiteId: planned.suiteId,
                         outcome: proof.outcome,
-                        durationMs: proof.durationMs,
+                        durationMs: execution.durationMs,
                         attempts: 1,
                         cacheHit: false,
-                        evidenceDigests: proof.evidenceDigest ? [proof.evidenceDigest] : [],
-                        diagnostics: authorDiagnostics(proof),
+                        evidenceDigests: [evidenceDigest],
+                        diagnostics: diagnostics(proof),
+                        platformEvidence: proof,
                     };
-                }
-                const proof = evidence.get(planned.suiteId);
-                if (
-                    !proof ||
-                    proof.suiteDigest !== planned.contentDigest ||
-                    (proof.outcome === "not-applicable") !== (planned.applicable === false)
-                ) {
-                    throw new TypeError(`PostgreSQL verification evidence does not match ${planned.suiteId}`);
-                }
-                const evidenceDigest = await sha256Hex(canonicalJsonBytes(proof));
-                return {
-                    suiteId: planned.suiteId,
-                    outcome: proof.outcome,
-                    durationMs: execution.durationMs,
-                    attempts: 1,
-                    cacheHit: false,
-                    evidenceDigests: [evidenceDigest],
-                    diagnostics: diagnostics(proof),
-                    platformEvidence: proof,
-                };
-            }),
+                }),
         ),
     };
     let migrations: readonly MigrationJobResultV1[] = [];
@@ -236,35 +253,4 @@ function authorDiagnostics(
             redacted: true,
         },
     ];
-}
-
-function resultBindings(input: VerificationSandboxInput, admissionDigest: string): VerificationJobResultV1["bindings"] {
-    const admission = input.workload.admission;
-    return {
-        admissionDigest,
-        candidateDigest: admission.candidate.candidateDigest,
-        packageDigest: admission.candidate.packageDigest,
-        verificationDigest: admission.candidate.verificationDigest,
-        policyDigest: admission.policyDigest,
-        reviewedBaselineRevisionIds: admission.reviewedBaselines.map((entry) => entry.revisionId).toSorted(),
-        reviewedBaselineDigests: admission.reviewedBaselines.map((entry) => entry.baselineDigest).toSorted(),
-        reviewedObservedSchemaDigests: admission.reviewedBaselines
-            .map((entry) => entry.observedSchemaDigest)
-            .toSorted(),
-        dependencyDigests: [...new Set(admission.dependencies.map((entry) => entry.packageDigest))].toSorted(),
-        activeContractDigests: admission.activeContracts.map((entry) => entry.contractDigest).toSorted(),
-        suiteContentDigests: admission.suites.map((entry) => entry.contentDigest).toSorted(),
-        catalogRevisionDigest: admission.catalogRevision.digest,
-        compatibilityRevisionDigest: admission.compatibilityRevision.digest,
-        compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
-        ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
-        ...(admission.releaseVerificationPlan
-            ? {
-                  releaseVerificationPlanDigest: admission.releaseVerificationPlan.digest,
-                  upgradeBaselineDigests: admission.releaseVerificationPlan.plan.baselines
-                      .map((entry) => entry.packageDigest)
-                      .toSorted(),
-              }
-            : {}),
-    };
 }

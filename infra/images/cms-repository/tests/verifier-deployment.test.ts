@@ -16,7 +16,8 @@ describe("integration verifier image", () => {
         );
         expect(bases).toEqual([
             `oven/bun:1.3.14-alpine@sha256:${"5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0"}`,
-            `oven/bun:1.3.14-alpine@sha256:${"5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0"}`,
+            `docker:28.5.2-cli-alpine3.22@sha256:${"625d9431a9f54c5a2bc90f24f0e1c3d55b1349fd857dd85035f98c2c9acbdd4d"}`,
+            `oven/bun:1.3.14-slim@sha256:${"d56a2534ffd262e92c12fd3249d3924d296d97086da773f821d7d0477435ea04"}`,
         ]);
         expect(dockerfile).toContain("--filter=@bernouy/cms-integration-verifier");
         expect(dockerfile).toContain("-u 1001");
@@ -70,13 +71,29 @@ describe("integration verifier trust zones", () => {
         expect(sandbox).toContain("SANDBOX_MAX_ERROR_BYTES");
         expect(sandbox).not.toContain("SANDBOX_EXECUTABLE");
         expect(sandbox).not.toContain("SANDBOX_ARGUMENTS_JSON");
-        expect(sandbox).toContain('CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0"');
+        expect(sandbox).toContain('CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.3.0"');
         expect(sandbox).not.toContain("service/postgresAdapter.ts");
         expect(sandbox).not.toContain('"platform-install"');
     });
 
+    test("gives the full-stack runner only a private disposable Docker daemon", () => {
+        const docker = serviceSource("cms-integration-release-runtime-docker", "cms-integration-release-runtime");
+        const runtime = serviceSource("cms-integration-release-runtime");
+        expect(compose).not.toContain("/var/run/docker.sock");
+        expect(docker).toContain(
+            `docker:28.5.2-dind-alpine3.22@sha256:${"2a232a42256f70d78e3cc5d2b5d6b3276710a0de0596c145f627ecfae90282ac"}`,
+        );
+        expect(docker).toContain("cms_release_runtime_egress: {}");
+        expect(docker).not.toContain("cms_repository");
+        expect(runtime).toContain("network_mode: service:cms-integration-release-runtime-docker");
+        expect(runtime).toContain("DOCKER_HOST: tcp://127.0.0.1:2375");
+        expect(runtime).toContain("releaseMain.ts");
+        expect(runtime).not.toContain("WORKER_TOKEN");
+        expect(runtime).not.toContain("SIGNING_KEY");
+    });
+
     test("uses an ephemeral digest-pinned PostgreSQL 16 provider on its own network", () => {
-        const postgres = serviceSource("cms-integration-verifier-postgres");
+        const postgres = serviceSource("cms-integration-verifier-postgres", "cms-integration-release-runtime-docker");
         expect(postgres).toContain(
             "postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
         );
@@ -103,6 +120,8 @@ describe("integration verifier trust zones", () => {
         expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE=");
         expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE=");
         expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE=");
+        expect(envExample).toContain("CMS_INTEGRATION_RELEASE_RUNTIME_SIGNING_KEY_SECRET_FILE=");
+        expect(envExample).toContain("CMS_INTEGRATION_RELEASE_RUNTIME_VERIFICATION_KEY_FILE=");
         expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE=");
         expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE=");
         expect(compose).toContain("source: cms_integration_verifier_worker_token");
@@ -132,6 +151,8 @@ composeTest("renders exact network membership, identities, secrets, and resource
     };
     const supervisor = config.services["cms-integration-verifier"]!;
     const sandbox = config.services["cms-integration-verifier-sandbox"]!;
+    const releaseDocker = config.services["cms-integration-release-runtime-docker"]!;
+    const releaseRuntime = config.services["cms-integration-release-runtime"]!;
     const postgres = config.services["cms-integration-verifier-postgres"]!;
     const repository = config.services["cms-repository"]!;
     const secretCheck = config.services["cms-repository-secret-check"]!;
@@ -149,10 +170,13 @@ composeTest("renders exact network membership, identities, secrets, and resource
     expect(supervisor.user).toBe("1001:1001");
     expect(sandbox.user).toBe("1002:1002");
     expect(postgres.user).toBe("70:70");
-    for (const service of [repository, supervisor, sandbox]) {
+    expect(releaseRuntime.user).toBe("1002:1002");
+    expect(releaseRuntime.network_mode).toBe("service:cms-integration-release-runtime-docker");
+    expect(releaseDocker.privileged).toBeTrue();
+    for (const service of [repository, supervisor, sandbox, releaseRuntime]) {
         expect(service.environment).toMatchObject({
             CMS_INTEGRATION_VERIFIER_RUNNER_NAME: "cms-postgres",
-            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0",
+            CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.3.0",
             CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: `sha256:${"b".repeat(64)}`,
         });
     }
@@ -198,8 +222,8 @@ composeTest("renders exact network membership, identities, secrets, and resource
     expect(sandbox).not.toHaveProperty("ports");
     expect(supervisor).not.toHaveProperty("ports");
     expect(postgres).not.toHaveProperty("ports");
-    for (const network of Object.values(config.networks)) {
-        expect(network.internal).toBe(true);
+    for (const [name, network] of Object.entries(config.networks)) {
+        expect(network.internal ?? false).toBe(name.endsWith("cms_release_runtime_egress") ? false : true);
     }
     for (const service of [supervisor, sandbox, postgres]) {
         expect(service.restart).toBe("unless-stopped");
@@ -231,6 +255,8 @@ function renderEnvironment(): Record<string, string> {
         CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE: "/secrets/verifier-worker",
         CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE: "/secrets/private.pem",
         CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: "/secrets/public.pem",
+        CMS_INTEGRATION_RELEASE_RUNTIME_SIGNING_KEY_SECRET_FILE: "/secrets/release-private.pem",
+        CMS_INTEGRATION_RELEASE_RUNTIME_VERIFICATION_KEY_FILE: "/secrets/release-public.pem",
         CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE: "/secrets/postgres",
         CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE: "/secrets/postgres-server",
     };

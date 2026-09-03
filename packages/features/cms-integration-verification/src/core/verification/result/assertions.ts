@@ -6,7 +6,7 @@ import type {
     VerificationJobResultV1,
 } from "../../../interfaces/verification";
 import { compareText, invalidReference, samePinnedRunner } from "../shared";
-import { POSTGRES_PLATFORM_VERIFICATION_SUITES_V1, identifyPlatformVerificationSuiteDefinition } from "../platform";
+import { PLATFORM_VERIFICATION_SUITES_V1, identifyPlatformVerificationSuiteDefinition } from "../platform";
 
 export function assertAttempt(
     result: VerificationJobResultV1,
@@ -91,9 +91,7 @@ export async function assertRunnerAndSuites(
         }
         const platformPolicy = policy.platformRequiredSuites.find((entry) => entry.suiteId === suite.suiteId);
         if (planned.source === "platform" && platformPolicy?.applicability !== undefined) {
-            const definition = POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.find(
-                (entry) => entry.suiteId === suite.suiteId,
-            );
+            const definition = PLATFORM_VERIFICATION_SUITES_V1.find((entry) => entry.suiteId === suite.suiteId);
             const definitionDigest = definition
                 ? (await identifyPlatformVerificationSuiteDefinition(definition)).digest
                 : undefined;

@@ -19,9 +19,9 @@ afterEach(async () => {
 });
 
 describe("integration verifier runtime configuration", () => {
-    test("requires the isolated sandbox service", async () => {
+    test("requires both isolated verification services", async () => {
         await expect(runIntegrationVerifierExecutable({ NODE_ENV: "production" })).rejects.toThrow(
-            /isolated remote sandbox service/,
+            /isolated platform and release runtime services/,
         );
     });
 
@@ -76,6 +76,7 @@ describe("integration verifier runtime configuration", () => {
             CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.0.0",
             CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: `sha256:${"a".repeat(64)}`,
             CMS_INTEGRATION_VERIFIER_SANDBOX_TIMEOUT_MS: "600000",
+            CMS_INTEGRATION_RELEASE_RUNTIME_TIMEOUT_MS: "1800000",
             CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_INPUT_BYTES: "41943040",
             CMS_INTEGRATION_VERIFIER_SANDBOX_MAX_OUTPUT_BYTES: "1048576",
         };
@@ -85,8 +86,13 @@ describe("integration verifier runtime configuration", () => {
             CMS_INTEGRATION_VERIFIER_WORKER_ID: "worker-1",
             CMS_INTEGRATION_VERIFIER_SANDBOX_URL: "http://sandbox:3101",
             CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_FILE: "/run/secrets/private-key",
+            CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_URL: "http://release-runtime:3102",
+            CMS_INTEGRATION_VERIFIER_RELEASE_RUNTIME_SIGNING_KEY_FILE: "/run/secrets/release-private-key",
         });
         expect(supervisor.sandboxSigningKeyFile).toBe("/run/secrets/private-key");
+        expect(supervisor.releaseRuntimeSigningKeyFile).toBe("/run/secrets/release-private-key");
+        expect(supervisor.sandboxTimeoutMs).toBe(600_000);
+        expect(supervisor.releaseRuntimeTimeoutMs).toBe(1_800_000);
 
         const sandbox = readVerificationSandboxServiceEnv({
             ...common,

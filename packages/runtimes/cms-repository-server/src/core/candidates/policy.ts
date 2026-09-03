@@ -5,7 +5,7 @@ import type {
 } from "@bernouy/cms-integration-verification";
 import {
     CMS_POSTGRES_MIGRATION_ENVIRONMENT_V1,
-    POSTGRES_PLATFORM_VERIFICATION_SUITES_V1,
+    PLATFORM_VERIFICATION_SUITES_V1,
     identifyPlatformVerificationSuiteDefinition,
     identifyMigrationVerificationEnvironment,
 } from "@bernouy/cms-integration-verification";
@@ -16,7 +16,7 @@ export async function productionReleaseAdmissionPolicy(
     migrationEnvironment?: MigrationVerificationEnvironmentV1,
 ): Promise<ReleaseAdmissionPolicySnapshotV1> {
     const platformRequiredSuites = await Promise.all(
-        POSTGRES_PLATFORM_VERIFICATION_SUITES_V1.map(async (definition) => ({
+        PLATFORM_VERIFICATION_SUITES_V1.map(async (definition) => ({
             suiteId: definition.suiteId,
             suiteDigest: (await identifyPlatformVerificationSuiteDefinition(definition)).digest,
             runner,
@@ -25,9 +25,9 @@ export async function productionReleaseAdmissionPolicy(
     );
     return Object.freeze({
         schema: "cms.integration.release-admission-policy.v1",
-        identity: { name: "repository-admission", version: "1.6.0" },
+        identity: { name: "repository-admission", version: "1.7.0" },
         staticEvaluator: { name: "repository-static-compatibility", version: "1.1.0" },
-        verificationPolicy: { name: "repository-verification", version: "1.4.0" },
+        verificationPolicy: { name: "repository-verification", version: "1.5.0" },
         migrationPolicy: { name: "repository-migration", version: "1.1.0" },
         approvedRunners: [runner],
         platformRequiredSuites,
