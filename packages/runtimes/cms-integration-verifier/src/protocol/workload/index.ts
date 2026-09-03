@@ -1,5 +1,6 @@
 import { computeIntegrationPackageDigest, validateIntegrationPackageEnvelope } from "@bernouy/cms-integration-packages";
 import {
+    assertReleaseVerificationPlanMatchesVerification,
     computeIntegrationVerificationDigest,
     identifyMigrationVerificationInput,
     identifyReleaseAdmissionPolicySnapshot,
@@ -13,9 +14,11 @@ import { record } from "../status";
 import type { CandidateStatusProjection, ExactVerificationWorkload } from "../types";
 import { parseExactDependencyPackages } from "./dependencyPackages";
 import { parseExactMigrationPackages } from "./migrationPackages";
+import { parseExactUpgradePackages } from "./upgradePackages";
 
 export { parseExactDependencyPackages } from "./dependencyPackages";
 export { parseExactMigrationPackages } from "./migrationPackages";
+export { parseExactUpgradePackages } from "./upgradePackages";
 
 export async function parseExactWorkload(
     value: unknown,
@@ -35,6 +38,12 @@ export async function parseExactWorkload(
         const verification = validateIntegrationVerificationEnvelope(input.verification);
         const policy = await identifyReleaseAdmissionPolicySnapshot(input.policy);
         const admission = await validateAdmissionInputSnapshotForPolicy(input.admission, policy.snapshot);
+        if (admission.snapshot.releaseVerificationPlan) {
+            assertReleaseVerificationPlanMatchesVerification(
+                admission.snapshot.releaseVerificationPlan.plan,
+                verification,
+            );
+        }
         const behavioralRlsPlan = await validateBehavioralRlsPlanBinding(
             input.behavioralRlsPlan,
             admission.snapshot.behavioralRlsPlan,
@@ -65,6 +74,11 @@ export async function parseExactWorkload(
             version: candidate.version,
             packageDigest: candidate.packageDigest,
         });
+        const upgradePackages = await parseExactUpgradePackages(
+            input.upgradePackages ?? [],
+            candidate.kind,
+            admission.snapshot.releaseVerificationPlan?.plan.baselines ?? [],
+        );
         const packageDigest = await computeIntegrationPackageDigest(packageEnvelope);
         const verificationDigest = await computeIntegrationVerificationDigest(verification);
         assertCandidateObjects(candidate, packageEnvelope, packageDigest, verification, verificationDigest);
@@ -87,6 +101,7 @@ export async function parseExactWorkload(
             ...(behavioralRlsPlan ? { behavioralRlsPlan } : {}),
             authorSuites,
             dependencyPackages,
+            upgradePackages,
             migrationInputs,
             migrationPackages,
         });
@@ -112,6 +127,7 @@ function optionalWorkloadFields(value: unknown): string[] {
         ...(Object.hasOwn(input, "migrationPackages") ? ["migrationPackages"] : []),
         ...(Object.hasOwn(input, "dependencyPackages") ? ["dependencyPackages"] : []),
         ...(Object.hasOwn(input, "behavioralRlsPlan") ? ["behavioralRlsPlan"] : []),
+        ...(Object.hasOwn(input, "upgradePackages") ? ["upgradePackages"] : []),
     ];
 }
 

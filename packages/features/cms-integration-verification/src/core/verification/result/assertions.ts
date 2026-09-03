@@ -50,6 +50,14 @@ export function assertBindings(
         compatibilityRevisionDigest: admission.compatibilityRevision.digest,
         compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
         ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
+        ...(admission.releaseVerificationPlan
+            ? {
+                  releaseVerificationPlanDigest: admission.releaseVerificationPlan.digest,
+                  upgradeBaselineDigests: admission.releaseVerificationPlan.plan.baselines
+                      .map((entry) => entry.packageDigest)
+                      .toSorted(compareText),
+              }
+            : {}),
     };
     if (!sameBytes(canonicalJsonBytes(result.bindings), canonicalJsonBytes(expected))) {
         invalidReference("jobResult.bindings", "do not match the canonical admission inputs");

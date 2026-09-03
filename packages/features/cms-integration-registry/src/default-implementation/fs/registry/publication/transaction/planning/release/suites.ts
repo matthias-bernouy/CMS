@@ -15,8 +15,8 @@ import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import {
     FsIntegrationRegistryCandidateAdmissionPlanningError,
     type IntegrationVerificationContractCatalog,
-} from "./types";
-import { integrationVerificationContractLineageId } from "../contracts";
+} from "../types";
+import { integrationVerificationContractLineageId } from "../../contracts";
 
 export type CandidateSuiteSelection = Readonly<{
     runner: PinnedVerificationRunnerIdentity;

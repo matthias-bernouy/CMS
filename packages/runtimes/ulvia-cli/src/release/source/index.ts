@@ -6,14 +6,20 @@ import { lstat, opendir, readFile, realpath } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { rcompare } from "semver";
 import type { LocalReleasePackage, LocalReviewedSchemaEvidence } from "../types";
+import type { StoredIntegrationVerificationBundle } from "@bernouy/cms-integration-registry";
 import { loadReviewedSchemaEvidence } from "./evidence";
+import { buildLocalVerificationBundle } from "./verification";
 
 const MAX_DEPTH = 10;
 const MAX_ENTRIES = 50_000;
 const SKIPPED_DIRECTORIES = new Set([".git", ".registry", "dist", "node_modules"]);
 
 export type LocalReleaseSource = LocalReleasePackage &
-    Readonly<{ integrationRoot: string; reviewedSchemaEvidence: readonly LocalReviewedSchemaEvidence[] }>;
+    Readonly<{
+        integrationRoot: string;
+        verification: StoredIntegrationVerificationBundle;
+        reviewedSchemaEvidence: readonly LocalReviewedSchemaEvidence[];
+    }>;
 
 export async function listLocalReleaseKinds(searchRoot: string): Promise<readonly string[]> {
     const indexes = await discoverIntegrationIndexes(searchRoot);
@@ -58,10 +64,16 @@ export async function readLocalReleaseSource(
     if (!parsedDefinition) {
         throw new Error(`Integration definition disappeared: ${kind}@${entry.version}`);
     }
+    const verification = await buildLocalVerificationBundle(integrationRoot, {
+        kind,
+        version: entry.version,
+        packageDigest: packageResult.digest,
+    });
     return {
         integrationRoot,
         package: packageResult,
         definition: parsedDefinition,
+        verification,
         reviewedSchemaEvidence: await loadReviewedSchemaEvidence(resolvedSearchRoot, integrationRoot),
     };
 }

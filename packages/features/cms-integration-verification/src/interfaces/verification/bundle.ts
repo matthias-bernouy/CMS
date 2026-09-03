@@ -7,6 +7,8 @@ import type { VerificationRunnerRequirement } from "../runner";
 
 export const INTEGRATION_VERIFICATION_SCHEMA = "cms.integration.verification.v1" as const;
 export const INTEGRATION_VERIFICATION_SDK_V1_SPECIFIER = "@bernouy/cms-integration-verification/sdk/v1" as const;
+export const INTEGRATION_UPGRADE_FIXTURES_SDK_V1_SPECIFIER =
+    "@bernouy/cms-integration-verification/upgrade-fixtures/v1" as const;
 export const INTEGRATION_VERIFICATION_SUITE_CONTENT_SCHEMA = "cms.integration.verification-suite-content.v2" as const;
 
 export type IntegrationVerificationAuthorSuiteType = "contract" | "conformance";
@@ -20,6 +22,20 @@ export type IntegrationVerificationContractSuiteV1 = Readonly<{
 export type IntegrationVerificationConformanceSuiteV1 = Readonly<{
     suiteId: string;
     entrypoint: string;
+}>;
+
+export type IntegrationVerificationUpgradeFixtureV1 = Readonly<{
+    entrypoint: string;
+    scenarios: readonly IntegrationVerificationUpgradeScenarioV1[];
+}>;
+
+export type IntegrationVerificationUpgradeScenarioV1 = Readonly<{
+    name: string;
+    from: string;
+    dependencies?: readonly Readonly<{
+        kind: string;
+        versionRange?: string;
+    }>[];
 }>;
 
 export type IntegrationVerificationSuiteContentV2 = Readonly<{
@@ -42,6 +58,8 @@ export type IntegrationVerificationManifestV1 = Readonly<{
     contracts: readonly IntegrationVerificationContractSuiteV1[];
     conformance: readonly IntegrationVerificationConformanceSuiteV1[];
     fixtures: readonly string[];
+    /** Portable business-state fixtures executed by the shared release verifier. */
+    upgradeFixture?: IntegrationVerificationUpgradeFixtureV1;
     /** Optional author fixtures for the repository-owned behavioral RLS suite. */
     behavioralRls?: string;
 }>;

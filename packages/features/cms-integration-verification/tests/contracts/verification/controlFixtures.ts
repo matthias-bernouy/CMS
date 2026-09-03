@@ -144,6 +144,14 @@ export async function jobResult(
             ...(selectedAdmission.behavioralRlsPlan
                 ? { behavioralRlsPlanDigest: selectedAdmission.behavioralRlsPlan.digest }
                 : {}),
+            ...(selectedAdmission.releaseVerificationPlan
+                ? {
+                      releaseVerificationPlanDigest: selectedAdmission.releaseVerificationPlan.digest,
+                      upgradeBaselineDigests: selectedAdmission.releaseVerificationPlan.plan.baselines.map(
+                          (entry) => entry.packageDigest,
+                      ),
+                  }
+                : {}),
         },
         runner: selectedAdmission.selectedRunner,
         environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },

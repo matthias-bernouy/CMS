@@ -85,6 +85,7 @@ export async function workloadFixture(): Promise<ClaimedVerificationJob["workloa
             },
         ],
         dependencyPackages: [],
+        upgradePackages: [],
         migrationInputs: [],
         migrationPackages: [],
     };

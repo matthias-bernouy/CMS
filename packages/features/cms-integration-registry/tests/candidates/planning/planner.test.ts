@@ -77,6 +77,18 @@ describe("filesystem candidate admission planning", () => {
             "platform-install",
             "public-api",
         ]);
+        expect(plan.admission.releaseVerificationPlan?.digest).toHaveLength(64);
+        expect(plan.admission.releaseVerificationPlan?.plan.baselines).toEqual([
+            {
+                version: "1.0.0",
+                packageDigest: baseline.digest,
+                resilienceKey: expect.any(String),
+            },
+        ]);
+        expect(plan.admission.releaseVerificationPlan?.plan.scenarios.map(({ type }) => type)).toEqual([
+            "fresh-install",
+            "upgrade",
+        ]);
 
         const restartedAfterQueue = new FsIntegrationRegistryCandidateStore({ root: fixture.root });
         const objects = await restartedAfterQueue.objects("candidate-demo-1");
@@ -86,6 +98,30 @@ describe("filesystem candidate admission planning", () => {
         expect(objects.compatibilityReport?.findings.every((finding) => finding.findingId.length === 64)).toBeTrue();
         expect(objects.statefulChanges?.requiredMigrations).toEqual([]);
         expect(objects.admission?.catalogRevision.digest).toHaveLength(64);
+    });
+
+    test("rejects a portable fixture that does not cover every immutable upgrade baseline", async () => {
+        const fixture = registryFixture();
+        await fixture.publisher.publish({ package: await publicationPackage("demo", "1.0.0") });
+        await fixture.publisher.publish({ package: await publicationPackage("demo", "2.0.0") });
+        const candidate = await verificationCandidate(await publicationPackage("demo", "3.0.0"), {
+            upgradeFixture: {
+                entrypoint: "tests/upgrade.ts",
+                scenarios: [{ name: "second generation", from: "^2.0.0" }],
+            },
+        });
+        const store = await validatingCandidate(fixture.root, "candidate-upgrade-coverage", candidate);
+        const planner = new FsIntegrationRegistryCandidateAdmissionPlanner({
+            snapshots: fixture.snapshots,
+            mutations: fixture.mutations,
+            candidates: store,
+            reviewedSchemaBaselines: fixture.reviewedSchemaBaselines,
+            policy: await planningPolicy(),
+        });
+
+        await expect(planner.plan({ candidateId: "candidate-upgrade-coverage", candidate })).rejects.toMatchObject({
+            code: "release_verification_plan_unavailable",
+        });
     });
 
     test("includes inherited contracts without copying them into the target verification bundle", async () => {

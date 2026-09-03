@@ -1,6 +1,9 @@
 import type { CanonicalFileSet } from "@bernouy/cms-integration-packages";
 import type * as TypeScript from "typescript";
-import { INTEGRATION_VERIFICATION_SDK_V1_SPECIFIER } from "../../interfaces/verification";
+import {
+    INTEGRATION_UPGRADE_FIXTURES_SDK_V1_SPECIFIER,
+    INTEGRATION_VERIFICATION_SDK_V1_SPECIFIER,
+} from "../../interfaces/verification";
 import { IntegrationVerificationContractError } from "./errors";
 
 export function collectVerificationModulePaths(
@@ -81,7 +84,10 @@ function collectModuleSpecifiers(
 }
 
 function resolveAllowedModule(files: CanonicalFileSet, importer: string, specifier: string): string | null {
-    if (specifier === INTEGRATION_VERIFICATION_SDK_V1_SPECIFIER) {
+    if (
+        specifier === INTEGRATION_VERIFICATION_SDK_V1_SPECIFIER ||
+        specifier === INTEGRATION_UPGRADE_FIXTURES_SDK_V1_SPECIFIER
+    ) {
         return null;
     }
     if ((!specifier.startsWith("./") && !specifier.startsWith("../")) || /[\\\0?#%]/.test(specifier)) {

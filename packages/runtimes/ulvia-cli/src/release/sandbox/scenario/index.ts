@@ -126,7 +126,12 @@ async function storePackages(
 ): Promise<void> {
     const unique = new Map(packages.map((entry) => [coordinate(entry), entry]));
     for (const entry of unique.values()) {
-        await repository.store({ package: entry.package, definition: entry.definition, source: "release-sandbox" });
+        await repository.store({
+            package: entry.package,
+            definition: entry.definition,
+            ...(entry.verification ? { verification: entry.verification } : {}),
+            source: "release-sandbox",
+        });
     }
 }
 

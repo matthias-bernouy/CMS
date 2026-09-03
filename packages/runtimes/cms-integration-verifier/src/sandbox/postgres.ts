@@ -258,5 +258,13 @@ function resultBindings(input: VerificationSandboxInput, admissionDigest: string
         compatibilityRevisionDigest: admission.compatibilityRevision.digest,
         compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
         ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
+        ...(admission.releaseVerificationPlan
+            ? {
+                  releaseVerificationPlanDigest: admission.releaseVerificationPlan.digest,
+                  upgradeBaselineDigests: admission.releaseVerificationPlan.plan.baselines
+                      .map((entry) => entry.packageDigest)
+                      .toSorted(),
+              }
+            : {}),
     };
 }

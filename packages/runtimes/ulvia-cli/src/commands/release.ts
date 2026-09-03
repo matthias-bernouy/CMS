@@ -70,6 +70,7 @@ async function releaseOne(
     const stored = await local.store({
         package: candidate.package,
         definition: candidate.definition,
+        verification: candidate.verification,
         source: `local:${candidate.integrationRoot}`,
     });
     log(`+ ${kind}@${version} released locally (${shortDigest(stored.record.digest)})`);

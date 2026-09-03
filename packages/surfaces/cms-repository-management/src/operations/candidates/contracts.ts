@@ -118,6 +118,13 @@ export type RepositoryCandidateExactMigrationPackage = Readonly<{
     envelope: IntegrationPackageEnvelopeV1;
 }>;
 
+export type RepositoryCandidateExactUpgradePackage = Readonly<{
+    kind: string;
+    version: string;
+    packageDigest: string;
+    envelope: IntegrationPackageEnvelopeV1;
+}>;
+
 export type RepositoryCandidateExactDependencyPackage = Readonly<
     Required<Pick<AdmissionDependencyReferenceV1, "selection">> &
         Pick<AdmissionDependencyReferenceV1, "kind" | "version" | "packageDigest"> & {

@@ -18,8 +18,9 @@ The implementation must satisfy all of these rules:
 4. Make an identical coordinate and digest an idempotent no-op.
 5. Reject a coordinate that already points to another digest.
 6. Validate package identity, definition, dependencies, and release ordering.
-7. Require trustworthy verification evidence or rerun the same verifier on the
-   server.
+7. Rerun the shared release-verification plan in server-owned disposable
+   infrastructure. Client evidence is diagnostic only and cannot admit a
+   release.
 8. Publish package objects before atomically updating version references and
    `stable`/`latest` channels.
 9. Keep all previous objects and references readable after a failed push.
@@ -54,26 +55,42 @@ Authentication must be supplied through a credential store or environment
 secret, never embedded in the repository URL, manifest, package, or shell
 history produced by the CLI.
 
-## Verification trust boundary
+## Shared verification trust boundary
 
-The current local release proves source tests and disposable runtime scenarios,
-but author tests are not yet stored in package bytes. The remote design must
-choose and enforce one trustworthy model:
+Local and remote verification use the same canonical planning code. The plan
+contains every installable historical version, its exact package digest, the
+portable business-fixture metadata, and the deduplicated crash-recovery matrix.
+The portable fixture source closure is stored in a separate immutable
+verification bundle bound to the target package digest.
 
-- submit an immutable verification bundle and server-verifiable attestation;
-- or let the remote admission service rerun the same candidate verification.
+The repository builds this plan from its authoritative catalog; it never trusts
+a baseline list supplied by the client. Worker transport then supplies every
+exact historical package and rejects omissions, extras, reordering, changed
+bytes, or a fixture plan that differs from the verification bundle.
 
-A plain client boolean such as `verified: true` is not evidence. Admission must
-bind the verifier result to the exact package digest, baseline digests,
-dependency digests, fixture bundle digest, and verifier policy version.
+A plain client boolean such as `verified: true`, and even a signed local
+attestation, is not sufficient for publication. The remote worker must execute
+the plan again and bind its result to the package, verification bundle, upgrade
+baselines, dependencies, admission plan, runner image, and policy digests.
+
+The existing remote PostgreSQL verifier does not yet provide a disposable CMS,
+MongoDB, Supabase Auth, Storage, and Edge Functions environment. The protocol
+and immutable workload are prepared, but remote runtime execution and `ulvia
+push` remain disabled until that server-owned capability exists. The production
+runner must not gain a host Docker socket; use a dedicated, resettable service
+stack or an equally isolated worker boundary.
 
 ## Implementation sequence
 
-1. Audit the existing remote repository read and candidate-management APIs.
-2. Reuse the local canonical object/reference format where possible.
-3. Define authenticated staging, verification, admission, and status contracts.
+1. Provision the server-owned disposable CMS, MongoDB, Supabase Auth, Storage,
+   and Edge Functions execution adapter behind the existing worker boundary.
+2. Make the mandatory platform suite execute the shared canonical release plan
+   and reject publication when any scenario is missing or fails.
+3. Enable strict rollback, cutover, and delayed-cleanup policy flags only when
+   the runner emits the corresponding evidence.
 4. Add conflict, interruption, retry, and concurrent-push tests on the server.
-5. Implement single-coordinate push with a read-only admission preflight, then
+5. Implement single-coordinate push using the existing candidate protocol,
+   then
    verify remote pull round-trips the same
    digest.
 6. Implement dependency-ordered `push --all`.

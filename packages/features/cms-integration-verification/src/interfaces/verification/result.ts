@@ -42,6 +42,10 @@ export type VerificationJobResultV1 = Readonly<{
         compatibilityEvaluatorInputDigest: string;
         /** Missing only when the corresponding legacy admission has no behavioral RLS plan. */
         behavioralRlsPlanDigest?: string;
+        /** Missing only when the corresponding legacy admission has no runtime release plan. */
+        releaseVerificationPlanDigest?: string;
+        /** Missing only when the corresponding legacy admission has no runtime release plan. */
+        upgradeBaselineDigests?: readonly string[];
     }>;
     runner: PinnedVerificationRunnerIdentity;
     environment: Readonly<{

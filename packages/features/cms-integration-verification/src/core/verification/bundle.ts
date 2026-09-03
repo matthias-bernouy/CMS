@@ -119,11 +119,15 @@ function parseManifest(
     const hasBehavioralRls = Boolean(
         value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "behavioralRls"),
     );
+    const hasUpgradeFixture = Boolean(
+        value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "upgradeFixture"),
+    );
     const input = strictRecord(value, "manifest", [
         "runnerRequirements",
         "contracts",
         "conformance",
         "fixtures",
+        ...(hasUpgradeFixture ? ["upgradeFixture"] : []),
         ...(hasBehavioralRls ? ["behavioralRls"] : []),
     ]);
     const runnerRequirements = boundedArray(
@@ -144,6 +148,7 @@ function parseManifest(
     const behavioralRls = hasBehavioralRls
         ? referencedFile(input.behavioralRls, "manifest.behavioralRls", files, true)
         : undefined;
+    const upgradeFixture = hasUpgradeFixture ? parseUpgradeFixture(input.upgradeFixture, files) : undefined;
     assertUnique(
         runnerRequirements.map((entry) => entry.name),
         "manifest.runnerRequirements.name",
@@ -166,7 +171,61 @@ function parseManifest(
         contracts: contracts.toSorted((left, right) => compareText(left.contractId, right.contractId)),
         conformance: conformance.toSorted((left, right) => compareText(left.suiteId, right.suiteId)),
         fixtures: fixtures.toSorted(compareText),
+        ...(upgradeFixture ? { upgradeFixture } : {}),
         ...(behavioralRls ? { behavioralRls } : {}),
+    };
+}
+
+function parseUpgradeFixture(
+    value: unknown,
+    files: CanonicalFileSet,
+): NonNullable<IntegrationVerificationManifestV1["upgradeFixture"]> {
+    const input = strictRecord(value, "manifest.upgradeFixture", ["entrypoint", "scenarios"]);
+    const scenarios = boundedArray(input.scenarios, "manifest.upgradeFixture.scenarios", parseUpgradeScenario, {
+        minimum: 1,
+        maximum: 32,
+    }).toSorted((left, right) => compareText(left.name, right.name));
+    assertUnique(
+        scenarios.map((scenario) => scenario.name),
+        "manifest.upgradeFixture.scenarios.name",
+    );
+    return {
+        entrypoint: referencedFile(input.entrypoint, "manifest.upgradeFixture.entrypoint", files, true),
+        scenarios,
+    };
+}
+
+function parseUpgradeScenario(
+    value: unknown,
+    field: string,
+): NonNullable<IntegrationVerificationManifestV1["upgradeFixture"]>["scenarios"][number] {
+    const input = strictRecord(value, field, ["name", "from", "dependencies"]);
+    const dependencies =
+        input.dependencies === undefined
+            ? undefined
+            : boundedArray(input.dependencies, `${field}.dependencies`, parseUpgradeDependency, {
+                  maximum: 16,
+              }).toSorted((left, right) => compareText(left.kind, right.kind));
+    if (dependencies) {
+        assertUnique(
+            dependencies.map((dependency) => dependency.kind),
+            `${field}.dependencies.kind`,
+        );
+    }
+    return {
+        name: requiredText(input.name, `${field}.name`, 160),
+        from: supportedVersionRange(input.from, `${field}.from`),
+        ...(dependencies ? { dependencies } : {}),
+    };
+}
+
+function parseUpgradeDependency(value: unknown, field: string) {
+    const input = strictRecord(value, field, ["kind", "versionRange"]);
+    return {
+        kind: packageKind(input.kind, `${field}.kind`),
+        ...(input.versionRange === undefined
+            ? {}
+            : { versionRange: supportedVersionRange(input.versionRange, `${field}.versionRange`) }),
     };
 }
 

@@ -7,6 +7,7 @@ import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/h
 import { LocalRepositoryCatalog } from "../src/repository/catalog";
 import { LocalIntegrationRepository } from "../src/repository/local";
 import { handleRepositoryRequest } from "../src/repository/server";
+import { buildLocalVerificationBundle } from "../src/release/source/verification";
 import { integrationDefinition, integrationPackage, removeReadonlyTree } from "./fixtures";
 
 const roots: string[] = [];
@@ -18,10 +19,16 @@ describe("local integration repository", () => {
     test("persists immutable package coordinates and definitions", async () => {
         const fixture = await repositoryFixture();
         const resolved = await integrationPackage();
+        const verification = await buildLocalVerificationBundle(fixture.root, {
+            kind: resolved.envelope.kind,
+            version: resolved.envelope.version,
+            packageDigest: resolved.digest,
+        });
 
         const first = await fixture.repository.store({
             package: resolved,
             definition: integrationDefinition(),
+            verification,
             source: "https://repository.example.test",
         });
         const second = await fixture.repository.store({
@@ -34,6 +41,7 @@ describe("local integration repository", () => {
         expect(second.added).toBeFalse();
         expect(await fixture.repository.list()).toEqual([first.record]);
         expect((await fixture.repository.getPackage(first.record)).digest).toBe(resolved.digest);
+        expect((await fixture.repository.getVerification(first.record))?.digest).toBe(verification.digest);
     });
 
     test("serves the same contracts consumed by a CMS runtime", async () => {

@@ -16,6 +16,7 @@ export async function verificationCandidate(
     const files = {
         "tests/contract.ts": { encoding: "utf8" as const, content: "export default true;" },
         "tests/conformance.ts": { encoding: "utf8" as const, content: "export default true;" },
+        "tests/upgrade.ts": { encoding: "utf8" as const, content: "export default {};" },
         "fixtures/input.json": { encoding: "utf8" as const, content: "{}" },
     };
     return await validateIntegrationCandidateEnvelope({

@@ -57,6 +57,7 @@ export type ExactVerificationWorkload = Readonly<{
     behavioralRlsPlan?: AdmissionBehavioralRlsPlanBindingV1;
     authorSuites: readonly BoundIntegrationVerificationAuthorSuiteV1[];
     dependencyPackages: readonly ExactDependencyPackage[];
+    upgradePackages: readonly ExactUpgradePackage[];
     migrationInputs: readonly MigrationVerificationInputV1[];
     migrationPackages: readonly ExactMigrationPackage[];
 }>;
@@ -71,6 +72,13 @@ export type ExactDependencyPackage = Readonly<{
 
 export type ExactMigrationPackage = Readonly<{
     digest: string;
+    envelope: IntegrationPackageEnvelopeV1;
+}>;
+
+export type ExactUpgradePackage = Readonly<{
+    kind: string;
+    version: string;
+    packageDigest: string;
     envelope: IntegrationPackageEnvelopeV1;
 }>;
 

@@ -29,7 +29,10 @@ in both:
 - the resolved definition, normally `definitions/root.json`.
 
 Use `path: "."` for the current source entry. Runtime package construction
-excludes author tests and registry evidence.
+excludes author tests and registry evidence. The transitive source closure for
+`tests/integration-contracts/upgrade-fixtures.ts` is stored separately in a
+digest-bound verification bundle, so it can be executed again without placing
+test code in the installed runtime package.
 
 Mutable business policy does not belong in installation answers. Installation
 inputs are appropriate for stable deployment settings, secret references, and
@@ -119,9 +122,9 @@ bun run ulvia -- release <kind>
 ```
 
 For a new local coordinate that is not already published remotely, `release`
-runs the same audit and stores the exact canonical package only after all
-scenarios pass. An already published identical package is pulled as-is. The
-coordinate is immutable:
+runs the same audit and stores the exact canonical package and verification
+bundle only after all scenarios pass. An already published identical package
+is pulled as-is. The coordinate is immutable:
 
 - identical `kind@version` and digest is a no-op;
 - identical coordinate with different bytes is rejected and suggests the

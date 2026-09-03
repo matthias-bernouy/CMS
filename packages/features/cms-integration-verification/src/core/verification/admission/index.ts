@@ -1,5 +1,6 @@
 import type { AdmissionInputSnapshotV1, IdentifiedAdmissionInputSnapshotV1 } from "../../../interfaces/verification";
 import { ADMISSION_INPUT_SNAPSHOT_SCHEMA } from "../../../interfaces/verification";
+import { integrationVersionReleaseLevel } from "@bernouy/cms-integrations";
 import { pinnedRunner } from "../../runner";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { assertContractIJson, assertUnique, boundedArray, strictRecord } from "../../validation/structure";
@@ -25,6 +26,7 @@ import {
     parseRevision,
     parseSuite,
 } from "./fields";
+import { identifyReleaseVerificationPlan, validateReleaseVerificationPlan } from "./releasePlanContract";
 
 export {
     identifyIntegrationVerificationSuiteContent,
@@ -32,6 +34,12 @@ export {
     type IdentifiedIntegrationVerificationSuiteContentV2,
 } from "./suiteContent";
 export { validateBoundIntegrationVerificationAuthorSuites } from "./suiteBinding";
+export { identifyReleaseMigrationStateKey, planReleaseVerification } from "./releasePlan";
+export {
+    assertReleaseVerificationPlanMatchesVerification,
+    identifyReleaseVerificationPlan,
+    validateReleaseVerificationPlan,
+} from "./releasePlanContract";
 
 export function parseAdmissionInputSnapshot(input: string | Uint8Array): AdmissionInputSnapshotV1 {
     return validateAdmissionInputSnapshot(parseVerificationControlDocument(input));
@@ -41,6 +49,9 @@ export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSn
     assertContractIJson(value);
     const hasBehavioralRlsPlan = Boolean(
         value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "behavioralRlsPlan"),
+    );
+    const hasReleaseVerificationPlan = Boolean(
+        value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "releaseVerificationPlan"),
     );
     const input = strictRecord(value, "admission", [
         "schema",
@@ -52,6 +63,7 @@ export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSn
         "activeContracts",
         "suites",
         ...(hasBehavioralRlsPlan ? ["behavioralRlsPlan"] : []),
+        ...(hasReleaseVerificationPlan ? ["releaseVerificationPlan"] : []),
         "catalogRevision",
         "compatibilityRevision",
     ]);
@@ -103,8 +115,14 @@ export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSn
     const candidate = parseCandidate(input.candidate);
     const policyDigest = sha256Digest(input.policyDigest, "admission.policyDigest");
     const behavioralRlsPlan = hasBehavioralRlsPlan ? parseBehavioralRlsPlanBinding(input.behavioralRlsPlan) : undefined;
+    const releaseVerificationPlan = hasReleaseVerificationPlan
+        ? parseReleaseVerificationPlanBinding(input.releaseVerificationPlan)
+        : undefined;
     if (behavioralRlsPlan) {
         assertBehavioralRlsPlanReferences(behavioralRlsPlan.plan, candidate, policyDigest);
+    }
+    if (releaseVerificationPlan) {
+        assertReleaseVerificationPlanReferences(releaseVerificationPlan.plan, candidate);
     }
     return {
         schema: ADMISSION_INPUT_SNAPSHOT_SCHEMA,
@@ -116,6 +134,7 @@ export function validateAdmissionInputSnapshot(value: unknown): AdmissionInputSn
         activeContracts,
         suites,
         ...(behavioralRlsPlan ? { behavioralRlsPlan } : {}),
+        ...(releaseVerificationPlan ? { releaseVerificationPlan } : {}),
         catalogRevision: parseRevision(input.catalogRevision, "admission.catalogRevision"),
         compatibilityRevision: parseCompatibilityRevision(input.compatibilityRevision),
     };
@@ -127,6 +146,12 @@ export async function identifyAdmissionInputSnapshot(value: unknown): Promise<Id
         const identifiedPlan = await identifyBehavioralRlsPlan(snapshot.behavioralRlsPlan.plan);
         if (identifiedPlan.digest !== snapshot.behavioralRlsPlan.digest) {
             invalidReference("admission.behavioralRlsPlan.digest", "does not identify the canonical plan");
+        }
+    }
+    if (snapshot.releaseVerificationPlan) {
+        const identifiedPlan = await identifyReleaseVerificationPlan(snapshot.releaseVerificationPlan.plan);
+        if (identifiedPlan.digest !== snapshot.releaseVerificationPlan.digest) {
+            invalidReference("admission.releaseVerificationPlan.digest", "does not identify the canonical plan");
         }
     }
     const identified = await identifyCanonicalVerificationContract(snapshot);
@@ -158,6 +183,30 @@ function parseBehavioralRlsPlanBinding(value: unknown): NonNullable<AdmissionInp
         digest: sha256Digest(input.digest, "admission.behavioralRlsPlan.digest"),
         plan: validateBehavioralRlsPlan(input.plan),
     };
+}
+
+function parseReleaseVerificationPlanBinding(
+    value: unknown,
+): NonNullable<AdmissionInputSnapshotV1["releaseVerificationPlan"]> {
+    const input = strictRecord(value, "admission.releaseVerificationPlan", ["digest", "plan"]);
+    return {
+        digest: sha256Digest(input.digest, "admission.releaseVerificationPlan.digest"),
+        plan: validateReleaseVerificationPlan(input.plan),
+    };
+}
+
+function assertReleaseVerificationPlanReferences(
+    plan: NonNullable<AdmissionInputSnapshotV1["releaseVerificationPlan"]>["plan"],
+    candidate: AdmissionInputSnapshotV1["candidate"],
+): void {
+    if (
+        plan.baselines.some((baseline) => integrationVersionReleaseLevel(baseline.version, candidate.version) === null)
+    ) {
+        invalidReference(
+            "admission.releaseVerificationPlan.plan.baselines",
+            "must contain only immutable versions older than the candidate",
+        );
+    }
 }
 
 function assertBehavioralRlsPlanReferences(

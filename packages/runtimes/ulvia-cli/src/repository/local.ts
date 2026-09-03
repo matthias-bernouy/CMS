@@ -1,11 +1,14 @@
 import { canonicalJsonBytes, type ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
 import { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs";
+import type { StoredIntegrationVerificationBundle } from "@bernouy/cms-integration-registry";
+import { FsIntegrationVerificationBundleStore } from "@bernouy/cms-integration-registry/fs";
 import { parseIntegrationDefinition, type IntegrationDefinition } from "@bernouy/cms-integrations";
 import { readManifest, type LocalPackageRecord, writeManifest } from "./manifest";
 
 export type PulledPackage = Readonly<{
     package: ResolvedIntegrationPackage;
     definition: IntegrationDefinition;
+    verification?: StoredIntegrationVerificationBundle;
     source: string;
 }>;
 
@@ -16,6 +19,7 @@ export type StorePackageResult = Readonly<{
 
 export class LocalIntegrationRepository {
     private readonly cache: FsIntegrationPackageCache;
+    private readonly verifications: FsIntegrationVerificationBundleStore;
     private mutation = Promise.resolve();
 
     constructor(
@@ -23,6 +27,7 @@ export class LocalIntegrationRepository {
         packageRoot: string,
     ) {
         this.cache = new FsIntegrationPackageCache({ root: packageRoot });
+        this.verifications = new FsIntegrationVerificationBundleStore(root);
     }
 
     async init(): Promise<void> {
@@ -50,13 +55,19 @@ export class LocalIntegrationRepository {
         };
     }
 
+    async getVerification(record: LocalPackageRecord): Promise<StoredIntegrationVerificationBundle | null> {
+        return record.verificationDigest ? await this.verifications.get(record.verificationDigest) : null;
+    }
+
     async store(input: PulledPackage): Promise<StorePackageResult> {
         const { kind, version } = input.package.envelope;
+        assertVerificationTarget(input, kind, version);
         const materialized = await this.cache.materialize(input.package, {
             kind,
             version,
             digest: input.package.digest,
         });
+        const verification = input.verification ? await this.verifications.put(input.verification) : undefined;
         await this.cache.recordReference(kind, version, materialized.digest);
         return await this.exclusive(async () => {
             const current = [...(await this.list())];
@@ -65,12 +76,28 @@ export class LocalIntegrationRepository {
                 if (existing.digest !== materialized.digest) {
                     throw new Error(`Local package coordinate ${kind}@${version} already has a different digest`);
                 }
+                if (
+                    existing.verificationDigest &&
+                    verification &&
+                    existing.verificationDigest !== verification.digest
+                ) {
+                    throw new Error(`Local verification for ${kind}@${version} already has a different digest`);
+                }
+                if (!existing.verificationDigest && verification) {
+                    const enriched = { ...existing, verificationDigest: verification.digest };
+                    await writeManifest(
+                        this.root,
+                        current.map((record) => (record === existing ? enriched : record)),
+                    );
+                    return { record: enriched, added: false };
+                }
                 return { record: existing, added: false };
             }
             const record: LocalPackageRecord = {
                 kind,
                 version,
                 digest: materialized.digest,
+                ...(verification ? { verificationDigest: verification.digest } : {}),
                 source: input.source,
                 pulledAt: new Date().toISOString(),
                 definition: parseIntegrationDefinition(input.definition),
@@ -92,5 +119,15 @@ export class LocalIntegrationRepository {
         } finally {
             release();
         }
+    }
+}
+
+function assertVerificationTarget(input: PulledPackage, kind: string, version: string): void {
+    const target = input.verification?.envelope.target;
+    if (
+        target &&
+        (target.kind !== kind || target.version !== version || target.packageDigest !== input.package.digest)
+    ) {
+        throw new Error("Local verification target does not match its package coordinate and digest");
     }
 }

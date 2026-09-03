@@ -6,7 +6,10 @@ import {
     type IntegrationPackageSource,
 } from "@bernouy/cms-integration-packages";
 import type { AdmissionDependencyReferenceV1 } from "@bernouy/cms-integration-verification";
-import { resolveExactDependencyPackages } from "../../src/operations/candidates/worker/packages";
+import {
+    resolveExactDependencyPackages,
+    resolveExactUpgradePackages,
+} from "../../src/operations/candidates/worker/packages";
 
 describe("candidate exact dependency package resolution", () => {
     test("binds every minimum and stable reference even when both select the same digest", async () => {
@@ -52,6 +55,33 @@ describe("candidate exact dependency package resolution", () => {
                 { kind: exact.envelope.kind, version: exact.envelope.version, packageDigest: exact.digest },
             ]),
         ).rejects.toThrow(/matrix selection/);
+    });
+});
+
+describe("candidate exact upgrade package resolution", () => {
+    test("resolves every server-planned immutable baseline", async () => {
+        const first = await packageFixture("demo", "1.0.0");
+        const second = await packageFixture("demo", "1.1.0");
+        const references = [first, second].map(({ envelope, digest }, index) => ({
+            version: envelope.version,
+            packageDigest: digest,
+            resilienceKey: String(index + 1).repeat(64),
+        }));
+
+        const resolved = await resolveExactUpgradePackages(packageSource([first, second]), "demo", references);
+
+        expect(resolved.map(({ envelope: _envelope, ...identity }) => identity)).toEqual(
+            references.map(({ resilienceKey: _resilienceKey, ...reference }) => ({ kind: "demo", ...reference })),
+        );
+    });
+
+    test("fails closed when an upgrade baseline is absent or substituted", async () => {
+        const exact = await packageFixture("demo", "1.0.0");
+        const references = [{ version: "1.0.0", packageDigest: exact.digest, resilienceKey: "1".repeat(64) }];
+        await expect(resolveExactUpgradePackages(packageSource([]), "demo", references)).rejects.toThrow(/demo@1.0.0/u);
+        await expect(resolveExactUpgradePackages(packageSource([exact]), "another-kind", references)).rejects.toThrow(
+            /unavailable/u,
+        );
     });
 });
 

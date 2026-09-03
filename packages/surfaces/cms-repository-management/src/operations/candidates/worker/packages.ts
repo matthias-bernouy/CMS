@@ -1,15 +1,39 @@
 import { computeIntegrationPackageDigest } from "@bernouy/cms-integration-packages";
 import type {
     AdmissionDependencyReferenceV1,
+    AdmissionInputSnapshotV1,
     MigrationVerificationInputV1,
 } from "@bernouy/cms-integration-verification";
 import type {
     RepositoryCandidateExactDependencyPackage,
     RepositoryCandidateExactMigrationPackage,
+    RepositoryCandidateExactUpgradePackage,
     RepositoryCandidateWorkerRoutesConfig,
 } from "../contracts";
 
 type PackageReference = MigrationVerificationInputV1["source"];
+
+export async function resolveExactUpgradePackages(
+    source: RepositoryCandidateWorkerRoutesConfig["packageSource"],
+    kind: string,
+    references: NonNullable<AdmissionInputSnapshotV1["releaseVerificationPlan"]>["plan"]["baselines"],
+): Promise<readonly RepositoryCandidateExactUpgradePackage[]> {
+    if (references.length === 0) {
+        return Object.freeze([]);
+    }
+    if (!source) {
+        throw new Error("Candidate upgrade package source is unavailable");
+    }
+    return Object.freeze(
+        await Promise.all(
+            references.map(async (reference) => {
+                const exact = { kind, version: reference.version, packageDigest: reference.packageDigest };
+                const resolved = await resolveExactPackage(source, exact, "upgrade");
+                return Object.freeze({ ...exact, envelope: resolved.envelope });
+            }),
+        ),
+    );
+}
 
 export async function resolveExactDependencyPackages(
     source: RepositoryCandidateWorkerRoutesConfig["packageSource"],
@@ -64,7 +88,7 @@ export async function resolveExactMigrationPackages(
 async function resolveExactPackage(
     source: NonNullable<RepositoryCandidateWorkerRoutesConfig["packageSource"]>,
     reference: PackageReference,
-    purpose: "dependency" | "migration",
+    purpose: "dependency" | "migration" | "upgrade",
 ) {
     const resolved = await source.getPackage(reference.kind, reference.version);
     if (

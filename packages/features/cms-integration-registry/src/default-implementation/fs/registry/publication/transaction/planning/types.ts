@@ -62,6 +62,7 @@ export type CandidateAdmissionPlanningErrorCode =
     | "dependency_unavailable"
     | "missing_migration_baseline"
     | "migration_input_unavailable"
+    | "release_verification_plan_unavailable"
     | "runner_unavailable"
     | "suite_conflict";
 

@@ -36,6 +36,7 @@ describe("local integration release commands", () => {
         expect(verifications).toBe(2);
         const catalog = await Bun.file(join(data, "repository", "catalog.json")).json();
         expect(catalog.packages).toHaveLength(1);
+        expect(catalog.packages[0].verificationDigest).toHaveLength(64);
 
         await writeFile(
             definitionPath,

@@ -50,6 +50,14 @@ export async function assertExactSubmission(
         compatibilityRevisionDigest: admission.compatibilityRevision.digest,
         compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
         ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
+        ...(admission.releaseVerificationPlan
+            ? {
+                  releaseVerificationPlanDigest: admission.releaseVerificationPlan.digest,
+                  upgradeBaselineDigests: admission.releaseVerificationPlan.plan.baselines
+                      .map(({ packageDigest }) => packageDigest)
+                      .toSorted(),
+              }
+            : {}),
     });
     expect(trace.result.verification.environment.digest).toBe(
         await sha256Hex(canonicalJsonBytes(trace.result.verification.environment.versions)),

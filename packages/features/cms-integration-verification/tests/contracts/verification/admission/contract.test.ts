@@ -8,9 +8,9 @@ import {
     parseAdmissionInputSnapshot,
     validateAdmissionInputSnapshot,
     validateAdmissionInputSnapshotForPolicy,
-} from "../../../src/exports/index";
-import { DIGEST_A, DIGEST_B } from "../fixtures";
-import { admissionSnapshot, policySnapshot } from "./controlFixtures";
+} from "../../../../src/exports/index";
+import { DIGEST_A, DIGEST_B } from "../../fixtures";
+import { admissionSnapshot, policySnapshot } from "../controlFixtures";
 
 describe("admission input snapshot", () => {
     test("canonically binds the exact candidate and all transitive admission inputs", async () => {

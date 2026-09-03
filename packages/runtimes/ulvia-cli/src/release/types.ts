@@ -1,10 +1,14 @@
 import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
-import type { ReviewedConnectorSchemaBaseline } from "@bernouy/cms-integration-registry";
+import type {
+    ReviewedConnectorSchemaBaseline,
+    StoredIntegrationVerificationBundle,
+} from "@bernouy/cms-integration-registry";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 
 export type LocalReleasePackage = Readonly<{
     package: ResolvedIntegrationPackage;
     definition: IntegrationDefinition;
+    verification?: StoredIntegrationVerificationBundle;
     reviewedSchemaBaselines?: readonly ReviewedConnectorSchemaBaseline[];
 }>;
 

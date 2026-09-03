@@ -12,6 +12,7 @@ export type LocalPackageRecord = Readonly<{
     kind: string;
     version: string;
     digest: string;
+    verificationDigest?: string;
     source: string;
     pulledAt: string;
     definition: IntegrationDefinition;
@@ -79,7 +80,26 @@ function parseRecord(value: unknown): LocalPackageRecord {
     if (definition.kind !== kind || definition.version !== version) {
         throw new Error("Local repository definition identity does not match its coordinate");
     }
-    return { kind, version, digest: value.digest, source: value.source, pulledAt: value.pulledAt, definition };
+    const verificationDigest = optionalDigest(value.verificationDigest);
+    return {
+        kind,
+        version,
+        digest: value.digest,
+        ...(verificationDigest ? { verificationDigest } : {}),
+        source: value.source,
+        pulledAt: value.pulledAt,
+        definition,
+    };
+}
+
+function optionalDigest(value: unknown): string | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (typeof value !== "string" || !/^[a-f0-9]{64}$/u.test(value)) {
+        throw new Error("Local repository verification digest is invalid");
+    }
+    return value;
 }
 
 function manifestPath(root: string): string {

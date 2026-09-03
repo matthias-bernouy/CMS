@@ -1,12 +1,7 @@
-import {
-    defineUpgradeScenarios,
-    type UpgradeFixtureScenarioV1,
-    type UpgradeFixtureSuiteV1,
-} from "@bernouy/cms-integration-verification/upgrade-fixtures/v1";
-import { integrationVersionSatisfies } from "@bernouy/cms-integrations";
+import { loadUpgradeFixtureSuiteModule } from "@bernouy/cms-integration-verification/bun";
+import type { UpgradeFixtureSuiteV1 } from "@bernouy/cms-integration-verification/upgrade-fixtures/v1";
 import { lstat } from "node:fs/promises";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 
 const FIXTURE_MODULE = join("tests", "integration-contracts", "upgrade-fixtures.ts");
 
@@ -24,25 +19,11 @@ export async function loadUpgradeFixtureSuite(sourceRoot: string): Promise<Upgra
     if (metadata.isSymbolicLink() || !metadata.isFile()) {
         throw new Error(`Upgrade fixture module must be a regular non-symlink file at ${FIXTURE_MODULE}`);
     }
-    const specifier = `${pathToFileURL(path).href}?v=${metadata.mtimeMs}-${metadata.size}`;
-    const loaded = (await import(specifier)) as Readonly<{ default?: unknown }>;
     try {
-        return defineUpgradeScenarios(loaded.default as UpgradeFixtureSuiteV1);
+        return await loadUpgradeFixtureSuiteModule(path);
     } catch (error) {
-        throw new Error(`Invalid upgrade fixture module at ${FIXTURE_MODULE}`, { cause: error });
+        const message = error instanceof Error && error.message ? error.message : String(error);
+        const detail = message ? `: ${message.slice(0, 512)}` : "";
+        throw new Error(`Invalid upgrade fixture module at ${FIXTURE_MODULE}${detail}`, { cause: error });
     }
-}
-
-export function upgradeFixturesForBaseline(
-    suite: UpgradeFixtureSuiteV1 | null,
-    baselineVersion: string,
-): readonly UpgradeFixtureScenarioV1[] {
-    if (!suite) {
-        return [];
-    }
-    const matching = suite.scenarios.filter((scenario) => integrationVersionSatisfies(baselineVersion, scenario.from));
-    if (!matching.length) {
-        throw new Error(`Upgrade fixtures do not cover immutable baseline ${baselineVersion}`);
-    }
-    return matching;
 }

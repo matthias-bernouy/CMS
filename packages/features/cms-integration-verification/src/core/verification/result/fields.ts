@@ -10,6 +10,22 @@ export function parseBindings(value: unknown): VerificationJobResultV1["bindings
     const hasBehavioralRlsPlanDigest = Boolean(
         value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "behavioralRlsPlanDigest"),
     );
+    const hasReleaseVerificationPlanDigest = Boolean(
+        value &&
+            typeof value === "object" &&
+            !Array.isArray(value) &&
+            Object.hasOwn(value, "releaseVerificationPlanDigest"),
+    );
+    const hasUpgradeBaselineDigests = Boolean(
+        value && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "upgradeBaselineDigests"),
+    );
+    if (hasReleaseVerificationPlanDigest !== hasUpgradeBaselineDigests) {
+        throw new IntegrationVerificationContractError(
+            "invalid_contract",
+            `${field} must bind the release verification plan and upgrade baselines together`,
+            field,
+        );
+    }
     const input = strictRecord(value, field, [
         "admissionDigest",
         "candidateDigest",
@@ -26,6 +42,8 @@ export function parseBindings(value: unknown): VerificationJobResultV1["bindings
         "compatibilityRevisionDigest",
         "compatibilityEvaluatorInputDigest",
         ...(hasBehavioralRlsPlanDigest ? ["behavioralRlsPlanDigest"] : []),
+        ...(hasReleaseVerificationPlanDigest ? ["releaseVerificationPlanDigest"] : []),
+        ...(hasUpgradeBaselineDigests ? ["upgradeBaselineDigests"] : []),
     ]);
     return {
         admissionDigest: sha256Digest(input.admissionDigest, `${field}.admissionDigest`),
@@ -64,6 +82,22 @@ export function parseBindings(value: unknown): VerificationJobResultV1["bindings
                   behavioralRlsPlanDigest: sha256Digest(
                       input.behavioralRlsPlanDigest,
                       `${field}.behavioralRlsPlanDigest`,
+                  ),
+              }
+            : {}),
+        ...(hasReleaseVerificationPlanDigest
+            ? {
+                  releaseVerificationPlanDigest: sha256Digest(
+                      input.releaseVerificationPlanDigest,
+                      `${field}.releaseVerificationPlanDigest`,
+                  ),
+              }
+            : {}),
+        ...(hasUpgradeBaselineDigests
+            ? {
+                  upgradeBaselineDigests: sortedDigests(
+                      input.upgradeBaselineDigests,
+                      `${field}.upgradeBaselineDigests`,
                   ),
               }
             : {}),

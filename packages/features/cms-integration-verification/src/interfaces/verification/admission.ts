@@ -1,5 +1,55 @@
+import type { IntegrationMigrationPhase } from "@bernouy/cms-integrations";
 import type { PinnedVerificationRunnerIdentity } from "../runner";
 import type { AdmissionBehavioralRlsPlanBindingV1 } from "./behavioralRls";
+
+export const RELEASE_VERIFICATION_PLAN_SCHEMA = "cms.integration.release-verification-plan.v1" as const;
+
+export type ReleaseVerificationPlanBaselineV1 = Readonly<{
+    version: string;
+    packageDigest: string;
+    resilienceKey: string;
+}>;
+
+export type ReleaseVerificationPlanFixtureV1 = Readonly<{
+    name: string;
+    from: string;
+}>;
+
+export type ReleaseVerificationPlanScenarioV1 =
+    | Readonly<{ type: "fresh-install" }>
+    | Readonly<{
+          type: "upgrade";
+          baseline: ReleaseVerificationPlanBaselineV1;
+          fixtureName?: string;
+      }>
+    | Readonly<{
+          type: "crash-recovery";
+          baseline: ReleaseVerificationPlanBaselineV1;
+          phase: IntegrationMigrationPhase;
+          fixtureName?: string;
+      }>;
+
+export type ReleaseVerificationPlanV1 = Readonly<{
+    schema: typeof RELEASE_VERIFICATION_PLAN_SCHEMA;
+    baselines: readonly ReleaseVerificationPlanBaselineV1[];
+    fixtures: readonly ReleaseVerificationPlanFixtureV1[];
+    hasMigrations: boolean;
+    scenarios: readonly ReleaseVerificationPlanScenarioV1[];
+    nominalScenarioCount: number;
+    resilienceScenarioCount: number;
+    distinctMigrationStateCount: number;
+}>;
+
+export type IdentifiedReleaseVerificationPlanV1 = Readonly<{
+    plan: ReleaseVerificationPlanV1;
+    canonicalBytes: Uint8Array;
+    digest: string;
+}>;
+
+export type AdmissionReleaseVerificationPlanBindingV1 = Readonly<{
+    digest: string;
+    plan: ReleaseVerificationPlanV1;
+}>;
 
 export const ADMISSION_INPUT_SNAPSHOT_SCHEMA = "cms.integration.admission-input.v1" as const;
 
@@ -55,6 +105,8 @@ export type AdmissionInputSnapshotV1 = Readonly<{
     suites: readonly AdmissionSuitePlanEntryV1[];
     /** Missing only from admissions created before behavioral RLS planning. */
     behavioralRlsPlan?: AdmissionBehavioralRlsPlanBindingV1;
+    /** Server-owned exact upgrade matrix; absent from admissions predating runtime upgrade planning. */
+    releaseVerificationPlan?: AdmissionReleaseVerificationPlanBindingV1;
     catalogRevision: Readonly<{
         revisionId: string;
         digest: string;

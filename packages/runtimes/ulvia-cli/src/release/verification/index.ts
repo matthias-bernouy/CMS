@@ -1,9 +1,8 @@
-import { INTEGRATION_MIGRATION_PHASES, type IntegrationMigrationPhase } from "@bernouy/cms-integrations";
+import { identifyReleaseMigrationStateKey, planReleaseVerification } from "@bernouy/cms-integration-verification";
+import { loadUpgradeFixtureSuiteFromVerification } from "@bernouy/cms-integration-verification/bun";
 import type { LocalReleaseVerificationInput, LocalReleaseVerifier } from "../types";
 import { runAuthorTests } from "../author-tests";
 import { runReleaseScenario } from "../sandbox/scenario";
-import { distinctMigrationBaselines } from "./migrationStates";
-import { loadUpgradeFixtureSuite, upgradeFixturesForBaseline } from "./upgradeFixtures";
 
 export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
     constructor(private readonly log: (message: string) => void) {}
@@ -14,76 +13,75 @@ export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
         if (await runAuthorTests(input.sourceRoot)) {
             this.log(`✓ source tests passed for ${coordinate}`);
         }
-        const fixtures = await loadUpgradeFixtureSuite(input.sourceRoot);
+        const fixtures = input.candidate.verification
+            ? await loadUpgradeFixtureSuiteFromVerification(input.candidate.verification.envelope)
+            : null;
         if (fixtures) {
             this.log(`✓ loaded ${fixtures.scenarios.length} integration-owned upgrade fixture(s)`);
         }
-        this.log(`… verifying fresh installation of ${coordinate}`);
-        await runReleaseScenario({ target: input.candidate, packages });
-        let nominalScenarioCount = 1;
-        for (const baseline of input.baselines) {
-            const from = baseline.package.envelope.version;
-            const matching = fixtures ? upgradeFixturesForBaseline(fixtures, from) : [undefined];
-            for (const fixture of matching) {
-                this.log(
-                    `… verifying upgrade ${from} → ${input.candidate.package.envelope.version}` +
-                        (fixture ? ` with business fixture "${fixture.name}"` : ""),
-                );
-                await runReleaseScenario({ target: input.candidate, baseline, packages, fixture });
-                nominalScenarioCount += 1;
-            }
-        }
-        const resilienceScenarioCount = await this.verifyMigrationResilience(input, packages, fixtures);
-        const scenarioCount = nominalScenarioCount + resilienceScenarioCount;
-        this.log(
-            `✓ runtime verification passed for ${scenarioCount} scenario(s)` +
-                (resilienceScenarioCount ? `, including ${resilienceScenarioCount} crash recoveries` : ""),
+        const baselines = await Promise.all(
+            input.baselines.map(async (baseline) => ({
+                version: baseline.package.envelope.version,
+                packageDigest: baseline.package.digest,
+                resilienceKey: await identifyReleaseMigrationStateKey({
+                    candidate: input.candidate.definition,
+                    baseline: baseline.definition,
+                }),
+            })),
         );
-        return { scenarioCount, resilienceScenarioCount };
-    }
-
-    private async verifyMigrationResilience(
-        input: LocalReleaseVerificationInput,
-        packages: LocalReleaseVerificationInput["availablePackages"],
-        fixtures: Awaited<ReturnType<typeof loadUpgradeFixtureSuite>>,
-    ): Promise<number> {
-        if (!input.candidate.definition.connectors?.some((connector) => connector.migration)) {
-            return 0;
-        }
-        let count = 0;
-        const baselines = distinctMigrationBaselines(input.candidate, input.baselines);
-        if (baselines.length !== input.baselines.length) {
+        const plan = planReleaseVerification({
+            baselines,
+            ...(fixtures ? { fixtures: fixtures.scenarios.map(({ name, from }) => ({ name, from })) } : {}),
+            hasMigrations: Boolean(input.candidate.definition.connectors?.some((connector) => connector.migration)),
+        });
+        if (plan.distinctMigrationStateCount !== input.baselines.length) {
             this.log(
-                `✓ resilience matrix: ${baselines.length} distinct migration state(s) ` +
+                `✓ resilience matrix: ${plan.distinctMigrationStateCount} distinct migration state(s) ` +
                     `selected from ${input.baselines.length} historical baselines`,
             );
         }
-        for (const baseline of baselines) {
-            const matching = fixtures
-                ? upgradeFixturesForBaseline(fixtures, baseline.package.envelope.version)
-                : [undefined];
-            for (const fixture of matching) {
-                for (const phase of auditedMigrationPhases()) {
-                    this.log(
-                        `… verifying crash recovery ${baseline.package.envelope.version} → ` +
-                            `${input.candidate.package.envelope.version} after ${phase}` +
-                            (fixture ? ` with business fixture "${fixture.name}"` : ""),
-                    );
-                    await runReleaseScenario({
-                        target: input.candidate,
-                        baseline,
-                        packages,
-                        faultAfterPhase: phase,
-                        fixture,
-                    });
-                    count += 1;
-                }
-            }
+        for (const scenario of plan.scenarios) {
+            const baseline =
+                scenario.type === "fresh-install"
+                    ? undefined
+                    : input.baselines.find(
+                          (entry) =>
+                              entry.package.envelope.version === scenario.baseline.version &&
+                              entry.package.digest === scenario.baseline.packageDigest,
+                      );
+            const fixture =
+                scenario.type === "fresh-install" || !scenario.fixtureName
+                    ? undefined
+                    : fixtures?.scenarios.find(({ name }) => name === scenario.fixtureName);
+            this.log(description(coordinate, input.candidate.package.envelope.version, scenario));
+            await runReleaseScenario({
+                target: input.candidate,
+                packages,
+                ...(baseline ? { baseline } : {}),
+                ...(fixture ? { fixture } : {}),
+                ...(scenario.type === "crash-recovery" ? { faultAfterPhase: scenario.phase } : {}),
+            });
         }
-        return count;
+        const scenarioCount = plan.scenarios.length;
+        this.log(
+            `✓ runtime verification passed for ${scenarioCount} scenario(s)` +
+                (plan.resilienceScenarioCount ? `, including ${plan.resilienceScenarioCount} crash recoveries` : ""),
+        );
+        return { scenarioCount, resilienceScenarioCount: plan.resilienceScenarioCount };
     }
 }
 
-function auditedMigrationPhases(): IntegrationMigrationPhase[] {
-    return [...INTEGRATION_MIGRATION_PHASES];
+function description(
+    coordinate: string,
+    targetVersion: string,
+    scenario: ReturnType<typeof planReleaseVerification>["scenarios"][number],
+): string {
+    if (scenario.type === "fresh-install") {
+        return `… verifying fresh installation of ${coordinate}`;
+    }
+    const fixture = scenario.fixtureName ? ` with business fixture "${scenario.fixtureName}"` : "";
+    if (scenario.type === "upgrade") {
+        return `… verifying upgrade ${scenario.baseline.version} → ${targetVersion}${fixture}`;
+    }
+    return `… verifying crash recovery ${scenario.baseline.version} → ${targetVersion} after ${scenario.phase}${fixture}`;
 }

@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
+    identifyReleaseVerificationPlan,
+    planReleaseVerification,
     validateVerificationJobResult,
     validateVerificationJobResultForAdmission,
     type VerificationJobResultV1,
@@ -96,6 +98,40 @@ describe("verification job result", () => {
                 ),
             ).rejects.toThrow(/canonical admission inputs/);
         }
+    });
+
+    test("binds the exact release plan and every immutable upgrade package digest", async () => {
+        const policy = await policySnapshot();
+        const baseAdmission = await admissionSnapshot(policy);
+        const releaseVerificationPlan = await identifyReleaseVerificationPlan(
+            planReleaseVerification({
+                baselines: [{ version: "1.0.0", packageDigest: DIGEST_A, resilienceKey: DIGEST_B }],
+                hasMigrations: false,
+            }),
+        );
+        const admission = {
+            ...baseAdmission,
+            releaseVerificationPlan: {
+                digest: releaseVerificationPlan.digest,
+                plan: releaseVerificationPlan.plan,
+            },
+        };
+        const result = await jobResult(policy, admission);
+
+        await expect(
+            validateVerificationJobResultForAdmission(result, admission, policy, ATTEMPT),
+        ).resolves.toBeDefined();
+        const missingBaselines = {
+            ...result,
+            bindings: { ...result.bindings, upgradeBaselineDigests: [] },
+        };
+        await expect(
+            validateVerificationJobResultForAdmission(missingBaselines, admission, policy, ATTEMPT),
+        ).rejects.toThrow(/canonical admission inputs/u);
+        const { upgradeBaselineDigests: _, ...missingPair } = result.bindings;
+        await expect(validateVerificationJobResult({ ...result, bindings: missingPair })).rejects.toThrow(
+            /release verification plan and upgrade baselines together/u,
+        );
     });
 });
 

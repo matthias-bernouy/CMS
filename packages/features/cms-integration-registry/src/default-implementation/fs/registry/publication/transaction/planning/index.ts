@@ -10,7 +10,8 @@ import { identifyCatalogRevision } from "./catalog";
 import { planCandidateCompatibility } from "./compatibility";
 import { resolveCandidateDependencies } from "./dependencies";
 import { buildMigrationVerificationInputs, selectStatefulChanges } from "./stateful";
-import { planCandidateBehavioralRls, selectCandidateSuites } from "./suites";
+import { planCandidateBehavioralRls, selectCandidateSuites } from "./release/suites";
+import { planCandidateReleaseVerification } from "./release/upgrades";
 import {
     FsIntegrationRegistryCandidateAdmissionPlanningError,
     type FsIntegrationRegistryCandidateAdmissionPlan,
@@ -101,6 +102,11 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
             candidateIdentity,
             policy.digest,
         );
+        const releaseVerificationPlan = await planCandidateReleaseVerification({
+            snapshot,
+            target: prepared.definition,
+            verification: input.candidate.envelope.verification,
+        });
         const admission = await identifyAdmissionInputSnapshot({
             schema: "cms.integration.admission-input.v1",
             candidate: {
@@ -116,6 +122,10 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
             ...(behavioralRlsPlan
                 ? { behavioralRlsPlan: { digest: behavioralRlsPlan.digest, plan: behavioralRlsPlan.plan } }
                 : {}),
+            releaseVerificationPlan: {
+                digest: releaseVerificationPlan.digest,
+                plan: releaseVerificationPlan.plan,
+            },
             catalogRevision: catalog,
             compatibilityRevision: {
                 revisionId: compatibility.report.reportId,
@@ -167,12 +177,4 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
     }
 }
 
-export {
-    FsIntegrationRegistryCandidateAdmissionPlanningError,
-    type CandidateAdmissionPlanningErrorCode,
-    type FsIntegrationRegistryCandidateAdmissionPlan,
-    type FsIntegrationRegistryCandidateAdmissionPlannerConfig,
-    type InheritedVerificationContract,
-    type IntegrationVerificationContractCatalog,
-    type PlanFsIntegrationRegistryCandidateInput,
-} from "./types";
+export * from "./types";

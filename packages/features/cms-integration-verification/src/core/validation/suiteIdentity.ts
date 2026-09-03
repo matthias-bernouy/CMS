@@ -14,6 +14,9 @@ export async function validateVerificationSuiteSources(envelope: IntegrationVeri
     for (const suite of [...envelope.manifest.contracts, ...envelope.manifest.conformance]) {
         await collectVerificationSuiteSourceClosure(envelope.files, suite.entrypoint);
     }
+    if (envelope.manifest.upgradeFixture) {
+        await collectVerificationSuiteSourceClosure(envelope.files, envelope.manifest.upgradeFixture.entrypoint);
+    }
 }
 
 export async function buildVerificationSuiteContent(

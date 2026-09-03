@@ -4,6 +4,7 @@ import {
     parseStrictJsonDocument,
 } from "@bernouy/cms-integration-packages";
 import {
+    assertReleaseVerificationPlanMatchesVerification,
     computeIntegrationVerificationDigest,
     identifyMigrationVerificationInput,
     validateBoundIntegrationVerificationAuthorSuites,
@@ -14,7 +15,11 @@ import {
 } from "@bernouy/cms-integration-verification";
 import { validateIntegrationPackageEnvelope } from "@bernouy/cms-integration-packages";
 import type { VerificationSandboxInput } from "../supervisor";
-import { parseExactDependencyPackages, parseExactMigrationPackages } from "../protocol/workload";
+import {
+    parseExactDependencyPackages,
+    parseExactMigrationPackages,
+    parseExactUpgradePackages,
+} from "../protocol/workload";
 import { validateDisposableDatabaseCredential } from "../supervisor/execution/credential";
 
 const IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
@@ -53,6 +58,12 @@ export async function parseCanonicalVerificationSandboxInput(
             !Array.isArray(rawWorkload) &&
             "behavioralRlsPlan" in rawWorkload,
     );
+    const hasUpgradePackages = Boolean(
+        rawWorkload &&
+            typeof rawWorkload === "object" &&
+            !Array.isArray(rawWorkload) &&
+            "upgradePackages" in rawWorkload,
+    );
     const workload = strictRecord(rawWorkload, [
         "package",
         "verification",
@@ -61,6 +72,7 @@ export async function parseCanonicalVerificationSandboxInput(
         ...(hasBehavioralRlsPlan ? ["behavioralRlsPlan"] : []),
         "authorSuites",
         ...(hasDependencyPackages ? ["dependencyPackages"] : []),
+        ...(hasUpgradePackages ? ["upgradePackages"] : []),
         ...(hasMigrationInputs ? ["migrationInputs"] : []),
         ...(hasMigrationPackages ? ["migrationPackages"] : []),
         "attempt",
@@ -69,6 +81,9 @@ export async function parseCanonicalVerificationSandboxInput(
     const verification = validateIntegrationVerificationEnvelope(workload.verification);
     const policy = await validateReleaseAdmissionPolicySnapshot(workload.policy);
     const admission = await validateAdmissionInputSnapshotForPolicy(workload.admission, policy);
+    if (admission.snapshot.releaseVerificationPlan) {
+        assertReleaseVerificationPlanMatchesVerification(admission.snapshot.releaseVerificationPlan.plan, verification);
+    }
     const behavioralRlsPlan = await validateBehavioralRlsPlanBinding(
         workload.behavioralRlsPlan,
         admission.snapshot.behavioralRlsPlan,
@@ -82,6 +97,11 @@ export async function parseCanonicalVerificationSandboxInput(
         admission.snapshot.dependencies,
     );
     const attempt = parseAttempt(workload.attempt);
+    const upgradePackages = await parseExactUpgradePackages(
+        workload.upgradePackages ?? [],
+        admission.snapshot.candidate.kind,
+        admission.snapshot.releaseVerificationPlan?.plan.baselines ?? [],
+    );
     const rawMigrationInputs = workload.migrationInputs ?? [];
     if (!Array.isArray(rawMigrationInputs)) {
         throw new TypeError("Sandbox migration input plan must be an array");
@@ -117,6 +137,7 @@ export async function parseCanonicalVerificationSandboxInput(
             ...(behavioralRlsPlan ? { behavioralRlsPlan } : {}),
             authorSuites,
             dependencyPackages,
+            upgradePackages,
             migrationInputs,
             migrationPackages,
             attempt,
