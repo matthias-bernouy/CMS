@@ -4,13 +4,13 @@ import { isRecord } from "../core/records.ts";
 import { maxPhotoBytes, photoBucket } from "./constants.ts";
 
 export async function ensurePhotoBucket(): Promise<void> {
-    const existing = await storage(`/bucket/${encodeURIComponent(photoBucket)}`, { method: "GET" });
+    const existing = await bucketStorage(`/bucket/${encodeURIComponent(photoBucket)}`, { method: "GET" });
     if (existing.ok) {
         const bucket = await existing.json().catch(() => null);
         if (isRecord(bucket) && bucket.public === false && bucket.file_size_limit === maxPhotoBytes) {
             return;
         }
-        const updated = await storage(`/bucket/${encodeURIComponent(photoBucket)}`, {
+        const updated = await bucketStorage(`/bucket/${encodeURIComponent(photoBucket)}`, {
             method: "PUT",
             headers: { "content-type": "application/json" },
             body: JSON.stringify(bucketConfiguration()),
@@ -23,13 +23,32 @@ export async function ensurePhotoBucket(): Promise<void> {
     if (!(await isMissingBucket(existing))) {
         throw await storageError(existing);
     }
-    const created = await storage("/bucket", {
+    const created = await bucketStorage("/bucket", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ id: photoBucket, name: photoBucket, ...bucketConfiguration() }),
     });
     if (!created.ok && created.status !== 409) {
         throw await storageError(created);
+    }
+}
+
+const bucketRetryDelays = [50, 100, 250, 500, 1_000] as const;
+
+async function bucketStorage(path: string, init: RequestInit): Promise<Response> {
+    for (let attempt = 0; ; attempt += 1) {
+        try {
+            const response = await storage(path, init);
+            if (response.status < 500 || attempt === bucketRetryDelays.length) {
+                return response;
+            }
+            await response.body?.cancel();
+        } catch (error) {
+            if (!(error instanceof TypeError) || attempt === bucketRetryDelays.length) {
+                throw error;
+            }
+        }
+        await new Promise((resolve) => setTimeout(resolve, bucketRetryDelays[attempt]));
     }
 }
 

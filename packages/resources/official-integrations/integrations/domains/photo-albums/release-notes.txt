@@ -1,4 +1,8 @@
-Photo Albums 2.0.0
+Photo Albums 2.0.1
+
+Bucket provisioning now retries transient local gateway disconnects without
+retrying photo uploads. This keeps fresh installs and restart recovery
+idempotent when Supabase Storage closes a pooled connection during startup.
 
 Uploads and replacements now declare their public image outputs to CmsCore, so
 the persistent image worker prepares every bounded responsive WebP variant

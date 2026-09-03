@@ -173,6 +173,37 @@ describe("photo albums Edge Function", () => {
         expect(calls).toEqual(["GET /storage/v1/bucket/photo-albums-originals", "POST /storage/v1/bucket"]);
     });
 
+    test("retries a closed gateway connection while ensuring the private bucket", async () => {
+        const calls: string[] = [];
+        let createAttempts = 0;
+        globalThis.fetch = async (input, init) => {
+            const upstream = new Request(input, init);
+            calls.push(`${upstream.method} ${new URL(upstream.url).pathname}`);
+            if (upstream.method === "GET") {
+                return Response.json({ error: "Bucket not found" }, { status: 400 });
+            }
+            createAttempts += 1;
+            if (createAttempts === 1) {
+                throw new TypeError("connection closed before message completed");
+            }
+            return Response.json({ name: "photo-albums-originals" });
+        };
+
+        const response = await handlePhotoAlbumsRequest(
+            new Request("https://edge.test/cms-photo-albums/setup", {
+                method: "POST",
+                headers: { authorization: "Bearer cms-photo-test" },
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(calls).toEqual([
+            "GET /storage/v1/bucket/photo-albums-originals",
+            "POST /storage/v1/bucket",
+            "POST /storage/v1/bucket",
+        ]);
+    });
+
     test("does not read Storage for an unpublished photo", async () => {
         const calls: string[] = [];
         globalThis.fetch = async (input, init) => {
