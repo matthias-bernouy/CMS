@@ -79,6 +79,7 @@ describe("shared release runtime plan execution", () => {
     test("does not turn retryable infrastructure failures into candidate evidence", async () => {
         const candidate = await releasePackage("1.0.0");
         const plan = planReleaseVerification({ baselines: [], hasMigrations: false });
+        let attempts = 0;
 
         await expect(
             executeReleaseVerificationPlan({
@@ -88,10 +89,35 @@ describe("shared release runtime plan execution", () => {
                 plan,
                 continueOnFailure: true,
                 runScenario: async () => {
+                    attempts += 1;
                     throw new ReleaseScenarioInfrastructureError(new Error("temporary daemon failure"));
                 },
             }),
         ).rejects.toBeInstanceOf(ReleaseScenarioInfrastructureError);
+        expect(attempts).toBe(3);
+    });
+
+    test("recreates only the affected scenario after a transient infrastructure failure", async () => {
+        const candidate = await releasePackage("1.0.0");
+        const plan = planReleaseVerification({ baselines: [], hasMigrations: false });
+        let attempts = 0;
+
+        const execution = await executeReleaseVerificationPlan({
+            candidate,
+            baselines: [],
+            availablePackages: [],
+            plan,
+            continueOnFailure: true,
+            runScenario: async () => {
+                attempts += 1;
+                if (attempts === 1) {
+                    throw new ReleaseScenarioInfrastructureError(new Error("temporary daemon failure"));
+                }
+            },
+        });
+
+        expect(attempts).toBe(2);
+        expect(execution.scenarios).toEqual([{ scenario: plan.scenarios[0], outcome: "passed" }]);
     });
 });
 

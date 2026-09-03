@@ -23,6 +23,9 @@ import { allocateReleaseSandboxPorts } from "../ports";
 import { prepareSandboxSupabase } from "../supabase-config";
 import { executeInstalledReleaseScenario } from "./fixture/execution";
 import { captureReleaseSandboxDockerVolumes, removeReleaseSandboxDockerVolumes } from "./dockerVolumes";
+import { ReleaseScenarioInfrastructureError } from "./errors";
+
+export { ReleaseScenarioInfrastructureError } from "./errors";
 
 export type ReleaseScenario = Readonly<{
     target: LocalReleasePackage;
@@ -32,12 +35,6 @@ export type ReleaseScenario = Readonly<{
     fixture?: UpgradeFixtureScenarioV1;
 }>;
 
-export class ReleaseScenarioInfrastructureError extends Error {
-    constructor(cause: unknown) {
-        super("Release scenario infrastructure failed", { cause });
-        this.name = "ReleaseScenarioInfrastructureError";
-    }
-}
 export async function runReleaseScenario(scenario: ReleaseScenario): Promise<void> {
     const root = await mkdtemp(join(tmpdir(), "ulvia-release-"));
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: join(root, "data") }, root);

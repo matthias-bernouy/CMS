@@ -10,6 +10,7 @@ import { ReleaseSandboxClient } from "../../client";
 import { installRequiredDependencies } from "../../dependencies";
 import type { ReleaseScenario } from "..";
 import { verifyMigrationCrashRecovery } from "../resilience";
+import { ReleaseScenarioInfrastructureError } from "../errors";
 import { installFixtureDependencies } from "./dependencies";
 import { createUpgradeFixtureHarness, type UpgradeFixtureHarness } from ".";
 import { snapshotFixtureState } from "./state";
@@ -33,11 +34,23 @@ export async function executeInstalledReleaseScenario(
         }
         await installFixtureDependencies(scenario.fixture?.dependencies ?? [], scenario.packages, installed, client);
         await installRequiredDependencies(initial, scenario.packages, installed, client);
-        await client.install(
-            initial.package.envelope.kind,
-            initial.package.envelope.version,
-            sandboxAnswers(initial.definition),
-        );
+        try {
+            await client.install(
+                initial.package.envelope.kind,
+                initial.package.envelope.version,
+                sandboxAnswers(initial.definition),
+            );
+        } catch (error) {
+            if (scenario.baseline) {
+                throw new ReleaseScenarioInfrastructureError(
+                    new Error(
+                        `Could not prepare immutable baseline ${initial.package.envelope.kind}@${initial.package.envelope.version}`,
+                        { cause: error },
+                    ),
+                );
+            }
+            throw error;
+        }
         installed.set(initial.package.envelope.kind, initial.package.envelope.version);
         if (!scenario.baseline) {
             return;

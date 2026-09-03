@@ -6,6 +6,8 @@ import type { UpgradeFixtureSuiteV1 } from "@bernouy/cms-integration-verificatio
 import type { LocalReleasePackage } from "../types";
 import { ReleaseScenarioInfrastructureError, runReleaseScenario, type ReleaseScenario } from "../sandbox/scenario";
 
+const SCENARIO_INFRASTRUCTURE_ATTEMPTS = 3;
+
 export { SUPABASE_CLI_VERSION } from "../../runtime/supabase";
 
 export type { LocalReleasePackage } from "../types";
@@ -36,7 +38,7 @@ export async function executeReleaseVerificationPlan(input: {
     for (const scenario of input.plan.scenarios) {
         input.onScenario?.(scenario);
         try {
-            await run(resolveScenario(input, packages, scenario));
+            await runWithInfrastructureRetries(run, resolveScenario(input, packages, scenario));
             results.push({ scenario, outcome: "passed" });
         } catch (error) {
             if (error instanceof ReleaseScenarioInfrastructureError) {
@@ -49,6 +51,25 @@ export async function executeReleaseVerificationPlan(input: {
         }
     }
     return Object.freeze({ scenarios: Object.freeze(results) });
+}
+
+async function runWithInfrastructureRetries(
+    run: (scenario: ReleaseScenario) => Promise<void>,
+    scenario: ReleaseScenario,
+): Promise<void> {
+    for (let attempt = 1; ; attempt += 1) {
+        try {
+            await run(scenario);
+            return;
+        } catch (error) {
+            if (
+                !(error instanceof ReleaseScenarioInfrastructureError) ||
+                attempt === SCENARIO_INFRASTRUCTURE_ATTEMPTS
+            ) {
+                throw error;
+            }
+        }
+    }
 }
 
 function resolveScenario(
