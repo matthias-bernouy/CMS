@@ -21,6 +21,7 @@ import {
     FsIntegrationCompatibilityV2ReportStore,
     FsIntegrationMigrationReportStore,
     FsIntegrationRegistryCandidateAdmissionPlanner,
+    FsIntegrationRegistryCandidateAdmissionPlanningError,
     FsIntegrationRegistryCandidateFinalizationError,
     FsIntegrationRegistryCandidateFinalizer,
     FsIntegrationRegistryCandidateStore,
@@ -47,6 +48,7 @@ import {
 import {
     mountRepositorySchemaBaselineImportRoutes,
     mountRepositoryVerificationBackfillRoutes,
+    RepositoryCandidateAdmissionPlanningError,
     mountRepositoryManagementRoutes,
 } from "@bernouy/cms-repository-management";
 import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
@@ -228,13 +230,25 @@ export async function createProductionRepositoryManagement(input: {
     const candidateFinalizer = candidateFinalizerConfig
         ? new FsIntegrationRegistryCandidateFinalizer(candidateFinalizerConfig)
         : undefined;
+    const candidatePlan = candidatePlanner
+        ? async (request: Parameters<FsIntegrationRegistryCandidateAdmissionPlanner["plan"]>[0]) => {
+              try {
+                  return await candidatePlanner.plan(request);
+              } catch (error) {
+                  if (error instanceof FsIntegrationRegistryCandidateAdmissionPlanningError) {
+                      throw new RepositoryCandidateAdmissionPlanningError(error.code);
+                  }
+                  throw error;
+              }
+          }
+        : undefined;
     const candidateProtocol = await createProductionRepositoryCandidateProtocol({
         root: input.root,
         ...input.candidateProtocol,
         store: candidateStore,
         packageSource: new SnapshotIntegrationPackageSource({ snapshots }),
         authorSuites: createRepositoryCandidateAuthorSuiteResolver(verificationContracts),
-        ...(candidatePlanner ? { plan: (request) => candidatePlanner.plan(request) } : {}),
+        ...(candidatePlan ? { plan: candidatePlan } : {}),
         ...(candidateFinalizer
             ? {
                   publication: {
