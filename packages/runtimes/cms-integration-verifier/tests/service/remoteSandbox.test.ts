@@ -64,6 +64,7 @@ describe("fixed sandbox service", () => {
             identity: runnerFixture(),
             async run(input) {
                 expect(process.env.CMS_INTEGRATION_VERIFIER_WORKER_TOKEN).toBeUndefined();
+                await Bun.sleep(1_100);
                 return await validSandboxResult(input);
             },
         };
@@ -73,6 +74,7 @@ describe("fixed sandbox service", () => {
             sandbox,
             maxInputBytes: 4 * 1_048_576,
             maxOutputBytes: 1_048_576,
+            serverIdleTimeoutSeconds: 1,
         });
         servers.push(server);
         const remote = createHttpVerificationSandbox({

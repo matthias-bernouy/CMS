@@ -10,6 +10,7 @@ export type VerificationSandboxServiceConfig = Readonly<{
     sandbox: VerificationSandbox;
     maxInputBytes: number;
     maxOutputBytes: number;
+    serverIdleTimeoutSeconds?: number;
 }>;
 
 export function startVerificationSandboxService(config: VerificationSandboxServiceConfig): Bun.Server<unknown> {
@@ -17,7 +18,8 @@ export function startVerificationSandboxService(config: VerificationSandboxServi
     return Bun.serve({
         port: config.port,
         hostname: config.hostname ?? "0.0.0.0",
-        async fetch(request) {
+        ...(config.serverIdleTimeoutSeconds === undefined ? {} : { idleTimeout: config.serverIdleTimeoutSeconds }),
+        async fetch(request, server) {
             const url = new URL(request.url);
             if (request.method === "GET" && url.pathname === "/ready") {
                 return Response.json({ ready: true, busy });
@@ -44,6 +46,7 @@ export function startVerificationSandboxService(config: VerificationSandboxServi
                     return jsonError(401, "capability_invalid");
                 }
                 const input = await parseCanonicalVerificationSandboxInput(body, config.maxInputBytes);
+                server.timeout(request, 0);
                 const result = await config.sandbox.run(input, request.signal);
                 const bytes = canonicalJsonBytes(result);
                 if (bytes.byteLength > config.maxOutputBytes) {
