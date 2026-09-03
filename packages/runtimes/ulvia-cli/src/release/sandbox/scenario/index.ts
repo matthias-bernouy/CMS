@@ -22,6 +22,7 @@ import { removeReleaseSandbox } from "../filesystem";
 import { allocateReleaseSandboxPorts } from "../ports";
 import { prepareSandboxSupabase } from "../supabase-config";
 import { executeInstalledReleaseScenario } from "./fixture/execution";
+import { captureReleaseSandboxDockerVolumes, removeReleaseSandboxDockerVolumes } from "./dockerVolumes";
 
 export type ReleaseScenario = Readonly<{
     target: LocalReleasePackage;
@@ -37,7 +38,6 @@ export class ReleaseScenarioInfrastructureError extends Error {
         this.name = "ReleaseScenarioInfrastructureError";
     }
 }
-
 export async function runReleaseScenario(scenario: ReleaseScenario): Promise<void> {
     const root = await mkdtemp(join(tmpdir(), "ulvia-release-"));
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: join(root, "data") }, root);
@@ -45,13 +45,14 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
     let cms: CmsProcess | undefined;
     let repositoryServer: LocalRepositoryServer | undefined;
     let management: LocalSupabaseManagementServer | undefined;
+    let projectRef: string | undefined;
     let supabasePrepared = false;
     let mongoRequested = false;
     let phase: "infrastructure" | "scenario" = "infrastructure";
     let primaryError: unknown;
     try {
         await ensureUlviaPaths(paths);
-        const projectRef = await prepareSandboxSupabase(paths.supabase, ports.supabase);
+        projectRef = await prepareSandboxSupabase(paths.supabase, ports.supabase);
         supabasePrepared = true;
         const repository = new LocalIntegrationRepository(paths.repository, paths.packages);
         await repository.init();
@@ -115,6 +116,14 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
                 ? infrastructureFailure(error)
                 : error;
     } finally {
+        let dockerVolumes: readonly string[] = [];
+        if (projectRef) {
+            try {
+                dockerVolumes = await captureReleaseSandboxDockerVolumes(projectRef);
+            } catch (error) {
+                primaryError = infrastructureFailure(error);
+            }
+        }
         const cleanup = await Promise.allSettled([
             cms ? stopLocalCms(cms) : Promise.resolve(),
             management ? management.stop() : Promise.resolve(),
@@ -124,8 +133,9 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
             mongoRequested ? destroyLocalMongo(paths.mongo) : Promise.resolve(false),
             supabasePrepared ? stopLocalSupabase(paths.supabase, { destroy: true }) : Promise.resolve(false),
         ]);
+        const volumeCleanup = await Promise.allSettled([removeReleaseSandboxDockerVolumes(dockerVolumes)]);
         const filesystem = await Promise.allSettled([removeReleaseSandbox(root)]);
-        const cleanupError = [...cleanup, ...infrastructure, ...filesystem].find(
+        const cleanupError = [...cleanup, ...infrastructure, ...volumeCleanup, ...filesystem].find(
             (result): result is PromiseRejectedResult => result.status === "rejected",
         )?.reason;
         if (cleanupError) {
@@ -136,7 +146,6 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
         throw primaryError;
     }
 }
-
 function infrastructureFailure(error: unknown): ReleaseScenarioInfrastructureError {
     return error instanceof ReleaseScenarioInfrastructureError ? error : new ReleaseScenarioInfrastructureError(error);
 }

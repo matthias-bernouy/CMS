@@ -3,6 +3,12 @@ import { planReleaseVerification } from "@bernouy/cms-integration-verification";
 import { defineUpgradeScenarios } from "@bernouy/cms-integration-verification/upgrade-fixtures/v1";
 import { executeReleaseVerificationPlan } from "../../src/release/verification/runtime";
 import { ReleaseScenarioInfrastructureError } from "../../src/release/sandbox/scenario";
+import {
+    captureReleaseSandboxDockerVolumes,
+    mountedDockerVolumes,
+    releaseSandboxContainerIds,
+    removeReleaseSandboxDockerVolumes,
+} from "../../src/release/sandbox/scenario/dockerVolumes";
 import { releasePackage } from "./support";
 
 describe("shared release runtime plan execution", () => {
@@ -86,5 +92,66 @@ describe("shared release runtime plan execution", () => {
                 },
             }),
         ).rejects.toBeInstanceOf(ReleaseScenarioInfrastructureError);
+    });
+});
+
+describe("release sandbox Docker volume cleanup", () => {
+    test("captures only volumes mounted by the exact ephemeral Supabase project", async () => {
+        const projectRef = "ulvia-release-123456abcdef";
+        const commands: readonly Readonly<{ exitCode: number; stdout: string; stderr: string }>[] = [
+            {
+                exitCode: 0,
+                stdout: [
+                    JSON.stringify({ ID: "a".repeat(12), Names: `supabase_db_${projectRef}` }),
+                    JSON.stringify({ ID: "b".repeat(12), Names: "supabase_db_unrelated" }),
+                ].join("\n"),
+                stderr: "",
+            },
+            {
+                exitCode: 0,
+                stdout: JSON.stringify([
+                    { Type: "bind", Source: "/tmp/project" },
+                    { Type: "volume", Name: "a".repeat(64) },
+                    { Type: "volume", Name: "b".repeat(64) },
+                ]),
+                stderr: "",
+            },
+        ];
+        const calls: string[][] = [];
+        let index = 0;
+
+        const volumes = await captureReleaseSandboxDockerVolumes(projectRef, async (arguments_) => {
+            calls.push([...arguments_]);
+            return commands[index++]!;
+        });
+
+        expect(volumes).toEqual(["a".repeat(64), "b".repeat(64)]);
+        expect(calls[1]).toEqual(["container", "inspect", "--format", "{{json .Mounts}}", "a".repeat(12)]);
+    });
+
+    test("removes only captured volumes and verifies a failed deletion", async () => {
+        const calls: string[][] = [];
+        const volume = "c".repeat(64);
+        await expect(
+            removeReleaseSandboxDockerVolumes([volume], async (arguments_) => {
+                calls.push([...arguments_]);
+                return { exitCode: calls.length === 1 ? 1 : 0, stdout: "", stderr: "" };
+            }),
+        ).rejects.toThrow(/retained/);
+        expect(calls).toEqual([
+            ["volume", "rm", volume],
+            ["volume", "inspect", volume],
+        ]);
+    });
+
+    test("rejects neighboring projects and malformed mount inventories", () => {
+        const projectRef = "ulvia-release-123456abcdef";
+        expect(
+            releaseSandboxContainerIds(
+                JSON.stringify({ ID: "a".repeat(12), Names: `supabase_db_${projectRef}-neighbor` }),
+                projectRef,
+            ),
+        ).toEqual([]);
+        expect(() => mountedDockerVolumes(JSON.stringify({ Type: "volume" }))).toThrow(/invalid/);
     });
 });
