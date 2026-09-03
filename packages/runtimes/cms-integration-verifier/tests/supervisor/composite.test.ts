@@ -14,7 +14,7 @@ import {
     type VerificationSandbox,
     type VerificationSandboxInput,
 } from "../../src";
-import { releaseRuntimeEvidence } from "../../src/sandbox/release/evidence";
+import { releaseRuntimeDiagnostics, releaseRuntimeEvidence } from "../../src/sandbox/release/evidence";
 import { createPostgresPlatformVerificationAdapter, postgresPlatformInputFixture } from "../fixtures/postgresAdapter";
 import { validSandboxResult } from "../fixtures/result";
 
@@ -88,6 +88,25 @@ describe("composite remote verification sandbox", () => {
             createCompositeVerificationSandbox({ platform, releaseRuntime }).run(input, new AbortController().signal),
         ).rejects.toThrow("platform unavailable");
         expect(runtimeAborted).toBe(true);
+    });
+
+    test("emits one diagnostic per failed check when several scenarios fail with the same finding", async () => {
+        const baselines = ["1.0.0", "1.1.0"].map((version, index) => ({
+            version,
+            packageDigest: String(index + 1).repeat(64),
+            resilienceKey: String(index + 3).repeat(64),
+        }));
+        const plan = planReleaseVerification({ baselines, hasMigrations: false });
+        const evidence = await releaseRuntimeEvidence("a".repeat(64), "b".repeat(64), {
+            scenarios: plan.scenarios.map((scenario) => ({ scenario, outcome: "failed" as const })),
+        });
+
+        const diagnostics = releaseRuntimeDiagnostics(evidence);
+        expect(diagnostics.map(({ code }) => code)).toEqual([
+            "release-runtime-fresh-install-failed",
+            "release-runtime-historical-upgrades-failed",
+        ]);
+        expect(new Set(diagnostics.map(({ code }) => code)).size).toBe(diagnostics.length);
     });
 });
 

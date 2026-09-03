@@ -10,7 +10,7 @@ import { loadUpgradeFixtureSuiteFromVerification } from "@bernouy/cms-integratio
 import { executeReleaseVerificationPlan } from "@bernouy/ulvia-cli/release-runtime";
 import type { VerificationSandboxInput } from "../../supervisor";
 import { verificationResultBindings } from "./bindings";
-import { releaseRuntimeEnvironmentVersions, releaseRuntimeEvidence } from "./evidence";
+import { releaseRuntimeDiagnostics, releaseRuntimeEnvironmentVersions, releaseRuntimeEvidence } from "./evidence";
 import { loadExactReleaseRuntimePackages } from "./packages";
 
 export async function runReleaseRuntimeVerification(
@@ -57,23 +57,10 @@ export async function runReleaseRuntimeVerification(
                 attempts: 1,
                 cacheHit: false,
                 evidenceDigests: [evidenceDigest],
-                diagnostics: diagnostics(platformEvidence),
+                diagnostics: releaseRuntimeDiagnostics(platformEvidence),
                 platformEvidence,
             },
         ],
     };
     return { schema: "cms.integration.candidate-admission-job-result.v1", verification: result, migrations: [] };
-}
-
-function diagnostics(
-    evidence: PlatformVerificationEvidenceV1,
-): VerificationJobResultV1["results"][number]["diagnostics"] {
-    return evidence.checks
-        .flatMap((check) => check.findings.map((entry) => ({ checkId: check.checkId, code: entry.code })))
-        .slice(0, 8)
-        .map(({ checkId, code }) => ({
-            code,
-            message: `${checkId} rejected one or more isolated runtime scenarios`,
-            redacted: true as const,
-        }));
 }

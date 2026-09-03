@@ -2,6 +2,7 @@ import {
     RELEASE_RUNTIME_PLATFORM_VERIFICATION_SUITE_V1,
     type PlatformVerificationEvidenceV1,
     type ReleaseVerificationPlanScenarioV1,
+    type VerificationJobResultV1,
 } from "@bernouy/cms-integration-verification";
 import { SUPABASE_CLI_VERSION, type ReleaseRuntimeExecution } from "@bernouy/ulvia-cli/release-runtime";
 import { checkEvidence, finding, suiteEvidence } from "../service/postgres/evidence";
@@ -46,6 +47,19 @@ export async function releaseRuntimeEvidence(
         suiteDigest,
         checks.toSorted((left, right) => left.checkId.localeCompare(right.checkId)),
     );
+}
+
+export function releaseRuntimeDiagnostics(
+    evidence: PlatformVerificationEvidenceV1,
+): VerificationJobResultV1["results"][number]["diagnostics"] {
+    return evidence.checks
+        .filter((check) => check.findings.length > 0)
+        .slice(0, 8)
+        .map((check) => ({
+            code: `release-runtime-${check.checkId}-failed`,
+            message: `${check.checkId} rejected one or more isolated runtime scenarios`,
+            redacted: true as const,
+        }));
 }
 
 async function scenarioCheck(checkId: string, results: readonly ScenarioResult[]) {
