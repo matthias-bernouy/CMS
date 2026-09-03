@@ -44,6 +44,7 @@ import {
     recoverReviewedSchemaBaselineImports,
     recoverVerifiedCandidateActivations,
     type ReviewedSchemaBaselineImportTarget,
+    type CandidateAdmissionPlanningErrorCode,
 } from "@bernouy/cms-integration-registry/fs";
 import {
     mountRepositorySchemaBaselineImportRoutes,
@@ -235,7 +236,7 @@ export async function createProductionRepositoryManagement(input: {
               try {
                   return await candidatePlanner.plan(request);
               } catch (error) {
-                  if (error instanceof FsIntegrationRegistryCandidateAdmissionPlanningError) {
+                  if (isCandidateAdmissionPlanningError(error)) {
                       throw new RepositoryCandidateAdmissionPlanningError(error.code);
                   }
                   throw error;
@@ -364,4 +365,32 @@ export async function createProductionRepositoryManagement(input: {
             candidateProtocol.mountManagement(runner);
         },
     });
+}
+
+const CANDIDATE_ADMISSION_PLANNING_ERROR_CODES = new Set<CandidateAdmissionPlanningErrorCode>([
+    "candidate_not_validating",
+    "catalog_changed",
+    "dependency_cycle",
+    "dependency_unavailable",
+    "missing_migration_baseline",
+    "migration_input_unavailable",
+    "release_verification_plan_unavailable",
+    "runner_unavailable",
+    "suite_conflict",
+]);
+
+function isCandidateAdmissionPlanningError(
+    error: unknown,
+): error is FsIntegrationRegistryCandidateAdmissionPlanningError {
+    if (error instanceof FsIntegrationRegistryCandidateAdmissionPlanningError) {
+        return true;
+    }
+    if (!(error instanceof Error) || error.name !== "FsIntegrationRegistryCandidateAdmissionPlanningError") {
+        return false;
+    }
+    const code = (error as Partial<FsIntegrationRegistryCandidateAdmissionPlanningError>).code;
+    return (
+        typeof code === "string" &&
+        CANDIDATE_ADMISSION_PLANNING_ERROR_CODES.has(code as CandidateAdmissionPlanningErrorCode)
+    );
 }
