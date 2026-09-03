@@ -105,11 +105,28 @@ describe("integration registry candidate attempts", () => {
         const recovered = recoverExpiredIntegrationRegistryCandidateLease(running, {
             expectedRevision: running.revision,
             now: TIMES.lease,
+            maximumAttempts: 2,
         });
 
         expect(recovered).toMatchObject({ status: "queued", lastFailure: { code: "lease_expired" } });
         expect(recovered.policyDigest).toBe(running.policyDigest);
         expect(recovered.admissionInputDigest).toBe(running.admissionInputDigest);
+    });
+
+    test("rejects an expired worker lease after the admission retry policy is exhausted", async () => {
+        const identity = await candidateIdentity();
+        const running = claim(await queueCandidate(identity.record, identity));
+        const recovered = recoverExpiredIntegrationRegistryCandidateLease(running, {
+            expectedRevision: running.revision,
+            now: TIMES.lease,
+            maximumAttempts: 1,
+        });
+
+        expect(recovered).toMatchObject({
+            status: "rejected",
+            lastFailure: { kind: "infrastructure", code: "verification_infrastructure_exhausted" },
+        });
+        expect(recovered.lease).toBeUndefined();
     });
 });
 
@@ -122,5 +139,6 @@ function claim(queued: Awaited<ReturnType<typeof queueIntegrationRegistryCandida
         workerId: "worker-1",
         now: TIMES.claimed,
         leaseExpiresAt,
+        maximumAttempts: 2,
     });
 }

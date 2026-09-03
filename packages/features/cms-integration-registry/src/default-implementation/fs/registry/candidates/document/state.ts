@@ -42,11 +42,17 @@ export function assertCandidateAdmissionState(record: IntegrationRegistryCandida
     ) {
         invalid("Candidate queued result must describe a retryable infrastructure failure");
     }
-    if (
-        record.status === "rejected" &&
-        record.lastFailure?.kind !== "validation" &&
-        (!record.policyDigest || !record.admissionInputDigest || !record.admissionJobResultDigest)
-    ) {
-        invalid("Candidate verification rejection requires exact admission and result digests");
+    if (record.status === "rejected" && record.lastFailure?.kind !== "validation") {
+        const exhaustedLeaseRecovery =
+            record.lastFailure?.kind === "infrastructure" &&
+            record.lastFailure.code === "verification_infrastructure_exhausted" &&
+            record.attemptCount >= 1;
+        if (
+            !record.policyDigest ||
+            !record.admissionInputDigest ||
+            (!record.admissionJobResultDigest && !exhaustedLeaseRecovery)
+        ) {
+            invalid("Candidate verification rejection requires exact admission inputs and failure evidence");
+        }
     }
 }

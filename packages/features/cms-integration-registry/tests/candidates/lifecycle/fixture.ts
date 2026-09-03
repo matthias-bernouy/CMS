@@ -63,6 +63,7 @@ export async function completeCandidate(
         workerId: "worker-1",
         now: TIMES.claimed,
         leaseExpiresAt: TIMES.lease,
+        maximumAttempts: 2,
     });
     return await completeIntegrationRegistryCandidateAttempt(running, {
         expectedRevision: running.revision,

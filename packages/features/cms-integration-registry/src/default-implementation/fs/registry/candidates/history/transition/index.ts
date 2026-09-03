@@ -44,8 +44,14 @@ export function assertCandidateRecordFollows(
             assertRenewal(previous, current);
             return;
         case "running->passed":
-        case "running->rejected":
             assertCompletion(previous, current, false);
+            return;
+        case "running->rejected":
+            if (current.admissionJobResultDigest !== previous.admissionJobResultDigest) {
+                assertCompletion(previous, current, false);
+            } else {
+                assertLeaseRecovery(previous, current);
+            }
             return;
         case "running->queued":
             if (current.admissionJobResultDigest !== previous.admissionJobResultDigest) {

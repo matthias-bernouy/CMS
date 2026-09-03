@@ -4,6 +4,7 @@ import {
 } from "cms-integration-registry/core/publication/candidates/state";
 import type {
     CreateIntegrationRegistryCandidateInput,
+    IntegrationRegistryCandidateObjects,
     IntegrationRegistryCandidateRecord,
     QueueIntegrationRegistryCandidateInput,
 } from "cms-integration-registry/interfaces/publication";
@@ -82,11 +83,14 @@ export async function queueStoredCandidate(
 export async function mutateStoredCandidate(
     layout: FsIntegrationRegistryCandidateLayout,
     candidateId: string,
-    transition: (record: IntegrationRegistryCandidateRecord) => IntegrationRegistryCandidateRecord,
+    transition: (
+        record: IntegrationRegistryCandidateRecord,
+        objects: IntegrationRegistryCandidateObjects,
+    ) => IntegrationRegistryCandidateRecord,
 ): Promise<IntegrationRegistryCandidateRecord> {
     const current = await requireCandidateRecord(layout, candidateId);
-    await readFsIntegrationRegistryCandidateObjects(layout, current);
-    const next = transition(current);
+    const objects = await readFsIntegrationRegistryCandidateObjects(layout, current);
+    const next = transition(current, objects);
     await appendCandidateRecordRevision(layout, next);
     return next;
 }

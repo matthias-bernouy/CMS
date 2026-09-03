@@ -101,7 +101,13 @@ export class FsIntegrationRegistryCandidateStore implements IntegrationRegistryC
         candidateId: string,
         input: ClaimIntegrationRegistryCandidateInput,
     ): Promise<IntegrationRegistryCandidateRecord> {
-        return await this.#mutate(candidateId, (record) => {
+        return await this.#mutate(candidateId, (record, objects) => {
+            if (!objects.policy) {
+                throw new IntegrationRegistryCandidateError(
+                    "invalid_candidate",
+                    "Candidate cannot be claimed without an immutable admission policy",
+                );
+            }
             const fencingToken = record.attemptCount + 1;
             if (!Number.isSafeInteger(fencingToken)) {
                 throw new IntegrationRegistryCandidateError(
@@ -109,7 +115,11 @@ export class FsIntegrationRegistryCandidateStore implements IntegrationRegistryC
                     "Candidate attempts exceed safe fencing",
                 );
             }
-            return claimIntegrationRegistryCandidate(record, { ...input, fencingToken });
+            return claimIntegrationRegistryCandidate(record, {
+                ...input,
+                fencingToken,
+                maximumAttempts: objects.policy.retry.maximumAttempts,
+            });
         });
     }
 
@@ -155,11 +165,20 @@ export class FsIntegrationRegistryCandidateStore implements IntegrationRegistryC
 
     async recoverExpiredLease(
         candidateId: string,
-        input: Parameters<typeof recoverExpiredIntegrationRegistryCandidateLease>[1],
+        input: Readonly<{ expectedRevision: number; now: string }>,
     ): Promise<IntegrationRegistryCandidateRecord> {
-        return await this.#mutate(candidateId, (record) =>
-            recoverExpiredIntegrationRegistryCandidateLease(record, input),
-        );
+        return await this.#mutate(candidateId, (record, objects) => {
+            if (!objects.policy) {
+                throw new IntegrationRegistryCandidateError(
+                    "invalid_candidate",
+                    "Candidate lease cannot be recovered without an immutable admission policy",
+                );
+            }
+            return recoverExpiredIntegrationRegistryCandidateLease(record, {
+                ...input,
+                maximumAttempts: objects.policy.retry.maximumAttempts,
+            });
+        });
     }
 
     async recoverExpiredLeases(now: string, limit = 100): Promise<readonly IntegrationRegistryCandidateRecord[]> {
@@ -197,7 +216,7 @@ export class FsIntegrationRegistryCandidateStore implements IntegrationRegistryC
 
     async #mutate(
         candidateId: string,
-        transition: (record: IntegrationRegistryCandidateRecord) => IntegrationRegistryCandidateRecord,
+        transition: Parameters<typeof mutateStoredCandidate>[2],
     ): Promise<IntegrationRegistryCandidateRecord> {
         const layout = await this.#loadLayout();
         return await withCandidateMutationLock(layout, () => mutateStoredCandidate(layout, candidateId, transition));

@@ -71,11 +71,13 @@ export function assertLeaseRecovery(
     previous: IntegrationRegistryCandidateRecord,
     current: IntegrationRegistryCandidateRecord,
 ): void {
+    const expectedFailureCode =
+        current.status === "rejected" ? "verification_infrastructure_exhausted" : "lease_expired";
     if (
         !previous.lease ||
         current.lease ||
         current.lastFailure?.kind !== "infrastructure" ||
-        current.lastFailure.code !== "lease_expired" ||
+        current.lastFailure.code !== expectedFailureCode ||
         Date.parse(current.updatedAt) < Date.parse(previous.lease.leaseExpiresAt)
     ) {
         corrupt(`Candidate ${current.candidateId} lease recovery is invalid`);

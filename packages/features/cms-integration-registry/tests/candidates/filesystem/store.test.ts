@@ -150,6 +150,44 @@ describe("filesystem integration registry candidate store", () => {
         expect(await fixture.store.recoverExpiredLeases("2026-07-26T10:04:00.000Z")).toEqual([]);
     });
 
+    test("rejects an expired lease once the immutable retry policy is exhausted", async () => {
+        const fixture = await candidateStoreFixture("candidate-exhausted-lease");
+        cleanup = fixture.cleanup;
+        const queued = await queueCandidate(fixture);
+        const first = await fixture.store.claim(fixture.candidateId, {
+            expectedRevision: queued.revision,
+            jobId: "job-exhausted",
+            attemptId: "attempt-1",
+            workerId: "worker-1",
+            now: "2026-07-26T10:03:00.000Z",
+            leaseExpiresAt: "2026-07-26T10:04:00.000Z",
+        });
+        const retried = await fixture.store.recoverExpiredLease(fixture.candidateId, {
+            expectedRevision: first.revision,
+            now: "2026-07-26T10:04:00.000Z",
+        });
+        const second = await fixture.store.claim(fixture.candidateId, {
+            expectedRevision: retried.revision,
+            jobId: "job-exhausted",
+            attemptId: "attempt-2",
+            workerId: "worker-2",
+            now: "2026-07-26T10:04:01.000Z",
+            leaseExpiresAt: "2026-07-26T10:05:00.000Z",
+        });
+
+        expect(
+            await fixture.store.recoverExpiredLease(fixture.candidateId, {
+                expectedRevision: second.revision,
+                now: "2026-07-26T10:05:00.000Z",
+            }),
+        ).toMatchObject({
+            status: "rejected",
+            attemptCount: 2,
+            lastFailure: { code: "verification_infrastructure_exhausted" },
+        });
+        expect(await fixture.store.listClaimable("2026-07-26T10:05:01.000Z")).toEqual([]);
+    });
+
     test("recovers then expires a running candidate at its TTL without a restart", async () => {
         const fixture = await candidateStoreFixture("running-ttl", "2026-07-26T10:04:00.000Z");
         cleanup = fixture.cleanup;

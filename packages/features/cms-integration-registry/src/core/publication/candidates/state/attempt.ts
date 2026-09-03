@@ -33,10 +33,17 @@ export function claimIntegrationRegistryCandidate(
         workerId: string;
         now: string;
         leaseExpiresAt: string;
+        maximumAttempts: number;
     }>,
 ): IntegrationRegistryCandidateRecord {
     assertCandidateRevision(record, input.expectedRevision);
     assertCandidateTransition(record, ["queued"], "running");
+    if (!Number.isSafeInteger(input.maximumAttempts) || input.maximumAttempts < 1) {
+        invalidCandidate("Candidate claim maximum attempts must be a positive safe integer");
+    }
+    if (record.attemptCount >= input.maximumAttempts) {
+        invalidCandidate("Candidate exhausted the admission retry policy");
+    }
     if (!record.policyDigest || !record.admissionInputDigest) {
         invalidCandidate("Candidate cannot be claimed without exact admission inputs");
     }
