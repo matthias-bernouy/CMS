@@ -80,7 +80,7 @@ function selectTargets(
 ): readonly LocalPackageRecord[] {
     const local = records.filter((record) => record.source.startsWith("local:"));
     if (all) {
-        return orderPushRecords(local);
+        return orderPushRecords(selectLatestByKind(local));
     }
     const matching = local.filter((record) => record.kind === kind);
     const target = version
@@ -94,6 +94,17 @@ function selectTargets(
         );
     }
     return [target];
+}
+
+function selectLatestByKind(records: readonly LocalPackageRecord[]): readonly LocalPackageRecord[] {
+    const latest = new Map<string, LocalPackageRecord>();
+    for (const record of records) {
+        const selected = latest.get(record.kind);
+        if (!selected || rcompare(record.version, selected.version) < 0) {
+            latest.set(record.kind, record);
+        }
+    }
+    return [...latest.values()];
 }
 
 async function verifyPublicRoundTrip(

@@ -128,6 +128,51 @@ describe("ulvia push", () => {
         expect(output.at(-1)).toContain("failed=1 skipped=1");
         expect(output.join("\n")).not.toContain("pat-not-logged");
     });
+
+    test("push --all selects only the latest local release for each integration", async () => {
+        const root = await temporaryRoot(roots);
+        const source = join(root, "source");
+        const data = join(root, "data");
+        const baseOptions = {
+            environment: { ULVIA_DATA_DIR: data },
+            cwd: source,
+            repositoryFetch: emptyRemote,
+            releaseVerifier: { verify: async () => undefined },
+            log: () => undefined,
+        };
+        await writeIntegrationSource(source, "1.0.0", "demo");
+        await runCli(["release", "demo"], baseOptions);
+        await writeIntegrationSource(source, "1.1.0", "demo");
+        await runCli(["release", "demo"], baseOptions);
+
+        const paths = resolveUlviaPaths(baseOptions.environment);
+        const local = new LocalIntegrationRepository(paths.repository, paths.packages);
+        await local.init();
+        const latest = (await local.list()).find((record) => record.kind === "demo" && record.version === "1.1.0")!;
+        const resolved = await local.getPackage(latest);
+        const submitted: string[] = [];
+
+        await runCli(["push", "--all"], {
+            environment: {
+                ULVIA_DATA_DIR: data,
+                ULVIA_URL: "https://manager.example.test",
+                ULVIA_TOKEN: "pat-not-logged",
+            },
+            repositoryFetch: remoteFixture(resolved),
+            publicationFetch: async (input, init) => {
+                const request = new Request(input, init);
+                if (request.method === "GET") {
+                    return Response.json({ kind: "demo", versions: [] });
+                }
+                const candidate = await validateIntegrationCandidateEnvelope(await request.json());
+                submitted.push(`${candidate.envelope.package.kind}@${candidate.envelope.package.version}`);
+                return candidateResponse(candidate, "published", 202);
+            },
+            log: () => undefined,
+        });
+
+        expect(submitted).toEqual(["demo@1.1.0"]);
+    });
 });
 
 function candidateResponse(
