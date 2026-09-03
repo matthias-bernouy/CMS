@@ -1,4 +1,5 @@
 import { runCanonicalVerificationSandboxProgram } from "../program";
+import { redactedErrorEvent } from "../process/diagnostics";
 import { runReleaseRuntimeVerification } from ".";
 
 export async function runReleaseRuntimeSandboxExecutable(): Promise<void> {
@@ -11,8 +12,8 @@ export async function runReleaseRuntimeSandboxExecutable(): Promise<void> {
 if (import.meta.main) {
     try {
         await runReleaseRuntimeSandboxExecutable();
-    } catch {
-        process.stderr.write('{"event":"release-runtime-sandbox-failed"}\n');
+    } catch (error) {
+        process.stderr.write(`${redactedErrorEvent("release-runtime-sandbox-failed", error)}\n`);
         process.exitCode = 1;
     }
 }

@@ -1,4 +1,5 @@
 import type { PinnedVerificationRunnerIdentity } from "@bernouy/cms-integration-verification";
+import { redactedErrorMessage } from "./diagnostics";
 
 export type ProcessVerificationSandboxConfig = Readonly<{
     identity: PinnedVerificationRunnerIdentity;
@@ -27,7 +28,13 @@ export type ProcessVerificationSandboxErrorCode =
 export class ProcessVerificationSandboxError extends Error {
     override readonly name = "ProcessVerificationSandboxError";
 
-    constructor(readonly code: ProcessVerificationSandboxErrorCode) {
-        super(`Verification sandbox failed: ${code}`);
+    constructor(
+        readonly code: ProcessVerificationSandboxErrorCode,
+        diagnostic?: string,
+    ) {
+        const message = diagnostic?.trim();
+        super(`Verification sandbox failed: ${code}`, {
+            ...(message ? { cause: new Error(redactedErrorMessage(message)) } : {}),
+        });
     }
 }

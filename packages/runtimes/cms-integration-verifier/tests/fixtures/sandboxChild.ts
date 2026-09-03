@@ -45,6 +45,12 @@ if (mode === "hang") {
     orphan.unref();
     const result = await validSandboxResult(input);
     process.stdout.write(Buffer.from(canonicalJsonBytes(result)));
+} else if (mode === "failure-diagnostic") {
+    await readStdin();
+    process.stderr.write(
+        "failed at https://user:password@example.test/path token=abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJ\n",
+    );
+    process.exitCode = 1;
 } else {
     await runCanonicalVerificationSandboxProgram(async (input) => {
         const result = await validSandboxResult(input);

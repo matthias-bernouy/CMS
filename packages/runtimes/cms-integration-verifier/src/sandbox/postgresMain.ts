@@ -1,4 +1,5 @@
 import { runCanonicalVerificationSandboxProgram } from "./program";
+import { redactedErrorEvent } from "./process/diagnostics";
 import { runPostgresPlatformVerification, type PostgresPlatformVerificationAdapter } from "./postgres";
 import { createPostgresPlatformVerificationAdapter } from "./service/postgres";
 
@@ -18,8 +19,8 @@ export async function runPostgresVerificationSandboxExecutable(
 if (import.meta.main) {
     try {
         await runPostgresVerificationSandboxExecutable();
-    } catch {
-        process.stderr.write('{"event":"postgres-verification-sandbox-failed"}\n');
+    } catch (error) {
+        process.stderr.write(`${redactedErrorEvent("postgres-verification-sandbox-failed", error)}\n`);
         process.exitCode = 1;
     }
 }

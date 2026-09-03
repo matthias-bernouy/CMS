@@ -76,6 +76,19 @@ describe("local process verification sandbox", () => {
         ).rejects.toMatchObject<Partial<ProcessVerificationSandboxError>>({ code: "launch-failed" });
     });
 
+    test("retains only redacted bounded stderr for a failed child", async () => {
+        const fixture = await trackedFixture("failure-diagnostic");
+
+        const error = await fixture.sandbox
+            .run(await sandboxInputFixture(), new AbortController().signal)
+            .catch((failure) => failure as ProcessVerificationSandboxError);
+
+        expect(error.code).toBe("process-failed");
+        expect((error.cause as Error).message).toContain("[redacted-url]");
+        expect((error.cause as Error).message).not.toContain("password@example.test");
+        expect((error.cause as Error).message).not.toContain("abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJ");
+    });
+
     test("rejects argument and environment channels that could carry ambient secrets", async () => {
         await expect(
             processSandboxFixture("unused", { environment: { WORKER_TOKEN: "must-not-cross" } }),

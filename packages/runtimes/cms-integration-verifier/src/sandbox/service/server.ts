@@ -1,6 +1,7 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import type { VerificationSandbox } from "../../supervisor";
 import { parseCanonicalVerificationSandboxInput } from "../childProtocol";
+import { redactedErrorEvent } from "../process/diagnostics";
 import type { SandboxCapabilityVerifier } from "./capability";
 
 export type VerificationSandboxServiceConfig = Readonly<{
@@ -72,21 +73,7 @@ export function startVerificationSandboxService(config: VerificationSandboxServi
 }
 
 function logSandboxFailure(error: unknown, log: (message: string) => void): void {
-    const causes: Array<Readonly<{ name: string; message: string }>> = [];
-    let current = error;
-    while (current instanceof Error && causes.length < 5) {
-        causes.push({ name: current.name.slice(0, 80), message: redactedErrorMessage(current.message) });
-        current = current.cause;
-    }
-    log(JSON.stringify({ event: "integration-verification-sandbox-failed", causes }));
-}
-
-function redactedErrorMessage(message: string): string {
-    return message
-        .replace(/\b(?:https?|postgres(?:ql)?|mongodb):\/\/[^\s"']+/giu, "[redacted-url]")
-        .replace(/\b(?:bearer|password|secret|token)\s*[=:]\s*[^\s,"']+/giu, "[redacted-credential]")
-        .replace(/\b[A-Za-z0-9_-]{48,}\b/gu, "[redacted-value]")
-        .slice(0, 1_024);
+    log(redactedErrorEvent("integration-verification-sandbox-failed", error));
 }
 
 async function requestBody(request: Request, limit: number): Promise<Uint8Array | undefined> {

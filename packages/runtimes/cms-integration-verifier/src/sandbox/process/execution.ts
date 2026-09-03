@@ -85,12 +85,12 @@ async function superviseChild(
             await completed.catch(() => undefined);
             throw new ProcessVerificationSandboxError(winner.kind);
         }
-        const [, output, , status] = winner.value;
+        const [, output, errorOutput, status] = winner.value;
         if (status.launchError) {
             throw new ProcessVerificationSandboxError("launch-failed");
         }
         if (status.code !== 0 || status.signal !== null) {
-            throw new ProcessVerificationSandboxError("process-failed");
+            throw new ProcessVerificationSandboxError("process-failed", Buffer.from(errorOutput).toString("utf8"));
         }
         return output;
     } catch (error) {
