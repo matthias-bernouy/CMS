@@ -344,6 +344,9 @@ services:
             - type: volume
               source: cms_integration_release_runtime_tmp
               target: /tmp
+            - type: volume
+              source: cms_integration_release_runtime_docker_volumes
+              target: /var/lib/docker/volumes
         pids_limit: 1024
         mem_limit: 6g
         cpus: "4.0"
@@ -471,3 +474,4 @@ networks:
 
 volumes:
     cms_integration_release_runtime_tmp:
+    cms_integration_release_runtime_docker_volumes:
