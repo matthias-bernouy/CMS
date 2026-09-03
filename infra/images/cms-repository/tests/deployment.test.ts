@@ -169,6 +169,9 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
             CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: "sha256:" + "d".repeat(64),
             CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE: "/run/operator-secrets/verifier-private.pem",
             CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: "/run/operator-secrets/verifier-public.pem",
+            CMS_INTEGRATION_RELEASE_RUNTIME_SIGNING_KEY_SECRET_FILE:
+                "/run/operator-secrets/release-runtime-private.pem",
+            CMS_INTEGRATION_RELEASE_RUNTIME_VERIFICATION_KEY_FILE: "/run/operator-secrets/release-runtime-public.pem",
             CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE: "/run/operator-secrets/verifier-postgres-password",
             CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE:
                 "/run/operator-secrets/verifier-postgres-server-password",
@@ -202,6 +205,8 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
         networks: Record<string, { internal?: boolean }>;
     };
     expect(Object.keys(config.services).toSorted()).toEqual([
+        "cms-integration-release-runtime",
+        "cms-integration-release-runtime-docker",
         "cms-integration-verifier",
         "cms-integration-verifier-postgres",
         "cms-integration-verifier-sandbox",
@@ -236,7 +241,7 @@ composeTest("Compose renders the isolated repository and verifier trust zones wi
         CMS_REPOSITORY_CANDIDATE_TERMINAL_RETENTION_MS: "604800000",
         CMS_REPOSITORY_CANDIDATE_PRUNE_AUDIT_RETENTION_MS: "2592000000",
         CMS_INTEGRATION_VERIFIER_RUNNER_NAME: "cms-postgres",
-        CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.2.0",
+        CMS_INTEGRATION_VERIFIER_RUNNER_VERSION: "1.3.0",
         CMS_INTEGRATION_VERIFIER_RUNNER_IMAGE_DIGEST: "sha256:" + "d".repeat(64),
     });
     expect(config.services["cms-repository"]?.secrets).toEqual(
