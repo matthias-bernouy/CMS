@@ -4,8 +4,8 @@ The new local-first Ulvia CLI. It is intentionally independent from the legacy
 `@bernouy/cms-cli` package, which remains available during the transition.
 
 See the workspace [integration development guide](../../../docs/integrations/README.md)
-for the release workflow, SemVer policy, business upgrade fixtures, and future
-remote publication contract.
+for the release workflow, SemVer policy, business upgrade fixtures, and remote
+publication contract.
 
 ## Commands
 
@@ -19,6 +19,10 @@ bun run ulvia -- audit --all --root ./integrations
 bun run ulvia -- release commerce
 bun run ulvia -- release --all --root ./integrations
 bun run ulvia -- release commerce --version 1.1.0 --root ./integrations
+ULVIA_URL=https://admin.integrations.example.com \
+ULVIA_TOKEN=pat_... \
+bun run ulvia -- push commerce
+bun run ulvia -- push --all
 bun run ulvia -- status
 bun run ulvia -- dev
 bun run ulvia -- dev status
@@ -39,8 +43,8 @@ persistent local repository.
 This audit proves package compatibility, integration-owned source behavior,
 real resource application, fresh installation, and upgrades. Source tests are
 authoring inputs: they are executed from the current source tree but never
-copied into runtime package bytes. Persisting their exact release evidence as a
-separate immutable verification bundle remains a later publication milestone.
+copied into runtime package bytes. Their portable source closure is persisted
+in a separate immutable verification bundle bound to the package digest.
 
 Migration-aware candidates receive an additional resilience matrix. For each
 distinct persisted connector state, the audit injects a crash after every
@@ -92,9 +96,23 @@ history without contacting the remote repository. Pulling additional history
 is an explicit `pull` operation; a later remote `push` will still have to reject
 any coordinate that conflicts with immutable remote bytes.
 
-Existing remote coordinates cannot be reused with different bytes. `push` is
-deliberately disabled. Exact package bytes are stored by SHA-256 digest, and
-immutable `kind@version` references make corruption or coordinate reuse visible.
+Existing remote coordinates cannot be reused with different bytes. `push`
+submits only packages created by `ulvia release`; pulled packages are not
+publication inputs. The server reruns admission in its own disposable services,
+then the CLI pulls the public coordinate and requires the exact local SHA-256
+digest before reporting success. Identical package and verification digests are
+an idempotent no-op. A conflict fails without overwriting history.
+
+`ULVIA_URL` identifies the manager CMS that exposes the authenticated repository
+gateway. `ULVIA_TOKEN` is a CMS Personal Access Token and must be supplied as an
+environment secret, never inside either URL. `ULVIA_REPOSITORY_URL` remains the
+anonymous public endpoint used for the final byte check. Remote HTTP is rejected
+by default; `--allow-insecure-http` is reserved for trusted internal networks
+and loopback development.
+
+`push --all` publishes all locally released coordinates in deterministic,
+dependency-aware order. It stops at the first rejection and can be rerun safely:
+already published exact coordinates are reported as unchanged.
 
 ## Source history transition
 

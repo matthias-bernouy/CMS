@@ -21,8 +21,10 @@ export async function integrationPackage(kind = "demo", version = "1.0.0") {
         kind,
         version,
         definition: "definition.json",
+        releaseNotes: "release-notes.md",
         files: {
             "definition.json": { encoding: "utf8", content: JSON.stringify(definition) },
+            "release-notes.md": { encoding: "utf8", content: "Initial release.\n" },
             "assets/icon.svg": { encoding: "utf8", content: '<svg xmlns="http://www.w3.org/2000/svg"></svg>' },
         },
     });

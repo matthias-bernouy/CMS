@@ -1,11 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtemp } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { INTEGRATION_PACKAGE_DIGEST_HEADER } from "@bernouy/cms-integration-packages";
-import { runCli } from "../src/cli";
-import { RemoteIntegrationRepository } from "../src/repository/remote";
-import { integrationDefinition, integrationPackage, removeReadonlyTree, writeIntegrationSource } from "./fixtures";
+import { runCli } from "../../src/cli";
+import { RemoteIntegrationRepository } from "../../src/repository/remote";
+import { integrationPackage, removeReadonlyTree, writeIntegrationSource } from "../fixtures";
+import { emptyRemote, remoteFixture, temporaryRoot } from "./support";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -14,7 +12,7 @@ afterEach(async () => {
 
 describe("Ulvia CLI", () => {
     test("pulls the remote default once and reports it locally", async () => {
-        const root = await temporaryRoot();
+        const root = await temporaryRoot(roots);
         const resolved = await integrationPackage();
         const environment = {
             ULVIA_DATA_DIR: root,
@@ -35,8 +33,13 @@ describe("Ulvia CLI", () => {
         expect(output.at(-1)).toContain("demo@1.0.0");
     });
 
-    test("refuses remote writes", async () => {
-        await expect(runCli(["push"])).rejects.toThrow(/disabled/);
+    test("push requires a locally released integration", async () => {
+        const root = await temporaryRoot(roots);
+        await expect(
+            runCli(["push", "demo"], {
+                environment: { ULVIA_DATA_DIR: root },
+            }),
+        ).rejects.toThrow(/no local release/);
     });
 
     test("keeps unverified coordinates out of pullable version lists", async () => {
@@ -57,16 +60,13 @@ describe("Ulvia CLI", () => {
     });
 
     test("releases every changed source and skips unchanged local coordinates", async () => {
-        const root = await temporaryRoot();
+        const root = await temporaryRoot(roots);
         const source = join(root, "source");
         await writeIntegrationSource(source, "1.0.0", "alpha");
         await writeIntegrationSource(source, "1.0.0", "beta");
         const verified: string[] = [];
         const options = {
-            environment: {
-                ULVIA_DATA_DIR: join(root, "data"),
-                ULVIA_REPOSITORY_URL: "http://repository.example.test/.cms/repository",
-            },
+            environment: { ULVIA_DATA_DIR: join(root, "data") },
             cwd: source,
             repositoryFetch: emptyRemote,
             releaseVerifier: {
@@ -85,42 +85,3 @@ describe("Ulvia CLI", () => {
         expect(catalog.packages.map(({ kind }: { kind: string }) => kind)).toEqual(["alpha", "beta"]);
     });
 });
-
-async function temporaryRoot(): Promise<string> {
-    const root = await mkdtemp(join(tmpdir(), "ulvia-cli-"));
-    roots.push(root);
-    return root;
-}
-
-function remoteFixture(resolved: Awaited<ReturnType<typeof integrationPackage>>): typeof fetch {
-    const definition = integrationDefinition();
-    const version = { version: "1.0.0", path: "demo/versions/1.0.0", definition: "definition.json" };
-    return async (request) => {
-        const url = new URL(request instanceof Request ? request.url : request);
-        const headers = { "content-type": "application/json" };
-        if (url.pathname.endsWith("/api/integrations/index")) {
-            return Response.json({
-                kind: "demo",
-                label: definition.label,
-                stable: "1.0.0",
-                latest: "1.0.0",
-                versions: [version],
-            });
-        }
-        if (url.pathname.endsWith("/api/integrations/definition")) {
-            return Response.json(definition);
-        }
-        if (url.pathname.endsWith("/api/integrations/package")) {
-            return new Response(request.method === "HEAD" ? null : Uint8Array.from(resolved.canonicalBytes).buffer, {
-                headers: {
-                    ...headers,
-                    "content-length": String(resolved.canonicalBytes.byteLength),
-                    [INTEGRATION_PACKAGE_DIGEST_HEADER]: resolved.digest,
-                },
-            });
-        }
-        return Response.json({ error: "not found" }, { status: 404, headers });
-    };
-}
-
-const emptyRemote: typeof fetch = async () => Response.json({ error: "not found" }, { status: 404 });

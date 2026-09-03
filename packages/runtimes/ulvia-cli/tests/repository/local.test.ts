@@ -4,11 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
-import { LocalRepositoryCatalog } from "../src/repository/catalog";
-import { LocalIntegrationRepository } from "../src/repository/local";
-import { handleRepositoryRequest } from "../src/repository/server";
-import { buildLocalVerificationBundle } from "../src/release/source/verification";
-import { integrationDefinition, integrationPackage, removeReadonlyTree } from "./fixtures";
+import { LocalRepositoryCatalog } from "../../src/repository/catalog";
+import { LocalIntegrationRepository } from "../../src/repository/local";
+import { handleRepositoryRequest } from "../../src/repository/server";
+import { buildLocalVerificationBundle } from "../../src/release/source/verification";
+import { integrationDefinition, integrationPackage, removeReadonlyTree } from "../fixtures";
 
 const roots: string[] = [];
 afterEach(async () => {

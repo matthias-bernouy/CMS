@@ -1,6 +1,7 @@
 import { auditCommand } from "./commands/audit";
 import { devCommand } from "./commands/dev";
 import { pullCommand } from "./commands/pull";
+import { pushCommand } from "./commands/push";
 import { releaseCommand } from "./commands/release";
 import { statusCommand } from "./commands/status";
 import type { LocalReleaseVerifier } from "./release/types";
@@ -18,6 +19,8 @@ Usage:
   ulvia audit --all [--root <directory>]
   ulvia release <integration> [--version <version>] [--root <directory>]
   ulvia release --all [--root <directory>]
+  ulvia push <integration> [--version <version>] [--url <manager-cms-url>]
+  ulvia push --all [--url <manager-cms-url>]
   ulvia status
   ulvia dev [status | credentials | stop]
 
@@ -25,13 +28,17 @@ Commands:
   pull       Store immutable integration packages in the local repository
   audit      Verify source compatibility, fresh installs, and every supported upgrade
   release    Build and verify changed packages in disposable local services
+  push       Submit exact local releases to remote admission and verify public bytes
   status     Show the persistent data directory and locally available packages
   dev        Run or inspect the persistent local development stack
-  push       Disabled while the local workflow is under construction
 
 Environment:
   ULVIA_DATA_DIR        Absolute persistent data directory override
-  ULVIA_REPOSITORY_URL  Read-only remote repository used by pull, audit, and release
+  ULVIA_REPOSITORY_URL  Public repository used by pull, audit, release, and push verification
+  ULVIA_URL             Manager CMS URL used by push
+  ULVIA_TOKEN           CMS Personal Access Token used by push
+  ULVIA_PUSH_TIMEOUT_MS Remote admission timeout (default: 900000)
+  ULVIA_PUSH_ALLOW_INSECURE_HTTP  Allow a non-loopback HTTP manager URL
 `;
 
 export type CliOptions = Readonly<{
@@ -39,6 +46,9 @@ export type CliOptions = Readonly<{
     home?: string;
     log?: (message: string) => void;
     repositoryFetch?: typeof fetch;
+    publicationFetch?: typeof fetch;
+    publicationNow?: () => number;
+    publicationWait?: (milliseconds: number) => Promise<void>;
     cwd?: string;
     releaseVerifier?: LocalReleaseVerifier;
 }>;
@@ -54,9 +64,6 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         log("0.1.0");
         return;
     }
-    if (command === "push") {
-        throw new Error("push is disabled: this milestone never writes to a remote repository");
-    }
     const environment = options.environment ?? process.env;
     const paths = resolveUlviaPaths(environment, options.home);
     await ensureUlviaPaths(paths);
@@ -70,6 +77,22 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     if (command === "pull") {
         const remote = new RemoteIntegrationRepository(repositoryUrl(environment), options.repositoryFetch);
         await pullCommand(args.slice(1), local, remote, log);
+        return;
+    }
+    if (command === "push") {
+        const remote = new RemoteIntegrationRepository(repositoryUrl(environment), options.repositoryFetch);
+        await pushCommand(
+            args.slice(1),
+            local,
+            remote,
+            {
+                environment,
+                ...(options.publicationFetch ? { fetch: options.publicationFetch } : {}),
+                ...(options.publicationNow ? { now: options.publicationNow } : {}),
+                ...(options.publicationWait ? { wait: options.publicationWait } : {}),
+            },
+            log,
+        );
         return;
     }
     if (command === "release") {

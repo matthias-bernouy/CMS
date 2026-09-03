@@ -1,8 +1,8 @@
 # Remote integration publication
 
-Remote publication is the next milestone after the local-first release flow.
-`ulvia push` is currently disabled and no command writes to the remote
-repository.
+Remote publication promotes an audited local release through the repository's
+authenticated candidate protocol. The server, rather than the workstation,
+makes the final admission decision.
 
 The remote repository must preserve the same package model as the local
 repository. Push is promotion of an already built local artifact, not another
@@ -31,29 +31,43 @@ The server must never reconstruct a package from Git, a ZIP, or a source
 directory during push. Otherwise the locally audited digest would not describe
 the remotely installed artifact.
 
-## Proposed command behavior
+## Command behavior
 
 ```bash
 ulvia push <kind> [--version <version>]
 ulvia push --all
 ```
 
-The client should:
+The client:
 
-- resolve only locally released coordinates;
-- read their immutable package object and recorded digest;
-- compare remote state before uploading;
-- upload missing objects and verification evidence;
-- request atomic admission of the coordinate and channel update;
-- report `published`, `already published`, or an actionable rejection.
+- resolves only locally released coordinates;
+- reads their immutable package object and recorded digest;
+- compares remote state before uploading;
+- uploads the canonical candidate containing the exact package and immutable
+  verification evidence;
+- requests atomic admission of the coordinate and channel update;
+- reports `published`, `already published`, or an actionable rejection.
 
 `push --all` should use dependency order and skip identical remote
 coordinates. A failure must not mutate later coordinates silently, and a retry
 must safely resume from objects already uploaded.
 
-Authentication must be supplied through a credential store or environment
-secret, never embedded in the repository URL, manifest, package, or shell
-history produced by the CLI.
+`ULVIA_URL` is the manager CMS base URL. That CMS authenticates the user's
+Personal Access Token and forwards only allow-listed repository operations to
+the private management listener. `ULVIA_TOKEN` supplies the PAT as an
+environment secret. Tokens are never accepted in URLs, manifests, packages, or
+CLI output.
+
+`ULVIA_REPOSITORY_URL` remains a separate anonymous read endpoint. After a
+candidate is admitted (or found unchanged), the CLI reads the coordinate from
+that public endpoint and compares its SHA-256 digest with the local object. This
+also fails closed when the configured manager and public repository do not
+expose the same admitted coordinate.
+
+The default admission timeout is 15 minutes and can be changed with
+`ULVIA_PUSH_TIMEOUT_MS` or `--timeout-ms`. Remote HTTP is accepted only for
+loopback hosts unless `--allow-insecure-http` is explicitly supplied for a
+trusted internal network.
 
 ## Shared verification trust boundary
 
@@ -84,20 +98,18 @@ The release runtime uses the same `executeReleaseVerificationPlan` and scenario
 implementation as local `ulvia release`; it is not a second upgrade algorithm.
 It controls a private disposable Docker daemon and never receives the repository
 worker credential, production credentials, production data, or the host Docker
-socket. `ulvia push` remains disabled until the client-side upload and recovery
-workflow is implemented and exercised against this admission path.
+socket. `ulvia push` uses this candidate path and never receives repository
+worker credentials.
 
-## Implementation sequence
+## Deployment gate
 
-1. Enable strict rollback, cutover, and delayed-cleanup policy flags only when
-   the runner emits the corresponding evidence.
-2. Add conflict, interruption, retry, and concurrent-push tests on the server.
-3. Implement single-coordinate push using the existing candidate protocol,
-   then
-   verify remote pull round-trips the same
-   digest.
-4. Implement dependency-ordered `push --all`.
-5. Enable the command only after end-to-end staging and recovery tests pass.
+The client implementation covers exact-byte submission, immutable conflicts,
+idempotent retries, bounded rate-limit retries, concurrent identical
+publication reconciliation, public digest round-trips, and dependency-ordered
+batch publication. Before production cutover, deploy the new repository image
+to staging, run a real candidate through both verifier workers, interrupt and
+resume one publication, and validate the existing production catalog and CMS
+consumer routes against the new public endpoint.
 
 ZIP archives may exist as transport or download conveniences, but they are not
 the source of truth. The canonical content-addressed package and its digest are.

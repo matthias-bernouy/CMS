@@ -11,8 +11,8 @@ This section documents the supported workflow:
 - [Business upgrade fixtures](./upgrade-fixtures.md) explains how an
   integration creates realistic old-version state and verifies it after an
   upgrade.
-- [Remote publication](./remote-publication.md) defines the trust and
-  immutability requirements for the future `ulvia push` milestone.
+- [Remote publication](./remote-publication.md) explains the `ulvia push`
+  trust boundary, configuration, immutability, and recovery behavior.
 - [Stripe Connect seller terms](./stripe-connect-seller-terms-published-page.md)
   documents the runtime publication and immutable acceptance model used by
   Stripe Connect.
@@ -50,6 +50,8 @@ bun run ulvia -- pull commerce --all-versions
 bun run ulvia -- audit commerce
 bun run ulvia -- release commerce
 bun run ulvia -- release --all
+bun run ulvia -- push commerce
+bun run ulvia -- push --all
 bun run ulvia -- status
 bun run ulvia -- dev
 ```
@@ -59,5 +61,6 @@ The persistent local repository is application data under
 absolute path when an isolated repository is required. Do not commit that
 directory.
 
-`ulvia push` is intentionally disabled until remote admission can preserve the
-same guarantees as local release.
+`ulvia push` promotes only immutable local releases. Remote admission reruns the
+shared verification plan in server-owned disposable infrastructure, and the CLI
+then verifies that the public repository returns the exact local digest.
