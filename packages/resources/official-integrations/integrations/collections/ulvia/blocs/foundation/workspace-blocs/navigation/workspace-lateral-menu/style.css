@@ -8,10 +8,6 @@
     background-color: var(--bg-sidebar, var(--bg-surface));
     font-family: Inter, system-ui, -apple-system, sans-serif;
 
-    --ctx-bg: var(--bg-sidebar, var(--bg-surface));
-    --ctx-fg: var(--text-main);
-    --ctx-fg-muted: var(--text-muted);
-    --ctx-border: var(--border-default);
     --menu-brand-mark: "";
     --menu-brand-mark-display: none;
 }

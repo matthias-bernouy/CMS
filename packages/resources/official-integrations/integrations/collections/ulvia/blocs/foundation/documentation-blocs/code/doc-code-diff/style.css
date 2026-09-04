@@ -1,13 +1,13 @@
 :host {
-    --before-bg: var(--integration-ulvia-documentation-blocs-danger-background, var(--integration-ulvia-basic-blocs-danger-muted, #fef2f2));
-    --before-border: var(--integration-ulvia-documentation-blocs-api-delete, var(--integration-ulvia-basic-blocs-danger-base, #fecaca));
-    --before-fg: var(--integration-ulvia-documentation-blocs-danger-text, var(--integration-ulvia-basic-blocs-danger-contrasted, #991b1b));
-    --after-bg: var(--integration-ulvia-documentation-blocs-tip-background, var(--integration-ulvia-basic-blocs-success-muted, #f0fdf4));
-    --after-border: var(--integration-ulvia-documentation-blocs-api-post, var(--integration-ulvia-basic-blocs-success-base, #bbf7d0));
-    --after-fg: var(--integration-ulvia-documentation-blocs-tip-text, var(--integration-ulvia-basic-blocs-success-contrasted, #166534));
-    --diff-radius: var(--integration-ulvia-documentation-blocs-radius-panel, var(--integration-ulvia-basic-blocs-radius-card, .5rem));
+    --before-bg: var(--ulvia-danger-muted, var(--ulvia-danger-muted, #fef2f2));
+    --before-border: var(--ulvia-danger-base, var(--ulvia-danger-base, #fecaca));
+    --before-fg: var(--ulvia-danger-contrasted, var(--ulvia-danger-contrasted, #991b1b));
+    --after-bg: var(--ulvia-success-muted, var(--ulvia-success-muted, #f0fdf4));
+    --after-border: var(--ulvia-success-base, var(--ulvia-success-base, #bbf7d0));
+    --after-fg: var(--ulvia-success-contrasted, var(--ulvia-success-contrasted, #166534));
+    --diff-radius: var(--ulvia-radius-card, var(--ulvia-radius-card, .5rem));
     display: block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+    font-family: var(--ulvia-font-mono, var(--ulvia-font-mono, ui-monospace, monospace));
     margin: 1rem 0;
 }
 .diff {
@@ -29,7 +29,7 @@
     background: rgba(0,0,0,.03);
     border-bottom: 1px solid;
     border-color: inherit;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
 }
 .code { margin: 0; padding: .8rem 1rem; overflow-x: auto; font-size: .85rem; line-height: 1.55; }
 .code ::slotted(*) { display: block; font: inherit; color: inherit; margin: 0; white-space: pre-wrap; }

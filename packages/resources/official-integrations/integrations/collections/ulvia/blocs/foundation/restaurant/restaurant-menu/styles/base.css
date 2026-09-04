@@ -1,9 +1,9 @@
 :host {
-    --_accent: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --_background: var(--integration-ulvia-restaurant-background, #15171a);
-    --_color: var(--integration-ulvia-restaurant-text, #fffaf0);
+    --_accent: var(--ulvia-success-base, #39ad65);
+    --_background: var(--ulvia-surface-text, #15171a);
+    --_color: var(--ulvia-page-background, #fffaf0);
     --_duration: 620ms;
-    --_muted: var(--integration-ulvia-restaurant-muted-text, #d0cbc1);
+    --_muted: var(--ulvia-secondary-base, #d0cbc1);
 
     position: fixed;
     z-index: 100;
@@ -11,7 +11,7 @@
     display: block;
     visibility: hidden;
     color: var(--_color);
-    font-family: var(--integration-ulvia-restaurant-font-body, system-ui, sans-serif);
+    font-family: var(--ulvia-font-body, system-ui, sans-serif);
     pointer-events: none;
     transition: visibility 0s var(--_duration);
 }
@@ -92,7 +92,7 @@
 
 ::slotted([slot="brand"]) {
     color: inherit;
-    font-family: var(--integration-ulvia-restaurant-font-heading, Georgia, serif);
+    font-family: var(--ulvia-font-heading, Georgia, serif);
     font-size: clamp(1.25rem, 3vw, 2rem);
     letter-spacing: .18em;
     text-transform: uppercase;
@@ -104,7 +104,7 @@
 ::slotted(a) { color: inherit; font-size: 1rem; text-underline-offset: .25em; }
 ::slotted(a[slot="navigation"]) {
     width: fit-content;
-    font-family: var(--integration-ulvia-restaurant-font-heading, Georgia, serif);
+    font-family: var(--ulvia-font-heading, Georgia, serif);
     font-size: clamp(2.5rem, 5vw, 5rem);
     line-height: 1.08;
     text-decoration: none;

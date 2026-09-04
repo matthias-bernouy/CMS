@@ -2,12 +2,9 @@
     --_footer-background: transparent;
     --_footer-border: transparent;
     --_footer-color: var(--_tone-contrasted);
+    --_ulvia-site-footer-muted-color: color-mix(in srgb, var(--_footer-color) 68%, transparent);
     --_footer-max-width: 90rem;
     --_footer-padding-block: clamp(2.5rem, 6vw, 5rem);
-    --ctx-bg: var(--_footer-background);
-    --ctx-fg: var(--_footer-color);
-    --ctx-fg-muted: color-mix(in srgb, var(--_footer-color) 68%, transparent);
-    --ctx-border: var(--_footer-border);
 
     display: block;
     color: var(--_footer-color);
@@ -36,7 +33,7 @@
 [part="footer"] {
     box-sizing: border-box;
     border: 1px solid var(--_footer-border);
-    border-radius: var(--integration-ulvia-basic-blocs-surface-radius, .75rem);
+    border-radius: var(--ulvia-surface-radius, .75rem);
     background: var(--_footer-background);
     color: var(--_footer-color);
 }
@@ -45,7 +42,7 @@
     box-sizing: border-box;
     width: min(100%, var(--_footer-max-width));
     margin-inline: auto;
-    padding: var(--_footer-padding-block) var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+    padding: var(--_footer-padding-block) var(--ulvia-space-lg, 1.5rem);
 }
 
 [part="main"] {
@@ -58,7 +55,7 @@
 [part="identity"] {
     display: grid;
     max-width: 32rem;
-    gap: var(--integration-ulvia-basic-blocs-space-sm, .5rem);
+    gap: var(--ulvia-space-sm, .5rem);
 }
 
 [part="navigation"],
@@ -66,14 +63,14 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--integration-ulvia-basic-blocs-space-sm, .5rem) var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+    gap: var(--ulvia-space-sm, .5rem) var(--ulvia-space-lg, 1.5rem);
 }
 
 [part="legal"] {
     margin-top: clamp(2rem, 5vw, 4rem);
-    padding-top: var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+    padding-top: var(--ulvia-space-lg, 1.5rem);
     border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-    color: var(--ctx-fg-muted);
+    color: var(--_ulvia-site-footer-muted-color);
 }
 
 ::slotted([slot="brand"]),
@@ -82,7 +79,7 @@
 
 ::slotted([slot="brand"]) {
     color: inherit;
-    font-family: var(--integration-ulvia-basic-blocs-font-heading, inherit);
+    font-family: var(--ulvia-font-heading, inherit);
     font-size: 1.25rem;
     font-weight: 750;
 }
@@ -91,7 +88,7 @@
 ::slotted(a[slot="navigation"]) {
     --cms-link-color: var(--_footer-color);
 
-    border-radius: var(--integration-ulvia-basic-blocs-action-radius, .5rem);
+    border-radius: var(--ulvia-action-radius, .5rem);
     color: inherit;
     text-decoration: none;
     transition: background-color 120ms ease, opacity 120ms ease;
@@ -113,7 +110,7 @@
 
 ::slotted([slot="description"]),
 ::slotted([slot="legal"]) {
-    color: var(--ctx-fg-muted);
+    color: var(--_ulvia-site-footer-muted-color);
     line-height: 1.6;
 }
 

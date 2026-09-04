@@ -7,10 +7,6 @@
     display: block;
     color: var(--basic-alert-color);
 
-    --ctx-bg: var(--basic-alert-background);
-    --ctx-fg: var(--basic-alert-color);
-    --ctx-fg-muted: color-mix(in oklab, var(--basic-alert-color) 72%, var(--basic-alert-background));
-    --ctx-border: var(--basic-alert-border);
 }
 
 :host([hidden]) { display: none !important; }
@@ -37,7 +33,7 @@
     padding: var(--space-md, 1rem);
     border: 1px solid var(--basic-alert-border);
     border-inline-start-width: .25rem;
-    border-radius: var(--integration-ulvia-basic-blocs-surface-radius, var(--radius-card, .5rem));
+    border-radius: var(--ulvia-surface-radius, var(--radius-card, .5rem));
     background: var(--basic-alert-background);
     color: inherit;
     line-height: 1.45;

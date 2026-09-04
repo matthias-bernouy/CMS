@@ -37,9 +37,9 @@ export function registerContainerTest(): void {
         expect(container.shadowRoot?.querySelector("slot")).not.toBeNull();
         expect(styles).toContain("max-inline-size: var(--basic-container-max-width)");
         expect(styles).toContain("margin-inline: auto");
-        expect(styles).toContain("var(--integration-ulvia-basic-blocs-content-width, var(--content-width, 68rem))");
-        expect(styles).toContain("var(--integration-ulvia-basic-blocs-wide-width, var(--wide-width, 82rem))");
-        expect(styles).toContain("var(--integration-ulvia-basic-blocs-space-md, var(--space-md, 1rem))");
+        expect(styles).toContain("var(--ulvia-content-width, var(--content-width, 68rem))");
+        expect(styles).toContain("var(--ulvia-wide-width, var(--wide-width, 82rem))");
+        expect(styles).toContain("var(--ulvia-space-md, var(--space-md, 1rem))");
         expect(styles).toContain("var(--wide-width, 82rem)");
         expect(styles).toContain("var(--space-md, 1rem)");
         expect(styles).toContain(':host([width="full"])');

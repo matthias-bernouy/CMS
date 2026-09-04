@@ -58,11 +58,11 @@ slot[name="icon-end"] {
     align-items: center;
     justify-content: var(--cms-button-alignment, center);
     gap: var(--cms-button-gap, .5rem);
-    min-height: var(--cms-button-min-height, var(--integration-ulvia-basic-blocs-action-min-height, 2.5rem));
+    min-height: var(--cms-button-min-height, var(--ulvia-action-min-height, 2.5rem));
     margin: 0;
     padding: var(--cms-button-padding, .625rem 1rem);
     border: var(--cms-button-border, 1px solid var(--cms-button-border-color, var(--_button-border)));
-    border-radius: var(--cms-button-radius, var(--integration-ulvia-basic-blocs-action-radius, .375rem));
+    border-radius: var(--cms-button-radius, var(--ulvia-action-radius, .375rem));
     background: var(--cms-button-background, var(--_button-background));
     color: var(--cms-button-color, var(--_button-color)) !important;
     font: inherit;

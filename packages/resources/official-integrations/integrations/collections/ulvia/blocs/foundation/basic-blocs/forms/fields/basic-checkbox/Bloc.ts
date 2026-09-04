@@ -29,13 +29,13 @@ class BasicCheckbox extends HTMLElement {
                 ${basicColorSchemeCss()}
 
                 :host {
-                    --_checkbox-background: var(--integration-ulvia-basic-blocs-field-background, Canvas);
-                    --_checkbox-border: var(--integration-ulvia-basic-blocs-field-border, color-mix(in srgb, currentColor 30%, transparent));
+                    --_checkbox-background: var(--ulvia-field-background, Canvas);
+                    --_checkbox-border: var(--ulvia-field-border, color-mix(in srgb, currentColor 30%, transparent));
                     --_checkbox-checked-background: var(--_tone-base);
                     --_checkbox-checked-border: var(--_tone-border);
                     --_checkbox-check-color: var(--_tone-foreground);
                     display: inline-block;
-                    color: var(--cms-input-color, var(--integration-ulvia-basic-blocs-field-text, inherit));
+                    color: var(--cms-input-color, var(--ulvia-field-text, inherit));
                     font: inherit;
                 }
 
@@ -131,7 +131,7 @@ class BasicCheckbox extends HTMLElement {
 
                 .error {
                     display: block;
-                    color: var(--cms-error-color, var(--integration-ulvia-basic-blocs-error-text, #b42318));
+                    color: var(--cms-error-color, var(--ulvia-error-text, #b42318));
                 }
 
                 [hidden] { display: none; }

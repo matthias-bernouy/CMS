@@ -1,9 +1,9 @@
 :host {
-    --integration-ulvia-basic-blocs-font-size-display: clamp(1rem, 2vw, 1.25rem);
-    --_accent: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --_background: var(--integration-ulvia-restaurant-background, #15171a);
-    --_color: var(--integration-ulvia-restaurant-text, #fffaf0);
-    --_muted: var(--integration-ulvia-restaurant-muted-text, #d0cbc1);
+    --ulvia-font-size-display: clamp(1rem, 2vw, 1.25rem);
+    --_accent: var(--ulvia-success-base, #39ad65);
+    --_background: var(--ulvia-surface-text, #15171a);
+    --_color: var(--ulvia-page-background, #fffaf0);
+    --_muted: var(--ulvia-secondary-base, #d0cbc1);
     --_padding: clamp(1rem, 3vw, 2.5rem);
 
     display: block;
@@ -13,7 +13,7 @@
     margin-inline: calc(50% - 50vw);
     overflow: hidden;
     color: var(--_color);
-    font-family: var(--integration-ulvia-restaurant-font-body, system-ui, sans-serif);
+    font-family: var(--ulvia-font-body, system-ui, sans-serif);
 }
 
 :host([hidden]) { display: none !important; }
@@ -70,7 +70,7 @@
     box-sizing: border-box;
     min-width: 0;
     min-height: 0;
-    padding-block-start: var(--integration-ulvia-restaurant-header-height, 4rem);
+    padding-block-start: var(--ulvia-navigation-topbar-height, 4rem);
 }
 
 [part="content"] {
@@ -128,7 +128,7 @@
 ::slotted(h1[slot="title"]) {
     margin-block-start: .75rem;
     color: var(--_muted);
-    font-family: var(--integration-ulvia-restaurant-font-heading, Georgia, serif);
+    font-family: var(--ulvia-font-heading, Georgia, serif);
     font-weight: 400;
     line-height: 1.2;
 }
@@ -155,7 +155,7 @@
 
 ::slotted(a[slot="actions"]:first-of-type) { background: var(--_accent); }
 ::slotted([slot="details"]) { color: var(--_muted); font-size: 1rem; line-height: 1.25; }
-::slotted([slot="details"][data-accent]) { color: var(--integration-ulvia-restaurant-rating, #dba64b); }
+::slotted([slot="details"][data-accent]) { color: var(--ulvia-warning-base, #dba64b); }
 ::slotted([slot="details"]:not([data-accent])) { padding-inline-start: .75rem; border-left: 1px solid currentColor; }
 
 ::slotted(img[slot="media"]),

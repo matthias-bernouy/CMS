@@ -32,12 +32,12 @@
 }
 
 @media (max-width: 900px) {
-    :host { --integration-ulvia-basic-blocs-font-size-display: 1rem; }
+    :host { --ulvia-font-size-display: 1rem; }
 
     [part="section"] {
         align-content: start;
         grid-template-rows: auto minmax(0, 1fr);
-        padding-block-start: var(--integration-ulvia-restaurant-header-height, 4.25rem);
+        padding-block-start: var(--ulvia-navigation-topbar-height, 4.25rem);
     }
 
     [part="content"] { width: min(100% - 1rem, 30rem); margin-block-end: .65rem; }

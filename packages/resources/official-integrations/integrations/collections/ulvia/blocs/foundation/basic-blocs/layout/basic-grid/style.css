@@ -5,10 +5,6 @@
     --basic-grid-justify: stretch;
     --basic-grid-background: transparent;
     --basic-grid-color: inherit;
-    --ctx-bg: var(--basic-grid-background);
-    --ctx-fg: var(--basic-grid-color);
-    --ctx-fg-muted: color-mix(in srgb, var(--basic-grid-color) 68%, transparent);
-    --ctx-border: var(--_tone-border);
 
     display: grid;
     box-sizing: border-box;

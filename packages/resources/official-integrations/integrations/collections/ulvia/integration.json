@@ -5,11 +5,11 @@
     "label": "Ulvia",
     "category": "Official blocks",
     "description": "The complete official Ulvia block collection with per-site resource activation.",
-    "stable": "2.1.0",
-    "latest": "2.1.0",
+    "stable": "4.0.1",
+    "latest": "4.0.1",
     "versions": [
         {
-            "version": "2.1.0",
+            "version": "4.0.1",
             "path": ".",
             "definition": "definition.json"
         }

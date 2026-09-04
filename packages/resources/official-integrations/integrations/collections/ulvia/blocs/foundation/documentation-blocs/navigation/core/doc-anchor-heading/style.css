@@ -1,9 +1,9 @@
 :host {
-    --ah-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --ah-fg: var(--integration-ulvia-documentation-blocs-heading-text, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
-    --ah-duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --ah-accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --ah-fg: var(--ulvia-surface-text, var(--ulvia-surface-text, #0f172a));
+    --ah-duration: var(--ulvia-duration-normal, 180ms);
     display: block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-heading, var(--integration-ulvia-basic-blocs-font-heading, system-ui, sans-serif));
+    font-family: var(--ulvia-font-heading, var(--ulvia-font-heading, system-ui, sans-serif));
     margin: 1.5rem 0 .75rem;
     scroll-margin-top: 5rem;
 }

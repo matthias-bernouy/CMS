@@ -1,11 +1,11 @@
 :host {
-    --toc-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --toc-fg: var(--integration-ulvia-documentation-blocs-heading-text, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
-    --toc-muted: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #64748b));
-    --toc-border: var(--integration-ulvia-documentation-blocs-border, var(--integration-ulvia-basic-blocs-surface-border, #e2e8f0));
-    --toc-duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --toc-accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --toc-fg: var(--ulvia-surface-text, var(--ulvia-surface-text, #0f172a));
+    --toc-muted: var(--ulvia-surface-muted-text, var(--ulvia-surface-muted-text, #64748b));
+    --toc-border: var(--ulvia-surface-border, var(--ulvia-surface-border, #e2e8f0));
+    --toc-duration: var(--ulvia-duration-normal, 180ms);
     display: block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
     font-size: .88rem;
 }
 .toc { padding: 1rem 0 1rem 1rem; border-left: 1px solid var(--toc-border); }

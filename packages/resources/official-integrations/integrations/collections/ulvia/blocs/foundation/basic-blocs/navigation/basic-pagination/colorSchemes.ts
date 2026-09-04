@@ -83,8 +83,6 @@ function scheme(value: string, label: string): BasicColorScheme {
 }
 
 function roleValue(value: ThemeColorRole): string {
-    const fallback = value.fallbackToken
-        ? `var(--integration-ulvia-basic-blocs-${value.fallbackToken}, ${value.system})`
-        : value.system;
-    return `var(--integration-ulvia-basic-blocs-${value.token}, ${fallback})`;
+    const fallback = value.fallbackToken ? `var(--ulvia-${value.fallbackToken}, ${value.system})` : value.system;
+    return `var(--ulvia-${value.token}, ${fallback})`;
 }

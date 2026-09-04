@@ -1,59 +1,86 @@
 import { describe, expect, test } from "bun:test";
 import { decodeSource, loadDefinition } from "./source";
 
-const DOCUMENTATION_THEME_PREFIX = "--integration-ulvia-documentation-blocs-";
-const BASIC_THEME_PREFIX = "var(--integration-ulvia-basic-blocs-";
+const ULVIA_THEME_PREFIX = "--ulvia-";
+const LEGACY_THEME_PREFIXES = [
+    "--ulvia-basic-blocs-",
+    "--ulvia-documentation-blocs-",
+    "--ulvia-commerce-",
+    "--ulvia-forms-",
+    "--ulvia-photo-albums-",
+    "--ulvia-restaurant-",
+];
 
-describe("documentation-blocs theme contracts", () => {
-    test("co-locates Basic and Documentation tokens in the Ulvia theme", async () => {
+describe("documentation blocs theme contracts", () => {
+    test("publishes one semantic Ulvia design system", async () => {
         const definition = await loadDefinition();
 
         expect(definition.dependencies).toBeUndefined();
-        expect(definition.theme?.categories.map((category) => category.id)).toEqual(
+        expect(definition.theme?.categories.map(({ id }) => id)).toEqual([
+            "actions",
+            "brand",
+            "feedback",
+            "form-controls",
+            "layout",
+            "shape-and-motion",
+            "surfaces",
+            "typography",
+            "code-and-terminal",
+            "navigation",
+        ]);
+        expect(definition.theme?.categories.map(({ label }) => label)).toEqual([
+            "Actions",
+            "Brand",
+            "Feedback",
+            "Form controls",
+            "Spacing and layout",
+            "Shape, elevation and motion",
+            "Surfaces and content",
+            "Typography",
+            "Code and terminal",
+            "Navigation",
+        ]);
+    });
+
+    test("keeps only genuinely specialized documentation tokens", async () => {
+        const categories = (await loadDefinition()).theme?.categories ?? [];
+        const ids = categories.flatMap(({ tokens }) => tokens.map(({ id }) => id));
+
+        expect(ids).toEqual(expect.arrayContaining(["code-background", "terminal-prompt", "navigation-sidebar-width"]));
+        expect(ids).not.toEqual(
             expect.arrayContaining([
-                "documentation-blocs-foundations",
-                "documentation-blocs-navigation",
-                "documentation-blocs-code",
-                "documentation-blocs-api",
-                "documentation-blocs-callouts",
+                "documentation-blocs-accent",
+                "documentation-blocs-background",
+                "documentation-blocs-info-background",
             ]),
         );
     });
 
-    test("links shared defaults to Basic Blocs tokens", async () => {
-        const categories = (await loadDefinition()).theme?.categories ?? [];
-        const tokens = categories.flatMap((category) => category.tokens);
-        const byId = new Map(tokens.map((token) => [token.id, token]));
-
-        for (const id of [
-            "accent",
-            "background",
-            "surface",
-            "subtle-surface",
-            "text",
-            "heading-text",
-            "muted-text",
-            "border",
-            "font-body",
-            "font-heading",
-            "font-mono",
-            "radius-control",
-            "radius-panel",
-            "shadow",
-        ]) {
-            expect(byId.get(`documentation-blocs-${id}`)?.defaults.light.startsWith(BASIC_THEME_PREFIX), id).toBeTrue();
-        }
-    });
-
-    test("makes every Bloc consume the documentation theme", async () => {
+    test("makes documentation blocs consume canonical Ulvia variables", async () => {
         const definition = await loadDefinition();
         for (const artifact of definition.artifacts) {
             if (artifact.type !== "bloc" || !artifact.bloc.path?.startsWith("blocs/foundation/documentation-blocs/")) {
                 continue;
             }
             const css = decodeSource(artifact.bloc.source?.["style.css"]);
-            expect(css, artifact.bloc.tag).toContain(DOCUMENTATION_THEME_PREFIX);
+            expect(css, artifact.bloc.tag).toContain(ULVIA_THEME_PREFIX);
+            for (const prefix of LEGACY_THEME_PREFIXES) {
+                expect(css, artifact.bloc.tag).not.toContain(prefix);
+            }
             expect(css, artifact.bloc.tag).not.toContain("var(--primary");
         }
+    });
+
+    test("does not expose generic context or site-owned variables", async () => {
+        const definition = await loadDefinition();
+        const sources = definition.artifacts
+            .filter((artifact) => artifact.type === "bloc")
+            .flatMap((artifact) => Object.values(artifact.bloc.source ?? {}))
+            .map(decodeSource)
+            .join("\n");
+
+        expect(sources).not.toContain("--integration-");
+        expect(sources).not.toContain("--ctx-");
+        expect(sources).not.toContain("--site-");
     });
 });

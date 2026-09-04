@@ -1,9 +1,9 @@
 :host([scheme="dark"]) {
-    --integration-ulvia-restaurant-content-background: var(--integration-ulvia-restaurant-background, #15171a);
-    --integration-ulvia-restaurant-content-surface: var(--integration-ulvia-restaurant-surface, #1d2124);
-    --integration-ulvia-restaurant-content-text: var(--integration-ulvia-restaurant-text, #fffaf0);
-    --integration-ulvia-restaurant-content-muted-text: var(--integration-ulvia-restaurant-muted-text, #d0cbc1);
-    --integration-ulvia-restaurant-content-border: color-mix(in srgb, var(--integration-ulvia-restaurant-text, #fffaf0) 18%, transparent);
+    --ulvia-page-background: var(--ulvia-surface-text, #15171a);
+    --ulvia-surface-background: var(--ulvia-body-text, #1d2124);
+    --ulvia-surface-text: var(--ulvia-page-background, #fffaf0);
+    --ulvia-surface-muted-text: var(--ulvia-secondary-base, #d0cbc1);
+    --ulvia-surface-border: color-mix(in srgb, var(--ulvia-page-background, #fffaf0) 18%, transparent);
 }
 
 :host([surface="card"]) [part="shell"] {

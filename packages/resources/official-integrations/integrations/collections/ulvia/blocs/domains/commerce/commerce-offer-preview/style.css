@@ -14,10 +14,10 @@
     display: grid;
     grid-template-rows: auto 1fr;
     overflow: hidden;
-    border: 1px solid var(--commerce-offer-border, var(--integration-ulvia-commerce-offer-border, var(--border-default, color-mix(in srgb, currentColor 16%, transparent))));
-    border-radius: var(--commerce-offer-radius, var(--integration-ulvia-commerce-offer-radius, var(--radius-card, 1rem)));
-    background: var(--commerce-offer-background, var(--integration-ulvia-commerce-offer-background, var(--bg-surface, Canvas)));
-    color: var(--commerce-offer-color, var(--integration-ulvia-commerce-offer-text, var(--text-main, inherit)));
+    border: 1px solid var(--commerce-offer-border, var(--ulvia-surface-border, var(--border-default, color-mix(in srgb, currentColor 16%, transparent))));
+    border-radius: var(--commerce-offer-radius, var(--ulvia-radius-lg, var(--radius-card, 1rem)));
+    background: var(--commerce-offer-background, var(--ulvia-surface-background, var(--bg-surface, Canvas)));
+    color: var(--commerce-offer-color, var(--ulvia-surface-text, var(--text-main, inherit)));
     transition: box-shadow 120ms ease, transform 120ms ease;
 }
 
@@ -36,7 +36,7 @@
 }
 
 ::slotted(a[slot="navigation"]:focus-visible) {
-    outline: 3px solid var(--commerce-offer-accent, var(--integration-ulvia-commerce-offer-accent, currentColor));
+    outline: 3px solid var(--commerce-offer-accent, var(--ulvia-primary-base, currentColor));
     outline-offset: -3px;
 }
 
@@ -73,10 +73,6 @@
 }
 
 [part="badges"] {
-    position: absolute;
-    z-index: 2;
-    top: .75rem;
-    left: .75rem;
     display: flex;
     flex-wrap: wrap;
     gap: .5rem;
@@ -90,7 +86,7 @@
 }
 
 [part="eyebrow"] {
-    color: var(--commerce-offer-accent, var(--integration-ulvia-commerce-offer-accent, var(--primary-base, currentColor)));
+    color: var(--commerce-offer-accent, var(--ulvia-primary-base, var(--primary-base, currentColor)));
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .06em;
@@ -98,13 +94,13 @@
 }
 
 [part="title"] {
-    font-family: var(--integration-ulvia-commerce-offer-heading-font, var(--font-heading, inherit));
+    font-family: var(--ulvia-font-heading, var(--font-heading, inherit));
     font-size: var(--commerce-offer-title-size, 1.25rem);
     line-height: 1.2;
 }
 
 [part="description"] {
-    color: var(--commerce-offer-muted-color, var(--integration-ulvia-commerce-offer-muted-text, var(--text-muted, color-mix(in srgb, currentColor 68%, transparent))));
+    color: var(--commerce-offer-muted-color, var(--ulvia-surface-muted-text, var(--text-muted, color-mix(in srgb, currentColor 68%, transparent))));
     line-height: 1.45;
 }
 
@@ -114,8 +110,8 @@
 
 [part="price"] {
     margin-top: auto;
-    color: var(--commerce-offer-price-color, var(--integration-ulvia-commerce-offer-price, var(--secondary-base, currentColor)));
-    font-family: var(--integration-ulvia-commerce-offer-heading-font, var(--font-heading, inherit));
+    color: var(--commerce-offer-price-color, var(--ulvia-secondary-base, var(--secondary-base, currentColor)));
+    font-family: var(--ulvia-font-heading, var(--font-heading, inherit));
     font-size: var(--commerce-offer-price-size, 1.35rem);
     font-weight: 700;
 }
@@ -147,7 +143,7 @@
 
 :host([appearance="elevated"]) [part="card"] {
     border-color: transparent;
-    box-shadow: var(--commerce-offer-shadow, var(--ctx-shadow-rest, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent)));
+    box-shadow: var(--commerce-offer-shadow, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent));
 }
 
 :host([density="compact"]) [part="content"] {

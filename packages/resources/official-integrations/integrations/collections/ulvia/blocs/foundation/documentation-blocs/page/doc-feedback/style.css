@@ -1,12 +1,12 @@
 :host {
-    --fb-bg: var(--integration-ulvia-documentation-blocs-subtle-surface, var(--integration-ulvia-basic-blocs-subtle-background, #f8fafc));
-    --fb-border: var(--integration-ulvia-documentation-blocs-border, var(--integration-ulvia-basic-blocs-surface-border, #e2e8f0));
-    --fb-fg: var(--integration-ulvia-documentation-blocs-heading-text, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
-    --fb-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --fb-radius: var(--integration-ulvia-documentation-blocs-radius-panel, var(--integration-ulvia-basic-blocs-radius-card, .5rem));
-    --fb-duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --fb-bg: var(--ulvia-subtle-background, var(--ulvia-subtle-background, #f8fafc));
+    --fb-border: var(--ulvia-surface-border, var(--ulvia-surface-border, #e2e8f0));
+    --fb-fg: var(--ulvia-surface-text, var(--ulvia-surface-text, #0f172a));
+    --fb-accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --fb-radius: var(--ulvia-radius-card, var(--ulvia-radius-card, .5rem));
+    --fb-duration: var(--ulvia-duration-normal, 180ms);
     display: block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
     margin: 1.5rem 0;
 }
 .feedback {
@@ -25,7 +25,7 @@
     cursor: pointer;
     padding: .4rem 1rem;
     border-radius: 999px;
-    background: var(--integration-ulvia-documentation-blocs-surface, var(--integration-ulvia-basic-blocs-surface-background, #fff));
+    background: var(--ulvia-surface-background, var(--ulvia-surface-background, #fff));
     border: 1px solid var(--fb-border);
     font-size: .88rem;
     font-weight: 600;

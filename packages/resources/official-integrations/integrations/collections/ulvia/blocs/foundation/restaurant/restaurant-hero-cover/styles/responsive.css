@@ -1,5 +1,5 @@
 @media (max-width: 900px) {
-    :host { --integration-ulvia-basic-blocs-font-size-display: 1rem; }
+    :host { --ulvia-font-size-display: 1rem; }
 
     [part="shade"] {
         background:

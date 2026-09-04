@@ -5,10 +5,6 @@
     --basic-stack-wrap: nowrap;
     --basic-stack-background: transparent;
     --basic-stack-color: inherit;
-    --ctx-bg: var(--basic-stack-background);
-    --ctx-fg: var(--basic-stack-color);
-    --ctx-fg-muted: color-mix(in srgb, var(--basic-stack-color) 68%, transparent);
-    --ctx-border: var(--_tone-border);
 
     display: flex;
     box-sizing: border-box;

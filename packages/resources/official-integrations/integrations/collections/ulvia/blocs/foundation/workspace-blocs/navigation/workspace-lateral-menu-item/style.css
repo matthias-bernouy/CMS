@@ -9,16 +9,9 @@
     --item-bg-hover: var(--bg-hover, var(--secondary-muted, oklch(94% 0.008 265)));
     --item-color-hover: var(--text-main, currentcolor);
     --item-contrasted: var(--primary-contrasted, oklch(98% 0.01 260));
-    --ctx-bg: transparent;
-    --ctx-fg: var(--item-color);
-    --ctx-fg-muted: var(--text-muted);
-    --ctx-border: transparent;
 }
 
 :host([data-current]) {
-    --ctx-bg: var(--item-bg-active);
-    --ctx-fg: var(--item-color-active);
-    --ctx-border: var(--item-color-active);
 }
 
 .menu-item {

@@ -1,11 +1,11 @@
 :host {
-    --gt-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --gt-bg: var(--integration-ulvia-documentation-blocs-code-background, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
-    --gt-fg: var(--integration-ulvia-documentation-blocs-code-text, var(--integration-ulvia-basic-blocs-page-background, #f8fafc));
-    --gt-duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --gt-accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --gt-bg: var(--ulvia-code-background, var(--ulvia-surface-text, #0f172a));
+    --gt-fg: var(--ulvia-code-text, var(--ulvia-page-background, #f8fafc));
+    --gt-duration: var(--ulvia-duration-normal, 180ms);
     display: inline;
     position: relative;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
 }
 .term {
     position: relative;
@@ -29,7 +29,7 @@
     font-size: .82rem;
     font-weight: 400;
     line-height: 1.5;
-    box-shadow: var(--integration-ulvia-documentation-blocs-shadow, 0 8px 20px -8px rgb(0 0 0 / 30%));
+    box-shadow: var(--ulvia-shadow-soft, 0 8px 20px -8px rgb(0 0 0 / 30%));
     opacity: 0;
     pointer-events: none;
     z-index: 100;

@@ -1,21 +1,21 @@
 :host {
-    --_accent: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --_background: var(--integration-ulvia-restaurant-content-background, #f5f1e9);
-    --_border: var(--integration-ulvia-restaurant-content-border, #ddd8cf);
-    --_muted: var(--integration-ulvia-restaurant-content-muted-text, #60665f);
-    --_surface: var(--integration-ulvia-restaurant-content-surface, #fffaf2);
-    --_text: var(--integration-ulvia-restaurant-content-text, #202421);
-    --integration-ulvia-basic-blocs-focus-color: var(--_accent);
-    --integration-ulvia-basic-blocs-surface-background: transparent;
-    --integration-ulvia-basic-blocs-surface-border: var(--_border);
-    --integration-ulvia-basic-blocs-surface-radius: 0.75rem;
-    --integration-ulvia-basic-blocs-surface-text: var(--_text);
-    --integration-ulvia-basic-blocs-table-font-size: 1rem;
+    --_accent: var(--ulvia-success-base, #39ad65);
+    --_background: var(--ulvia-page-background, #f5f1e9);
+    --_border: var(--ulvia-surface-border, #ddd8cf);
+    --_muted: var(--ulvia-surface-muted-text, #60665f);
+    --_surface: var(--ulvia-surface-background, #fffaf2);
+    --_text: var(--ulvia-surface-text, #202421);
+    --ulvia-focus-color: var(--_accent);
+    --ulvia-surface-background: transparent;
+    --ulvia-surface-border: var(--_border);
+    --ulvia-surface-radius: 0.75rem;
+    --ulvia-surface-text: var(--_text);
+    --ulvia-font-size-small: 1rem;
     display: block;
     min-width: 0;
     color: var(--_text);
     background: var(--_background);
-    font-family: var(--integration-ulvia-restaurant-font-body, Inter, system-ui, sans-serif);
+    font-family: var(--ulvia-font-body, Inter, system-ui, sans-serif);
 }
 
 *,
@@ -25,11 +25,11 @@
 }
 
 :host([scheme="dark"]) {
-    --integration-ulvia-restaurant-content-background: var(--integration-ulvia-restaurant-background, #15171a);
-    --integration-ulvia-restaurant-content-surface: var(--integration-ulvia-restaurant-surface, #1d2124);
-    --integration-ulvia-restaurant-content-text: var(--integration-ulvia-restaurant-text, #fffaf0);
-    --integration-ulvia-restaurant-content-muted-text: var(--integration-ulvia-restaurant-muted-text, #d0cbc1);
-    --integration-ulvia-restaurant-content-border: color-mix(in srgb, var(--integration-ulvia-restaurant-text, #fffaf0) 18%, transparent);
+    --ulvia-page-background: var(--ulvia-surface-text, #15171a);
+    --ulvia-surface-background: var(--ulvia-body-text, #1d2124);
+    --ulvia-surface-text: var(--ulvia-page-background, #fffaf0);
+    --ulvia-surface-muted-text: var(--ulvia-secondary-base, #d0cbc1);
+    --ulvia-surface-border: color-mix(in srgb, var(--ulvia-page-background, #fffaf0) 18%, transparent);
 }
 
 [part="section"] {
@@ -128,7 +128,7 @@
 
 ::slotted([slot="title"]),
 ::slotted([slot="hours-title"]) {
-    font-family: var(--integration-ulvia-restaurant-font-heading, Georgia, "Times New Roman", serif);
+    font-family: var(--ulvia-font-heading, Georgia, "Times New Roman", serif);
     overflow-wrap: anywhere;
 }
 

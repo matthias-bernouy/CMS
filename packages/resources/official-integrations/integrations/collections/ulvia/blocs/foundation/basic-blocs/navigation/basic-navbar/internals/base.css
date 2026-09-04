@@ -2,17 +2,13 @@
     --_navbar-background: transparent;
     --_navbar-border: transparent;
     --_navbar-color: var(--_tone-contrasted);
-    --_navbar-panel-background: var(--integration-ulvia-basic-blocs-surface-background, Canvas);
+    --_navbar-panel-background: var(--ulvia-surface-background, Canvas);
     --_navbar-action-background: var(--_tone-base);
     --_navbar-action-color: var(--_tone-foreground);
     --_navbar-action-hover-background: color-mix(in srgb, var(--_navbar-action-background) 86%, var(--_navbar-action-color));
-    --_navbar-padding-block: var(--integration-ulvia-basic-blocs-space-sm, .5rem);
-    --_navbar-padding-inline: var(--integration-ulvia-basic-blocs-space-md, 1rem);
+    --_navbar-padding-block: var(--ulvia-space-sm, .5rem);
+    --_navbar-padding-inline: var(--ulvia-space-md, 1rem);
     --_navbar-link-padding: .5rem .625rem;
-    --ctx-bg: var(--_navbar-background);
-    --ctx-fg: var(--_navbar-color);
-    --ctx-fg-muted: color-mix(in srgb, var(--_navbar-color) 68%, transparent);
-    --ctx-border: var(--_navbar-border);
 
     position: relative;
     z-index: 10;
@@ -43,14 +39,14 @@
 }
 
 :host([density="compact"]) {
-    --_navbar-padding-block: var(--integration-ulvia-basic-blocs-space-xs, .25rem);
-    --_navbar-padding-inline: var(--integration-ulvia-basic-blocs-space-sm, .5rem);
+    --_navbar-padding-block: var(--ulvia-space-xs, .25rem);
+    --_navbar-padding-inline: var(--ulvia-space-sm, .5rem);
     --_navbar-link-padding: .375rem .5rem;
 }
 
 :host([density="spacious"]) {
-    --_navbar-padding-block: var(--integration-ulvia-basic-blocs-space-md, 1rem);
-    --_navbar-padding-inline: var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+    --_navbar-padding-block: var(--ulvia-space-md, 1rem);
+    --_navbar-padding-inline: var(--ulvia-space-lg, 1.5rem);
     --_navbar-link-padding: .625rem .75rem;
 }
 
@@ -60,10 +56,10 @@
     box-sizing: border-box;
     min-height: 3.5rem;
     align-items: center;
-    gap: var(--integration-ulvia-basic-blocs-space-md, 1rem);
+    gap: var(--ulvia-space-md, 1rem);
     padding: var(--_navbar-padding-block) var(--_navbar-padding-inline);
     border: 1px solid var(--_navbar-border);
-    border-radius: var(--integration-ulvia-basic-blocs-surface-radius, .75rem);
+    border-radius: var(--ulvia-surface-radius, .75rem);
     background: var(--_navbar-background);
     color: var(--_navbar-color);
 }
@@ -90,14 +86,14 @@
     flex: 1;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--integration-ulvia-basic-blocs-space-md, 1rem);
+    gap: var(--ulvia-space-md, 1rem);
 }
 
 [part="links"],
 [part="actions"] {
     display: flex;
     align-items: center;
-    gap: var(--integration-ulvia-basic-blocs-space-xs, .25rem);
+    gap: var(--ulvia-space-xs, .25rem);
 }
 
 [part="toggle"] { display: none; }
@@ -113,7 +109,7 @@
 
     display: inline-flex;
     align-items: center;
-    border-radius: var(--integration-ulvia-basic-blocs-action-radius, .5rem);
+    border-radius: var(--ulvia-action-radius, .5rem);
     color: inherit;
     font: inherit;
     text-decoration: none;
@@ -126,9 +122,9 @@
 
     display: inline-flex;
     align-items: center;
-    border-radius: var(--integration-ulvia-basic-blocs-action-radius, .5rem);
+    border-radius: var(--ulvia-action-radius, .5rem);
     color: inherit;
-    font-family: var(--integration-ulvia-basic-blocs-font-heading, inherit);
+    font-family: var(--ulvia-font-heading, inherit);
     font-size: 1.125rem;
     font-weight: 700;
     text-decoration: none;

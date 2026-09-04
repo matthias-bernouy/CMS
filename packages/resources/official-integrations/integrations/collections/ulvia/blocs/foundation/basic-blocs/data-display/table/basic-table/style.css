@@ -2,19 +2,19 @@
     display: block;
     width: 100%;
     min-width: 0;
-    color: var(--integration-ulvia-basic-blocs-surface-text, var(--text-main, CanvasText));
+    color: var(--ulvia-surface-text, var(--text-main, CanvasText));
 }
 
 .table-container {
     width: 100%;
     overflow-x: auto;
-    background: var(--integration-ulvia-basic-blocs-surface-background, var(--bg-surface, Canvas));
+    background: var(--ulvia-surface-background, var(--bg-surface, Canvas));
     border: 1px solid
         var(
-            --integration-ulvia-basic-blocs-surface-border,
+            --ulvia-surface-border,
             var(--border-default, color-mix(in srgb, currentColor 16%, transparent))
         );
-    border-radius: var(--integration-ulvia-basic-blocs-surface-radius, var(--radius-card, 0.5rem));
+    border-radius: var(--ulvia-surface-radius, var(--radius-card, 0.5rem));
 }
 
 .table {
@@ -32,7 +32,7 @@
 ::slotted(basic-table-row:not(:last-child)) {
     border-bottom: 1px solid
         var(
-            --integration-ulvia-basic-blocs-surface-border,
+            --ulvia-surface-border,
             var(--border-default, color-mix(in srgb, currentColor 16%, transparent))
         );
 }

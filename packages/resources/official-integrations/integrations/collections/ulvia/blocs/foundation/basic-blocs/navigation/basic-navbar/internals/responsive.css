@@ -6,7 +6,7 @@
     place-items: center;
     padding: 0;
     border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
-    border-radius: var(--integration-ulvia-basic-blocs-action-radius, .5rem);
+    border-radius: var(--ulvia-action-radius, .5rem);
     background: transparent;
     color: inherit;
     cursor: pointer;
@@ -42,17 +42,17 @@
 
 :host([collapsed]) [part="panel"] {
     position: absolute;
-    top: calc(100% + var(--integration-ulvia-basic-blocs-space-xs, .25rem));
+    top: calc(100% + var(--ulvia-space-xs, .25rem));
     right: 0;
     left: 0;
     display: none;
     box-sizing: border-box;
     justify-content: stretch;
-    padding: var(--integration-ulvia-basic-blocs-space-sm, .5rem);
+    padding: var(--ulvia-space-sm, .5rem);
     border: 1px solid var(--_tone-border);
-    border-radius: var(--integration-ulvia-basic-blocs-surface-radius, .75rem);
+    border-radius: var(--ulvia-surface-radius, .75rem);
     background: var(--_navbar-panel-background);
-    box-shadow: var(--integration-ulvia-basic-blocs-shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, CanvasText 14%, transparent));
+    box-shadow: var(--ulvia-shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, CanvasText 14%, transparent));
     color: var(--_navbar-color);
 }
 
@@ -66,8 +66,8 @@
 }
 
 :host([collapsed]) [part="actions"] {
-    margin-top: var(--integration-ulvia-basic-blocs-space-sm, .5rem);
-    padding-top: var(--integration-ulvia-basic-blocs-space-sm, .5rem);
+    margin-top: var(--ulvia-space-sm, .5rem);
+    padding-top: var(--ulvia-space-sm, .5rem);
     border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
 }
 

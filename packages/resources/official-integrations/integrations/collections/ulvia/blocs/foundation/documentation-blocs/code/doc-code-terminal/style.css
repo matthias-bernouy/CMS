@@ -1,11 +1,11 @@
 :host {
-    --term-bg: var(--integration-ulvia-documentation-blocs-code-background, var(--integration-ulvia-basic-blocs-surface-text, #1e1e1e));
-    --term-fg: var(--integration-ulvia-documentation-blocs-code-text, var(--integration-ulvia-basic-blocs-page-background, #e5e5e5));
-    --term-bar-bg: var(--integration-ulvia-documentation-blocs-code-header-background, var(--integration-ulvia-basic-blocs-body-text, #2d2d2d));
-    --term-prompt: var(--integration-ulvia-documentation-blocs-terminal-prompt, var(--integration-ulvia-basic-blocs-success-base, #4ade80));
-    --term-radius: var(--integration-ulvia-documentation-blocs-radius-panel, var(--integration-ulvia-basic-blocs-radius-card, .5rem));
+    --term-bg: var(--ulvia-code-background, var(--ulvia-surface-text, #1e1e1e));
+    --term-fg: var(--ulvia-code-text, var(--ulvia-page-background, #e5e5e5));
+    --term-bar-bg: var(--ulvia-code-header-background, var(--ulvia-body-text, #2d2d2d));
+    --term-prompt: var(--ulvia-terminal-prompt, var(--ulvia-success-base, #4ade80));
+    --term-radius: var(--ulvia-radius-card, var(--ulvia-radius-card, .5rem));
     display: block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+    font-family: var(--ulvia-font-mono, var(--ulvia-font-mono, ui-monospace, monospace));
     margin: 1rem 0;
 }
 .term {
@@ -13,7 +13,7 @@
     color: var(--term-fg);
     border-radius: var(--term-radius);
     overflow: hidden;
-    box-shadow: var(--integration-ulvia-documentation-blocs-shadow, 0 .5rem 2rem rgb(0 0 0 / 40%));
+    box-shadow: var(--ulvia-shadow-soft, 0 .5rem 2rem rgb(0 0 0 / 40%));
 }
 .bar {
     display: flex;
@@ -30,7 +30,7 @@
 .title {
     flex: 1;
     text-align: center;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
     font-size: .78rem;
     color: #999;
 }
@@ -45,7 +45,7 @@
     background: rgb(255 255 255 / 7%);
     border: 0;
     border-radius: .35rem;
-    font: 600 .72rem var(--integration-ulvia-documentation-blocs-font-body, system-ui, sans-serif);
+    font: 600 .72rem var(--ulvia-font-body, system-ui, sans-serif);
     cursor: pointer;
 }
 .copy:hover { background: rgb(255 255 255 / 14%); }
@@ -69,4 +69,4 @@
 :host([os="linux"]) .bar::before { content: "~"; color: var(--term-prompt); margin-right: .5rem; }
 :host([os="windows"]) .dot { display: none; }
 :host([os="windows"]) { --term-bg: #012456; --term-bar-bg: #001e42; --term-prompt: #ffffff; }
-@media (prefers-reduced-motion: reduce) { :host { --integration-ulvia-documentation-blocs-motion-duration: 0ms; } }
+@media (prefers-reduced-motion: reduce) { :host { --ulvia-duration-normal: 0ms; } }

@@ -29,9 +29,9 @@ class BasicChipGroup extends HTMLElement {
                 ${basicColorSchemeCss()}
 
                 :host {
-                    --cms-chip-background: var(--integration-ulvia-basic-blocs-field-background, Canvas);
-                    --cms-chip-border-color: var(--integration-ulvia-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent));
-                    --cms-chip-color: var(--integration-ulvia-basic-blocs-field-text, inherit);
+                    --cms-chip-background: var(--ulvia-field-background, Canvas);
+                    --cms-chip-border-color: var(--ulvia-field-border, color-mix(in srgb, currentColor 25%, transparent));
+                    --cms-chip-color: var(--ulvia-field-text, inherit);
                     --cms-chip-selected-background: var(--_tone-base);
                     --cms-chip-selected-border: var(--_tone-border);
                     --cms-chip-selected-color: var(--_tone-foreground);
@@ -65,7 +65,7 @@ class BasicChipGroup extends HTMLElement {
                 }
 
                 :host([disabled]) .choices { opacity: .6; }
-                .error { color: var(--cms-error-color, var(--integration-ulvia-basic-blocs-error-text, #b42318)); }
+                .error { color: var(--cms-error-color, var(--ulvia-error-text, #b42318)); }
                 [hidden] { display: none; }
             </style>
             <span class="label" part="label"></span>

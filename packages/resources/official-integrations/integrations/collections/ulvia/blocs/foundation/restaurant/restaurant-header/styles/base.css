@@ -1,14 +1,14 @@
 :host {
-    --_accent: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --_background: var(--integration-ulvia-restaurant-background, #15171a);
-    --_color: var(--integration-ulvia-restaurant-text, #fffaf0);
-    --_max-width: var(--integration-ulvia-restaurant-content-width, 90rem);
+    --_accent: var(--ulvia-success-base, #39ad65);
+    --_background: var(--ulvia-surface-text, #15171a);
+    --_color: var(--ulvia-page-background, #fffaf0);
+    --_max-width: var(--ulvia-wide-width, 90rem);
 
     display: block;
     box-sizing: border-box;
     width: 100%;
     color: var(--_color);
-    font-family: var(--integration-ulvia-restaurant-font-body, system-ui, sans-serif);
+    font-family: var(--ulvia-font-body, system-ui, sans-serif);
 }
 
 :host([hidden]) { display: none !important; }
@@ -35,7 +35,7 @@
     align-items: center;
     box-sizing: border-box;
     width: min(100%, var(--_max-width));
-    min-height: var(--integration-ulvia-restaurant-header-height, 4.25rem);
+    min-height: var(--ulvia-navigation-topbar-height, 4.25rem);
     margin-inline: auto;
     padding: .55rem clamp(1rem, 3vw, 2rem);
     gap: 1rem;
@@ -61,11 +61,11 @@
 }
 
 ::slotted(basic-badge[slot="status"]) {
-    --integration-ulvia-basic-blocs-success-base: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --integration-ulvia-basic-blocs-success-foreground: var(--integration-ulvia-restaurant-text, #fffaf0);
-    --integration-ulvia-basic-blocs-success-muted: color-mix(in srgb, var(--integration-ulvia-restaurant-accent, #39ad65) 16%, transparent);
-    --integration-ulvia-basic-blocs-success-contrasted: var(--integration-ulvia-restaurant-text, #fffaf0);
-    --basic-badge-dot-color: var(--integration-ulvia-restaurant-accent, #39ad65);
+    --ulvia-success-base: var(--ulvia-success-base, #39ad65);
+    --ulvia-success-foreground: var(--ulvia-page-background, #fffaf0);
+    --ulvia-success-muted: color-mix(in srgb, var(--ulvia-success-base, #39ad65) 16%, transparent);
+    --ulvia-success-contrasted: var(--ulvia-page-background, #fffaf0);
+    --basic-badge-dot-color: var(--ulvia-success-base, #39ad65);
 }
 
 [part="menu"] {
@@ -141,19 +141,19 @@
 }
 
 ::slotted(basic-menu[slot="menu"]) {
-    --basic-menu-accent: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --basic-menu-background: var(--integration-ulvia-restaurant-background, #15171a);
-    --basic-menu-color: var(--integration-ulvia-restaurant-text, #fffaf0);
-    --basic-menu-muted: var(--integration-ulvia-restaurant-muted-text, #d0cbc1);
-    --integration-ulvia-basic-blocs-action-min-height: 2.75rem;
-    --integration-ulvia-basic-blocs-focus-color: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --integration-ulvia-basic-blocs-surface-text: var(--integration-ulvia-restaurant-text, #fffaf0);
+    --basic-menu-accent: var(--ulvia-success-base, #39ad65);
+    --basic-menu-background: var(--ulvia-surface-text, #15171a);
+    --basic-menu-color: var(--ulvia-page-background, #fffaf0);
+    --basic-menu-muted: var(--ulvia-secondary-base, #d0cbc1);
+    --ulvia-action-min-height: 2.75rem;
+    --ulvia-focus-color: var(--ulvia-success-base, #39ad65);
+    --ulvia-surface-text: var(--ulvia-page-background, #fffaf0);
 }
 
 ::slotted([slot="brand"]) {
     overflow: hidden;
     color: inherit;
-    font-family: var(--integration-ulvia-restaurant-font-heading, Georgia, serif);
+    font-family: var(--ulvia-font-heading, Georgia, serif);
     font-size: 1.25rem;
     letter-spacing: .18em;
     text-overflow: ellipsis;

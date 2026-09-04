@@ -1,10 +1,10 @@
 :host {
-    --fig-border: var(--integration-ulvia-documentation-blocs-border, var(--integration-ulvia-basic-blocs-surface-border, #e2e8f0));
-    --fig-bg: var(--integration-ulvia-documentation-blocs-subtle-surface, var(--integration-ulvia-basic-blocs-subtle-background, #f8fafc));
-    --fig-muted: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #64748b));
-    --fig-radius: var(--integration-ulvia-documentation-blocs-radius-panel, var(--integration-ulvia-basic-blocs-radius-card, .5rem));
+    --fig-border: var(--ulvia-surface-border, var(--ulvia-surface-border, #e2e8f0));
+    --fig-bg: var(--ulvia-subtle-background, var(--ulvia-subtle-background, #f8fafc));
+    --fig-muted: var(--ulvia-surface-muted-text, var(--ulvia-surface-muted-text, #64748b));
+    --fig-radius: var(--ulvia-radius-card, var(--ulvia-radius-card, .5rem));
     display: block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
     margin: 1.5rem 0;
 }
 .figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: .5rem; }

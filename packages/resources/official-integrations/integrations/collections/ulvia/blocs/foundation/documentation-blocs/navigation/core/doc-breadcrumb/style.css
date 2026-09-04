@@ -1,11 +1,11 @@
 :host {
-    --bc-fg: var(--integration-ulvia-documentation-blocs-heading-text, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
-    --bc-muted: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #64748b));
-    --bc-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --bc-duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --bc-fg: var(--ulvia-surface-text, var(--ulvia-surface-text, #0f172a));
+    --bc-muted: var(--ulvia-surface-muted-text, var(--ulvia-surface-muted-text, #64748b));
+    --bc-accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --bc-duration: var(--ulvia-duration-normal, 180ms);
     --bc-sep: "/";
     display: block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
     font-size: .88rem;
 }
 .crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; color: var(--bc-muted); }

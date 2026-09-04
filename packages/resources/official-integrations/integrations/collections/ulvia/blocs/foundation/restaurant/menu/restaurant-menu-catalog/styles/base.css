@@ -1,15 +1,15 @@
 :host {
-    --_accent: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --_background: var(--integration-ulvia-restaurant-content-background, #f5f1e9);
-    --_border: var(--integration-ulvia-restaurant-content-border, #ddd8cf);
-    --_muted: var(--integration-ulvia-restaurant-content-muted-text, #60665f);
-    --_surface: var(--integration-ulvia-restaurant-content-surface, #fffaf2);
-    --_text: var(--integration-ulvia-restaurant-content-text, #202421);
+    --_accent: var(--ulvia-success-base, #39ad65);
+    --_background: var(--ulvia-page-background, #f5f1e9);
+    --_border: var(--ulvia-surface-border, #ddd8cf);
+    --_muted: var(--ulvia-surface-muted-text, #60665f);
+    --_surface: var(--ulvia-surface-background, #fffaf2);
+    --_text: var(--ulvia-surface-text, #202421);
     display: block;
     min-width: 0;
     color: var(--_text);
     background: var(--_background);
-    font-family: var(--integration-ulvia-restaurant-font-body, Inter, system-ui, sans-serif);
+    font-family: var(--ulvia-font-body, Inter, system-ui, sans-serif);
 }
 
 *,
@@ -24,7 +24,7 @@
 }
 
 [part="shell"] {
-    width: min(100%, var(--integration-ulvia-restaurant-content-width, 90rem));
+    width: min(100%, var(--ulvia-wide-width, 90rem));
     min-width: 0;
     margin-inline: auto;
 }
@@ -141,7 +141,7 @@
 }
 
 ::slotted([slot="title"]) {
-    font-family: var(--integration-ulvia-restaurant-font-heading, Georgia, "Times New Roman", serif);
+    font-family: var(--ulvia-font-heading, Georgia, "Times New Roman", serif);
     overflow-wrap: anywhere;
 }
 

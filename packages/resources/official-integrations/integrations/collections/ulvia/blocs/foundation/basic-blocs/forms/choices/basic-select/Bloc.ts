@@ -38,9 +38,9 @@ class BasicSelect extends HTMLElement {
                 ${basicColorSchemeCss()}
 
                 :host {
-                    --_field-background: var(--integration-ulvia-basic-blocs-field-background, Canvas);
-                    --_field-border: var(--integration-ulvia-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent));
-                    --_field-color: var(--integration-ulvia-basic-blocs-field-text, inherit);
+                    --_field-background: var(--ulvia-field-background, Canvas);
+                    --_field-border: var(--ulvia-field-border, color-mix(in srgb, currentColor 25%, transparent));
+                    --_field-color: var(--ulvia-field-text, inherit);
                     position: relative;
                     display: block;
                     box-sizing: border-box;
@@ -93,7 +93,7 @@ class BasicSelect extends HTMLElement {
                     min-height: var(--cms-input-height, 2.75rem);
                     padding: var(--cms-input-padding, .65rem .75rem);
                     border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--_field-border)));
-                    border-radius: var(--cms-input-radius, var(--integration-ulvia-basic-blocs-field-radius, .5rem));
+                    border-radius: var(--cms-input-radius, var(--ulvia-field-radius, .5rem));
                     background: var(--cms-input-background, var(--_field-background));
                     color: var(--cms-input-color, var(--_field-color));
                     font: inherit;
@@ -131,7 +131,7 @@ class BasicSelect extends HTMLElement {
                 }
 
                 .value[data-placeholder="true"] {
-                    color: var(--cms-muted-color, var(--integration-ulvia-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent)));
+                    color: var(--cms-muted-color, var(--ulvia-muted-text, color-mix(in srgb, currentColor 65%, transparent)));
                 }
 
                 .chevron {
@@ -170,7 +170,7 @@ class BasicSelect extends HTMLElement {
                     padding: .3rem;
                     overflow-y: auto;
                     border: 1px solid var(--cms-input-border-color, var(--_field-border));
-                    border-radius: var(--cms-input-radius, var(--integration-ulvia-basic-blocs-field-radius, .5rem));
+                    border-radius: var(--cms-input-radius, var(--ulvia-field-radius, .5rem));
                     background: var(--cms-input-background, var(--_field-background));
                     color: var(--cms-input-color, var(--_field-color));
                     box-shadow: var(--cms-select-shadow, 0 .75rem 2rem color-mix(in srgb, currentColor 14%, transparent));
@@ -185,7 +185,7 @@ class BasicSelect extends HTMLElement {
                     min-height: 2.5rem;
                     padding: .55rem .65rem;
                     border: 0;
-                    border-radius: calc(var(--cms-input-radius, var(--integration-ulvia-basic-blocs-field-radius, .5rem)) - .15rem);
+                    border-radius: calc(var(--cms-input-radius, var(--ulvia-field-radius, .5rem)) - .15rem);
                     background: transparent;
                     color: inherit;
                     font: inherit;
@@ -214,8 +214,8 @@ class BasicSelect extends HTMLElement {
                 :host([disabled]) { opacity: .6; }
                 :host([disabled]) .control,
                 :host([disabled]) .native-control { cursor: not-allowed; }
-                .hint { color: var(--cms-muted-color, var(--integration-ulvia-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
-                .error { color: var(--cms-error-color, var(--integration-ulvia-basic-blocs-error-text, #b42318)); }
+                .hint { color: var(--cms-muted-color, var(--ulvia-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
+                .error { color: var(--cms-error-color, var(--ulvia-error-text, #b42318)); }
                 .source { display: none; }
                 [hidden] { display: none; }
 

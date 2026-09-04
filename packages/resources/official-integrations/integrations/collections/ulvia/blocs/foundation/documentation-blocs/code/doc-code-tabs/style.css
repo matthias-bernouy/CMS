@@ -1,13 +1,13 @@
 :host {
-    --tabs-bg: var(--integration-ulvia-documentation-blocs-code-header-background, var(--integration-ulvia-basic-blocs-body-text, #1e293b));
-    --tabs-fg: var(--integration-ulvia-documentation-blocs-code-muted-text, var(--integration-ulvia-basic-blocs-secondary-base, #94a3b8));
-    --tabs-active: var(--integration-ulvia-documentation-blocs-code-text, var(--integration-ulvia-basic-blocs-page-background, #f8fafc));
-    --tabs-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #6366f1));
-    --tabs-radius: var(--integration-ulvia-documentation-blocs-radius-panel, var(--integration-ulvia-basic-blocs-radius-card, .5rem));
-    --tabs-duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --tabs-bg: var(--ulvia-code-header-background, var(--ulvia-body-text, #1e293b));
+    --tabs-fg: var(--ulvia-code-muted-text, var(--ulvia-secondary-base, #94a3b8));
+    --tabs-active: var(--ulvia-code-text, var(--ulvia-page-background, #f8fafc));
+    --tabs-accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #6366f1));
+    --tabs-radius: var(--ulvia-radius-card, var(--ulvia-radius-card, .5rem));
+    --tabs-duration: var(--ulvia-duration-normal, 180ms);
     display: block;
     margin: 1rem 0;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
 }
 .wrapper {
     background: var(--tabs-bg);
@@ -18,7 +18,7 @@
     display: flex;
     gap: .25rem;
     padding: .4rem .4rem 0;
-    background: var(--integration-ulvia-documentation-blocs-code-background, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
+    background: var(--ulvia-code-background, var(--ulvia-surface-text, #0f172a));
     border-bottom: 1px solid rgba(255,255,255,.05);
     overflow-x: auto;
 }

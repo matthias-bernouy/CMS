@@ -1,20 +1,20 @@
-:host { display: block; color: var(--ctx-fg, inherit); font: inherit; }
+:host { display: block; color: var(--_ulvia-faq-item-color, inherit); font: inherit; }
 :host([hidden]) { display: none !important; }
 
 [part="details"] {
     box-sizing: border-box;
     overflow: clip;
-    border: 1px solid var(--ctx-border, currentColor);
-    border-radius: var(--integration-ulvia-basic-blocs-control-radius, .5rem);
-    background: color-mix(in srgb, var(--ctx-bg, transparent) 88%, var(--ctx-fg, currentColor) 4%);
+    border: 1px solid var(--_ulvia-faq-item-border, currentColor);
+    border-radius: var(--ulvia-radius-control, .5rem);
+    background: color-mix(in srgb, var(--_ulvia-faq-item-background, transparent) 88%, var(--_ulvia-faq-item-color, currentColor) 4%);
 }
 
 [part="summary"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
-    padding: var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+    gap: var(--ulvia-space-lg, 1.5rem);
+    padding: var(--ulvia-space-lg, 1.5rem);
     cursor: pointer;
     font-weight: 700;
     list-style: none;
@@ -22,8 +22,8 @@
 }
 
 [part="summary"]::-webkit-details-marker { display: none; }
-[part="summary"]:hover { background: color-mix(in srgb, var(--ctx-fg, currentColor) 7%, transparent); }
-[part="summary"]:focus-visible { outline: 2px solid var(--integration-ulvia-basic-blocs-focus-color, Highlight); outline-offset: -3px; }
+[part="summary"]:hover { background: color-mix(in srgb, var(--_ulvia-faq-item-color, currentColor) 7%, transparent); }
+[part="summary"]:focus-visible { outline: 2px solid var(--ulvia-focus-color, Highlight); outline-offset: -3px; }
 
 [part="indicator"] {
     flex: none;
@@ -36,7 +36,7 @@
 }
 
 [part="details"][open] [part="indicator"] { transform: rotate(225deg) translate(-.1rem, -.1rem); }
-[part="answer"] { padding: 0 var(--integration-ulvia-basic-blocs-space-lg, 1.5rem) var(--integration-ulvia-basic-blocs-space-lg, 1.5rem); color: var(--ctx-fg-muted, inherit); line-height: 1.65; }
+[part="answer"] { padding: 0 var(--ulvia-space-lg, 1.5rem) var(--ulvia-space-lg, 1.5rem); color: var(--_ulvia-faq-item-muted-color, inherit); line-height: 1.65; }
 ::slotted([slot="question"]), ::slotted(p) { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {

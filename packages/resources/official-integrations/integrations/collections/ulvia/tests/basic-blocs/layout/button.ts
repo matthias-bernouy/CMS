@@ -106,9 +106,7 @@ export function registerButtonTest(): void {
         expect(styles).toContain("text-decoration: none !important");
         expect(styles).toContain("var(--cms-button-background, var(--_tone-base)) 88%");
         expect(styles).toContain("var(--cms-button-color, var(--_button-color)) 10%");
-        expect(styles).toContain(
-            "var(--cms-button-min-height, var(--integration-ulvia-basic-blocs-action-min-height, 2.5rem))",
-        );
+        expect(styles).toContain("var(--cms-button-min-height, var(--ulvia-action-min-height, 2.5rem))");
         expect(styles).toContain(':host([appearance="soft"])');
         expect(styles).toContain("prefers-reduced-motion: reduce");
         expect(styles).toContain('::slotted(svg[slot="icon-start"])');

@@ -60,7 +60,7 @@ class BasicFileInput extends HTMLElement {
                     height: var(--cms-file-preview-size, 5rem);
                     margin-block-end: .375rem;
                     overflow: hidden;
-                    border: 1px solid var(--integration-ulvia-basic-blocs-field-border, var(--border-default, color-mix(in srgb, currentColor 20%, transparent)));
+                    border: 1px solid var(--ulvia-field-border, var(--border-default, color-mix(in srgb, currentColor 20%, transparent)));
                     border-radius: var(--cms-file-preview-radius, .75rem);
                     background: var(--bg-subtle, Canvas);
                 }
@@ -87,7 +87,7 @@ class BasicFileInput extends HTMLElement {
                     min-height: 2.5rem;
                     padding: .5rem .8rem;
                     border: 1px solid var(--cms-file-border-color, var(--_file-border));
-                    border-radius: var(--cms-input-radius, var(--integration-ulvia-basic-blocs-action-radius, .5rem));
+                    border-radius: var(--cms-input-radius, var(--ulvia-action-radius, .5rem));
                     background: var(--cms-file-background, var(--_file-background));
                     color: var(--cms-file-color, var(--_file-color));
                     font-weight: 700;
@@ -95,7 +95,7 @@ class BasicFileInput extends HTMLElement {
                 }
                 .file-name {
                     overflow: hidden;
-                    color: var(--integration-ulvia-basic-blocs-muted-text, var(--text-muted, color-mix(in srgb, currentColor 65%, transparent)));
+                    color: var(--ulvia-muted-text, var(--text-muted, color-mix(in srgb, currentColor 65%, transparent)));
                     text-overflow: ellipsis;
                     white-space: nowrap;
                 }
@@ -116,8 +116,8 @@ class BasicFileInput extends HTMLElement {
                 }
                 :host([disabled]) { opacity: .6; }
                 :host([disabled]) .picker { cursor: not-allowed; }
-                .hint { color: var(--cms-muted-color, var(--integration-ulvia-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
-                .error { color: var(--cms-error-color, var(--integration-ulvia-basic-blocs-error-text, #b42318)); }
+                .hint { color: var(--cms-muted-color, var(--ulvia-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
+                .error { color: var(--cms-error-color, var(--ulvia-error-text, #b42318)); }
                 [hidden] { display: none; }
             </style>
             <div class="field" part="field">

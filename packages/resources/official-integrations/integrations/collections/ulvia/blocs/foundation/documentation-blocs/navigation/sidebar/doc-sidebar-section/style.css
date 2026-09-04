@@ -1,11 +1,11 @@
 :host {
-    --accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --muted: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #64748b));
-    --duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --muted: var(--ulvia-surface-muted-text, var(--ulvia-surface-muted-text, #64748b));
+    --duration: var(--ulvia-duration-normal, 180ms);
     display: block;
     margin: 0 0 .65rem;
-    color: var(--integration-ulvia-documentation-blocs-text, var(--integration-ulvia-basic-blocs-body-text, inherit));
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    color: var(--ulvia-body-text, var(--ulvia-body-text, inherit));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
 }
 .sec { display: grid; }
 .title {

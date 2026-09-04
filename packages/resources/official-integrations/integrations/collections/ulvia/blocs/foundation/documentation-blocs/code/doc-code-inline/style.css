@@ -1,9 +1,9 @@
 :host {
-    --inline-bg: color-mix(in srgb, var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5)) 8%, transparent);
-    --inline-fg: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --inline-radius: var(--integration-ulvia-documentation-blocs-radius-control, var(--integration-ulvia-basic-blocs-radius-control, .375rem));
+    --inline-bg: color-mix(in srgb, var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5)) 8%, transparent);
+    --inline-fg: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --inline-radius: var(--ulvia-radius-control, var(--ulvia-radius-control, .375rem));
     display: inline;
-    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+    font-family: var(--ulvia-font-mono, var(--ulvia-font-mono, ui-monospace, monospace));
 }
 .inline {
     display: inline;
@@ -17,10 +17,10 @@
 }
 .inline ::slotted(*) { font: inherit; color: inherit; }
 :host([variant="accent"]) {
-    --inline-bg: color-mix(in srgb, var(--integration-ulvia-documentation-blocs-api-get) 12%, transparent);
-    --inline-fg: var(--integration-ulvia-documentation-blocs-info-text);
+    --inline-bg: color-mix(in srgb, var(--ulvia-info-base) 12%, transparent);
+    --inline-fg: var(--ulvia-info-contrasted);
 }
 :host([variant="danger"]) {
-    --inline-bg: var(--integration-ulvia-documentation-blocs-danger-background);
-    --inline-fg: var(--integration-ulvia-documentation-blocs-danger-text);
+    --inline-bg: var(--ulvia-danger-muted);
+    --inline-fg: var(--ulvia-danger-contrasted);
 }

@@ -30,15 +30,9 @@ describe("restaurant 1.0.0 bloc catalogue", () => {
                     artifact.type === "bloc" && artifact.bloc.path?.startsWith("blocs/foundation/restaurant/"),
             ),
         ).toHaveLength(restaurantTags.length);
-        const foundations = definition.theme?.categories.find((category) => category.id === "restaurant-foundations");
-        expect(foundations?.tokens.find((token) => token.id === "restaurant-accent")?.defaults).toEqual({
-            light: "#39ad65",
-            dark: "#39ad65",
-        });
-        expect(foundations?.tokens.find((token) => token.id === "restaurant-rating")?.defaults).toEqual({
-            light: "#e4b45d",
-            dark: "#e4b45d",
-        });
+        const themeTokenIds = definition.theme?.categories.flatMap(({ tokens }) => tokens.map(({ id }) => id));
+        expect(themeTokenIds).toEqual(expect.arrayContaining(["success-base", "warning-base", "surface-background"]));
+        expect(themeTokenIds?.some((id) => id.startsWith("restaurant-"))).toBeFalse();
 
         for (const tag of restaurantTags) {
             const bloc = await loadRestaurantBloc(tag);
@@ -94,11 +88,9 @@ describe("restaurant 1.0.0 bloc catalogue", () => {
         expect(headerDefault).toContain('<basic-select slot="locale"');
         expect(headerDefault).toContain('<basic-option value="en">🇬🇧 English</basic-option>');
         expect(headerDefault).toContain('<basic-option value="fr">🇫🇷 Français</basic-option>');
-        expect(headerBaseCss).toContain("--_color: var(--integration-ulvia-restaurant-text, #fffaf0)");
-        expect(headerBaseCss).toContain("--integration-ulvia-basic-blocs-action-min-height: 2.75rem");
-        expect(headerBaseCss).toContain(
-            "--integration-ulvia-basic-blocs-surface-text: var(--integration-ulvia-restaurant-text, #fffaf0)",
-        );
+        expect(headerBaseCss).toContain("--_color: var(--ulvia-page-background, #fffaf0)");
+        expect(headerBaseCss).toContain("--ulvia-action-min-height: 2.75rem");
+        expect(headerBaseCss).toContain("--ulvia-surface-text: var(--ulvia-page-background, #fffaf0)");
         expect(headerBaseCss).not.toContain("--cms-button-");
         expect(headerResponsiveCss).toContain('[part="locale"] { display: none; }');
         expect(headerResponsiveCss).toContain("@media (max-width: 360px)");
@@ -139,7 +131,7 @@ describe("restaurant 1.0.0 bloc catalogue", () => {
         }
     });
 
-    test("keeps restaurant colors centralized in the integration theme", async () => {
+    test("uses the unified Ulvia palette without a restaurant sub-theme", async () => {
         for (const tag of restaurantTags) {
             const bloc = await loadRestaurantBloc(tag);
             const source = Object.values(bloc.source ?? {})
@@ -147,6 +139,7 @@ describe("restaurant 1.0.0 bloc catalogue", () => {
                 .join("\n");
 
             expect(source).not.toMatch(/--restaurant-(?:header|hero|menu)-(?:accent|background|color|muted)/);
+            expect(source).not.toContain("--ulvia-restaurant-");
             expect(source).not.toContain('attribute: "text-color"');
             expect(source).not.toContain('attribute: "muted-color"');
             expect(source).not.toContain('attribute: "background-color"');
@@ -227,7 +220,7 @@ describe("restaurant 1.0.0 bloc catalogue", () => {
         expect(defaultContent).not.toContain('<restaurant-hero-gallery height="');
         expect(defaultContent).not.toContain("emblem");
         expect(defaultContent).not.toContain("mobile-image-fit");
-        expect(baseCss).toContain("--integration-ulvia-basic-blocs-font-size-display");
+        expect(baseCss).toContain("--ulvia-font-size-display");
         expect(responsiveCss).not.toContain(":host([height=");
         expect(responsiveCss).not.toContain('mobile-image-fit="contain"');
     });

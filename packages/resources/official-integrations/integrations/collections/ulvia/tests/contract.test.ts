@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { describe, expect, test } from "bun:test";
 import {
     assertCollectionConformance,
@@ -18,7 +19,7 @@ describe("official source and collection boundaries", () => {
                 definition.schema === "cms.integration.definition.v2" && definition.type === "collection",
         );
 
-        expect(collections.map(({ kind }) => kind)).toEqual(["ulvia"]);
+        expect(collections.map(({ kind }) => kind)).toEqual(["mossa", "ulvia"]);
         for (const definition of definitions) {
             expect(definition.schema).toBe("cms.integration.definition.v2");
             if (definition.type === "source") {
@@ -27,13 +28,13 @@ describe("official source and collection boundaries", () => {
             }
         }
 
-        const ulvia = collections[0]!;
-        expect(ulvia.version).toBe("2.1.0");
+        const ulvia = collections.find(({ kind }) => kind === "ulvia")!;
+        expect(ulvia.version).toBe("4.0.1");
         expect(ulvia.resources).toHaveLength(131);
         expect(new Set(ulvia.resources.map(({ id }) => id)).size).toBe(ulvia.resources.length);
         expect(ulvia.resources.every(({ id }) => id.startsWith("ulvia/blocs/"))).toBe(true);
         expect(
-            ulvia.resources.every((resource) => !resource.theme || resource.theme.contract === "ulvia-theme@1"),
+            ulvia.resources.every((resource) => !resource.theme || resource.theme.contract === "ulvia-theme@3"),
         ).toBe(true);
         expect(ulvia.artifacts?.every(({ type }) => type === "bloc")).toBe(true);
 
@@ -52,5 +53,16 @@ describe("official source and collection boundaries", () => {
         expect(
             resolveCollectionSelection(ulvia, [cta.id], undefined, definitions).effectiveResources[0]?.resources,
         ).toContain("ulvia/blocs/basic-button");
+
+        const offerPreview = ulvia.artifacts?.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "commerce-offer-preview",
+        );
+        const offerPreviewCss =
+            offerPreview?.type === "bloc"
+                ? Buffer.from(offerPreview.bloc.source?.["style.css"] ?? "", "base64").toString("utf8")
+                : "";
+        const badgeRule = offerPreviewCss.match(/\[part="badges"\]\s*\{[^}]*\}/)?.[0] ?? "";
+        expect(badgeRule).toContain("display: flex");
+        expect(badgeRule).not.toContain("position: absolute");
     });
 });

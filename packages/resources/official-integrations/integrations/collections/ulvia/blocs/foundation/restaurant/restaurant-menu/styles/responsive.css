@@ -2,7 +2,7 @@
     [part="header"],
     [part="footer"] { padding: 1rem 1.25rem; }
 
-    [part="header"] { min-height: var(--integration-ulvia-restaurant-header-height, 4.25rem); }
+    [part="header"] { min-height: var(--ulvia-navigation-topbar-height, 4.25rem); }
     [part="layout"] {
         grid-template-columns: minmax(0, 1fr);
         padding: 0 1.25rem;

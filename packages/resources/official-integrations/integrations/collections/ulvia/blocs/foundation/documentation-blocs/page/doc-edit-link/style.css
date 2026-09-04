@@ -1,10 +1,10 @@
 :host {
-    --el-fg: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #64748b));
-    --el-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --el-duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --el-fg: var(--ulvia-surface-muted-text, var(--ulvia-surface-muted-text, #64748b));
+    --el-accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --el-duration: var(--ulvia-duration-normal, 180ms);
     --edit-icon: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 20h9'/><path d='M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z'/></svg>");
     display: inline-block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
     font-size: .88rem;
 }
 
@@ -28,6 +28,6 @@
     transition: color var(--el-duration) ease, background-color var(--el-duration) ease;
 }
 
-::slotted(a:hover) { background-color: var(--integration-ulvia-documentation-blocs-subtle-surface, var(--integration-ulvia-basic-blocs-subtle-background, #f1f5f9)); color: var(--el-accent); }
+::slotted(a:hover) { background-color: var(--ulvia-subtle-background, var(--ulvia-subtle-background, #f1f5f9)); color: var(--el-accent); }
 ::slotted(a:focus-visible) { outline: 2px solid var(--el-accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { :host { --el-duration: 0ms; } }

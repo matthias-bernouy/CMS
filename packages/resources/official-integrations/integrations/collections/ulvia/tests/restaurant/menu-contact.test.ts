@@ -70,8 +70,8 @@ describe("restaurant menu and contact blocs", () => {
         expect(cardEditor).toContain('tag: "restaurant-contact-item"');
         expect(itemEditor).toContain('tag: "svg"');
         expect(itemEditor).toContain('tag: "a"');
-        expect(cardCss).toContain("--integration-ulvia-basic-blocs-table-font-size: 1rem");
-        expect(cardCss).toContain("--integration-ulvia-basic-blocs-surface-border: var(--_border)");
+        expect(cardCss).toContain("--ulvia-font-size-small: 1rem");
+        expect(cardCss).toContain("--ulvia-surface-border: var(--_border)");
         expect(cardCss).toContain("width: min(100%, 68rem)");
         expect(responsiveCss).toContain("@media (max-width: 820px)");
         expect(responsiveCss).toContain("grid-template-columns: minmax(0, 1fr)");
@@ -82,15 +82,16 @@ describe("restaurant menu and contact blocs", () => {
         expect(defaultContent).not.toContain("<script");
     });
 
-    test("provides editable light and dark editorial theme tokens", async () => {
+    test("inherits editable light and dark values from the shared Ulvia theme", async () => {
         const definition = await loadDefinition();
-        const foundations = definition.theme?.categories.find((category) => category.id === "restaurant-foundations");
-        const tokens = new Map(foundations?.tokens.map((token) => [token.id, token.defaults]));
+        const tokens = new Map(
+            definition.theme?.categories.flatMap(({ tokens }) => tokens.map((token) => [token.id, token.defaults])),
+        );
 
-        expect(tokens.get("restaurant-content-background")).toEqual({ light: "#f5f1e9", dark: "#15171a" });
-        expect(tokens.get("restaurant-content-surface")).toEqual({ light: "#fffaf2", dark: "#1d2124" });
-        expect(tokens.get("restaurant-content-text")).toEqual({ light: "#202421", dark: "#fffaf0" });
-        expect(tokens.get("restaurant-content-muted-text")).toEqual({ light: "#60665f", dark: "#d0cbc1" });
-        expect(tokens.get("restaurant-content-border")).toEqual({ light: "#ddd8cf", dark: "#4c4e4f" });
+        expect(tokens.get("page-background")).toEqual({ light: "#f9f7f1", dark: "#151815" });
+        expect(tokens.get("surface-background")).toEqual({ light: "#ffffff", dark: "#1d211e" });
+        expect(tokens.get("surface-text")).toEqual({ light: "#26261f", dark: "#f2f4ef" });
+        expect(tokens.get("surface-muted-text")).toEqual({ light: "#6d6b63", dark: "#a8afa6" });
+        expect(tokens.get("surface-border")).toEqual({ light: "#dfddd4", dark: "#3a423c" });
     });
 });

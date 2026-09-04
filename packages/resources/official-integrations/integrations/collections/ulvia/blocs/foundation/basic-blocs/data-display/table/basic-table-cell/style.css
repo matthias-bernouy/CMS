@@ -1,23 +1,16 @@
 :host {
-    --ctx-bg: transparent;
-    --ctx-fg: var(--_tone-contrasted);
-    --ctx-fg-muted: color-mix(in srgb, var(--_tone-contrasted) 68%, transparent);
-    --ctx-border: var(--_tone-border);
     display: table-cell;
     padding: 0.75rem 1.25rem;
     vertical-align: middle;
     color: var(--_tone-contrasted);
-    font-size: var(--integration-ulvia-basic-blocs-table-font-size, 0.875rem);
+    font-size: var(--ulvia-font-size-small, 0.875rem);
 }
 
 :host([appearance="soft"]) {
-    --ctx-bg: var(--_tone-muted);
     background: var(--_tone-muted);
 }
 
 :host([appearance="filled"]) {
-    --ctx-bg: var(--_tone-base);
-    --ctx-fg: var(--_tone-foreground);
     background: var(--_tone-base);
     color: var(--_tone-foreground);
 }

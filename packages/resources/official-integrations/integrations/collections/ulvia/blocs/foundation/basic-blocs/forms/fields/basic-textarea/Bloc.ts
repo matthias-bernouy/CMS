@@ -31,9 +31,9 @@ class BasicTextarea extends HTMLElement {
                 ${basicColorSchemeCss()}
 
                 :host {
-                    --_field-background: var(--integration-ulvia-basic-blocs-field-background, Canvas);
-                    --_field-border: var(--integration-ulvia-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent));
-                    --_field-color: var(--integration-ulvia-basic-blocs-field-text, inherit);
+                    --_field-background: var(--ulvia-field-background, Canvas);
+                    --_field-border: var(--ulvia-field-border, color-mix(in srgb, currentColor 25%, transparent));
+                    --_field-color: var(--ulvia-field-text, inherit);
                     display: block;
                     color: inherit;
                     font: inherit;
@@ -76,7 +76,7 @@ class BasicTextarea extends HTMLElement {
                     width: 100%;
                     padding: var(--cms-input-padding, .65rem .75rem);
                     border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--_field-border)));
-                    border-radius: var(--cms-input-radius, var(--integration-ulvia-basic-blocs-field-radius, .5rem));
+                    border-radius: var(--cms-input-radius, var(--ulvia-field-radius, .5rem));
                     background: var(--cms-input-background, var(--_field-background));
                     color: var(--cms-input-color, var(--_field-color));
                     font: inherit;
@@ -89,8 +89,8 @@ class BasicTextarea extends HTMLElement {
                 }
 
                 :host([disabled]) { opacity: .6; }
-                .hint { color: var(--cms-muted-color, var(--integration-ulvia-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
-                .error { color: var(--cms-error-color, var(--integration-ulvia-basic-blocs-error-text, #b42318)); }
+                .hint { color: var(--cms-muted-color, var(--ulvia-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
+                .error { color: var(--cms-error-color, var(--ulvia-error-text, #b42318)); }
                 [hidden] { display: none; }
             </style>
             <div class="field" part="field">

@@ -41,9 +41,9 @@ class BasicInput extends HTMLElement {
             <style>
                 ${basicColorSchemeCss()}
                 :host {
-                    --_field-background: var(--integration-ulvia-basic-blocs-field-background, Canvas);
-                    --_field-border: var(--integration-ulvia-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent));
-                    --_field-color: var(--integration-ulvia-basic-blocs-field-text, inherit);
+                    --_field-background: var(--ulvia-field-background, Canvas);
+                    --_field-border: var(--ulvia-field-border, color-mix(in srgb, currentColor 25%, transparent));
+                    --_field-color: var(--ulvia-field-text, inherit);
                     display: block;
                     box-sizing: border-box;
                     min-width: 0;
@@ -75,11 +75,11 @@ class BasicInput extends HTMLElement {
                 :host([hidden]) { display: none !important; }
                 .field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0; gap: var(--cms-field-gap, .375rem); }
                 label { font: inherit; font-weight: var(--cms-label-weight, 650); }
-                input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch; min-height: var(--cms-input-height, 2.75rem); padding: var(--cms-input-padding, .65rem .75rem); border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--_field-border))); border-radius: var(--cms-input-radius, var(--integration-ulvia-basic-blocs-field-radius, .5rem)); background: var(--cms-input-background, var(--_field-background)); color: var(--cms-input-color, var(--_field-color)); font: inherit; }
+                input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch; min-height: var(--cms-input-height, 2.75rem); padding: var(--cms-input-padding, .65rem .75rem); border: var(--cms-input-border, 1px solid var(--cms-input-border-color, var(--_field-border))); border-radius: var(--cms-input-radius, var(--ulvia-field-radius, .5rem)); background: var(--cms-input-background, var(--_field-background)); color: var(--cms-input-color, var(--_field-color)); font: inherit; }
                 input:focus-visible { outline: 2px solid var(--cms-focus-color, var(--_tone-focus)); outline-offset: 2px; }
                 :host([disabled]) { opacity: .6; }
-                .hint { color: var(--cms-muted-color, var(--integration-ulvia-basic-blocs-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
-                .error { color: var(--cms-error-color, var(--integration-ulvia-basic-blocs-error-text, #b42318)); }
+                .hint { color: var(--cms-muted-color, var(--ulvia-muted-text, color-mix(in srgb, currentColor 65%, transparent))); }
+                .error { color: var(--cms-error-color, var(--ulvia-error-text, #b42318)); }
                 [hidden] { display: none; }
             </style>
             <div class="field" part="field">

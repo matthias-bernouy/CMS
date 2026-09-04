@@ -14,10 +14,6 @@
     --_focus-ring: var(--primary-base, #2563eb);
     --_mobile-toolbar-height: 52px;
 
-    --ctx-bg: var(--_content-bg);
-    --ctx-fg: var(--text-main);
-    --ctx-fg-muted: var(--text-muted);
-    --ctx-border: var(--border-default);
 }
 
 .app-container {
@@ -82,18 +78,10 @@
 ::slotted([slot="sidebar"]),
 ::slotted([slot="secondary-sidebar"]) {
     width: 100%;
-    --ctx-bg: var(--_sidebar-bg);
-    --ctx-fg: var(--text-main);
-    --ctx-fg-muted: var(--text-muted);
-    --ctx-border: var(--_sidebar-border);
     --menu-border-width: 0;
 }
 
 ::slotted(:not([slot])) {
-    --ctx-bg: var(--_content-bg);
-    --ctx-fg: var(--text-main);
-    --ctx-fg-muted: var(--text-muted);
-    --ctx-border: var(--border-default);
 }
 
 :host([collapsed]) .app-sidebar {

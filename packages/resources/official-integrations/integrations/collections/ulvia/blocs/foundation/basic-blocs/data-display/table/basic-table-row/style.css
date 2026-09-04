@@ -16,7 +16,7 @@
 }
 
 ::slotted(a[slot="navigation"]:focus-visible) {
-    outline: 2px inset var(--integration-ulvia-basic-blocs-focus-color, var(--primary-base, CanvasText));
+    outline: 2px inset var(--ulvia-focus-color, var(--primary-base, CanvasText));
     outline-offset: -2px;
 }
 

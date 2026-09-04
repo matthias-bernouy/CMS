@@ -1,1 +1,1 @@
-Accept Mondial Relay Source 4.x for the picker while retaining its stable endpoint contract and exact resource selection behavior.
+Publish Ulvia theme contract 3 with concise --ulvia-* variables, named component internals, no generic cross-collection context API, and non-overlapping offer badges.

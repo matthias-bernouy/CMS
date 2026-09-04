@@ -2,12 +2,9 @@
     --_hero-background: transparent;
     --_hero-border: transparent;
     --_hero-color: var(--_tone-contrasted);
+    --_ulvia-hero-muted-color: color-mix(in srgb, var(--_hero-color) 72%, transparent);
     --_hero-max-width: 90rem;
     --_hero-padding-block: clamp(3rem, 9vw, 8rem);
-    --ctx-bg: var(--_hero-background);
-    --ctx-fg: var(--_hero-color);
-    --ctx-fg-muted: color-mix(in srgb, var(--_hero-color) 72%, transparent);
-    --ctx-border: var(--_hero-border);
 
     display: block;
     color: var(--_hero-color);
@@ -36,7 +33,7 @@
 [part="section"] {
     box-sizing: border-box;
     border: 1px solid var(--_hero-border);
-    border-radius: var(--integration-ulvia-basic-blocs-surface-radius, .75rem);
+    border-radius: var(--ulvia-surface-radius, .75rem);
     background: var(--_hero-background);
     color: var(--_hero-color);
 }
@@ -45,7 +42,7 @@
     box-sizing: border-box;
     width: min(100%, var(--_hero-max-width));
     margin-inline: auto;
-    padding: var(--_hero-padding-block) var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+    padding: var(--_hero-padding-block) var(--ulvia-space-lg, 1.5rem);
 }
 
 [part="layout"] {
@@ -60,14 +57,14 @@
     grid-template-columns: minmax(0, 1fr);
     min-width: 0;
     max-width: 48rem;
-    gap: var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+    gap: var(--ulvia-space-lg, 1.5rem);
 }
 
 [part="actions"] {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--integration-ulvia-basic-blocs-space-sm, .5rem);
+    gap: var(--ulvia-space-sm, .5rem);
 }
 
 [part="media"] { min-width: 0; }
@@ -78,7 +75,7 @@
 ::slotted([slot="description"]) { margin: 0; }
 
 ::slotted([slot="eyebrow"]) {
-    color: var(--ctx-fg-muted);
+    color: var(--_ulvia-hero-muted-color);
     font-size: .875rem;
     font-weight: 700;
     letter-spacing: .08em;
@@ -87,7 +84,7 @@
 
 ::slotted(h1[slot="title"]) {
     color: inherit;
-    font-family: var(--integration-ulvia-basic-blocs-font-heading, inherit);
+    font-family: var(--ulvia-font-heading, inherit);
     font-size: clamp(2.5rem, 7vw, 5.75rem);
     font-weight: 750;
     letter-spacing: -.04em;
@@ -97,7 +94,7 @@
 
 ::slotted(p[slot="description"]) {
     max-width: 42rem;
-    color: var(--ctx-fg-muted);
+    color: var(--_ulvia-hero-muted-color);
     font-size: clamp(1rem, 2vw, 1.25rem);
     line-height: 1.6;
 }
@@ -107,7 +104,7 @@
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
-    border-radius: var(--integration-ulvia-basic-blocs-surface-radius, .75rem);
+    border-radius: var(--ulvia-surface-radius, .75rem);
 }
 
 ::slotted(img[slot="media"]) {

@@ -1,6 +1,6 @@
 :host {
-    --accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #6366f1));
-    --duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    --accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #6366f1));
+    --duration: var(--ulvia-duration-normal, 180ms);
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
     display: block;
 }

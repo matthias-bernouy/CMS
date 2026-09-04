@@ -1,11 +1,11 @@
 :host {
-    --mmd-bg: var(--integration-ulvia-documentation-blocs-subtle-surface, var(--integration-ulvia-basic-blocs-subtle-background, #f8fafc));
-    --mmd-border: var(--integration-ulvia-documentation-blocs-border, var(--integration-ulvia-basic-blocs-surface-border, #e2e8f0));
-    --mmd-fg: var(--integration-ulvia-documentation-blocs-heading-text, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
-    --mmd-radius: var(--integration-ulvia-documentation-blocs-radius-panel, var(--integration-ulvia-basic-blocs-radius-card, .5rem));
+    --mmd-bg: var(--ulvia-subtle-background, var(--ulvia-subtle-background, #f8fafc));
+    --mmd-border: var(--ulvia-surface-border, var(--ulvia-surface-border, #e2e8f0));
+    --mmd-fg: var(--ulvia-surface-text, var(--ulvia-surface-text, #0f172a));
+    --mmd-radius: var(--ulvia-radius-card, var(--ulvia-radius-card, .5rem));
     display: block;
     margin: 1rem 0;
-    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+    font-family: var(--ulvia-font-mono, var(--ulvia-font-mono, ui-monospace, monospace));
 }
 .mermaid {
     margin: 0;
@@ -20,6 +20,6 @@
     overflow-x: auto;
 }
 .mermaid ::slotted(*) { font: inherit; color: inherit; margin: 0; }
-:host([theme="dark"]) { --mmd-bg: var(--integration-ulvia-documentation-blocs-code-background); --mmd-border: var(--integration-ulvia-documentation-blocs-code-header-background); --mmd-fg: var(--integration-ulvia-documentation-blocs-code-text); }
-:host([theme="forest"]) { --mmd-bg: var(--integration-ulvia-documentation-blocs-tip-background); --mmd-border: var(--integration-ulvia-documentation-blocs-api-post); --mmd-fg: var(--integration-ulvia-documentation-blocs-tip-text); }
-:host([theme="neutral"]) { --mmd-bg: var(--integration-ulvia-documentation-blocs-subtle-surface); --mmd-border: var(--integration-ulvia-documentation-blocs-border); --mmd-fg: var(--integration-ulvia-documentation-blocs-text); }
+:host([theme="dark"]) { --mmd-bg: var(--ulvia-code-background); --mmd-border: var(--ulvia-code-header-background); --mmd-fg: var(--ulvia-code-text); }
+:host([theme="forest"]) { --mmd-bg: var(--ulvia-success-muted); --mmd-border: var(--ulvia-success-base); --mmd-fg: var(--ulvia-success-contrasted); }
+:host([theme="neutral"]) { --mmd-bg: var(--ulvia-subtle-background); --mmd-border: var(--ulvia-surface-border); --mmd-fg: var(--ulvia-body-text); }

@@ -23,9 +23,9 @@
         "artifact": "basic-alert",
         "category": "feedback",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-surface-radius"
+                "surface-radius"
             ]
         }
     },
@@ -41,10 +41,10 @@
         "artifact": "basic-button",
         "category": "basic",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-action-min-height",
-                "basic-blocs-action-radius"
+                "action-min-height",
+                "action-radius"
             ]
         }
     },
@@ -54,10 +54,10 @@
         "artifact": "basic-card",
         "category": "basic",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-elevated-shadow",
-                "basic-blocs-surface-radius"
+                "elevated-shadow",
+                "surface-radius"
             ]
         }
     },
@@ -67,12 +67,12 @@
         "artifact": "basic-checkbox",
         "category": "form",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-error-text",
-                "basic-blocs-field-background",
-                "basic-blocs-field-border",
-                "basic-blocs-field-text"
+                "error-text",
+                "field-background",
+                "field-border",
+                "field-text"
             ]
         }
     },
@@ -82,14 +82,14 @@
         "artifact": "basic-chip",
         "category": "form",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-action-background",
-                "basic-blocs-action-text",
-                "basic-blocs-field-background",
-                "basic-blocs-field-border",
-                "basic-blocs-field-text",
-                "basic-blocs-focus-color"
+                "action-background",
+                "action-text",
+                "field-background",
+                "field-border",
+                "field-text",
+                "focus-color"
             ]
         }
     },
@@ -99,12 +99,12 @@
         "artifact": "basic-chip-group",
         "category": "form",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-error-text",
-                "basic-blocs-field-background",
-                "basic-blocs-field-border",
-                "basic-blocs-field-text"
+                "error-text",
+                "field-background",
+                "field-border",
+                "field-text"
             ]
         },
         "requires": {
@@ -119,13 +119,13 @@
         "artifact": "basic-container",
         "category": "layout",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-content-width",
-                "basic-blocs-space-md",
-                "basic-blocs-space-sm",
-                "basic-blocs-space-xl",
-                "basic-blocs-wide-width"
+                "content-width",
+                "space-md",
+                "space-sm",
+                "space-xl",
+                "wide-width"
             ]
         }
     },
@@ -135,12 +135,12 @@
         "artifact": "basic-cta",
         "category": "sections",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-heading",
-                "basic-blocs-space-lg",
-                "basic-blocs-space-sm",
-                "basic-blocs-surface-radius"
+                "font-heading",
+                "space-lg",
+                "space-sm",
+                "surface-radius"
             ]
         },
         "requires": {
@@ -155,12 +155,12 @@
         "artifact": "basic-faq",
         "category": "sections",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-heading",
-                "basic-blocs-space-lg",
-                "basic-blocs-space-sm",
-                "basic-blocs-surface-radius"
+                "font-heading",
+                "space-lg",
+                "space-sm",
+                "surface-radius"
             ]
         },
         "requires": {
@@ -175,10 +175,10 @@
         "artifact": "basic-faq-item",
         "category": "sections",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-focus-color",
-                "basic-blocs-space-lg"
+                "focus-color",
+                "space-lg"
             ]
         }
     },
@@ -188,12 +188,12 @@
         "artifact": "basic-feature-section",
         "category": "sections",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-heading",
-                "basic-blocs-space-lg",
-                "basic-blocs-space-sm",
-                "basic-blocs-surface-radius"
+                "font-heading",
+                "space-lg",
+                "space-sm",
+                "surface-radius"
             ]
         },
         "requires": {
@@ -208,12 +208,12 @@
         "artifact": "basic-file-input",
         "category": "form",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-action-radius",
-                "basic-blocs-error-text",
-                "basic-blocs-field-border",
-                "basic-blocs-muted-text"
+                "action-radius",
+                "error-text",
+                "field-border",
+                "muted-text"
             ]
         }
     },
@@ -229,12 +229,12 @@
         "artifact": "basic-hero",
         "category": "sections",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-heading",
-                "basic-blocs-space-lg",
-                "basic-blocs-space-sm",
-                "basic-blocs-surface-radius"
+                "font-heading",
+                "space-lg",
+                "space-sm",
+                "surface-radius"
             ]
         },
         "requires": {
@@ -249,14 +249,14 @@
         "artifact": "basic-input",
         "category": "form",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-error-text",
-                "basic-blocs-field-background",
-                "basic-blocs-field-border",
-                "basic-blocs-field-radius",
-                "basic-blocs-field-text",
-                "basic-blocs-muted-text"
+                "error-text",
+                "field-background",
+                "field-border",
+                "field-radius",
+                "field-text",
+                "muted-text"
             ]
         }
     },
@@ -266,12 +266,12 @@
         "artifact": "basic-media-section",
         "category": "sections",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-heading",
-                "basic-blocs-space-lg",
-                "basic-blocs-space-sm",
-                "basic-blocs-surface-radius"
+                "font-heading",
+                "space-lg",
+                "space-sm",
+                "surface-radius"
             ]
         },
         "requires": {
@@ -286,10 +286,10 @@
         "artifact": "basic-menu",
         "category": "basic-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-font-heading"
+                "font-body",
+                "font-heading"
             ]
         },
         "requires": {
@@ -304,17 +304,17 @@
         "artifact": "basic-navbar",
         "category": "navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-action-radius",
-                "basic-blocs-font-heading",
-                "basic-blocs-shadow-soft",
-                "basic-blocs-space-lg",
-                "basic-blocs-space-md",
-                "basic-blocs-space-sm",
-                "basic-blocs-space-xs",
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-radius"
+                "action-radius",
+                "font-heading",
+                "shadow-soft",
+                "space-lg",
+                "space-md",
+                "space-sm",
+                "space-xs",
+                "surface-background",
+                "surface-radius"
             ]
         }
     },
@@ -342,14 +342,14 @@
         "artifact": "basic-select",
         "category": "form",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-error-text",
-                "basic-blocs-field-background",
-                "basic-blocs-field-border",
-                "basic-blocs-field-radius",
-                "basic-blocs-field-text",
-                "basic-blocs-muted-text"
+                "error-text",
+                "field-background",
+                "field-border",
+                "field-radius",
+                "field-text",
+                "muted-text"
             ]
         },
         "requires": {
@@ -364,13 +364,13 @@
         "artifact": "basic-site-footer",
         "category": "sections",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-action-radius",
-                "basic-blocs-font-heading",
-                "basic-blocs-space-lg",
-                "basic-blocs-space-sm",
-                "basic-blocs-surface-radius"
+                "action-radius",
+                "font-heading",
+                "space-lg",
+                "space-sm",
+                "surface-radius"
             ]
         }
     },
@@ -392,12 +392,12 @@
         "artifact": "basic-table",
         "category": "data-display",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-radius",
-                "basic-blocs-surface-text"
+                "surface-background",
+                "surface-border",
+                "surface-radius",
+                "surface-text"
             ]
         },
         "requires": {
@@ -420,12 +420,12 @@
         "artifact": "basic-table-header-cell",
         "category": "data-display",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-elevated-shadow",
-                "basic-blocs-focus-color",
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-border"
+                "elevated-shadow",
+                "focus-color",
+                "surface-background",
+                "surface-border"
             ]
         }
     },
@@ -435,9 +435,9 @@
         "artifact": "basic-table-row",
         "category": "data-display",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-focus-color"
+                "focus-color"
             ]
         },
         "requires": {
@@ -452,14 +452,14 @@
         "artifact": "basic-textarea",
         "category": "form",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-error-text",
-                "basic-blocs-field-background",
-                "basic-blocs-field-border",
-                "basic-blocs-field-radius",
-                "basic-blocs-field-text",
-                "basic-blocs-muted-text"
+                "error-text",
+                "field-background",
+                "field-border",
+                "field-radius",
+                "field-text",
+                "muted-text"
             ]
         }
     },
@@ -469,10 +469,10 @@
         "artifact": "basic-toast",
         "category": "feedback",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-elevated-shadow",
-                "basic-blocs-surface-radius"
+                "elevated-shadow",
+                "surface-radius"
             ]
         }
     },
@@ -1049,16 +1049,16 @@
         "artifact": "commerce-offer-preview",
         "category": "commerce",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "commerce-offer-accent",
-                "commerce-offer-background",
-                "commerce-offer-border",
-                "commerce-offer-heading-font",
-                "commerce-offer-muted-text",
-                "commerce-offer-price",
-                "commerce-offer-radius",
-                "commerce-offer-text"
+                "font-heading",
+                "primary-base",
+                "radius-lg",
+                "secondary-base",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         },
         "requires": {
@@ -1346,15 +1346,12 @@
         "artifact": "doc-anchor-heading",
         "category": "documentation-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-heading",
-                "basic-blocs-primary-base",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-font-heading",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-motion-duration"
+                "duration-normal",
+                "font-heading",
+                "primary-base",
+                "surface-text"
             ]
         }
     },
@@ -1364,35 +1361,23 @@
         "artifact": "doc-api-endpoint",
         "category": "documentation-api",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-danger-contrasted",
-                "basic-blocs-danger-muted",
-                "basic-blocs-font-body",
-                "basic-blocs-font-mono",
-                "basic-blocs-info-base",
-                "basic-blocs-primary-foreground",
-                "basic-blocs-radius-card",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-api-delete",
-                "documentation-blocs-api-get",
-                "documentation-blocs-api-method-text",
-                "documentation-blocs-api-neutral",
-                "documentation-blocs-api-patch",
-                "documentation-blocs-api-post",
-                "documentation-blocs-api-put",
-                "documentation-blocs-border",
-                "documentation-blocs-danger-background",
-                "documentation-blocs-danger-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-subtle-surface"
+                "danger-base",
+                "danger-contrasted",
+                "danger-muted",
+                "font-body",
+                "font-mono",
+                "info-base",
+                "primary-base",
+                "primary-foreground",
+                "radius-card",
+                "subtle-background",
+                "success-base",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text",
+                "warning-base"
             ]
         }
     },
@@ -1402,24 +1387,16 @@
         "artifact": "doc-api-params",
         "category": "documentation-api",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-radius-card",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-subtle-surface",
-                "documentation-blocs-surface"
+                "font-body",
+                "primary-base",
+                "radius-card",
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         },
         "requires": {
@@ -1434,24 +1411,16 @@
         "artifact": "doc-api-property",
         "category": "documentation-api",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-danger-contrasted",
-                "basic-blocs-danger-muted",
-                "basic-blocs-font-body",
-                "basic-blocs-font-mono",
-                "basic-blocs-primary-base",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-border",
-                "documentation-blocs-danger-background",
-                "documentation-blocs-danger-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-text"
+                "body-text",
+                "danger-contrasted",
+                "danger-muted",
+                "font-body",
+                "font-mono",
+                "primary-base",
+                "surface-border",
+                "surface-muted-text"
             ]
         }
     },
@@ -1461,17 +1430,13 @@
         "artifact": "doc-breadcrumb",
         "category": "documentation-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-font-body",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text"
+                "duration-normal",
+                "font-body",
+                "primary-base",
+                "surface-muted-text",
+                "surface-text"
             ]
         }
     },
@@ -1481,32 +1446,26 @@
         "artifact": "doc-callout",
         "category": "documentation-content",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-font-body",
-                "basic-blocs-info-base",
-                "basic-blocs-info-contrasted",
-                "basic-blocs-info-muted",
-                "basic-blocs-radius-card",
-                "documentation-blocs-api-delete",
-                "documentation-blocs-api-get",
-                "documentation-blocs-api-post",
-                "documentation-blocs-api-put",
-                "documentation-blocs-danger-background",
-                "documentation-blocs-danger-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-info-background",
-                "documentation-blocs-info-text",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-subtle-surface",
-                "documentation-blocs-text",
-                "documentation-blocs-tip-background",
-                "documentation-blocs-tip-text",
-                "documentation-blocs-warning-background",
-                "documentation-blocs-warning-text"
+                "body-text",
+                "danger-base",
+                "danger-contrasted",
+                "danger-muted",
+                "duration-normal",
+                "font-body",
+                "info-base",
+                "info-contrasted",
+                "info-muted",
+                "radius-card",
+                "subtle-background",
+                "success-base",
+                "success-contrasted",
+                "success-muted",
+                "surface-muted-text",
+                "warning-base",
+                "warning-contrasted",
+                "warning-muted"
             ]
         }
     },
@@ -1516,32 +1475,27 @@
         "artifact": "doc-code-block",
         "category": "documentation-code",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-font-body",
-                "basic-blocs-font-mono",
-                "basic-blocs-page-background",
-                "basic-blocs-primary-base",
-                "basic-blocs-radius-card",
-                "basic-blocs-secondary-base",
-                "basic-blocs-success-base",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-border",
-                "documentation-blocs-code-background",
-                "documentation-blocs-code-header-background",
-                "documentation-blocs-code-muted-text",
-                "documentation-blocs-code-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-shadow",
-                "documentation-blocs-subtle-surface",
-                "documentation-blocs-terminal-prompt"
+                "body-text",
+                "code-background",
+                "code-header-background",
+                "code-muted-text",
+                "code-text",
+                "terminal-prompt",
+                "duration-normal",
+                "font-body",
+                "font-mono",
+                "page-background",
+                "primary-base",
+                "radius-card",
+                "secondary-base",
+                "shadow-soft",
+                "subtle-background",
+                "success-base",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         }
     },
@@ -1551,26 +1505,17 @@
         "artifact": "doc-code-diff",
         "category": "documentation-code",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-danger-base",
-                "basic-blocs-danger-contrasted",
-                "basic-blocs-danger-muted",
-                "basic-blocs-font-body",
-                "basic-blocs-font-mono",
-                "basic-blocs-radius-card",
-                "basic-blocs-success-base",
-                "basic-blocs-success-contrasted",
-                "basic-blocs-success-muted",
-                "documentation-blocs-api-delete",
-                "documentation-blocs-api-post",
-                "documentation-blocs-danger-background",
-                "documentation-blocs-danger-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-tip-background",
-                "documentation-blocs-tip-text"
+                "danger-base",
+                "danger-contrasted",
+                "danger-muted",
+                "font-body",
+                "font-mono",
+                "radius-card",
+                "success-base",
+                "success-contrasted",
+                "success-muted"
             ]
         }
     },
@@ -1580,18 +1525,15 @@
         "artifact": "doc-code-inline",
         "category": "documentation-code",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-mono",
-                "basic-blocs-primary-base",
-                "basic-blocs-radius-control",
-                "documentation-blocs-accent",
-                "documentation-blocs-api-get",
-                "documentation-blocs-danger-background",
-                "documentation-blocs-danger-text",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-info-text",
-                "documentation-blocs-radius-control"
+                "danger-contrasted",
+                "danger-muted",
+                "font-mono",
+                "info-base",
+                "info-contrasted",
+                "primary-base",
+                "radius-control"
             ]
         }
     },
@@ -1601,24 +1543,17 @@
         "artifact": "doc-code-kbd",
         "category": "documentation-code",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-font-mono",
-                "basic-blocs-radius-control",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-border",
-                "documentation-blocs-code-background",
-                "documentation-blocs-code-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-control",
-                "documentation-blocs-subtle-surface"
+                "code-background",
+                "code-text",
+                "font-body",
+                "font-mono",
+                "radius-control",
+                "subtle-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         }
     },
@@ -1628,23 +1563,20 @@
         "artifact": "doc-code-tabs",
         "category": "documentation-code",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-font-body",
-                "basic-blocs-page-background",
-                "basic-blocs-primary-base",
-                "basic-blocs-radius-card",
-                "basic-blocs-secondary-base",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-code-background",
-                "documentation-blocs-code-header-background",
-                "documentation-blocs-code-muted-text",
-                "documentation-blocs-code-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-radius-panel"
+                "body-text",
+                "code-background",
+                "code-header-background",
+                "code-muted-text",
+                "code-text",
+                "duration-normal",
+                "font-body",
+                "page-background",
+                "primary-base",
+                "radius-card",
+                "secondary-base",
+                "surface-text"
             ]
         },
         "requires": {
@@ -1659,24 +1591,21 @@
         "artifact": "doc-code-terminal",
         "category": "documentation-code",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-font-body",
-                "basic-blocs-font-mono",
-                "basic-blocs-page-background",
-                "basic-blocs-radius-card",
-                "basic-blocs-success-base",
-                "basic-blocs-surface-text",
-                "documentation-blocs-code-background",
-                "documentation-blocs-code-header-background",
-                "documentation-blocs-code-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-shadow",
-                "documentation-blocs-terminal-prompt"
+                "body-text",
+                "code-background",
+                "code-header-background",
+                "code-text",
+                "terminal-prompt",
+                "duration-normal",
+                "font-body",
+                "font-mono",
+                "page-background",
+                "radius-card",
+                "shadow-soft",
+                "success-base",
+                "surface-text"
             ]
         }
     },
@@ -1686,17 +1615,13 @@
         "artifact": "doc-edit-link",
         "category": "documentation-page",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-muted-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-font-body",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-subtle-surface"
+                "duration-normal",
+                "font-body",
+                "primary-base",
+                "subtle-background",
+                "surface-muted-text"
             ]
         }
     },
@@ -1706,18 +1631,13 @@
         "artifact": "doc-embed",
         "category": "documentation-content",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-radius-card",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-text",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-subtle-surface"
+                "font-body",
+                "radius-card",
+                "subtle-background",
+                "surface-border",
+                "surface-text"
             ]
         }
     },
@@ -1727,23 +1647,16 @@
         "artifact": "doc-feedback",
         "category": "documentation-page",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-radius-card",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-subtle-surface",
-                "documentation-blocs-surface"
+                "duration-normal",
+                "font-body",
+                "primary-base",
+                "radius-card",
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-text"
             ]
         }
     },
@@ -1753,18 +1666,13 @@
         "artifact": "doc-figure",
         "category": "documentation-content",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-radius-card",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-subtle-surface"
+                "font-body",
+                "radius-card",
+                "subtle-background",
+                "surface-border",
+                "surface-muted-text"
             ]
         }
     },
@@ -1774,18 +1682,16 @@
         "artifact": "doc-glossary-term",
         "category": "documentation-content",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-page-background",
-                "basic-blocs-primary-base",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-code-background",
-                "documentation-blocs-code-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-shadow"
+                "code-background",
+                "code-text",
+                "duration-normal",
+                "font-body",
+                "page-background",
+                "primary-base",
+                "shadow-soft",
+                "surface-text"
             ]
         }
     },
@@ -1795,35 +1701,23 @@
         "artifact": "doc-layout",
         "category": "documentation-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-font-body",
-                "basic-blocs-page-background",
-                "basic-blocs-primary-base",
-                "basic-blocs-radius-control",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-background",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-control",
-                "documentation-blocs-shadow",
-                "documentation-blocs-sidebar-background",
-                "documentation-blocs-sidebar-width",
-                "documentation-blocs-subtle-surface",
-                "documentation-blocs-surface",
-                "documentation-blocs-text",
-                "documentation-blocs-topbar-background",
-                "documentation-blocs-topbar-height"
+                "body-text",
+                "duration-normal",
+                "font-body",
+                "font-mono",
+                "navigation-sidebar-width",
+                "navigation-topbar-height",
+                "page-background",
+                "primary-base",
+                "radius-control",
+                "shadow-soft",
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         },
         "requires": {
@@ -1839,12 +1733,10 @@
         "artifact": "doc-math",
         "category": "documentation-content",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-text",
-                "documentation-blocs-border",
-                "documentation-blocs-heading-text"
+                "surface-border",
+                "surface-text"
             ]
         }
     },
@@ -1854,25 +1746,20 @@
         "artifact": "doc-mermaid",
         "category": "documentation-content",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-mono",
-                "basic-blocs-radius-card",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-text",
-                "documentation-blocs-api-post",
-                "documentation-blocs-border",
-                "documentation-blocs-code-background",
-                "documentation-blocs-code-header-background",
-                "documentation-blocs-code-text",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-subtle-surface",
-                "documentation-blocs-text",
-                "documentation-blocs-tip-background",
-                "documentation-blocs-tip-text"
+                "body-text",
+                "code-background",
+                "code-header-background",
+                "code-text",
+                "font-mono",
+                "radius-card",
+                "subtle-background",
+                "success-base",
+                "success-contrasted",
+                "success-muted",
+                "surface-border",
+                "surface-text"
             ]
         }
     },
@@ -1882,20 +1769,15 @@
         "artifact": "doc-prev-next",
         "category": "documentation-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-radius-card",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-panel",
-                "documentation-blocs-shadow"
+                "duration-normal",
+                "font-body",
+                "primary-base",
+                "radius-card",
+                "shadow-soft",
+                "surface-border",
+                "surface-muted-text"
             ]
         }
     },
@@ -1905,28 +1787,19 @@
         "artifact": "doc-search",
         "category": "documentation-page",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-font-mono",
-                "basic-blocs-primary-base",
-                "basic-blocs-radius-control",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-font-mono",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-radius-control",
-                "documentation-blocs-shadow",
-                "documentation-blocs-subtle-surface",
-                "documentation-blocs-surface"
+                "duration-normal",
+                "font-body",
+                "font-mono",
+                "primary-base",
+                "radius-control",
+                "shadow-soft",
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         }
     },
@@ -1936,11 +1809,10 @@
         "artifact": "doc-sidebar-link",
         "category": "documentation-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-primary-base",
-                "documentation-blocs-accent",
-                "documentation-blocs-motion-duration"
+                "duration-normal",
+                "primary-base"
             ]
         }
     },
@@ -1950,17 +1822,13 @@
         "artifact": "doc-sidebar-section",
         "category": "documentation-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-surface-muted-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-font-body",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-text"
+                "body-text",
+                "duration-normal",
+                "font-body",
+                "primary-base",
+                "surface-muted-text"
             ]
         },
         "requires": {
@@ -1975,23 +1843,16 @@
         "artifact": "doc-step",
         "category": "documentation-content",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-primary-foreground",
-                "basic-blocs-success-base",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-api-post",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-text"
+                "body-text",
+                "font-body",
+                "primary-base",
+                "primary-foreground",
+                "success-base",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         }
     },
@@ -2001,10 +1862,9 @@
         "artifact": "doc-steps",
         "category": "documentation-content",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "documentation-blocs-font-body"
+                "font-body"
             ]
         },
         "requires": {
@@ -2019,19 +1879,14 @@
         "artifact": "doc-toc",
         "category": "documentation-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text"
+                "duration-normal",
+                "font-body",
+                "primary-base",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         }
     },
@@ -2041,14 +1896,11 @@
         "artifact": "doc-updated",
         "category": "documentation-page",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-body-text",
-                "basic-blocs-font-body",
-                "basic-blocs-surface-muted-text",
-                "documentation-blocs-font-body",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-text"
+                "body-text",
+                "font-body",
+                "surface-muted-text"
             ]
         }
     },
@@ -2058,24 +1910,17 @@
         "artifact": "doc-version",
         "category": "documentation-navigation",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-body",
-                "basic-blocs-primary-base",
-                "basic-blocs-subtle-background",
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-muted-text",
-                "basic-blocs-surface-text",
-                "documentation-blocs-accent",
-                "documentation-blocs-border",
-                "documentation-blocs-font-body",
-                "documentation-blocs-heading-text",
-                "documentation-blocs-motion-duration",
-                "documentation-blocs-muted-text",
-                "documentation-blocs-shadow",
-                "documentation-blocs-subtle-surface",
-                "documentation-blocs-surface"
+                "duration-normal",
+                "font-body",
+                "primary-base",
+                "shadow-soft",
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         }
     },
@@ -2189,13 +2034,13 @@
             }
         ],
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "forms-accent",
-                "forms-background",
-                "forms-border",
-                "forms-muted-text",
-                "forms-text"
+                "primary-base",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         },
         "requires": {
@@ -2386,12 +2231,12 @@
             }
         ],
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "photo-albums-card-background",
-                "photo-albums-card-border",
-                "photo-albums-card-muted-text",
-                "photo-albums-card-text"
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         },
         "requires": {
@@ -2436,12 +2281,12 @@
             }
         ],
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "photo-albums-card-background",
-                "photo-albums-card-border",
-                "photo-albums-card-muted-text",
-                "photo-albums-card-text"
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
             ]
         },
         "requires": {
@@ -2460,25 +2305,20 @@
         "artifact": "restaurant-contact-card",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-focus-color",
-                "basic-blocs-surface-background",
-                "basic-blocs-surface-border",
-                "basic-blocs-surface-radius",
-                "basic-blocs-surface-text",
-                "restaurant-accent",
-                "restaurant-background",
-                "restaurant-content-background",
-                "restaurant-content-border",
-                "restaurant-content-muted-text",
-                "restaurant-content-surface",
-                "restaurant-content-text",
-                "restaurant-font-body",
-                "restaurant-font-heading",
-                "restaurant-muted-text",
-                "restaurant-surface",
-                "restaurant-text"
+                "body-text",
+                "focus-color",
+                "font-body",
+                "font-heading",
+                "page-background",
+                "secondary-base",
+                "success-base",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-radius",
+                "surface-text"
             ]
         },
         "requires": {
@@ -2497,12 +2337,12 @@
         "artifact": "restaurant-contact-item",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "restaurant-accent",
-                "restaurant-content-border",
-                "restaurant-content-muted-text",
-                "restaurant-font-body"
+                "font-body",
+                "success-base",
+                "surface-border",
+                "surface-muted-text"
             ]
         }
     },
@@ -2512,23 +2352,21 @@
         "artifact": "restaurant-header",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-action-min-height",
-                "basic-blocs-focus-color",
-                "basic-blocs-success-base",
-                "basic-blocs-success-contrasted",
-                "basic-blocs-success-foreground",
-                "basic-blocs-success-muted",
-                "basic-blocs-surface-text",
-                "restaurant-accent",
-                "restaurant-background",
-                "restaurant-content-width",
-                "restaurant-font-body",
-                "restaurant-font-heading",
-                "restaurant-header-height",
-                "restaurant-muted-text",
-                "restaurant-text"
+                "action-min-height",
+                "focus-color",
+                "font-body",
+                "font-heading",
+                "navigation-topbar-height",
+                "page-background",
+                "secondary-base",
+                "success-base",
+                "success-contrasted",
+                "success-foreground",
+                "success-muted",
+                "surface-text",
+                "wide-width"
             ]
         },
         "requires": {
@@ -2545,18 +2383,18 @@
         "artifact": "restaurant-hero-cover",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-size-display",
-                "restaurant-accent",
-                "restaurant-background",
-                "restaurant-content-width",
-                "restaurant-font-body",
-                "restaurant-font-heading",
-                "restaurant-header-height",
-                "restaurant-muted-text",
-                "restaurant-rating",
-                "restaurant-text"
+                "font-body",
+                "font-heading",
+                "font-size-display",
+                "navigation-topbar-height",
+                "page-background",
+                "secondary-base",
+                "success-base",
+                "surface-text",
+                "warning-base",
+                "wide-width"
             ]
         }
     },
@@ -2566,17 +2404,17 @@
         "artifact": "restaurant-hero-gallery",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-size-display",
-                "restaurant-accent",
-                "restaurant-background",
-                "restaurant-font-body",
-                "restaurant-font-heading",
-                "restaurant-header-height",
-                "restaurant-muted-text",
-                "restaurant-rating",
-                "restaurant-text"
+                "font-body",
+                "font-heading",
+                "font-size-display",
+                "navigation-topbar-height",
+                "page-background",
+                "secondary-base",
+                "success-base",
+                "surface-text",
+                "warning-base"
             ]
         }
     },
@@ -2586,17 +2424,17 @@
         "artifact": "restaurant-hero-split",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "basic-blocs-font-size-display",
-                "restaurant-accent",
-                "restaurant-background",
-                "restaurant-font-body",
-                "restaurant-font-heading",
-                "restaurant-header-height",
-                "restaurant-muted-text",
-                "restaurant-rating",
-                "restaurant-text"
+                "font-body",
+                "font-heading",
+                "font-size-display",
+                "navigation-topbar-height",
+                "page-background",
+                "secondary-base",
+                "success-base",
+                "surface-text",
+                "warning-base"
             ]
         }
     },
@@ -2606,15 +2444,15 @@
         "artifact": "restaurant-menu",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "restaurant-accent",
-                "restaurant-background",
-                "restaurant-font-body",
-                "restaurant-font-heading",
-                "restaurant-header-height",
-                "restaurant-muted-text",
-                "restaurant-text"
+                "font-body",
+                "font-heading",
+                "navigation-topbar-height",
+                "page-background",
+                "secondary-base",
+                "success-base",
+                "surface-text"
             ]
         }
     },
@@ -2624,21 +2462,19 @@
         "artifact": "restaurant-menu-catalog",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "restaurant-accent",
-                "restaurant-background",
-                "restaurant-content-background",
-                "restaurant-content-border",
-                "restaurant-content-muted-text",
-                "restaurant-content-surface",
-                "restaurant-content-text",
-                "restaurant-content-width",
-                "restaurant-font-body",
-                "restaurant-font-heading",
-                "restaurant-muted-text",
-                "restaurant-surface",
-                "restaurant-text"
+                "body-text",
+                "font-body",
+                "font-heading",
+                "page-background",
+                "secondary-base",
+                "success-base",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text",
+                "wide-width"
             ]
         },
         "requires": {
@@ -2654,12 +2490,12 @@
         "artifact": "restaurant-menu-item",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "restaurant-accent",
-                "restaurant-content-border",
-                "restaurant-content-muted-text",
-                "restaurant-font-body"
+                "font-body",
+                "success-base",
+                "surface-border",
+                "surface-muted-text"
             ]
         }
     },
@@ -2669,11 +2505,11 @@
         "artifact": "restaurant-menu-section",
         "category": "restaurant",
         "theme": {
-            "contract": "ulvia-theme@1",
+            "contract": "ulvia-theme@3",
             "required": [
-                "restaurant-accent",
-                "restaurant-content-muted-text",
-                "restaurant-font-body"
+                "font-body",
+                "success-base",
+                "surface-muted-text"
             ]
         },
         "requires": {

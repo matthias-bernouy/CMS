@@ -10,7 +10,7 @@
             <p cms-condition="data.description">{{ data.description }}</p>
         </header>
 
-        <basic-card appearance="outlined" background-color="var(--integration-ulvia-photo-albums-card-background, var(--bg-surface, Canvas))" border-color="var(--integration-ulvia-photo-albums-card-border, var(--border-default, currentColor))" text-color="var(--integration-ulvia-photo-albums-card-text, var(--text-main, inherit))" muted-text-color="var(--integration-ulvia-photo-albums-card-muted-text, var(--text-muted, currentColor))" cms-condition="data.photoCount == 0">
+        <basic-card appearance="outlined" background-color="var(--ulvia-surface-background, var(--bg-surface, Canvas))" border-color="var(--ulvia-surface-border, var(--border-default, currentColor))" text-color="var(--ulvia-surface-text, var(--text-main, inherit))" muted-text-color="var(--ulvia-surface-muted-text, var(--text-muted, currentColor))" cms-condition="data.photoCount == 0">
             <strong slot="title">This album has no photos yet.</strong>
         </basic-card>
 

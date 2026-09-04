@@ -15,22 +15,22 @@ class BasicChip extends HTMLElement {
                 button {
                     min-height: 2.5rem;
                     padding: .5rem .8rem;
-                    border: var(--cms-chip-border, 1px solid var(--cms-chip-border-color, var(--integration-ulvia-basic-blocs-field-border, color-mix(in srgb, currentColor 25%, transparent))));
+                    border: var(--cms-chip-border, 1px solid var(--cms-chip-border-color, var(--ulvia-field-border, color-mix(in srgb, currentColor 25%, transparent))));
                     border-radius: var(--cms-chip-radius, 999px);
-                    background: var(--cms-chip-background, var(--integration-ulvia-basic-blocs-field-background, var(--bg-surface, Canvas)));
-                    color: var(--cms-chip-color, var(--integration-ulvia-basic-blocs-field-text, var(--text-main, inherit)));
+                    background: var(--cms-chip-background, var(--ulvia-field-background, var(--bg-surface, Canvas)));
+                    color: var(--cms-chip-color, var(--ulvia-field-text, var(--text-main, inherit)));
                     font: inherit;
                     cursor: pointer;
                 }
 
                 :host([selected]) button {
-                    border-color: var(--cms-chip-selected-border, var(--integration-ulvia-basic-blocs-action-background, var(--primary-base, CanvasText)));
-                    background: var(--cms-chip-selected-background, var(--integration-ulvia-basic-blocs-action-background, var(--primary-base, CanvasText)));
-                    color: var(--cms-chip-selected-color, var(--cms-chip-color, var(--integration-ulvia-basic-blocs-action-text, var(--primary-foreground, var(--primary-contrasted, Canvas)))));
+                    border-color: var(--cms-chip-selected-border, var(--ulvia-action-background, var(--primary-base, CanvasText)));
+                    background: var(--cms-chip-selected-background, var(--ulvia-action-background, var(--primary-base, CanvasText)));
+                    color: var(--cms-chip-selected-color, var(--cms-chip-color, var(--ulvia-action-text, var(--primary-foreground, var(--primary-contrasted, Canvas)))));
                 }
 
                 button:focus-visible {
-                    outline: 2px solid var(--cms-focus-color, var(--integration-ulvia-basic-blocs-focus-color, var(--primary-base, CanvasText)));
+                    outline: 2px solid var(--cms-focus-color, var(--ulvia-focus-color, var(--primary-base, CanvasText)));
                     outline-offset: 2px;
                 }
 

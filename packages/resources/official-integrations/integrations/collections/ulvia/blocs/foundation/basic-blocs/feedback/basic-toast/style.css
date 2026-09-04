@@ -4,13 +4,9 @@
     --basic-toast-color: var(--_tone-contrasted);
     --basic-toast-close-color: var(--basic-toast-color);
     --basic-toast-padding: .75rem .875rem;
-    --basic-toast-radius: var(--integration-ulvia-basic-blocs-surface-radius, var(--radius-md, .5rem));
+    --basic-toast-radius: var(--ulvia-surface-radius, var(--radius-md, .5rem));
     --basic-toast-shadow: none;
     --basic-toast-width: max-content;
-    --ctx-bg: var(--basic-toast-background);
-    --ctx-fg: var(--basic-toast-color);
-    --ctx-fg-muted: color-mix(in srgb, var(--basic-toast-color) 68%, transparent);
-    --ctx-border: var(--basic-toast-border);
 
     position: fixed;
     z-index: 10000;
@@ -84,7 +80,7 @@
 :host([radius="pill"]) { --basic-toast-radius: 999px; }
 
 :host([shadow="sm"]) { --basic-toast-shadow: var(--shadow-sm, 0 .25rem .75rem color-mix(in srgb, CanvasText 10%, transparent)); }
-:host([shadow="md"]) { --basic-toast-shadow: var(--integration-ulvia-basic-blocs-elevated-shadow, var(--shadow-md, 0 .5rem 1.25rem color-mix(in srgb, CanvasText 14%, transparent))); }
+:host([shadow="md"]) { --basic-toast-shadow: var(--ulvia-elevated-shadow, var(--shadow-md, 0 .5rem 1.25rem color-mix(in srgb, CanvasText 14%, transparent))); }
 :host([shadow="lg"]) { --basic-toast-shadow: var(--shadow-lg, 0 .75rem 2rem color-mix(in srgb, CanvasText 18%, transparent)); }
 
 .icon {

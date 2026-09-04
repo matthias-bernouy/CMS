@@ -1,11 +1,11 @@
 :host {
-    --_accent: var(--integration-ulvia-restaurant-accent, #39ad65);
-    --_border: var(--integration-ulvia-restaurant-content-border, #ddd8cf);
-    --_muted: var(--integration-ulvia-restaurant-content-muted-text, #60665f);
+    --_accent: var(--ulvia-success-base, #39ad65);
+    --_border: var(--ulvia-surface-border, #ddd8cf);
+    --_muted: var(--ulvia-surface-muted-text, #60665f);
     display: block;
     min-width: 0;
     color: inherit;
-    font-family: var(--integration-ulvia-restaurant-font-body, Inter, system-ui, sans-serif);
+    font-family: var(--ulvia-font-body, Inter, system-ui, sans-serif);
 }
 
 [part="item"] {

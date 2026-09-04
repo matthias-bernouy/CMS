@@ -1,10 +1,10 @@
 :host {
-    --step-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
-    --step-muted: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #94a3b8));
-    --step-fg: var(--integration-ulvia-documentation-blocs-heading-text, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
+    --step-accent: var(--ulvia-primary-base, var(--ulvia-primary-base, #4f46e5));
+    --step-muted: var(--ulvia-surface-muted-text, var(--ulvia-surface-muted-text, #94a3b8));
+    --step-fg: var(--ulvia-surface-text, var(--ulvia-surface-text, #0f172a));
     --step-size: 2rem;
     display: block;
-    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-body, var(--ulvia-font-body, system-ui, sans-serif));
     counter-increment: step;
 }
 .step {
@@ -20,7 +20,7 @@
     top: var(--step-size);
     bottom: -1.5rem;
     width: 2px;
-    background: var(--integration-ulvia-documentation-blocs-border, var(--integration-ulvia-basic-blocs-surface-border, #e2e8f0));
+    background: var(--ulvia-surface-border, var(--ulvia-surface-border, #e2e8f0));
     transform: translateX(-50%);
 }
 :host(:last-child) .step::before { display: none; }
@@ -29,7 +29,7 @@
     height: var(--step-size);
     border-radius: 50%;
     background: var(--step-accent);
-    color: var(--integration-ulvia-basic-blocs-primary-foreground, #fff);
+    color: var(--ulvia-primary-foreground, #fff);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -48,12 +48,12 @@
 }
 :host-context(doc-steps[variant="bulleted"]) .marker::before { content: ""; }
 :host([status="pending"]) .marker { background: var(--step-muted); }
-:host([status="done"]) .marker { background: var(--integration-ulvia-documentation-blocs-api-post, var(--integration-ulvia-basic-blocs-success-base, #10b981)); }
+:host([status="done"]) .marker { background: var(--ulvia-success-base, var(--ulvia-success-base, #10b981)); }
 :host([status="done"]) .marker::before { content: "\2713"; }
 :host([status="current"]) .marker { box-shadow: 0 0 0 4px color-mix(in srgb, var(--step-accent) 25%, transparent); }
 .body { padding-top: .25rem; min-width: 0; }
 .title { font-weight: 700; font-size: 1.05rem; color: var(--step-fg); margin-bottom: .25rem; line-height: 1.4; }
 .title ::slotted(*) { margin: 0; font: inherit; color: inherit; }
-.content { color: var(--integration-ulvia-documentation-blocs-text, var(--integration-ulvia-basic-blocs-body-text, #475569)); line-height: 1.6; }
+.content { color: var(--ulvia-body-text, var(--ulvia-body-text, #475569)); line-height: 1.6; }
 .content ::slotted(*) { margin: 0 0 .5rem; }
 .content ::slotted(*:last-child) { margin-bottom: 0; }

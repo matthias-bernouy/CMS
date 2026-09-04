@@ -32,10 +32,6 @@ export class BasicCard extends HTMLElement {
                     --_card-color: var(--_tone-contrasted);
                     --_card-muted: color-mix(in srgb, var(--_card-color) 68%, transparent);
                     --_card-shadow: none;
-                    --ctx-bg: var(--_card-background);
-                    --ctx-fg: var(--_card-color);
-                    --ctx-fg-muted: var(--_card-muted);
-                    --ctx-border: var(--_card-border);
                 }
 
                 :host([hidden]) { display: none !important; }
@@ -47,16 +43,12 @@ export class BasicCard extends HTMLElement {
                 }
 
                 [part="card"] {
-                    --ctx-bg: var(--cms-card-background, var(--_card-background));
-                    --ctx-fg: var(--cms-card-color, var(--_card-color));
-                    --ctx-fg-muted: var(--cms-card-muted-color, var(--_card-muted));
-                    --ctx-border: var(--cms-card-border-color, var(--_card-border));
                     box-sizing: border-box;
                     display: grid;
                     gap: var(--cms-card-section-gap, 1.25rem);
                     padding: var(--cms-card-padding, 1.5rem);
                     border: var(--cms-card-border, 1px solid var(--cms-card-border-color, var(--_card-border)));
-                    border-radius: var(--cms-card-radius, var(--integration-ulvia-basic-blocs-surface-radius, var(--radius-lg, var(--radius-card, 1rem))));
+                    border-radius: var(--cms-card-radius, var(--ulvia-surface-radius, var(--radius-lg, var(--radius-card, 1rem))));
                     background: var(--cms-card-background, var(--_card-background));
                     color: var(--cms-card-color, var(--_card-color));
                     box-shadow: var(--cms-card-shadow, var(--_card-shadow));
@@ -123,7 +115,7 @@ export class BasicCard extends HTMLElement {
                 }
 
                 :host([elevation="elevated"]) {
-                    --_card-shadow: var(--ctx-shadow-rest, var(--integration-ulvia-basic-blocs-elevated-shadow, var(--shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent))));
+                    --_card-shadow: var(--ulvia-elevated-shadow, var(--shadow-soft, 0 .5rem 1.5rem color-mix(in srgb, currentColor 12%, transparent)));
                 }
 
                 :host([density="compact"]) [part="card"] {

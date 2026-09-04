@@ -16,7 +16,7 @@
     max-width: 26ch;
     margin-block-start: .75rem;
     color: var(--_muted);
-    font-family: var(--integration-ulvia-restaurant-font-heading, Georgia, serif);
+    font-family: var(--ulvia-font-heading, Georgia, serif);
     font-weight: 400;
     line-height: 1.2;
 }
@@ -43,7 +43,7 @@
 
 ::slotted(a[slot="actions"]:first-of-type) { background: var(--_accent); }
 ::slotted([slot="details"]) { color: var(--_muted); font-size: 1rem; line-height: 1.25; }
-::slotted([slot="details"][data-accent]) { color: var(--integration-ulvia-restaurant-rating, #dba64b); }
+::slotted([slot="details"][data-accent]) { color: var(--ulvia-warning-base, #dba64b); }
 ::slotted([slot="details"]:not([data-accent])) { padding-inline-start: .75rem; border-left: 1px solid currentColor; }
 
 ::slotted(img[slot="media"]),
