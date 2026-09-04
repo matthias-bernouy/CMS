@@ -41,7 +41,7 @@ function commitPublication(
     publicationDate: Date | undefined,
     guard: SiteBlocPublicationGuard,
 ): Promise<BlocRecord> {
-    return commitMongoSiteBlocPublication(db, locks, guard, async (session) => {
+    return commitMongoSiteBlocPublication(db, guard, async (session) => {
         const current = await requireBlocRecord(blocs, tag, session);
         const published = publishedSiteRecord(current, artifact, expectedDraftRevision, publicationDate);
         await replaceSiteBlocRecord(blocs, tag, current, published, expectedDraftRevision, session);

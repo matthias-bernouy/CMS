@@ -1,5 +1,5 @@
 import { randomUUIDv7 } from "bun";
-import type { Collection } from "mongodb";
+import type { Collection, Db } from "mongodb";
 import {
     SiteBlocPublicationLockLostError,
     SiteBlocPublicationRecoveryRequiredError,
@@ -17,12 +17,13 @@ import {
 import type { SiteBlocPublicationGuard } from "cms-content/interfaces/CmsRepository";
 
 export async function withMongoSiteBlocPublicationLock<T>(
+    db: Db,
     locks: Collection<SiteBlocPublicationLockDoc>,
     operation: (guard: SiteBlocPublicationGuard) => Promise<T>,
 ): Promise<T> {
     const token = randomUUIDv7();
     await acquire(locks, token);
-    const state: MongoPublicationGuardState = { committing: false, locks, token };
+    const state: MongoPublicationGuardState = { committing: false, db, locks, token };
     const guard: SiteBlocPublicationGuard = { assertHeld: () => assertHeld(state) };
     MONGO_PUBLICATION_GUARDS.set(guard, state);
     const heartbeat = setInterval(() => {

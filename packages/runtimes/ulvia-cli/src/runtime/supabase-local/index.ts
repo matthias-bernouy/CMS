@@ -48,6 +48,7 @@ export async function createLocalSupabaseManagementHandler(
     const functionsRuntime = options.functionsRuntime ?? new SupabaseCliFunctionsRuntime(options.projectRoot);
     const stripe = new LocalStripeApi();
     const basePath = `/v1/projects/${options.projectRef}`;
+    await restorePostgrestConfiguration(project, database);
     if (project.hasFunctions()) {
         try {
             await functionsRuntime.reload();
@@ -80,4 +81,16 @@ export async function createLocalSupabaseManagementHandler(
             }
         },
     };
+}
+
+async function restorePostgrestConfiguration(
+    project: LocalSupabaseProject,
+    database: LocalSupabaseDatabase,
+): Promise<void> {
+    const schemas = project.dataApiSchemas().join(",");
+    await database.query(
+        `alter role authenticator set pgrst.db_schemas = '${schemas}';\n` +
+            `alter role authenticator set pgrst.db_schema = '${schemas}';`,
+    );
+    await database.query("notify pgrst, 'reload config';\nnotify pgrst, 'reload schema';");
 }

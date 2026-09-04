@@ -58,6 +58,17 @@ describe("MongoCmsRepository site bloc publication fencing", () => {
         expect(await db.get("site_bloc_publication_locks").findOne({ _id: "published-graph" })).toBeNull();
     });
 
+    test("uses the durable commit phase when a standalone deployment rejects retryable writes", async () => {
+        const db = new FakeContentDb("unsupported-retryable-writes");
+        const repository = new MongoCmsRepository(db as unknown as Db);
+        await repository.createSiteBloc(siteBlocDefinition());
+
+        const published = await repository.publishSiteBloc("site-feature-panel", siteBlocArtifact(), 1);
+
+        expect(published.siteDefinition?.publishedRevision).toBe(1);
+        expect(db.get("site_bloc_publication_locks").usedSessions).toHaveLength(0);
+    });
+
     test("does not let a successor reclaim a standalone lock during its commit phase", async () => {
         const db = new FakeContentDb("unsupported");
         const repository = new MongoCmsRepository(db as unknown as Db);

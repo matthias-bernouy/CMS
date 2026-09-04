@@ -1,4 +1,4 @@
-import type { Collection } from "mongodb";
+import type { Collection, Db } from "mongodb";
 import type { SiteBlocPublicationLockDoc } from "cms-content/default-implementation/repositories/mongo/documents";
 import type { SiteBlocPublicationGuard } from "cms-content/interfaces/CmsRepository";
 
@@ -9,6 +9,7 @@ export const STALE_COMMIT_MS = 60_000;
 
 export type MongoPublicationGuardState = {
     committing: boolean;
+    db: Db;
     locks: Collection<SiteBlocPublicationLockDoc>;
     token: string;
 };

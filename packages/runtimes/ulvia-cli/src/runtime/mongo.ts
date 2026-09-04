@@ -40,7 +40,11 @@ export async function startLocalMongo(
         await runCommand(["docker", "start", name], { inherit: true });
     }
     await waitForPort(port);
-    return { name, url: `mongodb://127.0.0.1:${port}/ulvia_dev`, port };
+    return { name, url: localMongoUrl(port), port };
+}
+
+export function localMongoUrl(port: number): string {
+    return `mongodb://127.0.0.1:${port}/ulvia_dev?retryWrites=false`;
 }
 
 function currentUser(): string[] {

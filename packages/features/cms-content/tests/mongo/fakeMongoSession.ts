@@ -1,4 +1,4 @@
-export type FakeTransactionSupport = "supported" | "unsupported";
+export type FakeTransactionSupport = "supported" | "unsupported" | "unsupported-retryable-writes";
 
 export class FakeMongoClient {
     constructor(private readonly transactions: FakeTransactionSupport) {}
@@ -17,6 +17,9 @@ class FakeMongoSession {
                 code: 20,
                 codeName: "IllegalOperation",
             });
+        }
+        if (this.transactions === "unsupported-retryable-writes") {
+            throw new Error("This MongoDB deployment does not support retryable writes.");
         }
         return operation();
     }

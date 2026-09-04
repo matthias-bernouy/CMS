@@ -8,7 +8,11 @@ import {
     type LocalSupabaseFunctionsRuntime,
 } from "../src/runtime/supabase-local/functions-runtime";
 import { createLocalSupabaseManagementHandler } from "../src/runtime/supabase-local";
-import { parseLocalSupabaseEnvironment } from "../src/runtime/supabase";
+import {
+    ensureLocalSupabaseProjectIdentity,
+    localSupabaseProjectId,
+    parseLocalSupabaseEnvironment,
+} from "../src/runtime/supabase";
 import { removeReadonlyTree } from "./fixtures";
 
 const roots: string[] = [];
@@ -17,6 +21,25 @@ afterEach(async () => {
 });
 
 describe("local Supabase management bridge", () => {
+    test("assigns each persistent project a stable Supabase identity", async () => {
+        const first = await projectRoot();
+        const second = await projectRoot();
+        await writeFile(join(first, "supabase", "config.toml"), 'project_id = "supabase"\n[api]\nport = 54321\n');
+        await ensureLocalSupabaseProjectIdentity(first);
+
+        expect(localSupabaseProjectId(first)).toMatch(/^ulvia-dev-[a-f0-9]{12}$/u);
+        expect(localSupabaseProjectId(first)).not.toBe(localSupabaseProjectId(second));
+        expect(await readFile(join(first, "supabase", "config.toml"), "utf8")).toContain(
+            `project_id = "${localSupabaseProjectId(first)}"`,
+        );
+
+        await writeFile(join(second, "supabase", "config.toml"), 'project_id = "release-sandbox"\n');
+        await ensureLocalSupabaseProjectIdentity(second);
+        expect(await readFile(join(second, "supabase", "config.toml"), "utf8")).toBe(
+            'project_id = "release-sandbox"\n',
+        );
+    });
+
     test("detects readiness before retaining only the bounded output tail", () => {
         const observation = inspectFunctionsRuntimeOutput(
             "prefix",
@@ -107,7 +130,9 @@ describe("local Supabase management bridge", () => {
                 body: JSON.stringify({ query: "select 42 as answer" }),
             });
             expect(await query.json()).toEqual([{ answer: "42" }]);
-            expect(queries).toEqual(["select 42 as answer"]);
+            expect(queries[0]).toContain("pgrst.db_schemas = 'public,graphql_public'");
+            expect(queries[1]).toContain("reload config");
+            expect(queries[2]).toBe("select 42 as answer");
 
             await request("/postgrest", {
                 method: "PATCH",
@@ -172,13 +197,20 @@ describe("local Supabase management bridge", () => {
         expect(runtimeStopped).toBe(true);
 
         let restartReloads = 0;
+        const restartQueries: string[] = [];
         const reopened = await createLocalSupabaseManagementHandler({
             projectRoot: root,
             projectRef: "local",
             accessToken: token,
             databaseUrl: "postgresql://unused",
             port: 0,
-            database: { query: async () => [], close: async () => undefined },
+            database: {
+                query: async (source) => {
+                    restartQueries.push(source);
+                    return [];
+                },
+                close: async () => undefined,
+            },
             functionsRuntime: {
                 reload: async () => {
                     restartReloads += 1;
@@ -187,6 +219,8 @@ describe("local Supabase management bridge", () => {
             },
         });
         expect(restartReloads).toBe(1);
+        expect(restartQueries[0]).toContain("pgrst.db_schemas = 'public,demo'");
+        expect(restartQueries[1]).toContain("reload schema");
         await reopened.close();
     });
 });

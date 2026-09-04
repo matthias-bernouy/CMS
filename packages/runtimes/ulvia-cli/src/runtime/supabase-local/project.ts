@@ -161,6 +161,13 @@ async function readState(path: string): Promise<ProjectState> {
     if (state.schema !== "ulvia.local-supabase-management.v1") {
         throw new Error("Ulvia local Supabase management state is invalid");
     }
+    if (
+        !Array.isArray(state.dataApiSchemas) ||
+        !state.dataApiSchemas.length ||
+        state.dataApiSchemas.some((schema) => !/^[a-z_][a-z0-9_]*$/u.test(schema))
+    ) {
+        throw new Error("Ulvia local Supabase data API schema state is invalid");
+    }
     return state;
 }
 

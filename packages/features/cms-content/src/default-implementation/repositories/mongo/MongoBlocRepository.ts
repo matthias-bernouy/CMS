@@ -151,7 +151,7 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
     }
 
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T> {
-        return withMongoSiteBlocPublicationLock(this.siteBlocPublicationLocks, operation);
+        return withMongoSiteBlocPublicationLock(this.db, this.siteBlocPublicationLocks, operation);
     }
 
     async getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { runCli } from "../../src/cli";
 import { resolveDevPorts } from "../../src/commands/dev";
+import { localMongoUrl } from "../../src/runtime/mongo";
 import { RemoteIntegrationRepository } from "../../src/repository/remote";
 import { integrationPackage, removeReadonlyTree, writeIntegrationSource } from "../fixtures";
 import { emptyRemote, remoteFixture, temporaryRoot } from "./support";
@@ -21,6 +22,10 @@ describe("Ulvia CLI", () => {
             /ports must be distinct/,
         );
         expect(() => resolveDevPorts({ ULVIA_DEV_MONGO_PORT: "70000" })).toThrow(/between 1 and 65535/);
+    });
+
+    test("disables retryable writes for the standalone local MongoDB", () => {
+        expect(localMongoUrl(27_019)).toBe("mongodb://127.0.0.1:27019/ulvia_dev?retryWrites=false");
     });
 
     test("pulls the remote default once and reports it locally", async () => {

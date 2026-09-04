@@ -1,5 +1,6 @@
-import { access, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { access, chmod, mkdir, readFile, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { requireExecutable, runCommand } from "./process";
 
 export const SUPABASE_CLI_VERSION = "2.116.0";
@@ -19,12 +20,33 @@ export type LocalSupabaseEnvironment = Readonly<{
 
 export async function initializeLocalSupabase(projectRoot: string): Promise<void> {
     requireExecutable("bunx");
-    if (!(await exists(join(projectRoot, "supabase", "config.toml")))) {
+    const configPath = join(projectRoot, "supabase", "config.toml");
+    if (!(await exists(configPath))) {
         await requiredSupabaseCommand(projectRoot, ["init"]);
     }
+    await ensureLocalSupabaseProjectIdentity(projectRoot, configPath);
     // Supabase Studio bind-mounts this path. Creating it first prevents Docker
     // from leaving a root-owned directory in the persistent local workspace.
     await mkdir(join(projectRoot, "supabase", "snippets"), { recursive: true, mode: 0o700 });
+}
+
+export function localSupabaseProjectId(projectRoot: string): string {
+    const suffix = createHash("sha256").update(resolve(projectRoot)).digest("hex").slice(0, 12);
+    return `ulvia-dev-${suffix}`;
+}
+
+export async function ensureLocalSupabaseProjectIdentity(projectRoot: string, configPath?: string): Promise<void> {
+    const path = configPath ?? join(projectRoot, "supabase", "config.toml");
+    const source = await readFile(path, "utf8");
+    const updated = source.replace(
+        /^project_id\s*=\s*"supabase"\s*$/mu,
+        `project_id = "${localSupabaseProjectId(projectRoot)}"`,
+    );
+    if (updated === source) {
+        return;
+    }
+    await writeFile(path, updated, { mode: 0o600 });
+    await chmod(path, 0o600);
 }
 
 export async function startLocalSupabase(
