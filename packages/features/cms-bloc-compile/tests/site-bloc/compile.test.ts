@@ -29,7 +29,7 @@ describe("generated site bloc compilation", () => {
         expect(() => new Function(bloc.viewJS)).not.toThrow();
         expect(() => new Function(bloc.editorJS)).not.toThrow();
         expect(bloc.viewJS).toBe("");
-        expect(bloc.compositionHTML).toContain('<slot name="title"></slot>');
+        expect(bloc.compositionHTML).toContain('<slot name="title" slot="title"></slot>');
         expect(bloc.editorJS).toContain("window.p9rEditor.Editor");
         expect(bloc.editorJS).toContain("basic-heading-1");
         let registration: { defaultContent?: string } | undefined;

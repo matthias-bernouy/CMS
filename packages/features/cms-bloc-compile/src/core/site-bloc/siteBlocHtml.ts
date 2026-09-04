@@ -33,7 +33,7 @@ const VOID_TAGS = new Set([
 export function serializeSiteBlocTemplate(snapshot: SiteBlocSnapshot): string {
     const slots = slotMap(snapshot.slots);
     const usedSlots = new Set<string>();
-    const html = snapshot.structure.map((node) => serializeNode(node, slots, usedSlots)).join("");
+    const html = snapshot.structure.map((node) => serializeNode(node, slots, usedSlots, false)).join("");
     for (const slot of snapshot.slots) {
         if (!usedSlots.has(slot.id)) {
             throw new Error(`Site bloc slot "${slot.id}" has no placeholder`);
@@ -47,7 +47,12 @@ export function serializeSiteBlocDefault(tag: string, content: string): string {
     return `<${tag}>${normalizeFragment(content)}</${tag}>\n`;
 }
 
-function serializeNode(node: SiteBlocNode, slots: Map<string, SiteBlocSlot>, usedSlots: Set<string>): string {
+function serializeNode(
+    node: SiteBlocNode,
+    slots: Map<string, SiteBlocSlot>,
+    usedSlots: Set<string>,
+    nestedInBloc: boolean,
+): string {
     if (node.kind === "text") {
         assertStaticValue(node.value, "text");
         return escapeText(node.value);
@@ -61,7 +66,11 @@ function serializeNode(node: SiteBlocNode, slots: Map<string, SiteBlocSlot>, use
             throw new Error(`Duplicate site bloc slot placeholder "${node.slotId}"`);
         }
         usedSlots.add(node.slotId);
-        return slot.slot ? `<slot name="${escapeAttribute(slot.slot)}"></slot>` : "<slot></slot>";
+        if (!slot.slot) {
+            return "<slot></slot>";
+        }
+        const name = escapeAttribute(slot.slot);
+        return nestedInBloc ? `<slot name="${name}" slot="${name}"></slot>` : `<slot name="${name}"></slot>`;
     }
     if (node.kind !== "bloc") {
         throw new Error("Unsupported site bloc structure node");
@@ -82,7 +91,7 @@ function serializeNode(node: SiteBlocNode, slots: Map<string, SiteBlocSlot>, use
     if (VOID_TAGS.has(node.tag)) {
         return opening;
     }
-    const children = node.children.map((child) => serializeNode(child, slots, usedSlots)).join("");
+    const children = node.children.map((child) => serializeNode(child, slots, usedSlots, true)).join("");
     return `${opening}${children}</${node.tag}>`;
 }
 

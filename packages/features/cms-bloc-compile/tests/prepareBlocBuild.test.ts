@@ -136,6 +136,41 @@ describe("prepare_bloc build output", () => {
         );
         const bloc = await prepare_bloc(view, null, "Demo component", "Content", "", "demo-component");
         expect(bloc.viewJS).toContain("window.p9r.Component");
+        expect(bloc.viewJS).toContain("demo-component");
+
+        const definitions = new Map<string, unknown>();
+        const customElements = {
+            define: (tag: string, constructor: unknown) => definitions.set(tag, constructor),
+            get: (tag: string) => definitions.get(tag),
+        };
+        new Function("window", "customElements", "HTMLElement", bloc.viewJS)(
+            { p9r: { Component: class {} } },
+            customElements,
+            class {},
+        );
+        expect(definitions.get("demo-component")).toBeFunction();
+    });
+
+    test("keeps legacy self-registering views compatible without registering twice", async () => {
+        const view = new File(
+            ["customElements.define('legacy-card', class extends HTMLElement {});"],
+            "LegacyCard.ts",
+            { type: "text/typescript" },
+        );
+        const bloc = await prepare_bloc(view, null, "Legacy card", "Content", "", "legacy-card");
+        const definitions = new Map<string, unknown>();
+        let registrations = 0;
+        const customElements = {
+            define: (tag: string, constructor: unknown) => {
+                registrations++;
+                definitions.set(tag, constructor);
+            },
+            get: (tag: string) => definitions.get(tag),
+        };
+
+        new Function("customElements", "HTMLElement", bloc.viewJS)(customElements, class {});
+        expect(registrations).toBe(1);
+        expect(definitions.get("legacy-card")).toBeFunction();
     });
 
     test("reports Bun build failures instead of returning an empty view bundle", async () => {

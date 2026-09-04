@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { p9rExternalsPlugin } from "./p9rExternalsPlugin";
+import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
 
 /** Synthetic editor source for blocs deployed without their own Editor module. */
 const OPAQUE_EDITOR_SRC = `
@@ -61,10 +62,12 @@ export async function prepare_bloc(
             await Bun.write(editorPath, OPAQUE_EDITOR_SRC);
         }
 
+        const viewEntryPath = fileView ? await writeViewRegistrationEntry(tempDir, viewPath) : viewPath;
+
         const [viewJSRaw, editorJSRaw] = await Promise.all([
             options.native || options.compositionHTML !== undefined
                 ? ""
-                : runBuild(buildOptions(viewPath), `view bundle for ${blocId}`),
+                : runBuild(buildOptions(viewEntryPath), `view bundle for ${blocId}`),
             runBuild(buildOptions(editorPath), `editor bundle for ${blocId}`),
         ]);
 
