@@ -8,7 +8,6 @@
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
-        "@bernouy/cms-cli": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
@@ -355,45 +354,6 @@
         "@types/semver": "^7.7.1",
       },
     },
-    "packages/runtimes/cms-cli": {
-      "name": "@bernouy/cms-cli",
-      "version": "0.1.0",
-      "bin": {
-        "p9r": "./src/index.ts",
-      },
-      "dependencies": {
-        "@bernouy/cms-analytics": "workspace:*",
-        "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-bloc-compile": "workspace:*",
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-control": "workspace:*",
-        "@bernouy/cms-delivery": "workspace:*",
-        "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-functions": "workspace:*",
-        "@bernouy/cms-identities": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-        "@bernouy/cms-notifications": "workspace:*",
-        "@bernouy/cms-official-integrations": "workspace:*",
-        "@bernouy/cms-permissions": "workspace:*",
-        "@bernouy/cms-relations": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-source-images": "workspace:*",
-        "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "semver": "^7.8.2",
-      },
-      "devDependencies": {
-        "@bernouy/cms-repository": "workspace:*",
-        "@types/semver": "^7.7.1",
-      },
-      "peerDependencies": {
-        "typescript": "^5.9.3",
-      },
-    },
     "packages/runtimes/cms-integration-verifier": {
       "name": "@bernouy/cms-integration-verifier",
       "version": "0.1.0",
@@ -402,6 +362,7 @@
         "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-repository-management": "workspace:*",
+        "@bernouy/ulvia-cli": "workspace:*",
       },
       "devDependencies": {
         "@bernouy/cms-integration-registry": "workspace:*",
@@ -475,7 +436,10 @@
         "ulvia": "./src/index.ts",
       },
       "dependencies": {
+        "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
+        "@bernouy/cms-integration-registry": "workspace:*",
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
         "semver": "^7.8.2",
@@ -591,8 +555,6 @@
     "@bernouy/cms-auth": ["@bernouy/cms-auth@workspace:packages/features/cms-auth"],
 
     "@bernouy/cms-bloc-compile": ["@bernouy/cms-bloc-compile@workspace:packages/features/cms-bloc-compile"],
-
-    "@bernouy/cms-cli": ["@bernouy/cms-cli@workspace:packages/runtimes/cms-cli"],
 
     "@bernouy/cms-content": ["@bernouy/cms-content@workspace:packages/features/cms-content"],
 

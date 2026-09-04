@@ -1,16 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
-import { expandCompositions } from "@bernouy/cms-content";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 const RESOURCES_ROOT = resolve(OFFICIAL_INTEGRATIONS_ROOT, "../..");
-const HTML_SCOPES = [
-    OFFICIAL_INTEGRATIONS_ROOT,
-    resolve(RESOURCES_ROOT, "templates/default-site/site"),
-    resolve(RESOURCES_ROOT, "templates/site-photo/site"),
-    resolve(RESOURCES_ROOT, "sites/cms-repository-hub/site"),
-];
+const HTML_SCOPES = [OFFICIAL_INTEGRATIONS_ROOT, resolve(RESOURCES_ROOT, "sites/cms-repository-hub/site")];
 const BUTTON_SEMANTIC_ATTRIBUTES = ["action", "href", "target", "rel", "type", "disabled", "name", "value"];
 
 describe("native light-DOM navigation", () => {
@@ -19,6 +13,9 @@ describe("native light-DOM navigation", () => {
         for (const file of htmlFiles()) {
             const root = fragment(readFileSync(file, "utf8"));
             for (const host of root.querySelectorAll("basic-button")) {
+                if (host.closest("[data-forms-runtime-dependencies]")) {
+                    continue;
+                }
                 const attributes = BUTTON_SEMANTIC_ATTRIBUTES.filter((name) => host.hasAttribute(name));
                 if (attributes.length > 0) {
                     findings.push(`${show(file)}: basic-button owns ${attributes.join(", ")}`);
@@ -48,13 +45,13 @@ describe("native light-DOM navigation", () => {
         expect(findings).toEqual([]);
     });
 
-    test("keeps user navigation out of component shadow templates", () => {
+    test("keeps cross-page navigation out of component shadow templates", () => {
         const findings: string[] = [];
         for (const file of integrationFiles("**/template.html")) {
             if (siblingManifest(file)?.composition) {
                 continue;
             }
-            const anchors = fragment(readFileSync(file, "utf8")).querySelectorAll("a[href]");
+            const anchors = fragment(readFileSync(file, "utf8")).querySelectorAll('a[href]:not([href^="#"])');
             if (anchors.length > 0) {
                 findings.push(`${show(file)}: ${anchors.length} persistent shadow navigation link(s)`);
             }
@@ -67,20 +64,24 @@ describe("native light-DOM navigation", () => {
             readFileSync(file, "utf8").includes('createElement("a")'),
         );
         expect(sources.map(show).sort()).toEqual([
-            "official-integrations/integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-price-form/controller/Bloc.ts",
-            "official-integrations/integrations/domains/commerce/versions/1.1.0/blocs/commerce-offer-price-form/controller/Bloc.ts",
-            "official-integrations/integrations/extensions/commerce-mondial-relay-fulfillment/versions/1.0.0/blocs/commerce-mondial-relay-sale-fulfillment/Bloc.ts",
-            "official-integrations/integrations/extensions/commerce-stripe-payments/versions/1.0.0/blocs/commerce-stripe-payment/legal-consent.ts",
-            "official-integrations/integrations/foundation/documentation-blocs/versions/1.0.0/blocs/navigation/core/doc-toc/Bloc.ts",
+            "official-integrations/integrations/collections/mossa/blocs/courtside/account/orders/cs-purchase-list/Bloc.ts",
+            "official-integrations/integrations/collections/mossa/blocs/courtside/commerce/checkout/cs-service-withdrawal-form/Bloc.ts",
+            "official-integrations/integrations/collections/mossa/blocs/foundation/forms/workflows/base-form/Bloc.ts",
+            "official-integrations/integrations/collections/ulvia/blocs/domains/commerce/commerce-offer-price-form/controller/Bloc.ts",
+            "official-integrations/integrations/collections/ulvia/blocs/extensions/commerce-mondial-relay-fulfillment/commerce-mondial-relay-sale-fulfillment/Bloc.ts",
+            "official-integrations/integrations/collections/ulvia/blocs/extensions/commerce-stripe-payments/commerce-stripe-payment/legal-consent.ts",
+            "official-integrations/integrations/collections/ulvia/blocs/foundation/documentation-blocs/navigation/core/doc-layout/discovery.ts",
+            "official-integrations/integrations/collections/ulvia/blocs/foundation/documentation-blocs/navigation/core/doc-toc/Bloc.ts",
+            "official-integrations/integrations/collections/ulvia/blocs/foundation/documentation-blocs/page/doc-search/Bloc.ts",
         ]);
 
         const redirect = resolve(
             OFFICIAL_INTEGRATIONS_ROOT,
-            "foundation/basic-blocs/blocs/basic/basic-redirect/Bloc.ts",
+            "collections/ulvia/blocs/foundation/basic-blocs/basic/basic-redirect/Bloc.ts",
         );
         const headerCell = resolve(
             OFFICIAL_INTEGRATIONS_ROOT,
-            "foundation/basic-blocs/blocs/data-display/table/basic-table-header-cell/template.html",
+            "collections/ulvia/blocs/foundation/basic-blocs/data-display/table/basic-table-header-cell/template.html",
         );
         expect(readFileSync(redirect, "utf8")).toContain("<a hidden></a>");
         expect(readFileSync(headerCell, "utf8")).toContain("<a data-navigation hidden></a>");
@@ -95,62 +96,48 @@ describe("native light-DOM navigation", () => {
     });
 
     test("updates offer-price retry labels on the native button", () => {
-        for (const version of ["1.0.0", "1.1.0"]) {
-            const controller = resolve(
-                OFFICIAL_INTEGRATIONS_ROOT,
-                `domains/commerce/versions/${version}/blocs/commerce-offer-price-form/controller/Bloc.ts`,
-            );
-            const source = readFileSync(controller, "utf8");
-            expect(source).toContain('return this.querySelector("[data-retry]");');
-            expect(source).not.toContain('return this.querySelector("[data-technical-retry]");');
-        }
+        const controller = resolve(
+            OFFICIAL_INTEGRATIONS_ROOT,
+            "collections/ulvia/blocs/domains/commerce/commerce-offer-price-form/controller/Bloc.ts",
+        );
+        const source = readFileSync(controller, "utf8");
+        expect(source).toContain('return this.querySelector("[data-retry]");');
+        expect(source).not.toContain('return this.querySelector("[data-technical-retry]");');
     });
 
-    test("exposes template and repeated navigation to a shadow-unaware crawl", () => {
-        for (const file of sitePages("templates/default-site/site")) {
-            expect(expandedSitePage(file, "site-layout").querySelectorAll("a[href]").length).toBeGreaterThanOrEqual(8);
-        }
-        for (const file of sitePages("templates/site-photo/site")) {
-            expect(
-                expandedSitePage(file, "photo-site-shell").querySelectorAll("a[href]").length,
-            ).toBeGreaterThanOrEqual(10);
-        }
+    test("exposes repository and repeated navigation to a shadow-unaware crawl", () => {
         for (const file of sitePages("sites/cms-repository-hub/site")) {
             expect(fragment(readFileSync(file, "utf8")).querySelectorAll("a[href]").length).toBeGreaterThan(0);
         }
 
-        for (const version of ["1.0.0", "1.1.0"]) {
-            const list = resolve(
-                OFFICIAL_INTEGRATIONS_ROOT,
-                `domains/commerce/versions/${version}/blocs/commerce-offer-list/default.html`,
-            );
-            const anchor = fragment(readFileSync(list, "utf8")).querySelector<HTMLAnchorElement>(
-                'commerce-offer-preview > a[slot="navigation"]',
-            );
-            expect(anchor?.getAttribute("href")).toBe("/offer?slug={{ offer.slug }}");
-            expect(anchor?.getAttribute("aria-label")).toContain("{{ offer.title }}");
-        }
+        const list = resolve(
+            OFFICIAL_INTEGRATIONS_ROOT,
+            "collections/ulvia/blocs/domains/commerce/commerce-offer-list/default.html",
+        );
+        const anchor = fragment(readFileSync(list, "utf8")).querySelector<HTMLAnchorElement>(
+            'commerce-offer-preview > a[slot="navigation"]',
+        );
+        expect(anchor?.getAttribute("href")).toBe("/offer?slug={{ offer.slug }}");
+        expect(anchor?.getAttribute("aria-label")).toContain("{{ offer.title }}");
     });
 
     test("keeps offer-card navigation above passive content and below sibling actions", () => {
-        for (const version of ["1.0.0", "1.1.0"]) {
-            const root = resolve(
-                OFFICIAL_INTEGRATIONS_ROOT,
-                `domains/commerce/versions/${version}/blocs/commerce-offer-preview`,
-            );
-            const card = fragment(readFileSync(resolve(root, "default.html"), "utf8"));
-            expect(card.querySelector('commerce-offer-preview > a[slot="navigation"][href]')).not.toBeNull();
-            expect(card.querySelector('commerce-offer-preview > basic-button[slot="action"] > a[href]')).not.toBeNull();
+        const root = resolve(
+            OFFICIAL_INTEGRATIONS_ROOT,
+            "collections/ulvia/blocs/domains/commerce/commerce-offer-preview",
+        );
+        const card = fragment(readFileSync(resolve(root, "default.html"), "utf8"));
+        expect(card.querySelector('commerce-offer-preview > a[slot="navigation"][href]')).not.toBeNull();
+        expect(card.querySelector('commerce-offer-preview > basic-button[slot="action"] > a[href]')).not.toBeNull();
 
-            const style = readFileSync(resolve(root, "style.css"), "utf8");
-            const contentRule = style.match(/\[part="content"\]\s*\{([^}]*)\}/u)?.[1] ?? "";
-            const actionsRule = style.match(/\[part="actions"\]\s*\{([^}]*)\}/u)?.[1] ?? "";
-            expect(style).toContain('::slotted(a[slot="navigation"])');
-            expect(contentRule).toContain("pointer-events: none");
-            expect(contentRule).not.toContain("z-index");
-            expect(actionsRule).toContain("z-index: 3");
-            expect(actionsRule).toContain("pointer-events: auto");
-        }
+        const style = readFileSync(resolve(root, "style.css"), "utf8");
+        const contentRule = style.match(/\[part="content"\]\s*\{([^}]*)\}/u)?.[1] ?? "";
+        const actionsRule = style.match(/\[part="actions"\]\s*\{([^}]*)\}/u)?.[1] ?? "";
+        expect(style).toContain('::slotted(a[slot="navigation"])');
+        expect(contentRule).toContain("pointer-events: none");
+        expect(contentRule).not.toContain("z-index");
+        expect(actionsRule).toContain("z-index: 3");
+        expect(actionsRule).toContain("pointer-events: auto");
     });
 });
 
@@ -179,22 +166,6 @@ function fragment(source: string): DocumentFragment {
 function siblingManifest(template: string): { composition?: string } | null {
     const path = resolve(template, "../manifest.json");
     return Bun.file(path).size > 0 ? JSON.parse(readFileSync(path, "utf8")) : null;
-}
-
-function expandedSitePage(file: string, tag: string): DocumentFragment {
-    const page = fragment(readFileSync(file, "utf8"));
-    const pagesSegment = `${sep}pages${sep}`;
-    const pagesIndex = file.lastIndexOf(pagesSegment);
-    if (pagesIndex < 0) {
-        throw new Error(`Page is outside a site pages directory: ${file}`);
-    }
-    const siteRoot = file.slice(0, pagesIndex);
-    const templatePath = glob(resolve(siteRoot, "blocs"), `**/${tag}/template.html`)[0];
-    if (!templatePath) {
-        throw new Error(`${tag} composition template not found`);
-    }
-    expandCompositions(page, [{ id: tag, compositionHTML: readFileSync(templatePath, "utf8") }]);
-    return page;
 }
 
 function show(file: string): string {

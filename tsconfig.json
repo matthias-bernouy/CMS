@@ -29,7 +29,6 @@
         { "path": "packages/surfaces/cms-repository-management" },
         { "path": "packages/surfaces/cms-delivery" },
         { "path": "packages/surfaces/cms-control" },
-        { "path": "packages/runtimes/cms-cli" },
         { "path": "packages/runtimes/ulvia-cli" },
         { "path": "packages/runtimes/cms-integration-verifier" },
         { "path": "packages/runtimes/cms-repository-server" },
