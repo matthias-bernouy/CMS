@@ -1,0 +1,90 @@
+[
+    {
+        "endpointId": "recoverOrderShipmentCreation",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/shipment-creation/recover",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "orderPublicId": {
+                    "type": "string"
+                },
+                "providerReference": {
+                    "type": "string"
+                },
+                "providerShipmentId": {
+                    "type": "string"
+                },
+                "providerSnapshot": {
+                    "type": "object"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "orderPublicId",
+                "providerReference",
+                "providerShipmentId",
+                "reason"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "status": {
+                            "type": "string"
+                        },
+                        "providerReference": {
+                            "type": "string"
+                        },
+                        "providerShipmentId": {
+                            "type": "string"
+                        },
+                        "fulfillment": {
+                            "type": "object"
+                        },
+                        "idempotentReplay": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "status",
+                        "providerReference"
+                    ]
+                }
+            }
+        ]
+    }
+]

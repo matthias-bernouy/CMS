@@ -1,0 +1,34 @@
+[
+    {
+        "provider": "supabase",
+        "root": "connectors/supabase",
+        "dataApiSchemas": [
+            "forms"
+        ],
+        "schemas": [
+            {
+                "manifest": "install/sql/schema.manifest.json"
+            }
+        ],
+        "compatibility": {
+            "schema": {
+                "$include": "compatibility/schema.json"
+            }
+        },
+        "functions": [
+            {
+                "name": "cms-forms",
+                "directory": "functions/cms-forms",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_FORMS_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/http.json"
+                    }
+                }
+            }
+        ]
+    }
+]

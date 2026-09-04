@@ -1,0 +1,109 @@
+[
+    {
+        "endpointId": "recordOrderStripeDispute",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/stripe-dispute",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "orderPublicId": {
+                    "type": "string"
+                },
+                "providerEventId": {
+                    "type": "string"
+                },
+                "providerDisputeId": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "openedAt": {
+                    "type": "string"
+                },
+                "occurredAt": {
+                    "type": "string"
+                },
+                "evidenceDueBy": {
+                    "type": "string"
+                },
+                "providerSnapshot": {
+                    "type": "object"
+                }
+            },
+            "required": [
+                "orderPublicId",
+                "providerEventId",
+                "providerDisputeId",
+                "status",
+                "amount",
+                "currency",
+                "openedAt",
+                "occurredAt"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "providerDisputeId": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "reason": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "amount": {
+                            "type": "number"
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "evidenceDueBy": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "idempotentReplay": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "$include": "authorize-due-order-releases.json"
+    }
+]

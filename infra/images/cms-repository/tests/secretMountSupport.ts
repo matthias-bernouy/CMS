@@ -16,7 +16,16 @@ export function dockerSecretMountSmokeAvailable(): boolean {
 
 export function productionSecretEnvironment(
     base: Record<string, string>,
-    paths: Record<"repositoryWorker" | "verifierWorker" | "verifierDatabase" | "postgresDatabase", string>,
+    paths: Record<
+        | "repositoryWorker"
+        | "verifierWorker"
+        | "releaseRuntimeSigningKey"
+        | "sandboxVerificationKey"
+        | "releaseRuntimeVerificationKey"
+        | "verifierDatabase"
+        | "postgresDatabase",
+        string
+    >,
 ): Record<string, string> {
     return {
         ...base,
@@ -29,7 +38,9 @@ export function productionSecretEnvironment(
         CMS_REPOSITORY_WORKER_CAPABILITY_KEY_SECRET_FILE: paths.repositoryWorker,
         CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_SECRET_FILE: paths.verifierWorker,
         CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_SECRET_FILE: paths.verifierWorker,
-        CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: paths.verifierWorker,
+        CMS_INTEGRATION_RELEASE_RUNTIME_SIGNING_KEY_SECRET_FILE: paths.releaseRuntimeSigningKey,
+        CMS_INTEGRATION_VERIFIER_SANDBOX_VERIFICATION_KEY_FILE: paths.sandboxVerificationKey,
+        CMS_INTEGRATION_RELEASE_RUNTIME_VERIFICATION_KEY_FILE: paths.releaseRuntimeVerificationKey,
         CMS_INTEGRATION_VERIFIER_POSTGRES_PASSWORD_SECRET_FILE: paths.verifierDatabase,
         CMS_INTEGRATION_VERIFIER_POSTGRES_SERVER_PASSWORD_SECRET_FILE: paths.postgresDatabase,
     };
@@ -79,7 +90,8 @@ export function setNumericOwners(fixtureRoot: string): void {
         "-ec",
         [
             "chown 1000:1000 /fixture/repository-worker",
-            "chown 1001:1001 /fixture/verifier-worker /fixture/verifier-database",
+            "chown 1001:1001 /fixture/verifier-worker /fixture/release-runtime-signing-key /fixture/verifier-database",
+            "chown 1002:1002 /fixture/sandbox-verification-key /fixture/release-runtime-verification-key",
             "chown 70:70 /fixture/postgres-database",
         ].join("\n"),
     ]);

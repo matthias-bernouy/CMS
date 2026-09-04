@@ -1,0 +1,13 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-negotiation-list-controller",
+        "name": "Negotiation list controller",
+        "group": "Commerce",
+        "description": "Internal behavior controller for commerce-negotiation-list.",
+        "internal": true,
+        "path": "blocs/extensions/commerce-negotiation/commerce-negotiation-list",
+        "view": "controller/Bloc.ts",
+        "editor": null
+    }
+}

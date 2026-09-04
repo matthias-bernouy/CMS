@@ -1,10 +1,9 @@
 import { expect, test } from "bun:test";
-import { validateDashboard } from "@bernouy/cms-dashboards";
 import { validateSource } from "@bernouy/cms-sources";
 import { createHarness } from "../harness/create";
 
 export function registerInstallationTest(): void {
-    test("installs source, dashboard, connector, and system send endpoint", async () => {
+    test("installs source backends, connector, and system send endpoint", async () => {
         const harness = await createHarness();
         const source = await harness.sources.getSource("urn:emailer");
         const broadcastSource = await harness.sources.getSource("urn:emailer-broadcast");
@@ -16,42 +15,9 @@ export function registerInstallationTest(): void {
         expect(validateSource(source!)).toEqual([]);
         expect(broadcastSource).toBeTruthy();
         expect(validateSource(broadcastSource!)).toEqual([]);
-        expect(templatesDashboard).toBeTruthy();
-        expect(settingsDashboard).toBeTruthy();
-        expect(campaignsDashboard).toBeTruthy();
-        expect(validateDashboard(templatesDashboard!, { source })).toEqual([]);
-        expect(validateDashboard(settingsDashboard!, { source })).toEqual([]);
-        expect(validateDashboard(campaignsDashboard!, { source: broadcastSource })).toEqual([]);
-        const templateDetail = templatesDashboard?.views.find((view) => view.id === "templateDetail");
-        const settingsDetail = settingsDashboard?.views.find((view) => view.id === "emailerSettings");
-        if (templateDetail?.widget !== "w-detail" || settingsDetail?.widget !== "w-detail") {
-            throw new Error("emailer details not installed");
-        }
-        expect(templateDetail.actions?.find((action) => action.id === "saveTemplate")?.after).toEqual({
-            opens: "templateDetail",
-            row: "$result.key",
-            resource: "$result",
-        });
-        expect(templateDetail.actions?.find((action) => action.id === "archiveTemplate")?.after).toEqual({
-            resource: "$result",
-        });
-        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
-            resource: "$result",
-        });
-        const dashboardJson = JSON.stringify(templatesDashboard);
-        const settingsJson = JSON.stringify(settingsDashboard);
-        expect(dashboardJson).toContain("newTemplate");
-        expect(dashboardJson).toContain("sendTestEmail");
-        expect(dashboardJson).not.toContain("messagesTable");
-        expect(dashboardJson).toContain("textBody");
-        expect(dashboardJson).toContain("sampleDataJson");
-        const saveTemplate = templateDetail.actions?.find((action) => action.id === "saveTemplate");
-        expect(saveTemplate?.endpoint.body).toMatchObject({
-            textBody: "$field.textBody",
-            sampleDataJson: "$field.sampleDataJson",
-            metadata: "$resource.metadata",
-        });
-        expect(settingsJson).toContain("emailerSettings");
+        expect(templatesDashboard).toBeNull();
+        expect(settingsDashboard).toBeNull();
+        expect(campaignsDashboard).toBeNull();
         expect(harness.deployment?.dataApiSchemas).toEqual(["emailer", "broadcast"]);
         expect(
             harness.deployment?.schemas.map((schema) => ("manifest" in schema ? schema.manifest : schema.path)),

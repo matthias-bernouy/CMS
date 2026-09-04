@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-breadcrumb",
+        "name": "Breadcrumb",
+        "group": "Documentation · Navigation",
+        "description": "Navigation trail for the current documentation page.",
+        "path": "blocs/foundation/documentation-blocs/navigation/core/doc-breadcrumb"
+    }
+}

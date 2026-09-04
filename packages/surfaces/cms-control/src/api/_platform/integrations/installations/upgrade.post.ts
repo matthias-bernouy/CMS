@@ -1,6 +1,11 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { definitionForUpgrade } from "cms-control/core/management/integrations/definitions";
 import {
+    collectionDependencyDefinitions,
+    definitionForUpgrade,
+    installedIntegrationDefinitions,
+} from "cms-control/core/management/integrations/definitions";
+import {
+    installRequiredCollectionSources,
     integrationInstallationDeps,
     readInstallationActionBody,
 } from "cms-control/core/management/integrations/installationActions";
@@ -39,15 +44,42 @@ export default async function postIntegrationInstallationUpgrade(req: Request, c
         installation,
         version: targetVersion,
     });
+    const installedDefinitions = await installedIntegrationDefinitions(
+        cms.integrationCatalog,
+        cms.integrationInstallations,
+        cms.integrationPackageResolver,
+        [id],
+    );
+    const siteIntegrations = [
+        targetDefinition,
+        ...installedDefinitions,
+        ...(await collectionDependencyDefinitions(cms.integrationCatalog, targetDefinition)),
+    ];
+    const deps = integrationInstallationDeps(cms);
     try {
+        if (targetDefinition.schema === "cms.integration.definition.v2" && targetDefinition.type === "collection") {
+            await installRequiredCollectionSources(
+                cms,
+                {
+                    dto: {
+                        kind: targetDefinition.kind,
+                        answers: {},
+                        options: {},
+                    },
+                    siteIntegrations,
+                },
+                deps,
+            );
+        }
         const result = await runIntegrationInstallation({
             mode: "upgrade",
-            deps: integrationInstallationDeps(cms),
+            deps,
             installations: cms.integrationInstallations,
             integrationId: id,
             targetDefinition,
             ...(preflight.packageDigest ? { expectedPackageDigest: preflight.packageDigest } : {}),
             body,
+            siteIntegrations,
             packageResolver: cms.integrationPackageResolver,
         });
         return Response.json(result);

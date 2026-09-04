@@ -1,0 +1,8 @@
+[
+    {
+        "$include": "list.json"
+    },
+    {
+        "$include": "review.json"
+    }
+]

@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import { resolve } from "node:path";
-import { loadIntegrationDefinition } from "../../../../../../../../tests/helpers/integrationDefinition";
-import { integrationRoot } from "../paths";
+import { commerceDefinitionWithDeferredDashboards } from "../../../../catalog/support/deferredDashboards";
 
 export function registerPolicyDashboardTest(): void {
     test("publishes protected C2C revisions from the admin settings dashboard with CAS and typed controls", async () => {
-        const definition = await loadIntegrationDefinition<any>(resolve(integrationRoot, "definition.json"));
+        const definition = await commerceDefinitionWithDeferredDashboards<any>();
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const dashboard = definition.artifacts.find(
             (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-configuration",

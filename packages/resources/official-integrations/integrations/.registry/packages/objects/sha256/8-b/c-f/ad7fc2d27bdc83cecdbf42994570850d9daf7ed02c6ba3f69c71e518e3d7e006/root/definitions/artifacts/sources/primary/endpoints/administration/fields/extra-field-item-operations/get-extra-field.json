@@ -1,0 +1,97 @@
+{
+    "endpointId": "getExtraField",
+    "method": "GET",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/extra-fields/field",
+    "meta": {
+        "name": "Get personal information field",
+        "description": "Read one configured extra personal information field."
+    },
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "Configured extra field id or __new__."
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "label": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string"
+                            },
+                            "required": {
+                                "type": "boolean"
+                            },
+                            "multiple": {
+                                "type": "boolean"
+                            },
+                            "hasAllowedValues": {
+                                "type": "boolean"
+                            },
+                            "showInDashboardTable": {
+                                "type": "boolean"
+                            },
+                            "options": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        },
+                                        "position": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "label"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "label",
+                            "type"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-offer-filter",
+        "name": "Offer filter",
+        "group": "Commerce",
+        "description": "Maps a URL-synchronized control to a contextual product field.",
+        "path": "blocs/domains/commerce/commerce-offer-filter"
+    }
+}

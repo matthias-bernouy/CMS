@@ -1,0 +1,128 @@
+{
+    "widget": "w-detail",
+    "id": "providerExceptionDetail",
+    "source": {
+        "sourceId": "{{dependencies.stripe.sourceId}}",
+        "endpoint": "getProviderException",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "exception_type",
+        "fallback": "Stripe provider exception"
+    },
+    "status": {
+        "path": "status"
+    },
+    "actions": [
+        {
+            "id": "requeueCommerceProjection",
+            "label": "Requeue Commerce projection",
+            "tone": "danger",
+            "placement": "primary",
+            "confirm": "Requeue this exact projection after verifying that the Commerce consumer is healthy?",
+            "visibleWhen": {
+                "all": [
+                    {
+                        "value": "$resource.exception_type",
+                        "equals": "commerce_projection_delivery_failed"
+                    },
+                    {
+                        "value": "$resource.status",
+                        "notEquals": "resolved"
+                    }
+                ]
+            },
+            "endpoint": {
+                "sourceId": "{{dependencies.stripe.sourceId}}",
+                "endpoint": "requeueCommerceProjection",
+                "body": {
+                    "projectionId": "$resource.details.projectionId",
+                    "expectedInterventionRevision": "$resource.details.interventionRevision",
+                    "reason": "$field.interventionReason"
+                }
+            }
+        }
+    ],
+    "main": [
+        {
+            "id": "providerExceptionState",
+            "title": "Provider exception",
+            "fields": [
+                {
+                    "id": "severity",
+                    "label": "Severity",
+                    "path": "severity",
+                    "type": "readonly",
+                    "format": "badge"
+                },
+                {
+                    "id": "message",
+                    "label": "Reason",
+                    "path": "message",
+                    "type": "readonly"
+                },
+                {
+                    "id": "paymentId",
+                    "label": "Payment",
+                    "path": "payment_id",
+                    "type": "readonly"
+                },
+                {
+                    "id": "sellerUserId",
+                    "label": "Seller",
+                    "path": "details.userId",
+                    "type": "readonly"
+                },
+                {
+                    "id": "stripeAccountId",
+                    "label": "Stripe account",
+                    "path": "details.stripeAccountId",
+                    "type": "readonly"
+                },
+                {
+                    "id": "manualPayoutHoldStartedAt",
+                    "label": "Manual hold started",
+                    "path": "details.manualPayoutHoldStartedAt",
+                    "type": "readonly",
+                    "format": "date"
+                },
+                {
+                    "id": "manualPayoutHoldAlertAt",
+                    "label": "Manual hold alert",
+                    "path": "details.manualPayoutHoldAlertAt",
+                    "type": "readonly",
+                    "format": "date"
+                },
+                {
+                    "id": "manualPayoutHoldDeadlineAt",
+                    "label": "Manual hold deadline",
+                    "path": "details.manualPayoutHoldDeadlineAt",
+                    "type": "readonly",
+                    "format": "date"
+                },
+                {
+                    "id": "projectionId",
+                    "label": "Projection",
+                    "path": "details.projectionId",
+                    "type": "readonly"
+                },
+                {
+                    "id": "attemptCount",
+                    "label": "Attempts",
+                    "path": "details.attemptCount",
+                    "type": "readonly"
+                },
+                {
+                    "id": "interventionReason",
+                    "label": "Finance intervention reason",
+                    "path": "interventionReason",
+                    "type": "textarea",
+                    "required": true,
+                    "rows": 3
+                }
+            ]
+        }
+    ]
+}

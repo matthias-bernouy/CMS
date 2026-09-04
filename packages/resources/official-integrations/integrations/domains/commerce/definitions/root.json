@@ -1,8 +1,8 @@
 {
-    "schema": "cms.integration.definition.v1",
+    "schema": "cms.integration.definition.v2",
     "kind": "commerce",
     "label": "Commerce",
-    "version": "2.0.2",
+    "version": "3.0.0",
     "category": "Commerce",
     "description": "Run a catalogue, marketplace, orders, and replaceable buyer notifications from one Supabase-backed commerce model.",
     "icon": {
@@ -16,9 +16,6 @@
     },
     "ui": {
         "$include": "configuration/ui.json"
-    },
-    "theme": {
-        "$include": "configuration/theme.json"
     },
     "generatedSecrets": {
         "$include": "configuration/generated-secrets.json"
@@ -37,26 +34,8 @@
             "artifacts/source-overlays/offer-custom-fields.json",
             "artifacts/source-overlays/seller-custom-fields.json",
             "artifacts/source-overlays/order-custom-fields.json",
-            "artifacts/blocs/commerce-offer-list.json",
-            "artifacts/blocs/commerce-offer-filter.json",
-            "artifacts/blocs/commerce-offer-preview.json",
-            "artifacts/blocs/seller/commerce-account-offers.json",
-            "artifacts/blocs/seller/commerce-account-offers-controller.json",
-            "artifacts/blocs/commerce-account-sales.json",
-            "artifacts/blocs/seller/commerce-account-sales-controller.json",
-            "artifacts/blocs/commerce-sale-detail.json",
-            "artifacts/blocs/seller/commerce-offer-price-form.json",
-            "artifacts/blocs/seller/commerce-offer-price-form-controller.json",
-            "artifacts/blocs/commerce-notification-preferences.json",
-            "artifacts/triggers/dispatch-notifications.json",
-            "artifacts/dashboards/products/definition.json",
-            "artifacts/dashboards/offers/definition.json",
-            "artifacts/dashboards/orders/root.json",
-            "artifacts/dashboards/sellers/root.json",
-            "artifacts/dashboards/configuration/definition.json",
-            "artifacts/dashboards/workflow/definition.json",
-            "artifacts/dashboards/metadata/definition.json",
-            "artifacts/dashboards/taxonomy/definition.json"
+            "artifacts/triggers/dispatch-notifications.json"
         ]
-    }
+    },
+    "type": "source"
 }

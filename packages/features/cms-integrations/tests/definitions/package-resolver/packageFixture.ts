@@ -23,6 +23,7 @@ export async function resolverPackageFixture(
     const kind = options.kind ?? "resolver-demo";
     const version = options.version ?? "1.2.3";
     const definition: IntegrationDefinition = {
+        schema: "cms.integration.definition.v1",
         kind,
         label: options.label ?? "Resolver demo",
         version,
@@ -38,7 +39,7 @@ export async function resolverPackageFixture(
         files: {
             "definition.json": {
                 encoding: "utf8",
-                content: `${JSON.stringify({ schema: "cms.integration.definition.v1", ...definition }, null, 4)}\n`,
+                content: `${JSON.stringify(definition, null, 4)}\n`,
             },
             "release-notes.md": { encoding: "utf8", content: `# ${definition.label}\n` },
         },

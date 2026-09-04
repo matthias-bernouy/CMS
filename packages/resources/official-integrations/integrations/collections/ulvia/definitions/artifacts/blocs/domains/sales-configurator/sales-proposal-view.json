@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "sales-proposal-view",
+        "name": "Shared proposal",
+        "group": "Sales configurator",
+        "description": "Client-safe rendering of one published proposal selected by a revocable share token.",
+        "path": "blocs/domains/sales-configurator/sales-proposal-view"
+    }
+}

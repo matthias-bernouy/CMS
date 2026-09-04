@@ -112,5 +112,6 @@
                 "payment": "$steps.paymentLookup.payment"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

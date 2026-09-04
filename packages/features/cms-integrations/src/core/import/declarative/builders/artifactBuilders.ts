@@ -81,7 +81,12 @@ export function buildDashboardRelationProjectionArtifacts(
 export function buildBlocArtifacts(
     definition: IntegrationDefinition,
     context: TemplateContext,
+    activeResources?: ReadonlySet<string>,
 ): IntegrationBlocArtifact[] {
+    const resourcesByArtifact =
+        definition.schema === "cms.integration.definition.v2" && definition.type === "collection"
+            ? new Map(definition.resources.map((resource) => [resource.artifact, resource.id]))
+            : null;
     return buildArtifacts("bloc", () =>
         (definition.artifacts ?? [])
             .filter((artifact): artifact is DeclarativeBlocArtifactTemplate => artifact.type === "bloc")
@@ -97,6 +102,13 @@ export function buildBlocArtifacts(
                 return {
                     tag,
                     name,
+                    ...(resourcesByArtifact
+                        ? {
+                              catalogue: activeResources?.has(resourcesByArtifact.get(artifact.bloc.tag) ?? "")
+                                  ? ("active" as const)
+                                  : ("inactive" as const),
+                          }
+                        : {}),
                     ...(artifact.bloc.group ? { group: resolveTemplate(artifact.bloc.group, context) } : {}),
                     ...(artifact.bloc.description
                         ? { description: resolveTemplate(artifact.bloc.description, context) }

@@ -1,0 +1,59 @@
+[
+    {
+        "widget": "w-detail",
+        "id": "marketplaceTerms",
+        "source": { "endpoint": "getMarketplaceTermsManagement" },
+        "title": { "path": "label", "fallback": "Seller terms" },
+        "status": { "path": "status" },
+        "actions": [
+            {
+                "id": "publishMarketplaceTerms",
+                "label": "Publish seller terms",
+                "tone": "primary",
+                "placement": "primary",
+                "confirm": "Publish this immutable seller terms version? Existing seller acceptances remain attached to their original version.",
+                "endpoint": {
+                    "endpoint": "publishMarketplaceTermsManagement",
+                    "body": {
+                        "expectedVersion": "$resource.revision",
+                        "documentKey": "$field.documentKey",
+                        "label": "$field.label",
+                        "consentText": "$field.consentText",
+                        "publishedSnapshotUrl": "$field.publishedSnapshotUrl"
+                    }
+                },
+                "after": { "resource": "$result" }
+            }
+        ],
+        "main": [
+            {
+                "id": "document",
+                "title": "Runtime seller policy",
+                "description": "Publishing downloads the current CMS page snapshot, verifies its digest, and creates an immutable version.",
+                "fields": [
+                    { "id": "documentKey", "label": "Stable key", "path": "documentKey", "type": "text", "required": true },
+                    { "id": "label", "label": "Public label", "path": "label", "type": "text", "required": true },
+                    { "id": "consentText", "label": "Consent sentence", "path": "consentText", "type": "textarea", "required": true },
+                    {
+                        "id": "publishedSnapshotUrl",
+                        "label": "Published page snapshot URL",
+                        "path": "publishedSnapshotUrl",
+                        "type": "text",
+                        "required": true
+                    }
+                ]
+            }
+        ],
+        "aside": [
+            {
+                "id": "publication",
+                "title": "Publication",
+                "fields": [
+                    { "id": "status", "label": "Status", "path": "status", "type": "readonly", "format": "badge" },
+                    { "id": "revision", "label": "Current version", "path": "revision", "type": "readonly" },
+                    { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "type": "readonly", "format": "date" }
+                ]
+            }
+        ]
+    }
+]

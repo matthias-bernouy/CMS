@@ -112,6 +112,7 @@ export type IntegrationPendingOperationSourceState = {
     secretRefs: Record<string, string>;
     secretInputs: string[];
     artifacts: IntegrationArtifactResult[];
+    activeResources?: string[];
     runCount: number;
     runs: IntegrationRun[];
 };
@@ -168,5 +169,7 @@ export type IntegrationInstallation = {
     secretRefs: Record<string, string>;
     secretInputs: string[];
     artifacts: IntegrationArtifactResult[];
+    /** Exact active resource ids for collection installations. */
+    activeResources?: string[];
     runs: IntegrationRun[];
 };

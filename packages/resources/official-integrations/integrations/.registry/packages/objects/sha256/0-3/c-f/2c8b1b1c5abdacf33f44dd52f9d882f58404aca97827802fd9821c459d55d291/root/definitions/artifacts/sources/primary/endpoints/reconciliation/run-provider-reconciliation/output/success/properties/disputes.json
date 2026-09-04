@@ -1,0 +1,106 @@
+{
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string"
+            },
+            "paymentId": {
+                "type": "number"
+            },
+            "providerPaymentId": {
+                "type": "number"
+            },
+            "clientReferenceId": {
+                "type": "string"
+            },
+            "providerEventId": {
+                "type": "string"
+            },
+            "stripeChargeId": {
+                "type": "string"
+            },
+            "amount": {
+                "type": "number"
+            },
+            "currency": {
+                "type": "string"
+            },
+            "reason": {
+                "type": "string"
+            },
+            "status": {
+                "type": "string"
+            },
+            "evidenceStatus": {
+                "type": "string"
+            },
+            "evidenceDueBy": {
+                "type": "string"
+            },
+            "isChargeRefundable": {
+                "type": "boolean",
+                "nullable": true
+            },
+            "fundsWithdrawn": {
+                "type": "boolean"
+            },
+            "balanceTransactionIds": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "stagedEvidenceOperationId": {
+                "type": "string",
+                "nullable": true
+            },
+            "stagedEvidenceAt": {
+                "type": "string",
+                "nullable": true
+            },
+            "evidenceSubmissionCount": {
+                "type": "number"
+            },
+            "projectionId": {
+                "type": "number"
+            },
+            "projectionClaimToken": {
+                "type": "string"
+            },
+            "projectionAttemptCount": {
+                "type": "number"
+            },
+            "causalSequence": {
+                "type": "number"
+            },
+            "createdAt": {
+                "type": "string"
+            },
+            "updatedAt": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "paymentId",
+            "providerPaymentId",
+            "clientReferenceId",
+            "providerEventId",
+            "stripeChargeId",
+            "amount",
+            "currency",
+            "status",
+            "evidenceStatus",
+            "balanceTransactionIds",
+            "evidenceSubmissionCount",
+            "projectionId",
+            "projectionClaimToken",
+            "projectionAttemptCount",
+            "causalSequence",
+            "createdAt",
+            "updatedAt"
+        ]
+    }
+}

@@ -1,0 +1,104 @@
+[
+    {
+        "widget": "w-table",
+        "id": "providerPaymentsTable",
+        "title": "Stripe provider payments",
+        "source": {
+            "sourceId": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "listProviderPayments",
+            "params": {
+                "q": "$filter.q",
+                "paymentStatus": "$filter.paymentStatus",
+                "settlementStatus": "$filter.settlementStatus",
+                "limit": "100"
+            },
+            "itemsPath": "payments",
+            "totalPath": "total"
+        },
+        "rowKey": "paymentId",
+        "filters": [
+            {
+                "id": "q",
+                "label": "Order or provider id",
+                "param": "q",
+                "type": "text"
+            },
+            {
+                "id": "paymentStatus",
+                "label": "Provider payment",
+                "param": "paymentStatus",
+                "type": "text"
+            },
+            {
+                "id": "settlementStatus",
+                "label": "Provider settlement",
+                "param": "settlementStatus",
+                "type": "text"
+            }
+        ],
+        "columns": [
+            {
+                "id": "paymentId",
+                "label": "Provider payment",
+                "path": "paymentId",
+                "primary": true
+            },
+            {
+                "id": "clientReferenceId",
+                "label": "Order",
+                "path": "clientReferenceId"
+            },
+            {
+                "id": "amountTotal",
+                "label": "Captured",
+                "path": "amountTotal",
+                "format": "money"
+            },
+            {
+                "id": "refundedAmount",
+                "label": "Refunded",
+                "path": "refundedAmount",
+                "format": "money"
+            },
+            {
+                "id": "actualStripeProcessingFeeAmount",
+                "label": "Actual Stripe cost",
+                "path": "actualStripeProcessingFeeAmount",
+                "format": "money"
+            },
+            {
+                "id": "actualPlatformMarginAfterStripeAmount",
+                "label": "Retained after Stripe",
+                "path": "actualPlatformMarginAfterStripeAmount",
+                "format": "money"
+            },
+            {
+                "id": "paymentStatus",
+                "label": "Payment",
+                "path": "paymentStatus",
+                "format": "badge"
+            },
+            {
+                "id": "settlementStatus",
+                "label": "Settlement",
+                "path": "settlementStatus",
+                "format": "badge"
+            },
+            {
+                "id": "disputeStatus",
+                "label": "Dispute",
+                "path": "disputeStatus",
+                "format": "badge"
+            },
+            {
+                "id": "updatedAt",
+                "label": "Provider updated",
+                "path": "updatedAt",
+                "format": "date"
+            }
+        ],
+        "selection": {
+            "opens": "providerPaymentDetail"
+        }
+    }
+]

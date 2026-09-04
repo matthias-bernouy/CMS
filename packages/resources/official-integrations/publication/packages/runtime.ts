@@ -100,9 +100,6 @@ async function discoverIntegrationIndexes(requestedRoot: string): Promise<readon
     const root = await realpath(requestedRoot);
     const state = { entries: 0, indexes: [] as string[] };
     await walkForIndexes(root, root, 0, state);
-    if (state.indexes.length === 0) {
-        throw new Error("Official integrations root contains no integration indexes");
-    }
     return state.indexes.sort(compareText);
 }
 

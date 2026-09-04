@@ -122,7 +122,7 @@ async function seedNewsletter(deps: {
     await deps.installations.create({
         id: "newsletter",
         label: "Newsletter",
-        definitionVersion: "1.0.0",
+        definitionVersion: "3.0.0",
         status: "success",
         answersSnapshot: { id: "newsletter" },
         secretRefs: {},

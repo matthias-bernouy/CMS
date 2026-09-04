@@ -1,0 +1,105 @@
+{
+    "processed": {
+        "type": "number"
+    },
+    "staleCreations": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "externalOrderId": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "status": {
+                    "type": "string"
+                },
+                "manualReviewAt": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "shipments": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "externalOrderId": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "expeditionNumber": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "checkedAt": {
+                    "type": "string"
+                },
+                "reconciliationError": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "events": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "eventId": {
+                    "type": "number"
+                },
+                "claimToken": {
+                    "type": "string"
+                },
+                "projectionAttempts": {
+                    "type": "number"
+                },
+                "orderPublicId": {
+                    "type": "string"
+                },
+                "providerEventId": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "normalizedStatus": {
+                    "type": "string"
+                },
+                "occurredAt": {
+                    "type": "string"
+                },
+                "providerReference": {
+                    "type": "string"
+                },
+                "carrierAcceptedAt": {
+                    "type": "string"
+                },
+                "recipientHandoffAt": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "eventId",
+                "claimToken",
+                "projectionAttempts",
+                "orderPublicId",
+                "providerEventId",
+                "normalizedStatus",
+                "occurredAt",
+                "providerReference"
+            ]
+        }
+    },
+    "claimReturnEvents": {
+        "$include": "claim-return-events.json"
+    }
+}

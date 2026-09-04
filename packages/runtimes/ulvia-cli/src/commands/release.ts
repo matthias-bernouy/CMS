@@ -1,27 +1,30 @@
 import { compare } from "semver";
 import type { LocalIntegrationRepository } from "../repository/local";
-import type { RemoteIntegrationRepository } from "../repository/remote";
 import { auditPreparedLocalRelease, prepareLocalRelease } from "../release/audit";
 import { listLocalReleaseKinds } from "../release/source";
 import { orderLocalReleaseKinds } from "../release/source/dependencyOrder";
 import type { LocalReleaseVerifier } from "../release/types";
 import { parseSourceCommandFlags } from "./source-flags";
+import { importLocalPackageSeed } from "../repository/seed";
 
 export async function releaseCommand(
     args: readonly string[],
     cwd: string,
     local: LocalIntegrationRepository,
-    remote: RemoteIntegrationRepository,
     verifier: LocalReleaseVerifier,
     log: (message: string) => void,
 ): Promise<void> {
     const flags = parseSourceCommandFlags("release", args, cwd, { allowAll: true });
+    const imported = await importLocalPackageSeed(flags.root, local);
+    if (imported) {
+        log(`+ imported ${imported} immutable historical package(s) from the local source tree`);
+    }
     const discovered = flags.all ? await listLocalReleaseKinds(flags.root) : [flags.kind!];
     const kinds = flags.all ? await orderLocalReleaseKinds(flags.root, discovered) : discovered;
     const failures: { kind: string; error: unknown }[] = [];
     for (const kind of kinds) {
         try {
-            await releaseOne(flags.root, kind, flags.version, local, remote, verifier, log);
+            await releaseOne(flags.root, kind, flags.version, local, verifier, log);
         } catch (error) {
             if (!flags.all) {
                 throw error;
@@ -40,13 +43,10 @@ async function releaseOne(
     requestedKind: string,
     requestedVersion: string | undefined,
     local: LocalIntegrationRepository,
-    remote: RemoteIntegrationRepository,
     verifier: LocalReleaseVerifier,
     log: (message: string) => void,
 ): Promise<void> {
-    const prepared = await prepareLocalRelease(root, requestedKind, requestedVersion, local, remote, {
-        skipRemoteWhenLocal: true,
-    });
+    const prepared = await prepareLocalRelease(root, requestedKind, requestedVersion, local);
     const { candidate, existing, published, publishedVersions } = prepared;
     const { kind, version } = candidate.package.envelope;
     if (existing) {
@@ -66,7 +66,7 @@ async function releaseOne(
         log(`= ${kind}@${version} is already published (${shortDigest(stored.record.digest)})`);
         return;
     }
-    await auditPreparedLocalRelease(prepared, { local, remote, verifier, log });
+    await auditPreparedLocalRelease(prepared, { local, verifier, log });
     const stored = await local.store({
         package: candidate.package,
         definition: candidate.definition,

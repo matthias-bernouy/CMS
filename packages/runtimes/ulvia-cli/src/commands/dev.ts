@@ -9,7 +9,7 @@ import type { UlviaPaths } from "../runtime/paths";
 import { localSupabaseStatus, startLocalSupabase, stopLocalSupabase } from "../runtime/supabase";
 import { startLocalSupabaseManagementServer } from "../runtime/supabase-local";
 
-const PORTS: DevPorts = Object.freeze({
+const DEFAULT_PORTS: DevPorts = Object.freeze({
     control: 5100,
     delivery: 5101,
     repository: 5102,
@@ -22,13 +22,14 @@ export async function devCommand(
     paths: UlviaPaths,
     repository: LocalIntegrationRepository,
     log: (message: string) => void,
+    environment: Record<string, string | undefined> = process.env,
 ): Promise<void> {
     const action = args[0] ?? "start";
     if (args.length > (args[0] ? 1 : 0)) {
         throw new Error("dev accepts only one action: status, credentials, or stop");
     }
     if (action === "start") {
-        await runDev(paths, repository, log);
+        await runDev(paths, repository, log, resolveDevPorts(environment));
         return;
     }
     if (action === "status") {
@@ -55,19 +56,20 @@ async function runDev(
     paths: UlviaPaths,
     repository: LocalIntegrationRepository,
     log: (message: string) => void,
+    ports: DevPorts,
 ): Promise<void> {
     log("Starting persistent local Supabase services...");
     const supabaseEnvironment = await startLocalSupabase(paths.supabase);
     log("Starting persistent local MongoDB...");
-    const mongo = await startLocalMongo(paths.mongo, PORTS.mongo);
-    const bridge = startLocalRepositoryServer(repository, new LocalRepositoryCatalog(repository), PORTS.repository);
+    const mongo = await startLocalMongo(paths.mongo, ports.mongo);
+    const bridge = startLocalRepositoryServer(repository, new LocalRepositoryCatalog(repository), ports.repository);
     const supabaseToken = randomBytes(32).toString("base64url");
     const supabaseManagement = await startLocalSupabaseManagementServer({
         projectRoot: paths.supabase,
         projectRef: "local",
         accessToken: supabaseToken,
         databaseUrl: supabaseEnvironment.databaseUrl,
-        port: PORTS.supabaseManagement,
+        port: ports.supabaseManagement,
     });
     try {
         const config = await loadOrCreateDevRuntimeConfig(paths.dev);
@@ -83,11 +85,11 @@ async function runDev(
                 projectRef: "local",
                 environment: supabaseEnvironment,
             },
-            PORTS,
+            ports,
         );
         log("");
-        log(`CMS Control: http://127.0.0.1:${PORTS.control}`);
-        log(`CMS Delivery: http://127.0.0.1:${PORTS.delivery}`);
+        log(`CMS Control: http://127.0.0.1:${ports.control}`);
+        log(`CMS Delivery: http://127.0.0.1:${ports.delivery}`);
         log("Credentials: bun run ulvia -- dev credentials");
         log("The CMS repository is local-only; pull integrations in another terminal when needed.");
         log("Supabase-backed integration installs target the local database, Storage, and Edge Runtime.");
@@ -96,6 +98,36 @@ async function runDev(
         bridge.stop();
         await supabaseManagement.stop();
     }
+}
+
+export function resolveDevPorts(environment: Record<string, string | undefined>): DevPorts {
+    const ports: DevPorts = {
+        control: readPort(environment, "ULVIA_DEV_CONTROL_PORT", DEFAULT_PORTS.control),
+        delivery: readPort(environment, "ULVIA_DEV_DELIVERY_PORT", DEFAULT_PORTS.delivery),
+        repository: readPort(environment, "ULVIA_DEV_REPOSITORY_PORT", DEFAULT_PORTS.repository),
+        supabaseManagement: readPort(
+            environment,
+            "ULVIA_DEV_SUPABASE_MANAGEMENT_PORT",
+            DEFAULT_PORTS.supabaseManagement,
+        ),
+        mongo: readPort(environment, "ULVIA_DEV_MONGO_PORT", DEFAULT_PORTS.mongo),
+    };
+    if (new Set(Object.values(ports)).size !== Object.values(ports).length) {
+        throw new Error("Ulvia dev ports must be distinct");
+    }
+    return ports;
+}
+
+function readPort(environment: Record<string, string | undefined>, name: string, fallback: number): number {
+    const raw = environment[name]?.trim();
+    if (!raw) {
+        return fallback;
+    }
+    const port = Number(raw);
+    if (!/^\d+$/u.test(raw) || !Number.isInteger(port) || port < 1 || port > 65_535) {
+        throw new Error(`${name} must be an integer between 1 and 65535`);
+    }
+    return port;
 }
 
 async function superviseCms(cms: Awaited<ReturnType<typeof startLocalCms>>): Promise<void> {

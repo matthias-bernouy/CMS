@@ -1,0 +1,19 @@
+{
+    "type": "object",
+    "properties": {
+        "staged": {
+            "type": "boolean"
+        },
+        "attemptId": {
+            "type": "string"
+        },
+        "requiredCount": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "staged",
+        "attemptId",
+        "requiredCount"
+    ]
+}

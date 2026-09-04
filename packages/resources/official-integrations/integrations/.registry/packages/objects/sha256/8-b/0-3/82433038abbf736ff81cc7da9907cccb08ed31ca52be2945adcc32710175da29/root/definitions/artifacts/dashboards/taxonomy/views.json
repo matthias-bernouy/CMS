@@ -1,0 +1,6 @@
+{
+    "$files": [
+        "views/brand-and-category-management/root.json",
+        "views/category-detail/root.json"
+    ]
+}

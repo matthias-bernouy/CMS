@@ -1,0 +1,145 @@
+{
+    "endpointId": "relayPoints",
+    "method": "GET",
+    "access": "public",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/relay-points",
+    "params": [
+        {
+            "name": "country",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "postalCode",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "city",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "weightGrams",
+            "in": "query",
+            "type": "number"
+        },
+        {
+            "name": "modeDelivery",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "limit",
+            "in": "query",
+            "type": "number"
+        },
+        {
+            "name": "latitude",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "longitude",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "location": {
+                                    "type": "string"
+                                },
+                                "number": {
+                                    "type": "string"
+                                },
+                                "country": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "addressLine1": {
+                                    "type": "string"
+                                },
+                                "addressLine2": {
+                                    "type": "string"
+                                },
+                                "postalCode": {
+                                    "type": "string"
+                                },
+                                "city": {
+                                    "type": "string"
+                                },
+                                "latitude": {
+                                    "type": "number"
+                                },
+                                "longitude": {
+                                    "type": "number"
+                                },
+                                "nature": {
+                                    "type": "string"
+                                },
+                                "pointType": {
+                                    "type": "string"
+                                },
+                                "available": {
+                                    "type": "boolean"
+                                },
+                                "warning": {
+                                    "type": "string"
+                                },
+                                "photo": {
+                                    "type": "string"
+                                },
+                                "openingHoursHtml": {
+                                    "type": "string"
+                                },
+                                "shippingAmount": {
+                                    "type": "number"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "location",
+                                "number",
+                                "country",
+                                "name",
+                                "label",
+                                "postalCode",
+                                "city"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        }
+    ]
+}

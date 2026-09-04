@@ -1,8 +1,8 @@
 {
-    "schema": "cms.integration.definition.v1",
+    "schema": "cms.integration.definition.v2",
     "kind": "emailer",
     "label": "Emailer",
-    "version": "2.0.2",
+    "version": "3.0.0",
     "category": "Messaging",
     "description": "Manage transactional templates and bounded Newsletter broadcasts through SMTP.",
     "icon": {
@@ -23,10 +23,7 @@
     "artifacts": {
         "$files": [
             "artifacts/sources/primary/definition.json",
-            "artifacts/dashboards/templates/root.json",
-            "artifacts/dashboards/settings/root.json",
             "artifacts/sources/broadcast/definition.json",
-            "artifacts/dashboards/broadcast-campaigns.json",
             "artifacts/functions/get-newsletter-broadcast-status.json",
             "artifacts/functions/pause-newsletter-broadcast.json",
             "artifacts/functions/cancel-newsletter-broadcast.json",
@@ -36,5 +33,6 @@
     },
     "dependencies": {
         "$include": "configuration/dependencies.json"
-    }
+    },
+    "type": "source"
 }

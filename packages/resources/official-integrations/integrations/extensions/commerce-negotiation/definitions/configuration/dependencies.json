@@ -1,10 +1,7 @@
 [
     {
-        "name": "basicBlocs",
-        "kind": "basic-blocs"
-    },
-    {
         "name": "commerce",
-        "kind": "commerce"
+        "kind": "commerce",
+        "versionRange": "^3.0.0"
     }
 ]

@@ -1,0 +1,44 @@
+[
+    {
+        "provider": "supabase",
+        "root": "connectors/supabase",
+        "dataApiSchemas": [
+            "emailer",
+            "broadcast"
+        ],
+        "compatibility": {
+            "schema": {
+                "$include": "compatibility/schema.json"
+            }
+        },
+        "schemas": [
+            {
+                "manifest": "sql/schema.manifest.json"
+            },
+            {
+                "manifest": "sql/broadcast-schema.manifest.json"
+            }
+        ],
+        "functions": [
+            {
+                "name": "cms-emailer",
+                "directory": "functions/cms-emailer",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_EMAILER_API_KEY": "{{generated.cmsApiKey}}"
+                }
+            },
+            {
+                "name": "cms-broadcast",
+                "directory": "functions/cms-broadcast",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_BROADCAST_API_KEY": "{{generated.broadcastApiKey}}",
+                    "CMS_EMAILER_API_KEY": "{{generated.cmsApiKey}}",
+                    "BROADCAST_TICK_BATCH": "25",
+                    "BROADCAST_MAX_ATTEMPTS": "5"
+                }
+            }
+        ]
+    }
+]

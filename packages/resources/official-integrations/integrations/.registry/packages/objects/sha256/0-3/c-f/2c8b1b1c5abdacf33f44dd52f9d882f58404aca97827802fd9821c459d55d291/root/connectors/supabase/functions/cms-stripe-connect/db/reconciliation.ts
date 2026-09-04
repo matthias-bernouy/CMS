@@ -1,0 +1,131 @@
+import type { JsonRecord } from "../shared/types.ts";
+import { callRpcObject, callRpcRows, rest, restError } from "./postgrest.ts";
+
+export type ReconciliationOperationRead = {
+    operation: JsonRecord;
+    client_reference_id: string | null;
+    payment_currency: string | null;
+};
+
+export type ReconciliationProjectionRead = {
+    projection: JsonRecord;
+    payment: JsonRecord | null;
+    financial_operation: JsonRecord | null;
+    operation_payment: JsonRecord | null;
+    dispute: JsonRecord | null;
+    dispute_client_reference_id: string | null;
+    staged_evidence: JsonRecord | null;
+    evidence_submission_count: number;
+    pending_approval: JsonRecord | null;
+};
+
+export type PaymentReconciliationLedgerRead = {
+    refunded_amount: number;
+    transferred_amount: number;
+    reversed_amount: number;
+    seller_recovery_amount: number;
+};
+
+export type PaymentReconciliationLocalContext = {
+    payment: JsonRecord | null;
+    refunds: JsonRecord[];
+};
+
+export type ProviderTransferReconciliationContext = {
+    transfer: JsonRecord | null;
+    local_reversed_amount: number;
+};
+
+export type StripeDisputeApplicationContext = {
+    payment: JsonRecord | null;
+    dispute: JsonRecord | null;
+};
+
+export type FinancialOperationRecoveryContext = {
+    payment: JsonRecord | null;
+    transfer: JsonRecord | null;
+    transfer_reversal: JsonRecord | null;
+    transfer_recovery: JsonRecord | null;
+    refund: JsonRecord | null;
+};
+
+export async function readReconciliationOperations(limit: number): Promise<ReconciliationOperationRead[]> {
+    return await callRpcRows<ReconciliationOperationRead>("read_reconciliation_operations", {
+        p_limit: limit,
+    });
+}
+
+export async function claimReconciliationProjectionBatch(
+    owner: string,
+    limit: number,
+): Promise<ReconciliationProjectionRead[]> {
+    return await callRpcRows<ReconciliationProjectionRead>("claim_reconciliation_projection_batch", {
+        p_owner: owner,
+        p_limit: limit,
+    });
+}
+
+export async function readPaymentReconciliationLedger(paymentId: number): Promise<PaymentReconciliationLedgerRead> {
+    return await callRpcObject<PaymentReconciliationLedgerRead>("read_payment_reconciliation_ledger", {
+        p_payment_id: paymentId,
+    });
+}
+
+export async function readPaymentReconciliationLocalContext(
+    paymentId: number,
+): Promise<PaymentReconciliationLocalContext> {
+    return await callRpcObject<PaymentReconciliationLocalContext>("read_payment_reconciliation_local_context", {
+        p_payment_id: paymentId,
+    });
+}
+
+export async function readProviderTransferReconciliationContext(
+    stripeTransferId: string,
+): Promise<ProviderTransferReconciliationContext> {
+    return await callRpcObject<ProviderTransferReconciliationContext>("read_provider_transfer_reconciliation_context", {
+        p_stripe_transfer_id: stripeTransferId,
+    });
+}
+
+export async function readStripeDisputeApplicationContext(
+    stripeChargeId: string,
+    stripeDisputeId: string,
+): Promise<StripeDisputeApplicationContext> {
+    return await callRpcObject<StripeDisputeApplicationContext>("read_stripe_dispute_application_context", {
+        p_stripe_charge_id: stripeChargeId,
+        p_stripe_dispute_id: stripeDisputeId,
+    });
+}
+
+export async function readFinancialOperationRecoveryContext(
+    paymentId: number,
+    operationId: number,
+    recoveryRequestId: string | null,
+): Promise<FinancialOperationRecoveryContext> {
+    return await callRpcObject<FinancialOperationRecoveryContext>("read_financial_operation_recovery_context", {
+        p_payment_id: paymentId,
+        p_operation_id: operationId,
+        p_recovery_request_id: recoveryRequestId,
+    });
+}
+
+export async function resolveProviderExceptionRow(deduplicationKey: string, resolvedAt: string): Promise<void> {
+    const query = new URLSearchParams();
+    query.set("deduplication_key", `eq.${deduplicationKey}`);
+    query.set("status", "neq.resolved");
+    const response = await rest(`provider_exceptions?${query.toString()}`, {
+        method: "PATCH",
+        headers: {
+            "content-type": "application/json",
+            prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+            status: "resolved",
+            resolved_at: resolvedAt,
+            resolved_by: "provider-reconciliation",
+        }),
+    });
+    if (!response.ok) {
+        throw await restError(response);
+    }
+}

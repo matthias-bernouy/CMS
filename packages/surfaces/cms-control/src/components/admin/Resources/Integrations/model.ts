@@ -21,6 +21,7 @@ export type IntegrationInstallationDetail = IntegrationInstallationRow & {
     answers: Record<string, IntegrationAnswerValue>;
     definition?: IntegrationDefinition;
     secretInputs: string[];
+    activeResources?: string[];
 };
 
 export type IntegrationUpgradeVersions = {
@@ -96,7 +97,10 @@ export type IntegrationBrowserHost = HTMLElement & {
     renderAll(): void;
     setTab(tab: BrowserTab): void;
     openDetail(integrationId: string): void;
-    openSetup(definition: IntegrationDefinition, options?: { answers?: Record<string, unknown>; error?: string }): void;
+    openSetup(
+        definition: IntegrationDefinition,
+        options?: { answers?: Record<string, unknown>; error?: string; resources?: readonly string[] },
+    ): void;
     closeDetail(): void;
     waitForBoundData(predicate: () => boolean, timeoutMs?: number): Promise<void>;
 };

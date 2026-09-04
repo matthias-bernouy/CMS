@@ -1,0 +1,122 @@
+{
+    "type": "function",
+    "function": {
+        "id": "getClaimReturnForMe",
+        "method": "GET",
+        "access": {
+            "mode": "auth"
+        },
+        "meta": {
+            "name": "Get my claim return shipment",
+            "description": "Return a sanitized claim-bound return shipment to its buyer or seller."
+        },
+        "input": {
+            "params": {
+                "claimId": {
+                    "type": "number"
+                }
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "authorization",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "getClaimReturnAuthorization",
+                    "params": {
+                        "claimId": "$input.params.claimId"
+                    }
+                }
+            },
+            {
+                "assert": {
+                    "condition": {
+                        "in": [
+                            "$ctx.user.id",
+                            [
+                                "$steps.authorization.buyerCmsUserId",
+                                "$steps.authorization.sellerCmsUserId"
+                            ]
+                        ]
+                    },
+                    "failure": {
+                        "status": 403,
+                        "error": "Marketplace claim return does not belong to the current user"
+                    }
+                }
+            },
+            {
+                "id": "shipments",
+                "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "shipmentForExternalOrder",
+                    "params": {
+                        "externalOrderId": {
+                            "$concat": [
+                                "claim-return:",
+                                "$steps.authorization.claimId"
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": "tracking",
+                "forEach": {
+                    "items": "$steps.shipments.items",
+                    "max": 1,
+                    "steps": [
+                        {
+                            "assert": {
+                                "condition": {
+                                    "notEquals": [
+                                        "$item.deliveryRelayLocation",
+                                        null
+                                    ]
+                                },
+                                "failure": {
+                                    "status": 502,
+                                    "error": "Invalid claim return tracking relay location"
+                                }
+                            }
+                        }
+                    ],
+                    "yield": {
+                        "id": "$item.id",
+                        "expeditionNumber": "$item.expeditionNumber",
+                        "status": "$item.status",
+                        "trackingUrl": "$item.trackingUrl",
+                        "deliveryRelayLocation": "$item.deliveryRelayLocation",
+                        "latestEventLabel": "$item.latestEventLabel",
+                        "latestEventAt": "$item.latestEventAt",
+                        "carrierAcceptedAt": "$item.carrierAcceptedAt",
+                        "recipientHandoffAt": "$item.recipientHandoffAt",
+                        "createdAt": "$item.createdAt",
+                        "events": "$item.events"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": {
+                "claimId": "$steps.authorization.claimId",
+                "claimStatus": "$steps.authorization.claimStatus",
+                "returnShipByAt": "$steps.authorization.returnShipByAt",
+                "returnDeliveryStatus": "$steps.authorization.returnDeliveryStatus",
+                "orderNumber": "$steps.authorization.orderNumber",
+                "allowed": "$steps.authorization.allowed",
+                "reason": "$steps.authorization.reason",
+                "shipments": "$steps.tracking"
+            }
+        }
+    }
+}

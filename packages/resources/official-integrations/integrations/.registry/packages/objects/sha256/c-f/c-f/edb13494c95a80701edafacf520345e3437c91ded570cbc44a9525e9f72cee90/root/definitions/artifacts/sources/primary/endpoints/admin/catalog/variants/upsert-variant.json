@@ -1,0 +1,48 @@
+[
+  {
+    "endpointId": "upsertVariant",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/variant",
+    "meta": {
+      "name": "Save variant",
+      "description": "Create or update one commercial variant."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "moduleItemId": { "type": "number" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string", "nullable": true },
+        "providerName": { "type": "string", "nullable": true },
+        "pricingMode": { "type": "string" },
+        "unitAmountCents": { "type": "number", "nullable": true },
+        "currency": { "type": "string" },
+        "status": { "type": "string" },
+        "sortOrder": { "type": "number" }
+      },
+      "required": ["moduleItemId", "code", "name", "pricingMode", "currency", "status"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../../shapes/catalog/variant.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

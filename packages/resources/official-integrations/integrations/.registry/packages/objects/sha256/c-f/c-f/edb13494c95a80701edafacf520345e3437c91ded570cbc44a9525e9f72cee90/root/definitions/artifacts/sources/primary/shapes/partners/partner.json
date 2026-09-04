@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "number", "nullable": true },
+    "cmsUserId": {
+      "type": "string",
+      "semantic": {
+        "kind": "user-id",
+        "authority": "cms"
+      }
+    },
+    "status": { "type": "string" },
+    "displayName": { "type": "string" },
+    "contactEmail": { "type": "string", "nullable": true },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "createdAt": { "type": "string" },
+    "updatedAt": { "type": "string" }
+  },
+  "required": [
+    "id",
+    "cmsUserId",
+    "status",
+    "displayName",
+    "capabilities"
+  ]
+}

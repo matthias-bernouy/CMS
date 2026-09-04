@@ -1,0 +1,9 @@
+{
+    "$files": [
+        "endpoints/proposals/proposal-queries-and-creation/root.json",
+        "endpoints/proposals/proposal-actions.json",
+        "endpoints/admin/proposals/manage-proposals.json",
+        "endpoints/admin/proposal/proposal-management.json",
+        "endpoints/admin/settings/settings-management.json"
+    ]
+}

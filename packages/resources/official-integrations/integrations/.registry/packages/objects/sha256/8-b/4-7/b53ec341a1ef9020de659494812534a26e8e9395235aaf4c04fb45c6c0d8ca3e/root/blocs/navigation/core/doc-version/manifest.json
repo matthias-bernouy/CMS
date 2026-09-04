@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-version",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Version switcher",
+        "description": "Dropdown to switch between documentation versions.",
+        "categories": [
+            "content"
+        ]
+    }
+}

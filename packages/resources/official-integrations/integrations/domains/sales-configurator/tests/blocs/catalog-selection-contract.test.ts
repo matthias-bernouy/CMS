@@ -1,7 +1,9 @@
 import { resolve } from "node:path";
 import { describe, expect, test } from "bun:test";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
-const versionRoot = resolve(import.meta.dir, "../..");
+const sourceRoot = resolve(import.meta.dir, "../..");
+const blocRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/ulvia/blocs/domains/sales-configurator");
 
 describe("sales catalogue selection contract", () => {
     test("reserves data attributes for behavior and scopes fallback styles", async () => {
@@ -13,10 +15,10 @@ describe("sales catalogue selection contract", () => {
             "sales-proposal-starter",
             "sales-proposal-view",
         ]) {
-            const blocRoot = resolve(versionRoot, `blocs/${tag}`);
-            const content = await Bun.file(resolve(blocRoot, "default.html")).text();
+            const tagRoot = resolve(blocRoot, tag);
+            const content = await Bun.file(resolve(tagRoot, "default.html")).text();
             const sources: string[] = [];
-            for await (const path of new Bun.Glob("*.ts").scan({ cwd: blocRoot, absolute: true })) {
+            for await (const path of new Bun.Glob("*.ts").scan({ cwd: tagRoot, absolute: true })) {
                 if (!path.endsWith("BlocEditor.ts")) {
                     sources.push(await Bun.file(path).text());
                 }
@@ -47,8 +49,8 @@ describe("sales catalogue selection contract", () => {
 
     test("keeps starter and builder on the same compact searchable table hooks", async () => {
         for (const tag of ["sales-proposal-starter", "sales-proposal-builder"]) {
-            const content = await Bun.file(resolve(versionRoot, `blocs/${tag}/default.html`)).text();
-            const view = await Bun.file(resolve(versionRoot, `blocs/${tag}/Bloc.ts`)).text();
+            const content = await Bun.file(resolve(blocRoot, tag, "default.html")).text();
+            const view = await Bun.file(resolve(blocRoot, tag, "Bloc.ts")).text();
 
             expect(content).toContain('<table class="sales-catalog-table"');
             expect(content).toContain('cms-repeat="catalogData.selectionRows as row"');
@@ -85,8 +87,8 @@ describe("sales catalogue selection contract", () => {
             expect(view).not.toMatch(/\bfetch\s*\(/);
         }
 
-        const starter = await Bun.file(resolve(versionRoot, "blocs/sales-proposal-starter/default.html")).text();
-        const builder = await Bun.file(resolve(versionRoot, "blocs/sales-proposal-builder/default.html")).text();
+        const starter = await Bun.file(resolve(blocRoot, "sales-proposal-starter/default.html")).text();
+        const builder = await Bun.file(resolve(blocRoot, "sales-proposal-builder/default.html")).text();
         for (const content of [starter, builder]) {
             expect(content).not.toContain("data-sales-danger-action");
             expect(content).not.toContain("data-sales-form-layout");
@@ -99,10 +101,10 @@ describe("sales catalogue selection contract", () => {
 
     test("declares the additive flat selection row response shape", async () => {
         const endpoints = (await readJson(
-            "definitions/artifacts/sources/primary/endpoints/partner/catalog/root.json",
+            resolve(sourceRoot, "definitions/artifacts/sources/primary/endpoints/partner/catalog/root.json"),
         )) as Array<{ output: Array<{ status: string; body: Record<string, unknown> }> }>;
         const rowShape = await readJson(
-            "definitions/artifacts/sources/primary/shapes/catalog/partner/selection-row.json",
+            resolve(sourceRoot, "definitions/artifacts/sources/primary/shapes/catalog/partner/selection-row.json"),
         );
         const success = endpoints[0]!.output.find((output) => output.status === "200")!;
         const body = success.body as {
@@ -139,5 +141,5 @@ describe("sales catalogue selection contract", () => {
 });
 
 async function readJson(path: string): Promise<unknown> {
-    return Bun.file(resolve(versionRoot, path)).json();
+    return Bun.file(path).json();
 }

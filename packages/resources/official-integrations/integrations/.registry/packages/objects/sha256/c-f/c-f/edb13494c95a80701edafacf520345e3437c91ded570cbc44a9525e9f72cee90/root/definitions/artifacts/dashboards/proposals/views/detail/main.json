@@ -1,0 +1,117 @@
+[
+  {
+    "id": "proposalSummary",
+    "title": "Proposal",
+    "fields": [
+      { "id": "reference", "label": "Reference", "path": "reference", "type": "readonly" },
+      { "id": "title", "label": "Public title", "path": "title", "type": "readonly" },
+      { "id": "introduction", "label": "Public introduction", "path": "introduction", "type": "readonly" },
+      { "id": "partner", "label": "Sales partner", "path": "partner.displayName", "type": "readonly" },
+      { "id": "privateNotes", "label": "Private notes", "path": "privateNotes", "type": "readonly" }
+    ]
+  },
+  {
+    "id": "clientProfile",
+    "title": "Client profile",
+    "fields": [
+      { "id": "clientCompany", "label": "Client", "path": "client.companyName", "type": "readonly" },
+      {
+        "id": "clientRegistrationNumber",
+        "label": "Company registration",
+        "path": "client.companyRegistrationNumber",
+        "type": "readonly"
+      },
+      { "id": "clientContact", "label": "Client contact", "path": "client.contactName", "type": "readonly" },
+      {
+        "id": "clientContactJobTitle",
+        "label": "Contact job title",
+        "path": "client.contactJobTitle",
+        "type": "readonly"
+      },
+      { "id": "clientContactEmail", "label": "Contact email", "path": "client.contactEmail", "type": "readonly" },
+      { "id": "clientContactPhone", "label": "Contact phone", "path": "client.contactPhone", "type": "readonly" },
+      { "id": "clientAddressLine1", "label": "Address", "path": "client.addressLine1", "type": "readonly" },
+      { "id": "clientAddressLine2", "label": "Address line 2", "path": "client.addressLine2", "type": "readonly" },
+      { "id": "clientPostalCode", "label": "Postal code", "path": "client.postalCode", "type": "readonly" },
+      { "id": "clientCity", "label": "City", "path": "client.city", "type": "readonly" },
+      { "id": "clientCountry", "label": "Country", "path": "client.country", "type": "readonly" },
+      { "id": "clientNotes", "label": "Private client notes", "path": "client.notes", "type": "readonly" }
+    ]
+  },
+  {
+    "id": "currentVersion",
+    "title": "Current version",
+    "fields": [
+      {
+        "id": "fixedTotalCents",
+        "label": "Fixed total",
+        "path": "currentVersion.fixedTotalCents",
+        "type": "readonly",
+        "format": "money"
+      },
+      {
+        "id": "quoteItemCount",
+        "label": "Quote-only items",
+        "path": "currentVersion.quoteItemCount",
+        "type": "readonly"
+      },
+      {
+        "id": "publishedAt",
+        "label": "Published",
+        "path": "currentVersion.publishedAt",
+        "type": "readonly",
+        "format": "date"
+      },
+      {
+        "id": "snapshotItems",
+        "label": "Snapshot lines",
+        "path": "currentVersion.items",
+        "type": "table",
+        "columns": [
+          { "id": "label", "label": "Line", "path": "label", "primary": true, "width": "minmax(16rem, 2fr)" },
+          { "id": "kind", "label": "Kind", "path": "kind", "format": "badge", "width": "8rem" },
+          { "id": "origin", "label": "Origin", "path": "origin", "format": "badge", "width": "8rem" },
+          { "id": "pricingMode", "label": "Pricing", "path": "pricingMode", "format": "badge", "width": "8rem" },
+          { "id": "unitAmountCents", "label": "Amount", "path": "unitAmountCents", "format": "money", "width": "10rem" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "proposalShares",
+    "title": "Shares",
+    "fields": [
+      {
+        "id": "shares",
+        "label": "Share history",
+        "path": "shares",
+        "type": "table",
+        "columns": [
+          { "id": "createdAt", "label": "Created", "path": "createdAt", "format": "date", "width": "12rem" },
+          { "id": "expiresAt", "label": "Expires", "path": "expiresAt", "format": "date", "width": "12rem" },
+          { "id": "revokedAt", "label": "Revoked", "path": "revokedAt", "format": "date", "width": "12rem" },
+          { "id": "viewCount", "label": "Views", "path": "viewCount", "width": "6rem" },
+          { "id": "lastViewedAt", "label": "Last view", "path": "lastViewedAt", "format": "date", "width": "12rem" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "proposalEvents",
+    "title": "Event timeline",
+    "fields": [
+      {
+        "id": "events",
+        "label": "Events",
+        "path": "events",
+        "type": "table",
+        "columns": [
+          { "id": "eventType", "label": "Event", "path": "eventType", "primary": true, "width": "minmax(12rem, 1.25fr)" },
+          { "id": "actorType", "label": "Actor", "path": "actorType", "format": "badge", "width": "8rem" },
+          { "id": "actorId", "label": "Actor id", "path": "actorId", "width": "minmax(14rem, 1.25fr)" },
+          { "id": "occurredAt", "label": "Date", "path": "occurredAt", "format": "date", "width": "12rem" }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,56 @@
+{
+    "endpointId": "resolveDeliveryQuote",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/delivery-quotes/resolve",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "quoteId": {
+                "type": "string"
+            },
+            "externalOrderId": {
+                "type": "string"
+            },
+            "selectedForCmsUserId": {
+                "type": "string",
+                "semantic": {
+                    "kind": "user-id",
+                    "authority": "cms"
+                }
+            },
+            "orderVersion": {
+                "type": "number"
+            },
+            "merchandiseSubtotalMinorAmount": {
+                "type": "number"
+            },
+            "currency": {
+                "type": "string"
+            },
+            "purpose": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "quoteId",
+            "externalOrderId",
+            "selectedForCmsUserId",
+            "purpose"
+        ]
+    },
+    "output": {
+        "$include": "output/root.json"
+    }
+}

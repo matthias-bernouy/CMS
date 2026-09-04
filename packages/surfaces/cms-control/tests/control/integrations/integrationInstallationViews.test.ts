@@ -22,6 +22,7 @@ describe("buildIntegrationInstallationView", () => {
             answersSnapshot: {},
             secretRefs: {},
             secretInputs: [],
+            activeResources: ["ulvia/blocs/basic-paragraph"],
             runs: [],
             artifacts: [],
             migrationOperation: {
@@ -54,7 +55,9 @@ describe("buildIntegrationInstallationView", () => {
         const context = emptyContext();
 
         expect(buildIntegrationInstallationView(context, installation, false)).not.toHaveProperty("migrationOperation");
-        expect(buildIntegrationInstallationView(context, installation, true).migrationOperation).toEqual({
+        const detail = buildIntegrationInstallationView(context, installation, true);
+        expect(detail.activeResources).toEqual(["ulvia/blocs/basic-paragraph"]);
+        expect(detail.migrationOperation).toEqual({
             id: "migration-1",
             revision: 2,
             status: "paused",

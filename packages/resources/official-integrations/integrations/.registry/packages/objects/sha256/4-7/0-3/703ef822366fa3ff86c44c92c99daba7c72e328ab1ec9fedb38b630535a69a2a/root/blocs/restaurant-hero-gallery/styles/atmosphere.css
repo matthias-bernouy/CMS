@@ -1,0 +1,51 @@
+[part="section"] {
+    --_botanical-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 320'%3E%3Cg fill='none' stroke='black' stroke-width='1.4'%3E%3Cpath d='M22,302C68,237,98,119,217,18'/%3E%3Cpath d='M49,267C34,224,47,186,91,158C94,203,78,239,49,267Z'/%3E%3Cpath d='M79,214C75,176,92,140,132,119C129,159,111,193,79,214Z'/%3E%3Cpath d='M112,158C113,124,132,91,170,75C164,111,143,140,112,158Z'/%3E%3Cpath d='M146,106C152,76,173,49,207,39C196,69,177,93,146,106Z'/%3E%3Cpath d='M49,267L91,158M79,214L132,119M112,158L170,75M146,106L207,39'/%3E%3C/g%3E%3C/svg%3E");
+
+    position: relative;
+    isolation: isolate;
+    background:
+        radial-gradient(ellipse 46rem 26rem at 50% 27%, color-mix(in srgb, var(--_accent) 11%, transparent), transparent 72%),
+        radial-gradient(circle at 8% 60%, color-mix(in srgb, var(--_accent) 4%, transparent), transparent 24rem),
+        radial-gradient(circle at 92% 60%, color-mix(in srgb, var(--_accent) 6%, transparent), transparent 24rem),
+        var(--_background);
+}
+
+[part="section"]::before,
+[part="section"]::after {
+    position: absolute;
+    z-index: 0;
+    top: clamp(12rem, 24vh, 18rem);
+    width: clamp(10rem, 16vw, 19rem);
+    height: clamp(15rem, 25vw, 29rem);
+    background: var(--_muted);
+    content: "";
+    opacity: .09;
+    pointer-events: none;
+    -webkit-mask: var(--_botanical-art) center / contain no-repeat;
+    mask: var(--_botanical-art) center / contain no-repeat;
+}
+
+[part="section"]::before { left: clamp(1rem, 5vw, 7rem); transform: rotate(-8deg); }
+[part="section"]::after { right: clamp(1rem, 5vw, 7rem); transform: scaleX(-1) rotate(-8deg); }
+[part="content"],
+[part="visual"] { position: relative; z-index: 1; }
+
+[part="progress-value"] { background: var(--_color); }
+
+::slotted(img[slot^="gallery-"]) {
+    opacity: .78;
+    filter: saturate(.84) brightness(.88);
+    transition: opacity 240ms ease, filter 240ms ease, outline-color 240ms ease;
+}
+
+::slotted(img[slot^="gallery-"]:hover),
+::slotted(img[slot^="gallery-"][aria-pressed="true"]) { opacity: 1; filter: none; }
+
+@media (max-width: 900px) {
+    [part="section"]::before,
+    [part="section"]::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::slotted(img[slot^="gallery-"]) { transition: none; }
+}

@@ -4,13 +4,14 @@
     "label": "Consent",
     "category": "Identity & Legal",
     "description": "Collect versioned, page-backed consent evidence through reusable CMS triggers and blocks.",
-    "stable": "3.0.0",
-    "latest": "3.0.0",
+    "stable": "4.0.0",
+    "latest": "4.0.0",
     "versions": [
         {
-            "version": "3.0.0",
+            "version": "4.0.0",
             "path": ".",
             "definition": "definition.json"
         }
-    ]
+    ],
+    "type": "source"
 }

@@ -1,0 +1,116 @@
+[
+    {
+        "$include": "reserve-order-shipment-creation.json"
+    },
+    {
+        "endpointId": "claimPendingShipmentCreations",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/shipment-creations/claim",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "runKey": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "runKey",
+                "limit"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "operationId": {
+                                        "type": "number"
+                                    },
+                                    "claimToken": {
+                                        "type": "string"
+                                    },
+                                    "businessKey": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "orderId": {
+                                        "type": "number"
+                                    },
+                                    "orderPublicId": {
+                                        "type": "string"
+                                    },
+                                    "sellerId": {
+                                        "type": "string",
+                                        "semantic": {
+                                            "kind": "user-id",
+                                            "authority": "cms"
+                                        }
+                                    },
+                                    "buyerCmsUserId": {
+                                        "type": "string",
+                                        "semantic": {
+                                            "kind": "user-id",
+                                            "authority": "cms"
+                                        }
+                                    },
+                                    "deliveryQuoteId": {
+                                        "type": "string"
+                                    },
+                                    "merchandiseSubtotalMinorAmount": {
+                                        "type": "number"
+                                    },
+                                    "currency": {
+                                        "type": "string"
+                                    },
+                                    "financialTermsHash": {
+                                        "type": "string"
+                                    },
+                                    "fulfillmentStatus": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "operationId",
+                                    "claimToken",
+                                    "orderPublicId",
+                                    "sellerId",
+                                    "buyerCmsUserId",
+                                    "deliveryQuoteId",
+                                    "merchandiseSubtotalMinorAmount",
+                                    "currency",
+                                    "financialTermsHash"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "items"
+                    ]
+                }
+            }
+        ]
+    }
+]

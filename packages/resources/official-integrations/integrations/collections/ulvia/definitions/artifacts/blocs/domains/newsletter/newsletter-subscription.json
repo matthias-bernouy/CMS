@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "newsletter-subscription",
+        "name": "Newsletter subscription",
+        "group": "Newsletter",
+        "description": "Public newsletter subscription form backed by the Newsletter source.",
+        "path": "blocs/domains/newsletter/newsletter-subscription"
+    }
+}

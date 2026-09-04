@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-stack",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Stack",
+        "description": "One-dimensional row or column layout with configurable spacing, alignment, distribution, and wrapping."
+    }
+}

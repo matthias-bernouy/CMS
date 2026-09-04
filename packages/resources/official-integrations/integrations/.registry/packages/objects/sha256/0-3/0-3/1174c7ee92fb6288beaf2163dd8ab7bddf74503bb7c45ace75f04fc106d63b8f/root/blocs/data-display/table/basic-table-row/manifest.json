@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-table-row",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Table row",
+        "description": "Editable table row with an optional direct native navigation link."
+    }
+}

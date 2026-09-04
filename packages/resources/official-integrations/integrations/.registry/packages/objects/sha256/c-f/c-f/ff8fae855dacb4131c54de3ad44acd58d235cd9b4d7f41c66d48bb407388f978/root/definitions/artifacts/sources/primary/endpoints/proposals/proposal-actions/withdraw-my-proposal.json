@@ -1,0 +1,103 @@
+{
+    "endpointId": "withdrawMyProposal",
+    "method": "POST",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/proposal/withdraw",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "expectedVersion": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "expectedVersion"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object"
+            }
+        },
+        {
+            "status": "400",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "403",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "404",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "409",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        }
+    ]
+}

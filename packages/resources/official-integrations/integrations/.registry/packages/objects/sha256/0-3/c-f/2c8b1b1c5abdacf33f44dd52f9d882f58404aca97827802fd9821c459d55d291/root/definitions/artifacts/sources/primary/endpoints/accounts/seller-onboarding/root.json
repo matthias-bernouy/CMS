@@ -1,0 +1,149 @@
+[
+    {
+        "$include": "enroll-connect-seller/root.json"
+    },
+    {
+        "endpointId": "getConnectWallet",
+        "method": "GET",
+        "access": "auth",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/wallet",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "submitConnectVerification",
+        "method": "POST",
+        "access": "auth",
+        "timeoutMs": 60000,
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/verification",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "accountToken": {
+                    "type": "string"
+                },
+                "bankAccountToken": {
+                    "type": "string"
+                },
+                "contactEmail": {
+                    "type": "string"
+                },
+                "marketplaceTermsAccepted": {
+                    "type": "boolean"
+                },
+                "expectedMarketplaceTermsVersion": {
+                    "type": "string"
+                },
+                "expectedMarketplaceTermsHash": {
+                    "type": "string"
+                }
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "createOnboardingLink",
+        "method": "POST",
+        "access": "auth",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/onboarding",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "returnUrl": {
+                    "type": "string"
+                },
+                "refreshUrl": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "returnUrl",
+                "refreshUrl"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    }
+]

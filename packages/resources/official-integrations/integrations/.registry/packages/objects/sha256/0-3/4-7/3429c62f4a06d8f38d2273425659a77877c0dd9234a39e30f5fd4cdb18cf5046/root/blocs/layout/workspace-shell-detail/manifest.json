@@ -1,0 +1,13 @@
+{
+    "default-tag": "workspace-shell-detail",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Workspace shell detail",
+        "description": "Two-column tool detail shell with title, actions, main content, and aside.",
+        "categories": [
+            "layout"
+        ]
+    }
+}

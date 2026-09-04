@@ -1,5 +1,13 @@
 import type { BlocListItemResponse } from "cms-content/interfaces/CmsRepository";
-import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
+import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
+import type {
+    BlocOwnership,
+    BlocRecord,
+    SiteBlocDefinition,
+    SiteBlocSnapshot,
+    TBloc,
+    TBlocWrite,
+} from "cms-content/interfaces/blocs";
 import {
     archivedSiteDefinition,
     assertBlocRecordOwner,
@@ -44,6 +52,15 @@ export class InMemoryBlocRepository {
         }
         this.blocs.set(bloc.id, this.artifactRecord(bloc, current));
         return structuredClone(bloc);
+    }
+
+    async deleteBloc(tag: string, ownership: BlocOwnership): Promise<boolean> {
+        const current = this.blocs.get(tag);
+        if (!current) {
+            return false;
+        }
+        assertBlocRecordOwner(current, ownership);
+        return this.blocs.delete(tag);
     }
 
     async getBlocRecord(tag: string): Promise<BlocRecord | null> {
@@ -118,10 +135,10 @@ export class InMemoryBlocRepository {
         );
     }
 
-    async getBlocsList(): Promise<BlocListItemResponse[]> {
+    async getBlocsList(options: BlocListOptions = {}): Promise<BlocListItemResponse[]> {
         return [...this.blocs.values()].flatMap((record) => {
             const bloc = record.artifact;
-            return bloc
+            return bloc && (options.includeInactive || bloc.catalogue !== "inactive")
                 ? [
                       {
                           id: record.tag,

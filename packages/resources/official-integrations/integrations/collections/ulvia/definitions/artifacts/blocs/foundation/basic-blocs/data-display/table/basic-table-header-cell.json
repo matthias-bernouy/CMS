@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-table-header-cell",
+        "name": "Table header cell",
+        "group": "Data display",
+        "description": "Editable column header with optional URL-backed sorting and filtering.",
+        "path": "blocs/foundation/basic-blocs/data-display/table/basic-table-header-cell"
+    }
+}

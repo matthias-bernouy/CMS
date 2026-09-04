@@ -25,6 +25,19 @@ describe("assertContentRefsExist", () => {
         );
     });
 
+    test("checks installed inactive blocs instead of the authoring catalogue", async () => {
+        let includeInactive = false;
+        const cms = {
+            getBlocsList: async (options?: { includeInactive?: boolean }) => {
+                includeInactive = options?.includeInactive === true;
+                return includeInactive ? [{ id: "basic-button" }] : [];
+            },
+        };
+
+        await assertContentRefsExist(cms, "<basic-button></basic-button>");
+        expect(includeInactive).toBeTrue();
+    });
+
     test("rejects unknown bloc tag", async () => {
         const cms = makeSystem({ blocs: ["cs-card"] });
         await expect(assertContentRefsExist(cms, `<cs-mystery></cs-mystery>`)).rejects.toThrow(

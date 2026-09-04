@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}-proposals",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Price proposals",
+        "icon": {
+            "path": "assets/icon.svg"
+        }
+    },
+    "views": {
+        "$include": "views/root.json"
+    }
+}

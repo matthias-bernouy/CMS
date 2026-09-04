@@ -1,0 +1,37 @@
+:host {
+    --before-bg: var(--integration-ulvia-documentation-blocs-danger-background, var(--integration-ulvia-basic-blocs-danger-muted, #fef2f2));
+    --before-border: var(--integration-ulvia-documentation-blocs-api-delete, var(--integration-ulvia-basic-blocs-danger-base, #fecaca));
+    --before-fg: var(--integration-ulvia-documentation-blocs-danger-text, var(--integration-ulvia-basic-blocs-danger-contrasted, #991b1b));
+    --after-bg: var(--integration-ulvia-documentation-blocs-tip-background, var(--integration-ulvia-basic-blocs-success-muted, #f0fdf4));
+    --after-border: var(--integration-ulvia-documentation-blocs-api-post, var(--integration-ulvia-basic-blocs-success-base, #bbf7d0));
+    --after-fg: var(--integration-ulvia-documentation-blocs-tip-text, var(--integration-ulvia-basic-blocs-success-contrasted, #166534));
+    --diff-radius: var(--integration-ulvia-documentation-blocs-radius-panel, var(--integration-ulvia-basic-blocs-radius-card, .5rem));
+    display: block;
+    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+    margin: 1rem 0;
+}
+.diff {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+    border-radius: var(--diff-radius);
+    overflow: hidden;
+}
+.pane { border-radius: var(--diff-radius); overflow: hidden; border: 1px solid; }
+.before { background: var(--before-bg); border-color: var(--before-border); color: var(--before-fg); }
+.after { background: var(--after-bg); border-color: var(--after-border); color: var(--after-fg); }
+.head {
+    padding: .4rem .8rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: rgba(0,0,0,.03);
+    border-bottom: 1px solid;
+    border-color: inherit;
+    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+}
+.code { margin: 0; padding: .8rem 1rem; overflow-x: auto; font-size: .85rem; line-height: 1.55; }
+.code ::slotted(*) { display: block; font: inherit; color: inherit; margin: 0; white-space: pre-wrap; }
+:host([layout="unified"]) .diff { grid-template-columns: 1fr; }
+@media (max-width: 720px) { .diff { grid-template-columns: 1fr; } }

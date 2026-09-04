@@ -3,7 +3,7 @@ import { IntegrationRuntimeError } from "../../../../core/errors";
 import {
     SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
     type IntegrationConnectorProviderRepository,
-} from "../../../../interfaces/IntegrationConnectorProvider";
+} from "../../../../interfaces/IntegrationConnectorDeployer/provider";
 import type { SupabaseConnectorDeployerConfig } from "../../types";
 
 export type ConfiguredSupabaseMigrationServicesConfig = {

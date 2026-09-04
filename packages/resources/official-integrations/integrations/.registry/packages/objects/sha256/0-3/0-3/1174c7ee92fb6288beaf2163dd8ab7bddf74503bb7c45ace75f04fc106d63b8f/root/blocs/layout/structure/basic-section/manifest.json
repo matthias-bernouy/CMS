@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "section",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Section",
+        "description": "Native thematic section for grouping related content."
+    }
+}

@@ -9,11 +9,8 @@ describe("Consent integration contract", () => {
     test("keeps consent policy in integration artifacts, not an auth-specific bloc", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repository.get("consent");
-        expect(definition).toMatchObject({ kind: "consent", version: "3.0.0" });
+        expect(definition).toMatchObject({ kind: "consent", version: "4.0.0", type: "source" });
         expect(definition?.artifacts.map((artifact) => artifact.type).sort()).toEqual([
-            "bloc",
-            "dashboard",
-            "dashboard",
             "function",
             "function",
             "source",

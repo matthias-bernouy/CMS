@@ -1,0 +1,6 @@
+{
+    "type": "array",
+    "items": {
+        "$include": "items/root.json"
+    }
+}

@@ -8,6 +8,10 @@ export function fields(host: IntegrationBrowserHost): HTMLElement {
     return host.query("[data-reconfigure-fields]");
 }
 
+export function resources(host: IntegrationBrowserHost): HTMLElement {
+    return host.query("[data-reconfigure-resources]");
+}
+
 export function submitButton(host: IntegrationBrowserHost): HTMLElement & { disabled: boolean } {
     return host.query("[data-reconfigure-submit]");
 }
@@ -17,6 +21,8 @@ export function setLoadingContent(host: IntegrationBrowserHost): void {
     loading.className = "empty";
     loading.textContent = "Loading saved configuration…";
     fields(host).replaceChildren(loading);
+    resources(host).hidden = true;
+    resources(host).replaceChildren();
 }
 
 export function setStatus(host: IntegrationBrowserHost, value: string, error = false): void {

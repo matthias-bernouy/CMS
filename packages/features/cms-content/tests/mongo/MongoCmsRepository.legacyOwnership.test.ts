@@ -154,4 +154,17 @@ describe("Mongo legacy ownership claims", () => {
             }),
         ).rejects.toBeInstanceOf(BlocOwnershipConflictError);
     });
+
+    test("deletes only for the exact current owner", async () => {
+        const { repository } = createMongoContentRepository();
+        const owner = integrationOwner("installation-1");
+        await repository.createBloc({ ...siteBlocArtifact(), id: "removed-card", ownership: owner });
+
+        await expect(repository.deleteBloc("removed-card", integrationOwner("installation-2"))).rejects.toBeInstanceOf(
+            BlocOwnershipConflictError,
+        );
+        expect(await repository.deleteBloc("removed-card", owner)).toBe(true);
+        expect(await repository.getBlocRecord("removed-card")).toBeNull();
+        expect(await repository.deleteBloc("removed-card", owner)).toBe(false);
+    });
 });

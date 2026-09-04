@@ -15,6 +15,10 @@ export async function installRequiredDependencies(
         if (dependency.optional) {
             continue;
         }
+        const current = installed.get(dependency.kind);
+        if (current && (!dependency.versionRange || integrationVersionSatisfies(current, dependency.versionRange))) {
+            continue;
+        }
         const selected = packages
             .filter(
                 (entry) =>

@@ -1,7 +1,7 @@
 import {
     INTEGRATION_DEFINITION_BUNDLE_LIMITS,
     INTEGRATION_DEFINITION_BUNDLE_SCHEMA,
-    INTEGRATION_DEFINITION_SCHEMA,
+    INTEGRATION_DEFINITION_SCHEMAS,
 } from "./constants";
 import { resolveDefinitionFileGraph } from "./graph";
 import { withJsonFile } from "./loader";
@@ -56,9 +56,9 @@ function assertBundleEntry(
 }
 
 function assertCanonicalDefinition(value: unknown, versionRoot: string, rootFile: string): void {
-    if (!isRecord(value) || value.schema !== INTEGRATION_DEFINITION_SCHEMA) {
+    if (!isRecord(value) || !INTEGRATION_DEFINITION_SCHEMAS.includes(value.schema as never)) {
         throw new Error(
-            `${displayPath(versionRoot, rootFile)}: bundle root must be a ${INTEGRATION_DEFINITION_SCHEMA} definition`,
+            `${displayPath(versionRoot, rootFile)}: bundle root must use a supported integration definition schema`,
         );
     }
 }

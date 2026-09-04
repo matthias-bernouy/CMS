@@ -6,9 +6,9 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { declaredBlocViewSources } from "./support";
 
-describe("user-account form 2.0.0", () => {
+describe("Ulvia user-account form", () => {
     test("expands as light DOM and upgrades its internal behavior component", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("user-account");
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
         if (!definition) {
             throw new Error("user-account definition not found");
         }
@@ -77,7 +77,7 @@ describe("user-account form 2.0.0", () => {
                       : null,
         });
 
-        expect(definition.dependencies).toEqual([{ name: "basicBlocs", kind: "basic-blocs" }]);
+        expect(definition.type).toBe("collection");
         expect(formArtifact.bloc.viewJS).toBeUndefined();
         expect(controller.viewJS).toContain("window.p9r.Component");
         expect(compositionHTML).toContain("<user-account-form-controller");

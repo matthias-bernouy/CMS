@@ -1,0 +1,7 @@
+{
+  "$files": [
+    "manage-proposals.json",
+    "manage-proposal.json",
+    "transition-proposal.json"
+  ]
+}

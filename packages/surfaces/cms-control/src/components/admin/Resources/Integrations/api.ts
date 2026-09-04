@@ -84,8 +84,9 @@ export async function getIntegrationInstallation(id: string): Promise<Integratio
 export async function rerunIntegrationInstallation(
     id: string,
     answers?: Record<string, IntegrationAnswerValue>,
+    resources?: string[],
 ): Promise<void> {
-    const body = answers ? { answers } : {};
+    const body = { ...(answers ? { answers } : {}), ...(resources ? { resources } : {}) };
     await postJson(`${route("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, body);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));

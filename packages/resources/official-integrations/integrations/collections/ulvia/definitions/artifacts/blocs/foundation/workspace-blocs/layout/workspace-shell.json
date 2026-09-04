@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "workspace-shell",
+        "name": "Workspace shell",
+        "group": "Workspace · Layout",
+        "description": "Responsive application shell with primary and secondary lateral navigation.",
+        "path": "blocs/foundation/workspace-blocs/layout/workspace-shell"
+    }
+}

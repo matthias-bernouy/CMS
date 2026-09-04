@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { FormDefinition } from "../blocs/form-renderer/definition";
-import { imageChoiceItems } from "../blocs/form-renderer/rendering/imageChoice";
+import type { FormDefinition } from "../../../collections/ulvia/blocs/domains/forms/form-renderer/definition";
+import { imageChoiceItems } from "../../../collections/ulvia/blocs/domains/forms/form-renderer/rendering/imageChoice";
 
 describe("Forms image choices", () => {
     test("prepares image cards from stable keys and safe image sources", () => {

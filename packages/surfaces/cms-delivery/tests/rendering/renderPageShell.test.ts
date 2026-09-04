@@ -99,10 +99,14 @@ describe("renderPage — binding core wrapper", () => {
     test("passes transitive composition dependencies to asset resolution", async () => {
         const ctx = makeCtx();
         const repository = ctx.repository as unknown as {
-            getBlocsList: () => Promise<{ id: string }[]>;
+            getBlocsList: (options?: { includeInactive?: boolean }) => Promise<{ id: string }[]>;
             getBlocViewJS: (tag: string) => Promise<string | null>;
         };
-        repository.getBlocsList = async () => [{ id: "site-header" }, { id: "base-nav" }, { id: "base-link" }];
+        let includedInactive = false;
+        repository.getBlocsList = async (options) => {
+            includedInactive = options?.includeInactive === true;
+            return [{ id: "site-header" }, { id: "base-nav" }, { id: "base-link" }];
+        };
         repository.getBlocViewJS = async (tag) =>
             ({
                 "site-header": "const t = `<base-nav></base-nav>`;",
@@ -118,6 +122,7 @@ describe("renderPage — binding core wrapper", () => {
 
         await renderPage({ ...page, content: "<site-header></site-header>" }, ctx);
 
+        expect(includedInactive).toBe(true);
         expect(resolvedTags).toEqual(["base-link", "base-nav", "site-header"]);
     });
 

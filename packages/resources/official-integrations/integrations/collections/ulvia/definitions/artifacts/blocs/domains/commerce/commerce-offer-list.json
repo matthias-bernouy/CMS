@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-offer-list",
+        "name": "Offer list",
+        "group": "Commerce",
+        "description": "Transparent public offer source controller with URL-aware filters and pagination.",
+        "path": "blocs/domains/commerce/commerce-offer-list"
+    }
+}

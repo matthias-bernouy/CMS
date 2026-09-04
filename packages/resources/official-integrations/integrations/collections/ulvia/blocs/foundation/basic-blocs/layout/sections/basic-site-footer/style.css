@@ -1,0 +1,134 @@
+:host {
+    --_footer-background: transparent;
+    --_footer-border: transparent;
+    --_footer-color: var(--_tone-contrasted);
+    --_footer-max-width: 90rem;
+    --_footer-padding-block: clamp(2.5rem, 6vw, 5rem);
+    --ctx-bg: var(--_footer-background);
+    --ctx-fg: var(--_footer-color);
+    --ctx-fg-muted: color-mix(in srgb, var(--_footer-color) 68%, transparent);
+    --ctx-border: var(--_footer-border);
+
+    display: block;
+    color: var(--_footer-color);
+    font: inherit;
+}
+
+:host([hidden]) { display: none !important; }
+
+:host([appearance="soft"]) {
+    --_footer-background: var(--_tone-muted);
+    --_footer-border: var(--_tone-muted);
+}
+
+:host([appearance="filled"]) {
+    --_footer-background: var(--_tone-base);
+    --_footer-border: var(--_tone-base);
+    --_footer-color: var(--_tone-foreground);
+}
+
+:host([appearance="outlined"]) { --_footer-border: var(--_tone-border); }
+:host([width="content"]) { --_footer-max-width: 64rem; }
+:host([width="full"]) { --_footer-max-width: none; }
+:host([density="compact"]) { --_footer-padding-block: 2rem; }
+:host([density="spacious"]) { --_footer-padding-block: clamp(3.5rem, 8vw, 7rem); }
+
+[part="footer"] {
+    box-sizing: border-box;
+    border: 1px solid var(--_footer-border);
+    border-radius: var(--integration-ulvia-basic-blocs-surface-radius, .75rem);
+    background: var(--_footer-background);
+    color: var(--_footer-color);
+}
+
+[part="container"] {
+    box-sizing: border-box;
+    width: min(100%, var(--_footer-max-width));
+    margin-inline: auto;
+    padding: var(--_footer-padding-block) var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+}
+
+[part="main"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+    align-items: start;
+    gap: clamp(2rem, 5vw, 5rem);
+}
+
+[part="identity"] {
+    display: grid;
+    max-width: 32rem;
+    gap: var(--integration-ulvia-basic-blocs-space-sm, .5rem);
+}
+
+[part="navigation"],
+[part="actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--integration-ulvia-basic-blocs-space-sm, .5rem) var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+}
+
+[part="legal"] {
+    margin-top: clamp(2rem, 5vw, 4rem);
+    padding-top: var(--integration-ulvia-basic-blocs-space-lg, 1.5rem);
+    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    color: var(--ctx-fg-muted);
+}
+
+::slotted([slot="brand"]),
+::slotted([slot="description"]),
+::slotted([slot="legal"]) { margin: 0; }
+
+::slotted([slot="brand"]) {
+    color: inherit;
+    font-family: var(--integration-ulvia-basic-blocs-font-heading, inherit);
+    font-size: 1.25rem;
+    font-weight: 750;
+}
+
+::slotted(a[slot="brand"]),
+::slotted(a[slot="navigation"]) {
+    --cms-link-color: var(--_footer-color);
+
+    border-radius: var(--integration-ulvia-basic-blocs-action-radius, .5rem);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 120ms ease, opacity 120ms ease;
+}
+
+::slotted(a[slot="brand"]) {
+    display: inline-flex;
+    min-height: 2rem;
+    align-items: center;
+}
+
+::slotted(a[slot="brand"]:hover) { opacity: .72; }
+::slotted(a[slot="navigation"]) { padding: .25rem .375rem; }
+::slotted(a[slot="navigation"]:hover) { background: color-mix(in srgb, currentColor 8%, transparent); }
+::slotted(a:focus-visible) {
+    outline: 2px solid var(--_tone-focus);
+    outline-offset: 2px;
+}
+
+::slotted([slot="description"]),
+::slotted([slot="legal"]) {
+    color: var(--ctx-fg-muted);
+    line-height: 1.6;
+}
+
+:host([align="center"]) [part="main"] { justify-items: center; }
+:host([align="center"]) [part="identity"] { justify-items: center; text-align: center; }
+:host([align="center"]) [part="navigation"],
+:host([align="center"]) [part="actions"] { justify-content: center; }
+:host([align="center"]) [part="legal"] { text-align: center; }
+
+:host(:not(:has([slot="brand"], [slot="description"]))) [part="identity"],
+:host(:not(:has([slot="navigation"]))) [part="navigation"],
+:host(:not(:has([slot="actions"]))) [part="actions"],
+:host(:not(:has([slot="legal"]))) [part="legal"] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    ::slotted(a[slot="brand"]),
+    ::slotted(a[slot="navigation"]) { transition: none; }
+}

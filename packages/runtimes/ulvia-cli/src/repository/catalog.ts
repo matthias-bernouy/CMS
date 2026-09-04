@@ -90,10 +90,11 @@ function newestOrUndefined(records: readonly LocalPackageRecord[]): LocalPackage
 }
 
 function metadata(record: LocalPackageRecord) {
-    const { kind, label, icon, category, description } = record.definition;
+    const { label, icon, category, description, type } = record.metadata;
     return {
-        kind,
+        kind: record.kind,
         label,
+        ...(type ? { type } : {}),
         ...(icon ? { icon } : {}),
         ...(category ? { category } : {}),
         ...(description ? { description } : {}),

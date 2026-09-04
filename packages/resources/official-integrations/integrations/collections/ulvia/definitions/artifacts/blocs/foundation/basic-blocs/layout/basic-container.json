@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-container",
+        "name": "Container",
+        "group": "Layout",
+        "description": "Centered content container with theme-driven widths and responsive inline gutters.",
+        "path": "blocs/foundation/basic-blocs/layout/basic-container"
+    }
+}

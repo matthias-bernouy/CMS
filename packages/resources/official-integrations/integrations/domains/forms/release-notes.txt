@@ -1,14 +1,1 @@
-Ulvia 2.0.0
-
-- Migrated authoring to the direct current-source layout.
-- Retained the exact 1.0.0 package in immutable repository history.
-
-Forms 1.0.0
-
-- Adds a responsive multi-step renderer built on Basic Blocs form controls.
-- Adds public and authenticated published-form delivery through a CMS Source.
-- Adds immutable published versions and idempotent Supabase submission storage.
-- Adds form lifecycle and submission review dashboards.
-- Adds bounded batch retention and private connector access controls.
-- Adds editable stable question and option keys with accessible image-grid choices.
-- Adds card-based image choices backed by immutable private Forms media identifiers.
+Major release: Forms is now a backend-only Source package. UI blocks moved to the Ulvia Collection.

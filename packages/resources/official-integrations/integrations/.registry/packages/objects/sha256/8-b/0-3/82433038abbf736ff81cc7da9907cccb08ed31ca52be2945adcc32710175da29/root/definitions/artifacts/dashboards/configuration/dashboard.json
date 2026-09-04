@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}-configuration",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Settings",
+        "icon": {
+            "path": "assets/dashboards/configuration.svg"
+        }
+    },
+    "views": {
+        "$include": "views.json"
+    }
+}

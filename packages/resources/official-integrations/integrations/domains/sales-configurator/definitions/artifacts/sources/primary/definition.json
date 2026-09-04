@@ -1,6 +1,7 @@
 {
-  "type": "source",
-  "source": {
-    "$include": "source.json"
-  }
+    "type": "source",
+    "source": {
+        "$include": "source.json"
+    },
+    "endpointContractVersion": "1.0.0"
 }

@@ -34,7 +34,8 @@ Commands:
 
 Environment:
   ULVIA_DATA_DIR        Absolute persistent data directory override
-  ULVIA_REPOSITORY_URL  Public repository used by pull, audit, release, and push verification
+  ULVIA_DEV_*_PORT      Local Control, Delivery, repository, Supabase management, and Mongo ports
+  ULVIA_REPOSITORY_URL  Public repository used only by explicit pull and push commands
   ULVIA_URL             Manager CMS URL used by push
   ULVIA_TOKEN           CMS Personal Access Token used by push
   ULVIA_PUSH_TIMEOUT_MS Remote admission timeout (default: 900000)
@@ -96,31 +97,27 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         return;
     }
     if (command === "release") {
-        const remote = new RemoteIntegrationRepository(repositoryUrl(environment), options.repositoryFetch);
         await releaseCommand(
             args.slice(1),
             options.cwd ?? process.cwd(),
             local,
-            remote,
             options.releaseVerifier ?? new RuntimeLocalReleaseVerifier(log),
             log,
         );
         return;
     }
     if (command === "audit") {
-        const remote = new RemoteIntegrationRepository(repositoryUrl(environment), options.repositoryFetch);
         await auditCommand(
             args.slice(1),
             options.cwd ?? process.cwd(),
             local,
-            remote,
             options.releaseVerifier ?? new RuntimeLocalReleaseVerifier(log),
             log,
         );
         return;
     }
     if (command === "dev") {
-        await devCommand(args.slice(1), paths, local, log);
+        await devCommand(args.slice(1), paths, local, log, environment);
         return;
     }
     throw new Error(`Unknown command: ${command}`);

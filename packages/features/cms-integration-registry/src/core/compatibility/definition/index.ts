@@ -5,6 +5,7 @@ import { compareConnectorFunctions } from "../function";
 import { compareConnectorSchemas } from "../schema";
 import { compareDefinitionArtifacts } from "./artifacts";
 import { compareDefinitionBindings } from "./bindings";
+import { compareCollectionResources } from "./resources";
 
 export function compareIntegrationDefinitions(
     baseline: IntegrationCompatibilityPackage,
@@ -12,8 +13,12 @@ export function compareIntegrationDefinitions(
     changedPaths: ReadonlySet<string>,
     add: CompatibilityChangeSink,
 ): void {
+    if (baseline.definition.type !== candidate.definition.type) {
+        add("breaking", "definition", "integration-type-changed", "type", "Integration type changed");
+    }
     compareDefinitionBindings(baseline, candidate.definition, add);
     compareDefinitionArtifacts(baseline.definition, candidate.definition, add);
+    compareCollectionResources(baseline.definition, candidate.definition, add);
     compareConnectors(baseline, candidate, changedPaths, add);
 }
 

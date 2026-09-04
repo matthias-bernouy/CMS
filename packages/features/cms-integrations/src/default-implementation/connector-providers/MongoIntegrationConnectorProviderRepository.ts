@@ -2,7 +2,7 @@ import type { Collection, Db } from "mongodb";
 import type {
     IntegrationConnectorProvider,
     IntegrationConnectorProviderRepository,
-} from "../../interfaces/IntegrationConnectorProvider";
+} from "../../interfaces/IntegrationConnectorDeployer/provider";
 
 export type MongoIntegrationConnectorProviderRepositoryConfig = {
     collectionPrefix?: string;

@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-layout",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Doc layout",
+        "description": "Responsive documentation shell with search, breadcrumbs, sidebar, page outline, and theme controls.",
+        "categories": [
+            "layout"
+        ]
+    }
+}

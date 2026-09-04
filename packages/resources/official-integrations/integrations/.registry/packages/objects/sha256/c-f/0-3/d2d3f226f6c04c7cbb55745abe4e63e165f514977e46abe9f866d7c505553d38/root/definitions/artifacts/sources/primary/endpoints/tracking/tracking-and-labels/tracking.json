@@ -1,0 +1,93 @@
+{
+    "endpointId": "tracking",
+    "method": "GET",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/tracking",
+    "params": [
+        {
+            "name": "expeditionNumber",
+            "in": "query",
+            "type": "string",
+            "required": true
+        },
+        {
+            "name": "language",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "expeditionNumber": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "latestEventLabel": {
+                        "type": "string"
+                    },
+                    "latestEventAt": {
+                        "type": "string"
+                    },
+                    "carrierAcceptedAt": {
+                        "type": "string"
+                    },
+                    "recipientHandoffAt": {
+                        "type": "string"
+                    },
+                    "events": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "eventLabel": {
+                                    "type": "string"
+                                },
+                                "eventDate": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "eventTime": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "normalizedStatus": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "occurredAt": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "location": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "expeditionNumber",
+                    "status",
+                    "events"
+                ]
+            }
+        }
+    ]
+}

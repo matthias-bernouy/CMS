@@ -74,7 +74,7 @@ async function integrationResponse(
         return json({ error: "not found" }, 404);
     }
     if (route === "/api/integrations/definition") {
-        return json(record.definition);
+        return json(await repository.getDefinition(record));
     }
     if (route === "/api/integrations/package") {
         const resolved = await repository.getPackage(record);

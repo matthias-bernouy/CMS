@@ -1,0 +1,13 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "user-account-form-controller",
+        "name": "User account form controller",
+        "group": "User account",
+        "description": "Internal behavior controller for user-account-form.",
+        "internal": true,
+        "path": "blocs/domains/user-account/user-account-form",
+        "view": "controller/Bloc.ts",
+        "editor": null
+    }
+}

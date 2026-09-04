@@ -1,0 +1,85 @@
+[
+    {
+        "widget": "w-table",
+        "id": "claimsTable",
+        "title": "Marketplace claims",
+        "source": {
+            "endpoint": "claims",
+            "params": {
+                "status": "$filter.status",
+                "reason": "$filter.reason",
+                "limit": "100",
+                "offset": "0"
+            },
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "id",
+        "filters": [
+            {
+                "id": "status",
+                "label": "Status",
+                "param": "status",
+                "type": "text"
+            },
+            {
+                "id": "reason",
+                "label": "Reason",
+                "param": "reason",
+                "type": "text"
+            }
+        ],
+        "columns": [
+            {
+                "id": "id",
+                "label": "Claim",
+                "path": "publicId",
+                "primary": true
+            },
+            {
+                "id": "orderId",
+                "label": "Order",
+                "path": "orderId"
+            },
+            {
+                "id": "reason",
+                "label": "Reason",
+                "path": "reason",
+                "format": "badge"
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "format": "badge"
+            },
+            {
+                "id": "buyerRequestedAmount",
+                "label": "Requested",
+                "path": "buyerRequestedAmount",
+                "format": "money"
+            },
+            {
+                "id": "returnDeliveryStatus",
+                "label": "Return proof",
+                "path": "returnDeliveryStatus",
+                "format": "badge"
+            },
+            {
+                "id": "sellerResponseByAt",
+                "label": "Seller response due",
+                "path": "sellerResponseByAt",
+                "format": "date"
+            },
+            {
+                "id": "createdAt",
+                "label": "Opened",
+                "path": "createdAt",
+                "format": "date"
+            }
+        ],
+        "selection": {
+            "opens": "claimDetail"
+        }
+    }
+]

@@ -95,7 +95,11 @@ export async function prepareDeclarativeArtifactWrites(
     const sourceOverlayArtifacts = buildSourceOverlayArtifacts(input.definition, input.context);
     const relationArtifacts = buildRelationArtifacts(input.definition, input.context);
     const projectionArtifacts = buildDashboardRelationProjectionArtifacts(input.definition, input.context);
-    const blocArtifacts = buildBlocArtifacts(input.definition, input.context);
+    const blocArtifacts = buildBlocArtifacts(
+        input.definition,
+        input.context,
+        input.options.activeResources ? new Set(input.options.activeResources) : undefined,
+    );
 
     const dashboardWrites = await buildDashboardWrites(
         input.deps,

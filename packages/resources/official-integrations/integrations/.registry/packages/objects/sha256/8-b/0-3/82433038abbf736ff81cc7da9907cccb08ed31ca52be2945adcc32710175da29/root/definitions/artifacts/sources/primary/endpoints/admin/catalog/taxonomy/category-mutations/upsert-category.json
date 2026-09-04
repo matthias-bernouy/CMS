@@ -1,0 +1,131 @@
+{
+    "endpointId": "upsertCategory",
+    "method": "POST",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/category",
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "expectedVersion": {
+                "type": "number"
+            },
+            "parentId": {
+                "type": "string"
+            },
+            "slug": {
+                "type": "string"
+            },
+            "label": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            },
+            "status": {
+                "type": "string"
+            },
+            "position": {
+                "type": "number"
+            },
+            "metadata": {
+                "type": "object"
+            },
+            "categoryFields": {
+                "type": "array",
+                "items": {
+                    "type": "object"
+                }
+            }
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "parentId": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "fullSlug": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "number"
+                    },
+                    "metadata": {
+                        "type": "object"
+                    },
+                    "categoryFields": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "fieldKey": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "type": {
+                                    "type": "string"
+                                },
+                                "required": {
+                                    "type": "boolean"
+                                },
+                                "filterable": {
+                                    "type": "boolean"
+                                },
+                                "position": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+                    },
+                    "version": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}

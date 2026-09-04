@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-account-offers",
+        "name": "Account offers",
+        "group": "Commerce",
+        "description": "Authenticated seller offer listing with status filters and pagination.",
+        "path": "blocs/domains/commerce/commerce-account-offers",
+        "composition": "template.html"
+    }
+}

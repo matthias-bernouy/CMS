@@ -1,0 +1,22 @@
+:host {
+    display: block;
+    color: inherit;
+    font: inherit;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: var(--basic-pagination-justify, space-between);
+    gap: var(--basic-pagination-gap, 0.75rem);
+}
+
+[data-summary] {
+    color: var(--basic-pagination-color, inherit);
+    text-align: center;
+}
+
+:host([summary="hidden"]) [data-summary] {
+    display: none;
+}

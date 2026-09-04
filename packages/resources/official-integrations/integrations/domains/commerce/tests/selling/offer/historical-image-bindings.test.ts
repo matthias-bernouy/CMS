@@ -1,8 +1,10 @@
 import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { BINDING_CORE_TAG, BindingCore } from "@bernouy/components/binding";
 import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
-import accountOffersTemplate from "../../../blocs/commerce-account-offers/template.html" with { type: "text" };
-import { syncRenderedOffers } from "../../../blocs/commerce-account-offers/controller/presentation";
+import accountOffersTemplate from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-account-offers/template.html" with {
+    type: "text",
+};
+import { syncRenderedOffers } from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-account-offers/controller/presentation.ts";
 
 const nativeFetch = globalThis.fetch;
 

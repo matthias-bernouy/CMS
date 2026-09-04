@@ -42,7 +42,7 @@ export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<I
               .catch(() => null)
         : Promise.resolve(null));
     const blocIds = await cms.repository
-        .getBlocsList()
+        .getBlocsList({ includeInactive: true })
         .then((blocs) => new Set(blocs.map((bloc) => bloc.id)))
         .catch(() => null);
     const triggerIds = await (cms.triggers

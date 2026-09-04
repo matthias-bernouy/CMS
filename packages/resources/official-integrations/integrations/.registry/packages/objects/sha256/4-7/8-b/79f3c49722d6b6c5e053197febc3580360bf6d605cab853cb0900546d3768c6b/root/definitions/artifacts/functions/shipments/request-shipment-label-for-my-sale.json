@@ -1,0 +1,94 @@
+{
+    "type": "function",
+    "function": {
+        "id": "requestShipmentLabelForMySale",
+        "method": "POST",
+        "access": {
+            "mode": "auth"
+        },
+        "meta": {
+            "name": "Request shipment label for my sale",
+            "description": "Issue a short-lived seller-bound label capability without exposing the provider URL."
+        },
+        "input": {
+            "body": {
+                "type": "object",
+                "properties": {
+                    "orderId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "orderId"
+                ]
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "labelContext",
+                "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "getOrderLabelSellerContext",
+                    "params": {
+                        "orderId": "$input.body.orderId"
+                    }
+                }
+            },
+            {
+                "assert": {
+                    "condition": {
+                        "all": [
+                            {
+                                "equals": [
+                                    "$steps.labelContext.allowed",
+                                    true
+                                ]
+                            },
+                            {
+                                "equals": [
+                                    "$steps.labelContext.sellerCmsUserId",
+                                    "$ctx.user.id"
+                                ]
+                            }
+                        ]
+                    },
+                    "failure": {
+                        "status": 409,
+                        "error": "Commerce has not authorized label access"
+                    }
+                }
+            },
+            {
+                "id": "capability",
+                "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "issueLabelAccess",
+                    "body": {
+                        "externalOrderId": "$steps.labelContext.publicId",
+                        "sellerCmsUserId": "$ctx.user.id"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": {
+                "labelUrl": {
+                    "$concat": [
+                        "/.cms/sources/{{dependencies.delivery.sourceId}}/label?token=",
+                        "$steps.capability.token"
+                    ]
+                },
+                "expiresAt": "$steps.capability.expiresAt"
+            }
+        }
+    }
+}

@@ -1,0 +1,3288 @@
+[
+    {
+        "id": "ulvia/blocs/a",
+        "type": "bloc",
+        "artifact": "a",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/article",
+        "type": "bloc",
+        "artifact": "article",
+        "category": "structure"
+    },
+    {
+        "id": "ulvia/blocs/aside",
+        "type": "bloc",
+        "artifact": "aside",
+        "category": "structure"
+    },
+    {
+        "id": "ulvia/blocs/basic-alert",
+        "type": "bloc",
+        "artifact": "basic-alert",
+        "category": "feedback",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-surface-radius"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-badge",
+        "type": "bloc",
+        "artifact": "basic-badge",
+        "category": "feedback"
+    },
+    {
+        "id": "ulvia/blocs/basic-button",
+        "type": "bloc",
+        "artifact": "basic-button",
+        "category": "basic",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-action-min-height",
+                "basic-blocs-action-radius"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-card",
+        "type": "bloc",
+        "artifact": "basic-card",
+        "category": "basic",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-elevated-shadow",
+                "basic-blocs-surface-radius"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-checkbox",
+        "type": "bloc",
+        "artifact": "basic-checkbox",
+        "category": "form",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-error-text",
+                "basic-blocs-field-background",
+                "basic-blocs-field-border",
+                "basic-blocs-field-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-chip",
+        "type": "bloc",
+        "artifact": "basic-chip",
+        "category": "form",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-action-background",
+                "basic-blocs-action-text",
+                "basic-blocs-field-background",
+                "basic-blocs-field-border",
+                "basic-blocs-field-text",
+                "basic-blocs-focus-color"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-chip-group",
+        "type": "bloc",
+        "artifact": "basic-chip-group",
+        "category": "form",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-error-text",
+                "basic-blocs-field-background",
+                "basic-blocs-field-border",
+                "basic-blocs-field-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-chip"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-container",
+        "type": "bloc",
+        "artifact": "basic-container",
+        "category": "layout",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-content-width",
+                "basic-blocs-space-md",
+                "basic-blocs-space-sm",
+                "basic-blocs-space-xl",
+                "basic-blocs-wide-width"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-cta",
+        "type": "bloc",
+        "artifact": "basic-cta",
+        "category": "sections",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-heading",
+                "basic-blocs-space-lg",
+                "basic-blocs-space-sm",
+                "basic-blocs-surface-radius"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-faq",
+        "type": "bloc",
+        "artifact": "basic-faq",
+        "category": "sections",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-heading",
+                "basic-blocs-space-lg",
+                "basic-blocs-space-sm",
+                "basic-blocs-surface-radius"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-faq-item"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-faq-item",
+        "type": "bloc",
+        "artifact": "basic-faq-item",
+        "category": "sections",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-focus-color",
+                "basic-blocs-space-lg"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-feature-section",
+        "type": "bloc",
+        "artifact": "basic-feature-section",
+        "category": "sections",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-heading",
+                "basic-blocs-space-lg",
+                "basic-blocs-space-sm",
+                "basic-blocs-surface-radius"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-card"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-file-input",
+        "type": "bloc",
+        "artifact": "basic-file-input",
+        "category": "form",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-action-radius",
+                "basic-blocs-error-text",
+                "basic-blocs-field-border",
+                "basic-blocs-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-grid",
+        "type": "bloc",
+        "artifact": "basic-grid",
+        "category": "layout"
+    },
+    {
+        "id": "ulvia/blocs/basic-hero",
+        "type": "bloc",
+        "artifact": "basic-hero",
+        "category": "sections",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-heading",
+                "basic-blocs-space-lg",
+                "basic-blocs-space-sm",
+                "basic-blocs-surface-radius"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-input",
+        "type": "bloc",
+        "artifact": "basic-input",
+        "category": "form",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-error-text",
+                "basic-blocs-field-background",
+                "basic-blocs-field-border",
+                "basic-blocs-field-radius",
+                "basic-blocs-field-text",
+                "basic-blocs-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-media-section",
+        "type": "bloc",
+        "artifact": "basic-media-section",
+        "category": "sections",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-heading",
+                "basic-blocs-space-lg",
+                "basic-blocs-space-sm",
+                "basic-blocs-surface-radius"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-menu",
+        "type": "bloc",
+        "artifact": "basic-menu",
+        "category": "basic-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-font-heading"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-navbar",
+        "type": "bloc",
+        "artifact": "basic-navbar",
+        "category": "navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-action-radius",
+                "basic-blocs-font-heading",
+                "basic-blocs-shadow-soft",
+                "basic-blocs-space-lg",
+                "basic-blocs-space-md",
+                "basic-blocs-space-sm",
+                "basic-blocs-space-xs",
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-radius"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-option",
+        "type": "bloc",
+        "artifact": "basic-option",
+        "category": "form"
+    },
+    {
+        "id": "ulvia/blocs/basic-pagination",
+        "type": "bloc",
+        "artifact": "basic-pagination",
+        "category": "navigation"
+    },
+    {
+        "id": "ulvia/blocs/basic-redirect",
+        "type": "bloc",
+        "artifact": "basic-redirect",
+        "category": "basic"
+    },
+    {
+        "id": "ulvia/blocs/basic-select",
+        "type": "bloc",
+        "artifact": "basic-select",
+        "category": "form",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-error-text",
+                "basic-blocs-field-background",
+                "basic-blocs-field-border",
+                "basic-blocs-field-radius",
+                "basic-blocs-field-text",
+                "basic-blocs-muted-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-option"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-site-footer",
+        "type": "bloc",
+        "artifact": "basic-site-footer",
+        "category": "sections",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-action-radius",
+                "basic-blocs-font-heading",
+                "basic-blocs-space-lg",
+                "basic-blocs-space-sm",
+                "basic-blocs-surface-radius"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-skeleton",
+        "type": "bloc",
+        "artifact": "basic-skeleton",
+        "category": "feedback"
+    },
+    {
+        "id": "ulvia/blocs/basic-stack",
+        "type": "bloc",
+        "artifact": "basic-stack",
+        "category": "layout"
+    },
+    {
+        "id": "ulvia/blocs/basic-table",
+        "type": "bloc",
+        "artifact": "basic-table",
+        "category": "data-display",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-radius",
+                "basic-blocs-surface-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-table-cell",
+                "ulvia/blocs/basic-table-header-cell",
+                "ulvia/blocs/basic-table-row"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-table-cell",
+        "type": "bloc",
+        "artifact": "basic-table-cell",
+        "category": "data-display"
+    },
+    {
+        "id": "ulvia/blocs/basic-table-header-cell",
+        "type": "bloc",
+        "artifact": "basic-table-header-cell",
+        "category": "data-display",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-elevated-shadow",
+                "basic-blocs-focus-color",
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-border"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-table-row",
+        "type": "bloc",
+        "artifact": "basic-table-row",
+        "category": "data-display",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-focus-color"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-table-cell"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-textarea",
+        "type": "bloc",
+        "artifact": "basic-textarea",
+        "category": "form",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-error-text",
+                "basic-blocs-field-background",
+                "basic-blocs-field-border",
+                "basic-blocs-field-radius",
+                "basic-blocs-field-text",
+                "basic-blocs-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/basic-toast",
+        "type": "bloc",
+        "artifact": "basic-toast",
+        "category": "feedback",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-elevated-shadow",
+                "basic-blocs-surface-radius"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/blockquote",
+        "type": "bloc",
+        "artifact": "blockquote",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/button",
+        "type": "bloc",
+        "artifact": "button",
+        "category": "form"
+    },
+    {
+        "id": "ulvia/blocs/commerce-account-offers",
+        "type": "bloc",
+        "artifact": "commerce-account-offers",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:listMyOffers",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.status": "state.listMyOffers.status",
+                        "params.publicationStatus": "state.listMyOffers.publicationStatus",
+                        "params.workflowState": "state.listMyOffers.workflowState",
+                        "params.limit": "state.listMyOffers.limit",
+                        "params.offset": "state.listMyOffers.offset"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:myOfferImage",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.myOfferImage.id"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-option",
+                "ulvia/blocs/basic-pagination",
+                "ulvia/blocs/basic-select",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-toast",
+                "ulvia/blocs/commerce-account-offers-controller"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-account-offers-controller",
+        "type": "bloc",
+        "artifact": "commerce-account-offers-controller",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:listMyOffers",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.status": "state.listMyOffers.status",
+                        "params.publicationStatus": "state.listMyOffers.publicationStatus",
+                        "params.workflowState": "state.listMyOffers.workflowState",
+                        "params.limit": "state.listMyOffers.limit",
+                        "params.offset": "state.listMyOffers.offset"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:myOfferImage",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.myOfferImage.id"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/commerce-account-offers"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-account-sales",
+        "type": "bloc",
+        "artifact": "commerce-account-sales",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:mySales",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.status": "state.mySales.status",
+                        "params.limit": "state.mySales.limit",
+                        "params.offset": "state.mySales.offset"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-badge",
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-option",
+                "ulvia/blocs/basic-pagination",
+                "ulvia/blocs/basic-select",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-toast",
+                "ulvia/blocs/commerce-account-sales-controller"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-account-sales-controller",
+        "type": "bloc",
+        "artifact": "commerce-account-sales-controller",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:mySales",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.status": "state.mySales.status",
+                        "params.limit": "state.mySales.limit",
+                        "params.offset": "state.mySales.offset"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/commerce-account-sales"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-mondial-relay-sale-fulfillment",
+        "type": "bloc",
+        "artifact": "commerce-mondial-relay-sale-fulfillment",
+        "category": "delivery",
+        "endpoints": [
+            {
+                "source": "commerce-mondial-relay-fulfillment",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:createShipmentForMySale",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.orderId": "state.createShipmentForMySale.orderId"
+                    }
+                }
+            },
+            {
+                "source": "commerce-mondial-relay-fulfillment",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:declareShipmentHandoffForMySale",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.orderId": "state.declareShipmentHandoffForMySale.orderId"
+                    }
+                }
+            },
+            {
+                "source": "commerce-mondial-relay-fulfillment",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:getShipmentForMySale",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.orderId": "state.getShipmentForMySale.orderId"
+                    }
+                }
+            },
+            {
+                "source": "commerce-mondial-relay-fulfillment",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:requestShipmentLabelForMySale",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.orderId": "state.requestShipmentLabelForMySale.orderId"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-negotiation-form",
+        "type": "bloc",
+        "artifact": "commerce-negotiation-form",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce-negotiation:myProposals",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.role": "state.myProposals.role",
+                        "params.status": "state.myProposals.status",
+                        "params.offerId": "state.myProposals.offerId",
+                        "params.limit": "state.myProposals.limit",
+                        "params.offset": "state.myProposals.offset"
+                    }
+                }
+            },
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:createMyProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.offerId": "state.createMyProposal.offerId",
+                        "body.amount": "state.createMyProposal.amount",
+                        "body.message": "state.createMyProposal.message"
+                    }
+                }
+            },
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:getProposalPolicy",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.offerId": "state.getProposalPolicy.offerId"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-textarea",
+                "ulvia/blocs/basic-toast",
+                "ulvia/blocs/commerce-negotiation-form-controller"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-negotiation-form-controller",
+        "type": "bloc",
+        "artifact": "commerce-negotiation-form-controller",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce-negotiation:myProposals",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.role": "state.myProposals.role",
+                        "params.status": "state.myProposals.status",
+                        "params.offerId": "state.myProposals.offerId",
+                        "params.limit": "state.myProposals.limit",
+                        "params.offset": "state.myProposals.offset"
+                    }
+                }
+            },
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:createMyProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.offerId": "state.createMyProposal.offerId",
+                        "body.amount": "state.createMyProposal.amount",
+                        "body.message": "state.createMyProposal.message"
+                    }
+                }
+            },
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:getProposalPolicy",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.offerId": "state.getProposalPolicy.offerId"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/commerce-negotiation-form"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-negotiation-list",
+        "type": "bloc",
+        "artifact": "commerce-negotiation-list",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce-negotiation:myProposals",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.role": "state.myProposals.role",
+                        "params.status": "state.myProposals.status",
+                        "params.offerId": "state.myProposals.offerId",
+                        "params.limit": "state.myProposals.limit",
+                        "params.offset": "state.myProposals.offset"
+                    }
+                }
+            },
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce-negotiation:respondToProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.id": "state.respondToProposal.id",
+                        "body.action": "state.respondToProposal.action",
+                        "body.expectedVersion": "state.respondToProposal.expectedVersion",
+                        "body.message": "state.respondToProposal.message"
+                    }
+                }
+            },
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce-negotiation:withdrawMyProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.id": "state.withdrawMyProposal.id",
+                        "body.expectedVersion": "state.withdrawMyProposal.expectedVersion"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:publicOfferImage",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.publicOfferImage.id"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-chip",
+                "ulvia/blocs/basic-chip-group",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-option",
+                "ulvia/blocs/basic-pagination",
+                "ulvia/blocs/basic-select",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-toast",
+                "ulvia/blocs/commerce-negotiation-list-controller"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-negotiation-list-controller",
+        "type": "bloc",
+        "artifact": "commerce-negotiation-list-controller",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce-negotiation:myProposals",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.role": "state.myProposals.role",
+                        "params.status": "state.myProposals.status",
+                        "params.offerId": "state.myProposals.offerId",
+                        "params.limit": "state.myProposals.limit",
+                        "params.offset": "state.myProposals.offset"
+                    }
+                }
+            },
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce-negotiation:respondToProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.id": "state.respondToProposal.id",
+                        "body.action": "state.respondToProposal.action",
+                        "body.expectedVersion": "state.respondToProposal.expectedVersion",
+                        "body.message": "state.respondToProposal.message"
+                    }
+                }
+            },
+            {
+                "source": "commerce-negotiation",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce-negotiation:withdrawMyProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.id": "state.withdrawMyProposal.id",
+                        "body.expectedVersion": "state.withdrawMyProposal.expectedVersion"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:publicOfferImage",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.publicOfferImage.id"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/commerce-negotiation-list"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-notification-preferences",
+        "type": "bloc",
+        "artifact": "commerce-notification-preferences",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:getMyNotificationPreferences",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:updateMyNotificationPreferences",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.preferences": "state.updateMyNotificationPreferences.preferences"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "ulvia/blocs/commerce-offer-filter",
+        "type": "bloc",
+        "artifact": "commerce-offer-filter",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:offerFilterSchema",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.category": "props.category"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "ulvia/blocs/commerce-offer-list",
+        "type": "bloc",
+        "artifact": "commerce-offer-list",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:offers",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.q": "state.offers.q",
+                        "params.productId": "state.offers.productId",
+                        "params.variantId": "state.offers.variantId",
+                        "params.sellerId": "state.offers.sellerId",
+                        "params.conditionCode": "state.offers.conditionCode",
+                        "params.category": "state.offers.category",
+                        "params.brand": "state.offers.brand",
+                        "params.filters": "state.offers.filters",
+                        "params.priceMin": "state.offers.priceMin",
+                        "params.priceMax": "state.offers.priceMax",
+                        "params.sort": "state.offers.sort",
+                        "params.limit": "state.offers.limit",
+                        "params.offset": "state.offers.offset"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:publicOfferImage",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.publicOfferImage.id"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-pagination",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-toast",
+                "ulvia/blocs/commerce-offer-preview"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-offer-preview",
+        "type": "bloc",
+        "artifact": "commerce-offer-preview",
+        "category": "commerce",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "commerce-offer-accent",
+                "commerce-offer-background",
+                "commerce-offer-border",
+                "commerce-offer-heading-font",
+                "commerce-offer-muted-text",
+                "commerce-offer-price",
+                "commerce-offer-radius",
+                "commerce-offer-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-offer-price-form",
+        "type": "bloc",
+        "artifact": "commerce-offer-price-form",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:myOffer",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.myOffer.id"
+                    }
+                }
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccount",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:updateAccount",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.phone": "state.updateAccount.phone",
+                        "body.givenName": "state.updateAccount.givenName",
+                        "body.surname": "state.updateAccount.surname",
+                        "body.birthDate": "state.updateAccount.birthDate",
+                        "body.addressLine1": "state.updateAccount.addressLine1",
+                        "body.addressLine2": "state.updateAccount.addressLine2",
+                        "body.addressLine3": "state.updateAccount.addressLine3",
+                        "body.postalCode": "state.updateAccount.postalCode",
+                        "body.city": "state.updateAccount.city",
+                        "body.region": "state.updateAccount.region",
+                        "body.countryCode": "state.updateAccount.countryCode",
+                        "body.avatarUrl": "state.updateAccount.avatarUrl",
+                        "body.avatarFileId": "state.updateAccount.avatarFileId",
+                        "body.locale": "state.updateAccount.locale",
+                        "body.timezone": "state.updateAccount.timezone"
+                    }
+                }
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:getConnectClientConfig",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:getSellerSaleEnrollment",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:submitSellerOfferPrice",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.offerId": "state.submitSellerOfferPrice.offerId",
+                        "body.amount": "state.submitSellerOfferPrice.amount",
+                        "body.expectedVersion": "state.submitSellerOfferPrice.expectedVersion",
+                        "body.accountToken": "state.submitSellerOfferPrice.accountToken",
+                        "body.sellerTermsAccepted": "state.submitSellerOfferPrice.sellerTermsAccepted",
+                        "body.sellerTermsVersion": "state.submitSellerOfferPrice.sellerTermsVersion",
+                        "body.sellerTermsHash": "state.submitSellerOfferPrice.sellerTermsHash"
+                    }
+                }
+            }
+        ],
+        "context": [
+            "authenticated-user"
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-toast",
+                "ulvia/blocs/commerce-offer-price-form-controller"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-offer-price-form-controller",
+        "type": "bloc",
+        "artifact": "commerce-offer-price-form-controller",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:myOffer",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.myOffer.id"
+                    }
+                }
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccount",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:updateAccount",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.phone": "state.updateAccount.phone",
+                        "body.givenName": "state.updateAccount.givenName",
+                        "body.surname": "state.updateAccount.surname",
+                        "body.birthDate": "state.updateAccount.birthDate",
+                        "body.addressLine1": "state.updateAccount.addressLine1",
+                        "body.addressLine2": "state.updateAccount.addressLine2",
+                        "body.addressLine3": "state.updateAccount.addressLine3",
+                        "body.postalCode": "state.updateAccount.postalCode",
+                        "body.city": "state.updateAccount.city",
+                        "body.region": "state.updateAccount.region",
+                        "body.countryCode": "state.updateAccount.countryCode",
+                        "body.avatarUrl": "state.updateAccount.avatarUrl",
+                        "body.avatarFileId": "state.updateAccount.avatarFileId",
+                        "body.locale": "state.updateAccount.locale",
+                        "body.timezone": "state.updateAccount.timezone"
+                    }
+                }
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:getConnectClientConfig",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:getSellerSaleEnrollment",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:submitSellerOfferPrice",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.offerId": "state.submitSellerOfferPrice.offerId",
+                        "body.amount": "state.submitSellerOfferPrice.amount",
+                        "body.expectedVersion": "state.submitSellerOfferPrice.expectedVersion",
+                        "body.accountToken": "state.submitSellerOfferPrice.accountToken",
+                        "body.sellerTermsAccepted": "state.submitSellerOfferPrice.sellerTermsAccepted",
+                        "body.sellerTermsVersion": "state.submitSellerOfferPrice.sellerTermsVersion",
+                        "body.sellerTermsHash": "state.submitSellerOfferPrice.sellerTermsHash"
+                    }
+                }
+            }
+        ],
+        "context": [
+            "authenticated-user"
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/commerce-offer-price-form"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-sale-detail",
+        "type": "bloc",
+        "artifact": "commerce-sale-detail",
+        "category": "commerce",
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:mySale",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.mySale.id",
+                        "params.publicId": "state.mySale.publicId"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/commerce-stripe-payment",
+        "type": "bloc",
+        "artifact": "commerce-stripe-payment",
+        "category": "payments",
+        "endpoints": [
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:createPaymentForOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.orderId": "state.createPaymentForOrder.orderId",
+                        "body.acceptedLegalDocumentVersionIds": "state.createPaymentForOrder.acceptedLegalDocumentVersionIds"
+                    }
+                }
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:getPaymentLegalRequirements",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.orderId": "state.getPaymentLegalRequirements.orderId"
+                    }
+                }
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:getStripePaymentClientConfig",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:refreshPaymentForOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.orderId": "state.refreshPaymentForOrder.orderId"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "ulvia/blocs/consent-field",
+        "type": "bloc",
+        "artifact": "consent-field",
+        "category": "consent",
+        "endpoints": [
+            {
+                "source": "consent",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:consent:getRequirements",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.context": "props.contextKey"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "ulvia/blocs/doc-anchor-heading",
+        "type": "bloc",
+        "artifact": "doc-anchor-heading",
+        "category": "documentation-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-heading",
+                "basic-blocs-primary-base",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-font-heading",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-motion-duration"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-api-endpoint",
+        "type": "bloc",
+        "artifact": "doc-api-endpoint",
+        "category": "documentation-api",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-danger-contrasted",
+                "basic-blocs-danger-muted",
+                "basic-blocs-font-body",
+                "basic-blocs-font-mono",
+                "basic-blocs-info-base",
+                "basic-blocs-primary-foreground",
+                "basic-blocs-radius-card",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-api-delete",
+                "documentation-blocs-api-get",
+                "documentation-blocs-api-method-text",
+                "documentation-blocs-api-neutral",
+                "documentation-blocs-api-patch",
+                "documentation-blocs-api-post",
+                "documentation-blocs-api-put",
+                "documentation-blocs-border",
+                "documentation-blocs-danger-background",
+                "documentation-blocs-danger-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-subtle-surface"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-api-params",
+        "type": "bloc",
+        "artifact": "doc-api-params",
+        "category": "documentation-api",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-radius-card",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-subtle-surface",
+                "documentation-blocs-surface"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/doc-api-property"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-api-property",
+        "type": "bloc",
+        "artifact": "doc-api-property",
+        "category": "documentation-api",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-danger-contrasted",
+                "basic-blocs-danger-muted",
+                "basic-blocs-font-body",
+                "basic-blocs-font-mono",
+                "basic-blocs-primary-base",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-border",
+                "documentation-blocs-danger-background",
+                "documentation-blocs-danger-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-breadcrumb",
+        "type": "bloc",
+        "artifact": "doc-breadcrumb",
+        "category": "documentation-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-font-body",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-callout",
+        "type": "bloc",
+        "artifact": "doc-callout",
+        "category": "documentation-content",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-font-body",
+                "basic-blocs-info-base",
+                "basic-blocs-info-contrasted",
+                "basic-blocs-info-muted",
+                "basic-blocs-radius-card",
+                "documentation-blocs-api-delete",
+                "documentation-blocs-api-get",
+                "documentation-blocs-api-post",
+                "documentation-blocs-api-put",
+                "documentation-blocs-danger-background",
+                "documentation-blocs-danger-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-info-background",
+                "documentation-blocs-info-text",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-subtle-surface",
+                "documentation-blocs-text",
+                "documentation-blocs-tip-background",
+                "documentation-blocs-tip-text",
+                "documentation-blocs-warning-background",
+                "documentation-blocs-warning-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-code-block",
+        "type": "bloc",
+        "artifact": "doc-code-block",
+        "category": "documentation-code",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-font-body",
+                "basic-blocs-font-mono",
+                "basic-blocs-page-background",
+                "basic-blocs-primary-base",
+                "basic-blocs-radius-card",
+                "basic-blocs-secondary-base",
+                "basic-blocs-success-base",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-border",
+                "documentation-blocs-code-background",
+                "documentation-blocs-code-header-background",
+                "documentation-blocs-code-muted-text",
+                "documentation-blocs-code-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-shadow",
+                "documentation-blocs-subtle-surface",
+                "documentation-blocs-terminal-prompt"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-code-diff",
+        "type": "bloc",
+        "artifact": "doc-code-diff",
+        "category": "documentation-code",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-danger-base",
+                "basic-blocs-danger-contrasted",
+                "basic-blocs-danger-muted",
+                "basic-blocs-font-body",
+                "basic-blocs-font-mono",
+                "basic-blocs-radius-card",
+                "basic-blocs-success-base",
+                "basic-blocs-success-contrasted",
+                "basic-blocs-success-muted",
+                "documentation-blocs-api-delete",
+                "documentation-blocs-api-post",
+                "documentation-blocs-danger-background",
+                "documentation-blocs-danger-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-tip-background",
+                "documentation-blocs-tip-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-code-inline",
+        "type": "bloc",
+        "artifact": "doc-code-inline",
+        "category": "documentation-code",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-mono",
+                "basic-blocs-primary-base",
+                "basic-blocs-radius-control",
+                "documentation-blocs-accent",
+                "documentation-blocs-api-get",
+                "documentation-blocs-danger-background",
+                "documentation-blocs-danger-text",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-info-text",
+                "documentation-blocs-radius-control"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-code-kbd",
+        "type": "bloc",
+        "artifact": "doc-code-kbd",
+        "category": "documentation-code",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-font-mono",
+                "basic-blocs-radius-control",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-border",
+                "documentation-blocs-code-background",
+                "documentation-blocs-code-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-control",
+                "documentation-blocs-subtle-surface"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-code-tabs",
+        "type": "bloc",
+        "artifact": "doc-code-tabs",
+        "category": "documentation-code",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-font-body",
+                "basic-blocs-page-background",
+                "basic-blocs-primary-base",
+                "basic-blocs-radius-card",
+                "basic-blocs-secondary-base",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-code-background",
+                "documentation-blocs-code-header-background",
+                "documentation-blocs-code-muted-text",
+                "documentation-blocs-code-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-radius-panel"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/doc-code-block"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-code-terminal",
+        "type": "bloc",
+        "artifact": "doc-code-terminal",
+        "category": "documentation-code",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-font-body",
+                "basic-blocs-font-mono",
+                "basic-blocs-page-background",
+                "basic-blocs-radius-card",
+                "basic-blocs-success-base",
+                "basic-blocs-surface-text",
+                "documentation-blocs-code-background",
+                "documentation-blocs-code-header-background",
+                "documentation-blocs-code-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-shadow",
+                "documentation-blocs-terminal-prompt"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-edit-link",
+        "type": "bloc",
+        "artifact": "doc-edit-link",
+        "category": "documentation-page",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-muted-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-font-body",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-subtle-surface"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-embed",
+        "type": "bloc",
+        "artifact": "doc-embed",
+        "category": "documentation-content",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-radius-card",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-text",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-subtle-surface"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-feedback",
+        "type": "bloc",
+        "artifact": "doc-feedback",
+        "category": "documentation-page",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-radius-card",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-subtle-surface",
+                "documentation-blocs-surface"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-figure",
+        "type": "bloc",
+        "artifact": "doc-figure",
+        "category": "documentation-content",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-radius-card",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-subtle-surface"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-glossary-term",
+        "type": "bloc",
+        "artifact": "doc-glossary-term",
+        "category": "documentation-content",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-page-background",
+                "basic-blocs-primary-base",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-code-background",
+                "documentation-blocs-code-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-shadow"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-layout",
+        "type": "bloc",
+        "artifact": "doc-layout",
+        "category": "documentation-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-font-body",
+                "basic-blocs-page-background",
+                "basic-blocs-primary-base",
+                "basic-blocs-radius-control",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-background",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-control",
+                "documentation-blocs-shadow",
+                "documentation-blocs-sidebar-background",
+                "documentation-blocs-sidebar-width",
+                "documentation-blocs-subtle-surface",
+                "documentation-blocs-surface",
+                "documentation-blocs-text",
+                "documentation-blocs-topbar-background",
+                "documentation-blocs-topbar-height"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/doc-sidebar-link",
+                "ulvia/blocs/doc-sidebar-section"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-math",
+        "type": "bloc",
+        "artifact": "doc-math",
+        "category": "documentation-content",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-text",
+                "documentation-blocs-border",
+                "documentation-blocs-heading-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-mermaid",
+        "type": "bloc",
+        "artifact": "doc-mermaid",
+        "category": "documentation-content",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-mono",
+                "basic-blocs-radius-card",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-text",
+                "documentation-blocs-api-post",
+                "documentation-blocs-border",
+                "documentation-blocs-code-background",
+                "documentation-blocs-code-header-background",
+                "documentation-blocs-code-text",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-subtle-surface",
+                "documentation-blocs-text",
+                "documentation-blocs-tip-background",
+                "documentation-blocs-tip-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-prev-next",
+        "type": "bloc",
+        "artifact": "doc-prev-next",
+        "category": "documentation-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-radius-card",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-panel",
+                "documentation-blocs-shadow"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-search",
+        "type": "bloc",
+        "artifact": "doc-search",
+        "category": "documentation-page",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-font-mono",
+                "basic-blocs-primary-base",
+                "basic-blocs-radius-control",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-font-mono",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-radius-control",
+                "documentation-blocs-shadow",
+                "documentation-blocs-subtle-surface",
+                "documentation-blocs-surface"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-sidebar-link",
+        "type": "bloc",
+        "artifact": "doc-sidebar-link",
+        "category": "documentation-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-primary-base",
+                "documentation-blocs-accent",
+                "documentation-blocs-motion-duration"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-sidebar-section",
+        "type": "bloc",
+        "artifact": "doc-sidebar-section",
+        "category": "documentation-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-surface-muted-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-font-body",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/doc-sidebar-link"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-step",
+        "type": "bloc",
+        "artifact": "doc-step",
+        "category": "documentation-content",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-primary-foreground",
+                "basic-blocs-success-base",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-api-post",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-steps",
+        "type": "bloc",
+        "artifact": "doc-steps",
+        "category": "documentation-content",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "documentation-blocs-font-body"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/doc-step"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-toc",
+        "type": "bloc",
+        "artifact": "doc-toc",
+        "category": "documentation-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-updated",
+        "type": "bloc",
+        "artifact": "doc-updated",
+        "category": "documentation-page",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-body-text",
+                "basic-blocs-font-body",
+                "basic-blocs-surface-muted-text",
+                "documentation-blocs-font-body",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/doc-version",
+        "type": "bloc",
+        "artifact": "doc-version",
+        "category": "documentation-navigation",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-body",
+                "basic-blocs-primary-base",
+                "basic-blocs-subtle-background",
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-muted-text",
+                "basic-blocs-surface-text",
+                "documentation-blocs-accent",
+                "documentation-blocs-border",
+                "documentation-blocs-font-body",
+                "documentation-blocs-heading-text",
+                "documentation-blocs-motion-duration",
+                "documentation-blocs-muted-text",
+                "documentation-blocs-shadow",
+                "documentation-blocs-subtle-surface",
+                "documentation-blocs-surface"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/footer",
+        "type": "bloc",
+        "artifact": "footer",
+        "category": "structure"
+    },
+    {
+        "id": "ulvia/blocs/form",
+        "type": "bloc",
+        "artifact": "form",
+        "category": "form",
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-input"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/forms-renderer",
+        "type": "bloc",
+        "artifact": "forms-renderer",
+        "category": "forms",
+        "endpoints": [
+            {
+                "source": "forms",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:forms:formPublic",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.key": "props.formKey",
+                        "params.version": "props.version"
+                    }
+                }
+            },
+            {
+                "source": "forms",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:forms:submitPublic",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.key": "props.formKey",
+                        "body.version": "state.submitPublic.version",
+                        "body.idempotencyKey": "state.submitPublic.idempotencyKey",
+                        "body.sessionId": "state.submitPublic.sessionId",
+                        "body.startedAt": "state.submitPublic.startedAt",
+                        "body.website": "state.submitPublic.website",
+                        "body.answers": "state.submitPublic.answers"
+                    }
+                }
+            },
+            {
+                "source": "forms",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:forms:formImagePublic",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.key": "props.formKey",
+                        "params.version": "state.formVersion",
+                        "params.id": "state.formImagePublic.id"
+                    }
+                }
+            },
+            {
+                "source": "forms",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:forms:formAuthenticated",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.key": "props.formKey",
+                        "params.version": "props.version"
+                    }
+                }
+            },
+            {
+                "source": "forms",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:forms:submitAuthenticated",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.key": "props.formKey",
+                        "body.version": "state.submitAuthenticated.version",
+                        "body.idempotencyKey": "state.submitAuthenticated.idempotencyKey",
+                        "body.sessionId": "state.submitAuthenticated.sessionId",
+                        "body.startedAt": "state.submitAuthenticated.startedAt",
+                        "body.website": "state.submitAuthenticated.website",
+                        "body.answers": "state.submitAuthenticated.answers"
+                    }
+                }
+            },
+            {
+                "source": "forms",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:forms:formImageAuthenticated",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.key": "props.formKey",
+                        "params.version": "state.formVersion",
+                        "params.id": "state.formImageAuthenticated.id"
+                    }
+                }
+            }
+        ],
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "forms-accent",
+                "forms-background",
+                "forms-border",
+                "forms-muted-text",
+                "forms-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-checkbox",
+                "ulvia/blocs/basic-chip",
+                "ulvia/blocs/basic-chip-group",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-option",
+                "ulvia/blocs/basic-select",
+                "ulvia/blocs/basic-textarea"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/h1",
+        "type": "bloc",
+        "artifact": "h1",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/h2",
+        "type": "bloc",
+        "artifact": "h2",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/h3",
+        "type": "bloc",
+        "artifact": "h3",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/h4",
+        "type": "bloc",
+        "artifact": "h4",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/h5",
+        "type": "bloc",
+        "artifact": "h5",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/h6",
+        "type": "bloc",
+        "artifact": "h6",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/header",
+        "type": "bloc",
+        "artifact": "header",
+        "category": "structure"
+    },
+    {
+        "id": "ulvia/blocs/img",
+        "type": "bloc",
+        "artifact": "img",
+        "category": "media"
+    },
+    {
+        "id": "ulvia/blocs/li",
+        "type": "bloc",
+        "artifact": "li",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/mondial-relay-picker",
+        "type": "bloc",
+        "artifact": "mondial-relay-picker",
+        "category": "delivery",
+        "endpoints": [
+            {
+                "source": "mondial-relay",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:delivery:relayPoints",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.country": "state.relayPoints.country",
+                        "params.postalCode": "state.relayPoints.postalCode",
+                        "params.city": "state.relayPoints.city",
+                        "params.weightGrams": "state.relayPoints.weightGrams",
+                        "params.modeDelivery": "state.relayPoints.modeDelivery",
+                        "params.limit": "state.relayPoints.limit",
+                        "params.latitude": "state.relayPoints.latitude",
+                        "params.longitude": "state.relayPoints.longitude"
+                    }
+                }
+            },
+            {
+                "source": "commerce-mondial-relay-delivery",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:getRelayPointForOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.orderId": "state.getRelayPointForOrder.orderId"
+                    }
+                }
+            },
+            {
+                "source": "commerce-mondial-relay-delivery",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:setRelayPointForOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.orderId": "state.setRelayPointForOrder.orderId",
+                        "body.relayLocation": "state.setRelayPointForOrder.relayLocation",
+                        "body.country": "state.setRelayPointForOrder.country",
+                        "body.postalCode": "state.setRelayPointForOrder.postalCode",
+                        "body.city": "state.setRelayPointForOrder.city"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "ulvia/blocs/nav",
+        "type": "bloc",
+        "artifact": "nav",
+        "category": "structure"
+    },
+    {
+        "id": "ulvia/blocs/newsletter-subscription",
+        "type": "bloc",
+        "artifact": "newsletter-subscription",
+        "category": "newsletter",
+        "endpoints": [
+            {
+                "source": "newsletter",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:newsletter:setSubscription",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.email": "state.setSubscription.email",
+                        "body.email": "state.setSubscription.email",
+                        "body.subscribed": "state.setSubscription.subscribed"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "ulvia/blocs/ol",
+        "type": "bloc",
+        "artifact": "ol",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/p",
+        "type": "bloc",
+        "artifact": "p",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/photo-album-gallery",
+        "type": "bloc",
+        "artifact": "photo-album-gallery",
+        "category": "photo-albums",
+        "endpoints": [
+            {
+                "source": "photo-albums",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:photo-albums:album",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.slug": "state.albumSlug"
+                    }
+                }
+            },
+            {
+                "source": "photo-albums",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:photo-albums:publicPhoto",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.publicPhoto.id"
+                    }
+                }
+            }
+        ],
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "photo-albums-card-background",
+                "photo-albums-card-border",
+                "photo-albums-card-muted-text",
+                "photo-albums-card-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-toast"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/photo-album-list",
+        "type": "bloc",
+        "artifact": "photo-album-list",
+        "category": "photo-albums",
+        "endpoints": [
+            {
+                "source": "photo-albums",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:photo-albums:albums",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.category": "state.albums.category",
+                        "params.limit": "state.albums.limit",
+                        "params.offset": "state.albums.offset"
+                    }
+                }
+            },
+            {
+                "source": "photo-albums",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:photo-albums:publicPhoto",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.publicPhoto.id"
+                    }
+                }
+            }
+        ],
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "photo-albums-card-background",
+                "photo-albums-card-border",
+                "photo-albums-card-muted-text",
+                "photo-albums-card-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-pagination",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-toast"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-contact-card",
+        "type": "bloc",
+        "artifact": "restaurant-contact-card",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-focus-color",
+                "basic-blocs-surface-background",
+                "basic-blocs-surface-border",
+                "basic-blocs-surface-radius",
+                "basic-blocs-surface-text",
+                "restaurant-accent",
+                "restaurant-background",
+                "restaurant-content-background",
+                "restaurant-content-border",
+                "restaurant-content-muted-text",
+                "restaurant-content-surface",
+                "restaurant-content-text",
+                "restaurant-font-body",
+                "restaurant-font-heading",
+                "restaurant-muted-text",
+                "restaurant-surface",
+                "restaurant-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-badge",
+                "ulvia/blocs/basic-table",
+                "ulvia/blocs/basic-table-cell",
+                "ulvia/blocs/basic-table-row",
+                "ulvia/blocs/restaurant-contact-item"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-contact-item",
+        "type": "bloc",
+        "artifact": "restaurant-contact-item",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "restaurant-accent",
+                "restaurant-content-border",
+                "restaurant-content-muted-text",
+                "restaurant-font-body"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-header",
+        "type": "bloc",
+        "artifact": "restaurant-header",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-action-min-height",
+                "basic-blocs-focus-color",
+                "basic-blocs-success-base",
+                "basic-blocs-success-contrasted",
+                "basic-blocs-success-foreground",
+                "basic-blocs-success-muted",
+                "basic-blocs-surface-text",
+                "restaurant-accent",
+                "restaurant-background",
+                "restaurant-content-width",
+                "restaurant-font-body",
+                "restaurant-font-heading",
+                "restaurant-header-height",
+                "restaurant-muted-text",
+                "restaurant-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-badge",
+                "ulvia/blocs/basic-option",
+                "ulvia/blocs/basic-select"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-hero-cover",
+        "type": "bloc",
+        "artifact": "restaurant-hero-cover",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-size-display",
+                "restaurant-accent",
+                "restaurant-background",
+                "restaurant-content-width",
+                "restaurant-font-body",
+                "restaurant-font-heading",
+                "restaurant-header-height",
+                "restaurant-muted-text",
+                "restaurant-rating",
+                "restaurant-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-hero-gallery",
+        "type": "bloc",
+        "artifact": "restaurant-hero-gallery",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-size-display",
+                "restaurant-accent",
+                "restaurant-background",
+                "restaurant-font-body",
+                "restaurant-font-heading",
+                "restaurant-header-height",
+                "restaurant-muted-text",
+                "restaurant-rating",
+                "restaurant-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-hero-split",
+        "type": "bloc",
+        "artifact": "restaurant-hero-split",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "basic-blocs-font-size-display",
+                "restaurant-accent",
+                "restaurant-background",
+                "restaurant-font-body",
+                "restaurant-font-heading",
+                "restaurant-header-height",
+                "restaurant-muted-text",
+                "restaurant-rating",
+                "restaurant-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-menu",
+        "type": "bloc",
+        "artifact": "restaurant-menu",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "restaurant-accent",
+                "restaurant-background",
+                "restaurant-font-body",
+                "restaurant-font-heading",
+                "restaurant-header-height",
+                "restaurant-muted-text",
+                "restaurant-text"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-menu-catalog",
+        "type": "bloc",
+        "artifact": "restaurant-menu-catalog",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "restaurant-accent",
+                "restaurant-background",
+                "restaurant-content-background",
+                "restaurant-content-border",
+                "restaurant-content-muted-text",
+                "restaurant-content-surface",
+                "restaurant-content-text",
+                "restaurant-content-width",
+                "restaurant-font-body",
+                "restaurant-font-heading",
+                "restaurant-muted-text",
+                "restaurant-surface",
+                "restaurant-text"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/restaurant-menu-item",
+                "ulvia/blocs/restaurant-menu-section"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-menu-item",
+        "type": "bloc",
+        "artifact": "restaurant-menu-item",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "restaurant-accent",
+                "restaurant-content-border",
+                "restaurant-content-muted-text",
+                "restaurant-font-body"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/restaurant-menu-section",
+        "type": "bloc",
+        "artifact": "restaurant-menu-section",
+        "category": "restaurant",
+        "theme": {
+            "contract": "ulvia-theme@1",
+            "required": [
+                "restaurant-accent",
+                "restaurant-content-muted-text",
+                "restaurant-font-body"
+            ]
+        },
+        "requires": {
+            "resources": [
+                "ulvia/blocs/restaurant-menu-item"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/sales-catalog-browser",
+        "type": "bloc",
+        "artifact": "sales-catalog-browser",
+        "category": "sales-configurator",
+        "endpoints": [
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:getPartnerCatalog",
+                "contractVersion": "^1.0.0"
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-option",
+                "ulvia/blocs/basic-select",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-toast"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/sales-client-directory",
+        "type": "bloc",
+        "artifact": "sales-client-directory",
+        "category": "sales-configurator",
+        "endpoints": [
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:getMyClient",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.getMyClient.id"
+                    }
+                }
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:listMyClients",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.q": "state.listMyClients.q",
+                        "params.limit": "state.listMyClients.limit",
+                        "params.offset": "state.listMyClients.offset"
+                    }
+                }
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:saveMyClient",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.id": "state.saveMyClient.id",
+                        "body.companyName": "state.saveMyClient.companyName",
+                        "body.companyRegistrationNumber": "state.saveMyClient.companyRegistrationNumber",
+                        "body.contactName": "state.saveMyClient.contactName",
+                        "body.contactJobTitle": "state.saveMyClient.contactJobTitle",
+                        "body.contactEmail": "state.saveMyClient.contactEmail",
+                        "body.contactPhone": "state.saveMyClient.contactPhone",
+                        "body.addressLine1": "state.saveMyClient.addressLine1",
+                        "body.addressLine2": "state.saveMyClient.addressLine2",
+                        "body.postalCode": "state.saveMyClient.postalCode",
+                        "body.city": "state.saveMyClient.city",
+                        "body.country": "state.saveMyClient.country",
+                        "body.notes": "state.saveMyClient.notes"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-textarea",
+                "ulvia/blocs/basic-toast"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/sales-proposal-builder",
+        "type": "bloc",
+        "artifact": "sales-proposal-builder",
+        "category": "sales-configurator",
+        "endpoints": [
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:createMyProposalShare",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.proposalId": "state.createMyProposalShare.proposalId",
+                        "body.expiresAt": "state.createMyProposalShare.expiresAt"
+                    }
+                }
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:getMyProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.getMyProposal.id"
+                    }
+                }
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:getPartnerCatalog",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:publishMyProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.proposalId": "state.publishMyProposal.proposalId",
+                        "body.expectedVersionId": "state.publishMyProposal.expectedVersionId",
+                        "body.expectedRevision": "state.publishMyProposal.expectedRevision"
+                    }
+                }
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:revokeMyProposalShare",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.proposalId": "state.revokeMyProposalShare.proposalId",
+                        "body.shareId": "state.revokeMyProposalShare.shareId"
+                    }
+                }
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:saveMyProposalDraft",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.id": "state.saveMyProposalDraft.id",
+                        "body.clientId": "state.saveMyProposalDraft.clientId",
+                        "body.title": "state.saveMyProposalDraft.title",
+                        "body.introduction": "state.saveMyProposalDraft.introduction",
+                        "body.privateNotes": "state.saveMyProposalDraft.privateNotes",
+                        "body.selections": "state.saveMyProposalDraft.selections",
+                        "body.customRequests": "state.saveMyProposalDraft.customRequests"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-checkbox",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-textarea",
+                "ulvia/blocs/basic-toast"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/sales-proposal-list",
+        "type": "bloc",
+        "artifact": "sales-proposal-list",
+        "category": "sales-configurator",
+        "endpoints": [
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:listMyProposals",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.q": "state.listMyProposals.q",
+                        "params.status": "state.listMyProposals.status",
+                        "params.cursor": "state.listMyProposals.cursor",
+                        "params.limit": "state.listMyProposals.limit"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-option",
+                "ulvia/blocs/basic-select",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-toast"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/sales-proposal-starter",
+        "type": "bloc",
+        "artifact": "sales-proposal-starter",
+        "category": "sales-configurator",
+        "endpoints": [
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:getPartnerCatalog",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:listMyClients",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.q": "state.listMyClients.q",
+                        "params.limit": "state.listMyClients.limit",
+                        "params.offset": "state.listMyClients.offset"
+                    }
+                }
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:saveMyClient",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.id": "state.saveMyClient.id",
+                        "body.companyName": "state.saveMyClient.companyName",
+                        "body.companyRegistrationNumber": "state.saveMyClient.companyRegistrationNumber",
+                        "body.contactName": "state.saveMyClient.contactName",
+                        "body.contactJobTitle": "state.saveMyClient.contactJobTitle",
+                        "body.contactEmail": "state.saveMyClient.contactEmail",
+                        "body.contactPhone": "state.saveMyClient.contactPhone",
+                        "body.addressLine1": "state.saveMyClient.addressLine1",
+                        "body.addressLine2": "state.saveMyClient.addressLine2",
+                        "body.postalCode": "state.saveMyClient.postalCode",
+                        "body.city": "state.saveMyClient.city",
+                        "body.country": "state.saveMyClient.country",
+                        "body.notes": "state.saveMyClient.notes"
+                    }
+                }
+            },
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:saveMyProposalDraft",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.id": "state.saveMyProposalDraft.id",
+                        "body.clientId": "state.saveMyProposalDraft.clientId",
+                        "body.title": "state.saveMyProposalDraft.title",
+                        "body.introduction": "state.saveMyProposalDraft.introduction",
+                        "body.privateNotes": "state.saveMyProposalDraft.privateNotes",
+                        "body.selections": "state.saveMyProposalDraft.selections",
+                        "body.customRequests": "state.saveMyProposalDraft.customRequests"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-checkbox",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-option",
+                "ulvia/blocs/basic-select",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-textarea",
+                "ulvia/blocs/basic-toast"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/sales-proposal-view",
+        "type": "bloc",
+        "artifact": "sales-proposal-view",
+        "category": "sales-configurator",
+        "endpoints": [
+            {
+                "source": "sales-configurator",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:sales-configurator:getSharedProposal",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.token": "route.proposalToken"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-card",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/section",
+        "type": "bloc",
+        "artifact": "section",
+        "category": "structure"
+    },
+    {
+        "id": "ulvia/blocs/span",
+        "type": "bloc",
+        "artifact": "span",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/stripe-connect-onboarding",
+        "type": "bloc",
+        "artifact": "stripe-connect-onboarding",
+        "category": "payments",
+        "endpoints": [
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:enrollConnectSeller",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.accountToken": "state.enrollConnectSeller.accountToken",
+                        "body.contactEmail": "state.enrollConnectSeller.contactEmail",
+                        "body.marketplaceTermsAccepted": "state.enrollConnectSeller.marketplaceTermsAccepted",
+                        "body.marketplaceTermsVersion": "state.enrollConnectSeller.marketplaceTermsVersion",
+                        "body.marketplaceTermsHash": "state.enrollConnectSeller.marketplaceTermsHash",
+                        "body.expectedMarketplaceTermsVersion": "state.enrollConnectSeller.expectedMarketplaceTermsVersion",
+                        "body.expectedMarketplaceTermsHash": "state.enrollConnectSeller.expectedMarketplaceTermsHash"
+                    }
+                }
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:getConnectClientConfig",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:getConnectStatus",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.marketplaceTermsVersion": "state.getConnectStatus.marketplaceTermsVersion",
+                        "params.marketplaceTermsHash": "state.getConnectStatus.marketplaceTermsHash"
+                    }
+                }
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:getConnectWallet",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:submitConnectVerification",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.accountToken": "state.submitConnectVerification.accountToken",
+                        "body.bankAccountToken": "state.submitConnectVerification.bankAccountToken",
+                        "body.contactEmail": "state.submitConnectVerification.contactEmail",
+                        "body.marketplaceTermsAccepted": "state.submitConnectVerification.marketplaceTermsAccepted",
+                        "body.expectedMarketplaceTermsVersion": "state.submitConnectVerification.expectedMarketplaceTermsVersion",
+                        "body.expectedMarketplaceTermsHash": "state.submitConnectVerification.expectedMarketplaceTermsHash"
+                    }
+                }
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccount",
+                "contractVersion": "^1.0.0"
+            }
+        ],
+        "context": [
+            "authenticated-user"
+        ]
+    },
+    {
+        "id": "ulvia/blocs/ul",
+        "type": "bloc",
+        "artifact": "ul",
+        "category": "text"
+    },
+    {
+        "id": "ulvia/blocs/user-account-avatar",
+        "type": "bloc",
+        "artifact": "user-account-avatar",
+        "category": "user-account"
+    },
+    {
+        "id": "ulvia/blocs/user-account-form",
+        "type": "bloc",
+        "artifact": "user-account-form",
+        "category": "user-account",
+        "endpoints": [
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccount",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:updateAccount",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.phone": "state.updateAccount.phone",
+                        "body.givenName": "state.updateAccount.givenName",
+                        "body.surname": "state.updateAccount.surname",
+                        "body.birthDate": "state.updateAccount.birthDate",
+                        "body.addressLine1": "state.updateAccount.addressLine1",
+                        "body.addressLine2": "state.updateAccount.addressLine2",
+                        "body.addressLine3": "state.updateAccount.addressLine3",
+                        "body.postalCode": "state.updateAccount.postalCode",
+                        "body.city": "state.updateAccount.city",
+                        "body.region": "state.updateAccount.region",
+                        "body.countryCode": "state.updateAccount.countryCode",
+                        "body.avatarUrl": "state.updateAccount.avatarUrl",
+                        "body.avatarFileId": "state.updateAccount.avatarFileId",
+                        "body.locale": "state.updateAccount.locale",
+                        "body.timezone": "state.updateAccount.timezone"
+                    }
+                }
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:uploadAccountAvatar",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccountAvatar",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.fileId": "state.getAccountAvatar.fileId"
+                    }
+                }
+            }
+        ],
+        "context": [
+            "authenticated-user"
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/basic-grid",
+                "ulvia/blocs/basic-input",
+                "ulvia/blocs/basic-skeleton",
+                "ulvia/blocs/basic-stack",
+                "ulvia/blocs/basic-toast",
+                "ulvia/blocs/user-account-avatar",
+                "ulvia/blocs/user-account-form-controller"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/user-account-form-controller",
+        "type": "bloc",
+        "artifact": "user-account-form-controller",
+        "category": "user-account",
+        "endpoints": [
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccount",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:updateAccount",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.phone": "state.updateAccount.phone",
+                        "body.givenName": "state.updateAccount.givenName",
+                        "body.surname": "state.updateAccount.surname",
+                        "body.birthDate": "state.updateAccount.birthDate",
+                        "body.addressLine1": "state.updateAccount.addressLine1",
+                        "body.addressLine2": "state.updateAccount.addressLine2",
+                        "body.addressLine3": "state.updateAccount.addressLine3",
+                        "body.postalCode": "state.updateAccount.postalCode",
+                        "body.city": "state.updateAccount.city",
+                        "body.region": "state.updateAccount.region",
+                        "body.countryCode": "state.updateAccount.countryCode",
+                        "body.avatarUrl": "state.updateAccount.avatarUrl",
+                        "body.avatarFileId": "state.updateAccount.avatarFileId",
+                        "body.locale": "state.updateAccount.locale",
+                        "body.timezone": "state.updateAccount.timezone"
+                    }
+                }
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:uploadAccountAvatar",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccountAvatar",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.fileId": "state.getAccountAvatar.fileId"
+                    }
+                }
+            }
+        ],
+        "context": [
+            "authenticated-user"
+        ],
+        "requires": {
+            "resources": [
+                "ulvia/blocs/user-account-form"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/workspace-detail-section",
+        "type": "bloc",
+        "artifact": "workspace-detail-section",
+        "category": "workspace-layout"
+    },
+    {
+        "id": "ulvia/blocs/workspace-lateral-menu",
+        "type": "bloc",
+        "artifact": "workspace-lateral-menu",
+        "category": "workspace-navigation",
+        "requires": {
+            "resources": [
+                "ulvia/blocs/workspace-lateral-menu-item"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/workspace-lateral-menu-item",
+        "type": "bloc",
+        "artifact": "workspace-lateral-menu-item",
+        "category": "workspace-navigation"
+    },
+    {
+        "id": "ulvia/blocs/workspace-shell",
+        "type": "bloc",
+        "artifact": "workspace-shell",
+        "category": "workspace-layout",
+        "requires": {
+            "resources": [
+                "ulvia/blocs/workspace-lateral-menu",
+                "ulvia/blocs/workspace-lateral-menu-item"
+            ]
+        }
+    },
+    {
+        "id": "ulvia/blocs/workspace-shell-detail",
+        "type": "bloc",
+        "artifact": "workspace-shell-detail",
+        "category": "workspace-layout",
+        "requires": {
+            "resources": [
+                "ulvia/blocs/basic-button",
+                "ulvia/blocs/workspace-detail-section"
+            ]
+        }
+    }
+]

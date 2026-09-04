@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-badge",
+        "name": "Badge",
+        "group": "Feedback",
+        "description": "Compact presentational label with semantic tone, appearance, size, and status-dot options.",
+        "path": "blocs/foundation/basic-blocs/feedback/basic-badge"
+    }
+}

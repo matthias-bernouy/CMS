@@ -1,0 +1,70 @@
+{
+    "id": "settingsPricing",
+    "title": "Pricing",
+    "fields": [
+        {
+            "id": "pricePolicy",
+            "label": "Price policy",
+            "path": "pricePolicy",
+            "type": "select",
+            "options": [
+                {
+                    "value": "free",
+                    "label": "Free"
+                },
+                {
+                    "value": "admin_range",
+                    "label": "Administrator range"
+                }
+            ]
+        },
+        {
+            "id": "wholeUnitPrices",
+            "label": "Whole-unit prices",
+            "path": "wholeUnitPrices",
+            "type": "select",
+            "options": [
+                {
+                    "value": "true",
+                    "label": "Yes"
+                },
+                {
+                    "value": "false",
+                    "label": "No"
+                }
+            ]
+        },
+        {
+            "id": "autoApprovePriceInRange",
+            "label": "Auto-approve price in range",
+            "path": "autoApprovePriceInRange",
+            "type": "select",
+            "options": [
+                {
+                    "value": "true",
+                    "label": "Yes"
+                },
+                {
+                    "value": "false",
+                    "label": "No"
+                }
+            ]
+        },
+        {
+            "id": "requireFinalPriceApproval",
+            "label": "Require final price approval",
+            "path": "requireFinalPriceApproval",
+            "type": "select",
+            "options": [
+                {
+                    "value": "true",
+                    "label": "Yes"
+                },
+                {
+                    "value": "false",
+                    "label": "No"
+                }
+            ]
+        }
+    ]
+}

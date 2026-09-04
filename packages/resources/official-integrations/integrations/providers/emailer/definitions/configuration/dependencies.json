@@ -1,6 +1,7 @@
 [
     {
         "name": "newsletter",
-        "kind": "newsletter"
+        "kind": "newsletter",
+        "versionRange": "^3.0.0"
     }
 ]

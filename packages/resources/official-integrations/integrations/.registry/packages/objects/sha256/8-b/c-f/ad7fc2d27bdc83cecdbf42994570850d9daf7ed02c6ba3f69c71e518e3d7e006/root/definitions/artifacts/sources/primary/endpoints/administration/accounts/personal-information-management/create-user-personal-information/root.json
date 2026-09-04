@@ -1,0 +1,88 @@
+{
+    "endpointId": "createUserPersonalInformation",
+    "method": "POST",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record",
+    "meta": {
+        "name": "Create user personal information",
+        "description": "Create or update personal information for a target CMS user."
+    },
+    "params": [
+        {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "Target CMS user id."
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "phone": {
+                "type": "string"
+            },
+            "givenName": {
+                "type": "string"
+            },
+            "surname": {
+                "type": "string"
+            },
+            "birthDate": {
+                "type": "string"
+            },
+            "addressLine1": {
+                "type": "string"
+            },
+            "addressLine2": {
+                "type": "string"
+            },
+            "addressLine3": {
+                "type": "string"
+            },
+            "postalCode": {
+                "type": "string"
+            },
+            "city": {
+                "type": "string"
+            },
+            "region": {
+                "type": "string"
+            },
+            "countryCode": {
+                "type": "string"
+            },
+            "avatarUrl": {
+                "type": "string"
+            },
+            "avatarFileId": {
+                "type": "string"
+            },
+            "locale": {
+                "type": "string"
+            },
+            "timezone": {
+                "type": "string"
+            }
+        }
+    },
+    "output": {
+        "$include": "output.json"
+    }
+}

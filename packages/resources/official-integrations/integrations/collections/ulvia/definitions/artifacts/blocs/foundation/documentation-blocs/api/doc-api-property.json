@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-api-property",
+        "name": "API property",
+        "group": "Documentation · API",
+        "description": "Single property or parameter row for API reference pages.",
+        "path": "blocs/foundation/documentation-blocs/api/doc-api-property"
+    }
+}

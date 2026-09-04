@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "restaurant-menu",
+        "name": "Restaurant menu",
+        "group": "Restaurant",
+        "description": "Accessible navigation overlay with curtain, drawer, and panel presentations.",
+        "path": "blocs/foundation/restaurant/restaurant-menu"
+    }
+}

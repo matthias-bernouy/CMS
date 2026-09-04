@@ -41,6 +41,11 @@ other operator-owned values should live in runtime persistence and be managed
 through an authenticated dashboard or API. An `afterInstallation` hook must be
 idempotent and must not overwrite an existing runtime value.
 
+Keep package responsibilities strict. A `source` contains backend/data
+artifacts and their tests. A `collection` contains blocs, resource metadata,
+endpoint bindings, and theme contracts. See the
+[source and collection model](./model.md).
+
 ## 3. Choose the version
 
 SemVer describes the public integration contract, not whether an old test
@@ -83,6 +88,12 @@ when concurrent writes would otherwise lose state.
 When a linking integration starts using a newer dependency contract, declare a
 `versionRange`. Never let repository resolution silently select an older
 provider that lacks the endpoint or schema being called.
+
+Plan dependency-major transitions explicitly. The sandbox keeps an installed
+dependency when it still satisfies the target range, which permits a dependent
+package to upgrade before that dependency. If the new dependent cannot run
+against both dependency majors, publish a bridge release or design an atomic
+upgrade plan; do not bypass the installed-dependent guard.
 
 ## 5. Add tests and upgrade fixtures
 
@@ -147,13 +158,24 @@ bun run ulvia -- dev
 ```
 
 Install the locally released integration into the persistent development CMS,
-exercise its dashboards, Sources, Storage, Auth, and Edge Functions, then stop
-the stack with `bun run ulvia -- dev stop`.
+exercise its Source endpoints, Storage, Auth, Edge Functions, and collection
+blocs, then stop the stack with `bun run ulvia -- dev stop`.
+
+For collections, begin with an exact source-free selection, then add one
+source-backed resource and verify that only its dependency closure is installed.
+Create and publish a real page, write business data through a Source, restart
+the process, and perform at least one representative upgrade. The complete
+acceptance sequence is documented in
+[Local integration development](./local-development.md).
 
 ## Release checklist
 
 - Remote baselines were pulled before authoring.
 - Definition, index, release notes, and dependency ranges agree.
+- The package declares exactly one current type: `source` or `collection`.
+- Sources contain no blocs, dashboards, pages, or theme declarations.
+- Collection resources use stable namespaced IDs and explicit endpoint,
+  contract, binding, theme, and transitive resource requirements.
 - Mutable business state is runtime-owned and survives reinstall/reload.
 - Tests cover authorization, malformed input, retries, and concurrency.
 - Fixtures cover every immutable baseline and valuable business state.

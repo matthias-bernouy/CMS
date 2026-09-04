@@ -170,6 +170,24 @@ describe("local Supabase management bridge", () => {
         }
         expect(closed).toBe(true);
         expect(runtimeStopped).toBe(true);
+
+        let restartReloads = 0;
+        const reopened = await createLocalSupabaseManagementHandler({
+            projectRoot: root,
+            projectRef: "local",
+            accessToken: token,
+            databaseUrl: "postgresql://unused",
+            port: 0,
+            database: { query: async () => [], close: async () => undefined },
+            functionsRuntime: {
+                reload: async () => {
+                    restartReloads += 1;
+                },
+                stop: async () => undefined,
+            },
+        });
+        expect(restartReloads).toBe(1);
+        await reopened.close();
     });
 });
 

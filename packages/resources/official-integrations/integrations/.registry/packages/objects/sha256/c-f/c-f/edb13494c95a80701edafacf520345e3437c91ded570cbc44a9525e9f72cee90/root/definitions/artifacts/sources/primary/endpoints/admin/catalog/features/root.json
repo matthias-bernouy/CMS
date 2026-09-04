@@ -1,0 +1,7 @@
+{
+  "$files": [
+    "manage-features.json",
+    "manage-feature.json",
+    "upsert-feature.json"
+  ]
+}

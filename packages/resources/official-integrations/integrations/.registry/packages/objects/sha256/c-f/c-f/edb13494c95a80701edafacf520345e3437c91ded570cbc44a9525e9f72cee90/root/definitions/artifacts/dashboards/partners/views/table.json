@@ -1,0 +1,54 @@
+[
+  {
+    "widget": "w-table",
+    "id": "partnersTable",
+    "title": "Sales partners",
+    "source": {
+      "endpoint": "managePartners",
+      "params": {
+        "q": "$filter.q",
+        "status": "$filter.status",
+        "limit": "100"
+      },
+      "itemsPath": "items",
+      "totalPath": "total"
+    },
+    "rowKey": "id",
+    "filters": [
+      {
+        "id": "q",
+        "label": "Search",
+        "param": "q",
+        "type": "text",
+        "placeholder": "Search partners or CMS user ids"
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "param": "status",
+        "type": "select",
+        "options": [
+          { "value": "active", "label": "Active" },
+          { "value": "suspended", "label": "Suspended" }
+        ]
+      }
+    ],
+    "columns": [
+      { "id": "displayName", "label": "Partner", "path": "displayName", "primary": true, "width": "minmax(14rem, 1.5fr)" },
+      { "id": "cmsUserId", "label": "CMS user id", "path": "cmsUserId", "width": "minmax(16rem, 1.5fr)" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge", "width": "8rem" },
+      { "id": "contactEmail", "label": "Contact", "path": "contactEmail", "width": "minmax(16rem, 1.5fr)" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date", "width": "12rem" }
+    ],
+    "actions": [
+      {
+        "id": "createPartner",
+        "label": "Add sales partner",
+        "tone": "primary",
+        "placement": "primary",
+        "selection": { "opens": "partnerDetail" }
+      }
+    ],
+    "selection": { "opens": "partnerDetail" }
+  }
+]

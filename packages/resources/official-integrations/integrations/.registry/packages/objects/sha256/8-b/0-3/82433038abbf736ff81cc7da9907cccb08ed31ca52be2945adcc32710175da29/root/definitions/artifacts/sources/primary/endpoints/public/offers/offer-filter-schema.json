@@ -1,0 +1,131 @@
+[
+    {
+        "endpointId": "offerFilterSchema",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/offer-filter-schema",
+        "params": [
+            {
+                "name": "category",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "category": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "number"
+                                },
+                                "parentId": {
+                                    "type": "number",
+                                    "nullable": true
+                                },
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "fullSlug": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "fields": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "required": {
+                                        "type": "boolean"
+                                    },
+                                    "filterable": {
+                                        "type": "boolean"
+                                    },
+                                    "position": {
+                                        "type": "number"
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "operators": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "options": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "range": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "properties": {
+                                            "minimum": {
+                                                "type": "number"
+                                            },
+                                            "maximum": {
+                                                "type": "number"
+                                            },
+                                            "step": {
+                                                "type": "number"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "brands": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "number"
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

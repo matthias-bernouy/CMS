@@ -15,6 +15,8 @@ export type TBloc = {
     name: string;
     group: string;
     description: string;
+    /** Inactive collection resources remain renderable but are hidden from the authoring catalogue. */
+    catalogue?: "active" | "inactive";
     /** Internal behavior component omitted from the authoring catalogue. */
     internal?: boolean;
     viewJS: string;

@@ -1,11 +1,8 @@
 [
     {
-        "name": "basicBlocs",
-        "kind": "basic-blocs"
-    },
-    {
         "name": "emailer",
         "kind": "emailer",
-        "optional": true
+        "optional": true,
+        "versionRange": "^3.0.0"
     }
 ]

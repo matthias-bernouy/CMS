@@ -1,0 +1,94 @@
+[
+    {
+        "$include": "complete-order-shipment-creation.json"
+    },
+    {
+        "endpointId": "failOrderShipmentCreation",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/shipment-creation/fail",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "operationId": {
+                    "type": "number"
+                },
+                "claimToken": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "unknown": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "operationId",
+                "claimToken",
+                "error"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "businessKey": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "attempts": {
+                            "type": "number"
+                        },
+                        "providerReference": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "providerShipmentId": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "lastError": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "createdAt": {
+                            "type": "string"
+                        },
+                        "updatedAt": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "orderId",
+                        "businessKey",
+                        "status",
+                        "attempts"
+                    ]
+                }
+            }
+        ]
+    }
+]

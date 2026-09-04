@@ -1,0 +1,96 @@
+[
+    {
+        "status": "200",
+        "body": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "number"
+                },
+                "publicId": {
+                    "type": "string"
+                },
+                "orderId": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "buyerRequestedAmount": {
+                    "type": "number",
+                    "nullable": true
+                },
+                "resolutionOutcome": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "resolutionBuyerRefundAmount": {
+                    "type": "number",
+                    "nullable": true
+                },
+                "resolutionSellerTransferAmount": {
+                    "type": "number",
+                    "nullable": true
+                },
+                "resolutionProtectionFeeRefundAmount": {
+                    "type": "number",
+                    "nullable": true
+                },
+                "decisionReason": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "financialTerms": {
+                    "$include": "output/properties/financial-terms.json"
+                },
+                "settlement": {
+                    "$include": "output/properties/settlement.json"
+                },
+                "resolutionLimits": {
+                    "$include": "output/properties/resolution-limits.json"
+                },
+                "resolutionRefund": {
+                    "$include": "output/properties/resolution-refund.json"
+                },
+                "returnShipByAt": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "returnDeliveryStatus": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "returnProviderReference": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "returnCarrierAcceptedAt": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "returnRecipientHandoffAt": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "version": {
+                    "type": "number"
+                },
+                "events": {
+                    "$include": "output/properties/events.json"
+                },
+                "evidence": {
+                    "$include": "output/properties/evidence.json"
+                },
+                "returnEvents": {
+                    "$include": "output/properties/return-events.json"
+                }
+            }
+        }
+    }
+]

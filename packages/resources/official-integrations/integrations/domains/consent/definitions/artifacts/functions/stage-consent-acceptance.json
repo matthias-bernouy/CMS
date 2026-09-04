@@ -3,18 +3,24 @@
     "function": {
         "id": "stageConsentAcceptance",
         "method": "POST",
-        "access": { "mode": "system" },
+        "access": {
+            "mode": "system"
+        },
         "meta": {
             "name": "Stage consent acceptance",
             "description": "Forward only the bounded consent claim needed by the request-phase gate."
         },
         "input": {
-            "body": { "$include": "../sources/primary/shared/stage-acceptance-request.json" }
+            "body": {
+                "$include": "../sources/primary/shared/stage-acceptance-request.json"
+            }
         },
         "output": [
             {
                 "status": "200",
-                "body": { "$include": "../sources/primary/shared/stage-acceptance-response.json" }
+                "body": {
+                    "$include": "../sources/primary/shared/stage-acceptance-response.json"
+                }
             }
         ],
         "steps": [
@@ -36,5 +42,6 @@
             "status": 200,
             "body": "$steps.stage"
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

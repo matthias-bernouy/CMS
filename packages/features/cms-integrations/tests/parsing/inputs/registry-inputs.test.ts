@@ -113,9 +113,9 @@ describe("@bernouy/cms-integrations registry and scalar input DTO parsing", () =
             inputs: [],
         };
 
-        expect(integrationRegistry([definition]).filter((item) => item.kind === "test-secret-source")).toEqual([
-            definition,
-        ]);
+        const registry = integrationRegistry([definition]);
+        expect(registry.filter((item) => item.kind === "test-secret-source")).toEqual([definition]);
+        expect(Object.hasOwn(registry[0]!, "ui")).toBeFalse();
         expect(
             parseIntegrationImportRequest({ kind: "test-secret-source", answers: {} }, [definition]).dto.answers,
         ).toEqual({});

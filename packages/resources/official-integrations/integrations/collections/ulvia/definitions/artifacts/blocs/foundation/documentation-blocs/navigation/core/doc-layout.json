@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-layout",
+        "name": "Documentation layout",
+        "group": "Documentation · Navigation",
+        "description": "Responsive documentation shell with search, breadcrumbs, sidebar, page outline, and theme controls.",
+        "path": "blocs/foundation/documentation-blocs/navigation/core/doc-layout"
+    }
+}

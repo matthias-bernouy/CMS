@@ -34,7 +34,7 @@ describe("sales client directory", () => {
         });
         expect(artifact).toMatchObject({
             type: "bloc",
-            bloc: { tag: "sales-client-directory", path: "blocs/sales-client-directory" },
+            bloc: { tag: "sales-client-directory", path: "blocs/domains/sales-configurator/sales-client-directory" },
         });
         expect(editor).toContain('attribute: "source-id"');
         expect(editor).toContain('attribute: "client-limit"');

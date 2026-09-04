@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { resolve } from "node:path";
-import { loadIntegrationDefinition } from "../../../../../../../tests/helpers/integrationDefinition";
+import { commerceDefinitionWithDeferredDashboards } from "../../../catalog/support/deferredDashboards";
 import {
     capturedFetches,
     installCommerceTestEnvironment,
@@ -74,7 +73,7 @@ describe("commerce configuration post-action boundaries", () => {
     });
 
     test("resolves every configuration action to its matching mutation endpoint", async () => {
-        const definition = await loadIntegrationDefinition<any>(definitionPath);
+        const definition = await commerceDefinitionWithDeferredDashboards<any>();
         const endpoints = {
             saveCondition: "upsertOfferCondition",
             saveWorkflowState: "upsertWorkflowState",
@@ -92,8 +91,6 @@ describe("commerce configuration post-action boundaries", () => {
         }
     });
 });
-
-const definitionPath = resolve(import.meta.dir, "../../../../definition.json");
 
 function findById(value: unknown, id: string): Record<string, unknown> | undefined {
     if (Array.isArray(value)) {

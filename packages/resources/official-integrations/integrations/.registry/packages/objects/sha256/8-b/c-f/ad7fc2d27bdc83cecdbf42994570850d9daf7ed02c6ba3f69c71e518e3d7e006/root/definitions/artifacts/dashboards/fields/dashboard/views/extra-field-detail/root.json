@@ -1,0 +1,79 @@
+{
+    "widget": "w-detail",
+    "id": "extraFieldDetail",
+    "source": {
+        "endpoint": "getExtraField",
+        "params": {
+            "id": "$selection.id"
+        },
+        "itemPath": "field"
+    },
+    "title": {
+        "path": "label",
+        "fallback": "New field"
+    },
+    "status": {
+        "path": "type"
+    },
+    "actions": [
+        {
+            "id": "saveExtraField",
+            "label": "Save field",
+            "tone": "primary",
+            "placement": "primary",
+            "endpoint": {
+                "endpoint": "createExtraField",
+                "body": {
+                    "label": "$field.label",
+                    "id": "$field.id",
+                    "type": "$field.type",
+                    "required": "$field.required",
+                    "multiple": "$field.multiple",
+                    "hasAllowedValues": "$field.hasAllowedValues",
+                    "showInDashboardTable": "$field.showInDashboardTable",
+                    "options": "$field.options"
+                }
+            },
+            "after": {
+                "opens": "extraFieldDetail",
+                "row": "$result.field.id"
+            }
+        },
+        {
+            "id": "deleteExtraField",
+            "label": "Delete field",
+            "icon": "trash",
+            "tone": "danger",
+            "placement": "more",
+            "confirm": "Delete this field definition? Existing user metadata values will be kept.",
+            "visibleWhen": {
+                "value": "$field.id",
+                "notEquals": ""
+            },
+            "endpoint": {
+                "endpoint": "deleteExtraField",
+                "params": {
+                    "id": "$resource.id"
+                }
+            }
+        }
+    ],
+    "main": {
+        "$include": "main.json"
+    },
+    "aside": [
+        {
+            "id": "notes",
+            "title": "Usage",
+            "fields": [
+                {
+                    "id": "overlay",
+                    "label": "Overlay",
+                    "path": "id",
+                    "type": "readonly",
+                    "format": "badge"
+                }
+            ]
+        }
+    ]
+}

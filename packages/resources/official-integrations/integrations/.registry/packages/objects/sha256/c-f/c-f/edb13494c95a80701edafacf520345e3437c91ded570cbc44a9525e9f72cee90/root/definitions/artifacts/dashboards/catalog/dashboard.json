@@ -1,0 +1,13 @@
+{
+  "id": "{{answers.id}}-catalog",
+  "source": "{{answers.id}}",
+  "meta": {
+    "name": "Sales catalogue",
+    "icon": {
+      "path": "assets/icon.svg"
+    }
+  },
+  "views": {
+    "$include": "views.json"
+  }
+}

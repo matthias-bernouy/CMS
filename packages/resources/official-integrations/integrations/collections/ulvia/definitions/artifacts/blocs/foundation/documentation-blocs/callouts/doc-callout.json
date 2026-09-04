@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-callout",
+        "name": "Callout",
+        "group": "Documentation · Content",
+        "description": "Accessible information, tip, warning, danger, or note callout.",
+        "path": "blocs/foundation/documentation-blocs/callouts/doc-callout"
+    }
+}

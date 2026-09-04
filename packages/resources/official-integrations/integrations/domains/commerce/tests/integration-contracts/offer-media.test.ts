@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { loadIntegrationDefinition } from "../../../../../tests/helpers/integrationDefinition";
+import { commerceDefinitionWithDeferredDashboards } from "../catalog/support/deferredDashboards";
 
 type RecordValue = Record<string, any>;
 
@@ -39,7 +40,7 @@ describe("commerce offer media contract", () => {
     });
 
     test("wires the offer image editor to the admin operations", async () => {
-        const definition = await loadIntegrationDefinition<RecordValue>(definitionPath);
+        const definition = await commerceDefinitionWithDeferredDashboards<RecordValue>();
         const dashboard = definition.artifacts.find((artifact: RecordValue) =>
             artifact.dashboard?.id.endsWith("-offers"),
         ).dashboard;

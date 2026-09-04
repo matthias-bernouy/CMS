@@ -1,0 +1,3 @@
+{
+    "$files": ["views/context-table.json", "views/new-context.json", "views/context-detail.json"]
+}

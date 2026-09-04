@@ -46,7 +46,7 @@ async function defineList(): Promise<void> {
     if (customElements.get(listTag)) {
         return;
     }
-    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
     const artifact = definition?.artifacts?.find(
         (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "commerce-offer-list",
     );

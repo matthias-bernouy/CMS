@@ -137,6 +137,8 @@ export type EndpointResponse = {
 
 export type SourceEndpoint = {
     urn: string; // e.g. "urn:source-id:getUser" (method NOT in the urn)
+    /** Independently versioned public data contract consumed by collection blocs. */
+    contractVersion?: string;
     method: HTTPMethod;
     targetUrl: string; // e.g. "https://api.example.com/v1/users/{id}"
     timeoutMs?: number; // bounded upstream timeout; defaults to 15 seconds

@@ -3,18 +3,24 @@
     "function": {
         "id": "commitConsentAcceptance",
         "method": "POST",
-        "access": { "mode": "system" },
+        "access": {
+            "mode": "system"
+        },
         "meta": {
             "name": "Commit consent acceptance",
             "description": "Associate a staged claim with the private CMS subject emitted by the target endpoint."
         },
         "input": {
-            "body": { "$include": "../sources/primary/shared/commit-acceptance-request.json" }
+            "body": {
+                "$include": "../sources/primary/shared/commit-acceptance-request.json"
+            }
         },
         "output": [
             {
                 "status": "200",
-                "body": { "$include": "../sources/primary/shared/commit-acceptance-response.json" }
+                "body": {
+                    "$include": "../sources/primary/shared/commit-acceptance-response.json"
+                }
             }
         ],
         "steps": [
@@ -37,5 +43,6 @@
             "status": 200,
             "body": "$steps.commit"
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

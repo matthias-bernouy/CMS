@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}-taxonomy",
+    "source": "{{answers.id}}",
+    "meta": {
+        "name": "Catalogue taxonomy",
+        "icon": {
+            "path": "assets/dashboards/products.svg"
+        }
+    },
+    "views": {
+        "$include": "views.json"
+    }
+}

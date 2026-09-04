@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "subjectItemId": { "type": "number", "nullable": true },
+    "subjectKind": { "type": "string", "nullable": true },
+    "subjectCode": { "type": "string", "nullable": true },
+    "subjectName": { "type": "string", "nullable": true },
+    "subject": {
+      "type": "object",
+      "nullable": true,
+      "properties": {
+        "id": { "type": "number" },
+        "kind": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "lookupSubtitle": { "type": "string" }
+      },
+      "required": ["id", "kind", "code", "name", "lookupSubtitle"]
+    },
+    "requiredItemId": { "type": "number", "nullable": true },
+    "requiredKind": { "type": "string", "nullable": true },
+    "requiredCode": { "type": "string", "nullable": true },
+    "requiredName": { "type": "string", "nullable": true },
+    "required": {
+      "type": "object",
+      "nullable": true,
+      "properties": {
+        "id": { "type": "number" },
+        "kind": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "lookupSubtitle": { "type": "string" }
+      },
+      "required": ["id", "kind", "code", "name", "lookupSubtitle"]
+    },
+    "createdAt": { "type": "string", "nullable": true }
+  },
+  "required": [
+    "id",
+    "subjectItemId",
+    "subjectKind",
+    "subjectCode",
+    "subjectName",
+    "subject",
+    "requiredItemId",
+    "requiredKind",
+    "requiredCode",
+    "requiredName",
+    "required"
+  ]
+}

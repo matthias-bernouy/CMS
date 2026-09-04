@@ -1,6 +1,7 @@
 import {
     assertBlocOwner,
     type BlocListItemResponse,
+    type BlocOwnership,
     type BlocRecord,
     ContentValidationError,
     DuplicateBlocTagError,
@@ -118,6 +119,20 @@ export class BlocsStore {
             throw new SiteBlocPublicationRequiredError(bloc.id);
         }
         return this.writeArtifact(bloc);
+    }
+
+    async delete(tag: string, ownership: BlocOwnership): Promise<boolean> {
+        const current = await this.getRecord(tag);
+        if (!current) {
+            return false;
+        }
+        assertBlocOwner(tag, current.ownership, ownership);
+        const folder = this.built.get(tag)?.folder ?? (await this.findDefinition(tag))?.folder;
+        if (folder) {
+            await rm(folder, { recursive: true, force: true });
+        }
+        this.built.delete(tag);
+        return true;
     }
 
     async writeArtifact(write: TBloc, definition?: SiteBlocDefinition): Promise<TBloc> {

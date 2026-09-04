@@ -3,8 +3,9 @@ import { collectReconfigureAnswers, renderFields } from "../fields";
 import type { IntegrationBrowserHost } from "../model";
 import { definitionFor } from "../ui/browser";
 import { renderDetail } from "../ui/detail";
+import { handleCollectionSelection, renderCollectionSelection, selectedCollectionResources } from "../ui/resources";
 import { stateFor } from "./state";
-import { errorMessage, fields, modal, setLoadingContent, setStatus, submitButton } from "./view";
+import { errorMessage, fields, modal, resources, setLoadingContent, setStatus, submitButton } from "./view";
 
 export async function openIntegrationReconfigure(host: IntegrationBrowserHost): Promise<void> {
     const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
@@ -37,6 +38,12 @@ export async function openIntegrationReconfigure(host: IntegrationBrowserHost): 
             mode: "reconfigure",
             secretInputs: detail.secretInputs,
         });
+        if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
+            renderCollectionSelection(resources(host), definition, detail.activeResources);
+        } else {
+            resources(host).hidden = true;
+            resources(host).replaceChildren();
+        }
         setStatus(host, "Existing secrets can stay blank. Any newly required secret must be provided.");
         submitButton(host).disabled = false;
         queueMicrotask(() =>
@@ -68,9 +75,13 @@ export async function submitIntegrationReconfigure(host: IntegrationBrowserHost,
             state.detail.secretInputs,
             state.detail.answers,
         );
+        const selectedResources =
+            state.definition.schema === "cms.integration.definition.v2" && state.definition.type === "collection"
+                ? selectedCollectionResources(resources(host))
+                : undefined;
         setActionPending(host, true);
         setStatus(host, "Saving configuration and syncing resources…");
-        await rerunIntegrationInstallation(state.detail.id, answers);
+        await rerunIntegrationInstallation(state.detail.id, answers, selectedResources);
         document.dispatchEvent(new Event("integration:reconfigured", { bubbles: true }));
         if (token !== state.loadToken) {
             return;
@@ -84,6 +95,18 @@ export async function submitIntegrationReconfigure(host: IntegrationBrowserHost,
         setActionPending(host, false);
         setStatus(host, errorMessage(error, "Reconfiguration failed."), true);
     }
+}
+
+export function handleReconfigureCollectionSelection(host: IntegrationBrowserHost, event: Event): boolean {
+    const state = stateFor(host);
+    const target = event.target instanceof Element ? event.target : null;
+    return Boolean(
+        target &&
+            target.closest("[data-reconfigure-resources]") &&
+            state.definition?.schema === "cms.integration.definition.v2" &&
+            state.definition.type === "collection" &&
+            handleCollectionSelection(target, state.definition),
+    );
 }
 
 export function closeIntegrationReconfigure(host: IntegrationBrowserHost): void {
@@ -134,5 +157,7 @@ function clearReconfigure(host: IntegrationBrowserHost): void {
     state.definition = null;
     setActionPending(host, false);
     fields(host).replaceChildren();
+    resources(host).hidden = true;
+    resources(host).replaceChildren();
     setStatus(host, "");
 }

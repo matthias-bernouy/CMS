@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "number" },
+    "code": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "nullable": true },
+    "availability": { "type": "string" },
+    "pricingMode": { "type": "string" },
+    "unitAmountCents": { "type": "number", "nullable": true },
+    "currency": { "type": "string" },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "$include": "../requirement.json"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "code",
+    "name",
+    "availability",
+    "pricingMode",
+    "currency",
+    "requirements"
+  ]
+}

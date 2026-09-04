@@ -1,0 +1,6 @@
+{
+    "$files": [
+        "authorization/root.json",
+        "seller-recovery.json"
+    ]
+}

@@ -29,6 +29,7 @@ export type SourceParamDto = {
 
 export type SourceEndpointDto = {
     endpointId: string;
+    contractVersion?: string;
     method: HTTPMethod;
     targetUrl: string;
     timeoutMs?: number;

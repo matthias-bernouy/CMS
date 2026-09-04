@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-step",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Step",
+        "description": "A single step inside a steps container.",
+        "categories": [
+            "content"
+        ]
+    }
+}

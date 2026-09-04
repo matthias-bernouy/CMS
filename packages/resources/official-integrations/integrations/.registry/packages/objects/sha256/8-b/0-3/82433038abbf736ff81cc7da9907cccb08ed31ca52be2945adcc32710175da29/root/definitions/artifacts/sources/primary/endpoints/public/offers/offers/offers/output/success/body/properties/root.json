@@ -1,0 +1,17 @@
+{
+    "items": {
+        "$include": "items/root.json"
+    },
+    "wholeUnitPrices": {
+        "type": "boolean"
+    },
+    "total": {
+        "type": "number"
+    },
+    "limit": {
+        "type": "number"
+    },
+    "offset": {
+        "type": "number"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "id": "{{answers.id}}-broadcast",
+    "meta": {
+        "name": "Newsletter Broadcast",
+        "description": "Durable newsletter campaign queue backed by Supabase.",
+        "icon": "send"
+    },
+    "endpoints": {
+        "$include": "endpoints/root.json"
+    }
+}

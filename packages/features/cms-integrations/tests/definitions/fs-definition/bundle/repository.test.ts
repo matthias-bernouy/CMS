@@ -18,6 +18,7 @@ describe("bundled filesystem definitions", () => {
         const definition = await fixture.repository.get("demo");
 
         expect(definition).toEqual({
+            schema: "cms.integration.definition.v1",
             kind: "demo",
             label: "Demo",
             version: "1.0.0",

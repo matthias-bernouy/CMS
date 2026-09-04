@@ -1,0 +1,6 @@
+{
+    "$files": [
+        "seller-payment-contexts/protected-checkout.json",
+        "seller-payment-contexts/protected-payment.json"
+    ]
+}

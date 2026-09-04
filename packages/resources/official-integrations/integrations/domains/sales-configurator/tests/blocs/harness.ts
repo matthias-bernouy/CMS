@@ -1,6 +1,7 @@
 import { Buffer, File } from "node:buffer";
 import { resolve } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 export const tags = [
     "sales-client-directory",
@@ -12,14 +13,14 @@ export const tags = [
 ] as const;
 export type SalesBlocTag = (typeof tags)[number];
 
-const versionRoot = resolve(import.meta.dir, "../..");
+const versionRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/ulvia");
 
 export function blocPath(tag: SalesBlocTag, file: string): string {
-    return resolve(versionRoot, "blocs", tag, file);
+    return resolve(versionRoot, "blocs/domains/sales-configurator", tag, file);
 }
 
 export function artifactPath(tag: SalesBlocTag): string {
-    return resolve(versionRoot, "definitions/artifacts/blocs", `${tag}.json`);
+    return resolve(versionRoot, "definitions/artifacts/blocs/domains/sales-configurator", `${tag}.json`);
 }
 
 export async function readBlocFile(tag: SalesBlocTag, file: string): Promise<string> {

@@ -5,8 +5,17 @@ import { Component } from "@bernouy/components/base";
 import { createBlocUsageResolver, expandCompositions } from "@bernouy/cms-content";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { syncRenderedOffers } from "../../blocs/commerce-account-offers/controller/presentation";
+import { syncRenderedOffers } from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-account-offers/controller/presentation.ts";
 import { declaredBlocViewSources } from "../../../../../tests/helpers/blocArtifactSource";
+
+async function commerceWithUlviaBlocs() {
+    const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    const [commerce, ulvia] = await Promise.all([repository.get("commerce"), repository.get("ulvia")]);
+    if (!commerce || !ulvia) {
+        throw new Error("Commerce or Ulvia definition not found");
+    }
+    return { ...commerce, artifacts: [...(commerce.artifacts ?? []), ...(ulvia.artifacts ?? [])] };
+}
 
 describe("commerce account offers 1.0.0", () => {
     test("waits for a resolved positive media id before publishing a seller image binding", () => {
@@ -66,7 +75,7 @@ describe("commerce account offers 1.0.0", () => {
     });
 
     test("renders the exact published seller consent once with its document link", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        const definition = await commerceWithUlviaBlocs();
         const composition = definition?.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form",
         );
@@ -139,10 +148,7 @@ describe("commerce account offers 1.0.0", () => {
     });
 
     test("provides transparent public offer list and editable offer preview blocs", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
-        if (!definition) {
-            throw new Error("commerce definition not found");
-        }
+        const definition = await commerceWithUlviaBlocs();
         const artifacts =
             definition.artifacts?.filter(
                 (item) =>
@@ -258,10 +264,7 @@ describe("commerce account offers 1.0.0", () => {
     });
 
     test("compiles as a configurable Light DOM composition backed by listMyOffers", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
-        if (!definition) {
-            throw new Error("commerce definition not found");
-        }
+        const definition = await commerceWithUlviaBlocs();
         const artifact = definition.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-offers",
         );
@@ -319,8 +322,7 @@ describe("commerce account offers 1.0.0", () => {
         const runtimeSource = `${artifact.bloc.compositionHTML}\n${compiledController.viewJS}`;
 
         expect(definition.dependencies).toEqual([
-            { name: "basicBlocs", kind: "basic-blocs" },
-            { name: "emailer", kind: "emailer", optional: true },
+            { name: "emailer", kind: "emailer", optional: true, versionRange: "^3.0.0" },
         ]);
         expect(compiledController.viewJS).toContain("window.p9r.Component");
         expect(runtimeSource).toContain('cms-repeat="items as offer"');
@@ -412,10 +414,7 @@ describe("commerce account offers 1.0.0", () => {
     });
 
     test("provides a seller price form backed by the offer price workflow", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
-        if (!definition) {
-            throw new Error("commerce definition not found");
-        }
+        const definition = await commerceWithUlviaBlocs();
         const artifact = definition.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form",
         );

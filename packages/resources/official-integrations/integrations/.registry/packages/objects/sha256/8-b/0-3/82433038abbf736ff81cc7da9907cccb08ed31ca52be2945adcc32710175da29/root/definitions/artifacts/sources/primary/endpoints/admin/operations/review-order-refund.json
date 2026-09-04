@@ -1,0 +1,93 @@
+[
+    {
+        "endpointId": "reviewOrderRefund",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/refund/review",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "refundRequestId": {
+                    "type": "number"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "expectedVersion": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "refundRequestId",
+                "decision",
+                "reason",
+                "expectedVersion"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "businessKey": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "requestedAmount": {
+                            "type": "number"
+                        },
+                        "decisionReason": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "number"
+                        },
+                        "refundAuthorization": {
+                            "type": "object",
+                            "nullable": true
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

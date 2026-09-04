@@ -1,0 +1,41 @@
+{
+    "type": "function",
+    "function": {
+        "id": "commitConsentAcceptance",
+        "method": "POST",
+        "access": { "mode": "system" },
+        "meta": {
+            "name": "Commit consent acceptance",
+            "description": "Associate a staged claim with the private CMS subject emitted by the target endpoint."
+        },
+        "input": {
+            "body": { "$include": "../sources/primary/shared/commit-acceptance-request.json" }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": { "$include": "../sources/primary/shared/commit-acceptance-response.json" }
+            }
+        ],
+        "steps": [
+            {
+                "id": "commit",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "commitAcceptance",
+                    "body": {
+                        "contextKey": "$input.body.contextKey",
+                        "subjectClaim": "$input.body.subjectClaim",
+                        "attemptId": "$input.body.attemptId",
+                        "acceptedVersionIds": "$input.body.acceptedVersionIds",
+                        "cmsUserId": "$input.body.cmsUserId"
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": "$steps.commit"
+        }
+    }
+}

@@ -1,0 +1,37 @@
+:host {
+    --toc-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
+    --toc-fg: var(--integration-ulvia-documentation-blocs-heading-text, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
+    --toc-muted: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #64748b));
+    --toc-border: var(--integration-ulvia-documentation-blocs-border, var(--integration-ulvia-basic-blocs-surface-border, #e2e8f0));
+    --toc-duration: var(--integration-ulvia-documentation-blocs-motion-duration, 180ms);
+    display: block;
+    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-size: .88rem;
+}
+.toc { padding: 1rem 0 1rem 1rem; border-left: 1px solid var(--toc-border); }
+:host([sticky="true"]) .toc { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; }
+.title {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--toc-muted);
+    margin-bottom: .75rem;
+}
+.list { display: flex; flex-direction: column; gap: .25rem; margin: 0; padding: 0; }
+::slotted(a[slot="entry"]) {
+    display: block;
+    padding: .25rem .5rem;
+    color: var(--toc-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    margin-left: -1px;
+    transition: color var(--toc-duration) ease, border-color var(--toc-duration) ease;
+    line-height: 1.4;
+}
+::slotted(a[slot="entry"][data-level="h3"]) { margin-left: 1rem; }
+::slotted(a[slot="entry"][data-level="h4"]) { margin-left: 2rem; }
+::slotted(a[slot="entry"]:hover) { color: var(--toc-fg); }
+::slotted(a[slot="entry"]:focus-visible) { outline: 2px solid var(--toc-accent); outline-offset: 2px; }
+::slotted(a[slot="entry"][data-active]) { color: var(--toc-accent); border-left-color: var(--toc-accent); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { :host { --toc-duration: 0ms; } }

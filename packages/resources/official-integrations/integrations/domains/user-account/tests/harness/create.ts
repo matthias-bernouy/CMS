@@ -1,8 +1,5 @@
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
-    InMemoryIntegrationInstallationRepository,
-    type IntegrationBlocArtifact,
     type IntegrationConnectorDeployer,
     type IntegrationConnectorDeployment,
 } from "@bernouy/cms-integrations";
@@ -30,20 +27,6 @@ export async function createHarness() {
     const sourceOverlays = new InMemorySourceOverlayRepository();
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
-    const dashboards = new InMemoryDashboardRepository();
-    const installations = new InMemoryIntegrationInstallationRepository();
-    await installations.create({
-        id: "basic-blocs",
-        label: "Basic Blocs",
-        definitionVersion: "1.0.0",
-        status: "success",
-        answersSnapshot: {},
-        secretRefs: {},
-        secretInputs: [],
-        artifacts: [{ type: "bloc", id: "basic-input", action: "created" }],
-        runs: [],
-    });
-    const importedBlocs: IntegrationBlocArtifact[] = [];
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
         provider: "supabase",
@@ -65,16 +48,8 @@ export async function createHarness() {
             sources,
             secrets,
             roles,
-            dashboards,
             sourceOverlays,
-            installations,
             connectorDeployers: [deployer],
-            blocs: {
-                async importBloc(artifact) {
-                    importedBlocs.push(artifact);
-                    return { id: artifact.tag, action: "created" };
-                },
-            },
         },
         { kind: "user-account", answers: { id: "user-account" }, options: {} },
         [definition],
@@ -118,8 +93,6 @@ export async function createHarness() {
         sourceOverlays,
         secrets,
         roles,
-        dashboards,
-        importedBlocs,
         deployment,
         rest,
         async materializedOverlays() {

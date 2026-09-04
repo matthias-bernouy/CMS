@@ -1,0 +1,36 @@
+[
+    {
+        "endpointId": "publicPhoto",
+        "method": "GET",
+        "access": "public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-photo-albums/public/photo",
+        "params": [
+            {
+                "name": "id",
+                "in": "query",
+                "type": "number",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "responseKind": "file",
+        "mediaType": "image/*",
+        "output": [
+            {
+                "status": "200"
+            },
+            {
+                "status": "206"
+            }
+        ]
+    }
+]

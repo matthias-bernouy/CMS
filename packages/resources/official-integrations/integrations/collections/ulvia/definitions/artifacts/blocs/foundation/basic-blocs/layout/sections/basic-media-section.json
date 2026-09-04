@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-media-section",
+        "name": "Media section",
+        "group": "Sections",
+        "description": "Responsive editorial section combining semantic content, optional actions, and media.",
+        "path": "blocs/foundation/basic-blocs/layout/sections/basic-media-section"
+    }
+}

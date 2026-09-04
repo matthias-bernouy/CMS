@@ -1,0 +1,13 @@
+{
+    "id": "{{answers.id}}",
+    "meta": {
+        "name": "Photo Albums",
+        "description": "Published photo albums and administrator-managed originals.",
+        "icon": {
+            "path": "assets/icon.svg"
+        }
+    },
+    "endpoints": {
+        "$include": "endpoints.json"
+    }
+}

@@ -37,7 +37,7 @@ export type {
 export { wrapBindingCore } from "cms-content/interfaces/settings";
 
 // ── Repository seam ────────────────────────────────────────────────────
-export type { ContentReader } from "cms-content/interfaces/ContentReader";
+export type { BlocListOptions, ContentReader } from "cms-content/interfaces/ContentReader";
 export type {
     CmsRepository,
     BlocListItemResponse,

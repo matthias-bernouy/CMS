@@ -18,7 +18,7 @@ export async function hydrateDefinitionIconAssets(
     for (const artifact of definition.artifacts) {
         artifacts.push(await hydrateArtifactIcon(artifact, resolveSvg));
     }
-    return { ...definition, artifacts };
+    return { ...definition, artifacts } as IntegrationDefinition;
 }
 
 function hasUnhydratedIconAsset(artifact: DeclarativeArtifactTemplate): boolean {

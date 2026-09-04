@@ -199,7 +199,7 @@ async function defineBloc(): Promise<void> {
     if (customElements.get(tag)) {
         return;
     }
-    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("stripe-connect");
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
     const artifact = definition?.artifacts?.find(
         (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "stripe-connect-onboarding",
     );

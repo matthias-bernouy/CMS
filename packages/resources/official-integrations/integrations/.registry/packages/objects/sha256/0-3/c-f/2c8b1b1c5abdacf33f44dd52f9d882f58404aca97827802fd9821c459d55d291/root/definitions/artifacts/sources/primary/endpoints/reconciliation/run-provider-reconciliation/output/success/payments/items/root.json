@@ -1,0 +1,24 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties.json"
+    },
+    "required": [
+        "paymentId",
+        "providerPaymentId",
+        "clientReferenceId",
+        "financialTermsHash",
+        "financialRevision",
+        "currency",
+        "amountTotal",
+        "paymentStatus",
+        "commercePaymentStatus",
+        "settlementStatus",
+        "projectionId",
+        "projectionClaimToken",
+        "projectionAttemptCount",
+        "causalSequence",
+        "occurredAt",
+        "updatedAt"
+    ]
+}

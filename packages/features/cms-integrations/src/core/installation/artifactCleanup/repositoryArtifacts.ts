@@ -6,6 +6,7 @@ export type ArtifactRestorer = () => Promise<void>;
 export async function deleteArtifact(
     deps: IntegrationImportDeps,
     artifact: IntegrationArtifactResult,
+    installationId: string,
 ): Promise<ArtifactRestorer | null> {
     const id = artifact.id;
     switch (artifact.type) {
@@ -63,10 +64,15 @@ export async function deleteArtifact(
                 (previous) => repository.createDashboardRelationProjection(previous),
             );
         }
-        case "bloc":
-            throw new IntegrationRuntimeError(
-                `cannot remove obsolete bloc artifact "${id}": bloc deletion is not supported`,
-            );
+        case "bloc": {
+            const importer = deps.blocs;
+            if (!importer?.deleteBloc) {
+                throw new IntegrationRuntimeError(
+                    `cannot remove obsolete bloc artifact "${id}": bloc deletion is not supported`,
+                );
+            }
+            return importer.deleteBloc(id, installationId);
+        }
     }
 }
 

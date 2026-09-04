@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "span",
+        "name": "Inline text",
+        "group": "Text",
+        "description": "Native inline text with rich-text authoring.",
+        "path": "blocs/foundation/basic-blocs/content/text/basic-span"
+    }
+}

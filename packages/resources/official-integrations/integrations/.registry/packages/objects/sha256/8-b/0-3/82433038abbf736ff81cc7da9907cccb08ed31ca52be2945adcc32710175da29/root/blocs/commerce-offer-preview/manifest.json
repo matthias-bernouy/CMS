@@ -1,0 +1,10 @@
+{
+    "default-tag": "commerce-offer-preview",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Offer preview",
+        "description": "Public offer preview with editable commerce content slots."
+    }
+}

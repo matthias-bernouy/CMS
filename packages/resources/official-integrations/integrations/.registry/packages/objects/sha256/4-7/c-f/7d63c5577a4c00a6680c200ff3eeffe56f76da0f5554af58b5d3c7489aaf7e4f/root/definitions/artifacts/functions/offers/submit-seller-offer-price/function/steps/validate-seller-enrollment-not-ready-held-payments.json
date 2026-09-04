@@ -1,0 +1,60 @@
+{
+    "assert": {
+        "condition": {
+            "all": [
+                {
+                    "equals": [
+                        "$steps.enrollment.userId",
+                        "$ctx.user.id"
+                    ]
+                },
+                {
+                    "equals": [
+                        "$steps.enrollment.accountStatus",
+                        "active"
+                    ]
+                },
+                {
+                    "equals": [
+                        "$steps.enrollment.termsStatus",
+                        "accepted"
+                    ]
+                },
+                {
+                    "equals": [
+                        "$steps.enrollment.stripeTermsStatus",
+                        "accepted"
+                    ]
+                },
+                {
+                    "equals": [
+                        "$steps.enrollment.marketplaceTermsStatus",
+                        "accepted"
+                    ]
+                },
+                {
+                    "equals": [
+                        "$steps.enrollment.marketplaceTermsCurrentVersionAccepted",
+                        true
+                    ]
+                },
+                {
+                    "equals": [
+                        "$steps.enrollment.enrollmentStatus",
+                        "enrolled"
+                    ]
+                },
+                {
+                    "equals": [
+                        "$steps.enrollment.canAcceptHeldPayments",
+                        true
+                    ]
+                }
+            ]
+        },
+        "failure": {
+            "status": 409,
+            "error": "Seller enrollment is not ready for held payments"
+        }
+    }
+}

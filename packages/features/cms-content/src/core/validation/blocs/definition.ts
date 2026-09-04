@@ -12,6 +12,9 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
         validateOwnership(value.ownership);
     }
     const bloc = normalizeBlocWrite(value);
+    if (bloc.catalogue !== undefined && bloc.catalogue !== "active" && bloc.catalogue !== "inactive") {
+        throw new ContentValidationError("catalogue", "expected active or inactive");
+    }
     if (!isRegisteredBlocTag(bloc.id)) {
         throw new ContentValidationError("id", "valid lower-case HTML or custom-element tag expected");
     }

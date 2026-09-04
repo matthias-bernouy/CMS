@@ -94,5 +94,6 @@
                 "orders": "$steps.orders"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

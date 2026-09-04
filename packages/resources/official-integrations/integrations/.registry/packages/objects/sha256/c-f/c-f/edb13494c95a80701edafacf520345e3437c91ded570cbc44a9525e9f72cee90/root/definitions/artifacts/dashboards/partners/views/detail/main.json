@@ -1,0 +1,38 @@
+[
+  {
+    "id": "partnerAccount",
+    "title": "Sales-partner account",
+    "description": "The CMS user link is immutable. Sales ownership uses this partner account’s own id.",
+    "fields": [
+      {
+        "id": "cmsUserId",
+        "label": "CMS user",
+        "path": "cmsUserId",
+        "type": "cms-user",
+          "placeholder": "Search by email or CMS user id",
+        "visibleWhen": { "value": "$resource.id", "equals": null },
+        "required": true
+      },
+      {
+        "id": "linkedCmsUserId",
+        "label": "CMS user id",
+        "path": "cmsUserId",
+        "type": "readonly",
+        "visibleWhen": { "value": "$resource.id", "notEquals": null }
+      },
+      {
+        "id": "displayName",
+        "label": "Display name",
+        "path": "displayName",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "contactEmail",
+        "label": "Sales contact email",
+        "path": "contactEmail",
+        "type": "text"
+      }
+    ]
+  }
+]

@@ -3,11 +3,15 @@ import { resolve } from "node:path";
 import { afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { BindingCore, BINDING_CORE_TAG } from "@bernouy/components/binding";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 const tag = "test-sales-proposal-starter";
-const versionRoot = resolve(import.meta.dir, "../..");
-const blocRoot = resolve(versionRoot, "blocs/sales-proposal-starter");
-const artifactPath = resolve(versionRoot, "definitions/artifacts/blocs/sales-proposal-starter.json");
+const versionRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/ulvia");
+const blocRoot = resolve(versionRoot, "blocs/domains/sales-configurator/sales-proposal-starter");
+const artifactPath = resolve(
+    versionRoot,
+    "definitions/artifacts/blocs/domains/sales-configurator/sales-proposal-starter.json",
+);
 const realFetch = globalThis.fetch;
 
 beforeAll(async () => {
@@ -45,7 +49,7 @@ describe("sales proposal starter", () => {
         });
         expect(artifact).toMatchObject({
             type: "bloc",
-            bloc: { tag: "sales-proposal-starter", path: "blocs/sales-proposal-starter" },
+            bloc: { tag: "sales-proposal-starter", path: "blocs/domains/sales-configurator/sales-proposal-starter" },
         });
         expect(view).toContain("extends HTMLElement");
         expect(view).not.toMatch(/\bfetch\s*\(/);

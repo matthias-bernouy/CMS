@@ -37,7 +37,7 @@ export async function withObsoleteArtifactCleanup<T>(request: ObsoleteArtifactCl
 
     try {
         for (const artifact of obsolete) {
-            const restore = await deleteArtifact(request.deps, artifact);
+            const restore = await deleteArtifact(request.deps, artifact, request.installationId);
             if (restore) {
                 restorers.push(restore);
             }

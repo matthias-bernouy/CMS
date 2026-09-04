@@ -4,13 +4,14 @@
     "label": "Photo Albums",
     "category": "Media",
     "description": "Publish categorized photo albums with managed originals, responsive Source images, and backoffice editing.",
-    "stable": "2.0.1",
-    "latest": "2.0.1",
+    "stable": "3.0.0",
+    "latest": "3.0.0",
     "versions": [
         {
-            "version": "2.0.1",
+            "version": "3.0.0",
             "path": ".",
             "definition": "definition.json"
         }
-    ]
+    ],
+    "type": "source"
 }

@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-file-input",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "File input",
+        "description": "Form-associated file picker with an encapsulated label, hint, and validation message."
+    }
+}

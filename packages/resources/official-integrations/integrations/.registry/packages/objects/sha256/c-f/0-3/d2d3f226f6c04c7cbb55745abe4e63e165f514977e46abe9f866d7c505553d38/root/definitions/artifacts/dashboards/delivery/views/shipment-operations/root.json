@@ -1,0 +1,80 @@
+[
+    {
+        "$include": "shipments-table.json"
+    },
+    {
+        "widget": "w-table",
+        "id": "projectionExceptionsTable",
+        "title": "Projection exceptions",
+        "source": {
+            "endpoint": "shipmentProjectionExceptions",
+            "params": {
+                "limit": "50"
+            },
+            "itemsPath": "items"
+        },
+        "rowKey": "id",
+        "columns": [
+            {
+                "id": "projectionStatus",
+                "label": "Status",
+                "path": "projectionStatus",
+                "primary": true
+            },
+            {
+                "id": "externalOrderId",
+                "label": "Order or claim",
+                "path": "externalOrderId"
+            },
+            {
+                "id": "expeditionNumber",
+                "label": "Expedition",
+                "path": "expeditionNumber"
+            },
+            {
+                "id": "normalizedStatus",
+                "label": "Carrier event",
+                "path": "normalizedStatus"
+            },
+            {
+                "id": "projectionAttempts",
+                "label": "Attempts",
+                "path": "projectionAttempts"
+            },
+            {
+                "id": "projectionLastError",
+                "label": "Last error",
+                "path": "projectionLastError"
+            },
+            {
+                "id": "projectionNextAttemptAt",
+                "label": "Next attempt",
+                "path": "projectionNextAttemptAt",
+                "format": "date"
+            },
+            {
+                "id": "projectionManualReviewAt",
+                "label": "Manual review",
+                "path": "projectionManualReviewAt",
+                "format": "date"
+            }
+        ],
+        "actions": [
+            {
+                "id": "requeueProjectionException",
+                "label": "Requeue selected projection",
+                "tone": "danger",
+                "placement": "primary",
+                "confirm": "Requeue this projection without changing its carrier status?",
+                "endpoint": {
+                    "endpoint": "reviewShipmentProjectionException",
+                    "body": {
+                        "eventId": "$selection.id",
+                        "action": "requeue",
+                        "reason": "Operator requested a safe projection retry from the Delivery dashboard"
+                    }
+                }
+            }
+        ]
+    }
+]

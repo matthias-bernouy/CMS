@@ -57,6 +57,7 @@ function publicArtifactContract(artifact: DeclarativeArtifactTemplate): unknown 
     switch (artifact.type) {
         case "function":
             return {
+                contractVersion: artifact.contractVersion,
                 method: artifact.function.method,
                 access: artifact.function.access,
                 input: artifact.function.input,

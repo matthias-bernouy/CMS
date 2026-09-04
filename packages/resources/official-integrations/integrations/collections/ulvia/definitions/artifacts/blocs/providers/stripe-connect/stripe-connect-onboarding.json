@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "stripe-connect-onboarding",
+        "name": "Stripe Connect onboarding",
+        "group": "Payments",
+        "description": "Seller-facing Stripe identity, bank tokenization, onboarding, wallet, and payout-risk status.",
+        "path": "blocs/providers/stripe-connect/stripe-connect-onboarding"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "restaurant-menu-section",
+        "name": "Restaurant menu section",
+        "group": "Restaurant",
+        "description": "Editable menu category with a navigation icon, heading, introduction, and dish list.",
+        "path": "blocs/foundation/restaurant/menu/restaurant-menu-section"
+    }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "{{answers.id}}",
+  "meta": {
+    "name": "Sales Configurator",
+    "description": "Catalogue, partner-owned client, proposal, publication, and sharing endpoints.",
+    "icon": {
+      "path": "assets/icon.svg"
+    }
+  },
+  "endpoints": {
+    "$include": "endpoints.json"
+  }
+}

@@ -6,6 +6,8 @@ import type { TriggerDto } from "@bernouy/cms-triggers";
 
 export type DeclarativeSourceArtifactTemplate = {
     type: "source";
+    /** Default contract version assigned to endpoints that do not override it. */
+    endpointContractVersion?: string;
     source: SourceDto;
 };
 
@@ -31,6 +33,8 @@ export type DeclarativeDashboardRelationProjectionArtifactTemplate = {
 
 export type DeclarativeFunctionArtifactTemplate = {
     type: "function";
+    /** Contract version of the HTTP endpoint exposed through system-functions. */
+    contractVersion?: string;
     function: FunctionDto;
 };
 

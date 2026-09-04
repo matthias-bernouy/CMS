@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Forms — Restaurant onboarding mockup</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="mockup.js" defer></script>
+    </head>
+    <body>
+        <main class="shell">
+            <aside class="sidebar" aria-label="Form progress">
+                <a class="brand" href="#" aria-label="Luma home">
+                    <span class="brand-mark" aria-hidden="true">L</span>
+                    <span>Luma</span>
+                </a>
+                <div class="sidebar-copy">
+                    <p class="eyebrow">Restaurant launch</p>
+                    <h1>Let’s make your place feel like yours.</h1>
+                    <p>Four short steps, then your restaurant profile is ready to publish.</p>
+                </div>
+                <ol class="steps">
+                    <li class="step is-complete" data-step-marker="1">
+                        <span class="step-dot">✓</span>
+                        <span><strong>About you</strong><small>Owner and contact</small></span>
+                    </li>
+                    <li class="step is-current" data-step-marker="2">
+                        <span class="step-dot">2</span>
+                        <span><strong>Your restaurant</strong><small>Name and identity</small></span>
+                    </li>
+                    <li class="step" data-step-marker="3">
+                        <span class="step-dot">3</span>
+                        <span><strong>The essentials</strong><small>Cuisine and location</small></span>
+                    </li>
+                    <li class="step" data-step-marker="4">
+                        <span class="step-dot">4</span>
+                        <span><strong>Final details</strong><small>Opening and review</small></span>
+                    </li>
+                </ol>
+                <p class="privacy">Saved on this device until you submit.</p>
+            </aside>
+
+            <section class="content">
+                <header class="mobile-header">
+                    <a class="brand" href="#" aria-label="Luma home"><span class="brand-mark">L</span><span>Luma</span></a>
+                    <span class="mobile-progress" data-progress-label>Step 2 of 4</span>
+                </header>
+                <div class="progress-track" aria-hidden="true"><span data-progress-bar></span></div>
+
+                <form class="form-card" novalidate>
+                    <section class="panel" data-panel="1" hidden>
+                        <p class="eyebrow">Step 1 · About you</p>
+                        <h2>Who should we keep in the loop?</h2>
+                        <p class="lede">We’ll only use these details for your restaurant setup.</p>
+                        <div class="field-grid">
+                            <label class="field"><span>Your name</span><input name="ownerName" autocomplete="name" placeholder="Alex Morgan" required></label>
+                            <label class="field"><span>Email address</span><input name="email" type="email" autocomplete="email" placeholder="alex@example.com" required></label>
+                        </div>
+                    </section>
+
+                    <section class="panel" data-panel="2">
+                        <p class="eyebrow">Step 2 · Your restaurant</p>
+                        <h2>Give your place a personality.</h2>
+                        <p class="lede">Start with the name guests will remember, then choose a visual direction.</p>
+                        <label class="field">
+                            <span>Restaurant name</span>
+                            <input name="restaurantName" autocomplete="organization" value="Maison Sépia" required>
+                            <small>This is how it will appear on your public profile.</small>
+                        </label>
+                        <fieldset class="choice-field">
+                            <legend>What should it feel like?</legend>
+                            <div class="mood-grid">
+                                <label class="mood"><input type="radio" name="mood" value="warm" checked><span class="mood-art warm"><i></i><i></i></span><span><strong>Warm &amp; crafted</strong><small>Earthy, intimate, timeless</small></span></label>
+                                <label class="mood"><input type="radio" name="mood" value="bright"><span class="mood-art bright"><i></i><i></i></span><span><strong>Bright &amp; fresh</strong><small>Open, crisp, energetic</small></span></label>
+                                <label class="mood"><input type="radio" name="mood" value="bold"><span class="mood-art bold"><i></i><i></i></span><span><strong>Bold &amp; modern</strong><small>Graphic, urban, confident</small></span></label>
+                            </div>
+                        </fieldset>
+                        <fieldset class="choice-field compact">
+                            <legend>Accent colour</legend>
+                            <div class="swatches">
+                                <label><input type="radio" name="colour" value="terracotta" checked><span style="--swatch:#b9583f" title="Terracotta"></span></label>
+                                <label><input type="radio" name="colour" value="olive"><span style="--swatch:#65735b" title="Olive"></span></label>
+                                <label><input type="radio" name="colour" value="ochre"><span style="--swatch:#c9903b" title="Ochre"></span></label>
+                                <label><input type="radio" name="colour" value="ink"><span style="--swatch:#33465c" title="Ink"></span></label>
+                                <label><input type="radio" name="colour" value="plum"><span style="--swatch:#67434e" title="Plum"></span></label>
+                            </div>
+                        </fieldset>
+                    </section>
+
+                    <section class="panel" data-panel="3" hidden>
+                        <p class="eyebrow">Step 3 · The essentials</p>
+                        <h2>Help guests find the right table.</h2>
+                        <p class="lede">A few practical details make your profile useful from day one.</p>
+                        <div class="field-grid">
+                            <label class="field"><span>Cuisine</span><select name="cuisine" required><option value="">Choose a cuisine</option><option>French</option><option>Italian</option><option>Japanese</option><option>Mediterranean</option></select></label>
+                            <label class="field"><span>City</span><input name="city" autocomplete="address-level2" placeholder="Bordeaux" required></label>
+                        </div>
+                        <fieldset class="choice-field"><legend>Service options</legend><div class="checks"><label><input type="checkbox" name="service" value="lunch"><span>Lunch</span></label><label><input type="checkbox" name="service" value="dinner" checked><span>Dinner</span></label><label><input type="checkbox" name="service" value="terrace"><span>Terrace</span></label></div></fieldset>
+                    </section>
+
+                    <section class="panel" data-panel="4" hidden>
+                        <p class="eyebrow">Step 4 · Final details</p>
+                        <h2>One last look.</h2>
+                        <p class="lede">Add a short introduction. You can change everything later.</p>
+                        <label class="field"><span>Restaurant introduction</span><textarea name="introduction" rows="5" placeholder="Tell guests what makes your table special…"></textarea><small>Recommended: 80–160 characters.</small></label>
+                        <label class="consent"><input type="checkbox" name="consent" required><span>I confirm that these details are accurate and may be published.</span></label>
+                    </section>
+
+                    <section class="success" hidden aria-live="polite">
+                        <span class="success-mark">✓</span>
+                        <p class="eyebrow">All done</p>
+                        <h2>Maison Sépia is ready.</h2>
+                        <p>Your answers were accepted. In the real form, this is where the published success message or redirect will appear.</p>
+                        <button type="button" data-restart>View the form again</button>
+                    </section>
+
+                    <footer class="actions">
+                        <button class="back" type="button" data-back>Back</button>
+                        <span class="autosave" aria-live="polite"><i></i><span data-save-label>Draft saved</span></span>
+                        <button class="next" type="button" data-next>Continue <span aria-hidden="true">→</span></button>
+                    </footer>
+                </form>
+                <p class="mockup-note">Interactive V1 mockup · no data is sent or stored</p>
+            </section>
+        </main>
+    </body>
+</html>

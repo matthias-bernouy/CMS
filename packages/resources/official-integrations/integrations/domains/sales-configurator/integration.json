@@ -1,16 +1,17 @@
 {
-  "schema": "cms.integration.index.v1",
-  "kind": "sales-configurator",
-  "label": "Sales Configurator",
-  "category": "Sales",
-  "description": "Configure a commercial catalogue and publish immutable, partner-owned sales proposals.",
-  "stable": "2.0.0",
-  "latest": "2.0.0",
-  "versions": [
-    {
-      "version": "2.0.0",
-      "path": ".",
-      "definition": "definition.json"
-    }
-  ]
+    "schema": "cms.integration.index.v1",
+    "kind": "sales-configurator",
+    "label": "Sales Configurator",
+    "category": "Sales",
+    "description": "Configure a commercial catalogue and publish immutable, partner-owned sales proposals.",
+    "stable": "3.0.0",
+    "latest": "3.0.0",
+    "versions": [
+        {
+            "version": "3.0.0",
+            "path": ".",
+            "definition": "definition.json"
+        }
+    ],
+    "type": "source"
 }

@@ -27,6 +27,7 @@ export async function buildRerunDto(
             kind: installation.id,
             answers: rawAnswers,
             options: { ...rawOptions, force: true },
+            ...(body.resources !== undefined ? { resources: body.resources } : {}),
         },
         siteIntegrations,
     );

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
-    type IntegrationBlocArtifact,
+    InMemoryIntegrationInstallationRepository,
     type IntegrationConnectorDeployment,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
@@ -21,10 +21,10 @@ import {
 } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { expectedEndpointUrns } from "./expectations";
-import { blocImporter, connectorDeployer, installedBasicBlocs } from "./setup";
+import { connectorDeployer } from "./setup";
 import { installCommerceTestEnvironment, supabaseUrl } from "../../harness";
 installCommerceTestEnvironment();
-describe("commerce 2.0.2 contract", () => {
+describe("commerce 3.0.0 contract", () => {
     test("loads and imports the official Commerce contract", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const catalog = await repository.list();
@@ -38,8 +38,7 @@ describe("commerce 2.0.2 contract", () => {
         const triggers = new InMemoryTriggerRepository();
         const secrets = new InMemorySecretStore(),
             roles = new InMemoryRolesRepository();
-        const importedBlocs: IntegrationBlocArtifact[] = [];
-        const installations = await installedBasicBlocs();
+        const installations = new InMemoryIntegrationInstallationRepository();
         let deployment: IntegrationConnectorDeployment | undefined;
         const deployer = connectorDeployer((value) => {
             deployment = value;
@@ -54,7 +53,6 @@ describe("commerce 2.0.2 contract", () => {
                 installations,
                 triggers,
                 connectorDeployers: [deployer],
-                blocs: blocImporter(importedBlocs),
             },
             { kind: "commerce", answers: { id: "commerce" }, options: {} },
             [definition],
@@ -62,16 +60,6 @@ describe("commerce 2.0.2 contract", () => {
         const source = await sources.getSource("urn:commerce");
         const overlays = await sourceOverlays.getAllOverlays();
         const installedDashboards = await dashboards.getDashboardsForSource("commerce");
-        const dashboardIds = [
-            "commerce-configuration",
-            "commerce-metadata",
-            "commerce-offers",
-            "commerce-orders",
-            "commerce-products",
-            "commerce-sellers",
-            "commerce-taxonomy",
-            "commerce-workflow",
-        ];
         const endpointUrns = source?.endpoints.map((endpoint) => endpoint.urn) ?? [];
         const endpointTargets = Object.fromEntries(
             source?.endpoints.map((endpoint) => [endpoint.urn, endpoint.targetUrl]) ?? [],
@@ -79,45 +67,26 @@ describe("commerce 2.0.2 contract", () => {
         const functionSecrets = deployment?.functions[0]?.secrets ?? {};
 
         expect(catalog.map((entry) => entry.kind)).toContain("commerce");
-        expect(definition).toMatchObject({ kind: "commerce", version: "2.0.2" });
+        expect(definition).toMatchObject({ kind: "commerce", version: "3.0.0", type: "source" });
         expect(definition.dependencies).toEqual([
-            { name: "basicBlocs", kind: "basic-blocs" },
-            { name: "emailer", kind: "emailer", optional: true },
+            { name: "emailer", kind: "emailer", optional: true, versionRange: "^3.0.0" },
         ]);
         expect(JSON.stringify(definition).match(/\$selection\.(?!id)/g) ?? []).toEqual([]);
         expect(result.artifacts).toEqual(
             expect.arrayContaining([
                 { type: "source", id: "urn:commerce", action: "created" },
-                { type: "bloc", id: "commerce-account-offers", action: "created" },
-                { type: "bloc", id: "commerce-account-sales", action: "created" },
-                { type: "bloc", id: "commerce-account-sales-controller", action: "created" },
-                { type: "bloc", id: "commerce-sale-detail", action: "created" },
-                { type: "bloc", id: "commerce-notification-preferences", action: "created" },
                 ...["product", "offer", "seller", "order"].map((entity) => ({
                     type: "sourceOverlay",
                     id: `commerce-${entity}-custom-fields`,
                     action: "created",
                 })),
                 { type: "sourceOverlay", id: "commerce-product-classification", action: "created" },
-                ...dashboardIds.map((id) => ({ type: "dashboard", id, action: "created" })),
+                { type: "trigger", id: "schedule-dispatch-commerce-notifications", action: "created" },
             ]),
         );
         expect(result.artifacts).not.toContainEqual(
             expect.objectContaining({ type: "dashboard", id: "commerce-dashboard" }),
         );
-        expect(importedBlocs.map((bloc) => bloc.tag)).toEqual([
-            "commerce-offer-list",
-            "commerce-offer-filter",
-            "commerce-offer-preview",
-            "commerce-account-offers",
-            "commerce-account-offers-controller",
-            "commerce-account-sales",
-            "commerce-account-sales-controller",
-            "commerce-sale-detail",
-            "commerce-offer-price-form",
-            "commerce-offer-price-form-controller",
-            "commerce-notification-preferences",
-        ]);
         expect(endpointUrns).toHaveLength(175);
         expect(endpointUrns).not.toEqual(
             expect.arrayContaining(["urn:commerce:variants", "urn:commerce:variant", "urn:commerce:upsertVariant"]),
@@ -343,86 +312,11 @@ describe("commerce 2.0.2 contract", () => {
             icon: "assets/icon.svg",
             svg: expect.stringContaining("<svg"),
         });
-        expect(installedDashboards.map((dashboard) => dashboard.id).sort()).toEqual(dashboardIds);
-        expect(
-            Object.fromEntries(
-                installedDashboards.map((dashboard) => [
-                    dashboard.id,
-                    {
-                        name: dashboard.meta.name,
-                        views: dashboard.views.map((view) => view.id),
-                    },
-                ]),
-            ),
-        ).toMatchObject({
-            "commerce-configuration": {
-                name: "Settings",
-                views: ["settingsTabs"],
-            },
-            "commerce-workflow": {
-                name: "Workflow",
-                views: [
-                    "workflowStatesTable",
-                    "workflowTransitionsTable",
-                    "workflowStateDetail",
-                    "workflowTransitionDetail",
-                ],
-            },
-            "commerce-metadata": { name: "Metadata", views: ["customFieldsTable", "customFieldDetail"] },
-        });
-        const settingsTabs = installedDashboards
-            .find((dashboard) => dashboard.id === "commerce-configuration")
-            ?.views.find((view) => view.id === "settingsTabs");
-        if (settingsTabs?.widget !== "w-tabs") {
-            throw new Error("commerce settings tabs not installed");
-        }
-        expect(settingsTabs.tabs.map((tab) => tab.id)).toEqual([
-            "general",
-            "notifications",
-            "protectedC2c",
-            "offerConditions",
-        ]);
-        expect(settingsTabs.tabs.flatMap((tab) => tab.children.map((child) => child.id))).toEqual(
-            expect.arrayContaining([
-                "commerceSettings",
-                "notificationSettings",
-                "protectedC2cPolicySettings",
-                "conditionsTable",
-                "conditionDetail",
-            ]),
-        );
-        const offerDetail = installedDashboards
-            .find((dashboard) => dashboard.id === "commerce-offers")
-            ?.views.find((view) => view.id === "offerDetail");
-        if (offerDetail?.widget !== "w-detail") {
-            throw new Error("commerce offer detail not installed");
-        }
-        const priceFields = offerDetail.main
-            .flatMap((section) => section.fields)
-            .filter((field) => ["acceptedPriceAmount", "minimumAmount", "maximumAmount"].includes(field.id));
-        expect(priceFields).toHaveLength(3);
-        expect(priceFields).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({
-                    type: "money",
-                    currencyPath: "currency",
-                    allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
-                }),
-            ]),
-        );
+        expect(installedDashboards).toEqual([]);
         expect(
             source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:manageOffer")?.output?.[0]?.body
                 ?.properties?.wholeUnitPrices,
         ).toMatchObject({ type: "boolean" });
-        for (const dashboard of installedDashboards) {
-            expect(dashboard.meta).toMatchObject({
-                icon:
-                    dashboard.id === "commerce-taxonomy"
-                        ? "assets/dashboards/products.svg"
-                        : `assets/dashboards/${dashboard.id.replace("commerce-", "")}.svg`,
-                svg: expect.stringContaining("<svg"),
-            });
-        }
         expect(await dashboards.getDashboard("commerce-dashboard")).toBeNull();
         expect(deployment?.dataApiSchemas).toEqual(["commerce"]);
         expect(deployment?.functions.map((fn) => fn.name)).toEqual(["cms-commerce"]);

@@ -1,0 +1,101 @@
+[
+    {
+        "$include": "get-claim-return-authorization.json"
+    },
+    {
+        "endpointId": "recordClaimReturnDelivery",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/claim/return-delivery",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "claimId": {
+                    "type": "number"
+                },
+                "providerEventId": {
+                    "type": "string"
+                },
+                "providerReference": {
+                    "type": "string"
+                },
+                "normalizedStatus": {
+                    "type": "string"
+                },
+                "occurredAt": {
+                    "type": "string"
+                },
+                "providerEvidence": {
+                    "type": "object"
+                }
+            },
+            "required": [
+                "claimId",
+                "providerEventId",
+                "providerReference",
+                "normalizedStatus",
+                "occurredAt"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number"
+                        },
+                        "publicId": {
+                            "type": "string"
+                        },
+                        "orderId": {
+                            "type": "number"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "returnDeliveryStatus": {
+                            "type": "string"
+                        },
+                        "returnProviderReference": {
+                            "type": "string"
+                        },
+                        "returnCarrierAcceptedAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "returnRecipientHandoffAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "idempotentReplay": {
+                            "type": "boolean"
+                        },
+                        "version": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "status",
+                        "returnDeliveryStatus",
+                        "idempotentReplay",
+                        "version"
+                    ]
+                }
+            }
+        ]
+    }
+]

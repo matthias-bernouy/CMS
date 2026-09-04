@@ -7,7 +7,7 @@ export async function seedInstallation(
     await installations.create({
         id,
         label: id,
-        definitionVersion: id === "stripe-connect" ? "2.1.0" : "2.0.0",
+        definitionVersion: "3.0.0",
         status: "success",
         answersSnapshot: { id },
         secretRefs: {},

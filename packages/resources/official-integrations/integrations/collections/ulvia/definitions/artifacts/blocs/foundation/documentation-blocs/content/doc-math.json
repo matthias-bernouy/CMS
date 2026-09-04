@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-math",
+        "name": "Math formula",
+        "group": "Documentation · Content",
+        "description": "Portable inline or block mathematical source.",
+        "path": "blocs/foundation/documentation-blocs/content/doc-math"
+    }
+}

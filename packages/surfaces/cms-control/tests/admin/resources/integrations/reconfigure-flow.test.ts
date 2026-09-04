@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import "../../../../src/components/admin/Resources/Integrations/IntegrationBrowser";
 import { openIntegrationReconfigure } from "cms-control/components/admin/Resources/Integrations/reconfigure";
+import type { IntegrationDefinition } from "cms-control/components/admin/Resources/Integrations/model";
 import { createAdmin, definition, detail, flush, setValue, value } from "./support";
 
 const originalFetch = globalThis.fetch;
@@ -143,4 +144,73 @@ describe("integration reconfiguration flow", () => {
         expect(status.textContent?.toLowerCase()).toContain("json");
         expect(status.classList.contains("is-error")).toBeTrue();
     });
+
+    test("reconfigures exact collection resources and hides internal controllers", async () => {
+        const collection = collectionDefinition();
+        const requests: Array<{ url: string; body?: unknown }> = [];
+        globalThis.fetch = (async (input, init) => {
+            const url = String(input);
+            requests.push({ url, body: init?.body ? JSON.parse(String(init.body)) : undefined });
+            return url.includes("/rerun")
+                ? Response.json({})
+                : Response.json({
+                      ...detail({ definition: collection }),
+                      activeResources: ["stripe-connect/blocs/card"],
+                  });
+        }) as typeof fetch;
+        const admin = createAdmin(collection);
+
+        await openIntegrationReconfigure(admin);
+        const choices = admin.query<HTMLElement>("[data-reconfigure-resources]");
+        expect(choices.hidden).toBeFalse();
+        expect(choices.querySelectorAll("[data-collection-resource]")).toHaveLength(2);
+        expect(choices.textContent).not.toContain("Internal controller");
+
+        choices.querySelector<HTMLInputElement>('[data-collection-resource="stripe-connect/blocs/list"]')!.click();
+        admin.query<HTMLFormElement>("[data-reconfigure-form]").requestSubmit();
+        await flush();
+
+        expect(requests.at(-1)).toEqual({
+            url: "/api/integrations/installations/rerun?id=stripe-connect",
+            body: {
+                answers: {},
+                resources: ["stripe-connect/blocs/card", "stripe-connect/blocs/list"],
+            },
+        });
+    });
 });
+
+function collectionDefinition(): IntegrationDefinition {
+    return {
+        schema: "cms.integration.definition.v2",
+        type: "collection",
+        kind: "stripe-connect",
+        label: "Collection",
+        version: "1.0.0",
+        inputs: [],
+        resourceCategories: [{ id: "content", label: "Content" }],
+        resources: [
+            { id: "stripe-connect/blocs/card", type: "bloc", artifact: "card", category: "content" },
+            { id: "stripe-connect/blocs/list", type: "bloc", artifact: "list", category: "content" },
+            {
+                id: "stripe-connect/blocs/internal-controller",
+                type: "bloc",
+                artifact: "internal-controller",
+                category: "content",
+            },
+        ],
+        artifacts: [
+            { type: "bloc", bloc: { tag: "card", name: "Card", compositionHTML: "<article></article>" } },
+            { type: "bloc", bloc: { tag: "list", name: "List", compositionHTML: "<section></section>" } },
+            {
+                type: "bloc",
+                bloc: {
+                    tag: "internal-controller",
+                    name: "Internal controller",
+                    internal: true,
+                    viewJS: "customElements.define('internal-controller', class extends HTMLElement {})",
+                },
+            },
+        ],
+    };
+}

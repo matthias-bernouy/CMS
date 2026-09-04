@@ -85,5 +85,6 @@
                 "expiresAt": "$steps.selection.expiresAt"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

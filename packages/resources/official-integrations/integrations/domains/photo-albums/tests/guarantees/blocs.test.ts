@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { syncResponsiveSourceImageElement } from "@bernouy/cms-source-images/browser";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
-const integrationRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const integrationRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/ulvia");
 const blocNames = ["photo-album-list", "photo-album-gallery"] as const;
 
 async function blocFile(name: (typeof blocNames)[number], file: string): Promise<string> {
-    return readFile(resolve(integrationRoot, "blocs", name, file), "utf8");
+    return readFile(resolve(integrationRoot, "blocs/domains/photo-albums", name, file), "utf8");
 }
 
 class TestElement {

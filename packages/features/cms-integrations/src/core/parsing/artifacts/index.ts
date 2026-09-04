@@ -8,6 +8,7 @@ import { parseDashboardRelationProjectionTemplate, parseRelationTemplate } from 
 import { parseSourceTemplate } from "./source";
 import { parseSourceOverlayTemplate } from "./sourceOverlay";
 import { parseTriggerTemplate } from "./workflows/trigger";
+import { isExactIntegrationVersion } from "../../definitions/versioning";
 
 export function parseArtifactTemplates(value: unknown): DeclarativeArtifactTemplate[] {
     if (value === undefined || value === null) {
@@ -28,7 +29,22 @@ function parseArtifactTemplate(value: unknown, name: string): DeclarativeArtifac
         if (!isRecord(value.source)) {
             throw new IntegrationInputError(`${name}.source`, "must be an object");
         }
-        return { type: "source", source: parseSourceTemplate(value.source, `${name}.source`) };
+        const source = parseSourceTemplate(value.source, `${name}.source`);
+        const endpointContractVersion = text(value.endpointContractVersion);
+        if (endpointContractVersion && !isExactIntegrationVersion(endpointContractVersion)) {
+            throw new IntegrationInputError(`${name}.endpointContractVersion`, "must be an exact SemVer version");
+        }
+        if (endpointContractVersion) {
+            source.endpoints = source.endpoints.map((endpoint) => ({
+                ...endpoint,
+                contractVersion: endpoint.contractVersion ?? endpointContractVersion,
+            }));
+        }
+        return {
+            type: "source",
+            ...(endpointContractVersion ? { endpointContractVersion } : {}),
+            source,
+        };
     }
     if (type === "dashboard") {
         if (!isRecord(value.dashboard)) {
@@ -61,7 +77,15 @@ function parseArtifactTemplate(value: unknown, name: string): DeclarativeArtifac
         if (!isRecord(value.function)) {
             throw new IntegrationInputError(`${name}.function`, "must be an object");
         }
-        return { type: "function", function: parseFunctionTemplate(value.function, `${name}.function`) };
+        const contractVersion = text(value.contractVersion);
+        if (contractVersion && !isExactIntegrationVersion(contractVersion)) {
+            throw new IntegrationInputError(`${name}.contractVersion`, "must be an exact SemVer version");
+        }
+        return {
+            type: "function",
+            ...(contractVersion ? { contractVersion } : {}),
+            function: parseFunctionTemplate(value.function, `${name}.function`),
+        };
     }
     if (type === "trigger") {
         if (!isRecord(value.trigger)) {

@@ -5,7 +5,7 @@ import {
     type IntegrationPackageLimits,
 } from "@bernouy/cms-integration-packages";
 
-const DEFINITION_SCHEMA = "cms.integration.definition.v1";
+const DEFINITION_SCHEMAS = new Set(["cms.integration.definition.v1", "cms.integration.definition.v2"]);
 const DEFINITION_BUNDLE_SCHEMA = "cms.integration.definition.bundle.v1";
 const MAX_DEFINITION_BUNDLE_DEPTH = 32;
 const MAX_DEFINITION_BUNDLE_FILES = 4_096;
@@ -37,8 +37,8 @@ export function resolveIntegrationDefinitionEnvelopeValue(
         }
         const root = resolveJsonReference(envelope.definition, entry.root, state);
         const value = resolveJsonGraph(root, state, 1);
-        if (!isRecord(value) || value.schema !== DEFINITION_SCHEMA) {
-            throw new Error(`${root}: bundle root must be a ${DEFINITION_SCHEMA} definition`);
+        if (!isRecord(value) || !DEFINITION_SCHEMAS.has(String(value.schema))) {
+            throw new Error(`${root}: bundle root must use a supported integration definition schema`);
         }
         return value;
     });

@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-pagination",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Pagination",
+        "description": "Accessible previous and next pagination with page and offset events."
+    }
+}

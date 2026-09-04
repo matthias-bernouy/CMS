@@ -1,8 +1,8 @@
 {
-    "schema": "cms.integration.definition.v1",
+    "schema": "cms.integration.definition.v2",
     "kind": "commerce-stripe-payments",
     "label": "Commerce Stripe payments",
-    "version": "3.0.0",
+    "version": "4.0.0",
     "category": "Payments",
     "description": "Orchestrate protected Commerce payments, settlements, refunds, and disputes through Stripe Connect.",
     "inputs": {
@@ -50,9 +50,8 @@
             "artifacts/triggers/schedules/process-due-order-deadlines.json",
             "artifacts/triggers/schedules/dispatch-pending-payment-cancellations.json",
             "artifacts/triggers/schedules/dispatch-pending-protected-refunds.json",
-            "artifacts/triggers/schedules/dispatch-due-protected-settlements.json",
-            "artifacts/dashboards/commerce-stripe-payments-operations/definition.json",
-            "artifacts/blocs/commerce-stripe-payment.json"
+            "artifacts/triggers/schedules/dispatch-due-protected-settlements.json"
         ]
-    }
+    },
+    "type": "source"
 }

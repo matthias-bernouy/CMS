@@ -77,11 +77,13 @@ export class FakeContentCollection {
         return { matchedCount: 0 };
     }
 
-    async deleteOne(filter: Filter): Promise<void> {
+    async deleteOne(filter: Filter): Promise<{ deletedCount: number }> {
         const document = this.findStored(filter);
         if (document) {
             this.documents.delete(document._id);
+            return { deletedCount: 1 };
         }
+        return { deletedCount: 0 };
     }
 
     private findStored(filter: Filter): StoredDocument | undefined {

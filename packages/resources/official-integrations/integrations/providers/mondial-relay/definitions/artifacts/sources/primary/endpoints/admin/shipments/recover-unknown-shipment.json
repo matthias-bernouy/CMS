@@ -3,7 +3,7 @@
         "endpointId": "recoverUnknownShipment",
         "method": "POST",
         "access": "admin",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/admin/shipments/recover",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/admin/shipments/recover",
         "params": [],
         "headers": [
             {

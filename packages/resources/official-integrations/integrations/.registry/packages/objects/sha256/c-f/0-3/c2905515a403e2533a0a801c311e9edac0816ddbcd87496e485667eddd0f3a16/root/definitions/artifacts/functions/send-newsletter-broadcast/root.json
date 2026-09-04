@@ -1,0 +1,6 @@
+{
+    "type": "function",
+    "function": {
+        "$include": "function.json"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "schema": "cms.integration.sql-bundle.v1",
+    "transaction": "atomic",
+    "entries": [
+        { "file": "items.sql" },
+        { "file": "shares-and-events.sql" },
+        { "file": "public-items.sql" },
+        { "file": "partner.sql" },
+        { "file": "admin.sql" }
+    ]
+}

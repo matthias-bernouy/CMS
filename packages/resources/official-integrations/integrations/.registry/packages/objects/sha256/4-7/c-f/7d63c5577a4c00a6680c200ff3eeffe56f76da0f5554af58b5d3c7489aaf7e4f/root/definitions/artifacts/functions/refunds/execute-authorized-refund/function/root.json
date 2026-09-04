@@ -1,0 +1,99 @@
+{
+    "id": "executeAuthorizedRefund",
+    "method": "POST",
+    "access": {
+        "mode": "system"
+    },
+    "meta": {
+        "name": "Execute authorized refund",
+        "description": "Execute Commerce-authorized seller recovery and buyer refund operations in provider order."
+    },
+    "input": {
+        "body": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "orderId": {
+                    "type": "number"
+                },
+                "orderPublicId": {
+                    "type": "string"
+                },
+                "providerPaymentId": {
+                    "type": "number"
+                },
+                "refundRequestId": {
+                    "type": "string"
+                },
+                "commerceRefundRequestId": {
+                    "type": "number"
+                },
+                "businessKey": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "authorizedSellerAmount": {
+                    "type": "number"
+                },
+                "sellerEntitlementReductionAmount": {
+                    "type": "number"
+                },
+                "sellerRecoveryAmount": {
+                    "type": "number"
+                },
+                "protectionFeeRefundAmount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "financialTermsHash": {
+                    "type": "string"
+                },
+                "requiresFinanceApproval": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "status",
+                "orderId",
+                "orderPublicId",
+                "providerPaymentId",
+                "refundRequestId",
+                "commerceRefundRequestId",
+                "businessKey",
+                "amount",
+                "authorizedSellerAmount",
+                "sellerEntitlementReductionAmount",
+                "sellerRecoveryAmount",
+                "protectionFeeRefundAmount",
+                "currency",
+                "financialTermsHash",
+                "requiresFinanceApproval"
+            ]
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object"
+            }
+        }
+    ],
+    "steps": {
+        "$include": "steps.json"
+    },
+    "return": {
+        "status": 200,
+        "body": {
+            "orderPublicId": "$input.body.orderPublicId",
+            "providerRefund": "$steps.providerRefund",
+            "commerceOperations": "$steps.commerceOperations"
+        }
+    }
+}

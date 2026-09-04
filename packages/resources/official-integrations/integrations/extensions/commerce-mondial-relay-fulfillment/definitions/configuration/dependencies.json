@@ -1,10 +1,12 @@
 [
     {
         "name": "commerce",
-        "kind": "commerce"
+        "kind": "commerce",
+        "versionRange": "^3.0.0"
     },
     {
         "name": "delivery",
-        "kind": "mondial-relay"
+        "kind": "mondial-relay",
+        "versionRange": "^3.0.0"
     }
 ]

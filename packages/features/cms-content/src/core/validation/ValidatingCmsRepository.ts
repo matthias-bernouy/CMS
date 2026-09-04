@@ -6,7 +6,14 @@ import type {
     PagesQuery,
     SiteBlocPublicationGuard,
 } from "cms-content/interfaces/CmsRepository";
-import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
+import type {
+    BlocOwnership,
+    BlocRecord,
+    SiteBlocDefinition,
+    SiteBlocSnapshot,
+    TBloc,
+    TBlocWrite,
+} from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/documents/pages";
@@ -56,6 +63,9 @@ export class ValidatingCmsRepository implements CmsRepository {
     replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
         return this.inner.replaceBloc(validateBlocWrite(bloc));
     }
+    deleteBloc(tag: string, ownership: BlocOwnership): Promise<boolean> {
+        return this.inner.deleteBloc(tag, ownership);
+    }
     getBlocRecord(tag: string): Promise<BlocRecord | null> {
         return this.inner.getBlocRecord(tag);
     }
@@ -99,8 +109,8 @@ export class ValidatingCmsRepository implements CmsRepository {
     getBlocsJS() {
         return this.inner.getBlocsJS();
     }
-    getBlocsList(): Promise<BlocListItemResponse[]> {
-        return this.inner.getBlocsList();
+    getBlocsList(options?: Parameters<CmsRepository["getBlocsList"]>[0]): Promise<BlocListItemResponse[]> {
+        return this.inner.getBlocsList(options);
     }
     getBlocViewJS(htmlTag: string) {
         return this.inner.getBlocViewJS(htmlTag);

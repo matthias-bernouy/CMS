@@ -1,0 +1,25 @@
+:host {
+    --mmd-bg: var(--integration-ulvia-documentation-blocs-subtle-surface, var(--integration-ulvia-basic-blocs-subtle-background, #f8fafc));
+    --mmd-border: var(--integration-ulvia-documentation-blocs-border, var(--integration-ulvia-basic-blocs-surface-border, #e2e8f0));
+    --mmd-fg: var(--integration-ulvia-documentation-blocs-heading-text, var(--integration-ulvia-basic-blocs-surface-text, #0f172a));
+    --mmd-radius: var(--integration-ulvia-documentation-blocs-radius-panel, var(--integration-ulvia-basic-blocs-radius-card, .5rem));
+    display: block;
+    margin: 1rem 0;
+    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+}
+.mermaid {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    background: var(--mmd-bg);
+    color: var(--mmd-fg);
+    border: 1px solid var(--mmd-border);
+    border-radius: var(--mmd-radius);
+    font-size: .85rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+.mermaid ::slotted(*) { font: inherit; color: inherit; margin: 0; }
+:host([theme="dark"]) { --mmd-bg: var(--integration-ulvia-documentation-blocs-code-background); --mmd-border: var(--integration-ulvia-documentation-blocs-code-header-background); --mmd-fg: var(--integration-ulvia-documentation-blocs-code-text); }
+:host([theme="forest"]) { --mmd-bg: var(--integration-ulvia-documentation-blocs-tip-background); --mmd-border: var(--integration-ulvia-documentation-blocs-api-post); --mmd-fg: var(--integration-ulvia-documentation-blocs-tip-text); }
+:host([theme="neutral"]) { --mmd-bg: var(--integration-ulvia-documentation-blocs-subtle-surface); --mmd-border: var(--integration-ulvia-documentation-blocs-border); --mmd-fg: var(--integration-ulvia-documentation-blocs-text); }

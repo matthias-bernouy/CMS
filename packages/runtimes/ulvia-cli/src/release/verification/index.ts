@@ -3,6 +3,7 @@ import { loadUpgradeFixtureSuiteFromVerification } from "@bernouy/cms-integratio
 import type { LocalReleaseVerificationInput, LocalReleaseVerifier } from "../types";
 import { runAuthorTests } from "../author-tests";
 import { executeReleaseVerificationPlan } from "./runtime";
+import { verifyCollectionRelease } from "./collection";
 
 export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
     constructor(private readonly log: (message: string) => void) {}
@@ -11,6 +12,12 @@ export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
         const coordinate = `${input.candidate.package.envelope.kind}@${input.candidate.package.envelope.version}`;
         if (await runAuthorTests(input.sourceRoot)) {
             this.log(`✓ source tests passed for ${coordinate}`);
+        }
+        if (
+            input.candidate.definition.schema === "cms.integration.definition.v2" &&
+            input.candidate.definition.type === "collection"
+        ) {
+            return verifyCollectionRelease(input, this.log);
         }
         const fixtures = input.candidate.verification
             ? await loadUpgradeFixtureSuiteFromVerification(input.candidate.verification.envelope)

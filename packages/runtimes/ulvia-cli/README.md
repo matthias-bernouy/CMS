@@ -4,8 +4,8 @@ The new local-first Ulvia CLI. It is intentionally independent from the legacy
 `@bernouy/cms-cli` package, which remains available during the transition.
 
 See the workspace [integration development guide](../../../docs/integrations/README.md)
-for the release workflow, SemVer policy, business upgrade fixtures, and remote
-publication contract.
+for the source/collection model, release workflow, local runtime, SemVer policy,
+business upgrade fixtures, and remote publication contract.
 
 ## Commands
 
@@ -136,3 +136,10 @@ runtime. The CMS sees only locally pulled integrations. Supabase connector SQL,
 Data API schema configuration, Storage bucket migrations, function secrets, and
 Edge Function bundles are applied to that local project. The local management
 bridge exists only while `ulvia dev` is running and never accepts remote hosts.
+
+The official `ulvia` collection contains every official bloc but persists an
+exact per-site active resource list. Activating a source-backed resource installs
+only its required source closure. Inactive resources stay renderable for
+existing content and are omitted from the authoring catalogue. See
+[Local integration development](../../../docs/integrations/local-development.md)
+for the restart and upgrade acceptance sequence.

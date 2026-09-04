@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "a",
+        "name": "Link",
+        "group": "Text",
+        "description": "Native link with CMS destination and relationship settings.",
+        "path": "blocs/foundation/basic-blocs/content/links/basic-link"
+    }
+}

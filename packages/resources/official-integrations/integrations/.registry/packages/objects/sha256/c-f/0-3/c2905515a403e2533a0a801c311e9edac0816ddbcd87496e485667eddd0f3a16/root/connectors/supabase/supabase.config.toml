@@ -1,0 +1,5 @@
+[functions.cms-emailer]
+verify_jwt = false
+
+[functions.cms-broadcast]
+verify_jwt = false

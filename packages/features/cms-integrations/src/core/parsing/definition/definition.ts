@@ -19,12 +19,18 @@ import {
     parseSecretTemplates,
     validateGeneratedSecretDefinition,
 } from "../templates/secretTemplates";
-import { parseSecurityDefinition, validateSecurityDefinition } from "./securityDefinition";
+import { parseSecurityDefinition, validateSecurityDefinition } from "./metadata/securityDefinition";
 import { parseThemeDefinition, validateThemeDefinition } from "./metadata/themeDefinition";
 import { parseUiDefinition } from "./metadata/uiDefinition";
 import { isRecord, parseJsonAnswer, text } from "./values";
+import {
+    INTEGRATION_DEFINITION_SCHEMA_V1,
+    INTEGRATION_DEFINITION_SCHEMA_V2,
+} from "../../../interfaces/IntegrationResources";
+import { parseCollectionCategories, parseCollectionResources } from "./resources";
 
 export function assertDefinitionUsable(definition: IntegrationDefinition): void {
+    validateDefinitionModel(definition);
     assertUniqueInputs(definition.inputs);
     assertSecretInputsUseStringValues(definition);
     assertPasswordInputsDeclareSecrets(definition);
@@ -73,6 +79,8 @@ export function parseIntegrationDefinition(value: unknown): IntegrationDefinitio
 }
 
 function parseDefinition(value: Record<string, unknown>): IntegrationDefinition {
+    const schema = parseSchema(value.schema);
+    const type = parseDefinitionType(value.type, schema);
     const kind = text(value.kind);
     if (!kind) {
         throw new MissingIntegrationParam("definition.kind");
@@ -87,7 +95,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
 
     const inputs = value.inputs.map((input, index) => parseInput(input, `definition.inputs.${index}`));
     assertUniqueInputs(inputs);
-    const parsedDefinition = { kind, label, inputs } satisfies Pick<IntegrationDefinition, "kind" | "label" | "inputs">;
+    const parsedDefinition = { kind, label, inputs };
     assertSecretInputsUseStringValues(parsedDefinition);
     assertPasswordInputsDeclareSecrets(parsedDefinition);
     const secrets = parseSecretTemplates(value.secrets, new Set(sensitiveInputNames(parsedDefinition)));
@@ -115,7 +123,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     const theme = parseThemeDefinition(value.theme, kind);
     const security = parseSecurityDefinition(value.security);
 
-    return {
+    const base = {
         kind,
         label,
         ...(version ? { version } : {}),
@@ -134,4 +142,141 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
         ...(security ? { security } : {}),
         ...(dependencies.length ? { dependencies } : {}),
     };
+    if (schema === INTEGRATION_DEFINITION_SCHEMA_V2 && type === "source") {
+        const definition: IntegrationDefinition = {
+            ...base,
+            schema,
+            type,
+            artifacts: artifacts.filter(
+                (
+                    artifact,
+                ): artifact is Exclude<typeof artifact, { type: "bloc" | "dashboard" | "dashboardRelation" }> =>
+                    artifact.type !== "bloc" && artifact.type !== "dashboard" && artifact.type !== "dashboardRelation",
+            ),
+        };
+        validateDefinitionModel(definition, artifacts);
+        return definition;
+    }
+    if (schema === INTEGRATION_DEFINITION_SCHEMA_V2 && type === "collection") {
+        const definition: IntegrationDefinition = {
+            ...base,
+            schema,
+            type,
+            artifacts: artifacts.filter(
+                (artifact): artifact is Extract<typeof artifact, { type: "bloc" }> => artifact.type === "bloc",
+            ),
+            resourceCategories: parseCollectionCategories(value.resourceCategories),
+            resources: parseCollectionResources(value.resources, kind),
+        };
+        validateDefinitionModel(definition, artifacts);
+        return definition;
+    }
+    return {
+        ...base,
+        ...(schema === INTEGRATION_DEFINITION_SCHEMA_V1 ? { schema } : {}),
+        ...(artifacts.length ? { artifacts } : {}),
+    };
+}
+
+function parseSchema(value: unknown): IntegrationDefinition["schema"] {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === INTEGRATION_DEFINITION_SCHEMA_V1 || value === INTEGRATION_DEFINITION_SCHEMA_V2) {
+        return value;
+    }
+    throw new IntegrationInputError("definition.schema", "must be cms.integration.definition.v1 or v2");
+}
+
+function parseDefinitionType(
+    value: unknown,
+    schema: IntegrationDefinition["schema"],
+): "source" | "collection" | undefined {
+    if (schema !== INTEGRATION_DEFINITION_SCHEMA_V2) {
+        if (value !== undefined) {
+            throw new IntegrationInputError("definition.type", "is supported only by cms.integration.definition.v2");
+        }
+        return undefined;
+    }
+    if (value !== "source" && value !== "collection") {
+        throw new IntegrationInputError("definition.type", "must be source or collection");
+    }
+    return value;
+}
+
+function validateDefinitionModel(
+    definition: IntegrationDefinition,
+    parsedArtifacts: readonly NonNullable<IntegrationDefinition["artifacts"]>[number][] = definition.artifacts ?? [],
+): void {
+    if (definition.schema !== INTEGRATION_DEFINITION_SCHEMA_V2) {
+        return;
+    }
+    if (definition.type === "source") {
+        const forbidden = parsedArtifacts.filter(
+            (artifact) =>
+                artifact.type === "bloc" || artifact.type === "dashboard" || artifact.type === "dashboardRelation",
+        );
+        if (forbidden.length) {
+            throw new IntegrationInputError(
+                "definition.artifacts",
+                "source integrations cannot publish blocs or dashboards",
+            );
+        }
+        for (const artifact of definition.artifacts ?? []) {
+            if (artifact.type === "source" && artifact.source.endpoints.some((endpoint) => !endpoint.contractVersion)) {
+                throw new IntegrationInputError(
+                    "definition.artifacts",
+                    `source "${artifact.source.id}" must version every endpoint contract`,
+                );
+            }
+            if (artifact.type === "function" && !artifact.contractVersion) {
+                throw new IntegrationInputError(
+                    "definition.artifacts",
+                    `function "${artifact.function.id}" must declare a contract version`,
+                );
+            }
+        }
+        if (definition.theme) {
+            throw new IntegrationInputError("definition.theme", "source integrations cannot publish theme tokens");
+        }
+        return;
+    }
+    if (parsedArtifacts.some((artifact) => artifact.type !== "bloc")) {
+        throw new IntegrationInputError("definition.artifacts", "collection integrations can publish only blocs");
+    }
+    for (const field of [
+        "dependencies",
+        "secrets",
+        "generatedSecrets",
+        "connectors",
+        "provisions",
+        "afterInstallation",
+        "security",
+    ] as const) {
+        if (definition[field] !== undefined) {
+            throw new IntegrationInputError(`definition.${field}`, "is not supported by collection integrations");
+        }
+    }
+    if (definition.inputs.length) {
+        throw new IntegrationInputError("definition.inputs", "collection integrations cannot declare setup inputs");
+    }
+    const categories = new Set(definition.resourceCategories.map(({ id }) => id));
+    const artifacts = new Set((definition.artifacts ?? []).map(({ bloc }) => bloc.tag));
+    for (const resource of definition.resources) {
+        if (!categories.has(resource.category)) {
+            throw new IntegrationInputError(
+                `definition.resources.${resource.id}.category`,
+                "references an unknown category",
+            );
+        }
+        if (!artifacts.has(resource.artifact)) {
+            throw new IntegrationInputError(
+                `definition.resources.${resource.id}.artifact`,
+                "references an unknown bloc",
+            );
+        }
+    }
+    if (artifacts.size !== definition.resources.length) {
+        throw new IntegrationInputError("definition.resources", "must declare exactly one resource per bloc artifact");
+    }
 }

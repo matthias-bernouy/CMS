@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-step",
+        "name": "Step",
+        "group": "Documentation · Content",
+        "description": "Single instruction inside a numbered steps composition.",
+        "path": "blocs/foundation/documentation-blocs/content/doc-step"
+    }
+}

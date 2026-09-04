@@ -1,0 +1,49 @@
+[
+  {
+    "endpointId": "saveMyClient",
+    "method": "POST",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/partner/client",
+    "meta": {
+      "name": "Save my client",
+      "description": "Create or update a client owned by the authenticated sales partner."
+    },
+    "params": [],
+    "headers": {
+      "$include": "../../../shared/actor-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "number", "nullable": true },
+        "companyName": { "type": "string" },
+        "companyRegistrationNumber": { "type": "string", "nullable": true },
+        "contactName": { "type": "string" },
+        "contactJobTitle": { "type": "string", "nullable": true },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string", "nullable": true },
+        "addressLine1": { "type": "string", "nullable": true },
+        "addressLine2": { "type": "string", "nullable": true },
+        "postalCode": { "type": "string", "nullable": true },
+        "city": { "type": "string", "nullable": true },
+        "country": { "type": "string", "nullable": true },
+        "notes": { "type": "string", "nullable": true }
+      },
+      "required": ["companyName", "contactName", "contactEmail"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../shapes/clients/client.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

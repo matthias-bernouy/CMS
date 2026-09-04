@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-figure",
+        "name": "Figure",
+        "group": "Documentation · Content",
+        "description": "Image with caption and optional zoom interaction.",
+        "path": "blocs/foundation/documentation-blocs/content/doc-figure"
+    }
+}

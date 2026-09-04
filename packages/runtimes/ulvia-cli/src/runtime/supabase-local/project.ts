@@ -65,6 +65,10 @@ export class LocalSupabaseProject {
         return this.state.functions[slug]?.receipt ?? null;
     }
 
+    hasFunctions(): boolean {
+        return Object.keys(this.state.functions).length > 0;
+    }
+
     private async persist(): Promise<void> {
         await privateWrite(this.statePath, `${JSON.stringify(this.state, null, 2)}\n`);
     }

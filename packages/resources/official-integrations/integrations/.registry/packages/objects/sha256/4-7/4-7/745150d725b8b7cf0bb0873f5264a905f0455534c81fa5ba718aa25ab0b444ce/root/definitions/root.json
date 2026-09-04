@@ -1,0 +1,21 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "commerce-mondial-relay-delivery",
+    "label": "Commerce Mondial Relay delivery",
+    "version": "2.0.0",
+    "category": "Delivery",
+    "description": "Link authenticated Commerce orders to server-validated Mondial Relay pickup point selections.",
+    "inputs": [],
+    "dependencies": {
+        "$include": "configuration/dependencies.json"
+    },
+    "ui": {
+        "$include": "configuration/ui.json"
+    },
+    "artifacts": {
+        "$files": [
+            "artifacts/functions/set-relay-point-for-order/root.json",
+            "artifacts/functions/get-relay-point-for-order.json"
+        ]
+    }
+}

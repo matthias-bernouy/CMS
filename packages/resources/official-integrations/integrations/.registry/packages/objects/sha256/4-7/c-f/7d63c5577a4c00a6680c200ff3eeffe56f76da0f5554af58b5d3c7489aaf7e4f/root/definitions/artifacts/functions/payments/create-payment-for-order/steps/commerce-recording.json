@@ -1,0 +1,49 @@
+[
+    {
+        "id": "commercePayment",
+        "call": {
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "recordOrderPayment",
+            "body": {
+                "orderPublicId": "$steps.terms.orderPublicId",
+                "providerEventId": {
+                    "$concat": [
+                        "payment-checkout-sync:",
+                        "$steps.payment.paymentId",
+                        ":",
+                        "$steps.payment.updatedAt"
+                    ]
+                },
+                "providerPaymentId": "$steps.payment.paymentId",
+                "status": "$steps.payment.commercePaymentStatus",
+                "amount": "$steps.payment.amountTotal",
+                "currency": "$steps.payment.currency",
+                "financialTermsHash": "$steps.payment.financialTermsHash",
+                "occurredAt": "$steps.payment.updatedAt",
+                "providerChargeId": "$steps.payment.stripeChargeId",
+                "providerPaymentIntentId": "$steps.payment.stripePaymentIntentId",
+                "providerSnapshot": {
+                    "paymentId": "$steps.payment.paymentId",
+                    "stripePaymentIntentId": "$steps.payment.stripePaymentIntentId",
+                    "stripeChargeId": "$steps.payment.stripeChargeId",
+                    "stripeChargeBalanceTransactionId": "$steps.payment.stripeChargeBalanceTransactionId",
+                    "clientReferenceId": "$steps.payment.clientReferenceId",
+                    "paymentStatus": "$steps.payment.paymentStatus",
+                    "commercePaymentStatus": "$steps.payment.commercePaymentStatus",
+                    "settlementStatus": "$steps.payment.settlementStatus",
+                    "manualReviewReason": "$steps.payment.manualReviewReason",
+                    "disputeStatus": "$steps.payment.disputeStatus",
+                    "amountTotal": "$steps.payment.amountTotal",
+                    "sellerTransferAmount": "$steps.payment.sellerTransferAmount",
+                    "platformRetainedAmount": "$steps.payment.platformRetainedAmount",
+                    "transferredAmount": "$steps.payment.transferredAmount",
+                    "reversedAmount": "$steps.payment.reversedAmount",
+                    "refundedAmount": "$steps.payment.refundedAmount",
+                    "currency": "$steps.payment.currency",
+                    "financialTermsHash": "$steps.payment.financialTermsHash",
+                    "updatedAt": "$steps.payment.updatedAt"
+                }
+            }
+        }
+    }
+]

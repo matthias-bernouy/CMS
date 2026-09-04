@@ -1,0 +1,104 @@
+[
+    {
+        "endpointId": "getBuyerLegalRequirements",
+        "method": "GET",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/legal-requirements",
+        "params": [
+            {
+                "name": "orderId",
+                "in": "query",
+                "type": "number",
+                "required": true
+            },
+            {
+                "name": "paymentProvider",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "documents": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    },
+                                    "consentText": {
+                                        "type": "string"
+                                    },
+                                    "pageUrl": {
+                                        "type": "string"
+                                    },
+                                    "versionId": {
+                                        "type": "string"
+                                    },
+                                    "versionDate": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "label",
+                                    "consentText",
+                                    "pageUrl",
+                                    "versionId",
+                                    "versionDate"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "enabled",
+                        "documents"
+                    ]
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        ]
+    }
+]

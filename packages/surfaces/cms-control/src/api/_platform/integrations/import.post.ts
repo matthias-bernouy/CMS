@@ -1,5 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { importBlocArtifact } from "cms-control/core/content/bloc/importBlocArtifact";
+import { deleteIntegrationBlocArtifact } from "cms-control/core/content/bloc/deleteIntegrationBlocArtifact";
 import { definitionsForImport } from "cms-control/core/management/integrations/definitions";
 import { publishedPageResolver } from "cms-control/core/management/integrations/publishedPageResolver";
 import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
@@ -9,6 +10,7 @@ import {
     runIntegrationInstallation,
 } from "@bernouy/cms-integrations";
 import { invalidateGlobalStyleAndPages } from "cms-control/core/admin/server/cache/invalidation";
+import { installRequiredCollectionSources } from "cms-control/core/management/integrations/installationActions";
 
 export default async function postIntegrationImport(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
@@ -40,14 +42,16 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
                         },
                     },
                 ),
+            deleteBloc: (id, installationId) => deleteIntegrationBlocArtifact(cms, blocRepository, id, installationId),
         },
         connectorDeployers: cms.integrationConnectorDeployers,
         provisioners: cms.integrationProvisioners,
         sourceExecutorDeps: cms.sourceExecutorDeps,
-        sourceTargetValidation: cms.config.sourceTargetValidation,
+        sourceTargetValidation: cms.config?.sourceTargetValidation,
         resolvePublishedPage: publishedPageResolver(cms.repository, cms.config?.deliveryUrl),
     };
     try {
+        await installRequiredCollectionSources(cms, request, deps);
         const result = await runIntegrationInstallation({
             mode: "create",
             deps,

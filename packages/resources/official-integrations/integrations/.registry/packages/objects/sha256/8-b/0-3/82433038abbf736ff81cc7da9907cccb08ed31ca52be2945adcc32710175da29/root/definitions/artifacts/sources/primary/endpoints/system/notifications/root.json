@@ -1,0 +1,8 @@
+{
+    "$files": [
+        "preferences/root.json",
+        "dispatch/root.json",
+        "admin/root.json",
+        "templates.json"
+    ]
+}

@@ -1,0 +1,33 @@
+[
+    {
+        "$include": "success/root.json"
+    },
+    {
+        "status": "404",
+        "body": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "error"
+            ]
+        }
+    },
+    {
+        "status": "409",
+        "body": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "error"
+            ]
+        }
+    }
+]

@@ -1,0 +1,20 @@
+{
+    "csp": {
+        "script": [
+            "https://js.stripe.com",
+            "https://*.js.stripe.com"
+        ],
+        "connect": [
+            "https://api.stripe.com",
+            "https://link.com",
+            "https://*.link.com"
+        ],
+        "frame": [
+            "https://js.stripe.com",
+            "https://*.js.stripe.com",
+            "https://hooks.stripe.com",
+            "https://link.com",
+            "https://*.link.com"
+        ]
+    }
+}

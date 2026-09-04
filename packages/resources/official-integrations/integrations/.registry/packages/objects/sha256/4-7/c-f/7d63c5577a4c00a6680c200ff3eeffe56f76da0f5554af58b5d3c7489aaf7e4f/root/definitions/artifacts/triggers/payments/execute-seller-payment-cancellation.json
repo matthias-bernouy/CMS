@@ -1,0 +1,38 @@
+{
+    "type": "trigger",
+    "trigger": {
+        "id": "execute-seller-payment-cancellation",
+        "label": "Cancel seller order PaymentIntent",
+        "event": {
+            "kind": "endpoint",
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "cancelMySale",
+            "phase": "response"
+        },
+        "mode": "async",
+        "failureMode": "ignore",
+        "condition": {
+            "all": [
+                {
+                    "equals": [
+                        "$response.status",
+                        201
+                    ]
+                },
+                {
+                    "in": [
+                        "$response.body.paymentCancellationAuthorization.status",
+                        [
+                            "requested",
+                            "processing"
+                        ]
+                    ]
+                }
+            ]
+        },
+        "function": {
+            "id": "executeProviderPaymentCancellation",
+            "body": "$response.body.paymentCancellationAuthorization"
+        }
+    }
+}

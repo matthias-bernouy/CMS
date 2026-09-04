@@ -28,6 +28,7 @@ export function parseEndpointTemplate(value: unknown, name: string): SourceEndpo
     const timeoutMs = parseTimeoutMs(value.timeoutMs, `${name}.timeoutMs`);
     return {
         endpointId,
+        ...(text(value.contractVersion) ? { contractVersion: text(value.contractVersion)! } : {}),
         method: method as SourceEndpointDto["method"],
         targetUrl,
         ...(timeoutMs !== undefined ? { timeoutMs } : {}),

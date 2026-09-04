@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-faq",
+        "name": "FAQ",
+        "group": "Sections",
+        "description": "Accessible frequently asked questions section with editable native disclosure items.",
+        "path": "blocs/foundation/basic-blocs/layout/sections/basic-faq"
+    }
+}

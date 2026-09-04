@@ -127,9 +127,9 @@
                         "amount": "$input.body.amount",
                         "message": "$input.body.message",
                         "offerSlug": "$steps.offer.offerSlug",
-            "offerTitle": "$steps.offer.offerTitle",
-            "offerMainImageMediaId": "$steps.offer.offerMainImageMediaId",
-            "sellerCmsUserId": "$steps.offer.sellerCmsUserId",
+                        "offerTitle": "$steps.offer.offerTitle",
+                        "offerMainImageMediaId": "$steps.offer.offerMainImageMediaId",
+                        "sellerCmsUserId": "$steps.offer.sellerCmsUserId",
                         "sellerDisplayName": "$steps.offer.sellerDisplayName",
                         "referenceAmount": "$steps.offer.referenceAmount",
                         "currency": "$steps.offer.currency",
@@ -164,5 +164,6 @@
             "status": 201,
             "body": "$steps.proposal"
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

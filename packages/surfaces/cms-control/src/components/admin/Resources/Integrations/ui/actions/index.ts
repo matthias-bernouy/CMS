@@ -4,6 +4,7 @@ import type { BrowserTab, IntegrationBrowserHost, IntegrationDefinition } from "
 import { closeIntegrationReconfigure, openIntegrationReconfigure } from "../../reconfigure";
 import { retryBoundSources } from "../data";
 import { renderImporting, renderSetup } from "../setup";
+import { handleCollectionSelection, selectedCollectionResources } from "../resources";
 import {
     cancelIntegrationUpgrade,
     confirmIntegrationUpgrade,
@@ -14,6 +15,13 @@ import {
 export async function handleClick(host: IntegrationBrowserHost, event: Event): Promise<void> {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) {
+        return;
+    }
+    if (
+        host.activeDefinition?.schema === "cms.integration.definition.v2" &&
+        host.activeDefinition.type === "collection" &&
+        handleCollectionSelection(target, host.activeDefinition)
+    ) {
         return;
     }
     if (target.closest("[data-repository-retry]")) {
@@ -82,7 +90,7 @@ export async function handleClick(host: IntegrationBrowserHost, event: Event): P
 export function openSetup(
     host: IntegrationBrowserHost,
     definition: IntegrationDefinition,
-    options: { answers?: Record<string, unknown>; error?: string } = {},
+    options: { answers?: Record<string, unknown>; error?: string; resources?: readonly string[] } = {},
 ): void {
     host.activeDefinition = definition;
     host.selectedIntegrationId = "";
@@ -97,9 +105,13 @@ async function importActive(host: IntegrationBrowserHost): Promise<void> {
     }
     const definition = host.activeDefinition;
     const answers = collectAnswers(host.query("[data-fields]"), definition);
+    const resources =
+        definition.schema === "cms.integration.definition.v2" && definition.type === "collection"
+            ? selectedCollectionResources(host)
+            : undefined;
     renderImporting(host, definition, answers);
     try {
-        const result = await importIntegration({ kind: definition.kind, answers });
+        const result = await importIntegration({ kind: definition.kind, answers, ...(resources ? { resources } : {}) });
         host.tab = "installed";
         const id = result.installation?.id ?? "";
         await host.waitForBoundData(() =>
@@ -109,7 +121,11 @@ async function importActive(host: IntegrationBrowserHost): Promise<void> {
         );
         host.openDetail(id || host.installations.find((installation) => installation.id === definition.kind)?.id || "");
     } catch (error) {
-        openSetup(host, definition, { answers, error: error instanceof Error ? error.message : "Import failed" });
+        openSetup(host, definition, {
+            answers,
+            ...(resources ? { resources } : {}),
+            error: error instanceof Error ? error.message : "Import failed",
+        });
     }
 }
 

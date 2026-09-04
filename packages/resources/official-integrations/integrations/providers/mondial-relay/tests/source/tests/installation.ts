@@ -1,17 +1,7 @@
-import {
-    JsonRecord,
-    connectEndpoint,
-    createHarness,
-    expect,
-    test,
-    trackingEndpoint,
-    validateDashboard,
-    validateSource,
-} from "../support";
-import { declaredBlocViewSources } from "../../../../../../tests/helpers/blocArtifactSource";
+import { connectEndpoint, createHarness, expect, test, trackingEndpoint, validateSource } from "../support";
 
 export function registerInstallationTests(): void {
-    test("installs the Connect source and dashboard with widget-backed relay lookup", async () => {
+    test("installs only the Connect source backend", async () => {
         const harness = await createHarness();
         const source = await harness.sources.getSource("urn:delivery");
         const dashboard = await harness.dashboards.getDashboard("delivery-delivery");
@@ -40,36 +30,7 @@ export function registerInstallationTests(): void {
         expect(createBody?.properties).not.toHaveProperty("deliveryRelayNumber");
         expect(createBody?.properties).not.toHaveProperty("sizeCode");
         expect(createBody?.properties).not.toHaveProperty("insuranceLevel");
-        expect(dashboard).toBeTruthy();
-        expect(validateDashboard(dashboard!, { source: source! })).toEqual([]);
-        const views = dashboard?.views as JsonRecord[] | undefined;
-        expect(views?.map((view) => `${view.widget}:${view.id}`)).toEqual([
-            "w-table:shipmentsTable",
-            "w-table:projectionExceptionsTable",
-            "w-detail:shipmentDetail",
-            "w-detail:settingsDetail",
-        ]);
-        const shipmentsTable = views?.[0];
-        const tableActions = shipmentsTable?.actions as JsonRecord[] | undefined;
-        expect(tableActions?.map((action) => action.id)).toEqual(["openSettings"]);
-        expect(tableActions?.[0]).toMatchObject({ selection: { opens: "settingsDetail" } });
-        const settingsDetail = dashboard?.views.find((view) => view.id === "settingsDetail");
-        if (settingsDetail?.widget !== "w-detail") {
-            throw new Error("delivery settings detail not installed");
-        }
-        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
-            resource: "$result",
-        });
-        const dashboardJson = JSON.stringify(dashboard);
-        expect(dashboardJson).toContain("recoverUnknownShipment");
-        expect(dashboardJson).not.toContain("createShipmentForm");
-        expect(dashboardJson).not.toContain('"widget":"w-tabs"');
-        expect(dashboardJson).not.toContain('"id":"pickupPoints"');
-        expect(dashboardJson).not.toContain('"id":"relayPointsTable"');
-        expect(dashboardJson).toContain("Edit settings");
-        expect(dashboardJson).toContain("Sender address");
-        expect(dashboardJson).toContain("Default weight grams");
-        expect(dashboardJson).not.toContain('"path":"labelUrl"');
+        expect(dashboard).toBeNull();
         expect(harness.deployment?.dataApiSchemas).toEqual(["delivery"]);
         const functionSecrets = harness.deployment?.functions[0]?.secrets ?? {};
         expect(functionSecrets).toMatchObject({
@@ -84,11 +45,6 @@ export function registerInstallationTests(): void {
         });
         expect(functionSecrets).not.toHaveProperty("MONDIAL_RELAY_SENDER_NAME");
         expect(functionSecrets).not.toHaveProperty("MONDIAL_RELAY_DEFAULT_MODE_COL");
-        const pickerSource = declaredBlocViewSources(harness.importedBlocs[0] ?? {});
-        expect(pickerSource).toContain("Choisissez un point relais");
-        expect(pickerSource).toContain("setRelayPointForOrder");
-        expect(pickerSource).toContain("mondial-relay-picker:change");
-        expect(pickerSource).toContain("source-id");
-        expect(harness.importedBlocs[0]?.editorJS).toContain('type: "color"');
+        expect(harness.importedBlocs).toEqual([]);
     });
 }

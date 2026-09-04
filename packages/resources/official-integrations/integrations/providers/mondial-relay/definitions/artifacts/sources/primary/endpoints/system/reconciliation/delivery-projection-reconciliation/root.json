@@ -6,7 +6,7 @@
         "endpointId": "acknowledgeShipmentEvent",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/events/ack",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/system/events/ack",
         "params": [],
         "headers": [
             {
@@ -68,7 +68,7 @@
         "endpointId": "failShipmentEventProjection",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/events/fail",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/system/events/fail",
         "params": [],
         "headers": [
             {

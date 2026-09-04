@@ -65,7 +65,13 @@ describe("definition bundle validation", () => {
         root.bundle();
         root.write("definitions/root.json", { kind: "demo", label: "Demo", version: "1.0.0", inputs: [] });
 
-        await expect(resolve(root)).rejects.toThrow(/bundle root must be a cms\.integration\.definition\.v1/);
+        await expect(resolve(root)).rejects.toThrow(/bundle root must use a supported integration definition schema/);
+
+        const current = createBundleFixture();
+        current.bundle();
+        current.write("definitions/root.json", current.canonical({ schema: "cms.integration.definition.v2" }));
+
+        await expect(resolve(current)).resolves.toMatchObject({ schema: "cms.integration.definition.v2" });
     });
 });
 

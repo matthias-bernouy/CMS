@@ -1,0 +1,38 @@
+{
+    "endpointId": "myOrder",
+    "method": "GET",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order",
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "type": "string"
+        },
+        {
+            "name": "publicId",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "output": {
+        "$include": "my-order/responses/root.json"
+    }
+}

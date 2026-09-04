@@ -1,6 +1,11 @@
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 
+export type BlocListOptions = {
+    /** Include installed blocs hidden from the authoring catalogue. */
+    includeInactive?: boolean;
+};
+
 /**
  * Read-only view of the content aggregate — the subset public rendering
  * needs: no create/update/delete paths and no editor bundles.
@@ -23,9 +28,9 @@ export interface ContentReader {
     getPublishedPages(): Promise<TPage[]>;
 
     // BLOC (view only — editor bundles live in the admin)
-    getBlocsList(): Promise<
-        { id: string; name: string; group: string; description: string; compositionHTML?: string }[]
-    >;
+    getBlocsList(
+        options?: BlocListOptions,
+    ): Promise<{ id: string; name: string; group: string; description: string; compositionHTML?: string }[]>;
     getBlocViewJS(tag: string): Promise<string | null>;
 
     // SYSTEM (theme, favicon, host, language, system page refs)

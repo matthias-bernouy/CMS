@@ -1,0 +1,119 @@
+{
+    "expectedSettingsVersion": {
+        "type": "number"
+    },
+    "name": {
+        "type": "string"
+    },
+    "shippingBeneficiary": {
+        "type": "string"
+    },
+    "buyerFeeBasis": {
+        "type": "string"
+    },
+    "buyerFeeRateBps": {
+        "type": "number"
+    },
+    "buyerFeeFixedAmount": {
+        "type": "number"
+    },
+    "buyerFeeMinimumAmount": {
+        "type": "number"
+    },
+    "buyerFeeMaximumAmount": {
+        "type": "number"
+    },
+    "buyerFeeRefundPolicy": {
+        "type": "string"
+    },
+    "sellerFeeBasis": {
+        "type": "string"
+    },
+    "sellerFeeRateBps": {
+        "type": "number"
+    },
+    "sellerFeeFixedAmount": {
+        "type": "number"
+    },
+    "sellerFeeMinimumAmount": {
+        "type": "number"
+    },
+    "sellerFeeMaximumAmount": {
+        "type": "number"
+    },
+    "sellerFeeRefundPolicy": {
+        "type": "string"
+    },
+    "costEstimatesConfigured": {
+        "type": "boolean"
+    },
+    "estimatedStripeCostAmount": {
+        "type": "number"
+    },
+    "estimatedCarrierCostAmount": {
+        "type": "number"
+    },
+    "platformRiskReserveContributionAmount": {
+        "type": "number"
+    },
+    "configuredMinimumMarginAmount": {
+        "type": "number"
+    },
+    "subsidyOverride": {
+        "type": "boolean"
+    },
+    "subsidyReason": {
+        "type": "string"
+    },
+    "subsidyMaximumDeficitAmount": {
+        "type": "number"
+    },
+    "paymentWindowMinutes": {
+        "type": "number"
+    },
+    "sellerHandoffHours": {
+        "type": "number"
+    },
+    "scanGraceHours": {
+        "type": "number"
+    },
+    "claimWindowHours": {
+        "type": "number"
+    },
+    "sellerResponseHours": {
+        "type": "number"
+    },
+    "returnShipHours": {
+        "type": "number"
+    },
+    "financeReviewThresholdAmount": {
+        "type": "number"
+    },
+    "dualApprovalThresholdAmount": {
+        "type": "number"
+    },
+    "sellerReserveRateBps": {
+        "type": "number"
+    },
+    "payoutDelayDays": {
+        "type": "number"
+    },
+    "sellerReserveLiabilityDays": {
+        "type": "number"
+    },
+    "orderTransferLimitAmount": {
+        "type": "number"
+    },
+    "velocityLimitAmount": {
+        "type": "number"
+    },
+    "highValueReviewAmount": {
+        "type": "number"
+    },
+    "claimRatioReviewBps": {
+        "type": "number"
+    },
+    "chargebackRatioReviewBps": {
+        "type": "number"
+    }
+}

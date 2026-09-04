@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "article",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Article",
+        "description": "Native self-contained article for independently reusable content."
+    }
+}

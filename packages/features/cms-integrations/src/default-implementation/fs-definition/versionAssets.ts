@@ -17,7 +17,7 @@ export async function hydrateVersionAssets(
         return withIcons;
     }
     const artifacts = await Promise.all(withIcons.artifacts.map((artifact) => hydrateBloc(artifact, versionRoot)));
-    return { ...withIcons, artifacts };
+    return { ...withIcons, artifacts } as IntegrationDefinition;
 }
 
 async function hydrateBloc(

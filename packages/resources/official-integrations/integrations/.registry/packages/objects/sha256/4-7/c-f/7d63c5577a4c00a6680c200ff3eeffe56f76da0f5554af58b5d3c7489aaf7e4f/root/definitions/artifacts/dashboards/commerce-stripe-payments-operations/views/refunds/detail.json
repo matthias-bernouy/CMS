@@ -1,0 +1,42 @@
+{
+    "widget": "w-detail",
+    "id": "refundRequestDetail",
+    "source": {
+        "endpoint": "refundRequest",
+        "params": {
+            "id": "$selection.id"
+        }
+    },
+    "title": {
+        "path": "id",
+        "fallback": "Refund request"
+    },
+    "status": {
+        "path": "status"
+    },
+    "actions": [
+        {
+            "id": "reviewRefund",
+            "label": "Review refund",
+            "tone": "primary",
+            "placement": "primary",
+            "confirm": "Apply this finance review decision?",
+            "visibleWhen": {
+                "value": "$field.status",
+                "equals": "requested"
+            },
+            "endpoint": {
+                "endpoint": "reviewOrderRefund",
+                "body": {
+                    "refundRequestId": "$resource.id",
+                    "decision": "$field.decision",
+                    "reason": "$field.reviewReason",
+                    "expectedVersion": "$resource.version"
+                }
+            }
+        }
+    ],
+    "main": {
+        "$include": "detail-sections.json"
+    }
+}

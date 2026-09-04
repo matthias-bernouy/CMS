@@ -1,0 +1,7 @@
+{
+  "$files": [
+    "list-my-clients.json",
+    "get-my-client.json",
+    "save-my-client.json"
+  ]
+}

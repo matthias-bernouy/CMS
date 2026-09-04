@@ -1,12 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
-import { resolve } from "node:path";
-import { loadIntegrationDefinition } from "../../../../../tests/helpers/integrationDefinition";
+import { commerceDefinitionWithDeferredDashboards } from "./support/deferredDashboards";
 
 type Endpoint = { endpointId: string; output?: Array<{ body?: DataShape }> };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
-
-const definitionPath = resolve(import.meta.dir, "../../definition.json");
 
 describe("commerce resource-backed lookup selections", () => {
     test("uses the six embedded relations and keeps direct endpoints available", async () => {
@@ -90,7 +87,7 @@ describe("commerce resource-backed lookup selections", () => {
 });
 
 async function commerceDefinition(): Promise<Definition> {
-    return loadIntegrationDefinition<Definition>(definitionPath);
+    return commerceDefinitionWithDeferredDashboards<Definition>();
 }
 
 function endpoints(definition: Definition): Endpoint[] {

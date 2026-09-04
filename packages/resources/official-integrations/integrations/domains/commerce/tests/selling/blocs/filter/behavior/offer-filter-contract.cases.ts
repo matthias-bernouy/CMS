@@ -3,12 +3,12 @@ import {
     filterControls,
     filterableFields,
     numericRange,
-} from "../../../../../blocs/commerce-offer-filter/schema/schema-helpers";
+} from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-offer-filter/schema/schema-helpers.ts";
 import {
     formatRangeValue,
     isRangeValue,
     snapRangeValue,
-} from "../../../../../blocs/commerce-offer-filter/range/range-values";
+} from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-offer-filter/range/range-values.ts";
 import { tennisSchema } from "../support/offer-filter-panel.fixtures";
 
 describe("Commerce offer filter contracts", () => {

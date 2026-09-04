@@ -12,7 +12,23 @@ describe("local release source", () => {
     test("packages a direct source tree from a workspace containing unrelated symlinks", async () => {
         const root = await temporaryRoot();
         const source = join(root, "source");
-        await writeDirectIntegrationSource(source);
+        const definitionPath = await writeDirectIntegrationSource(source);
+        await writeFile(
+            definitionPath,
+            JSON.stringify({
+                schema: "cms.integration.definition.v2",
+                type: "source",
+                kind: "demo",
+                label: "Demo",
+                version: "2.0.0",
+                inputs: [],
+            }),
+        );
+        const integrationRoot = join(source, "integrations", "demo");
+        await mkdir(join(integrationRoot, "definitions", "artifacts", "dashboards"), { recursive: true });
+        await mkdir(join(integrationRoot, "assets", "dashboards"), { recursive: true });
+        await writeFile(join(integrationRoot, "definitions", "artifacts", "dashboards", "admin.json"), "{}\n");
+        await writeFile(join(integrationRoot, "assets", "dashboards", "admin.svg"), "<svg></svg>\n");
         await symlink(root, join(source, "workspace-link"), "dir");
         let files: readonly string[] = [];
 

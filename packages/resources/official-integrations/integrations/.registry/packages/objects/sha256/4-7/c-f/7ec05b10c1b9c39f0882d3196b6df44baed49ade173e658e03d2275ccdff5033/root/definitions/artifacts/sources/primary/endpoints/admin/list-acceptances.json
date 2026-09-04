@@ -1,0 +1,84 @@
+[
+    {
+        "endpointId": "listAcceptances",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/acceptances",
+        "meta": {
+            "name": "List consent acceptances",
+            "description": "Audit committed evidence for one context or CMS subject."
+        },
+        "params": [
+            { "name": "context", "in": "query", "type": "string" },
+            { "name": "cmsUserId", "in": "query", "type": "string" },
+            { "name": "beforeCommittedAt", "in": "query", "type": "string" },
+            { "name": "beforeId", "in": "query", "type": "string" },
+            { "name": "limit", "in": "query", "type": "number" }
+        ],
+        "headers": {
+            "$include": "../../shared/service-header.json"
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": { "type": "string" },
+                                    "contextKey": { "type": "string" },
+                                    "cmsUserId": { "type": "string" },
+                                    "acceptedAt": { "type": "string" },
+                                    "committedAt": { "type": "string" },
+                                    "documentSummary": { "type": "string" },
+                                    "documents": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "documentKey": { "type": "string" },
+                                                "versionId": { "type": "string" },
+                                                "contentHash": { "type": "string" },
+                                                "label": { "type": "string" },
+                                                "pageTitle": { "type": "string" },
+                                                "pagePath": { "type": "string" },
+                                                "publishedSnapshotUrl": { "type": "string" }
+                                            },
+                                            "required": [
+                                                "documentKey", "versionId", "contentHash", "label",
+                                                "pageTitle", "pagePath", "publishedSnapshotUrl"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "id", "contextKey", "cmsUserId", "acceptedAt",
+                                    "committedAt", "documentSummary", "documents"
+                                ]
+                            }
+                        },
+                        "total": { "type": "number" },
+                        "nextCursor": {
+                            "type": "object",
+                            "nullable": true,
+                            "properties": {
+                                "committedAt": { "type": "string" },
+                                "id": { "type": "string" }
+                            },
+                            "required": ["committedAt", "id"]
+                        }
+                    },
+                    "required": ["items", "total", "nextCursor"]
+                }
+            },
+            {
+                "status": "default",
+                "body": { "$include": "../../shared/error.json" }
+            }
+        ]
+    }
+]

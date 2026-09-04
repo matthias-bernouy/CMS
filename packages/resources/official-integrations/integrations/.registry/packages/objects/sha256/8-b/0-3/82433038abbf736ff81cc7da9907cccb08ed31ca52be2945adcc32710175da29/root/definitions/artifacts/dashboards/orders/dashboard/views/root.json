@@ -1,0 +1,104 @@
+[
+    {
+        "widget": "w-table",
+        "id": "ordersTable",
+        "title": "Orders",
+        "source": {
+            "endpoint": "orders",
+            "params": {
+                "status": "$filter.status",
+                "sellerId": "$filter.sellerId",
+                "limit": "100"
+            },
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "id",
+        "filters": [
+            {
+                "id": "status",
+                "label": "Status",
+                "param": "status",
+                "type": "select",
+                "options": [
+                    {
+                        "value": "awaiting_quote",
+                        "label": "Awaiting delivery quote"
+                    },
+                    {
+                        "value": "awaiting_payment",
+                        "label": "Awaiting protected payment"
+                    },
+                    {
+                        "value": "active",
+                        "label": "Protected payment held"
+                    },
+                    {
+                        "value": "cancellation_pending",
+                        "label": "Cancellation pending"
+                    },
+                    {
+                        "value": "cancelled",
+                        "label": "Cancelled"
+                    },
+                    {
+                        "value": "completed",
+                        "label": "Completed"
+                    },
+                    {
+                        "value": "expired",
+                        "label": "Expired"
+                    }
+                ]
+            },
+            {
+                "id": "sellerId",
+                "label": "Seller id",
+                "param": "sellerId",
+                "type": "text"
+            }
+        ],
+        "columns": [
+            {
+                "id": "orderNumber",
+                "label": "Order",
+                "path": "orderNumber",
+                "primary": true
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "format": "badge"
+            },
+            {
+                "id": "sellerId",
+                "label": "Seller",
+                "path": "sellerId"
+            },
+            {
+                "id": "buyerCmsUserId",
+                "label": "Buyer",
+                "path": "buyerCmsUserId"
+            },
+            {
+                "id": "totalAmount",
+                "label": "Total",
+                "path": "totalAmount",
+                "format": "money"
+            },
+            {
+                "id": "createdAt",
+                "label": "Created",
+                "path": "createdAt",
+                "format": "date"
+            }
+        ],
+        "selection": {
+            "opens": "orderDetail"
+        }
+    },
+    {
+        "$include": "order-detail.json"
+    }
+]

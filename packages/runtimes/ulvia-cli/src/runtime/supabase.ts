@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises";
+import { access, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { requireExecutable, runCommand } from "./process";
 
@@ -22,6 +22,9 @@ export async function initializeLocalSupabase(projectRoot: string): Promise<void
     if (!(await exists(join(projectRoot, "supabase", "config.toml")))) {
         await requiredSupabaseCommand(projectRoot, ["init"]);
     }
+    // Supabase Studio bind-mounts this path. Creating it first prevents Docker
+    // from leaving a root-owned directory in the persistent local workspace.
+    await mkdir(join(projectRoot, "supabase", "snippets"), { recursive: true, mode: 0o700 });
 }
 
 export async function startLocalSupabase(

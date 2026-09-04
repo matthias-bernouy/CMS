@@ -1,0 +1,8 @@
+{
+    "$files": [
+        "endpoints/public.json",
+        "endpoints/authenticated.json",
+        "endpoints/admin.json",
+        "endpoints/system.json"
+    ]
+}

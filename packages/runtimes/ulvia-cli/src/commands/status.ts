@@ -11,6 +11,7 @@ export async function statusCommand(
     log(`Local repository: ${records.length} package${records.length === 1 ? "" : "s"}`);
     for (const record of records) {
         const origin = record.source.startsWith("local:") ? (record.admission?.status ?? "released") : "pulled";
-        log(`  ${record.kind}@${record.version}  sha256:${record.digest.slice(0, 12)}  ${origin}`);
+        const type = record.metadata.type ?? "legacy";
+        log(`  ${record.kind}@${record.version}  ${type}  sha256:${record.digest.slice(0, 12)}  ${origin}`);
     }
 }

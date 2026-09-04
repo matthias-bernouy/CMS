@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-hero",
+        "name": "Hero",
+        "group": "Sections",
+        "description": "SEO-friendly page introduction with a required heading, actions, and optional media.",
+        "path": "blocs/foundation/basic-blocs/layout/sections/basic-hero"
+    }
+}

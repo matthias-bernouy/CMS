@@ -1,0 +1,10 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties/root.json"
+    },
+    "required": [
+        "connect",
+        "seller"
+    ]
+}

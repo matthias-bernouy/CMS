@@ -111,5 +111,6 @@
                 "selection": "$steps.selection"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

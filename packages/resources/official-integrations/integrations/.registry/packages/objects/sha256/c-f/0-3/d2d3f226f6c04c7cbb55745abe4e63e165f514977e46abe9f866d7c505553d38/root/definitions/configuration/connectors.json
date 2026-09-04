@@ -1,0 +1,43 @@
+[
+    {
+        "provider": "supabase",
+        "connectorKey": "primary",
+        "lineageId": "mondial-relay-supabase-v1",
+        "migrationRevision": 1,
+        "root": "connectors/supabase",
+        "dataApiSchemas": [
+            "delivery"
+        ],
+        "compatibility": {
+            "schema": {
+                "$include": "compatibility/schema.json"
+            }
+        },
+        "migration": {
+            "$include": "compatibility/migration.json"
+        },
+        "schemas": [
+            {
+                "manifest": "install/sql/schema.manifest.json"
+            }
+        ],
+        "functions": [
+            {
+                "name": "cms-delivery-v2",
+                "directory": "functions/cms-delivery",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_DELIVERY_API_KEY": "{{generated.cmsApiKey}}",
+                    "MONDIAL_RELAY_CONNECT_ENDPOINT": "{{answers.mondialRelayConnectEndpoint}}",
+                    "MONDIAL_RELAY_CONNECT_LOGIN": "{{answers.mondialRelayConnectLogin}}",
+                    "MONDIAL_RELAY_CONNECT_PASSWORD": "{{connectorSecrets.mondialRelayConnectPassword}}",
+                    "MONDIAL_RELAY_CONNECT_CUSTOMER_ID": "{{answers.mondialRelayConnectCustomerId}}",
+                    "MONDIAL_RELAY_WIDGET_BRAND": "{{answers.mondialRelayConnectCustomerId}}",
+                    "MONDIAL_RELAY_TRACKING_ENDPOINT": "{{answers.mondialRelayTrackingEndpoint}}",
+                    "MONDIAL_RELAY_TRACKING_BRAND": "{{answers.mondialRelayTrackingBrand}}",
+                    "MONDIAL_RELAY_TRACKING_PRIVATE_KEY": "{{connectorSecrets.mondialRelayTrackingPrivateKey}}"
+                }
+            }
+        ]
+    }
+]

@@ -1,0 +1,146 @@
+{
+    "endpointId": "updateSettings",
+    "method": "POST",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/settings",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "expectedVersion": {
+                "type": "number"
+            },
+            "mode": {
+                "type": "string"
+            },
+            "defaultCurrency": {
+                "type": "string"
+            },
+            "requireVerifiedSeller": {
+                "type": "boolean"
+            },
+            "offerModeration": {
+                "type": "string"
+            },
+            "pricePolicy": {
+                "type": "string"
+            },
+            "wholeUnitPrices": {
+                "type": "boolean"
+            },
+            "productImageMinCount": {
+                "type": "number"
+            },
+            "productImageMaxCount": {
+                "type": "number"
+            },
+            "offerImageMinCount": {
+                "type": "number"
+            },
+            "offerImageMaxCount": {
+                "type": "number"
+            },
+            "autoApprovePriceInRange": {
+                "type": "boolean"
+            },
+            "requireFinalPriceApproval": {
+                "type": "boolean"
+            },
+            "sellerCanPublish": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "expectedVersion"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "mode": {
+                        "type": "string"
+                    },
+                    "defaultCurrency": {
+                        "type": "string"
+                    },
+                    "requireVerifiedSeller": {
+                        "type": "boolean"
+                    },
+                    "offerModeration": {
+                        "type": "string"
+                    },
+                    "pricePolicy": {
+                        "type": "string"
+                    },
+                    "wholeUnitPrices": {
+                        "type": "boolean"
+                    },
+                    "productImageMinCount": {
+                        "type": "number"
+                    },
+                    "productImageMaxCount": {
+                        "type": "number"
+                    },
+                    "offerImageMinCount": {
+                        "type": "number"
+                    },
+                    "offerImageMaxCount": {
+                        "type": "number"
+                    },
+                    "autoApprovePriceInRange": {
+                        "type": "boolean"
+                    },
+                    "requireFinalPriceApproval": {
+                        "type": "boolean"
+                    },
+                    "sellerCanPublish": {
+                        "type": "boolean"
+                    },
+                    "buyerLegalAcceptanceEnabled": {
+                        "type": "boolean"
+                    },
+                    "activeC2cFeePolicyId": {
+                        "type": "number"
+                    },
+                    "activeC2cProtectionPolicyId": {
+                        "type": "number"
+                    },
+                    "activeC2cSellerRiskPolicyId": {
+                        "type": "number"
+                    },
+                    "version": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,44 @@
+{
+    "type": "object",
+    "properties": {
+        "id": { "type": "string" },
+        "ref": { "type": "string" },
+        "sectionRef": { "type": "string" },
+        "formKey": { "type": "string" },
+        "sectionTitle": { "type": "string" },
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "type": { "type": "string" },
+        "required": { "type": "boolean" },
+        "hint": { "type": "string", "nullable": true },
+        "placeholder": { "type": "string", "nullable": true },
+        "presentation": { "type": "string" },
+        "multiple": { "type": "boolean" },
+        "position": { "type": "number" },
+        "options": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "key": { "type": "string" },
+                    "label": { "type": "string" },
+                    "image": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "mediaId": { "type": "string", "nullable": true },
+                            "url": { "type": "string", "nullable": true },
+                            "alt": { "type": "string", "nullable": true }
+                        }
+                    },
+                    "imageUrl": { "type": "string", "nullable": true },
+                    "imageAlt": { "type": "string", "nullable": true },
+                    "position": { "type": "number" }
+                },
+                "required": ["id", "key", "label"]
+            }
+        }
+    },
+    "required": ["id", "ref", "sectionRef", "formKey", "key", "label", "type"]
+}

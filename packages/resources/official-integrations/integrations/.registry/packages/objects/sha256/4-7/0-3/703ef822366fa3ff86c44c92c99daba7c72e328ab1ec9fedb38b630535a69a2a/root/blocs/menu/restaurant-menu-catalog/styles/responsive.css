@@ -1,0 +1,46 @@
+@media (max-width: 720px) {
+    [part="section"] {
+        padding-inline: 1rem;
+    }
+
+    :host([surface="card"]) [part="section"] {
+        padding-inline: 0.75rem;
+    }
+
+    :host([surface="card"]) [part="shell"] {
+        padding: 1.25rem;
+        border-radius: 1rem;
+    }
+
+    [part="intro"] {
+        margin-block-end: 2rem;
+    }
+
+    [part="categories"] {
+        margin-inline: -1rem;
+        padding-inline: 0.5rem;
+        scroll-padding-inline: 0.5rem;
+    }
+
+    [part="categories"] button {
+        flex-basis: 7rem;
+        min-width: 7rem;
+        min-height: 5rem;
+        padding-inline: 0.75rem;
+    }
+
+    :host([presentation="stacked"]) ::slotted(restaurant-menu-section) {
+        padding-block: 2.25rem;
+    }
+}
+
+@media (max-width: 380px) {
+    :host([surface="card"]) [part="shell"] {
+        padding-inline: 1rem;
+    }
+
+    [part="categories"] button {
+        flex-basis: 6.5rem;
+        min-width: 6.5rem;
+    }
+}

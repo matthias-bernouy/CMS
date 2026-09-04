@@ -1,8 +1,8 @@
 {
-    "schema": "cms.integration.definition.v1",
+    "schema": "cms.integration.definition.v2",
     "kind": "commerce-negotiation",
     "label": "Commerce negotiation",
-    "version": "2.0.2",
+    "version": "3.0.0",
     "category": "Commerce",
     "description": "Let authenticated marketplace buyers propose bounded prices to Commerce sellers.",
     "inputs": {
@@ -24,13 +24,8 @@
         "$files": [
             "artifacts/sources/primary/definition.json",
             "artifacts/functions/get-proposal-policy.json",
-            "artifacts/functions/create-my-proposal.json",
-            "artifacts/blocs/commerce-negotiation-form.json",
-            "artifacts/blocs/commerce-negotiation-form-controller.json",
-            "artifacts/blocs/commerce-negotiation-list.json",
-            "artifacts/blocs/commerce-negotiation-list-controller.json",
-            "artifacts/dashboards/proposals/root.json",
-            "artifacts/dashboards/settings.json"
+            "artifacts/functions/create-my-proposal.json"
         ]
-    }
+    },
+    "type": "source"
 }

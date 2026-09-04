@@ -1,16 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { loadDefinitionFragment } from "../../../../../tests/helpers/definitionFragment";
+
+const integrationRoot = new URL("../..", import.meta.url).pathname;
 
 describe("sales-configurator dashboard presentation", () => {
     test("keeps money/date formats and readable table widths in assembled dashboards", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
-            "sales-configurator",
+        const dashboards = await Promise.all(
+            ["catalog", "proposals", "partners"].map(async (kind) => {
+                const artifact = (await loadDefinitionFragment(
+                    `${integrationRoot}/definitions/artifacts/dashboards/${kind}/definition.json`,
+                )) as { dashboard: { id: string; views: DashboardWidget[] } };
+                return artifact.dashboard;
+            }),
         );
-        const dashboards =
-            definition?.artifacts.flatMap((artifact) => (artifact.type === "dashboard" ? [artifact.dashboard] : [])) ??
-            [];
         const catalog = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-catalog")!;
         const proposals = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-proposals")!;
         const partners = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-partners")!;

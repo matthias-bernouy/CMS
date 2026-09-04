@@ -1,12 +1,16 @@
 import { describe, expect, test } from "bun:test";
 
-import { formatMoney, majorToMinor, minorToMajor } from "../../../blocs/commerce-offer-price-form/money.ts";
+import {
+    formatMoney,
+    majorToMinor,
+    minorToMajor,
+} from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-offer-price-form/money.ts";
 import {
     parseDate,
     profileFieldReady,
     PublicError,
     stripeEnrollmentComplete,
-} from "../../../blocs/commerce-offer-price-form/profile.ts";
+} from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-offer-price-form/profile.ts";
 
 describe("commerce offer price helpers", () => {
     test("converts decimal prices without floating-point rounding", () => {

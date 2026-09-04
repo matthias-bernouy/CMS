@@ -1,0 +1,16 @@
+{
+  "$files": [
+    "endpoints/admin/catalog/items/root.json",
+    "endpoints/admin/catalog/modules/root.json",
+    "endpoints/admin/catalog/variants/root.json",
+    "endpoints/admin/catalog/features/root.json",
+    "endpoints/admin/catalog/variant-features/root.json",
+    "endpoints/admin/catalog/requirements/root.json",
+    "endpoints/admin/partners/root.json",
+    "endpoints/admin/proposals/root.json",
+    "endpoints/partner/catalog/root.json",
+    "endpoints/partner/clients/root.json",
+    "endpoints/partner/proposals/root.json",
+    "endpoints/public/shared-proposal.json"
+  ]
+}

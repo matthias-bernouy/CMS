@@ -17,6 +17,8 @@ import type {
     RunIntegrationInstallationResult,
 } from "./execution/runIntegrationInstallation";
 import type { IntegrationInstallationCreate } from "../../interfaces/IntegrationInstallationRepository";
+import { assertCollectionConformance } from "../resources/conformance";
+import { resolveCollectionSelection } from "../resources/selection";
 
 export async function runCreate(
     request: RunIntegrationInstallationCreateRequest,
@@ -32,6 +34,13 @@ export async function runCreate(
     }
     const resolvedPackage = await resolveCreatePackage(request.packageResolver, definition);
     const importDefinition = resolvedPackage?.definition ?? definition;
+    if (importDefinition.schema === "cms.integration.definition.v2" && importDefinition.type === "collection") {
+        assertCollectionConformance(importDefinition, request.siteIntegrations ?? []);
+    }
+    const selection =
+        importDefinition.schema === "cms.integration.definition.v2" && importDefinition.type === "collection"
+            ? resolveCollectionSelection(importDefinition, request.dto.resources, undefined, request.siteIntegrations)
+            : undefined;
     const instanceIds = connectorInstanceIds(importDefinition);
 
     const secretInputs = declarativeSecretBindingNames(importDefinition);
@@ -48,7 +57,7 @@ export async function runCreate(
         deps,
         importDefinition,
         request.dto.answers,
-        request.dto.options,
+        { ...request.dto.options, ...(selection ? { activeResources: selection.activeResources } : {}) },
         async (result) => {
             const run = successRun(1, startedAt, result);
             const base: IntegrationInstallationCreate = {
@@ -62,6 +71,7 @@ export async function runCreate(
                     : {}),
                 status: "success",
                 artifacts: result.artifacts,
+                ...(selection ? { activeResources: selection.activeResources } : {}),
                 answersSnapshot: sanitizeAnswers(importDefinition, request.dto.answers),
                 secretRefs: updateSecretRefs({}, result, secretInputs),
                 secretInputs,

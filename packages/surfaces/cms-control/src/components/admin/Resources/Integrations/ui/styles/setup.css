@@ -145,3 +145,42 @@
     padding: 24px 16px;
     text-align: center;
 }
+
+.collection-selection {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.collection-category {
+    display: grid;
+    gap: 8px;
+    border: 1px solid #dfe5e2;
+    border-radius: 7px;
+    padding: 10px 12px;
+}
+
+.collection-category label {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.collection-category legend label {
+    font-weight: 750;
+}
+
+.collection-resource {
+    padding-left: 8px;
+}
+
+.collection-resource small {
+    margin-left: auto;
+    color: #5d6d67;
+}
+
+.collection-source-plan {
+    margin: 0;
+    color: #40504b;
+    font-size: 13px;
+}

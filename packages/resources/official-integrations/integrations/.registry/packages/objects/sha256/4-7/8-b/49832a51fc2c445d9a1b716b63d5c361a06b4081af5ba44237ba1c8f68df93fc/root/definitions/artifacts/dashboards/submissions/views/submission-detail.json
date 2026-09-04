@@ -1,0 +1,68 @@
+[
+    {
+        "widget": "w-detail",
+        "id": "submissionDetail",
+        "source": { "endpoint": "manageSubmission", "params": { "id": "$selection.id" } },
+        "title": { "path": "receiptId", "fallback": "Submission" },
+        "status": { "path": "status" },
+        "actions": [
+            {
+                "id": "markReviewed",
+                "label": "Mark reviewed",
+                "tone": "primary",
+                "placement": "primary",
+                "endpoint": {
+                    "endpoint": "updateSubmission",
+                    "body": { "id": "$resource.id", "status": "reviewed" }
+                },
+                "after": { "resource": "$result" }
+            },
+            {
+                "id": "archiveSubmission",
+                "label": "Archive",
+                "tone": "danger",
+                "placement": "more",
+                "confirm": "Archive this submission? Its answers will remain available.",
+                "endpoint": {
+                    "endpoint": "updateSubmission",
+                    "body": { "id": "$resource.id", "status": "archived" }
+                },
+                "after": { "resource": "$result" }
+            }
+        ],
+        "main": [
+            {
+                "id": "answers",
+                "title": "Answers",
+                "description": "Answers are shown with the exact form version presented to the visitor.",
+                "fields": [
+                    {
+                        "id": "answers",
+                        "label": "Submitted answers",
+                        "path": "answers",
+                        "type": "table",
+                        "columns": [
+                            { "id": "section", "label": "Section", "path": "section" },
+                            { "id": "question", "label": "Question", "path": "question", "primary": true },
+                            { "id": "answer", "label": "Answer", "path": "answer" }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "aside": [
+            {
+                "id": "submissionMetadata",
+                "title": "Submission",
+                "fields": [
+                    { "id": "status", "label": "Status", "path": "status", "type": "readonly", "format": "badge" },
+                    { "id": "formKey", "label": "Form", "path": "formKey", "type": "readonly" },
+                    { "id": "formVersion", "label": "Version", "path": "formVersion", "type": "readonly" },
+                    { "id": "submittedBy", "label": "CMS subject", "path": "submittedBy", "type": "readonly" },
+                    { "id": "createdAt", "label": "Received", "path": "createdAt", "type": "readonly", "format": "date" },
+                    { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "type": "readonly", "format": "date" }
+                ]
+            }
+        ]
+    }
+]

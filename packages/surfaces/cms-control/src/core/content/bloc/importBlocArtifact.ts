@@ -27,6 +27,7 @@ export type BlocImportInput = {
     name: string;
     group?: string;
     description?: string;
+    catalogue?: "active" | "inactive";
     internal?: boolean;
     viewPath?: string;
     viewJS?: string | File | null;
@@ -109,6 +110,7 @@ export async function importBlocArtifact(
     );
     const bloc: TBloc = {
         ...prepared,
+        ...(input.catalogue ? { catalogue: input.catalogue } : {}),
         ...(input.internal ? { editorJS: "" } : {}),
         ...(input.internal ? { internal: true } : {}),
         ownership: runtime.ownership ?? { kind: "code-managed" },

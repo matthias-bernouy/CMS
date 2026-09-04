@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "photo-album-list",
+        "name": "Photo album list",
+        "group": "Photo Albums",
+        "description": "Paginated public album catalogue with responsive Source cover images.",
+        "path": "blocs/domains/photo-albums/photo-album-list"
+    }
+}

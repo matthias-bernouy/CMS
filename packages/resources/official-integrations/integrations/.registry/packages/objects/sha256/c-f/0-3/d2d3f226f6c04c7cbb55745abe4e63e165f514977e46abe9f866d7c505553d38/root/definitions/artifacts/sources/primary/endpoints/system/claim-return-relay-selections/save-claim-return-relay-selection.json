@@ -1,0 +1,116 @@
+[
+    {
+        "endpointId": "saveClaimReturnRelaySelection",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/claim-return-relay-selections",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "externalOrderId": {
+                    "type": "string"
+                },
+                "relayLocation": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "postalCode": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "externalOrderId",
+                "relayLocation",
+                "country",
+                "postalCode"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "externalOrderId": {
+                            "type": "string"
+                        },
+                        "relayLocation": {
+                            "type": "string"
+                        },
+                        "country": {
+                            "type": "string"
+                        },
+                        "number": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "addressLine1": {
+                            "type": "string"
+                        },
+                        "addressLine2": {
+                            "type": "string"
+                        },
+                        "postalCode": {
+                            "type": "string"
+                        },
+                        "city": {
+                            "type": "string"
+                        },
+                        "nature": {
+                            "type": "string"
+                        },
+                        "pointType": {
+                            "type": "string"
+                        },
+                        "weightGrams": {
+                            "type": "number"
+                        },
+                        "shippingAmount": {
+                            "type": "number"
+                        },
+                        "currency": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "externalOrderId",
+                        "relayLocation",
+                        "country",
+                        "number",
+                        "name",
+                        "postalCode",
+                        "city",
+                        "weightGrams",
+                        "shippingAmount",
+                        "currency"
+                    ]
+                }
+            }
+        ]
+    }
+]

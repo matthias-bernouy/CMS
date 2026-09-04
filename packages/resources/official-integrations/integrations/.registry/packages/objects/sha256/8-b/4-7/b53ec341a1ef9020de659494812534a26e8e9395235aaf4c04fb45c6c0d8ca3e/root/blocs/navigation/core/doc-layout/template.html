@@ -1,0 +1,40 @@
+<a class="skip-link" href="#documentation-content">Skip to content</a>
+<header class="topbar" part="topbar">
+    <button class="icon-button toggle" type="button" aria-label="Open navigation" aria-controls="documentation-sidebar" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="brand"><slot name="brand"></slot></div>
+    <nav class="top-links" aria-label="Primary"><slot name="top"></slot></nav>
+    <div class="search-wrap">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input class="search-input" type="search" placeholder="Search documentation" autocomplete="off" aria-label="Search documentation" aria-controls="documentation-search-results" aria-expanded="false" aria-autocomplete="list" role="combobox" />
+        <kbd class="search-shortcut">⌘K</kbd>
+        <div id="documentation-search-results" class="search-results" role="listbox" aria-label="Search results"></div>
+    </div>
+    <button class="icon-button theme-toggle" type="button" aria-label="Use dark theme" title="Change color theme">
+        <svg class="sun" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.6 15.1A9 9 0 1 1 8.9 3.4a7 7 0 0 0 11.7 11.7Z"/></svg>
+    </button>
+    <div class="top-actions"><slot name="actions"></slot></div>
+</header>
+<div class="shell">
+    <aside id="documentation-sidebar" class="sidebar" part="sidebar" aria-label="Documentation navigation">
+        <div class="sidebar-inner"><slot name="sidebar"></slot></div>
+    </aside>
+    <div class="backdrop" aria-hidden="true"></div>
+    <main id="documentation-content" class="main" part="main" tabindex="-1">
+        <nav class="breadcrumbs" aria-label="Breadcrumb"></nav>
+        <details class="mobile-toc">
+            <summary>On this page <span class="toc-count"></span></summary>
+            <ol class="mobile-toc-list"></ol>
+        </details>
+        <div class="content-grid">
+            <article class="article"><slot></slot></article>
+            <aside class="on-page" aria-label="On this page">
+                <p class="on-page-title">On this page</p>
+                <ol class="on-page-list"></ol>
+                <div class="aside-slot"><slot name="aside"></slot></div>
+            </aside>
+        </div>
+    </main>
+</div>

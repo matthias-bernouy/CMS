@@ -27,9 +27,7 @@
             "default": "./publication/index.ts"
         },
         "./integrations/ban/*": "./integrations/providers/ban/*",
-        "./integrations/basic-blocs/*": "./integrations/foundation/basic-blocs/*",
-        "./integrations/documentation-blocs/*": "./integrations/foundation/documentation-blocs/*",
-        "./integrations/workspace-blocs/*": "./integrations/foundation/workspace-blocs/*",
+        "./integrations/ulvia/*": "./integrations/collections/ulvia/*",
         "./integrations/commerce/*": "./integrations/domains/commerce/*",
         "./integrations/consent/*": "./integrations/domains/consent/*",
         "./integrations/commerce-mondial-relay-delivery/*": "./integrations/extensions/commerce-mondial-relay-delivery/*",
@@ -41,7 +39,6 @@
         "./integrations/mondial-relay/*": "./integrations/providers/mondial-relay/*",
         "./integrations/newsletter/*": "./integrations/domains/newsletter/*",
         "./integrations/photo-albums/*": "./integrations/domains/photo-albums/*",
-        "./integrations/restaurant/*": "./integrations/domains/restaurant/*",
         "./integrations/sales-configurator/*": "./integrations/domains/sales-configurator/*",
         "./integrations/stripe-connect/*": "./integrations/providers/stripe-connect/*",
         "./integrations/user-account/*": "./integrations/domains/user-account/*"

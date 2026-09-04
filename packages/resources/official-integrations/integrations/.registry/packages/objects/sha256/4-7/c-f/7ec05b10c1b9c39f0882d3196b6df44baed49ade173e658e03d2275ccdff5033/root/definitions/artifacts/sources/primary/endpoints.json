@@ -1,0 +1,14 @@
+{
+    "$files": [
+        "endpoints/public/get-requirements.json",
+        "endpoints/system/bootstrap-context.json",
+        "endpoints/system/sync-context.json",
+        "endpoints/system/stage-acceptance.json",
+        "endpoints/system/commit-acceptance.json",
+        "endpoints/admin/list-contexts.json",
+        "endpoints/admin/get-context.json",
+        "endpoints/admin/publish-context.json",
+        "endpoints/admin/list-acceptances.json",
+        "endpoints/health/health.json"
+    ]
+}

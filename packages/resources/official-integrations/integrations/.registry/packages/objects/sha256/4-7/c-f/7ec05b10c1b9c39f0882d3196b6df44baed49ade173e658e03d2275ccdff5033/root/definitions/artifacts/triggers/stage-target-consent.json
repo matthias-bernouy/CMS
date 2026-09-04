@@ -1,0 +1,25 @@
+{
+    "type": "trigger",
+    "trigger": {
+        "id": "consent-stage-target",
+        "label": "Validate and stage target consent",
+        "critical": true,
+        "event": {
+            "kind": "endpoint",
+            "source": "system-auth",
+            "endpoint": "signup",
+            "phase": "request"
+        },
+        "mode": "sync",
+        "failureMode": "block",
+        "function": {
+            "id": "stageConsentAcceptance",
+            "body": {
+                "contextKey": "{{answers.contextKey}}",
+                "subjectClaim": "$request.body.email",
+                "attemptId": "$request.body.consentAttemptId",
+                "acceptedVersionIds": "$request.body.acceptedConsentVersionIds"
+            }
+        }
+    }
+}

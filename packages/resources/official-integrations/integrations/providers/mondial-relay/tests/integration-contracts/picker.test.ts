@@ -115,7 +115,7 @@ describe("mondial-relay-picker 1.0.0", () => {
 });
 
 async function definePicker(): Promise<void> {
-    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mondial-relay");
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
     const artifact = definition?.artifacts?.find(
         (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "mondial-relay-picker",
     );

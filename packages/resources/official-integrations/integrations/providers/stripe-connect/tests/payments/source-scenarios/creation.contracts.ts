@@ -4,7 +4,6 @@ import { financialTermsHash } from "../../runtime/constants";
 import type { StripeConnectHarness } from "../../runtime/harness";
 import { jsonBody, okJson } from "../../runtime/http";
 import { sourceJson, sourceRequest, sourceRequestWithUser } from "../../runtime/source-requests";
-import { expectWalletBlocContract } from "./creation-expectations";
 
 type CreateHarness = () => Promise<StripeConnectHarness>;
 
@@ -150,7 +149,7 @@ export function registerProtectedPaymentCreationScenario(createHarness: CreateHa
         );
         expect(userPermissions).not.toContain("urn:stripe-connect:getProtectedPayment");
         expect(userPermissions).not.toContain("urn:stripe-connect:getProtectedPaymentByClientReference");
-        expectWalletBlocContract(harness.importedBlocs[0]);
+        expect(harness.importedBlocs).toEqual([]);
         expect(harness.rest.lastPaymentIntentParameters?.has("transfer_data[destination]")).toBeFalse();
         expect(harness.rest.lastPaymentIntentParameters?.has("application_fee_amount")).toBeFalse();
         expect(harness.rest.lastPaymentIntentParameters?.has("on_behalf_of")).toBeFalse();

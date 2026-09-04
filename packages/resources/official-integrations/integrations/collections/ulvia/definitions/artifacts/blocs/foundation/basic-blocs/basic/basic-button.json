@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-button",
+        "name": "Basic button",
+        "group": "Basic",
+        "description": "Presentation wrapper for a direct native anchor or button child.",
+        "path": "blocs/foundation/basic-blocs/basic/basic-button"
+    }
+}

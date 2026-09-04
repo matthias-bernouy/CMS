@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { runCli } from "../../src/cli";
+import { resolveDevPorts } from "../../src/commands/dev";
 import { RemoteIntegrationRepository } from "../../src/repository/remote";
 import { integrationPackage, removeReadonlyTree, writeIntegrationSource } from "../fixtures";
 import { emptyRemote, remoteFixture, temporaryRoot } from "./support";
@@ -11,6 +12,17 @@ afterEach(async () => {
 });
 
 describe("Ulvia CLI", () => {
+    test("accepts isolated dev ports and rejects collisions", () => {
+        expect(resolveDevPorts({ ULVIA_DEV_CONTROL_PORT: "5210" })).toMatchObject({
+            control: 5210,
+            delivery: 5101,
+        });
+        expect(() => resolveDevPorts({ ULVIA_DEV_CONTROL_PORT: "5200", ULVIA_DEV_DELIVERY_PORT: "5200" })).toThrow(
+            /ports must be distinct/,
+        );
+        expect(() => resolveDevPorts({ ULVIA_DEV_MONGO_PORT: "70000" })).toThrow(/between 1 and 65535/);
+    });
+
     test("pulls the remote default once and reports it locally", async () => {
         const root = await temporaryRoot(roots);
         const resolved = await integrationPackage();

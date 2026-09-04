@@ -1,0 +1,150 @@
+{
+  "endpointId": "getMyPriceAgreementCheckout",
+  "method": "GET",
+  "access": "auth",
+  "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/price-agreement-checkout",
+  "params": [
+    {
+      "name": "agreementId",
+      "in": "query",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "headers": [
+    {
+      "name": "authorization",
+      "source": {
+        "from": "secret",
+        "ref": "{{secrets.cmsApiKey}}",
+        "prefix": "Bearer "
+      }
+    },
+    {
+      "name": "x-cms-user-id",
+      "source": {
+        "from": "computed",
+        "ref": "userID"
+      }
+    }
+  ],
+  "output": [
+    {
+      "status": "200",
+      "body": {
+        "type": "object",
+        "properties": {
+          "agreementId": {
+            "type": "string"
+          },
+          "agreementVersion": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "consumedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "offer": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "number"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "mainImageMediaId": {
+                "type": "number",
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "slug",
+              "title",
+              "mainImageMediaId"
+            ]
+          },
+          "seller": {
+            "type": "object",
+            "properties": {
+              "displayName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "displayName"
+            ]
+          },
+          "unitAmount": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "subtotalAmount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "agreementId",
+          "agreementVersion",
+          "status",
+          "expiresAt",
+          "consumedAt",
+          "offer",
+          "seller",
+          "unitAmount",
+          "quantity",
+          "subtotalAmount",
+          "currency",
+          "orderId"
+        ]
+      }
+    },
+    {
+      "status": "400",
+      "body": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    },
+    {
+      "status": "404",
+      "body": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    }
+  ]
+}

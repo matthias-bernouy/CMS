@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "footer",
+        "name": "Footer",
+        "group": "Structure",
+        "description": "Native footer content for a page or section.",
+        "path": "blocs/foundation/basic-blocs/layout/structure/basic-footer"
+    }
+}

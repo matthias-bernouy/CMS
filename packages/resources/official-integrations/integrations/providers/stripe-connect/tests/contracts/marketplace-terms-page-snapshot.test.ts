@@ -141,7 +141,15 @@ describe("Stripe Connect marketplace terms published-page evidence", () => {
         expect(afterInstallation).not.toContain("termsConfiguration");
         expect(afterInstallation).not.toContain("syncMarketplaceTermsConfiguration");
         expect(afterInstallation).toContain('"id": "providerSnapshot"');
-        expect(providerDefinition).toContain('"artifacts/dashboards/marketplace-terms.json"');
+        expect(providerDefinition).not.toContain('"artifacts/dashboards/marketplace-terms.json"');
+        expect(
+            await Bun.file(
+                resolve(
+                    integrationRoot,
+                    "providers/stripe-connect/definitions/artifacts/dashboards/marketplace-terms.json",
+                ),
+            ).exists(),
+        ).toBe(true);
         expect(providerEndpoints).toContain('"endpoints/admin/configuration/marketplace-terms.json"');
         expect(schema).toContain("page_snapshot jsonb not null");
         expect(schema).toContain("terms_version_id uuid");

@@ -1,0 +1,150 @@
+{
+    "widget": "w-table",
+    "id": "shipmentsTable",
+    "title": "Shipments",
+    "source": {
+        "endpoint": "shipments",
+        "params": {
+            "status": "$filter.status",
+            "q": "$filter.q",
+            "limit": "50"
+        },
+        "itemsPath": "items"
+    },
+    "rowKey": "id",
+    "actions": [
+        {
+            "id": "openSettings",
+            "label": "Edit settings",
+            "tone": "primary",
+            "placement": "primary",
+            "selection": {
+                "opens": "settingsDetail"
+            }
+        }
+    ],
+    "filters": [
+        {
+            "id": "q",
+            "param": "q",
+            "type": "text",
+            "label": "Search",
+            "placeholder": "Search shipments"
+        },
+        {
+            "id": "status",
+            "param": "status",
+            "type": "select",
+            "label": "Status",
+            "options": [
+                {
+                    "value": "creating",
+                    "label": "Creating"
+                },
+                {
+                    "value": "created",
+                    "label": "Created"
+                },
+                {
+                    "value": "label_ready",
+                    "label": "Label ready"
+                },
+                {
+                    "value": "carrier_accepted",
+                    "label": "Carrier accepted"
+                },
+                {
+                    "value": "in_transit",
+                    "label": "In transit"
+                },
+                {
+                    "value": "arrived_at_pickup_point",
+                    "label": "Arrived at pickup point"
+                },
+                {
+                    "value": "available_for_pickup",
+                    "label": "Available for pickup"
+                },
+                {
+                    "value": "collected_by_recipient",
+                    "label": "Collected by recipient"
+                },
+                {
+                    "value": "incident",
+                    "label": "Incident"
+                },
+                {
+                    "value": "lost",
+                    "label": "Lost"
+                },
+                {
+                    "value": "pickup_expired",
+                    "label": "Pickup expired"
+                },
+                {
+                    "value": "returning_to_sender",
+                    "label": "Returning to sender"
+                },
+                {
+                    "value": "returned_to_sender",
+                    "label": "Returned to sender"
+                },
+                {
+                    "value": "cancelled",
+                    "label": "Cancelled"
+                },
+                {
+                    "value": "failed",
+                    "label": "Failed"
+                },
+                {
+                    "value": "unknown",
+                    "label": "Unknown"
+                }
+            ]
+        }
+    ],
+    "columns": [
+        {
+            "id": "externalOrderId",
+            "label": "Order",
+            "path": "externalOrderId",
+            "primary": true
+        },
+        {
+            "id": "expeditionNumber",
+            "label": "Expedition",
+            "path": "expeditionNumber"
+        },
+        {
+            "id": "recipientName",
+            "label": "Recipient",
+            "path": "recipientName"
+        },
+        {
+            "id": "recipientPostalCode",
+            "label": "Postcode",
+            "path": "recipientPostalCode"
+        },
+        {
+            "id": "recipientCity",
+            "label": "City",
+            "path": "recipientCity"
+        },
+        {
+            "id": "status",
+            "label": "Status",
+            "path": "status",
+            "format": "badge"
+        },
+        {
+            "id": "createdAt",
+            "label": "Created",
+            "path": "createdAt",
+            "format": "date"
+        }
+    ],
+    "selection": {
+        "opens": "shipmentDetail"
+    }
+}

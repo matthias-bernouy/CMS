@@ -48,6 +48,15 @@ export async function createLocalSupabaseManagementHandler(
     const functionsRuntime = options.functionsRuntime ?? new SupabaseCliFunctionsRuntime(options.projectRoot);
     const stripe = new LocalStripeApi();
     const basePath = `/v1/projects/${options.projectRef}`;
+    if (project.hasFunctions()) {
+        try {
+            await functionsRuntime.reload();
+        } catch (error) {
+            await functionsRuntime.stop().catch(() => undefined);
+            await database.close().catch(() => undefined);
+            throw error;
+        }
+    }
     return {
         fetch: async (request) => {
             const pathname = new URL(request.url).pathname;

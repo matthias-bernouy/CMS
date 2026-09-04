@@ -1,0 +1,8 @@
+{
+    "$files": [
+        "protected-terms-validation.json",
+        "seller-context-and-eligibility.json",
+        "platform-payout-controls.json",
+        "payment-creation.json"
+    ]
+}

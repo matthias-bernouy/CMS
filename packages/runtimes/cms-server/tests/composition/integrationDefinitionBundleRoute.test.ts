@@ -20,6 +20,7 @@ test("repository HTTP routes publish assembled filesystem definition bundles", a
 
         expect(response.status).toBe(200);
         expect(definition).toEqual({
+            schema: "cms.integration.definition.v1",
             kind: "demo",
             label: "Demo",
             version: "1.0.0",

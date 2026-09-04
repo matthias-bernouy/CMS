@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "user-account-avatar",
+        "name": "User account avatar",
+        "group": "User account",
+        "description": "Profile image picker used by the User Account form.",
+        "path": "blocs/domains/user-account/user-account-avatar"
+    }
+}

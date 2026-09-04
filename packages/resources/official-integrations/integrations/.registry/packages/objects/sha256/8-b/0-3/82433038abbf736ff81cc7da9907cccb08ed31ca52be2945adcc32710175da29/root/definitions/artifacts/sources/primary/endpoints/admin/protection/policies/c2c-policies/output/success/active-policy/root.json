@@ -1,0 +1,19 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties/root.json"
+    },
+    "required": [
+        "id",
+        "policyKey",
+        "version",
+        "name",
+        "status",
+        "currency",
+        "fee",
+        "buyerProtection",
+        "sellerCommission",
+        "protection",
+        "sellerRisk"
+    ]
+}

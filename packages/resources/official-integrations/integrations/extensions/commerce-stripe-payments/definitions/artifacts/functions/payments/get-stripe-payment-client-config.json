@@ -42,5 +42,6 @@
             "status": 200,
             "body": "$steps.config"
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

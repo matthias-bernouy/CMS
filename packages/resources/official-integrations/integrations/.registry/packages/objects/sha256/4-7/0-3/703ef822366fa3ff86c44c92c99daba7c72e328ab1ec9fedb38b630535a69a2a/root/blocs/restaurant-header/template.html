@@ -1,0 +1,16 @@
+<header part="header">
+    <div part="bar">
+        <div part="start">
+            <div part="status"><slot name="status"></slot></div>
+            <div part="locale"><slot name="locale"></slot></div>
+        </div>
+        <div part="brand"><slot name="brand"></slot></div>
+        <div part="end">
+            <nav part="navigation" aria-label="Primary navigation"><slot name="navigation"></slot></nav>
+            <div part="menu">
+                <slot name="menu"></slot>
+                <span part="menu-icon" aria-hidden="true"><i></i><i></i></span>
+            </div>
+        </div>
+    </div>
+</header>

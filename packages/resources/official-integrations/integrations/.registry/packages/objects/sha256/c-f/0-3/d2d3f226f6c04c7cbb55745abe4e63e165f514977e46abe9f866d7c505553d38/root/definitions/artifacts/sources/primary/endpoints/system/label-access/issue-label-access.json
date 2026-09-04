@@ -1,0 +1,86 @@
+[
+    {
+        "endpointId": "issueLabelAccess",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/label-access",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "externalOrderId": {
+                    "type": "string"
+                },
+                "sellerCmsUserId": {
+                    "type": "string",
+                    "semantic": {
+                        "kind": "user-id",
+                        "authority": "cms"
+                    }
+                }
+            },
+            "required": [
+                "externalOrderId",
+                "sellerCmsUserId"
+            ]
+        },
+        "output": [
+            {
+                "status": "201",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "token": {
+                            "type": "string"
+                        },
+                        "expiresAt": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "token",
+                        "expiresAt"
+                    ]
+                }
+            },
+            {
+                "status": "404",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        ]
+    }
+]

@@ -13,6 +13,7 @@ import { buildLocalVerificationBundle } from "./verification";
 const MAX_DEPTH = 10;
 const MAX_ENTRIES = 50_000;
 const SKIPPED_DIRECTORIES = new Set([".git", ".registry", "dist", "node_modules"]);
+const DEFERRED_SOURCE_PACKAGE_PATHS = ["assets/dashboards", "definitions/artifacts/dashboards"];
 
 export type LocalReleaseSource = LocalReleasePackage &
     Readonly<{
@@ -52,6 +53,10 @@ export async function readLocalReleaseSource(
     assertWithin(versionRoot, definitionPath, "definition");
     const definition = portableRelative(versionRoot, definitionPath);
     const releaseNotes = await releaseNotesPath(versionRoot);
+    const parsedDefinition = await new FsIntegrationDefinitionRepository(integrationRoot).get(kind, entry.version);
+    if (!parsedDefinition) {
+        throw new Error(`Integration definition disappeared: ${kind}@${entry.version}`);
+    }
     const packageResult = await readIntegrationPackageDirectory({
         root: versionRoot,
         kind,
@@ -59,11 +64,10 @@ export async function readLocalReleaseSource(
         definition,
         releaseNotes,
         ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
+        ...(parsedDefinition.schema === "cms.integration.definition.v2" && parsedDefinition.type === "source"
+            ? { excludePathPrefixes: DEFERRED_SOURCE_PACKAGE_PATHS }
+            : {}),
     });
-    const parsedDefinition = await new FsIntegrationDefinitionRepository(integrationRoot).get(kind, entry.version);
-    if (!parsedDefinition) {
-        throw new Error(`Integration definition disappeared: ${kind}@${entry.version}`);
-    }
     const verification = await buildLocalVerificationBundle(integrationRoot, {
         kind,
         version: entry.version,

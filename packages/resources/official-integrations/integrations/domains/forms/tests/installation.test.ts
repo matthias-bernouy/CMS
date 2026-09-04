@@ -1,10 +1,8 @@
 import { expect, test } from "bun:test";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
-import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     InMemoryIntegrationInstallationRepository,
-    type IntegrationBlocArtifact,
     type IntegrationConnectorDeployment,
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
@@ -16,34 +14,19 @@ import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrations/publication";
 
-const integrationsRoot = new URL("../..", import.meta.url).pathname;
+const integrationsRoot = new URL("../../..", import.meta.url).pathname;
 
-test("Forms 1.0.0 imports its source, dashboards, Bloc, and connector", async () => {
+test("Forms 3.0.0 imports only its source backend and connector", async () => {
     const definitions = new FsIntegrationDefinitionRepository(integrationsRoot);
     const definition = await definitions.get("forms");
     expect(definition).toBeTruthy();
 
     const sources = new InMemorySourceRepository();
-    const dashboards = new InMemoryDashboardRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
-    await installations.create({
-        id: "basic-blocs",
-        label: "Basic Blocs",
-        definitionVersion: "1.0.0",
-        status: "success",
-        answersSnapshot: {},
-        secretRefs: {},
-        secretInputs: [],
-        artifacts: [{ type: "bloc", id: "basic-input", action: "created" }],
-        runs: [],
-    });
-
-    const importedBlocs: IntegrationBlocArtifact[] = [];
     let deployment: IntegrationConnectorDeployment | undefined;
     await importIntegration(
         {
             sources,
-            dashboards,
             installations,
             secrets: new InMemorySecretStore(),
             roles: new InMemoryRolesRepository(),
@@ -67,12 +50,6 @@ test("Forms 1.0.0 imports its source, dashboards, Bloc, and connector", async ()
                 },
             ],
             provisioners: [],
-            blocs: {
-                async importBloc(artifact) {
-                    importedBlocs.push(artifact);
-                    return { id: artifact.tag, action: "created" };
-                },
-            },
         },
         { kind: "forms", answers: { id: "forms" }, options: {} },
         [definition as IntegrationDefinition],
@@ -83,51 +60,18 @@ test("Forms 1.0.0 imports its source, dashboards, Bloc, and connector", async ()
     expect(validateSource(source!)).toEqual([]);
     expect(source?.endpoints.map((endpoint) => endpoint.urn)).toContain("urn:forms:submitAuthenticated");
 
-    for (const dashboardId of ["forms-forms", "forms-submissions"]) {
-        const dashboard = await dashboards.getDashboard(dashboardId);
-        expect(dashboard).toBeTruthy();
-        expect(validateDashboard(dashboard!, { source })).toEqual([]);
-    }
-    const formsDashboard = await dashboards.getDashboard("forms-forms");
-    const table = formsDashboard?.views.find((widget) => widget.id === "formsTable");
-    const detail = formsDashboard?.views.find((widget) => widget.id === "formDetail");
-    const sectionDetail = formsDashboard?.views.find((widget) => widget.id === "sectionDetail");
-    expect(table?.widget).toBe("w-table");
-    expect(detail?.widget).toBe("w-detail");
-    if (table?.widget !== "w-table" || detail?.widget !== "w-detail" || sectionDetail?.widget !== "w-detail") {
-        throw new Error("Forms dashboard widgets are missing");
-    }
-    expect(table.rowKey).toBe("key");
-    expect(detail.source.params).toEqual({ key: "$selection.id" });
-    expect(formsDashboard?.views.map((widget) => widget.id)).toEqual([
-        "formsTable",
-        "newFormDetail",
-        "formDetail",
-        "sectionDetail",
-        "questionDetail",
-    ]);
-    expect(detail.main.filter((item) => "widget" in item).map((widget) => widget.id)).toEqual(["sectionNavigation"]);
-    expect(sectionDetail.main.filter((item) => "widget" in item).map((widget) => widget.id)).toEqual([
-        "questionNavigation",
-    ]);
-    expect(JSON.stringify(formsDashboard)).not.toContain("definitionJson");
-    expect(detail.actions.find((action) => action.id === "saveDraft")?.after).toEqual({
-        opens: "formDetail",
-        row: "$result.key",
-        resource: "$result",
-    });
-    const submissionsDashboard = await dashboards.getDashboard("forms-submissions");
-    expect(submissionsDashboard?.views.map((widget) => widget.id)).toEqual(["submissionsTable", "submissionDetail"]);
-    expect(JSON.stringify(submissionsDashboard)).toContain('"type":"table"');
-    expect(importedBlocs.map((bloc) => bloc.tag)).toEqual(["forms-renderer"]);
+    expect(definition).toMatchObject({ version: "3.0.0", type: "source" });
+    expect(definition?.artifacts?.map((artifact) => artifact.type)).toEqual(["source"]);
     expect(deployment?.dataApiSchemas).toEqual(["forms"]);
     expect(deployment?.functions.map((fn) => fn.name)).toEqual(["cms-forms"]);
 });
 
-test("Forms 1.0.0 bundles the modular renderer with current and legacy package runners", async () => {
+test("Ulvia bundles the Forms renderer with current and legacy package runners", async () => {
     const definitions = new FsIntegrationDefinitionRepository(integrationsRoot);
-    const definition = await definitions.get("forms");
-    const artifact = definition?.artifacts?.find((candidate) => candidate.type === "bloc");
+    const definition = await definitions.get("ulvia");
+    const artifact = definition?.artifacts?.find(
+        (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "forms-renderer",
+    );
     expect(artifact?.type).toBe("bloc");
     if (!artifact || artifact.type !== "bloc") {
         throw new Error("Forms renderer artifact is missing");

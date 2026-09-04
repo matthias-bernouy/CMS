@@ -55,7 +55,7 @@ export async function renderPage(
     // scripts / on* handlers / dangerous URL schemes from the parsed tree
     // before this HTML reaches a public visitor, whatever path stored it.
     sanitizeDomTree(document.body);
-    const blocList = await ctx.repository.getBlocsList();
+    const blocList = await ctx.repository.getBlocsList({ includeInactive: true });
     expandCompositions(document.body, blocList);
     sanitizeDomTree(document.body);
     // A browser may fetch an interpolated img src before the deferred binding

@@ -1,0 +1,44 @@
+<sales-proposal-view source-id="sales-configurator" token-param="proposalToken">
+    <basic-stack gap="md" cms-condition="$source.loading">
+        <basic-skeleton height="8rem" animation="wave" label="Loading proposal"></basic-skeleton>
+        <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
+    </basic-stack>
+
+    <basic-card cms-condition="$source.empty || $source.error">
+        <strong slot="title">Proposal unavailable</strong>
+        <span slot="description">This link is invalid, expired, or has been revoked. Ask your contact for a new link.</span>
+    </basic-card>
+
+    <article cms-condition="$source.loaded">
+        <header>
+            <small>{{ shared.proposal.reference }} · Published {{ shared.proposal.publishedAt }}</small>
+            <h1>{{ shared.proposal.title }}</h1>
+            <p>{{ shared.proposal.introduction }}</p>
+        </header>
+
+        <basic-stack gap="md">
+            <basic-card data-sales-proposal-item data-sales-depth="{{ item.depth }}" appearance="outlined" cms-repeat="shared.proposal.items as item">
+                <small slot="eyebrow">{{ item.kind }}</small>
+                <strong slot="title">{{ item.label }}</strong>
+                <span slot="description">{{ item.description }}</span>
+                <span cms-condition="item.pricingMode == 'included'">Included</span>
+                <strong data-sales-money data-amount-cents="{{ item.unitAmountCents }}" data-currency="{{ item.currency }}" cms-condition="item.pricingMode == 'fixed'">—</strong>
+                <span cms-condition="item.pricingMode == 'quote'">On request</span>
+            </basic-card>
+        </basic-stack>
+
+        <basic-card appearance="outlined">
+            <strong slot="title">Proposal total</strong>
+            <span>
+                <strong data-sales-money data-amount-cents="{{ shared.proposal.fixedTotalCents }}" data-currency="{{ shared.proposal.currency }}">—</strong>
+                <span cms-condition="shared.proposal.quoteItemCount > 0"> + {{ shared.proposal.quoteItemCount }} item(s) requiring a quote</span>
+            </span>
+        </basic-card>
+
+        <footer cms-condition="shared.proposal.salesContact">
+            <strong>Your contact</strong>
+            <p>{{ shared.proposal.salesContact.displayName }}</p>
+            <a href="mailto:{{ shared.proposal.salesContact.email }}" cms-condition="shared.proposal.salesContact.email">{{ shared.proposal.salesContact.email }}</a>
+        </footer>
+    </article>
+</sales-proposal-view>

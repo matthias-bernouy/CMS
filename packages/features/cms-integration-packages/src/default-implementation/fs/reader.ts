@@ -26,6 +26,8 @@ export type ReadIntegrationPackageDirectoryOptions = {
     expectedEnvelope?: IntegrationPackageEnvelopeV1;
     /** Authoring-only root entries which must not become runtime package bytes. */
     excludeRootEntries?: readonly string[];
+    /** Authoring-only relative paths whose complete subtrees must not become package bytes. */
+    excludePathPrefixes?: readonly string[];
     limits?: Partial<IntegrationPackageLimits>;
 };
 
@@ -44,6 +46,7 @@ export async function readIntegrationPackageDirectory(
     const limits = resolveIntegrationPackageLimits(options.limits);
     const files = await readIntegrationPackageFiles(options.root, limits, {
         excludeRootEntries: options.excludeRootEntries,
+        excludePathPrefixes: options.excludePathPrefixes,
     });
     const envelope = options.expectedEnvelope
         ? validateExpectedEnvelope(options, files, limits)

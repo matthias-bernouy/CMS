@@ -1,0 +1,9 @@
+{
+    "$files": [
+        "order-pricing.json",
+        "seller-settlement.json",
+        "platform-economics.json",
+        "deadlines.json",
+        "policy-snapshots.json"
+    ]
+}

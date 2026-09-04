@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "header",
+        "name": "Header",
+        "group": "Structure",
+        "description": "Native introductory content for a page or section.",
+        "path": "blocs/foundation/basic-blocs/layout/structure/basic-header"
+    }
+}

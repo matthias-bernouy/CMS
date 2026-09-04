@@ -20,6 +20,7 @@ export async function startLocalMongo(
     const status = await containerStatus(name);
     if (status === null) {
         const persistence = options.ephemeral ? [] : ["--mount", `type=bind,source=${dataRoot},target=/data/db`];
+        const owner = options.ephemeral ? [] : currentUser();
         await runCommand(
             [
                 "docker",
@@ -29,6 +30,7 @@ export async function startLocalMongo(
                 name,
                 "--publish",
                 `127.0.0.1:${port}:27017`,
+                ...owner,
                 ...persistence,
                 MONGO_IMAGE,
             ],
@@ -39,6 +41,12 @@ export async function startLocalMongo(
     }
     await waitForPort(port);
     return { name, url: `mongodb://127.0.0.1:${port}/ulvia_dev`, port };
+}
+
+function currentUser(): string[] {
+    const uid = process.getuid?.();
+    const gid = process.getgid?.();
+    return uid === undefined || gid === undefined ? [] : ["--user", `${uid}:${gid}`];
 }
 
 export async function localMongoStatus(dataRoot: string): Promise<string | null> {

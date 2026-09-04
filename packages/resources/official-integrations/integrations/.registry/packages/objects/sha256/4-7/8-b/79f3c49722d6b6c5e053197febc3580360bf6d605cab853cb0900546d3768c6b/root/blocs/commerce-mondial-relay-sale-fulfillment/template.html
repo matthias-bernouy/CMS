@@ -1,0 +1,28 @@
+<section>
+    <div data-loading>
+        <basic-skeleton height="16rem" animation="wave" label="Chargement de l’expédition"></basic-skeleton>
+    </div>
+
+    <basic-card data-error hidden appearance="outlined" density="spacious">
+        <strong slot="title">Expédition indisponible</strong>
+        <span slot="description" data-error-message></span>
+    </basic-card>
+
+    <basic-card data-content hidden appearance="outlined" density="spacious">
+        <strong slot="title" data-title></strong>
+        <span slot="description" data-copy></span>
+        <div class="summary">
+            <div><span>Commande</span><strong data-order-number></strong></div>
+            <div><span>Statut</span><strong class="status" data-status></strong></div>
+            <div><span>N° d’expédition</span><strong data-expedition></strong></div>
+            <p data-latest></p>
+        </div>
+        <div slot="actions" class="actions">
+            <basic-button><button data-create type="button"></button></basic-button>
+            <basic-button><button data-handoff type="button" hidden></button></basic-button>
+            <basic-button appearance="outlined"><button data-label type="button" hidden></button></basic-button>
+            <slot name="tracking-action"></slot>
+        </div>
+        <p slot="footer" class="message" data-message aria-live="polite"></p>
+    </basic-card>
+</section>

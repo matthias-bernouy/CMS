@@ -1,0 +1,6 @@
+{
+    "$files": [
+        "views/custom-fields-table.json",
+        "views/custom-field-detail/root.json"
+    ]
+}

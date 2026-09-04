@@ -1,4 +1,3 @@
-import { isDeepStrictEqual } from "node:util";
 import { findIntegration } from "../../definitions/catalog";
 import { integrationVersionReleaseLevel, isExactIntegrationVersion } from "../../definitions/versioning";
 import { IntegrationInputError, IntegrationRuntimeError, MissingIntegrationInstallationError } from "../../errors";
@@ -17,7 +16,7 @@ import {
     resolveRerunPackage,
     resolveUpgradePackage,
 } from "../packages";
-import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "../snapshots";
+import { declarativeValuesEqual, sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "../snapshots";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
 import type { IntegrationImportDto, IntegrationImportResult } from "../../../interfaces/IntegrationImport";
 import type { IntegrationInstallation, IntegrationRun } from "../../../interfaces/IntegrationInstallation";
@@ -36,6 +35,8 @@ import {
 import { assertUpgradePreservesDependentRanges } from "./upgradeDependencies";
 import { connectorBindingsFromResult, connectorInstanceIds } from "../migration/adoption/installationBindings";
 import { runDurableMigrationUpgrade } from "../migration/engine";
+import { resolveCollectionSelection } from "../../resources/selection";
+import { assertCollectionConformance } from "../../resources/conformance";
 
 type ExistingInstallationRequest = RunIntegrationInstallationRerunRequest | RunIntegrationInstallationUpgradeRequest;
 
@@ -206,7 +207,7 @@ function assertMigrationUpgradeRequestSupported(
         throw new IntegrationInputError("version", "migration requires the exact installed definition snapshot");
     }
     for (const field of ["generatedSecrets", "secrets", "provisions", "afterInstallation"] as const) {
-        if (!isDeepStrictEqual(source[field] ?? [], target[field] ?? [])) {
+        if (!declarativeValuesEqual(source[field] ?? [], target[field] ?? [])) {
             throw new IntegrationInputError("version", `migration-aware upgrade cannot change declarative ${field}`);
         }
     }
@@ -244,6 +245,13 @@ async function runRerunImport(
     resolvedPackage?: ResolvedIntegrationPackageRoot,
 ): Promise<RunIntegrationInstallationResult> {
     const dto = await buildRerunDto(request.deps, installation, definition, request.body ?? {}, siteIntegrations);
+    if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
+        assertCollectionConformance(definition, siteIntegrations);
+    }
+    const selection =
+        definition.schema === "cms.integration.definition.v2" && definition.type === "collection"
+            ? resolveCollectionSelection(definition, dto.resources, installation.activeResources, siteIntegrations)
+            : undefined;
     const secretInputs = declarativeSecretBindingNames(definition);
     const plannedSecretRefs = resolveDeclarativeSecretRefs(definition, dto.answers);
     await assertSecretKeysAvailable(request.installations, installation.id, plannedSecretRefs);
@@ -258,7 +266,7 @@ async function runRerunImport(
         deps,
         definition,
         dto.answers,
-        dto.options,
+        { ...dto.options, ...(selection ? { activeResources: selection.activeResources } : {}) },
         async (result) =>
             commitSuccessfulRerun(
                 request,
@@ -270,6 +278,7 @@ async function runRerunImport(
                 result,
                 resolvedPackage,
                 instanceIds,
+                selection?.activeResources,
             ),
     );
     return { ...importResult, ...committed };
@@ -285,6 +294,7 @@ async function commitSuccessfulRerun(
     result: IntegrationImportResult,
     resolvedPackage?: ResolvedIntegrationPackageRoot,
     instanceIds: Record<string, string> = {},
+    activeResources?: string[],
 ): Promise<{ installation: IntegrationInstallation; run: IntegrationRun }> {
     const run = successRun(installation.runCount + 1, startedAt, result);
     const nextSecretRefs = updateSecretRefs(installation.secretRefs, result, secretInputs);
@@ -295,6 +305,7 @@ async function commitSuccessfulRerun(
         secretRefs: nextSecretRefs,
         secretInputs,
         connectorBindings: connectorBindingsFromResult(definition, result, instanceIds, installation.connectorBindings),
+        ...(activeResources ? { activeResources } : {}),
         ...(!installation.packageDigest && resolvedPackage ? { packageDigest: resolvedPackage.digest } : {}),
         ...(request.mode === "upgrade"
             ? {

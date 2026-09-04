@@ -67,7 +67,27 @@ export type {
     IntegrationThemeTokenType,
     IntegrationUiDefinition,
     IntegrationValueInput,
+    LegacyIntegrationDefinition,
+    SourceIntegrationDefinition,
+    CollectionIntegrationDefinition,
 } from "../interfaces/Integration";
+export {
+    INTEGRATION_DEFINITION_SCHEMA_V1,
+    INTEGRATION_DEFINITION_SCHEMA_V2,
+    ULVIA_THEME_CONTRACT_V1,
+    type IntegrationType,
+    type CollectionResourceCategory,
+    type CollectionBindingValue,
+    type CollectionEndpointBindings,
+    type CollectionEndpointRequirement,
+    type CollectionRequirement,
+    type CollectionResourceRequirements,
+    type CollectionThemeOptionalToken,
+    type CollectionThemeRequirement,
+    type CollectionBlocResource,
+    type CollectionResource,
+    type CollectionSelection,
+} from "../interfaces/IntegrationResources";
 export {
     MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES,
     OBSERVED_SCHEMA_CONTRACT_V1,
@@ -112,7 +132,7 @@ export {
     SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
     type IntegrationConnectorProvider,
     type IntegrationConnectorProviderRepository,
-} from "../interfaces/IntegrationConnectorProvider";
+} from "../interfaces/IntegrationConnectorDeployer/provider";
 export type {
     IntegrationArtifactAction,
     IntegrationArtifactResult,
@@ -201,6 +221,18 @@ export {
     parseIntegrationImportDto,
 } from "../core/parsing/parseIntegrationImportDto";
 export { parseIntegrationDefinition } from "../core/parsing/definition/definition";
+export { assertCollectionConformance } from "../core/resources/conformance";
+export { resolveCollectionDependencies } from "../core/resources/dependencySelection";
+export {
+    collectionResourceIdsForCategories,
+    collectionSelectableResources,
+    resolveCollectionSelection,
+} from "../core/resources/selection";
+export {
+    assertSourceCanBeRemoved,
+    sourceRemovalBlockers,
+    type SourceRemovalBlocker,
+} from "../core/resources/sourceRemoval";
 export {
     parseConnectorFunctionHttpDataShape,
     parseConnectorSchemaContract,
@@ -211,7 +243,7 @@ export {
     sameObservedSchemaContract,
 } from "../core/parsing/templates/connector-compatibility";
 export { assertSqlConnectorSchemaCompatibilityDeclared } from "../core/definitions/connectorCompatibility";
-export { importIntegration } from "../core/importIntegration";
+export { importIntegration } from "../core/import";
 export {
     integrationInstallationId,
     runIntegrationInstallation,

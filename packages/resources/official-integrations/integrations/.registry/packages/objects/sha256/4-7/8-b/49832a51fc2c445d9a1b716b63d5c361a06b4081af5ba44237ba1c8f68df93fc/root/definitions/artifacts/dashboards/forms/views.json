@@ -1,0 +1,9 @@
+{
+    "$files": [
+        "views/forms-table.json",
+        "views/new-form-detail.json",
+        "views/form-detail.json",
+        "views/section-detail.json",
+        "views/question-detail.json"
+    ]
+}

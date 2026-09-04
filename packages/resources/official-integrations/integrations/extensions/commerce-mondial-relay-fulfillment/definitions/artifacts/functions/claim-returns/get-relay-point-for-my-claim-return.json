@@ -73,5 +73,6 @@
             "status": 200,
             "body": "$steps.selection"
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

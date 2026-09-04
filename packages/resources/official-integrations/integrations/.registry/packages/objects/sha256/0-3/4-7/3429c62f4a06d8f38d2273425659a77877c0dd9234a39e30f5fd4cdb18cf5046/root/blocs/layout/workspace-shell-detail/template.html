@@ -1,0 +1,22 @@
+<article class="shell-detail">
+    <header class="shell-detail-header">
+        <div class="shell-detail-identity">
+            <slot name="back"></slot>
+            <div class="shell-detail-title">
+                <h3><slot name="title"></slot></h3>
+            </div>
+        </div>
+        <div class="shell-detail-actions">
+            <slot name="actions"></slot>
+        </div>
+    </header>
+
+    <div class="shell-detail-layout">
+        <main class="shell-detail-main">
+            <slot name="main"></slot>
+        </main>
+        <aside class="shell-detail-aside">
+            <slot name="aside"></slot>
+        </aside>
+    </div>
+</article>

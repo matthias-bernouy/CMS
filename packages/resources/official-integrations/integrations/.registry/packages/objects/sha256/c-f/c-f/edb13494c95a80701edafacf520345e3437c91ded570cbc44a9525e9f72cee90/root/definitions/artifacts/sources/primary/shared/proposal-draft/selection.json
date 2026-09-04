@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "variantItemId": { "type": "number" },
+    "optionalFeatureItemIds": {
+      "type": "array",
+      "items": { "type": "number" }
+    }
+  },
+  "required": [
+    "variantItemId",
+    "optionalFeatureItemIds"
+  ]
+}

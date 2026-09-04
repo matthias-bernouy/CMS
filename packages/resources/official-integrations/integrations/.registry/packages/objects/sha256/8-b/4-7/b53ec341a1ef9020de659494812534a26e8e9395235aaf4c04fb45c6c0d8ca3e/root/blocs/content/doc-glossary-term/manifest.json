@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-glossary-term",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Glossary term",
+        "description": "Inline term with tooltip definition on hover or focus.",
+        "categories": [
+            "content"
+        ]
+    }
+}

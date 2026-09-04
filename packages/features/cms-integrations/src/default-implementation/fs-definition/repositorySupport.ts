@@ -45,6 +45,7 @@ export function parseIntegrationDefinitionIndex(value: unknown, source: string):
         ...(text(value.schema) ? { schema: text(value.schema)! } : {}),
         kind,
         label,
+        ...(value.type === "source" || value.type === "collection" ? { type: value.type } : {}),
         ...(icon ? { icon } : {}),
         ...(text(value.category) ? { category: text(value.category)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),

@@ -1,0 +1,149 @@
+{
+    "settings": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string"
+            },
+            "mode": {
+                "type": "string"
+            },
+            "defaultCurrency": {
+                "type": "string"
+            },
+            "activeC2cFeePolicyId": {
+                "type": "number"
+            },
+            "activeC2cProtectionPolicyId": {
+                "type": "number"
+            },
+            "activeC2cSellerRiskPolicyId": {
+                "type": "number"
+            },
+            "version": {
+                "type": "number"
+            },
+            "updatedAt": {
+                "type": "string"
+            }
+        }
+    },
+    "activePolicy": {
+        "$include": "active-policy/root.json"
+    },
+    "feePolicy": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "revision": {
+                "type": "number"
+            },
+            "status": {
+                "type": "string"
+            },
+            "buyerFeeRateBps": {
+                "type": "number"
+            },
+            "sellerFeeRateBps": {
+                "type": "number"
+            },
+            "costEstimatesConfigured": {
+                "type": "boolean"
+            },
+            "subsidyOverride": {
+                "type": "boolean"
+            }
+        }
+    },
+    "protectionPolicy": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "revision": {
+                "type": "number"
+            },
+            "status": {
+                "type": "string"
+            },
+            "paymentWindowMinutes": {
+                "type": "number"
+            },
+            "claimWindowHours": {
+                "type": "number"
+            },
+            "financeReviewThresholdAmount": {
+                "type": "number"
+            }
+        }
+    },
+    "sellerRiskPolicy": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "revision": {
+                "type": "number"
+            },
+            "status": {
+                "type": "string"
+            },
+            "sellerReserveRateBps": {
+                "type": "number"
+            },
+            "payoutDelayDays": {
+                "type": "number"
+            },
+            "reserveLiabilityDays": {
+                "type": "number"
+            }
+        }
+    },
+    "components": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "number"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "beneficiary": {
+                    "type": "string"
+                },
+                "rateBps": {
+                    "type": "number"
+                },
+                "fixedAmount": {
+                    "type": "number"
+                }
+            }
+        }
+    },
+    "subsidyOverrides": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "maximumDeficitAmount": {
+                    "type": "number"
+                },
+                "createdAt": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

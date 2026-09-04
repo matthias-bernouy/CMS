@@ -88,6 +88,9 @@ function definitionMetadata(value: Record<string, unknown>, versions: readonly s
     return {
         kind: requiredText(value.kind, "kind"),
         label: requiredText(value.label, "label"),
+        ...(value.type === "source" || value.type === "collection"
+            ? { type: value.type as "source" | "collection" }
+            : {}),
         ...(text(value.schema) ? { schema: text(value.schema)! } : {}),
         ...(icon ? { icon } : {}),
         ...(text(value.category) ? { category: text(value.category)! } : {}),

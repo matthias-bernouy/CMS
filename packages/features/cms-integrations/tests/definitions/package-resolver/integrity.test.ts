@@ -95,4 +95,21 @@ describe("filesystem integration package resolver integrity", () => {
         expect(resolved.definition).toEqual(snapshot);
         expect(resolved.definition.inputs[0]).not.toHaveProperty("defaultValue");
     });
+
+    test("accepts a pre-schema legacy installation snapshot", async () => {
+        const workspace = await temporaryResolverWorkspace(cleanup);
+        const fixture = await resolverPackageFixture();
+        const { schema: _schema, ...legacySnapshot } = fixture.definition;
+        const resolver = new FsIntegrationPackageResolver({
+            cache: new FsIntegrationPackageCache({ root: workspace.cacheRoot }),
+            source: staticPackageSource(fixture.package),
+        });
+
+        const resolved = await resolver.resolve(
+            resolutionRequest(fixture, { reason: "rerun", expectedDefinition: legacySnapshot }),
+        );
+
+        expect(resolved.definition).toEqual(legacySnapshot);
+        expect(resolved.definition).not.toHaveProperty("schema");
+    });
 });

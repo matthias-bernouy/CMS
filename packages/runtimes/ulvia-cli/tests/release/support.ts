@@ -22,11 +22,12 @@ export async function temporaryRoot(): Promise<string> {
 export async function releasePackage(
     version: string,
     overrides: Record<string, unknown> = {},
+    kind = "demo",
 ): Promise<LocalReleasePackage> {
-    const parsed = parseIntegrationDefinition(integrationDefinition("demo", version, overrides));
+    const parsed = parseIntegrationDefinition(integrationDefinition(kind, version, overrides));
     const envelope = validateIntegrationPackageEnvelope({
         schema: "cms.integration.package.v1",
-        kind: "demo",
+        kind,
         version,
         definition: "definition.json",
         files: { "definition.json": { encoding: "utf8", content: JSON.stringify(parsed) } },

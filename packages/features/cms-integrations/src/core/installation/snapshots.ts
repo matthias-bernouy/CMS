@@ -2,6 +2,7 @@ import { isSensitiveInput } from "../shared/inputSensitivity";
 import { cleanText } from "./ids";
 import type { IntegrationAnswerValue, IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationImportDto, IntegrationImportResult } from "../../interfaces/IntegrationImport";
+import { INTEGRATION_DEFINITION_SCHEMA_V1 } from "../../interfaces/IntegrationResources";
 
 export function updateSecretRefs(
     current: Record<string, string>,
@@ -47,10 +48,11 @@ export function sanitizeDefinitionSnapshot(definition: IntegrationDefinition): I
 }
 
 export function definitionSnapshotsEqual(left: IntegrationDefinition, right: IntegrationDefinition): boolean {
-    return (
-        JSON.stringify(normalizeSnapshot(sanitizeDefinitionSnapshot(left))) ===
-        JSON.stringify(normalizeSnapshot(sanitizeDefinitionSnapshot(right)))
-    );
+    return JSON.stringify(normalizeDefinitionSnapshot(left)) === JSON.stringify(normalizeDefinitionSnapshot(right));
+}
+
+export function declarativeValuesEqual(left: unknown, right: unknown): boolean {
+    return JSON.stringify(normalizeSnapshot(left)) === JSON.stringify(normalizeSnapshot(right));
 }
 
 export function installationLabel(definition: IntegrationDefinition, dto: IntegrationImportDto): string {
@@ -70,4 +72,12 @@ function normalizeSnapshot(value: unknown): unknown {
             .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
             .map(([key, child]) => [key, normalizeSnapshot(child)]),
     );
+}
+
+function normalizeDefinitionSnapshot(definition: IntegrationDefinition): unknown {
+    const sanitized = sanitizeDefinitionSnapshot(definition);
+    return normalizeSnapshot({
+        ...sanitized,
+        schema: sanitized.schema ?? INTEGRATION_DEFINITION_SCHEMA_V1,
+    });
 }

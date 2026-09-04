@@ -158,6 +158,14 @@ async function passedResult(
             compatibilityRevisionDigest: admission.compatibilityRevision.digest,
             compatibilityEvaluatorInputDigest: admission.compatibilityRevision.evaluatorInputDigest,
             ...(admission.behavioralRlsPlan ? { behavioralRlsPlanDigest: admission.behavioralRlsPlan.digest } : {}),
+            ...(admission.releaseVerificationPlan
+                ? {
+                      releaseVerificationPlanDigest: admission.releaseVerificationPlan.digest,
+                      upgradeBaselineDigests: admission.releaseVerificationPlan.plan.baselines
+                          .map(({ packageDigest }) => packageDigest)
+                          .toSorted(),
+                  }
+                : {}),
         },
         runner: admission.selectedRunner,
         environment: { digest: await sha256Hex(canonicalJsonBytes(versions)), versions },

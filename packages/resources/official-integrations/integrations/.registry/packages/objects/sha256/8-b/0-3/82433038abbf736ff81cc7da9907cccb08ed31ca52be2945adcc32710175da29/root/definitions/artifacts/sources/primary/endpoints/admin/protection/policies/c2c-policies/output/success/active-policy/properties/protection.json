@@ -1,0 +1,57 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "number"
+        },
+        "policyKey": {
+            "type": "string"
+        },
+        "version": {
+            "type": "number"
+        },
+        "name": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "currency": {
+            "type": "string"
+        },
+        "paymentWindowMinutes": {
+            "type": "number"
+        },
+        "sellerHandoffHours": {
+            "type": "number"
+        },
+        "scanGraceHours": {
+            "type": "number"
+        },
+        "claimWindowHours": {
+            "type": "number"
+        },
+        "sellerResponseHours": {
+            "type": "number"
+        },
+        "returnShipHours": {
+            "type": "number"
+        },
+        "financeReviewThresholdAmount": {
+            "type": "number"
+        },
+        "dualApprovalThresholdAmount": {
+            "type": "number"
+        },
+        "publishedAt": {
+            "type": "string",
+            "nullable": true
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "createdAt": {
+            "type": "string"
+        }
+    }
+}

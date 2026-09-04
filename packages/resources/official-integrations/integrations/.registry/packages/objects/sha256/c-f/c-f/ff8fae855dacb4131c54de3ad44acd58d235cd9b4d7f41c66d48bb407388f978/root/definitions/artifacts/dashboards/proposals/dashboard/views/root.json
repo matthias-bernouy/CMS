@@ -1,0 +1,107 @@
+[
+    {
+        "widget": "w-table",
+        "id": "proposalsTable",
+        "title": "Price proposals",
+        "source": {
+            "endpoint": "manageProposals",
+            "params": {
+                "q": "$filter.q",
+                "status": "$filter.status",
+                "limit": "100"
+            },
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "id",
+        "filters": [
+            {
+                "id": "q",
+                "label": "Search",
+                "param": "q",
+                "type": "text",
+                "placeholder": "Offer or user"
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "param": "status",
+                "type": "select",
+                "options": [
+                    {
+                        "value": "pending",
+                        "label": "Pending"
+                    },
+                    {
+                        "value": "accepted",
+                        "label": "Accepted"
+                    },
+                    {
+                        "value": "rejected",
+                        "label": "Rejected"
+                    },
+                    {
+                        "value": "withdrawn",
+                        "label": "Withdrawn"
+                    },
+                    {
+                        "value": "expired",
+                        "label": "Expired"
+                    },
+                    {
+                        "value": "canceled",
+                        "label": "Canceled"
+                    }
+                ]
+            }
+        ],
+        "columns": [
+            {
+                "id": "offerTitle",
+                "label": "Offer",
+                "path": "offerTitle",
+                "primary": true
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "format": "badge"
+            },
+            {
+                "id": "proposedAmount",
+                "label": "Proposed",
+                "path": "proposedAmount",
+                "format": "money"
+            },
+            {
+                "id": "referenceAmount",
+                "label": "Reference",
+                "path": "referenceAmount",
+                "format": "money"
+            },
+            {
+                "id": "currency",
+                "label": "Currency",
+                "path": "currency"
+            },
+            {
+                "id": "sellerDisplayName",
+                "label": "Seller",
+                "path": "sellerDisplayName"
+            },
+            {
+                "id": "createdAt",
+                "label": "Created",
+                "path": "createdAt",
+                "format": "date"
+            }
+        ],
+        "selection": {
+            "opens": "proposalDetail"
+        }
+    },
+    {
+        "$include": "proposal-detail/root.json"
+    }
+]

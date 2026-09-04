@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-code-inline",
+        "name": "Inline code",
+        "group": "Documentation · Code",
+        "description": "Short inline code fragment with editable text.",
+        "path": "blocs/foundation/documentation-blocs/code/doc-code-inline"
+    }
+}

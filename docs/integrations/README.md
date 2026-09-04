@@ -6,8 +6,12 @@ immutable packages. Released history belongs to repositories, not to copied
 
 This section documents the supported workflow:
 
+- [Source and collection model](./model.md) defines ownership, resource
+  selection, endpoint bindings, contracts, themes, and dependency closure.
 - [Creating a release](./releases.md) covers source layout, SemVer, audits,
   local releases, dependencies, and operational practices.
+- [Local integration development](./local-development.md) covers the persistent
+  CMS, MongoDB, Supabase, selective installation, and end-to-end acceptance.
 - [Business upgrade fixtures](./upgrade-fixtures.md) explains how an
   integration creates realistic old-version state and verifies it after an
   upgrade.
@@ -19,7 +23,7 @@ This section documents the supported workflow:
 
 ## Source layout
 
-An official integration normally lives below
+An official source or collection normally lives below
 `packages/resources/official-integrations/integrations/<group>/<kind>/`:
 
 ```text
@@ -39,6 +43,10 @@ repositories retain every released package.
 
 The definition version and the version declared by `integration.json` must
 match. Never change the contents of an already released `kind@version`.
+
+Current definitions use `cms.integration.definition.v2` and explicitly declare
+`type: "source"` or `type: "collection"`. Legacy definitions remain readable
+only as immutable upgrade baselines.
 
 ## Command summary
 

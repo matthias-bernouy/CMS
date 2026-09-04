@@ -1,0 +1,45 @@
+[
+  {
+    "endpointId": "getPartnerCatalog",
+    "method": "GET",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/partner/catalog",
+    "meta": {
+      "name": "Get partner catalogue",
+      "description": "Read the published commercial catalogue available to an active sales partner."
+    },
+    "params": [],
+    "headers": {
+      "$include": "../../../shared/actor-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "type": "object",
+          "properties": {
+            "modules": {
+              "type": "array",
+              "items": {
+                "$include": "../../../shapes/catalog/partner/catalog.json"
+              }
+            },
+            "selectionRows": {
+              "type": "array",
+              "items": {
+                "$include": "../../../shapes/catalog/partner/selection-row.json"
+              }
+            }
+          },
+          "required": ["modules", "selectionRows"]
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

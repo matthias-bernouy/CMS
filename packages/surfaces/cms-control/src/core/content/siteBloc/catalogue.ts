@@ -18,7 +18,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
     const normalizedSearch = query.search?.trim().toLowerCase() ?? "";
 
     return records
-        .filter((record) => !record.artifact?.internal)
+        .filter((record) => !record.artifact?.internal && record.artifact?.catalogue !== "inactive")
         .map((record) => {
             const definition = record.siteDefinition;
             const metadata = definition?.draft ?? record.artifact;

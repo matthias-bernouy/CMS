@@ -46,7 +46,10 @@ export function getBlocGroupManifest(delivery: DeliveryCms): Promise<BlocGroups>
 
 async function computeBlocGroupManifest(delivery: DeliveryCms): Promise<BlocGroups> {
     const repository = delivery.repository;
-    const [pages, blocList] = await Promise.all([repository.getAllPages(), repository.getBlocsList()]);
+    const [pages, blocList] = await Promise.all([
+        repository.getAllPages(),
+        repository.getBlocsList({ includeInactive: true }),
+    ]);
 
     const resolveUsage = createBlocUsageResolver(blocList, repository);
     const pageBlocSets = await Promise.all(pages.map((page) => resolveUsage(page.content)));

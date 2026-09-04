@@ -1,0 +1,35 @@
+{
+    "type": "trigger",
+    "trigger": {
+        "id": "execute-seller-cancellation-refund",
+        "label": "Execute seller cancellation refund",
+        "event": {
+            "kind": "endpoint",
+            "source": "{{dependencies.commerce.sourceId}}",
+            "endpoint": "cancelMySale",
+            "phase": "response"
+        },
+        "mode": "async",
+        "failureMode": "ignore",
+        "condition": {
+            "all": [
+                {
+                    "equals": [
+                        "$response.status",
+                        201
+                    ]
+                },
+                {
+                    "equals": [
+                        "$response.body.refundAuthorization.status",
+                        "approved"
+                    ]
+                }
+            ]
+        },
+        "function": {
+            "id": "executeAuthorizedRefund",
+            "body": "$response.body.refundAuthorization"
+        }
+    }
+}

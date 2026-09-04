@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-mermaid",
+        "name": "Mermaid diagram",
+        "group": "Documentation · Content",
+        "description": "Editable Mermaid diagram source with theme controls.",
+        "path": "blocs/foundation/documentation-blocs/content/doc-mermaid"
+    }
+}

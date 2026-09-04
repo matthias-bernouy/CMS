@@ -1,0 +1,13 @@
+[
+  {
+    "id": "proposalState",
+    "title": "State",
+    "fields": [
+      { "id": "status", "label": "Status", "path": "status", "type": "readonly", "format": "badge" },
+      { "id": "version", "label": "Version", "path": "currentVersion.versionNumber", "type": "readonly" },
+      { "id": "currency", "label": "Currency", "path": "currentVersion.currency", "type": "readonly" },
+      { "id": "createdAt", "label": "Created", "path": "createdAt", "type": "readonly", "format": "date" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "type": "readonly", "format": "date" }
+    ]
+  }
+]

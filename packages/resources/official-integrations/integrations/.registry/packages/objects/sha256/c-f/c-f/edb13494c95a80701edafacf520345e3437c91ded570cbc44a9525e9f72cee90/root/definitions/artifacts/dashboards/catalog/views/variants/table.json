@@ -1,0 +1,55 @@
+[
+  {
+    "widget": "w-table",
+    "id": "variantsTable",
+    "title": "Variants",
+    "source": {
+      "endpoint": "manageVariants",
+      "params": {
+        "q": "$filter.q",
+        "status": "$filter.status",
+        "limit": "100"
+      },
+      "itemsPath": "items",
+      "totalPath": "total"
+    },
+    "rowKey": "id",
+    "filters": [
+      {
+        "id": "q",
+        "label": "Search",
+        "param": "q",
+        "type": "text",
+        "placeholder": "Search variants"
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "param": "status",
+        "type": "select",
+        "options": [
+          { "value": "draft", "label": "Draft" },
+          { "value": "published", "label": "Published" },
+          { "value": "archived", "label": "Archived" }
+        ]
+      }
+    ],
+    "columns": [
+      { "id": "name", "label": "Variant", "path": "name", "primary": true, "width": "minmax(15rem, 1.5fr)" },
+      { "id": "moduleName", "label": "Module", "path": "moduleName", "width": "minmax(15rem, 1.5fr)" },
+      { "id": "pricingMode", "label": "Pricing", "path": "pricingMode", "format": "badge", "width": "8rem" },
+      { "id": "unitAmountCents", "label": "Amount", "path": "unitAmountCents", "format": "money", "width": "10rem" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge", "width": "8rem" }
+    ],
+    "actions": [
+      {
+        "id": "createVariant",
+        "label": "Create variant",
+        "tone": "primary",
+        "placement": "primary",
+        "selection": { "opens": "variantDetail" }
+      }
+    ],
+    "selection": { "opens": "variantDetail" }
+  }
+]

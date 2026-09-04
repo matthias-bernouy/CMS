@@ -3,7 +3,7 @@ import { ContentValidationError } from "cms-content/core/validation/errors";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
-    getBlocsList(): Promise<Array<{ id: string }>>;
+    getBlocsList(options?: { includeInactive?: boolean }): Promise<Array<{ id: string }>>;
 };
 
 /**
@@ -27,7 +27,7 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
 
     const missing: string[] = [];
 
-    const known = new Set((await repository.getBlocsList()).map((b) => b.id));
+    const known = new Set((await repository.getBlocsList({ includeInactive: true })).map((b) => b.id));
     for (const tag of blocs) {
         if (!known.has(tag)) {
             missing.push(`bloc "${tag}"`);

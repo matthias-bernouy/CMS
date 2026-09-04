@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from "node:util";
-import type { DeclarativeArtifactTemplate } from "@bernouy/cms-integrations";
+import { integrationVersionReleaseLevel, type DeclarativeArtifactTemplate } from "@bernouy/cms-integrations";
 import type { CompatibilityChangeSink } from "../changes";
 import { compareSourceIndexing } from "./sourceIndexing";
 
@@ -44,6 +44,7 @@ function compareSourceEndpoint(
     path: string,
     add: CompatibilityChangeSink,
 ): void {
+    compareContractVersion(baseline.contractVersion, candidate.contractVersion, `${path}.contractVersion`, add);
     if (baseline.method !== candidate.method) {
         add("breaking", "artifact", "endpoint-method-changed", path, "Source endpoint method changed");
     }
@@ -96,6 +97,45 @@ function compareSourceEndpoint(
             "Endpoint body, response, or injected-header contract changed",
         );
     }
+}
+
+function compareContractVersion(
+    baseline: string | undefined,
+    candidate: string | undefined,
+    path: string,
+    add: CompatibilityChangeSink,
+): void {
+    if (baseline === candidate) {
+        return;
+    }
+    if (!baseline || !candidate) {
+        add(
+            "unknown",
+            "artifact",
+            "endpoint-contract-version-unproven",
+            path,
+            "Endpoint contract version was added or removed without a comparable baseline",
+        );
+        return;
+    }
+    const release = integrationVersionReleaseLevel(baseline, candidate);
+    if (release === "major" || release === null) {
+        add(
+            "breaking",
+            "artifact",
+            "endpoint-contract-version-breaking",
+            path,
+            `Endpoint contract version changed from ${baseline} to ${candidate}`,
+        );
+        return;
+    }
+    add(
+        "additive",
+        "artifact",
+        "endpoint-contract-version-advanced",
+        path,
+        `Endpoint contract version advanced from ${baseline} to ${candidate}`,
+    );
 }
 
 function compareAccess(baseline: string, candidate: string, path: string, add: CompatibilityChangeSink): void {

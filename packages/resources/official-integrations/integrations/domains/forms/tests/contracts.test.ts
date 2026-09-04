@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { restaurantPreview } from "../blocs/form-renderer/preview";
+import { restaurantPreview } from "../../../collections/ulvia/blocs/domains/forms/form-renderer/preview";
 import { handleFormsRequest } from "../connectors/supabase/functions/cms-forms/handler";
 import { formDefinition, submissionAnswers } from "../connectors/supabase/functions/cms-forms/validation";
 
 const versionRoot = new URL("../", import.meta.url);
+const ulviaRoot = new URL("../../../collections/ulvia/", import.meta.url);
 const originalFetch = globalThis.fetch;
 
 async function json(path: string): Promise<unknown> {
@@ -36,8 +37,8 @@ afterEach(() => {
     Reflect.deleteProperty(globalThis, "Deno");
 });
 
-describe("Forms 1.0.0 contracts", () => {
-    test("declares the expected dependency and paired visitor endpoints", async () => {
+describe("Forms 3.0.0 contracts", () => {
+    test("declares no UI dependency and keeps paired visitor endpoints", async () => {
         const dependencies = (await json("definitions/configuration/dependencies.json")) as Array<
             Record<string, string>
         >;
@@ -48,7 +49,7 @@ describe("Forms 1.0.0 contracts", () => {
             "definitions/artifacts/sources/primary/endpoints/authenticated.json",
         )) as Array<Record<string, unknown>>;
 
-        expect(dependencies).toEqual([{ name: "basicBlocs", kind: "basic-blocs", versionRange: "^1.0.0" }]);
+        expect(dependencies).toEqual([]);
         expect(publicEndpoints.map((endpoint) => endpoint.endpointId)).toEqual([
             "formPublic",
             "submitPublic",
@@ -79,8 +80,10 @@ describe("Forms 1.0.0 contracts", () => {
         expect(managedFormSql).not.toContain("definitionJson");
     });
 
-    test("declares dynamically created Basic Blocs for Delivery asset discovery", async () => {
-        const defaultContent = await Bun.file(new URL("blocs/form-renderer/default.html", versionRoot)).text();
+    test("declares dynamically created Ulvia blocks for Delivery asset discovery", async () => {
+        const defaultContent = await Bun.file(
+            new URL("blocs/domains/forms/form-renderer/default.html", ulviaRoot),
+        ).text();
 
         for (const tag of [
             "basic-input",

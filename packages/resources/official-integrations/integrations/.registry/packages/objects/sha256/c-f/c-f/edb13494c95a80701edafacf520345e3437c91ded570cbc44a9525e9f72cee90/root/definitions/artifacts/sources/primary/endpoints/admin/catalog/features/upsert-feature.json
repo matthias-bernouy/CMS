@@ -1,0 +1,43 @@
+[
+  {
+    "endpointId": "upsertFeature",
+    "method": "POST",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/feature",
+    "meta": {
+      "name": "Save feature",
+      "description": "Create or update one reusable commercial feature."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "number" }
+    ],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string", "nullable": true },
+        "status": { "type": "string" },
+        "sortOrder": { "type": "number" }
+      },
+      "required": ["code", "name", "status"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../../shapes/catalog/feature.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

@@ -2,9 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import {
     InMemoryIntegrationConnectorProviderRepository,
+    InMemoryIntegrationInstallationRepository,
     runIntegrationInstallation,
     SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
-    type IntegrationImportOptions,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
@@ -13,7 +13,6 @@ import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
-import { installedBasicBlocs } from "../../../../integration-contracts/integration-import/setup";
 
 type ManagementRequest = { body: BodyInit | null | undefined; method: string; url: string };
 
@@ -30,9 +29,8 @@ describe("Commerce media connector rerun", () => {
             throw new Error("Commerce package root not found.");
         }
         const requests: ManagementRequest[] = [];
-        const forceOptions: boolean[] = [];
         const secrets = new InMemorySecretStore();
-        const installations = await installedBasicBlocs();
+        const installations = new InMemoryIntegrationInstallationRepository();
         const providerRepository = new InMemoryIntegrationConnectorProviderRepository({
             provider: "supabase",
             enabled: true,
@@ -76,12 +74,6 @@ describe("Commerce media connector rerun", () => {
                 },
                 resolveSecret: async () => "commerce-rollout-cms-api-key",
             },
-            blocs: {
-                async importBloc(artifact: { tag: string }, options: IntegrationImportOptions) {
-                    forceOptions.push(options.force === true);
-                    return { id: artifact.tag, action: options.force ? ("updated" as const) : ("created" as const) };
-                },
-            },
         };
 
         await runIntegrationInstallation({
@@ -97,7 +89,6 @@ describe("Commerce media connector rerun", () => {
             },
         });
         requests.length = 0;
-        forceOptions.length = 0;
 
         const rerun = await runIntegrationInstallation({
             mode: "rerun",
@@ -125,8 +116,6 @@ describe("Commerce media connector rerun", () => {
         expect(productMedia).toContain('rpcRecord("attach_product_media_v2"');
         expect(offerMedia).not.toContain("removeReturnedObject");
         expect(productMedia).not.toContain("removeReturnedObject");
-        expect(forceOptions.length).toBeGreaterThan(0);
-        expect(forceOptions.every(Boolean)).toBeTrue();
         expect(rerun.installation.runCount).toBe(2);
         expect(rerun.installation.runs.map((run) => run.status)).toEqual(["success", "success"]);
         expect(rerun.connectors?.[0]?.resources?.map((resource) => resource.type)).toEqual([

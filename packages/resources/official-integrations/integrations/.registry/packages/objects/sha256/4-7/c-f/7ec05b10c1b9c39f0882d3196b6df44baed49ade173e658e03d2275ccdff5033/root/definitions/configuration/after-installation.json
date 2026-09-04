@@ -1,0 +1,15 @@
+[
+    {
+        "id": "bootstrap-consent-context",
+        "steps": [
+            {
+                "id": "bootstrap",
+                "call": {
+                    "source": "{{answers.id}}",
+                    "endpoint": "bootstrapContext",
+                    "body": { "contextKey": "{{answers.contextKey}}" }
+                }
+            }
+        ]
+    }
+]

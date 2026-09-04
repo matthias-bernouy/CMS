@@ -1,0 +1,54 @@
+[
+  {
+    "widget": "w-table",
+    "id": "featuresTable",
+    "title": "Features",
+    "source": {
+      "endpoint": "manageFeatures",
+      "params": {
+        "q": "$filter.q",
+        "status": "$filter.status",
+        "limit": "100"
+      },
+      "itemsPath": "items",
+      "totalPath": "total"
+    },
+    "rowKey": "id",
+    "filters": [
+      {
+        "id": "q",
+        "label": "Search",
+        "param": "q",
+        "type": "text",
+        "placeholder": "Search features"
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "param": "status",
+        "type": "select",
+        "options": [
+          { "value": "draft", "label": "Draft" },
+          { "value": "published", "label": "Published" },
+          { "value": "archived", "label": "Archived" }
+        ]
+      }
+    ],
+    "columns": [
+      { "id": "name", "label": "Feature", "path": "name", "primary": true, "width": "minmax(16rem, 2fr)" },
+      { "id": "code", "label": "Code", "path": "code", "width": "minmax(10rem, 1fr)" },
+      { "id": "status", "label": "Status", "path": "status", "format": "badge", "width": "8rem" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date", "width": "12rem" }
+    ],
+    "actions": [
+      {
+        "id": "createFeature",
+        "label": "Create feature",
+        "tone": "primary",
+        "placement": "primary",
+        "selection": { "opens": "featureDetail" }
+      }
+    ],
+    "selection": { "opens": "featureDetail" }
+  }
+]

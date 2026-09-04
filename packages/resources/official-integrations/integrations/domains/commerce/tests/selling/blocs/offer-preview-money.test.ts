@@ -3,7 +3,10 @@ import {
     clearResponsiveSourceImageElement,
     syncResponsiveSourceImageElement,
 } from "@bernouy/cms-source-images/browser";
-import { formatMoney, parseBooleanAttribute } from "../../../blocs/commerce-offer-preview/money";
+import {
+    formatMoney,
+    parseBooleanAttribute,
+} from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-offer-preview/money.ts";
 
 describe("Commerce offer preview money", () => {
     test("omits insignificant decimals from whole amounts", () => {

@@ -1,15 +1,10 @@
 import { expect, test } from "bun:test";
-import {
-    importIntegration,
-    InMemoryIntegrationInstallationRepository,
-    type IntegrationBlocArtifact,
-} from "@bernouy/cms-integrations";
+import { importIntegration, InMemoryIntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
-import { declaredBlocViewSources } from "../../../../../tests/helpers/blocArtifactSource";
 import { installationsForFulfillment, sourcesForFulfillment } from "./harness";
 
 export function registerInstallationTests(): void {
@@ -19,7 +14,6 @@ export function registerInstallationTests(): void {
         const roles = new InMemoryRolesRepository();
         const installations = await installationsForFulfillment();
         const triggers = new InMemoryTriggerRepository();
-        const blocs: IntegrationBlocArtifact[] = [];
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
             "commerce-mondial-relay-fulfillment",
         );
@@ -34,12 +28,6 @@ export function registerInstallationTests(): void {
                 roles,
                 installations,
                 triggers,
-                blocs: {
-                    async importBloc(artifact) {
-                        blocs.push(artifact);
-                        return { id: artifact.tag, action: "created" };
-                    },
-                },
             },
             { kind: definition.kind, answers: {}, options: {} },
             [definition],
@@ -89,24 +77,6 @@ export function registerInstallationTests(): void {
         expect(serialized).toContain("completeOrderShipmentCreation");
         expect(serialized).toContain("recordOrderFulfillment");
         expect(serialized).toContain("recipientHandoffAt");
-
-        const viewSources = declaredBlocViewSources(blocs[0] ?? {});
-        expect(viewSources).toContain("requestShipmentLabelForMySale");
-        expect(viewSources).toContain("declareShipmentHandoffForMySale");
-        expect(viewSources).not.toContain("shipment?.labelUrl");
-        expect(viewSources).not.toContain("location.assign");
-        expect(viewSources).toContain('document.createElement("a")');
-        expect(viewSources).toContain("noopener noreferrer");
-        expect(viewSources).toContain("dataset.shipmentStatus");
-        expect(viewSources).toContain('"Dépôt déclaré"');
-        expect(viewSources).toContain('"Retélécharger l’étiquette"');
-        expect(viewSources).toContain('"J’ai déposé le colis"');
-        expect(viewSources).toContain('new CustomEvent("commerce-fulfillment:updated"');
-        expect(viewSources).not.toContain("content.dataset.status");
-        const importedTemplate = atob(blocs[0]?.source?.["template.html"] ?? "");
-        expect(importedTemplate).toContain("data-label");
-        expect(importedTemplate).toContain("data-handoff");
-        expect(importedTemplate).not.toContain('data-handoff type="button" appearance="outlined"');
 
         const grants = (await roles.get(USER_ROLE))?.grants.map((grant) => grant.permission) ?? [];
         expect(grants).toEqual(

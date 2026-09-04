@@ -1,0 +1,8 @@
+{
+    "id": "immutableFinancialSnapshot",
+    "title": "Immutable financial snapshot",
+    "description": "Commerce-calculated minor-unit amounts frozen at checkout. Carrier and Stripe costs in this section are policy estimates, not provider expenses.",
+    "fields": {
+        "$include": "financial-fields/root.json"
+    }
+}

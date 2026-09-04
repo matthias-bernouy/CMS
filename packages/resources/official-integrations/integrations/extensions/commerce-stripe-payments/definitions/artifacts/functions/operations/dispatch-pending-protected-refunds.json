@@ -108,5 +108,6 @@
                 "dispatches": "$steps.dispatches"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

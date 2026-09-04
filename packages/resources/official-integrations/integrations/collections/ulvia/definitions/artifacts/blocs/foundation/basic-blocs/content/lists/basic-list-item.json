@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "li",
+        "name": "List item",
+        "group": "Text",
+        "description": "Native list item with rich-text authoring.",
+        "path": "blocs/foundation/basic-blocs/content/lists/basic-list-item"
+    }
+}

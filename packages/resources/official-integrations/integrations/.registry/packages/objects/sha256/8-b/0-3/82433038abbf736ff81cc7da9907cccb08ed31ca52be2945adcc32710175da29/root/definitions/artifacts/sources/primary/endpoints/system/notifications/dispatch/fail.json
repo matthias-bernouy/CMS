@@ -1,0 +1,47 @@
+{
+    "endpointId": "failNotification",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/notifications/system/fail",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "deliveryId": {
+                "type": "string"
+            },
+            "runKey": {
+                "type": "string"
+            },
+            "error": {
+                "type": "string"
+            },
+            "retryable": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "deliveryId",
+            "runKey",
+            "error"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "$include": "../outputs/delivery-result.json"
+            }
+        }
+    ]
+}

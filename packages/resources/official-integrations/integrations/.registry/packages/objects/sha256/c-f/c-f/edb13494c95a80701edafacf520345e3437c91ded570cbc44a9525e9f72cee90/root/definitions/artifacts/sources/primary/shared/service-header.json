@@ -1,0 +1,10 @@
+[
+  {
+    "name": "authorization",
+    "source": {
+      "from": "secret",
+      "ref": "{{secrets.cmsApiKey}}",
+      "prefix": "Bearer "
+    }
+  }
+]

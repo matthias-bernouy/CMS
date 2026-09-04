@@ -1,0 +1,9 @@
+{
+    "default-tag": "newsletter-subscription",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Newsletter subscription",
+        "description": "Public newsletter subscription form backed by the Newsletter source."
+    }
+}

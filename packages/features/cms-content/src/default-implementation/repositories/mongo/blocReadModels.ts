@@ -1,3 +1,4 @@
+import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
 import type { BlocListItemResponse } from "cms-content/interfaces/CmsRepository";
 import type { ClientSession, Collection } from "mongodb";
 import { SiteBlocNotFoundError } from "cms-content/core/validation/errors";
@@ -16,10 +17,10 @@ export async function requireBlocRecord(
     return record;
 }
 
-export function projectBlocList(records: BlocRecord[]): BlocListItemResponse[] {
+export function projectBlocList(records: BlocRecord[], options: BlocListOptions = {}): BlocListItemResponse[] {
     return records.flatMap((record) => {
         const bloc = record.artifact;
-        return bloc
+        return bloc && (options.includeInactive || bloc.catalogue !== "inactive")
             ? [
                   {
                       id: record.tag,

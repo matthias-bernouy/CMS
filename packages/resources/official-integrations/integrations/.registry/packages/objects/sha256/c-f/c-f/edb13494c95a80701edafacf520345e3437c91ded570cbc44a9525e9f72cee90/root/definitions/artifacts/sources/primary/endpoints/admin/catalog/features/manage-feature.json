@@ -1,0 +1,32 @@
+[
+  {
+    "endpointId": "manageFeature",
+    "method": "GET",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/feature",
+    "meta": {
+      "name": "Manage feature",
+      "description": "Read one feature or return defaults for a new feature."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "string" }
+    ],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../../shapes/catalog/feature.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

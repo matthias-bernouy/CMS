@@ -1,0 +1,45 @@
+[
+    {
+        "widget": "w-table",
+        "id": "formsTable",
+        "title": "Forms",
+        "source": {
+            "endpoint": "manageForms",
+            "params": { "q": "$filter.q", "status": "$filter.status", "limit": "50" },
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "key",
+        "filters": [
+            { "id": "q", "label": "Search", "param": "q", "type": "text", "placeholder": "Title or form key" },
+            {
+                "id": "status",
+                "label": "Status",
+                "param": "status",
+                "type": "select",
+                "options": [
+                    { "value": "draft", "label": "Draft only" },
+                    { "value": "published", "label": "Published" },
+                    { "value": "archived", "label": "Archived" }
+                ]
+            }
+        ],
+        "columns": [
+            { "id": "title", "label": "Form", "path": "title", "primary": true },
+            { "id": "key", "label": "Key", "path": "key" },
+            { "id": "status", "label": "Status", "path": "status", "format": "badge" },
+            { "id": "version", "label": "Published version", "path": "version" },
+            { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date" }
+        ],
+        "actions": [
+            {
+                "id": "createForm",
+                "label": "Create form",
+                "tone": "primary",
+                "placement": "primary",
+                "selection": { "opens": "newFormDetail" }
+            }
+        ],
+        "selection": { "opens": "formDetail" }
+    }
+]

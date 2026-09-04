@@ -1,0 +1,111 @@
+[
+    {
+        "$include": "relay-points.json"
+    },
+    {
+        "endpointId": "relaySelection",
+        "method": "GET",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/relay-selection",
+        "params": [
+            {
+                "name": "externalOrderId",
+                "in": "query",
+                "type": "string",
+                "required": true
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "externalOrderId": {
+                            "type": "string"
+                        },
+                        "relayLocation": {
+                            "type": "string"
+                        },
+                        "country": {
+                            "type": "string"
+                        },
+                        "number": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "addressLine1": {
+                            "type": "string"
+                        },
+                        "addressLine2": {
+                            "type": "string"
+                        },
+                        "postalCode": {
+                            "type": "string"
+                        },
+                        "city": {
+                            "type": "string"
+                        },
+                        "latitude": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "longitude": {
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "nature": {
+                            "type": "string"
+                        },
+                        "pointType": {
+                            "type": "string"
+                        },
+                        "weightGrams": {
+                            "type": "number"
+                        },
+                        "shippingAmount": {
+                            "type": "number"
+                        },
+                        "currency": {
+                            "type": "string"
+                        },
+                        "selectedAt": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "externalOrderId",
+                        "relayLocation",
+                        "country",
+                        "number",
+                        "name",
+                        "postalCode",
+                        "city",
+                        "weightGrams",
+                        "shippingAmount",
+                        "currency"
+                    ]
+                }
+            }
+        ]
+    }
+]

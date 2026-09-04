@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mondial-relay-picker",
+        "name": "Mondial Relay pickup point picker",
+        "group": "Delivery",
+        "description": "Customizable pickup point picker with optional persistence on an authenticated Commerce order.",
+        "path": "blocs/providers/mondial-relay/mondial-relay-picker"
+    }
+}

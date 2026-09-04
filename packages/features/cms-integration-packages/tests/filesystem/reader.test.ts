@@ -119,4 +119,21 @@ describe("filesystem integration package reader", () => {
             readIntegrationPackageDirectory({ ...readerOptions(root), excludeRootEntries: ["../tests"] }),
         ).rejects.toThrow(/single path segment/);
     });
+
+    test("excludes bounded nested authoring subtrees from runtime bytes", async () => {
+        const root = createVersionRoot();
+        writeText(root, "definitions/artifacts/sources/source.json", "source");
+        writeText(root, "definitions/artifacts/dashboards/admin.json", "deferred");
+
+        const result = await readIntegrationPackageDirectory({
+            ...readerOptions(root),
+            excludePathPrefixes: ["definitions/artifacts/dashboards"],
+        });
+
+        expect(Object.keys(result.envelope.files)).toContain("definitions/artifacts/sources/source.json");
+        expect(Object.keys(result.envelope.files)).not.toContain("definitions/artifacts/dashboards/admin.json");
+        await expect(
+            readIntegrationPackageDirectory({ ...readerOptions(root), excludePathPrefixes: ["../dashboards"] }),
+        ).rejects.toThrow(/path segment/);
+    });
 });

@@ -96,6 +96,7 @@ function endpointDtoToEndpoint(sourceId: string, e: SourceEndpointDto, authority
     }));
     const endpoint: SourceEndpoint = {
         urn: makeEndpointUrn(sourceId, e.endpointId),
+        ...(e.contractVersion ? { contractVersion: e.contractVersion } : {}),
         method: e.method,
         targetUrl: e.targetUrl,
     };
@@ -146,6 +147,7 @@ function endpointDtoToEndpoint(sourceId: string, e: SourceEndpointDto, authority
 function endpointToDto(endpoint: SourceEndpoint): SourceEndpointDto {
     return {
         endpointId: parseUrn(endpoint.urn)?.endpoint ?? "",
+        ...(endpoint.contractVersion ? { contractVersion: endpoint.contractVersion } : {}),
         method: endpoint.method,
         targetUrl: endpoint.targetUrl,
         ...(endpoint.timeoutMs !== undefined ? { timeoutMs: endpoint.timeoutMs } : {}),

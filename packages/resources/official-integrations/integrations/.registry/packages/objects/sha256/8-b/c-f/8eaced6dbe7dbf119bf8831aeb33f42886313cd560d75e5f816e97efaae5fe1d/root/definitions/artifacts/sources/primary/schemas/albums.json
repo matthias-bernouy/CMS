@@ -1,0 +1,44 @@
+{
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": {
+                "$include": "album.json"
+            }
+        },
+        "total": {
+            "type": "number"
+        },
+        "limit": {
+            "type": "number"
+        },
+        "offset": {
+            "type": "number"
+        },
+        "display": {
+            "type": "object",
+            "properties": {
+                "galleryTitle": {
+                    "type": "string"
+                },
+                "defaultPageSize": {
+                    "type": "number"
+                },
+                "allowDownloads": {
+                    "type": "boolean"
+                },
+                "showCaptions": {
+                    "type": "boolean"
+                },
+                "showTakenAt": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "required": [
+        "items",
+        "total"
+    ]
+}

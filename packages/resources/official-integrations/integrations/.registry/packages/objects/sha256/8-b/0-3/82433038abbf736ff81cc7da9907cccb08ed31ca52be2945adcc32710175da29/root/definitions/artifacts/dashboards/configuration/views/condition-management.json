@@ -1,0 +1,137 @@
+[
+    {
+        "widget": "w-table",
+        "id": "conditionsTable",
+        "title": "Offer conditions",
+        "source": {
+            "endpoint": "offerConditions",
+            "itemsPath": "items",
+            "totalPath": "total"
+        },
+        "rowKey": "code",
+        "columns": [
+            {
+                "id": "label",
+                "label": "Condition",
+                "path": "label",
+                "primary": true
+            },
+            {
+                "id": "code",
+                "label": "Code",
+                "path": "code"
+            },
+            {
+                "id": "position",
+                "label": "Position",
+                "path": "position"
+            },
+            {
+                "id": "enabled",
+                "label": "Enabled",
+                "path": "enabled",
+                "format": "badge"
+            }
+        ],
+        "actions": [
+            {
+                "id": "createCondition",
+                "label": "Create condition",
+                "tone": "primary",
+                "placement": "primary",
+                "selection": {
+                    "opens": "conditionDetail"
+                }
+            }
+        ],
+        "selection": {
+            "opens": "conditionDetail"
+        }
+    },
+    {
+        "widget": "w-detail",
+        "id": "conditionDetail",
+        "source": {
+            "endpoint": "offerCondition",
+            "params": {
+                "code": "$selection.id"
+            }
+        },
+        "title": {
+            "path": "label",
+            "fallback": "New offer condition"
+        },
+        "actions": [
+            {
+                "id": "saveCondition",
+                "label": "Save condition",
+                "tone": "primary",
+                "placement": "primary",
+                "endpoint": {
+                    "endpoint": "upsertOfferCondition",
+                    "body": {
+                        "code": "$field.code",
+                        "label": "$field.label",
+                        "description": "$field.description",
+                        "position": "$field.position",
+                        "enabled": "$field.enabled"
+                    }
+                },
+                "after": {
+                    "resource": "$result"
+                }
+            }
+        ],
+        "main": [
+            {
+                "id": "conditionFields",
+                "title": "Condition",
+                "fields": [
+                    {
+                        "id": "code",
+                        "label": "Code",
+                        "path": "code",
+                        "type": "text",
+                        "required": true
+                    },
+                    {
+                        "id": "label",
+                        "label": "Label",
+                        "path": "label",
+                        "type": "text",
+                        "required": true
+                    },
+                    {
+                        "id": "description",
+                        "label": "Description",
+                        "path": "description",
+                        "type": "textarea",
+                        "rows": 3
+                    },
+                    {
+                        "id": "position",
+                        "label": "Position",
+                        "path": "position",
+                        "type": "text"
+                    },
+                    {
+                        "id": "enabled",
+                        "label": "Enabled",
+                        "path": "enabled",
+                        "type": "select",
+                        "options": [
+                            {
+                                "value": "true",
+                                "label": "Yes"
+                            },
+                            {
+                                "value": "false",
+                                "label": "No"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

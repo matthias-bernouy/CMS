@@ -2,7 +2,7 @@
     "endpointId": "deliveryProjectionHealth",
     "method": "GET",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/projection-health",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/system/projection-health",
     "params": [],
     "headers": [
         {

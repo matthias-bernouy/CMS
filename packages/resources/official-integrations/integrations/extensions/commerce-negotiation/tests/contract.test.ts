@@ -9,7 +9,7 @@ import {
     type IntegrationConnectorDeployment,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
@@ -17,8 +17,8 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository, validateSource, type Source } from "@bernouy/cms-sources";
 import { declaredBlocViewSources } from "./support";
 
-describe("commerce negotiation 2.0.2", () => {
-    test("installs a Commerce-backed source, connector, and administration dashboards", async () => {
+describe("commerce negotiation 3.0.0", () => {
+    test("installs its Commerce-backed source and connector", async () => {
         const sources = new InMemorySourceRepository();
         const dashboards = new InMemoryDashboardRepository();
         const secrets = new InMemorySecretStore();
@@ -26,22 +26,11 @@ describe("commerce negotiation 2.0.2", () => {
         const functions = new InMemoryFunctionRepository();
         const importedBlocs: IntegrationBlocArtifact[] = [];
         await secrets.set("COMMERCE_KEY", "commerce-private-key");
-        await installations.create({
-            id: "basic-blocs",
-            label: "Basic Blocs",
-            definitionVersion: "1.0.0",
-            status: "success",
-            answersSnapshot: {},
-            secretRefs: {},
-            secretInputs: [],
-            artifacts: [{ type: "bloc", id: "basic-button", action: "created" }],
-            runs: [],
-        });
         await sources.createSource(commerceSource());
         await installations.create({
             id: "commerce",
             label: "Commerce",
-            definitionVersion: "1.0.0",
+            definitionVersion: "3.0.0",
             status: "success",
             answersSnapshot: { id: "commerce" },
             secretRefs: { cmsApiKey: "COMMERCE_KEY" },
@@ -97,46 +86,11 @@ describe("commerce negotiation 2.0.2", () => {
         );
 
         const source = await sources.getSource("urn:commerce-negotiation");
-        const proposals = await dashboards.getDashboard("commerce-negotiation-proposals");
-        const settings = await dashboards.getDashboard("commerce-negotiation-settings");
-        expect(result.artifacts.map((artifact) => artifact.type)).toEqual([
-            "source",
-            "function",
-            "function",
-            "dashboard",
-            "dashboard",
-            "bloc",
-            "bloc",
-            "bloc",
-            "bloc",
-        ]);
-        expect(importedBlocs.map((bloc) => bloc.tag)).toEqual([
-            "commerce-negotiation-form",
-            "commerce-negotiation-form-controller",
-            "commerce-negotiation-list",
-            "commerce-negotiation-list-controller",
-        ]);
-        expect(importedBlocs.filter((bloc) => bloc.internal).map((bloc) => bloc.tag)).toEqual([
-            "commerce-negotiation-form-controller",
-            "commerce-negotiation-list-controller",
-        ]);
-        expect(importedBlocs.filter((bloc) => bloc.internal).map((bloc) => bloc.viewPath)).toEqual([
-            "controller/Bloc.ts",
-            "controller/Bloc.ts",
-        ]);
+        expect(result.artifacts.map((artifact) => artifact.type)).toEqual(["source", "function", "function"]);
+        expect(importedBlocs).toEqual([]);
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
-        expect(proposals).toBeTruthy();
-        expect(settings).toBeTruthy();
-        expect(validateDashboard(proposals!, { source })).toEqual([]);
-        expect(validateDashboard(settings!, { source })).toEqual([]);
-        const settingsDetail = settings?.views.find((view) => view.id === "negotiationSettings");
-        if (settingsDetail?.widget !== "w-detail") {
-            throw new Error("negotiation settings detail not installed");
-        }
-        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
-            resource: "$result",
-        });
+        expect(await dashboards.getAllDashboards()).toEqual([]);
         expect(deployment?.dataApiSchemas).toEqual(["commerce_negotiation"]);
         expect(deployment?.functions[0]?.name).toBe("cms-commerce-negotiation");
         expect(deployment?.functions[0]?.secrets).not.toHaveProperty("CMS_COMMERCE_API_KEY");
@@ -172,11 +126,9 @@ describe("commerce negotiation 2.0.2", () => {
     });
 
     test("compiles customizable Light DOM compositions built from Basic Blocs", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
-            "commerce-negotiation",
-        );
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
         if (!definition) {
-            throw new Error("commerce-negotiation definition not found");
+            throw new Error("Ulvia collection definition not found");
         }
         const artifacts =
             definition.artifacts?.filter(
@@ -228,10 +180,12 @@ describe("commerce negotiation 2.0.2", () => {
         const listViewSource = declaredBlocViewSources(listController.bloc);
         const formEditorSource = formArtifact?.bloc.editorJS ?? "";
         const listEditorSource = listArtifact?.bloc.editorJS ?? "";
-        expect(definition.dependencies).toEqual([
-            { name: "basicBlocs", kind: "basic-blocs" },
-            { name: "commerce", kind: "commerce" },
-        ]);
+        expect(definition.type).toBe("collection");
+        expect(
+            definition.type === "collection"
+                ? definition.resources.find(({ id }) => id === "ulvia/blocs/commerce-negotiation-form")?.endpoints
+                : undefined,
+        ).toEqual(expect.arrayContaining([expect.objectContaining({ source: "commerce-negotiation" })]));
         expect(form.viewJS).toContain("window.p9r.Component");
         expect(formRuntime).toContain("getProposalPolicy");
         expect(formRuntime).toContain("myProposals");

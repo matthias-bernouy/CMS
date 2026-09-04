@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "li",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "List item",
+        "description": "Native list item with rich-text authoring."
+    }
+}

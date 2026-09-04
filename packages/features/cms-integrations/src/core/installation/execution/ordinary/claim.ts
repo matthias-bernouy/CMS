@@ -30,6 +30,9 @@ export async function claimPendingIntegrationOperation(
                 secretRefs: structuredClone(installation.secretRefs),
                 secretInputs: structuredClone(installation.secretInputs),
                 artifacts: structuredClone(installation.artifacts),
+                ...(installation.activeResources
+                    ? { activeResources: structuredClone(installation.activeResources) }
+                    : {}),
                 runCount: installation.runCount,
                 runs: structuredClone(installation.runs),
             },

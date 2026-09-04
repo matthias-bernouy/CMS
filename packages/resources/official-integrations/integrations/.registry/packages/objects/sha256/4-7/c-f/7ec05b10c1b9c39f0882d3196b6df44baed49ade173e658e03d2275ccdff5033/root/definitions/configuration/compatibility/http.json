@@ -1,0 +1,182 @@
+{
+    "endpoints": [
+        {
+            "route": "/admin/context",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/admin/context/publish",
+            "method": "POST",
+            "requiredInputs": [
+                "contextKey",
+                "documents",
+                "enabled",
+                "expectedRevision"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/admin/contexts",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/acceptances",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/acceptances/commit",
+            "method": "POST",
+            "requiredInputs": [
+                "cmsUserId",
+                "contextKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/acceptances/stage",
+            "method": "POST",
+            "requiredInputs": [
+                "contextKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/context/bootstrap",
+            "method": "POST",
+            "requiredInputs": [
+                "contextKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/context/sync",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/requirements",
+            "method": "GET",
+            "requiredInputs": [
+                "context"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        }
+    ],
+    "requiredSecrets": [
+        "CMS_CONSENT_API_KEY"
+    ]
+}

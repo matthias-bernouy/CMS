@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-sidebar-link",
+        "name": "Sidebar link",
+        "group": "Documentation · Navigation",
+        "description": "Current-aware link inside a documentation sidebar.",
+        "path": "blocs/foundation/documentation-blocs/navigation/sidebar/doc-sidebar-link"
+    }
+}

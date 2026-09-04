@@ -1,0 +1,1388 @@
+{
+    "categories": [
+        {
+            "id": "basic-blocs-actions",
+            "label": "Basic Blocs · Actions",
+            "description": "Semantic defaults for buttons, links and selected choices.",
+            "tokens": [
+                {
+                    "id": "basic-blocs-action-background",
+                    "label": "Action background",
+                    "description": "Background for prominent actions.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-base)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-action-text",
+                    "label": "Action text",
+                    "description": "Text and icons placed on prominent actions.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-foreground)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-action-border",
+                    "label": "Action border",
+                    "description": "Border for outlined and prominent actions.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-base)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-action-muted-background",
+                    "label": "Muted action background",
+                    "description": "Background for soft and secondary actions.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-muted)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-action-muted-text",
+                    "label": "Muted action text",
+                    "description": "Text and icons placed on soft action backgrounds.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-contrasted)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-action-min-height",
+                    "label": "Action minimum height",
+                    "description": "Minimum interactive height for buttons and action controls.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "2.5rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-action-radius",
+                    "label": "Action radius",
+                    "description": "Default rounding for buttons and selectable controls.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-radius-control)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-focus-color",
+                    "label": "Focus color",
+                    "description": "Visible keyboard focus indicator.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-base)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "basic-blocs-brand",
+            "label": "Basic Blocs · Brand",
+            "description": "Primary and secondary colors shared by official interface elements.",
+            "tokens": [
+                {
+                    "id": "basic-blocs-primary-base",
+                    "label": "Primary",
+                    "description": "Main brand color used for prominent actions and highlights.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#16634d",
+                        "dark": "#66d3ad"
+                    }
+                },
+                {
+                    "id": "basic-blocs-primary-muted",
+                    "label": "Primary muted",
+                    "description": "Soft primary background used for subtle emphasis.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#e2f0ea",
+                        "dark": "#173c31"
+                    }
+                },
+                {
+                    "id": "basic-blocs-primary-contrasted",
+                    "label": "Primary contrasted",
+                    "description": "Readable primary color used on muted primary backgrounds.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#164534",
+                        "dark": "#b9f5df"
+                    }
+                },
+                {
+                    "id": "basic-blocs-primary-foreground",
+                    "label": "Primary foreground",
+                    "description": "Text and icons placed on the primary color.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#ffffff",
+                        "dark": "#10231d"
+                    }
+                },
+                {
+                    "id": "basic-blocs-secondary-base",
+                    "label": "Secondary",
+                    "description": "Secondary color used for neutral and supporting controls.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#e7eee9",
+                        "dark": "#34443e"
+                    }
+                },
+                {
+                    "id": "basic-blocs-secondary-muted",
+                    "label": "Secondary muted",
+                    "description": "Soft secondary background used for quiet emphasis.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#f1f5f2",
+                        "dark": "#26342f"
+                    }
+                },
+                {
+                    "id": "basic-blocs-secondary-contrasted",
+                    "label": "Secondary contrasted",
+                    "description": "Readable secondary color used on muted secondary backgrounds.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#17362c",
+                        "dark": "#d7e7df"
+                    }
+                },
+                {
+                    "id": "basic-blocs-secondary-foreground",
+                    "label": "Secondary foreground",
+                    "description": "Text and icons placed on the secondary color.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#17362c",
+                        "dark": "#eff7f3"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "basic-blocs-feedback",
+            "label": "Basic Blocs · Feedback",
+            "description": "Semantic colors for informational, successful, warning and dangerous states.",
+            "tokens": [
+                {
+                    "id": "basic-blocs-info-base",
+                    "label": "Information",
+                    "description": "Strong informational accent.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#2f6f98",
+                        "dark": "#73b5dc"
+                    }
+                },
+                {
+                    "id": "basic-blocs-info-muted",
+                    "label": "Information muted",
+                    "description": "Soft informational background.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#edf6fb",
+                        "dark": "#173647"
+                    }
+                },
+                {
+                    "id": "basic-blocs-info-contrasted",
+                    "label": "Information contrasted",
+                    "description": "Readable information color used on muted backgrounds.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#17324d",
+                        "dark": "#bfe8ff"
+                    }
+                },
+                {
+                    "id": "basic-blocs-info-foreground",
+                    "label": "Information foreground",
+                    "description": "Text and icons placed on the information color.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#ffffff",
+                        "dark": "#0f2530"
+                    }
+                },
+                {
+                    "id": "basic-blocs-success-base",
+                    "label": "Success",
+                    "description": "Strong successful-state accent.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#21865f",
+                        "dark": "#58c998"
+                    }
+                },
+                {
+                    "id": "basic-blocs-success-muted",
+                    "label": "Success muted",
+                    "description": "Soft successful-state background.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#e8f4ef",
+                        "dark": "#173b2d"
+                    }
+                },
+                {
+                    "id": "basic-blocs-success-contrasted",
+                    "label": "Success contrasted",
+                    "description": "Readable success color used on muted backgrounds.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#185b43",
+                        "dark": "#baf2d7"
+                    }
+                },
+                {
+                    "id": "basic-blocs-success-foreground",
+                    "label": "Success foreground",
+                    "description": "Text and icons placed on the success color.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#ffffff",
+                        "dark": "#10281e"
+                    }
+                },
+                {
+                    "id": "basic-blocs-warning-base",
+                    "label": "Warning",
+                    "description": "Strong warning-state accent.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#b7791f",
+                        "dark": "#e0ab55"
+                    }
+                },
+                {
+                    "id": "basic-blocs-warning-muted",
+                    "label": "Warning muted",
+                    "description": "Soft warning-state background.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#f8f0df",
+                        "dark": "#443117"
+                    }
+                },
+                {
+                    "id": "basic-blocs-warning-contrasted",
+                    "label": "Warning contrasted",
+                    "description": "Readable warning color used on muted backgrounds.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#6b470c",
+                        "dark": "#f8ddb0"
+                    }
+                },
+                {
+                    "id": "basic-blocs-warning-foreground",
+                    "label": "Warning foreground",
+                    "description": "Text and icons placed on the warning color.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#1f1f1b",
+                        "dark": "#2d1d07"
+                    }
+                },
+                {
+                    "id": "basic-blocs-danger-base",
+                    "label": "Danger",
+                    "description": "Strong destructive and error-state accent.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#c4473d",
+                        "dark": "#e77b70"
+                    }
+                },
+                {
+                    "id": "basic-blocs-danger-muted",
+                    "label": "Danger muted",
+                    "description": "Soft destructive and error-state background.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#f9e9e7",
+                        "dark": "#4a211e"
+                    }
+                },
+                {
+                    "id": "basic-blocs-danger-contrasted",
+                    "label": "Danger contrasted",
+                    "description": "Readable danger color used on muted backgrounds.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#7b2923",
+                        "dark": "#ffd0cb"
+                    }
+                },
+                {
+                    "id": "basic-blocs-danger-foreground",
+                    "label": "Danger foreground",
+                    "description": "Text and icons placed on the danger color.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#ffffff",
+                        "dark": "#33100d"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "basic-blocs-form-controls",
+            "label": "Basic Blocs · Form controls",
+            "description": "Semantic defaults for fields, validation and supporting text.",
+            "tokens": [
+                {
+                    "id": "basic-blocs-field-background",
+                    "label": "Field background",
+                    "description": "Background for text fields and selectable controls.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-background)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-field-text",
+                    "label": "Field text",
+                    "description": "Text entered or selected in form controls.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-text)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-field-border",
+                    "label": "Field border",
+                    "description": "Default border for form controls.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-border)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-field-radius",
+                    "label": "Field radius",
+                    "description": "Default rounding for form controls.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-radius-card)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-muted-text",
+                    "label": "Supporting text",
+                    "description": "Hints and secondary form-control text.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-muted-text)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-error-text",
+                    "label": "Error text",
+                    "description": "Validation errors and invalid-control messages.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-danger-base)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "basic-blocs-layout",
+            "label": "Basic Blocs · Spacing and layout",
+            "description": "Shared spacing steps and content widths.",
+            "tokens": [
+                {
+                    "id": "basic-blocs-space-xs",
+                    "label": "Extra-small spacing",
+                    "description": "Tight spacing between closely related elements.",
+                    "type": "length",
+                    "defaults": {
+                        "light": ".25rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-space-sm",
+                    "label": "Small spacing",
+                    "description": "Compact inline and control spacing.",
+                    "type": "length",
+                    "defaults": {
+                        "light": ".5rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-space-md",
+                    "label": "Medium spacing",
+                    "description": "Default component and content spacing.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "1rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-space-lg",
+                    "label": "Large spacing",
+                    "description": "Separation between content groups.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "1.5rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-space-xl",
+                    "label": "Extra-large spacing",
+                    "description": "Generous section and page spacing.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "3rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-content-width",
+                    "label": "Content width",
+                    "description": "Maximum width for regular page content.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "68rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-wide-width",
+                    "label": "Wide content width",
+                    "description": "Maximum width for galleries and broad page sections.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "82rem"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "basic-blocs-shape",
+            "label": "Basic Blocs · Shape and elevation",
+            "description": "Shared corner radii and shadows.",
+            "tokens": [
+                {
+                    "id": "basic-blocs-radius-sm",
+                    "label": "Small radius",
+                    "description": "Subtle rounding for compact elements.",
+                    "type": "length",
+                    "defaults": {
+                        "light": ".25rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-radius-control",
+                    "label": "Control radius",
+                    "description": "Default rounding for buttons and form controls.",
+                    "type": "length",
+                    "defaults": {
+                        "light": ".375rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-radius-card",
+                    "label": "Card radius",
+                    "description": "Default rounding for cards and panels.",
+                    "type": "length",
+                    "defaults": {
+                        "light": ".5rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-radius-lg",
+                    "label": "Large radius",
+                    "description": "Prominent rounding for large surfaces.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "1rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-radius-pill",
+                    "label": "Pill radius",
+                    "description": "Fully rounded controls and badges.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "999px"
+                    }
+                },
+                {
+                    "id": "basic-blocs-shadow-sm",
+                    "label": "Small shadow",
+                    "description": "Subtle separation for compact floating elements.",
+                    "type": "shadow",
+                    "defaults": {
+                        "light": "0 .25rem .75rem rgb(18 30 24 / 10%)",
+                        "dark": "0 .25rem .75rem rgb(0 0 0 / 28%)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-shadow-soft",
+                    "label": "Soft shadow",
+                    "description": "Default elevation for cards and overlays.",
+                    "type": "shadow",
+                    "defaults": {
+                        "light": "0 .5rem 1.5rem rgb(18 30 24 / 12%)",
+                        "dark": "0 .5rem 1.5rem rgb(0 0 0 / 36%)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-shadow-lg",
+                    "label": "Large shadow",
+                    "description": "Strong elevation for prominent overlays.",
+                    "type": "shadow",
+                    "defaults": {
+                        "light": "0 .75rem 2rem rgb(18 30 24 / 18%)",
+                        "dark": "0 .75rem 2rem rgb(0 0 0 / 44%)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "basic-blocs-surfaces",
+            "label": "Basic Blocs · Surfaces and content",
+            "description": "Page, panel, border and readable content colors.",
+            "tokens": [
+                {
+                    "id": "basic-blocs-page-background",
+                    "label": "Page background",
+                    "description": "Main page canvas.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#f9f7f1",
+                        "dark": "#151815"
+                    }
+                },
+                {
+                    "id": "basic-blocs-surface-background",
+                    "label": "Surface background",
+                    "description": "Cards, panels and floating content.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#ffffff",
+                        "dark": "#1d211e"
+                    }
+                },
+                {
+                    "id": "basic-blocs-subtle-background",
+                    "label": "Subtle background",
+                    "description": "Quiet sections and alternate rows.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#f4f2ec",
+                        "dark": "#252b27"
+                    }
+                },
+                {
+                    "id": "basic-blocs-surface-text",
+                    "label": "Surface text",
+                    "description": "Headings and prominent text displayed on surfaces.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#26261f",
+                        "dark": "#f2f4ef"
+                    }
+                },
+                {
+                    "id": "basic-blocs-body-text",
+                    "label": "Body text",
+                    "description": "Long-form copy and regular content.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#3f3e38",
+                        "dark": "#d7dbd4"
+                    }
+                },
+                {
+                    "id": "basic-blocs-surface-muted-text",
+                    "label": "Muted text",
+                    "description": "Secondary copy, captions and supporting information.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#6d6b63",
+                        "dark": "#a8afa6"
+                    }
+                },
+                {
+                    "id": "basic-blocs-surface-border",
+                    "label": "Surface border",
+                    "description": "Dividers and neutral component outlines.",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#dfddd4",
+                        "dark": "#3a423c"
+                    }
+                },
+                {
+                    "id": "basic-blocs-surface-radius",
+                    "label": "Surface radius",
+                    "description": "Default rounding for cards and panels.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-radius-card)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-elevated-shadow",
+                    "label": "Elevated shadow",
+                    "description": "Default depth for floating surfaces.",
+                    "type": "shadow",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-shadow-soft)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "basic-blocs-typography",
+            "label": "Basic Blocs · Typography",
+            "description": "Font families, sizes and reading rhythm shared by official interfaces.",
+            "tokens": [
+                {
+                    "id": "basic-blocs-font-body",
+                    "label": "Body font",
+                    "description": "Paragraphs, controls and regular interface text.",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "Inter, system-ui, sans-serif"
+                    }
+                },
+                {
+                    "id": "basic-blocs-font-heading",
+                    "label": "Heading font",
+                    "description": "Titles and prominent headings.",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "Georgia, serif"
+                    }
+                },
+                {
+                    "id": "basic-blocs-font-mono",
+                    "label": "Monospace font",
+                    "description": "Code, identifiers and tabular technical values.",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "ui-monospace, SFMono-Regular, Consolas, monospace"
+                    }
+                },
+                {
+                    "id": "basic-blocs-font-size-small",
+                    "label": "Small text size",
+                    "description": "Captions and supporting interface text.",
+                    "type": "length",
+                    "defaults": {
+                        "light": ".875rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-font-size-body",
+                    "label": "Body text size",
+                    "description": "Default reading and interface text size.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "1rem"
+                    }
+                },
+                {
+                    "id": "basic-blocs-font-size-display",
+                    "label": "Display text size",
+                    "description": "Large marketing and page headings.",
+                    "type": "length",
+                    "defaults": {
+                        "light": "clamp(2.75rem, 7vw, 5.5rem)"
+                    }
+                },
+                {
+                    "id": "basic-blocs-line-height-body",
+                    "label": "Body line height",
+                    "description": "Default line height for readable copy.",
+                    "type": "number",
+                    "defaults": {
+                        "light": "1.6"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "commerce-offer-cards",
+            "label": "Commerce · Offer cards",
+            "description": "Theme defaults used by Commerce offer previews.",
+            "tokens": [
+                {
+                    "id": "commerce-offer-accent",
+                    "label": "Offer accent",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--primary-base)"
+                    }
+                },
+                {
+                    "id": "commerce-offer-background",
+                    "label": "Offer background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--bg-surface)"
+                    }
+                },
+                {
+                    "id": "commerce-offer-border",
+                    "label": "Offer border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--border-subtle, var(--border-default))"
+                    }
+                },
+                {
+                    "id": "commerce-offer-text",
+                    "label": "Offer text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-main)"
+                    }
+                },
+                {
+                    "id": "commerce-offer-muted-text",
+                    "label": "Muted offer text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-muted)"
+                    }
+                },
+                {
+                    "id": "commerce-offer-price",
+                    "label": "Offer price",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--secondary-base)"
+                    }
+                },
+                {
+                    "id": "commerce-offer-radius",
+                    "label": "Offer radius",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--radius-lg, var(--radius-card))"
+                    }
+                },
+                {
+                    "id": "commerce-offer-heading-font",
+                    "label": "Offer heading font",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "var(--font-display, var(--font-heading))"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "documentation-blocs-api",
+            "label": "Documentation Blocs · API reference",
+            "description": "Semantic colors for HTTP method badges and API contracts.",
+            "tokens": [
+                {
+                    "id": "documentation-blocs-api-get",
+                    "label": "GET method",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-info-base)",
+                        "dark": "var(--integration-ulvia-basic-blocs-info-base)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-api-post",
+                    "label": "POST method",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-success-base)",
+                        "dark": "var(--integration-ulvia-basic-blocs-success-base)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-api-put",
+                    "label": "PUT method",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-warning-base)",
+                        "dark": "var(--integration-ulvia-basic-blocs-warning-base)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-api-patch",
+                    "label": "PATCH method",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-base)",
+                        "dark": "var(--integration-ulvia-basic-blocs-primary-base)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-api-delete",
+                    "label": "DELETE method",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-danger-base)",
+                        "dark": "var(--integration-ulvia-basic-blocs-danger-base)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-api-neutral",
+                    "label": "Neutral method",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-muted-text)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-muted-text)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-api-method-text",
+                    "label": "Method badge text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-foreground)",
+                        "dark": "var(--integration-ulvia-basic-blocs-primary-foreground)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "documentation-blocs-callouts",
+            "label": "Documentation Blocs · Callouts",
+            "description": "Semantic callout colors inherited from the Basic Blocs feedback palette.",
+            "tokens": [
+                {
+                    "id": "documentation-blocs-info-background",
+                    "label": "Information background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-info-muted)",
+                        "dark": "var(--integration-ulvia-basic-blocs-info-muted)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-info-text",
+                    "label": "Information text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-info-contrasted)",
+                        "dark": "var(--integration-ulvia-basic-blocs-info-contrasted)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-tip-background",
+                    "label": "Tip background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-success-muted)",
+                        "dark": "var(--integration-ulvia-basic-blocs-success-muted)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-tip-text",
+                    "label": "Tip text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-success-contrasted)",
+                        "dark": "var(--integration-ulvia-basic-blocs-success-contrasted)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-warning-background",
+                    "label": "Warning background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-warning-muted)",
+                        "dark": "var(--integration-ulvia-basic-blocs-warning-muted)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-warning-text",
+                    "label": "Warning text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-warning-contrasted)",
+                        "dark": "var(--integration-ulvia-basic-blocs-warning-contrasted)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-danger-background",
+                    "label": "Danger background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-danger-muted)",
+                        "dark": "var(--integration-ulvia-basic-blocs-danger-muted)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-danger-text",
+                    "label": "Danger text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-danger-contrasted)",
+                        "dark": "var(--integration-ulvia-basic-blocs-danger-contrasted)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "documentation-blocs-code",
+            "label": "Documentation Blocs · Code and terminal",
+            "description": "Technical content surfaces that remain distinct from regular documentation panels.",
+            "tokens": [
+                {
+                    "id": "documentation-blocs-code-background",
+                    "label": "Code background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-text)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-background)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-code-header-background",
+                    "label": "Code header background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-body-text)",
+                        "dark": "var(--integration-ulvia-basic-blocs-subtle-background)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-code-text",
+                    "label": "Code text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-page-background)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-text)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-code-muted-text",
+                    "label": "Muted code text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-secondary-base)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-muted-text)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-terminal-prompt",
+                    "label": "Terminal prompt",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-success-base)",
+                        "dark": "var(--integration-ulvia-basic-blocs-success-base)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "documentation-blocs-foundations",
+            "label": "Documentation Blocs · Documentation foundations",
+            "description": "Shared typography, surfaces, shape and motion for documentation content.",
+            "tokens": [
+                {
+                    "id": "documentation-blocs-accent",
+                    "label": "Accent",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-primary-base)",
+                        "dark": "var(--integration-ulvia-basic-blocs-primary-base)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-background",
+                    "label": "Page background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-page-background)",
+                        "dark": "var(--integration-ulvia-basic-blocs-page-background)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-surface",
+                    "label": "Content surface",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-background)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-background)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-subtle-surface",
+                    "label": "Subtle surface",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-subtle-background)",
+                        "dark": "var(--integration-ulvia-basic-blocs-subtle-background)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-text",
+                    "label": "Body text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-body-text)",
+                        "dark": "var(--integration-ulvia-basic-blocs-body-text)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-heading-text",
+                    "label": "Heading text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-text)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-text)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-muted-text",
+                    "label": "Muted text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-muted-text)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-muted-text)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-border",
+                    "label": "Border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-border)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-border)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-font-body",
+                    "label": "Body font",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-font-body)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-font-heading",
+                    "label": "Heading font",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-font-heading)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-font-mono",
+                    "label": "Monospace font",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-font-mono)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-radius-control",
+                    "label": "Control radius",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-radius-control)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-radius-panel",
+                    "label": "Panel radius",
+                    "type": "length",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-radius-card)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-shadow",
+                    "label": "Floating content shadow",
+                    "type": "shadow",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-shadow-soft)",
+                        "dark": "var(--integration-ulvia-basic-blocs-shadow-soft)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-motion-duration",
+                    "label": "Motion duration",
+                    "type": "value",
+                    "defaults": {
+                        "light": "180ms"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "documentation-blocs-navigation",
+            "label": "Documentation Blocs · Documentation navigation",
+            "description": "Layout dimensions and surfaces for the documentation shell.",
+            "tokens": [
+                {
+                    "id": "documentation-blocs-topbar-height",
+                    "label": "Top bar height",
+                    "type": "length",
+                    "defaults": {
+                        "light": "3.5rem"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-sidebar-width",
+                    "label": "Sidebar width",
+                    "type": "length",
+                    "defaults": {
+                        "light": "16.25rem"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-topbar-background",
+                    "label": "Top bar background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-surface-background)",
+                        "dark": "var(--integration-ulvia-basic-blocs-surface-background)"
+                    }
+                },
+                {
+                    "id": "documentation-blocs-sidebar-background",
+                    "label": "Sidebar background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--integration-ulvia-basic-blocs-subtle-background)",
+                        "dark": "var(--integration-ulvia-basic-blocs-subtle-background)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "forms-form-surface",
+            "label": "Forms · Form surface",
+            "description": "Colours shared by the renderer, fields, progress, and completion state.",
+            "tokens": [
+                {
+                    "id": "forms-accent",
+                    "label": "Accent",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--primary-base, #b9583f)"
+                    }
+                },
+                {
+                    "id": "forms-background",
+                    "label": "Background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--bg-surface, #fffdf9)"
+                    }
+                },
+                {
+                    "id": "forms-text",
+                    "label": "Text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-main, #292724)"
+                    }
+                },
+                {
+                    "id": "forms-muted-text",
+                    "label": "Muted text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-muted, #77716b)"
+                    }
+                },
+                {
+                    "id": "forms-border",
+                    "label": "Border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--border-default, #dfd8ce)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "photo-albums-album-cards",
+            "label": "Photo Albums · Album cards",
+            "description": "Colors and shape shared by the public album catalogue.",
+            "tokens": [
+                {
+                    "id": "photo-albums-card-background",
+                    "label": "Card background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--bg-surface)"
+                    }
+                },
+                {
+                    "id": "photo-albums-card-border",
+                    "label": "Card border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--border-subtle, var(--border-default))"
+                    }
+                },
+                {
+                    "id": "photo-albums-card-text",
+                    "label": "Card text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-main)"
+                    }
+                },
+                {
+                    "id": "photo-albums-card-muted-text",
+                    "label": "Muted card text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "var(--text-muted)"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "restaurant-foundations",
+            "label": "Restaurant · Restaurant foundations",
+            "description": "Shared colors, typography, and dimensions for restaurant editorial surfaces.",
+            "tokens": [
+                {
+                    "id": "restaurant-background",
+                    "label": "Background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#15171a",
+                        "dark": "#15171a"
+                    }
+                },
+                {
+                    "id": "restaurant-surface",
+                    "label": "Surface",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#1d2124",
+                        "dark": "#1d2124"
+                    }
+                },
+                {
+                    "id": "restaurant-text",
+                    "label": "Text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#fffaf0",
+                        "dark": "#fffaf0"
+                    }
+                },
+                {
+                    "id": "restaurant-muted-text",
+                    "label": "Muted text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#d0cbc1",
+                        "dark": "#d0cbc1"
+                    }
+                },
+                {
+                    "id": "restaurant-accent",
+                    "label": "Accent",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#39ad65",
+                        "dark": "#39ad65"
+                    }
+                },
+                {
+                    "id": "restaurant-rating",
+                    "label": "Rating accent",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#e4b45d",
+                        "dark": "#e4b45d"
+                    }
+                },
+                {
+                    "id": "restaurant-content-background",
+                    "label": "Editorial background",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#f5f1e9",
+                        "dark": "#15171a"
+                    }
+                },
+                {
+                    "id": "restaurant-content-surface",
+                    "label": "Editorial surface",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#fffaf2",
+                        "dark": "#1d2124"
+                    }
+                },
+                {
+                    "id": "restaurant-content-text",
+                    "label": "Editorial text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#202421",
+                        "dark": "#fffaf0"
+                    }
+                },
+                {
+                    "id": "restaurant-content-muted-text",
+                    "label": "Editorial muted text",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#60665f",
+                        "dark": "#d0cbc1"
+                    }
+                },
+                {
+                    "id": "restaurant-content-border",
+                    "label": "Editorial border",
+                    "type": "color",
+                    "defaults": {
+                        "light": "#ddd8cf",
+                        "dark": "#4c4e4f"
+                    }
+                },
+                {
+                    "id": "restaurant-font-heading",
+                    "label": "Heading font",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "Georgia, 'Times New Roman', serif"
+                    }
+                },
+                {
+                    "id": "restaurant-font-body",
+                    "label": "Body font",
+                    "type": "font-family",
+                    "defaults": {
+                        "light": "Inter, system-ui, sans-serif"
+                    }
+                },
+                {
+                    "id": "restaurant-content-width",
+                    "label": "Content width",
+                    "type": "length",
+                    "defaults": {
+                        "light": "90rem"
+                    }
+                },
+                {
+                    "id": "restaurant-header-height",
+                    "label": "Header height",
+                    "type": "length",
+                    "defaults": {
+                        "light": "4.25rem"
+                    }
+                }
+            ]
+        }
+    ]
+}

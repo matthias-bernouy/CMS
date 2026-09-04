@@ -85,9 +85,9 @@ export function registerFoundationTests(): void {
 
         expect(list.map((entry) => entry.kind)).toContain("mondial-relay");
         expect(definition?.kind).toBe("mondial-relay");
-        expect(definition?.version).toBe("2.0.1");
+        expect(definition?.version).toBe("3.0.0");
         const serialized = JSON.stringify(definition);
-        expect(serialized).toContain("mondial-relay-picker");
+        expect(serialized).not.toContain("mondial-relay-picker");
         expect(serialized).toContain("reconcileShipments");
         expect(serialized).toContain("recipientHandoffAt");
         expect(definition?.inputs.find((input) => input.name === "mondialRelayConnectEndpoint")).toMatchObject({

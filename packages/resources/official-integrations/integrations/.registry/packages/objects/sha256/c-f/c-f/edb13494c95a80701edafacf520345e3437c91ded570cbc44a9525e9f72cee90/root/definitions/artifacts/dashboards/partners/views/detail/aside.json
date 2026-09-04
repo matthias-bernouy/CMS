@@ -1,0 +1,33 @@
+[
+  {
+    "id": "partnerAccess",
+    "title": "Access",
+    "fields": [
+      {
+        "id": "status",
+        "label": "Status",
+        "path": "status",
+        "type": "select",
+        "required": true,
+        "options": [
+          { "value": "active", "label": "Active" },
+          { "value": "suspended", "label": "Suspended" }
+        ]
+      },
+      {
+        "id": "capabilities",
+        "label": "Granted capabilities",
+        "path": "capabilities",
+        "type": "readonly"
+      }
+    ]
+  },
+  {
+    "id": "partnerDates",
+    "title": "History",
+    "fields": [
+      { "id": "createdAt", "label": "Created", "path": "createdAt", "type": "readonly", "format": "date" },
+      { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "type": "readonly", "format": "date" }
+    ]
+  }
+]

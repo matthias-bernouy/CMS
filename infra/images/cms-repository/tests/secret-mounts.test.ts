@@ -27,6 +27,9 @@ dockerTest(
         const secretPaths = {
             repositoryWorker: join(fixtureRoot, "repository-worker"),
             verifierWorker: join(fixtureRoot, "verifier-worker"),
+            releaseRuntimeSigningKey: join(fixtureRoot, "release-runtime-signing-key"),
+            sandboxVerificationKey: join(fixtureRoot, "sandbox-verification-key"),
+            releaseRuntimeVerificationKey: join(fixtureRoot, "release-runtime-verification-key"),
             verifierDatabase: join(fixtureRoot, "verifier-database"),
             postgresDatabase: join(fixtureRoot, "postgres-database"),
         };
@@ -44,12 +47,20 @@ dockerTest(
         try {
             writeFileSync(secretPaths.repositoryWorker, "shared-worker-token", { mode: 0o600 });
             writeFileSync(secretPaths.verifierWorker, "shared-worker-token", { mode: 0o600 });
+            writeFileSync(secretPaths.releaseRuntimeSigningKey, "release-runtime-signing-key", { mode: 0o600 });
+            writeFileSync(secretPaths.sandboxVerificationKey, "sandbox-verification-key", { mode: 0o644 });
+            writeFileSync(secretPaths.releaseRuntimeVerificationKey, "release-runtime-verification-key", {
+                mode: 0o644,
+            });
             writeFileSync(secretPaths.verifierDatabase, "shared-database-password", { mode: 0o600 });
             writeFileSync(secretPaths.postgresDatabase, "shared-database-password", { mode: 0o600 });
             setNumericOwners(fixtureRoot);
 
             expect(ownership(secretPaths.repositoryWorker)).toEqual({ uid: 1000, gid: 1000, mode: 0o600 });
             expect(ownership(secretPaths.verifierWorker)).toEqual({ uid: 1001, gid: 1001, mode: 0o600 });
+            expect(ownership(secretPaths.releaseRuntimeSigningKey)).toEqual({ uid: 1001, gid: 1001, mode: 0o600 });
+            expect(ownership(secretPaths.sandboxVerificationKey)).toEqual({ uid: 1002, gid: 1002, mode: 0o644 });
+            expect(ownership(secretPaths.releaseRuntimeVerificationKey)).toEqual({ uid: 1002, gid: 1002, mode: 0o644 });
             expect(ownership(secretPaths.verifierDatabase)).toEqual({ uid: 1001, gid: 1001, mode: 0o600 });
             expect(ownership(secretPaths.postgresDatabase)).toEqual({ uid: 70, gid: 70, mode: 0o600 });
 

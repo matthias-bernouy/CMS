@@ -1,0 +1,64 @@
+{
+    "id": "createProtectedOrder",
+    "method": "POST",
+    "access": {
+        "mode": "auth"
+    },
+    "meta": {
+        "name": "Create protected order",
+        "description": "Resolve the authoritative Commerce seller and require current held-payment eligibility before reserving an offer."
+    },
+    "input": {
+        "body": {
+            "type": "object",
+            "properties": {
+                "idempotencyKey": {
+                    "type": "string"
+                },
+                "agreementId": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "offerId": {
+                                "type": "string"
+                            },
+                            "quantity": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "offerId",
+                            "quantity"
+                        ]
+                    }
+                },
+                "shippingAddress": {
+                    "type": "object"
+                },
+                "billingAddress": {
+                    "type": "object"
+                },
+                "metadata": {
+                    "type": "object"
+                }
+            },
+            "required": [
+                "idempotencyKey"
+            ]
+        }
+    },
+    "output": {
+        "$include": "output.json"
+    },
+    "steps": {
+        "$include": "steps.json"
+    },
+    "return": {
+        "status": 200,
+        "body": "$steps.order"
+    }
+}

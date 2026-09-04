@@ -4,13 +4,14 @@
     "label": "Stripe Connect",
     "category": "Payments",
     "description": "Connect CMS users to Stripe connected accounts and destination-charge payments.",
-    "stable": "2.1.2",
-    "latest": "2.1.2",
+    "stable": "3.0.0",
+    "latest": "3.0.0",
     "versions": [
         {
-            "version": "2.1.2",
+            "version": "3.0.0",
             "path": ".",
             "definition": "definition.json"
         }
-    ]
+    ],
+    "type": "source"
 }

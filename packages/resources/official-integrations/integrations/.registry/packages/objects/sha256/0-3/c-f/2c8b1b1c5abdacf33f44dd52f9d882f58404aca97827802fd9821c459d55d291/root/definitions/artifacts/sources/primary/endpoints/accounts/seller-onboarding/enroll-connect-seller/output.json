@@ -1,0 +1,160 @@
+[
+    {
+        "status": "200",
+        "body": {
+            "type": "object",
+            "properties": {
+                "exists": {
+                    "type": "boolean"
+                },
+                "userId": {
+                    "type": "string",
+                    "semantic": {
+                        "kind": "user-id",
+                        "authority": "cms"
+                    }
+                },
+                "connected": {
+                    "type": "boolean"
+                },
+                "accountStatus": {
+                    "type": "string"
+                },
+                "stripeAccountId": {
+                    "type": "string"
+                },
+                "stripeAccountApiVersion": {
+                    "type": "string"
+                },
+                "termsStatus": {
+                    "type": "string"
+                },
+                "stripeTermsStatus": {
+                    "type": "string"
+                },
+                "marketplaceTermsStatus": {
+                    "type": "string"
+                },
+                "marketplaceTermsCurrentVersionAccepted": {
+                    "type": "boolean"
+                },
+                "marketplaceTermsAcceptedAt": {
+                    "type": "string"
+                },
+                "marketplaceTermsRequirement": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                        "mode": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        },
+                        "hash": {
+                            "type": "string"
+                        },
+                        "documentKey": {
+                            "type": "string"
+                        },
+                        "label": {
+                            "type": "string"
+                        },
+                        "consentText": {
+                            "type": "string"
+                        },
+                        "page": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "path": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "path",
+                                "title"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "mode",
+                        "version",
+                        "hash"
+                    ]
+                },
+                "enrollmentStatus": {
+                    "type": "string"
+                },
+                "onboardingStatus": {
+                    "type": "string"
+                },
+                "payoutsEnabled": {
+                    "type": "boolean"
+                },
+                "chargesEnabled": {
+                    "type": "boolean"
+                },
+                "detailsSubmitted": {
+                    "type": "boolean"
+                },
+                "applicationControlledRecipient": {
+                    "type": "boolean"
+                },
+                "stripeTransfersStatus": {
+                    "type": "string"
+                },
+                "bankAccountStatus": {
+                    "type": "string"
+                },
+                "bankPayoutsStatus": {
+                    "type": "string"
+                },
+                "canAcceptHeldPayments": {
+                    "type": "boolean"
+                },
+                "canReceiveProtectedPayments": {
+                    "type": "boolean"
+                },
+                "payoutBankReady": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "exists",
+                "connected",
+                "accountStatus",
+                "termsStatus",
+                "stripeTermsStatus",
+                "marketplaceTermsStatus",
+                "marketplaceTermsCurrentVersionAccepted",
+                "enrollmentStatus",
+                "onboardingStatus",
+                "stripeTransfersStatus",
+                "bankAccountStatus",
+                "bankPayoutsStatus",
+                "canAcceptHeldPayments",
+                "canReceiveProtectedPayments",
+                "payoutBankReady"
+            ]
+        }
+    },
+    {
+        "status": "400",
+        "body": {
+            "type": "object"
+        }
+    },
+    {
+        "status": "409",
+        "body": {
+            "type": "object"
+        }
+    }
+]

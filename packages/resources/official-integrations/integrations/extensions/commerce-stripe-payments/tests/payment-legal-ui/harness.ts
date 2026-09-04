@@ -10,9 +10,7 @@ export type TestPaymentElement = HTMLElement & {
 
 export async function mountPaymentElement(attributes: Record<string, string> = {}): Promise<TestPaymentElement> {
     const tag = `test-commerce-stripe-legal-${++tagSequence}`;
-    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
-        "commerce-stripe-payments",
-    );
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
     const artifact = definition?.artifacts?.find(
         (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "commerce-stripe-payment",
     );

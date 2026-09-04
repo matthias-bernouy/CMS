@@ -107,5 +107,6 @@
             "status": 200,
             "body": "$steps.requirements"
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

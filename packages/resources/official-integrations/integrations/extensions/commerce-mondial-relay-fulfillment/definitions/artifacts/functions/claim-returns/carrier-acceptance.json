@@ -120,5 +120,6 @@
                 "claim": "$steps.commerceClaim"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

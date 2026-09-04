@@ -1,0 +1,61 @@
+[
+    {
+        "name": "offerId",
+        "in": "query",
+        "type": "number",
+        "required": true
+    },
+    {
+        "name": "offerSlug",
+        "in": "query",
+        "type": "string",
+        "required": true
+    },
+    {
+        "name": "offerTitle",
+        "in": "query",
+        "type": "string",
+        "required": true
+    },
+    {
+        "name": "sellerCmsUserId",
+        "in": "query",
+        "type": "string",
+        "required": true
+    },
+    {
+        "name": "sellerDisplayName",
+        "in": "query",
+        "type": "string"
+    },
+    {
+        "name": "referenceAmount",
+        "in": "query",
+        "type": "number",
+        "required": true
+    },
+    {
+        "name": "currency",
+        "in": "query",
+        "type": "string",
+        "required": true
+    },
+    {
+        "name": "wholeUnitPrices",
+        "in": "query",
+        "type": "boolean",
+        "required": true
+    },
+    {
+        "name": "publicationStatus",
+        "in": "query",
+        "type": "string",
+        "required": true
+    },
+    {
+        "name": "availability",
+        "in": "query",
+        "type": "string",
+        "required": true
+    }
+]

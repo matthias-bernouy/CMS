@@ -1,8 +1,8 @@
 {
-    "schema": "cms.integration.definition.v1",
+    "schema": "cms.integration.definition.v2",
     "kind": "mondial-relay",
     "label": "Mondial Relay Delivery",
-    "version": "2.0.1",
+    "version": "3.0.0",
     "category": "Delivery",
     "description": "Create and reconcile protected single-parcel Mondial Relay 24R shipments through a Supabase connector.",
     "icon": {
@@ -25,9 +25,8 @@
     },
     "artifacts": {
         "$files": [
-            "artifacts/blocs/mondial-relay-picker.json",
-            "artifacts/sources/primary/definition.json",
-            "artifacts/dashboards/delivery/definition.json"
+            "artifacts/sources/primary/definition.json"
         ]
-    }
+    },
+    "type": "source"
 }

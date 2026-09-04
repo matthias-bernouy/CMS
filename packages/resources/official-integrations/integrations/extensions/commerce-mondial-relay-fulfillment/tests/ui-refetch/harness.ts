@@ -2,8 +2,12 @@ import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { Component } from "@bernouy/components/base";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
-const blocDirectory = resolve(import.meta.dir, "../../blocs/commerce-mondial-relay-sale-fulfillment");
+const blocDirectory = resolve(
+    OFFICIAL_INTEGRATIONS_ROOT,
+    "collections/ulvia/blocs/extensions/commerce-mondial-relay-fulfillment/commerce-mondial-relay-sale-fulfillment",
+);
 const tag = "test-commerce-mondial-relay-sale-fulfillment-refetch";
 let defaultContent = "";
 

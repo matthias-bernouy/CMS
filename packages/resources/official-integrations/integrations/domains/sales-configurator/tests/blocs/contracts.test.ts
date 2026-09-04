@@ -23,7 +23,7 @@ describe("sales-configurator bloc contracts", () => {
             });
             expect(artifact).toMatchObject({
                 type: "bloc",
-                bloc: { tag, path: `blocs/${tag}` },
+                bloc: { tag, path: `blocs/domains/sales-configurator/${tag}` },
             });
             expect(view).toContain("extends HTMLElement");
             expect(view).not.toMatch(/\bfetch\s*\(/);

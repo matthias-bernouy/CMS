@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { restaurantPreview } from "../blocs/form-renderer/preview";
+import { restaurantPreview } from "../../../collections/ulvia/blocs/domains/forms/form-renderer/preview";
 import { handleFormsRequest } from "../connectors/supabase/functions/cms-forms/handler";
 
 const originalFetch = globalThis.fetch;

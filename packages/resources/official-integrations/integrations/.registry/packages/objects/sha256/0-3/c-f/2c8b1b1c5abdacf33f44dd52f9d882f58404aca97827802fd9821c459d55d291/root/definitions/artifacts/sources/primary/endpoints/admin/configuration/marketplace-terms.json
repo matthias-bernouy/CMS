@@ -1,0 +1,51 @@
+[
+    {
+        "endpointId": "getMarketplaceTermsManagement",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect-management/marketplace-terms",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " }
+            },
+            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } },
+            { "name": "x-cms-user-role", "source": { "from": "computed", "ref": "userRole" } }
+        ],
+        "output": [
+            { "status": "200", "body": { "$include": "../../../schemas/marketplace-terms-management.json" } },
+            { "status": "default", "body": { "type": "object" } }
+        ]
+    },
+    {
+        "endpointId": "publishMarketplaceTermsManagement",
+        "method": "POST",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect-management/marketplace-terms/publish",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " }
+            },
+            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } },
+            { "name": "x-cms-user-role", "source": { "from": "computed", "ref": "userRole" } }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "expectedVersion": { "type": "string" },
+                "documentKey": { "type": "string" },
+                "label": { "type": "string" },
+                "consentText": { "type": "string" },
+                "publishedSnapshotUrl": { "type": "string" }
+            },
+            "required": ["expectedVersion", "documentKey", "label", "consentText", "publishedSnapshotUrl"]
+        },
+        "output": [
+            { "status": "200", "body": { "$include": "../../../schemas/marketplace-terms-management.json" } },
+            { "status": "default", "body": { "type": "object" } }
+        ]
+    }
+]

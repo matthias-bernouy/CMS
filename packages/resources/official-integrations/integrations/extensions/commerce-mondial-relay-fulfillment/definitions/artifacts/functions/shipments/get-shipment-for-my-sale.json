@@ -86,5 +86,6 @@
                 "shipments": "$steps.details"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

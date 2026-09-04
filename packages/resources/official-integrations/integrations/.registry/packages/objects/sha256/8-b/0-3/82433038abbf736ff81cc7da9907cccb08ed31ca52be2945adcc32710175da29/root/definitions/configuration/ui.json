@@ -1,0 +1,89 @@
+{
+    "mark": "C",
+    "markClass": "commerce",
+    "emit": "source:updated",
+    "instructions": [
+        [
+            "Install Basic Blocs",
+            "Install the Basic Blocs integration used by the account offers composition."
+        ],
+        [
+            "Deploy connector resources",
+            "Apply the bundled private Commerce schema and deploy the cms-commerce Edge Function."
+        ],
+        [
+            "Generate CMS API key",
+            "Install the generated bearer token in the CMS secret store and Supabase function secrets."
+        ],
+        [
+            "Configure Commerce",
+            "Review marketplace settings, offer conditions, workflows, and metadata definitions."
+        ]
+    ],
+    "scopes": [
+        "Public product and offer catalogue",
+        "Marketplace seller registration and offer management",
+        "Authenticated buyer carts and seller-grouped checkout",
+        "Versioned buyer legal requirements and immutable acceptance evidence",
+        "Administrator seller and offer review",
+        "Atomic single-seller ordering",
+        "Built-in buyer notifications with optional Emailer delivery",
+        "External or disabled notification delivery modes",
+        "Commerce settings, workflows, conditions, and metadata",
+        "Public offer list and preview blocs plus authenticated seller offer listing",
+        "Backoffice Commerce dashboards"
+    ],
+    "checks": [
+        "The Commerce schema stays private to anon and authenticated Supabase roles.",
+        "Seller and buyer identities come from the CMS-computed x-cms-user-id header.",
+        "Cart mutations use optimistic versions, and checkout revalidates every offer before creating seller-grouped orders.",
+        "Prices, snapshots, workflow transitions, and ownership are validated by transactional database commands.",
+        "Required buyer legal documents are resolved from published CMS pages and accepted before protected payment preparation.",
+        "Payment and delivery remain separate integrations linked through immutable order public ids."
+    ],
+    "resources": [
+        [
+            "Dependencies",
+            "Basic Blocs layout, form, media, feedback, and pagination controls"
+        ],
+        [
+            "Sources",
+            "Commerce source contract"
+        ],
+        [
+            "Blocs",
+            "Public offer browsing, authenticated seller offers, and buyer notification preferences"
+        ],
+        [
+            "Dashboards",
+            "Products, catalogue taxonomy, offers, orders, sellers, settings, workflow, and metadata dashboards"
+        ],
+        [
+            "Secrets",
+            "Generated private CMS Commerce API key"
+        ],
+        [
+            "Supabase",
+            "Private commerce schema, native notification queue, and modular cms-commerce Edge Function"
+        ]
+    ],
+    "review": [
+        "Keep publication status separate from configurable workflow state.",
+        "Keep price ranges, access rules, and seller verification out of custom metadata.",
+        "Do not trust client-provided seller ids, buyer ids, prices, cart projections, order totals, or snapshots.",
+        "Do not trust client-provided legal hashes, page content, actors, or acceptance timestamps.",
+        "Use metadata only for validated descriptive information.",
+        "Keep notification delivery behind the Commerce source contract; never write into a provider database."
+    ],
+    "sync": [
+        "Validate answers",
+        "Validate Basic Blocs dependency",
+        "Generate private API key",
+        "Deploy Supabase connector",
+        "Materialize configured published legal pages",
+        "Install Commerce source and custom-field overlays",
+        "Install Commerce dashboards",
+        "Refresh Sources"
+    ],
+    "syncNote": "Commerce keeps domain state and notification intent in one transactional schema; the configured sender owns message delivery."
+}

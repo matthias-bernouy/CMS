@@ -1,0 +1,67 @@
+[
+    {
+        "$include": "get-order-delivery-quote-authorization.json"
+    },
+    {
+        "$include": "get-order-delivery-setup-context.json"
+    },
+    {
+        "endpointId": "getOrderDeliverySelectionContext",
+        "method": "GET",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/delivery-selection-context",
+        "params": [
+            {
+                "name": "orderId",
+                "in": "query",
+                "type": "string"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "publicId": {
+                            "type": "string"
+                        },
+                        "buyerCmsUserId": {
+                            "type": "string",
+                            "semantic": {
+                                "kind": "user-id",
+                                "authority": "cms"
+                            }
+                        },
+                        "deliveryQuoteId": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    },
+                    "required": [
+                        "publicId",
+                        "buyerCmsUserId",
+                        "deliveryQuoteId"
+                    ]
+                }
+            }
+        ]
+    }
+]

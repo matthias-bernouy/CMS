@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-edit-link",
+        "name": "Edit link",
+        "group": "Documentation · Page",
+        "description": "Link from a documentation page to its source file.",
+        "path": "blocs/foundation/documentation-blocs/page/doc-edit-link"
+    }
+}

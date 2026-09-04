@@ -1,0 +1,146 @@
+{
+    "endpointId": "createMyProposal",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/proposals",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "offerId": {
+                "type": "number"
+            },
+            "amount": {
+                "type": "number"
+            },
+            "message": {
+                "type": "string"
+            },
+            "offerSlug": {
+                "type": "string"
+            },
+      "offerTitle": {
+        "type": "string"
+      },
+      "offerMainImageMediaId": {
+        "type": "number",
+        "nullable": true
+      },
+            "sellerCmsUserId": {
+                "type": "string"
+            },
+            "sellerDisplayName": {
+                "type": "string"
+            },
+            "referenceAmount": {
+                "type": "number"
+            },
+            "currency": {
+                "type": "string"
+            },
+            "wholeUnitPrices": {
+                "type": "boolean"
+            },
+            "publicationStatus": {
+                "type": "string"
+            },
+            "availability": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "offerId",
+            "amount",
+            "offerSlug",
+      "offerTitle",
+      "offerMainImageMediaId",
+            "sellerCmsUserId",
+            "referenceAmount",
+            "currency",
+            "wholeUnitPrices",
+            "publicationStatus",
+            "availability"
+        ]
+    },
+    "output": [
+        {
+            "status": "201",
+            "body": {
+                "type": "object"
+            }
+        },
+        {
+            "status": "400",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "403",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "404",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        },
+        {
+            "status": "409",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        }
+    ]
+}

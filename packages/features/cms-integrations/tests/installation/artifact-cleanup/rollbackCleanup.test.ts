@@ -69,6 +69,51 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
         expect(installation?.artifacts).toEqual([{ type: "bloc", id: "legacy-card", action: "created" }]);
     });
 
+    test("deletes an obsolete bloc through the host-owned transactional importer", async () => {
+        const sources = new InMemorySourceRepository();
+        const secrets = new InMemorySecretStore();
+        const installations = new InMemoryIntegrationInstallationRepository();
+        const previous = blocDefinition("1.0.0", true);
+        const current = blocDefinition("2.0.0", false);
+        let blocExists = false;
+        const deps = {
+            sources,
+            secrets,
+            blocs: {
+                async importBloc(artifact: { tag: string }) {
+                    blocExists = true;
+                    return { id: artifact.tag, action: "created" as const };
+                },
+                async deleteBloc(id: string, installationId: string) {
+                    expect(id).toBe("legacy-card");
+                    expect(installationId).toBe("bloc-cleanup");
+                    blocExists = false;
+                    return async () => {
+                        blocExists = true;
+                    };
+                },
+            },
+        };
+
+        await runIntegrationInstallation({
+            mode: "create",
+            deps,
+            installations,
+            siteIntegrations: [previous],
+            dto: { kind: previous.kind, answers: {}, options: {} },
+        });
+        await runIntegrationInstallation({
+            mode: "upgrade",
+            deps,
+            installations,
+            integrationId: current.kind,
+            targetDefinition: current,
+        });
+
+        expect(blocExists).toBe(false);
+        expect((await installations.get("bloc-cleanup"))?.artifacts).toEqual([]);
+    });
+
     test("restores obsolete artifacts when the changed installation hook fails", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();

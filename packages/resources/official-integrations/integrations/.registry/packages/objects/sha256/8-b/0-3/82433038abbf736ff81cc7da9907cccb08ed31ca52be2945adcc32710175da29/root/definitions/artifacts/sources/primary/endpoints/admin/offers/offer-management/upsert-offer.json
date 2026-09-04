@@ -1,0 +1,150 @@
+{
+    "endpointId": "upsertOffer",
+    "method": "POST",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer",
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "type": "string"
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "expectedVersion": {
+                "type": "number"
+            },
+            "sellerId": {
+                "type": "string"
+            },
+            "productId": {
+                "type": "string"
+            },
+            "variantId": {
+                "type": "string"
+            },
+            "slug": {
+                "type": "string"
+            },
+            "title": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            },
+            "conditionCode": {
+                "type": "string"
+            },
+            "publicationStatus": {
+                "type": "string"
+            },
+            "workflowState": {
+                "type": "string"
+            },
+            "acceptedPriceAmount": {
+                "type": "number"
+            },
+            "currency": {
+                "type": "string"
+            },
+            "availability": {
+                "type": "string"
+            },
+            "quantityAvailable": {
+                "type": "number"
+            },
+            "metadata": {
+                "type": "object"
+            }
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "sellerId": {
+                        "type": "number"
+                    },
+                    "productId": {
+                        "type": "number"
+                    },
+                    "variantId": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "conditionCode": {
+                        "type": "string"
+                    },
+                    "publicationStatus": {
+                        "type": "string"
+                    },
+                    "workflowState": {
+                        "type": "string"
+                    },
+                    "acceptedPriceAmount": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "availability": {
+                        "type": "string"
+                    },
+                    "quantityAvailable": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "inventoryRevision": {
+                        "type": "number"
+                    },
+                    "metadata": {
+                        "type": "object"
+                    },
+                    "version": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}

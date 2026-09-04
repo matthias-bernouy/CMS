@@ -3,10 +3,10 @@ import { resolve } from "node:path";
 import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
 import { BindingCore, BINDING_CORE_TAG } from "@bernouy/components/binding";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 const tag = "consent-field";
-const versionRoot = resolve(import.meta.dir, "..");
-const blocRoot = resolve(versionRoot, "blocs/consent-field");
+const blocRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/ulvia/blocs/domains/consent/consent-field");
 const originalFetch = globalThis.fetch;
 
 beforeAll(async () => {

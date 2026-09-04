@@ -1,0 +1,1 @@
+Declare transitive block requirements while keeping support blocks hidden from the authoring catalogue.

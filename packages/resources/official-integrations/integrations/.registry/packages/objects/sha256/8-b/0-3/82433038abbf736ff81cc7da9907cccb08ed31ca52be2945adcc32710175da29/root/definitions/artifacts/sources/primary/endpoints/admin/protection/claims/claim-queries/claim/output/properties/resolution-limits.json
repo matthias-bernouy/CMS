@@ -1,0 +1,23 @@
+{
+    "type": "object",
+    "properties": {
+        "remainingBuyerRefundAmount": {
+            "type": "number"
+        },
+        "remainingMerchandiseRefundAmount": {
+            "type": "number"
+        },
+        "remainingShippingRefundAmount": {
+            "type": "number"
+        },
+        "remainingProtectionFeeRefundAmount": {
+            "type": "number"
+        },
+        "maximumSellerTransferAmount": {
+            "type": "number"
+        },
+        "remainingPlatformContributionAmount": {
+            "type": "number"
+        }
+    }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "widget": "w-table",
+    "id": "requirementsTable",
+    "title": "Prerequisites",
+    "source": {
+      "endpoint": "manageRequirements",
+      "params": {
+        "q": "$filter.q",
+        "limit": "100"
+      },
+      "itemsPath": "items",
+      "totalPath": "total"
+    },
+    "rowKey": "id",
+    "filters": [
+      {
+        "id": "q",
+        "label": "Search",
+        "param": "q",
+        "type": "text",
+        "placeholder": "Search prerequisites"
+      }
+    ],
+    "columns": [
+      { "id": "subjectName", "label": "Subject", "path": "subjectName", "primary": true, "width": "minmax(16rem, 1.5fr)" },
+      { "id": "subjectKind", "label": "Subject type", "path": "subjectKind", "format": "badge", "width": "9rem" },
+      { "id": "requiredName", "label": "Requires", "path": "requiredName", "width": "minmax(16rem, 1.5fr)" },
+      { "id": "requiredKind", "label": "Required type", "path": "requiredKind", "format": "badge", "width": "9rem" }
+    ],
+    "actions": [
+      {
+        "id": "createRequirement",
+        "label": "Add prerequisite",
+        "tone": "primary",
+        "placement": "primary",
+        "selection": { "opens": "requirementDetail" }
+      }
+    ],
+    "selection": { "opens": "requirementDetail" }
+  }
+]

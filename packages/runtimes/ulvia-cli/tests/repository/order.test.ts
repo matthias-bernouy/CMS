@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { orderPushRecords } from "../../src/publication/order";
 import type { LocalPackageRecord } from "../../src/repository/manifest";
-import { integrationDefinition } from "../fixtures";
 
 describe("push planning", () => {
     test("orders every version after its required local dependencies", () => {
@@ -42,8 +41,9 @@ function record(
         verificationDigest: "b".repeat(64),
         source: `local:/${kind}`,
         pulledAt: "2026-01-01T00:00:00.000Z",
-        definition: integrationDefinition(kind, version, dependencies.length ? { dependencies } : {}),
-    } as LocalPackageRecord;
+        metadata: { label: kind },
+        dependencies,
+    };
 }
 
 function coordinate(record: LocalPackageRecord): string {

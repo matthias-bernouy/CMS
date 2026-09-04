@@ -1,9 +1,15 @@
-import { canonicalJsonBytes, type ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
-import { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs";
+import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
 import type { StoredIntegrationVerificationBundle } from "@bernouy/cms-integration-registry";
 import { FsIntegrationVerificationBundleStore } from "@bernouy/cms-integration-registry/fs";
-import { parseIntegrationDefinition, type IntegrationDefinition } from "@bernouy/cms-integrations";
-import { readManifest, type LocalPackageAdmission, type LocalPackageRecord, writeManifest } from "./manifest";
+import type { IntegrationDefinition } from "@bernouy/cms-integrations";
+import {
+    compactDefinitionRecord,
+    readManifest,
+    type LocalPackageAdmission,
+    type LocalPackageRecord,
+    writeManifest,
+} from "./manifest";
+import { LocalPackageReader } from "./packageReader";
 
 export type PulledPackage = Readonly<{
     package: ResolvedIntegrationPackage;
@@ -18,7 +24,7 @@ export type StorePackageResult = Readonly<{
 }>;
 
 export class LocalIntegrationRepository {
-    private readonly cache: FsIntegrationPackageCache;
+    private readonly packages: LocalPackageReader;
     private readonly verifications: FsIntegrationVerificationBundleStore;
     private mutation = Promise.resolve();
 
@@ -26,12 +32,12 @@ export class LocalIntegrationRepository {
         private readonly root: string,
         packageRoot: string,
     ) {
-        this.cache = new FsIntegrationPackageCache({ root: packageRoot });
+        this.packages = new LocalPackageReader(packageRoot);
         this.verifications = new FsIntegrationVerificationBundleStore(root);
     }
 
     async init(): Promise<void> {
-        await this.cache.init();
+        await this.packages.init();
         await readManifest(this.root);
     }
 
@@ -44,15 +50,11 @@ export class LocalIntegrationRepository {
     }
 
     async getPackage(record: LocalPackageRecord): Promise<ResolvedIntegrationPackage> {
-        const materialized = await this.cache.get(record.digest);
-        if (!materialized) {
-            throw new Error(`Local package ${record.kind}@${record.version} is missing for digest ${record.digest}`);
-        }
-        return {
-            envelope: materialized.envelope,
-            digest: materialized.digest,
-            canonicalBytes: canonicalJsonBytes(materialized.envelope),
-        };
+        return await this.packages.getPackage(record);
+    }
+
+    async getDefinition(record: LocalPackageRecord): Promise<IntegrationDefinition> {
+        return await this.packages.getDefinition(record);
     }
 
     async getVerification(record: LocalPackageRecord): Promise<StoredIntegrationVerificationBundle | null> {
@@ -83,13 +85,14 @@ export class LocalIntegrationRepository {
     async store(input: PulledPackage): Promise<StorePackageResult> {
         const { kind, version } = input.package.envelope;
         assertVerificationTarget(input, kind, version);
-        const materialized = await this.cache.materialize(input.package, {
+        const compact = compactDefinitionRecord(input.definition, kind, version);
+        const materialized = await this.packages.materialize(input.package, {
             kind,
             version,
             digest: input.package.digest,
         });
         const verification = input.verification ? await this.verifications.put(input.verification) : undefined;
-        await this.cache.recordReference(kind, version, materialized.digest);
+        await this.packages.recordReference(kind, version, materialized.digest);
         return await this.exclusive(async () => {
             const current = [...(await this.list())];
             const existing = current.find((record) => record.kind === kind && record.version === version);
@@ -121,7 +124,7 @@ export class LocalIntegrationRepository {
                 ...(verification ? { verificationDigest: verification.digest } : {}),
                 source: input.source,
                 pulledAt: new Date().toISOString(),
-                definition: parseIntegrationDefinition(input.definition),
+                ...compact,
             };
             await writeManifest(this.root, [...current, record]);
             return { record, added: true };

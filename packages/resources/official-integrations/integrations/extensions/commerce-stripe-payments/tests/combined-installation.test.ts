@@ -31,7 +31,7 @@ import {
 import { InMemoryTriggerRepository, validateTrigger } from "@bernouy/cms-triggers";
 import { stripeWebhookProvisioner } from "../../../../tests/helpers/stripeWebhookProvisioner";
 
-const INTEGRATION_KINDS = ["basic-blocs", "commerce", "stripe-connect", "commerce-stripe-payments"] as const;
+const INTEGRATION_KINDS = ["commerce", "stripe-connect", "commerce-stripe-payments"] as const;
 
 describe("Commerce protected Stripe combined installation", () => {
     test("installs the real dependency graph with compatible contracts and least-privilege access", async () => {
@@ -79,7 +79,6 @@ describe("Commerce protected Stripe combined installation", () => {
             blocs: repositoryBackedBlocImporter(blocs),
         };
 
-        await install("basic-blocs", {}, definitions, deps, installations);
         await install(
             "commerce",
             { id: "commerce", buyerLegalEnabled: false, buyerLegalDocuments: [] },
@@ -134,8 +133,6 @@ describe("Commerce protected Stripe combined installation", () => {
         expect(linkingResult.artifacts.map((artifact) => artifact.type)).toEqual([
             ...Array(17).fill("function"),
             ...Array(15).fill("trigger"),
-            "dashboard",
-            "bloc",
         ]);
         for (const kind of INTEGRATION_KINDS) {
             expect((await installations.get(kind))?.status).toBe("success");
@@ -277,46 +274,7 @@ describe("Commerce protected Stripe combined installation", () => {
         ]);
 
         const installedDashboards = await dashboards.getAllDashboards();
-        expect(installedDashboards.map((dashboard) => dashboard.id).sort()).toEqual([
-            "commerce-configuration",
-            "commerce-metadata",
-            "commerce-offers",
-            "commerce-orders",
-            "commerce-products",
-            "commerce-sellers",
-            "commerce-stripe-payments-operations",
-            "commerce-taxonomy",
-            "commerce-workflow",
-            "stripe-connect-marketplace-terms",
-        ]);
-        for (const dashboard of installedDashboards) {
-            const source = await sources.getSource(makeSourceUrn(dashboard.source));
-            expect(source).not.toBeNull();
-            expect(validateDashboard(dashboard, { source })).toEqual([]);
-            await assertDashboardEndpointRefs(dashboard, sources);
-        }
-        expect(await dashboards.getDashboard("stripe-connect-marketplace-terms")).not.toBeNull();
-
-        const operationsDashboard = await dashboards.getDashboard("commerce-stripe-payments-operations");
-        if (!operationsDashboard) {
-            throw new Error("protected operations dashboard not installed");
-        }
-        const operationRefs = collectEndpointRefs(operationsDashboard).map(
-            (ref) => `${ref.sourceId ?? operationsDashboard.source}:${ref.endpoint}`,
-        );
-        expect(operationRefs).not.toContain("stripe-connect:createProtectedPayment");
-        expect(operationRefs).not.toContain("stripe-connect:requestSettlementRelease");
-        expect(operationRefs).not.toContain("stripe-connect:requestProtectedRefund");
-        expect(operationRefs).toEqual(
-            expect.arrayContaining([
-                "commerce:protectedPayments",
-                "commerce:claims",
-                "commerce:refundRequests",
-                "stripe-connect:listProviderPayments",
-                "stripe-connect:listStripeDisputes",
-                "stripe-connect:listProviderExceptions",
-            ]),
-        );
+        expect(installedDashboards).toEqual([]);
 
         await assertImportedAccessGrants(sources, functions, roles);
         expect(

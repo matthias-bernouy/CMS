@@ -16,7 +16,7 @@ export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: s
         return;
     }
 
-    const blocList = await cms.repository.getBlocsList();
+    const blocList = await cms.repository.getBlocsList({ includeInactive: true });
     const resolveUsage = createBlocUsageResolver(blocList, cms.repository);
     const usages = await Promise.all(pages.map((page) => resolveUsage(page.content)));
     pages.forEach((page, index) => {

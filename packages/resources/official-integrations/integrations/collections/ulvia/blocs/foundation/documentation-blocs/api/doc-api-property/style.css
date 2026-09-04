@@ -1,0 +1,48 @@
+:host {
+    --prop-border: var(--integration-ulvia-documentation-blocs-border, var(--integration-ulvia-basic-blocs-surface-border, #e2e8f0));
+    --prop-accent: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
+    --prop-muted: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #64748b));
+    display: block;
+    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+}
+.prop {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr .8fr 2fr;
+    gap: 1rem;
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--prop-border);
+    align-items: baseline;
+}
+:host(:last-of-type) .prop { border-bottom: none; }
+.name {
+    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--prop-accent);
+}
+.name ::slotted(*) { font: inherit; color: inherit; margin: 0; }
+.type {
+    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+    font-size: .82rem;
+    color: var(--prop-muted);
+}
+.type ::slotted(*) { font: inherit; color: inherit; margin: 0; }
+.req { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+:host([required="true"]) .req::before {
+    content: "Required";
+    color: var(--integration-ulvia-documentation-blocs-danger-text, var(--integration-ulvia-basic-blocs-danger-contrasted, #be123c));
+    padding: .15rem .5rem;
+    background: var(--integration-ulvia-documentation-blocs-danger-background, var(--integration-ulvia-basic-blocs-danger-muted, #ffe4e6));
+    border-radius: 4px;
+}
+:host(:not([required="true"])) .req::before {
+    content: "Optional";
+    color: var(--prop-muted);
+}
+.desc { font-size: .9rem; line-height: 1.55; color: var(--integration-ulvia-documentation-blocs-text, var(--integration-ulvia-basic-blocs-body-text, #334155)); }
+.desc ::slotted(*) { margin: 0; }
+:host([deprecated]) .name { text-decoration: line-through; opacity: .6; }
+@media (max-width: 720px) {
+    .prop { grid-template-columns: 1fr; gap: .3rem; }
+    .req { margin: .2rem 0; }
+}

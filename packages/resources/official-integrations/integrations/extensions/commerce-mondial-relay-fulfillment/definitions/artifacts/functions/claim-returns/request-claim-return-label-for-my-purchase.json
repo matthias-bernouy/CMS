@@ -99,5 +99,6 @@
                 "expiresAt": "$steps.capability.expiresAt"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

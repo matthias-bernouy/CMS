@@ -29,6 +29,7 @@ export function buildIntegrationInstallationView(
                   answers: installation.answersSnapshot,
                   definition: installation.definitionSnapshot,
                   secretInputs: installation.secretInputs,
+                  ...(installation.activeResources ? { activeResources: installation.activeResources } : {}),
                   connectorBaselineAdoptions: (installation.connectorBaselineAdoptions ?? []).map((audit) => ({
                       ...audit,
                       adoptedAtLabel: dateTimeLabel(audit.adoptedAt),

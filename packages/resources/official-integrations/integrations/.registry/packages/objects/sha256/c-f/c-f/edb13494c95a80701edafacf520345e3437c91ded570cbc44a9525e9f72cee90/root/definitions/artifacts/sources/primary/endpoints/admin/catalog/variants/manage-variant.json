@@ -1,0 +1,32 @@
+[
+  {
+    "endpointId": "manageVariant",
+    "method": "GET",
+    "access": "admin",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/admin/variant",
+    "meta": {
+      "name": "Manage variant",
+      "description": "Read one variant or return defaults for a new variant."
+    },
+    "params": [
+      { "name": "id", "in": "query", "type": "string" }
+    ],
+    "headers": {
+      "$include": "../../../../shared/admin-headers.json"
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "$include": "../../../../shapes/catalog/variant.json"
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

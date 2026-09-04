@@ -17,7 +17,7 @@ describe("Commerce Mondial Relay delivery installation", () => {
             await installations.create({
                 id,
                 label: id,
-                definitionVersion: "1.0.0",
+                definitionVersion: "3.0.0",
                 status: "success",
                 answersSnapshot: { id: sourceId },
                 secretRefs: {},

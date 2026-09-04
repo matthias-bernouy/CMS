@@ -18,10 +18,10 @@ import {
     sellerShippingShareAmount,
     shippingAmount,
     variantLabel,
-} from "../../../blocs/commerce-sale-detail/helpers";
-import { renderSale } from "../../../blocs/commerce-sale-detail/render";
+} from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-sale-detail/helpers.ts";
+import { renderSale } from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-sale-detail/render.ts";
 
-const blocsRoot = resolve(import.meta.dir, "../../../blocs");
+const blocsRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/ulvia/blocs/domains/commerce");
 
 describe("Commerce seller blocs", () => {
     test("formats immutable sale details", () => {
@@ -79,7 +79,7 @@ describe("Commerce seller blocs", () => {
     });
 
     test("compiles an authenticated sales list as a Light DOM composition", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
         const composition = definition?.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-sales",
         );
@@ -135,7 +135,7 @@ describe("Commerce seller blocs", () => {
     });
 
     test("bridges pagination to the declarative offset control without rendering content", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
         const composition = definition?.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-sales",
         );

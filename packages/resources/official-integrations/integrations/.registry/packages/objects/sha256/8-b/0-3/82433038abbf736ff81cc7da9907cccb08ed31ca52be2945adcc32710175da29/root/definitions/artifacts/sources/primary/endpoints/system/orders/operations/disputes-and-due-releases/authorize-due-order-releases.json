@@ -1,0 +1,113 @@
+{
+    "endpointId": "authorizeDueOrderReleases",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/releases/due",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "runKey": {
+                "type": "string"
+            },
+            "limit": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "runKey"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "runKey": {
+                        "type": "string"
+                    },
+                    "authorizations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "status": {
+                                    "type": "string"
+                                },
+                                "releaseAuthorizationId": {
+                                    "type": "string"
+                                },
+                                "orderId": {
+                                    "type": "number"
+                                },
+                                "orderPublicId": {
+                                    "type": "string"
+                                },
+                                "paymentId": {
+                                    "type": "number"
+                                },
+                                "businessKey": {
+                                    "type": "string"
+                                },
+                                "releaseKind": {
+                                    "type": "string"
+                                },
+                                "sellerId": {
+                                    "type": "string",
+                                    "semantic": {
+                                        "kind": "user-id",
+                                        "authority": "cms"
+                                    }
+                                },
+                                "sellerRequiredMinimumBalanceAmount": {
+                                    "type": "number"
+                                },
+                                "payoutDelayDays": {
+                                    "type": "number"
+                                },
+                                "amount": {
+                                    "type": "number"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "financialTermsHash": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "status",
+                                "releaseAuthorizationId",
+                                "orderId",
+                                "orderPublicId",
+                                "paymentId",
+                                "businessKey",
+                                "sellerId",
+                                "sellerRequiredMinimumBalanceAmount",
+                                "payoutDelayDays",
+                                "amount",
+                                "currency",
+                                "financialTermsHash"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "runKey",
+                    "authorizations"
+                ]
+            }
+        }
+    ]
+}

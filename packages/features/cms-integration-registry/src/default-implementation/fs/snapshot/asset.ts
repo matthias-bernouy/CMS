@@ -44,7 +44,7 @@ export function hydrateSnapshotDefinitionAssets(
     return {
         ...definition,
         artifacts: definition.artifacts.map((artifact) => hydrateArtifact(artifact, envelope)),
-    };
+    } as IntegrationDefinition;
 }
 
 function hydrateArtifact(

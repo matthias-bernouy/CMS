@@ -1,0 +1,75 @@
+{
+    "endpointId": "sendTemplateEmail",
+    "method": "POST",
+    "access": "system",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template/send",
+    "params": [],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        }
+    ],
+    "body": {
+        "type": "object",
+        "properties": {
+            "key": {
+                "type": "string"
+            },
+            "toEmails": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "ccEmails": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "bccEmails": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "data": {
+                "type": "object"
+            },
+            "idempotencyKey": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "key",
+            "toEmails"
+        ]
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object"
+            }
+        },
+        {
+            "status": "400",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            }
+        }
+    ]
+}

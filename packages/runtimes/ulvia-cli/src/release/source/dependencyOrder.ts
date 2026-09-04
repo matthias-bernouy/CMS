@@ -21,8 +21,21 @@ export async function orderLocalReleaseKinds(root: string, kinds: readonly strin
         }
         visiting.push(kind);
         const source = sources.get(kind)!;
-        const dependencies = (source.definition.dependencies ?? [])
-            .filter((dependency) => !dependency.optional && sourceSatisfies(dependency, sources.get(dependency.kind)))
+        const collectionDependencies =
+            source.definition.schema === "cms.integration.definition.v2" && source.definition.type === "collection"
+                ? source.definition.resources.flatMap((resource) =>
+                      (resource.endpoints ?? []).map((endpoint) => ({
+                          kind: endpoint.source,
+                          versionRange: endpoint.sourceVersion,
+                      })),
+                  )
+                : [];
+        const dependencies = [...(source.definition.dependencies ?? []), ...collectionDependencies]
+            .filter(
+                (dependency) =>
+                    (!("optional" in dependency) || !dependency.optional) &&
+                    sourceSatisfies(dependency, sources.get(dependency.kind)),
+            )
             .map((dependency) => dependency.kind)
             .sort((left, right) => left.localeCompare(right));
         for (const dependency of dependencies) {

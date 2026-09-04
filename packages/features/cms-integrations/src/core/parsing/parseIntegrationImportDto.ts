@@ -45,7 +45,22 @@ export function parseIntegrationImportDto(
 
     const rawAnswers = parseAnswersBody(body.answers) ?? parseFlatAnswersBody(body);
     const answers = parseAnswers(definition, rawAnswers);
-    return { kind, answers, options: parseOptions(body.options) };
+    const resources = parseResources(body.resources);
+    return { kind, answers, options: parseOptions(body.options), ...(resources ? { resources } : {}) };
+}
+
+function parseResources(value: unknown): string[] | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (!Array.isArray(value) || value.some((entry) => typeof entry !== "string" || !entry.trim())) {
+        throw new IntegrationInputError("resources", "must be an array of non-empty resource ids");
+    }
+    const resources = value.map((entry) => (entry as string).trim());
+    if (new Set(resources).size !== resources.length) {
+        throw new IntegrationInputError("resources", "must contain unique resource ids");
+    }
+    return resources;
 }
 
 function parseAnswers(

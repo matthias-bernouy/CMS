@@ -1,0 +1,98 @@
+[
+    {
+        "endpointId": "acknowledgeCommerceProjection",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/reconciliation/projections/ack",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "projectionId": {
+                    "type": "number"
+                },
+                "claimToken": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "projectionId",
+                "claimToken"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "failCommerceProjection",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/reconciliation/projections/fail",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "projectionId": {
+                    "type": "number"
+                },
+                "claimToken": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "projectionId",
+                "claimToken",
+                "error"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ]
+    }
+]

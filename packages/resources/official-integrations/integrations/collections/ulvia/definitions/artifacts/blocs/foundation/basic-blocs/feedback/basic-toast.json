@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-toast",
+        "name": "Toast",
+        "group": "Feedback",
+        "description": "Neutral, customizable transient notification.",
+        "path": "blocs/foundation/basic-blocs/feedback/basic-toast"
+    }
+}

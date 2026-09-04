@@ -1,5 +1,13 @@
 import type { BlocListItemResponse, SiteBlocPublicationGuard } from "cms-content/interfaces/CmsRepository";
-import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
+import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
+import type {
+    BlocOwnership,
+    BlocRecord,
+    SiteBlocDefinition,
+    SiteBlocSnapshot,
+    TBloc,
+    TBlocWrite,
+} from "cms-content/interfaces/blocs";
 import {
     archivedSiteDefinition,
     assertBlocRecordOwner,
@@ -62,6 +70,20 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
             throw new BlocOwnershipConflictError(bloc.id);
         }
         return structuredClone(bloc);
+    }
+
+    async deleteBloc(tag: string, ownership: BlocOwnership): Promise<boolean> {
+        const document = await this.blocs.findOne({ _id: tag });
+        if (!document) {
+            return false;
+        }
+        const current = fromBlocDoc(document)!;
+        assertBlocRecordOwner(current, ownership);
+        const result = await this.blocs.deleteOne(replaceBlocFilter(document, current) as never);
+        if (result.deletedCount !== 1) {
+            throw new BlocOwnershipConflictError(tag);
+        }
+        return true;
     }
 
     async getBlocRecord(tag: string): Promise<BlocRecord | null> {
@@ -140,8 +162,8 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         );
     }
 
-    async getBlocsList(): Promise<BlocListItemResponse[]> {
-        return projectBlocList(await this.getBlocRecords());
+    async getBlocsList(options: BlocListOptions = {}): Promise<BlocListItemResponse[]> {
+        return projectBlocList(await this.getBlocRecords(), options);
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {

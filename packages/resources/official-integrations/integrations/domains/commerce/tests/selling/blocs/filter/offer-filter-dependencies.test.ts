@@ -6,7 +6,7 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 describe("Commerce schema-driven offer filter dependencies", () => {
     test("loads the Basic select runtime even when selects only appear dynamically", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia");
         const artifact = definition?.artifacts?.find(
             (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "commerce-offer-filter",
         );

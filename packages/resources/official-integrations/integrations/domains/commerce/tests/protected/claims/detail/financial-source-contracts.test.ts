@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
 import { resolve } from "node:path";
 import { loadIntegrationDefinition } from "../../../../../../../tests/helpers/integrationDefinition";
+import { loadDefinitionFragment } from "../../../../../../../tests/helpers/definitionFragment";
 
 type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape }> };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] }; dashboard?: unknown }> };
@@ -88,10 +89,13 @@ describe("commerce financial operations read contracts", () => {
     });
 
     test("keeps dashboards bound to persisted terms, limits, and allocation fields", async () => {
-        const definition = await loadIntegrationDefinition<Definition>(
-            resolve(import.meta.dir, "../../../../../../extensions/commerce-stripe-payments/definition.json"),
+        const artifact = await loadDefinitionFragment<{ dashboard: unknown }>(
+            resolve(
+                import.meta.dir,
+                "../../../../../../extensions/commerce-stripe-payments/definitions/artifacts/dashboards/commerce-stripe-payments-operations/definition.json",
+            ),
         );
-        const serialized = JSON.stringify(definition.artifacts.find((artifact) => artifact.dashboard)?.dashboard);
+        const serialized = JSON.stringify(artifact.dashboard);
 
         for (const path of [
             "financialTerms.merchandiseSubtotalAmount",

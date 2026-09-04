@@ -1,5 +1,6 @@
 import type {
     BlocListItemResponse,
+    BlocOwnership,
     BlocRecord,
     CmsRepository,
     PageLink,
@@ -48,6 +49,9 @@ export class LocalFsCmsRepository implements CmsRepository {
     }
     replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
         return this._blocs.replace(bloc);
+    }
+    deleteBloc(tag: string, ownership: BlocOwnership): Promise<boolean> {
+        return this._blocs.delete(tag, ownership);
     }
     getBlocRecord(tag: string): Promise<BlocRecord | null> {
         return this._blocs.getRecord(tag);

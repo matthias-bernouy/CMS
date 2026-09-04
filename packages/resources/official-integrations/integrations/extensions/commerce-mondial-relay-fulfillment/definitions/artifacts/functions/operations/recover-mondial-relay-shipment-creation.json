@@ -97,5 +97,6 @@
                 "fulfillment": "$steps.commerceRecovery"
             }
         }
-    }
+    },
+    "contractVersion": "1.0.0"
 }

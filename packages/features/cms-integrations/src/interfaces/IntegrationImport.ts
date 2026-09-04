@@ -91,12 +91,15 @@ export type IntegrationImportResult = {
 
 export type IntegrationImportOptions = {
     force?: boolean;
+    /** Resolved internally from a collection resource selection. */
+    activeResources?: string[];
 };
 
 export type IntegrationImportDto = {
     kind: string;
     answers: Record<string, IntegrationAnswerValue>;
     options: IntegrationImportOptions;
+    resources?: string[];
 };
 
 export type IntegrationImportRequest = {
@@ -145,6 +148,7 @@ export type IntegrationBlocArtifact = {
     name: string;
     group?: string;
     description?: string;
+    catalogue?: "active" | "inactive";
     internal?: boolean;
     viewPath?: string;
     viewJS?: string;
@@ -165,4 +169,5 @@ export type IntegrationBlocImporter = {
         options: IntegrationImportOptions,
         context: IntegrationBlocImportContext,
     ): Promise<{ id: string; action: IntegrationArtifactAction }>;
+    deleteBloc?(id: string, installationId: string): Promise<(() => Promise<void>) | null>;
 };

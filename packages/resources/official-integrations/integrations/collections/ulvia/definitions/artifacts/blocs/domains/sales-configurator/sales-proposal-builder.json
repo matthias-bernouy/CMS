@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "sales-proposal-builder",
+        "name": "Proposal builder",
+        "group": "Sales configurator",
+        "description": "Binding-aware proposal configurator for the current sales partner.",
+        "path": "blocs/domains/sales-configurator/sales-proposal-builder"
+    }
+}

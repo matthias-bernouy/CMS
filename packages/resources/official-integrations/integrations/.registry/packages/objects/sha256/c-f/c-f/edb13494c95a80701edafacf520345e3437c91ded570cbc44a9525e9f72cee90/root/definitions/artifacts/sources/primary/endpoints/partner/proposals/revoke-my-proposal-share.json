@@ -1,0 +1,48 @@
+[
+  {
+    "endpointId": "revokeMyProposalShare",
+    "method": "POST",
+    "access": "auth",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-sales-configurator/partner/proposal/share/revoke",
+    "meta": {
+      "name": "Revoke proposal share",
+      "description": "Revoke one share owned through the authenticated sales partner's proposal."
+    },
+    "params": [],
+    "headers": {
+      "$include": "../../../shared/actor-headers.json"
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "proposalId": { "type": "number" },
+        "shareId": { "type": "number" }
+      },
+      "required": ["proposalId", "shareId"]
+    },
+    "output": [
+      {
+        "status": "200",
+        "body": {
+          "type": "object",
+          "properties": {
+            "revoked": { "type": "boolean" },
+            "share": {
+              "$include": "../../../shapes/proposals/share.json"
+            },
+            "proposal": {
+              "$include": "../../../shapes/proposals/partner/detail.json"
+            }
+          },
+          "required": ["revoked", "share", "proposal"]
+        }
+      },
+      {
+        "status": "default",
+        "body": {
+          "$include": "../../../shared/error.json"
+        }
+      }
+    ]
+  }
+]

@@ -10,6 +10,8 @@ import {
 import { validateHeaders, validateParams } from "cms-sources/core/validation/sourceRequestValidation";
 
 const RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
+const EXACT_CONTRACT_VERSION =
+    /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
 export function isValidResponseStatus(status: string): boolean {
     return status === "default" || RESPONSE_STATUS.test(status);
@@ -22,6 +24,9 @@ export function validateEndpoint(
 ): void {
     if (!(HTTP_METHODS as readonly string[]).includes(endpoint.method)) {
         errors.push(`invalid method for "${endpoint.urn}": "${endpoint.method}"`);
+    }
+    if (endpoint.contractVersion !== undefined && !EXACT_CONTRACT_VERSION.test(endpoint.contractVersion)) {
+        errors.push(`invalid contractVersion for "${endpoint.urn}": expected an exact SemVer version`);
     }
     validateTimeout(endpoint, errors);
     validateAccess(endpoint, errors);

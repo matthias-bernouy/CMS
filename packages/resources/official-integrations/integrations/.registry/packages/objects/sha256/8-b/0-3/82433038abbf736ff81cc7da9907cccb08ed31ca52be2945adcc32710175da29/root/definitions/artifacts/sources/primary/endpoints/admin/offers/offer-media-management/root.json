@@ -1,0 +1,124 @@
+[
+    {
+        "$include": "upload-offer-image.json"
+    },
+    {
+        "$include": "replace-offer-image.json"
+    },
+    {
+        "endpointId": "removeOfferImage",
+        "method": "DELETE",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/image",
+        "params": [
+            {
+                "name": "offerId",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "mediaId",
+                "in": "query",
+                "type": "string"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "ok": {
+                            "type": "boolean"
+                        },
+                        "mediaId": {
+                            "type": "number"
+                        },
+                        "detachedAt": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "reorderOfferImages",
+        "method": "POST",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/images/reorder",
+        "params": [
+            {
+                "name": "offerId",
+                "in": "query",
+                "type": "string"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "mediaIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "mediaIds"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "ok": {
+                            "type": "boolean"
+                        },
+                        "mediaIds": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]

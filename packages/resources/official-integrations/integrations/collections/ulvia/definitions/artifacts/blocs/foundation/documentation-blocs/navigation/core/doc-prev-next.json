@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-prev-next",
+        "name": "Previous and next",
+        "group": "Documentation · Navigation",
+        "description": "Links to adjacent documentation pages.",
+        "path": "blocs/foundation/documentation-blocs/navigation/core/doc-prev-next"
+    }
+}

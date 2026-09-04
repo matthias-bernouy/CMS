@@ -1,0 +1,64 @@
+[
+  {
+    "widget": "w-detail",
+    "id": "featureDetail",
+    "source": {
+      "endpoint": "manageFeature",
+      "params": { "id": "$selection.id" }
+    },
+    "title": { "path": "name", "fallback": "New feature" },
+    "status": { "path": "status" },
+    "actions": [
+      {
+        "id": "saveFeature",
+        "label": "Save feature",
+        "tone": "primary",
+        "placement": "primary",
+        "endpoint": {
+          "endpoint": "upsertFeature",
+          "params": { "id": "$resource.id" },
+          "body": {
+            "code": "$field.code",
+            "name": "$field.name",
+            "description": "$field.description",
+            "status": "$field.status",
+            "sortOrder": "$field.sortOrder"
+          }
+        },
+        "after": { "resource": "$result" }
+      }
+    ],
+    "main": [
+      {
+        "id": "featureDefinition",
+        "title": "Feature",
+        "fields": [
+          { "id": "code", "label": "Code", "path": "code", "type": "text", "required": true },
+          { "id": "name", "label": "Name", "path": "name", "type": "text", "required": true },
+          { "id": "description", "label": "Description", "path": "description", "type": "textarea", "rows": 5 },
+          { "id": "sortOrder", "label": "Position", "path": "sortOrder", "type": "number", "min": 0 }
+        ]
+      }
+    ],
+    "aside": [
+      {
+        "id": "featurePublication",
+        "title": "Publication",
+        "fields": [
+          {
+            "id": "status",
+            "label": "Status",
+            "path": "status",
+            "type": "select",
+            "required": true,
+            "options": [
+              { "value": "draft", "label": "Draft" },
+              { "value": "published", "label": "Published" },
+              { "value": "archived", "label": "Archived" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

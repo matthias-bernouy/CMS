@@ -1,0 +1,10 @@
+{
+  "$files": [
+    "list-my-proposals.json",
+    "get-my-proposal.json",
+    "save-my-proposal-draft.json",
+    "publish-my-proposal.json",
+    "create-my-proposal-share.json",
+    "revoke-my-proposal-share.json"
+  ]
+}

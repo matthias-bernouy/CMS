@@ -1,4 +1,5 @@
 import type { IntegrationDefinition, IntegrationIcon } from "./Integration";
+import type { IntegrationType } from "./IntegrationResources";
 
 export type IntegrationAsset = {
     bytes: Uint8Array;
@@ -17,6 +18,7 @@ export type IntegrationDefinitionIndex = {
     schema?: string;
     kind: string;
     label: string;
+    type?: IntegrationType;
     icon?: IntegrationIcon;
     category?: string;
     description?: string;

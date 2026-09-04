@@ -18,8 +18,9 @@ export function findIntegration(
 
 function sanitizeRegistryDefinition(definition: IntegrationDefinition): IntegrationDefinition {
     const ui = sanitizeUiDefinition(definition.ui);
+    const { ui: _untrustedUi, ...base } = definition;
     return {
-        ...definition,
-        ...(ui ? { ui } : { ui: undefined }),
-    };
+        ...base,
+        ...(ui ? { ui } : {}),
+    } as IntegrationDefinition;
 }

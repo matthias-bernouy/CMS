@@ -1,0 +1,28 @@
+<photo-album-list source-id="photo-albums" page-size="12" page-param="page" sync-url="true" grid-min="sm" grid-max="lg" grid-gap="md">
+    <h2 slot="heading">{{ data.display.galleryTitle }}</h2>
+
+    <basic-grid slot="loading" min="sm" max="lg" gap="md" data-album-grid cms-condition="$source.loading">
+        <basic-skeleton height="18rem" animation="wave" label="Loading photo albums"></basic-skeleton>
+        <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
+        <basic-skeleton height="18rem" animation="wave" aria-hidden="true"></basic-skeleton>
+    </basic-grid>
+
+    <basic-toast slot="error" tone="danger" appearance="filled" role="alert" cms-condition="$source.error">Photo albums could not be loaded.</basic-toast>
+
+    <basic-card slot="empty" appearance="outlined" background-color="var(--integration-ulvia-photo-albums-card-background, var(--bg-surface, Canvas))" border-color="var(--integration-ulvia-photo-albums-card-border, var(--border-default, currentColor))" text-color="var(--integration-ulvia-photo-albums-card-text, var(--text-main, inherit))" muted-text-color="var(--integration-ulvia-photo-albums-card-muted-text, var(--text-muted, currentColor))" cms-condition="$source.loaded && data.total == 0">
+        <strong slot="title">No photo album is available yet.</strong>
+    </basic-card>
+
+    <basic-grid slot="catalogue" min="sm" max="lg" gap="md" data-album-grid cms-condition="$source.loaded && data.total > 0">
+        <a href="/photo-album?slug={{ album.slug }}" cms-repeat="data.items as album">
+            <basic-card appearance="outlined" background-color="var(--integration-ulvia-photo-albums-card-background, var(--bg-surface, Canvas))" border-color="var(--integration-ulvia-photo-albums-card-border, var(--border-default, currentColor))" text-color="var(--integration-ulvia-photo-albums-card-text, var(--text-main, inherit))" muted-text-color="var(--integration-ulvia-photo-albums-card-muted-text, var(--text-muted, currentColor))" stretch>
+                <img slot="media" src="/.cms/sources/photo-albums/publicPhoto?id={{ album.coverPhoto.id }}" data-photo-source-url="publicPhoto" data-source-image-access="public" data-source-width="{{ album.coverPhoto.width }}" data-source-height="{{ album.coverPhoto.height }}" alt="{{ album.coverPhoto.alt }}" loading="lazy" decoding="async" style="display:block;width:100%;height:auto" cms-condition="album.coverPhoto.id">
+                <strong slot="title">{{ album.title }}</strong>
+                <span slot="description">{{ album.description }}</span>
+                <span>{{ album.photoCount }} photos</span>
+            </basic-card>
+        </a>
+    </basic-grid>
+
+    <basic-pagination slot="pagination" page="1" page-size="12" total="{{ data.total }}" cms-condition="$source.loaded && data.total > data.limit"></basic-pagination>
+</photo-album-list>

@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-code-tabs",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Code tabs",
+        "description": "Tabbed code examples in multiple languages.",
+        "categories": [
+            "content"
+        ]
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "default-tag": "commerce-account-offers",
+    "composition": "./template.html",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Account offers",
+        "description": "Authenticated seller offer listing with status filters and pagination."
+    }
+}

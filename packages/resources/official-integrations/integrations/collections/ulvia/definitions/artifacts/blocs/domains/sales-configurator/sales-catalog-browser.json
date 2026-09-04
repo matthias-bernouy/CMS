@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "sales-catalog-browser",
+        "name": "Catalog browser",
+        "group": "Sales configurator",
+        "description": "Read-only partner catalog browser with local search and availability filters.",
+        "path": "blocs/domains/sales-configurator/sales-catalog-browser"
+    }
+}

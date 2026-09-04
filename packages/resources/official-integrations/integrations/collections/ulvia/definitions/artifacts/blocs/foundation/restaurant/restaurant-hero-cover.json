@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "restaurant-hero-cover",
+        "name": "Restaurant hero · Cover",
+        "group": "Restaurant",
+        "description": "Immersive restaurant introduction over a panoramic image with a thumbnail rail.",
+        "path": "blocs/foundation/restaurant/restaurant-hero-cover"
+    }
+}

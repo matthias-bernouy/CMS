@@ -1,0 +1,83 @@
+{
+    "id": "buyerProtectionFee",
+    "title": "Buyer protection fee",
+    "fields": [
+        {
+            "id": "buyerFeeBasis",
+            "label": "Calculation basis",
+            "path": "activePolicy.buyerProtection.basis",
+            "type": "select",
+            "required": true,
+            "options": [
+                {
+                    "value": "merchandise",
+                    "label": "Merchandise"
+                },
+                {
+                    "value": "merchandise_and_shipping",
+                    "label": "Merchandise and shipping"
+                }
+            ]
+        },
+        {
+            "id": "buyerFeeRateBps",
+            "label": "Rate (basis points)",
+            "path": "activePolicy.buyerProtection.rateBps",
+            "type": "number",
+            "required": true,
+            "min": 0,
+            "max": 10000,
+            "step": 1
+        },
+        {
+            "id": "buyerFeeFixedAmount",
+            "label": "Fixed amount",
+            "path": "activePolicy.buyerProtection.fixedAmount",
+            "type": "number",
+            "required": true,
+            "min": 0,
+            "step": 1
+        },
+        {
+            "id": "buyerFeeMinimumAmount",
+            "label": "Minimum amount",
+            "path": "activePolicy.buyerProtection.minimumAmount",
+            "type": "number",
+            "min": 0,
+            "step": 1
+        },
+        {
+            "id": "buyerFeeMaximumAmount",
+            "label": "Maximum amount",
+            "path": "activePolicy.buyerProtection.maximumAmount",
+            "type": "number",
+            "min": 0,
+            "step": 1
+        },
+        {
+            "id": "buyerFeeRefundPolicy",
+            "label": "Refund policy",
+            "path": "activePolicy.buyerProtection.refundPolicy",
+            "type": "select",
+            "required": true,
+            "options": [
+                {
+                    "value": "always",
+                    "label": "Always"
+                },
+                {
+                    "value": "never",
+                    "label": "Never"
+                },
+                {
+                    "value": "proportional",
+                    "label": "Proportional"
+                },
+                {
+                    "value": "resolution_defined",
+                    "label": "Defined by resolution"
+                }
+            ]
+        }
+    ]
+}

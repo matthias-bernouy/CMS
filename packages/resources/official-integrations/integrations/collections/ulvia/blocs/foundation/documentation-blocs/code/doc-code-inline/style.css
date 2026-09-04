@@ -1,0 +1,26 @@
+:host {
+    --inline-bg: color-mix(in srgb, var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5)) 8%, transparent);
+    --inline-fg: var(--integration-ulvia-documentation-blocs-accent, var(--integration-ulvia-basic-blocs-primary-base, #4f46e5));
+    --inline-radius: var(--integration-ulvia-documentation-blocs-radius-control, var(--integration-ulvia-basic-blocs-radius-control, .375rem));
+    display: inline;
+    font-family: var(--integration-ulvia-documentation-blocs-font-mono, var(--integration-ulvia-basic-blocs-font-mono, ui-monospace, monospace));
+}
+.inline {
+    display: inline;
+    padding: .12em .4em;
+    font-size: .88em;
+    font-family: inherit;
+    background: var(--inline-bg);
+    color: var(--inline-fg);
+    border-radius: var(--inline-radius);
+    white-space: nowrap;
+}
+.inline ::slotted(*) { font: inherit; color: inherit; }
+:host([variant="accent"]) {
+    --inline-bg: color-mix(in srgb, var(--integration-ulvia-documentation-blocs-api-get) 12%, transparent);
+    --inline-fg: var(--integration-ulvia-documentation-blocs-info-text);
+}
+:host([variant="danger"]) {
+    --inline-bg: var(--integration-ulvia-documentation-blocs-danger-background);
+    --inline-fg: var(--integration-ulvia-documentation-blocs-danger-text);
+}

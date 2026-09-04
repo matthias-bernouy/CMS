@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-offer-preview",
+        "name": "Offer preview",
+        "group": "Commerce",
+        "description": "Public offer preview with editable commerce content slots.",
+        "path": "blocs/domains/commerce/commerce-offer-preview"
+    }
+}

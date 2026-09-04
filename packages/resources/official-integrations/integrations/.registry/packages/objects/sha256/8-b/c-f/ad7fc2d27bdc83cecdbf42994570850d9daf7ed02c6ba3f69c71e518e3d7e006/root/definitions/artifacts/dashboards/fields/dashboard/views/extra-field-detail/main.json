@@ -1,0 +1,140 @@
+[
+    {
+        "id": "field",
+        "title": "Field",
+        "fields": [
+            {
+                "id": "label",
+                "label": "Label",
+                "path": "label",
+                "type": "text",
+                "required": true
+            },
+            {
+                "id": "id",
+                "label": "ID",
+                "path": "id",
+                "type": "readonly",
+                "visibleWhen": {
+                    "value": "$field.id",
+                    "notEquals": ""
+                }
+            },
+            {
+                "id": "type",
+                "label": "Type",
+                "path": "type",
+                "type": "select",
+                "required": true,
+                "options": [
+                    {
+                        "label": "Text",
+                        "value": "string"
+                    },
+                    {
+                        "label": "Number",
+                        "value": "number"
+                    },
+                    {
+                        "label": "Boolean",
+                        "value": "boolean"
+                    }
+                ]
+            },
+            {
+                "id": "multiple",
+                "label": "Allow multiple values",
+                "path": "multiple",
+                "type": "select",
+                "options": [
+                    {
+                        "label": "No",
+                        "value": "false"
+                    },
+                    {
+                        "label": "Yes",
+                        "value": "true"
+                    }
+                ]
+            },
+            {
+                "id": "hasAllowedValues",
+                "label": "Restrict to allowed values",
+                "path": "hasAllowedValues",
+                "type": "checkbox",
+                "visibleWhen": {
+                    "value": "$field.type",
+                    "notEquals": "boolean"
+                }
+            },
+            {
+                "id": "options",
+                "label": "Allowed values",
+                "path": "options",
+                "type": "reorderable-list",
+                "itemKey": "id",
+                "positionPath": "position",
+                "addLabel": "Add value",
+                "maxItems": 100,
+                "visibleWhen": {
+                    "all": [
+                        {
+                            "value": "$field.type",
+                            "notEquals": "boolean"
+                        },
+                        {
+                            "value": "$field.hasAllowedValues",
+                            "equals": true
+                        }
+                    ]
+                },
+                "fields": [
+                    {
+                        "id": "value",
+                        "label": "Value",
+                        "path": "value",
+                        "required": true
+                    },
+                    {
+                        "id": "label",
+                        "label": "Label",
+                        "path": "label",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "id": "required",
+                "label": "Required",
+                "path": "required",
+                "type": "select",
+                "options": [
+                    {
+                        "label": "No",
+                        "value": "false"
+                    },
+                    {
+                        "label": "Yes",
+                        "value": "true"
+                    }
+                ]
+            },
+            {
+                "id": "showInDashboardTable",
+                "label": "Show in users table",
+                "path": "showInDashboardTable",
+                "type": "select",
+                "options": [
+                    {
+                        "label": "No",
+                        "value": "false"
+                    },
+                    {
+                        "label": "Yes",
+                        "value": "true"
+                    }
+                ]
+            }
+        ]
+    }
+]

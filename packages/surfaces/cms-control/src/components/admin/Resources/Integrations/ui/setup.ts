@@ -2,12 +2,12 @@ import { renderFields } from "../fields";
 import type { IntegrationBrowserHost, IntegrationDefinition } from "../model";
 import { renderLinkedPlaceholder } from "./detail";
 import { cloneElement, fillIcon, text } from "./templates";
-import { renderResourceRows, renderSummary, resourceRows } from "./resources";
+import { renderCollectionSelection, renderResourceRows, renderSummary, resourceRows } from "./resources";
 
 export function renderSetup(
     host: IntegrationBrowserHost,
     definition: IntegrationDefinition,
-    options: { answers?: Record<string, unknown>; error?: string } = {},
+    options: { answers?: Record<string, unknown>; error?: string; resources?: readonly string[] } = {},
 ): void {
     const shell = cloneElement("setup-shell");
     text(shell, "[data-title]", `Install ${definition.label}`);
@@ -16,6 +16,13 @@ export function renderSetup(
     status.textContent = options.error ?? "";
     status.classList.toggle("is-error", Boolean(options.error));
     renderResourceRows(shell.querySelector<HTMLElement>("[data-resources]")!, resourceRows(definition));
+    if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
+        renderCollectionSelection(
+            shell.querySelector<HTMLElement>("[data-collection-selection]")!,
+            definition,
+            options.resources,
+        );
+    }
     renderLinkedPlaceholder(shell.querySelector<HTMLElement>("[data-linked]")!);
     renderSummary(shell.querySelector<HTMLElement>("[data-summary]")!, summaryRows(definition));
     host.query<HTMLElement>("[data-detail-view]").replaceChildren(shell);

@@ -17,7 +17,7 @@ describe("Mondial Relay shipment tracking context source contract", () => {
         expect(context).toMatchObject({
             method: "GET",
             access: "system",
-            targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/shipment-tracking-context",
+            targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/system/shipment-tracking-context",
             params: [
                 { name: "expeditionNumber", in: "query", type: "string", required: true },
                 { name: "expectedExternalOrderId", in: "query", type: "string", required: true },

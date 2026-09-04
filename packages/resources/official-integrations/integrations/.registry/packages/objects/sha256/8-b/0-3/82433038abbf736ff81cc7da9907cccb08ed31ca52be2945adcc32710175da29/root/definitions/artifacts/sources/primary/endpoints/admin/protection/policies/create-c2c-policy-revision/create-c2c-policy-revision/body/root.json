@@ -1,0 +1,41 @@
+{
+    "type": "object",
+    "properties": {
+        "$include": "properties.json"
+    },
+    "required": [
+        "expectedSettingsVersion",
+        "name",
+        "shippingBeneficiary",
+        "buyerFeeBasis",
+        "buyerFeeRateBps",
+        "buyerFeeFixedAmount",
+        "buyerFeeRefundPolicy",
+        "sellerFeeBasis",
+        "sellerFeeRateBps",
+        "sellerFeeFixedAmount",
+        "sellerFeeRefundPolicy",
+        "costEstimatesConfigured",
+        "estimatedStripeCostAmount",
+        "estimatedCarrierCostAmount",
+        "platformRiskReserveContributionAmount",
+        "configuredMinimumMarginAmount",
+        "subsidyOverride",
+        "paymentWindowMinutes",
+        "sellerHandoffHours",
+        "scanGraceHours",
+        "claimWindowHours",
+        "sellerResponseHours",
+        "returnShipHours",
+        "financeReviewThresholdAmount",
+        "dualApprovalThresholdAmount",
+        "sellerReserveRateBps",
+        "payoutDelayDays",
+        "sellerReserveLiabilityDays",
+        "orderTransferLimitAmount",
+        "velocityLimitAmount",
+        "highValueReviewAmount",
+        "claimRatioReviewBps",
+        "chargebackRatioReviewBps"
+    ]
+}

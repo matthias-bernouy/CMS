@@ -1,0 +1,21 @@
+:host {
+    --basic-container-max-width: var(--integration-ulvia-basic-blocs-content-width, var(--content-width, 68rem));
+    --basic-container-gutter: var(--integration-ulvia-basic-blocs-space-md, var(--space-md, 1rem));
+
+    display: block;
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: var(--basic-container-max-width);
+    margin-inline: auto;
+    padding-inline: var(--basic-container-gutter);
+}
+
+:host([width="content"]) { --basic-container-max-width: var(--integration-ulvia-basic-blocs-content-width, var(--content-width, 68rem)); }
+:host([width="wide"]) { --basic-container-max-width: var(--integration-ulvia-basic-blocs-wide-width, var(--wide-width, 82rem)); }
+:host([width="full"]) { --basic-container-max-width: none; }
+
+:host([gutter="none"]) { --basic-container-gutter: 0; }
+:host([gutter="sm"]) { --basic-container-gutter: var(--integration-ulvia-basic-blocs-space-sm, var(--space-sm, .5rem)); }
+:host([gutter="md"]) { --basic-container-gutter: var(--integration-ulvia-basic-blocs-space-md, var(--space-md, 1rem)); }
+:host([gutter="xl"]) { --basic-container-gutter: var(--integration-ulvia-basic-blocs-space-xl, var(--space-xl, 3rem)); }

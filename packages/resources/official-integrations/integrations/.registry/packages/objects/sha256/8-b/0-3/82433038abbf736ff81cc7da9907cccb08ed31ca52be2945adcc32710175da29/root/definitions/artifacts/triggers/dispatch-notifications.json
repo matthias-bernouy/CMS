@@ -1,0 +1,23 @@
+{
+    "type": "trigger",
+    "trigger": {
+        "id": "schedule-dispatch-commerce-notifications",
+        "label": "Dispatch Commerce notifications",
+        "event": {
+            "kind": "schedule",
+            "intervalMs": 30000,
+            "initialDelayMs": 25000,
+            "timeoutMs": 120000
+        },
+        "mode": "async",
+        "failureMode": "ignore",
+        "task": {
+            "id": "cms.notifications.dispatch",
+            "body": {
+                "notificationKind": "commerce",
+                "emailerKind": "emailer",
+                "limit": 10
+            }
+        }
+    }
+}

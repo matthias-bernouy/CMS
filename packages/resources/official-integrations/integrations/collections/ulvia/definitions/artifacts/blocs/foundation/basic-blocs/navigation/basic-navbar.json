@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "basic-navbar",
+        "name": "Navbar",
+        "group": "Navigation",
+        "description": "Intrinsic primary navigation with literal links and an accessible overflow menu.",
+        "path": "blocs/foundation/basic-blocs/navigation/basic-navbar"
+    }
+}

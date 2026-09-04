@@ -1,4 +1,7 @@
-export const INTEGRATION_DEFINITION_SCHEMA = "cms.integration.definition.v1";
+export const INTEGRATION_DEFINITION_SCHEMAS = [
+    "cms.integration.definition.v1",
+    "cms.integration.definition.v2",
+] as const;
 export const INTEGRATION_DEFINITION_BUNDLE_SCHEMA = "cms.integration.definition.bundle.v1";
 
 export const INTEGRATION_DEFINITION_BUNDLE_LIMITS = {

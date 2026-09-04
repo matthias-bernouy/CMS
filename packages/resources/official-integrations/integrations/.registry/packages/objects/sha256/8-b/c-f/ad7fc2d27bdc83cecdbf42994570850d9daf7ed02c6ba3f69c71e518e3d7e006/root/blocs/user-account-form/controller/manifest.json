@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "user-account-form-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "user-account-form controller",
+        "description": "Internal behavior controller for user-account-form."
+    }
+}

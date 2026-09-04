@@ -1,5 +1,13 @@
 import type { ContentReader } from "cms-content/interfaces/ContentReader";
-import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
+import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
+import type {
+    BlocOwnership,
+    BlocRecord,
+    SiteBlocDefinition,
+    SiteBlocSnapshot,
+    TBloc,
+    TBlocWrite,
+} from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 
@@ -58,6 +66,7 @@ export interface CmsRepository extends ContentReader {
     // BLOC
     createBloc(bloc: TBlocWrite): Promise<TBloc>;
     replaceBloc(bloc: TBlocWrite): Promise<TBloc>;
+    deleteBloc(tag: string, ownership: BlocOwnership): Promise<boolean>;
 
     getBlocRecord(tag: string): Promise<BlocRecord | null>;
     getBlocRecords(): Promise<BlocRecord[]>;
@@ -75,7 +84,7 @@ export interface CmsRepository extends ContentReader {
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T>;
 
     getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]>;
-    getBlocsList(): Promise<BlocListItemResponse[]>;
+    getBlocsList(options?: BlocListOptions): Promise<BlocListItemResponse[]>;
     getBlocViewJS(htmlTag: string): Promise<string | null>;
     /** Author-side source map for `p9r pull`. Returns null when the bloc has no source bundle. */
     getBlocSource(htmlTag: string): Promise<Record<string, string> | null>;

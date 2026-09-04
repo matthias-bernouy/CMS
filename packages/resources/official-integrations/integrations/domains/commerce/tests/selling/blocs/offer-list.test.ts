@@ -7,13 +7,17 @@ import {
     readMetadataFilters,
     schemaFiltersPending,
     validIdentifier,
-} from "../../../blocs/commerce-offer-list/helpers";
-import { syncOfferListPresentation } from "../../../blocs/commerce-offer-list/presentation";
+} from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-offer-list/helpers.ts";
+import { syncOfferListPresentation } from "@bernouy/cms-official-integrations/integrations/ulvia/blocs/domains/commerce/commerce-offer-list/presentation.ts";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 describe("Commerce public offer list filters", () => {
     test("binds the public price precision policy on every preview", async () => {
         const defaultContent = await Bun.file(
-            resolve(import.meta.dir, "../../../blocs/commerce-offer-list/default.html"),
+            resolve(
+                OFFICIAL_INTEGRATIONS_ROOT,
+                "collections/ulvia/blocs/domains/commerce/commerce-offer-list/default.html",
+            ),
         ).text();
 
         expect(defaultContent).toContain('whole-unit-prices="{{ data.wholeUnitPrices }}"');

@@ -1,0 +1,77 @@
+[
+    {
+        "endpointId": "manageProposals",
+        "method": "GET",
+        "access": "admin",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-negotiation/admin/proposals",
+        "params": [
+            {
+                "name": "q",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "status",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "limit",
+                "in": "query",
+                "type": "number"
+            },
+            {
+                "name": "offset",
+                "in": "query",
+                "type": "number"
+            }
+        ],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "items",
+                        "total"
+                    ]
+                }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        ]
+    }
+]

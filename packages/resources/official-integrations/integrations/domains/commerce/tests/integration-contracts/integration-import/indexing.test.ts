@@ -1,29 +1,28 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
-import { importIntegration, type IntegrationBlocArtifact } from "@bernouy/cms-integrations";
+import { importIntegration, InMemoryIntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
-import { blocImporter, connectorDeployer, installedBasicBlocs } from "./setup";
+import { connectorDeployer } from "./setup";
 
-describe("commerce 2.0.2 indexing contract", () => {
+describe("commerce 3.0.0 indexing contract", () => {
     test("publishes the current source as the sole authored release", async () => {
         const index = await repository().getIndex("commerce");
 
-        expect(index).toMatchObject({ stable: "2.0.2", latest: "2.0.2" });
-        expect(index?.versions).toEqual([{ version: "2.0.2", path: ".", definition: "definition.json" }]);
+        expect(index).toMatchObject({ stable: "3.0.0", latest: "3.0.0", type: "source" });
+        expect(index?.versions).toEqual([{ version: "3.0.0", path: ".", definition: "definition.json" }]);
     });
 
     test("imports product and offer strategies for id and slug identities", async () => {
-        const definition = await repository().get("commerce", "2.0.2");
+        const definition = await repository().get("commerce", "3.0.0");
         if (!definition) {
-            throw new Error("commerce 2.0.2 definition not found");
+            throw new Error("commerce 3.0.0 definition not found");
         }
         const sources = new InMemorySourceRepository();
-        const importedBlocs: IntegrationBlocArtifact[] = [];
 
         await importIntegration(
             {
@@ -32,12 +31,11 @@ describe("commerce 2.0.2 indexing contract", () => {
                 dashboards: new InMemoryDashboardRepository(),
                 secrets: new InMemorySecretStore(),
                 roles: new InMemoryRolesRepository(),
-                installations: await installedBasicBlocs(),
+                installations: new InMemoryIntegrationInstallationRepository(),
                 triggers: new InMemoryTriggerRepository(),
                 connectorDeployers: [connectorDeployer(() => {})],
-                blocs: blocImporter(importedBlocs),
             },
-            { kind: "commerce", version: "2.0.2", answers: { id: "commerce" }, options: {} },
+            { kind: "commerce", version: "3.0.0", answers: { id: "commerce" }, options: {} },
             [definition],
         );
 

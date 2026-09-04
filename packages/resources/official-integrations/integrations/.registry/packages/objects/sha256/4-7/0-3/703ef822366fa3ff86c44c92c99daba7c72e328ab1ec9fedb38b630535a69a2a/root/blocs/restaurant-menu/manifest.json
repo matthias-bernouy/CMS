@@ -1,0 +1,10 @@
+{
+    "default-tag": "restaurant-menu",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Restaurant menu",
+        "description": "Accessible restaurant navigation overlay with curtain, drawer, and panel presentations."
+    }
+}

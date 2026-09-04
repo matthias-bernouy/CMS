@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "doc-toc",
+        "name": "Table of contents",
+        "group": "Documentation · Navigation",
+        "description": "Table of contents generated from page headings.",
+        "path": "blocs/foundation/documentation-blocs/navigation/core/doc-toc"
+    }
+}

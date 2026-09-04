@@ -74,7 +74,7 @@ function renderFrameDocument(input: {
 async function expandEditorContent(content: string, cms: ControlCms): Promise<string> {
     const { document } = parseHTML("<html><body></body></html>");
     document.body.innerHTML = content;
-    expandCompositions(document.body, await cms.repository.getBlocsList(), "editor");
+    expandCompositions(document.body, await cms.repository.getBlocsList({ includeInactive: true }), "editor");
     return hardenStoredHtml(document.body.innerHTML);
 }
 

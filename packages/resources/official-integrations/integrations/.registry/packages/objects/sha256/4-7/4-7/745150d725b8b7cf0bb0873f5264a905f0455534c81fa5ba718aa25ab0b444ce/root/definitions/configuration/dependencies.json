@@ -1,0 +1,14 @@
+[
+    {
+        "name": "commerce",
+        "kind": "commerce"
+    },
+    {
+        "name": "delivery",
+        "kind": "mondial-relay"
+    },
+    {
+        "name": "accounts",
+        "kind": "user-account"
+    }
+]

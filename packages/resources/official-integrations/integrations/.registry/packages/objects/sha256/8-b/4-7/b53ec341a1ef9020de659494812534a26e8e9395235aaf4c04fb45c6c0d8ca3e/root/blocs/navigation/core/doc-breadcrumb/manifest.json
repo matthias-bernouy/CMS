@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-breadcrumb",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Breadcrumb",
+        "description": "Navigation trail showing the current page's hierarchy.",
+        "categories": [
+            "content"
+        ]
+    }
+}

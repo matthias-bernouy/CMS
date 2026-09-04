@@ -1,0 +1,11 @@
+:host {
+    --up-fg: var(--integration-ulvia-documentation-blocs-muted-text, var(--integration-ulvia-basic-blocs-surface-muted-text, #64748b));
+    display: block;
+    font-family: var(--integration-ulvia-documentation-blocs-font-body, var(--integration-ulvia-basic-blocs-font-body, system-ui, sans-serif));
+    font-size: .82rem;
+    color: var(--up-fg);
+    font-style: italic;
+}
+.updated { display: inline-flex; align-items: baseline; gap: .35rem; }
+.label ::slotted(*) { margin: 0; font: inherit; color: inherit; }
+.time { font-weight: 600; font-style: normal; color: var(--integration-ulvia-documentation-blocs-text, var(--integration-ulvia-basic-blocs-body-text, #334155)); }

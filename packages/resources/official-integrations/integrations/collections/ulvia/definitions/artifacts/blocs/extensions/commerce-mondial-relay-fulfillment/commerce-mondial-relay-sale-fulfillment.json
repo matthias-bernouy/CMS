@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "commerce-mondial-relay-sale-fulfillment",
+        "name": "Mondial Relay seller fulfillment",
+        "group": "Delivery",
+        "description": "Creates the seller shipment, issues protected label downloads, separates seller handoff from carrier acceptance, and displays tracking.",
+        "path": "blocs/extensions/commerce-mondial-relay-fulfillment/commerce-mondial-relay-sale-fulfillment"
+    }
+}

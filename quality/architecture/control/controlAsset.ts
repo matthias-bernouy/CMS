@@ -39,6 +39,14 @@ export async function generateControlComponentAssetInProcess(rootDir: string): P
 export function normalizeControlAsset(contents: string): string {
     return contents.replace(/^(\s*\/\/ )(.+)$/gm, (_line, prefix: string, rawPath: string) => {
         const path = rawPath.replaceAll("\\", "/");
+        const nodeModulesMarker = path.lastIndexOf("/node_modules/");
+        if (nodeModulesMarker >= 0) {
+            return `${prefix}${path.slice(nodeModulesMarker + 1)}`;
+        }
+        const relativeNodeModules = /^(?:\.\.\/)+node_modules\//.exec(path);
+        if (relativeNodeModules) {
+            return `${prefix}${path.slice(relativeNodeModules[0].length - "node_modules/".length)}`;
+        }
         const packagesMarker = path.lastIndexOf("/packages/");
         const repositoryPath = packagesMarker >= 0 ? path.slice(packagesMarker + 1) : path;
         const controlPrefix = "packages/surfaces/cms-control/";

@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "properties": {
+    "error": { "type": "string" },
+    "code": { "type": "string" },
+    "missingRequirements": {
+      "type": "array",
+      "items": {
+        "$include": "missing-requirement.json"
+      }
+    }
+  },
+  "required": [
+    "error",
+    "code",
+    "missingRequirements"
+  ]
+}

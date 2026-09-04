@@ -1,7 +1,7 @@
 import type {
     IntegrationConnectorProvider,
     IntegrationConnectorProviderRepository,
-} from "../../interfaces/IntegrationConnectorProvider";
+} from "../../interfaces/IntegrationConnectorDeployer/provider";
 
 export class InMemoryIntegrationConnectorProviderRepository implements IntegrationConnectorProviderRepository {
     private configuredProvider: IntegrationConnectorProvider | null = null;

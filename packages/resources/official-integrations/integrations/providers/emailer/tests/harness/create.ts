@@ -70,7 +70,7 @@ async function importEmailer() {
     await installations.create({
         id: "newsletter",
         label: "Newsletter",
-        definitionVersion: "1.0.0",
+        definitionVersion: "3.0.0",
         status: "success",
         answersSnapshot: { id: "newsletter" },
         secretRefs: { cmsApiKey: "NEWSLETTER_KEY" },

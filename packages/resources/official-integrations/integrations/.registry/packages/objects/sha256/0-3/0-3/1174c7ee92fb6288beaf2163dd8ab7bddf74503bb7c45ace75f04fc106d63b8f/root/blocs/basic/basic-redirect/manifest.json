@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-redirect",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Redirect",
+        "description": "Redirects a published page to another internal page."
+    }
+}

@@ -24,7 +24,7 @@ export function orderPushRecords(records: readonly LocalPackageRecord[]): readon
         for (const candidate of previous) {
             visit(candidate);
         }
-        for (const dependency of [...(record.definition.dependencies ?? [])]
+        for (const dependency of [...record.dependencies]
             .filter((entry) => !entry.optional)
             .sort((left, right) => left.kind.localeCompare(right.kind))) {
             for (const candidate of targets.filter(

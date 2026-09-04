@@ -1,6 +1,12 @@
 import type { DeclarativeArtifactTemplate } from "./IntegrationArtifacts";
 import type { FunctionStep } from "@bernouy/cms-functions";
 import type { DeclarativeConnectorTemplate } from "./IntegrationConnectorDeployer";
+import type {
+    CollectionResource,
+    CollectionResourceCategory,
+    INTEGRATION_DEFINITION_SCHEMA_V1,
+    INTEGRATION_DEFINITION_SCHEMA_V2,
+} from "./IntegrationResources";
 
 export type {
     DeclarativeArtifactTemplate,
@@ -202,7 +208,7 @@ export type DeclarativeAfterInstallationTemplate = {
     steps: FunctionStep[];
 };
 
-export type IntegrationDefinition = {
+type IntegrationDefinitionBase = {
     kind: string;
     label: string;
     version?: string;
@@ -219,5 +225,37 @@ export type IntegrationDefinition = {
     connectors?: DeclarativeConnectorTemplate[];
     provisions?: DeclarativeProvisionTemplate[];
     afterInstallation?: DeclarativeAfterInstallationTemplate[];
-    artifacts?: DeclarativeArtifactTemplate[];
 };
+
+type SourceArtifact = Exclude<DeclarativeArtifactTemplate, { type: "bloc" | "dashboard" | "dashboardRelation" }>;
+type CollectionArtifact = Extract<DeclarativeArtifactTemplate, { type: "bloc" }>;
+
+/** Historical definitions remain readable so immutable upgrade baselines still work. */
+export type LegacyIntegrationDefinition = IntegrationDefinitionBase & {
+    schema?: typeof INTEGRATION_DEFINITION_SCHEMA_V1;
+    type?: never;
+    artifacts?: DeclarativeArtifactTemplate[];
+    resourceCategories?: never;
+    resources?: never;
+};
+
+export type SourceIntegrationDefinition = IntegrationDefinitionBase & {
+    schema: typeof INTEGRATION_DEFINITION_SCHEMA_V2;
+    type: "source";
+    artifacts?: SourceArtifact[];
+    resourceCategories?: never;
+    resources?: never;
+};
+
+export type CollectionIntegrationDefinition = IntegrationDefinitionBase & {
+    schema: typeof INTEGRATION_DEFINITION_SCHEMA_V2;
+    type: "collection";
+    artifacts?: CollectionArtifact[];
+    resourceCategories: CollectionResourceCategory[];
+    resources: CollectionResource[];
+};
+
+export type IntegrationDefinition =
+    | LegacyIntegrationDefinition
+    | SourceIntegrationDefinition
+    | CollectionIntegrationDefinition;

@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "span",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Inline text",
+        "description": "Native inline text with rich-text authoring."
+    }
+}

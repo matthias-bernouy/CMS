@@ -1,0 +1,10 @@
+{
+    "default-tag": "commerce-negotiation-list",
+    "composition": "./template.html",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Negotiation list",
+        "description": "Customizable received and sent proposal list with seller and buyer actions."
+    }
+}

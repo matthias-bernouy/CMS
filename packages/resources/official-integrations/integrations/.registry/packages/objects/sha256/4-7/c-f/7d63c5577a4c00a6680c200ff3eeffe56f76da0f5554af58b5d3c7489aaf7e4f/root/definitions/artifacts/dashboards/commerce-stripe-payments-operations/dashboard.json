@@ -1,0 +1,11 @@
+{
+    "id": "commerce-stripe-payments-operations",
+    "meta": {
+        "name": "Payments & Disputes",
+        "icon": "credit-card"
+    },
+    "source": "{{dependencies.commerce.sourceId}}",
+    "views": {
+        "$include": "views.json"
+    }
+}
