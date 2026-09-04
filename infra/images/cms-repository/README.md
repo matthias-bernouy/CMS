@@ -207,35 +207,23 @@ pruned-candidate audit record. It is not yet a permanent publisher signature;
 durable third-party publisher identity and signing remain a separate trust-model
 upgrade.
 
-## Empty-volume bootstrap policy
+## Empty-volume initialization
 
-On first startup only, the default image builds the closed historical bootstrap
-set of 14 official packages with the shared canonical package builder and
-prevalidates the entire publication plan before writing to a completely empty
-registry bind mount. Later checked-in releases are published through the normal
-explicit workflow; image startup never reconciles them into an initialized
-volume. A separate, explicitly privileged bootstrap publisher admits the nine
-legacy SQL packages that predate `compatibility.schema`; the normal management
-publisher remains strict and cannot use that exemption.
+The image contains no integration seed. Starting with an empty registry mount
+serves an empty catalog; startup never imports source files, reconstructs old
+packages, or changes an initialized catalog. Initialize a new repository by
+releasing current sources into a trusted Ulvia local repository and publishing
+them through the authenticated candidate protocol. Restore an existing
+repository only from a complete registry backup.
 
-After preflight, the runtime durably creates
-`.official-bootstrap-in-progress`, publishes the prepared packages through the
-normal immutable index and snapshot machinery, and removes the marker only
-after every expected kind, version, and digest was committed. If publication
-is interrupted, the marker remains and every later startup fails closed instead
-of serving a partial seed. Do not remove only the marker. Archive the partial
-fresh-volume contents for diagnosis, replace them with a new empty mode-0750
-registry directory owned by UID/GID 1000, and restart the same immutable image.
-
-Any non-empty registry without that marker is already initialized and is left
-untouched by bootstrap. After initialization:
+After initialization:
 
 - image upgrades never reconcile or mutate registry contents;
 - `docker compose pull` cannot publish a version;
 - official updates go through authenticated, locked, auditable publication.
 
-This rule deliberately makes the registry volume, not later image contents, the
-source of truth. Pulling a newer image does not merge newly bundled resources.
+This rule makes the registry volume, not Git or image contents, the source of
+truth. Pulling a newer image does not merge newly authored resources.
 
 ### Publishing one integration
 
@@ -264,10 +252,11 @@ Ulvia CLI command and must not be emulated by editing registry files.
 
 ### Publishing the official catalog
 
-The non-interactive publisher audits every checked-in current source without
-credentials:
+The non-interactive publisher first pulls the anonymous remote history, then
+audits every checked-in current source without publication credentials:
 
 ```bash
+bun run ulvia -- pull --all
 bun run ulvia -- audit --all \
   --root packages/resources/official-integrations/integrations
 ```
@@ -294,9 +283,8 @@ through both `workflow_dispatch` and `workflow_call`. Every run first executes a
 credential-free audit on a hosted runner. Normal publication then runs on a
 hosted runner through the HTTPS CMS gateway with the `ULVIA_TOKEN` secret,
 scoped only to the validation and publication steps. Image builds and pulls
-never invoke this workflow automatically. The first empty-volume seed is
-performed locally by the repository runtime; every later official update
-remains an explicit, reviewable publication operation.
+never invoke this workflow automatically. Initial population and every later
+official update remain explicit, reviewable publication operations.
 
 The fixed, protected `integration-repository` GitHub environment owns both
 destinations as environment variables: `REPOSITORY_CMS_URL` for the public CMS
@@ -331,10 +319,9 @@ Restore only into an empty prepared registry directory owned by UID/GID 1000
 with mode `0750`. Restore the complete tree rather than selected indexes or
 version directories, then start the repository and inspect `/ready` plus the
 authenticated management status and diagnostics before re-enabling the CMS
-management gateway or publication automation. A bootstrap-in-progress marker is
-recovery evidence, not a file to delete blindly; an interrupted initial seed
-should be investigated or the still-new volume replaced from a known-good
-backup.
+management gateway or publication automation. If an initial publication is
+interrupted, retry it through Ulvia: immutable objects and admitted coordinates
+make the operation resumable without editing registry files.
 
 The registry status reports exact decimal byte capacity from the mounted
 filesystem. Monitor available space outside the container and retain room for

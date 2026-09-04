@@ -134,12 +134,12 @@ describe("registry lifecycle documentation", () => {
         expect(readmeSource).toContain("sudo chown 1002:1002");
     });
 
-    test("documents empty-only bootstrap and image-upgrade immutability", () => {
-        expect(readmeSource).toMatch(/closed historical bootstrap\s+set of 14 official packages/);
+    test("documents explicit empty-volume initialization and image-upgrade immutability", () => {
+        expect(readmeSource).toContain("The image contains no integration seed");
+        expect(readmeSource).toContain("Starting with an empty registry mount");
+        expect(readmeSource).toContain("serves an empty catalog");
         expect(readmeSource).toMatch(/First publish[\s\S]*cms-repository-hub[^\n]*migration\s+reference/);
-        expect(readmeSource).toContain(".official-bootstrap-in-progress");
-        expect(readmeSource).toContain("every later startup fails closed");
-        expect(readmeSource).toContain("Any non-empty registry without that marker is already initialized");
+        expect(readmeSource).toContain("explicit, reviewable publication operations");
         expect(readmeSource).toContain("image upgrades never reconcile or mutate registry contents");
         expect(readmeSource).toContain("Public reads have no token");
         expect(readmeSource).toContain("last valid snapshot stays available");
