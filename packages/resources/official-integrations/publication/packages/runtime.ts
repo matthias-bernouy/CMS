@@ -7,7 +7,6 @@ import { compare as compareSemVer } from "semver";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "../../index";
 import type { BuiltOfficialIntegrationPackage, OfficialIntegrationPackage } from "../contracts";
 import { assertWithin, compareText, joinWithin, portableRelative, readBoundedJsonDocument } from "../filesystem";
-import { loadOfficialIntegrationPackageHistory } from "./history";
 
 const MAX_DISCOVERY_DEPTH = 8;
 const MAX_DISCOVERY_ENTRIES = 8_192;
@@ -45,7 +44,7 @@ export async function buildOfficialIntegrationPackages(
                 version: entry.version,
                 definition: portableRelative(versionRoot, definitionPath),
                 releaseNotes: await officialReleaseNotesPath(versionRoot),
-                ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
+                ...(entry.path === "." ? { excludeRootEntries: ["integration.json", "tests"] } : {}),
             });
             const definition = await definitions.get(index.kind, entry.version);
             if (!definition) {
@@ -61,16 +60,6 @@ export async function buildOfficialIntegrationPackages(
                 sourceRoot: versionRoot,
             });
         }
-    }
-    for (const integrationPackage of await loadOfficialIntegrationPackageHistory(requestedRoot)) {
-        const identity = `${integrationPackage.kind}\0${integrationPackage.version}`;
-        if (identities.has(identity)) {
-            throw new Error(
-                `Official integration package identity is duplicated: ${integrationPackage.kind}@${integrationPackage.version}`,
-            );
-        }
-        identities.add(identity);
-        packages.push(integrationPackage);
     }
     return Object.freeze(packages.sort(comparePackages));
 }
@@ -124,9 +113,6 @@ async function walkForIndexes(
     for (const entry of entries) {
         if (entry.isSymbolicLink()) {
             throw new Error("Official integration discovery must not follow symlinks");
-        }
-        if (directory === root && entry.name === ".registry") {
-            continue;
         }
         if (entry.isDirectory()) {
             const child = await realpath(join(directory, entry.name));

@@ -9,8 +9,8 @@ import {
     type IntegrationRegistryRecoveryResult,
     type IntegrationRegistryReleaseEvidenceReader,
     type IntegrationVerificationBundleStore,
-    type OfficialRepositoryBootstrapBaselineApproval,
-    type PreparedOfficialVerificationBackfill,
+    type PreparedIntegrationVerificationBackfill,
+    type ReviewedSchemaBaselineImportApproval,
 } from "@bernouy/cms-integration-registry";
 import type {
     MigrationVerificationEnvironmentV1,
@@ -36,6 +36,7 @@ import {
     FsReleaseAdmissionReconciler,
     FsReleaseAdmissionDecisionStore,
     FsReviewedSchemaBaselineStore,
+    loadReviewedConnectorSchemaBaselines,
     FsReviewedSchemaBaselineImporter,
     MAX_REVIEWED_SCHEMA_BASELINE_IMPORT_DOCUMENT_BYTES,
     MAX_INTEGRATION_VERIFICATION_BACKFILL_DOCUMENT_BYTES,
@@ -52,7 +53,7 @@ import {
     RepositoryCandidateAdmissionPlanningError,
     mountRepositoryManagementRoutes,
 } from "@bernouy/cms-repository-management";
-import type { RepositoryCompatibilityReader } from "@bernouy/cms-repository";
+import type { RepositoryCompatibilityReader, RepositorySchemaBaselineReader } from "@bernouy/cms-repository";
 import type { Runner } from "@bernouy/http-runner";
 import type { RepositoryCatalogRuntime } from "./core/catalogRuntime";
 import {
@@ -78,6 +79,7 @@ export type ProductionRepositoryManagement = Readonly<{
     compatibility: RepositoryCompatibilityReader;
     releases: IntegrationRegistryReleaseEvidenceReader;
     verificationBundles: Pick<IntegrationVerificationBundleStore, "get">;
+    schemaBaselines: RepositorySchemaBaselineReader;
 }>;
 
 export async function createProductionRepositoryManagement(input: {
@@ -85,10 +87,10 @@ export async function createProductionRepositoryManagement(input: {
     catalog: RepositoryCatalogRuntime;
     telemetry?: RepositoryOperationalTelemetry;
     baselineImports?: Readonly<{
-        approval: OfficialRepositoryBootstrapBaselineApproval;
+        approval: ReviewedSchemaBaselineImportApproval;
         approvedTargets: readonly ReviewedSchemaBaselineImportTarget[];
     }>;
-    verificationBackfills?: readonly PreparedOfficialVerificationBackfill[];
+    verificationBackfills?: readonly PreparedIntegrationVerificationBackfill[];
     candidateProtocol?: Omit<ProductionRepositoryCandidateProtocolConfig, "root">;
     candidateAdmissionPolicy?: ReleaseAdmissionPolicySnapshotV1;
     candidateMigrationEnvironment?: MigrationVerificationEnvironmentV1;
@@ -327,6 +329,10 @@ export async function createProductionRepositoryManagement(input: {
         compatibility: compatibilityReports,
         releases: releaseEvidence,
         verificationBundles,
+        schemaBaselines: {
+            listForPackage: (kind, version, packageDigest) =>
+                loadReviewedConnectorSchemaBaselines(reviewedSchemaBaselines, kind, version, packageDigest),
+        },
         mountMaintenance(runner: Runner) {
             if (baselineImporter) {
                 mountRepositorySchemaBaselineImportRoutes(runner, {

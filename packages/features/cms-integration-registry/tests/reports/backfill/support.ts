@@ -3,16 +3,16 @@ import {
     INTEGRATION_VERIFICATION_BACKFILL_SCHEMA,
     identifyIntegrationVerificationBackfillRequest,
     type IntegrationVerificationBackfillRequest,
-    type PreparedOfficialVerificationBackfill,
+    type PreparedIntegrationVerificationBackfill,
 } from "@bernouy/cms-integration-registry";
 import {
     FsIntegrationVerificationBackfiller,
     FsIntegrationVerificationBundleStore,
     type FsIntegrationVerificationBackfillerConfig,
 } from "@bernouy/cms-integration-registry/fs";
-import { bootstrapPlan } from "../../publication/official-bootstrap/fixtures";
 import { publicationPackage, registryFixture } from "../../publication/fixtures";
 import { releaseStores } from "../fixtures/stores";
+import { verificationBackfill } from "./fixture";
 
 export async function populatedBackfillFixture(
     overrides: Partial<FsIntegrationVerificationBackfillerConfig> = {},
@@ -25,7 +25,7 @@ export async function populatedBackfillFixture(
     } else {
         await fixture.publisher.publish({ package: integrationPackage });
     }
-    const entry = bootstrapPlan([integrationPackage]).verificationBackfills[0]!;
+    const entry = verificationBackfill(integrationPackage);
     const request = backfillRequest(entry);
     const identified = await identifyIntegrationVerificationBackfillRequest(request);
     const stores = releaseStores(fixture);
@@ -57,7 +57,9 @@ export async function populatedBackfillFixture(
     };
 }
 
-export function backfillRequest(entry: PreparedOfficialVerificationBackfill): IntegrationVerificationBackfillRequest {
+export function backfillRequest(
+    entry: PreparedIntegrationVerificationBackfill,
+): IntegrationVerificationBackfillRequest {
     return {
         schema: INTEGRATION_VERIFICATION_BACKFILL_SCHEMA,
         verification: { envelope: entry.verification.envelope, digest: entry.verification.digest },
@@ -69,7 +71,7 @@ export function backfillRequest(entry: PreparedOfficialVerificationBackfill): In
 }
 
 export async function alternateBackfillRequest(
-    entry: PreparedOfficialVerificationBackfill,
+    entry: PreparedIntegrationVerificationBackfill,
 ): Promise<IntegrationVerificationBackfillRequest> {
     const envelope = {
         ...entry.verification.envelope,
@@ -97,5 +99,5 @@ export async function alternateBackfillRequest(
 
 export async function orphanBackfillRequest(): Promise<IntegrationVerificationBackfillRequest> {
     const integrationPackage = await publicationPackage("absent", "1.0.0");
-    return backfillRequest(bootstrapPlan([integrationPackage]).verificationBackfills[0]!);
+    return backfillRequest(verificationBackfill(integrationPackage));
 }

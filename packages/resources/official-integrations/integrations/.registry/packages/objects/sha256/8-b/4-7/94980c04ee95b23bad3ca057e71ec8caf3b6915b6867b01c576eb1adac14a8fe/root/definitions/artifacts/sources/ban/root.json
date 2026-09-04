@@ -1,6 +1,0 @@
-{
-    "type": "source",
-    "source": {
-        "$include": "source/root.json"
-    }
-}

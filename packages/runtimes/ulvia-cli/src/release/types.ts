@@ -12,13 +12,6 @@ export type LocalReleasePackage = Readonly<{
     reviewedSchemaBaselines?: readonly ReviewedConnectorSchemaBaseline[];
 }>;
 
-export type LocalReviewedSchemaEvidence = Readonly<{
-    kind: string;
-    version: string;
-    packageDigest: string;
-    baseline: ReviewedConnectorSchemaBaseline;
-}>;
-
 export type LocalReleaseVerificationInput = Readonly<{
     candidate: LocalReleasePackage;
     sourceRoot: string;

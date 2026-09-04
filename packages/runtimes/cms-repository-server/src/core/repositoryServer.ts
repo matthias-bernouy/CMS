@@ -12,6 +12,7 @@ import {
     type PublicPackageDownloadProtection,
     type RepositoryCompatibilityReader,
     type PublicRepositoryReadObserver,
+    type RepositorySchemaBaselineReader,
 } from "@bernouy/cms-repository";
 import { REPOSITORY_MANAGEMENT_BASE_PATH } from "@bernouy/cms-repository-management";
 import type { Middleware, Runner } from "@bernouy/http-runner";
@@ -45,6 +46,7 @@ export type RepositoryServerConfig = Readonly<{
     integrationCompatibility?: RepositoryCompatibilityReader;
     integrationReleases?: IntegrationRegistryReleaseEvidenceReader;
     integrationVerificationBundles?: Pick<IntegrationVerificationBundleStore, "get">;
+    integrationSchemaBaselines?: RepositorySchemaBaselineReader;
     observePublicRead?: PublicRepositoryReadObserver;
     managementGuard: Middleware;
     mountManagement: RepositoryManagementSurfaceMount;
@@ -74,6 +76,7 @@ export function startRepositoryServer(config: RepositoryServerConfig): Repositor
             integrationCompatibility: config.integrationCompatibility,
             integrationReleases: config.integrationReleases,
             integrationVerificationBundles: config.integrationVerificationBundles,
+            integrationSchemaBaselines: config.integrationSchemaBaselines,
             integrationPackages: packages,
             packageDownloadProtection: config.packageDownloadProtection,
             observeRead: config.observePublicRead,

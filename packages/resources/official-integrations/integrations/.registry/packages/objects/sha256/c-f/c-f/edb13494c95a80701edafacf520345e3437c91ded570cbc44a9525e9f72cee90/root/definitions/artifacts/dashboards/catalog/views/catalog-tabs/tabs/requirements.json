@@ -1,7 +1,0 @@
-{
-  "id": "requirements",
-  "label": "Prerequisites",
-  "children": {
-    "$include": "../../requirements/root.json"
-  }
-}

@@ -2,12 +2,12 @@ import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import { identifyReviewedSchemaBaseline } from "@bernouy/cms-integration-verification";
 import { ReviewedSchemaBaselineImportError } from "../../../../../../core/baselines/errors";
 import type { IntegrationRegistryCatalogSnapshot } from "../../../../../../interfaces/catalog";
-import type { OfficialRepositoryBootstrapBaselineApproval } from "../../../../../../interfaces/publication";
+import type { ReviewedSchemaBaselineImportApproval } from "../../../../../../interfaces/publication";
 import type {
     ReviewedSchemaBaselineHistory,
     ReviewedSchemaBaselineImportRequest,
 } from "../../../../../../interfaces/reportStore";
-import { assertApprovedReviewedSchemaBaseline } from "../../../publication/official-bootstrap/approval";
+import { assertApprovedReviewedSchemaBaseline } from "./approval";
 import type { ReviewedSchemaBaselineImportTarget } from "../types";
 import { validateReviewedSchemaBaselineDependencies } from "./dependencies";
 export { identifyReviewedSchemaBaselineImportPolicy } from "./policy";
@@ -15,7 +15,7 @@ export { identifyReviewedSchemaBaselineImportPolicy } from "./policy";
 export async function validateReviewedSchemaBaselineImport(
     request: ReviewedSchemaBaselineImportRequest,
     snapshot: IntegrationRegistryCatalogSnapshot,
-    approval: OfficialRepositoryBootstrapBaselineApproval,
+    approval: ReviewedSchemaBaselineImportApproval,
     targets: readonly ReviewedSchemaBaselineImportTarget[],
 ): Promise<void> {
     const { baseline } = request;

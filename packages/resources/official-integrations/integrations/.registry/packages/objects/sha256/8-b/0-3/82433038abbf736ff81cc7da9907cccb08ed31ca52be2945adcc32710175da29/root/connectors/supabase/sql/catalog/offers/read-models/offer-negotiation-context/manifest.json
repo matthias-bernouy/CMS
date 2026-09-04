@@ -1,9 +1,0 @@
-{
-    "schema": "cms.integration.sql-bundle.v1",
-    "transaction": "atomic",
-    "entries": [
-        { "file": "get-context.sql" },
-        { "file": "lock-context.sql" },
-        { "file": "execution-privileges.sql" }
-    ]
-}

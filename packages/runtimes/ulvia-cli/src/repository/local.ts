@@ -1,5 +1,8 @@
 import type { ResolvedIntegrationPackage } from "@bernouy/cms-integration-packages";
-import type { StoredIntegrationVerificationBundle } from "@bernouy/cms-integration-registry";
+import type {
+    ReviewedConnectorSchemaBaseline,
+    StoredIntegrationVerificationBundle,
+} from "@bernouy/cms-integration-registry";
 import { FsIntegrationVerificationBundleStore } from "@bernouy/cms-integration-registry/fs";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import {
@@ -10,11 +13,13 @@ import {
     writeManifest,
 } from "./manifest";
 import { LocalPackageReader } from "./packageReader";
+import { LocalReviewedSchemaBaselineStore } from "./reviewed-schema";
 
 export type PulledPackage = Readonly<{
     package: ResolvedIntegrationPackage;
     definition: IntegrationDefinition;
     verification?: StoredIntegrationVerificationBundle;
+    reviewedSchemaBaselines?: readonly ReviewedConnectorSchemaBaseline[];
     source: string;
 }>;
 
@@ -26,6 +31,7 @@ export type StorePackageResult = Readonly<{
 export class LocalIntegrationRepository {
     private readonly packages: LocalPackageReader;
     private readonly verifications: FsIntegrationVerificationBundleStore;
+    private readonly reviewedSchemaBaselines: LocalReviewedSchemaBaselineStore;
     private mutation = Promise.resolve();
 
     constructor(
@@ -34,6 +40,7 @@ export class LocalIntegrationRepository {
     ) {
         this.packages = new LocalPackageReader(packageRoot);
         this.verifications = new FsIntegrationVerificationBundleStore(root);
+        this.reviewedSchemaBaselines = new LocalReviewedSchemaBaselineStore(root);
     }
 
     async init(): Promise<void> {
@@ -59,6 +66,14 @@ export class LocalIntegrationRepository {
 
     async getVerification(record: LocalPackageRecord): Promise<StoredIntegrationVerificationBundle | null> {
         return record.verificationDigest ? await this.verifications.get(record.verificationDigest) : null;
+    }
+
+    async getReviewedSchemaBaselines(record: LocalPackageRecord): Promise<readonly ReviewedConnectorSchemaBaseline[]> {
+        return await this.reviewedSchemaBaselines.get({
+            kind: record.kind,
+            version: record.version,
+            packageDigest: record.digest,
+        });
     }
 
     async recordAdmission(
@@ -92,6 +107,12 @@ export class LocalIntegrationRepository {
             digest: input.package.digest,
         });
         const verification = input.verification ? await this.verifications.put(input.verification) : undefined;
+        if (input.reviewedSchemaBaselines) {
+            await this.reviewedSchemaBaselines.put(
+                { kind, version, packageDigest: materialized.digest },
+                input.reviewedSchemaBaselines,
+            );
+        }
         await this.packages.recordReference(kind, version, materialized.digest);
         return await this.exclusive(async () => {
             const current = [...(await this.list())];

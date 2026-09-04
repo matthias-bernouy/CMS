@@ -1,9 +1,0 @@
-{
-    "schema": "cms.integration.sql-bundle.v1",
-    "transaction": "atomic",
-    "entries": [
-        { "file": "transactional-model/emailer.sql" },
-        { "file": "transactional-maintenance/set-updated-at.sql" },
-        { "file": "transactional-access/schema-access-and-comments.sql" }
-    ]
-}

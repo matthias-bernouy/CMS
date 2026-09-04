@@ -4,6 +4,7 @@ import { runCli } from "../../src/cli";
 import { resolveDevPorts } from "../../src/commands/dev";
 import { localMongoUrl } from "../../src/runtime/mongo";
 import { RemoteIntegrationRepository } from "../../src/repository/remote";
+import { LocalIntegrationRepository } from "../../src/repository/local";
 import { integrationPackage, removeReadonlyTree, writeIntegrationSource } from "../fixtures";
 import { emptyRemote, remoteFixture, temporaryRoot } from "./support";
 
@@ -28,7 +29,7 @@ describe("Ulvia CLI", () => {
         expect(localMongoUrl(27_019)).toBe("mongodb://127.0.0.1:27019/ulvia_dev?retryWrites=false");
     });
 
-    test("pulls the remote default once and reports it locally", async () => {
+    test("pulls the remote default and refreshes its evidence locally", async () => {
         const root = await temporaryRoot(roots);
         const resolved = await integrationPackage();
         const environment = {
@@ -36,7 +37,7 @@ describe("Ulvia CLI", () => {
             ULVIA_REPOSITORY_URL: "http://repository.example.test/.cms/repository",
         };
         const output: string[] = [];
-        const repositoryFetch = remoteFixture(resolved);
+        const repositoryFetch = remoteFixture(resolved, [reviewedBaseline(resolved.digest)]);
         await runCli(["pull", "demo"], { environment, repositoryFetch, log: (line) => output.push(line) });
         await runCli(["pull", "demo"], { environment, repositoryFetch, log: (line) => output.push(line) });
         await runCli(["status"], { environment, log: (line) => output.push(line) });
@@ -48,6 +49,13 @@ describe("Ulvia CLI", () => {
             ]),
         );
         expect(output.at(-1)).toContain("demo@1.0.0");
+        const local = new LocalIntegrationRepository(join(root, "repository"), join(root, "repository", "packages"));
+        await local.init();
+        const record = await local.getRecord("demo", "1.0.0");
+        expect(record && (await local.getReviewedSchemaBaselines(record))[0]).toMatchObject({
+            connector: { provider: "supabase" },
+            packageDigest: resolved.digest,
+        });
     });
 
     test("push requires a locally released integration", async () => {
@@ -102,3 +110,17 @@ describe("Ulvia CLI", () => {
         expect(catalog.packages.map(({ kind }: { kind: string }) => kind)).toEqual(["alpha", "beta"]);
     });
 });
+
+function reviewedBaseline(packageDigest: string) {
+    return {
+        connector: { provider: "supabase", root: "connectors/supabase" },
+        packageDigest,
+        dependencies: [],
+        schema: { namespaces: [] },
+        provenance: {
+            evidenceId: `reviewed-schema-baseline-${"a".repeat(64)}`,
+            source: "legacy-backfill:reviewed@1.0.0",
+            reviewedAt: "2026-09-04T10:00:00.000Z",
+        },
+    } as const;
+}

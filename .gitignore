@@ -24,6 +24,7 @@ build/
 .codex/
 .playwright-mcp/
 /site/
+/packages/resources/official-integrations/integrations/.registry/
 
 
 # Generated files

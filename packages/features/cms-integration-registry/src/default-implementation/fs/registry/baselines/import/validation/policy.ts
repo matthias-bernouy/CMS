@@ -1,13 +1,13 @@
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
-import type { OfficialRepositoryBootstrapBaselineApproval } from "../../../../../../interfaces/publication";
-import { assertBootstrapBaselineApproval } from "../../../publication/official-bootstrap/approval";
+import type { ReviewedSchemaBaselineImportApproval } from "../../../../../../interfaces/publication";
 import type { ReviewedSchemaBaselineImportTarget } from "../types";
+import { assertBaselineImportApproval } from "./approval";
 
 export async function identifyReviewedSchemaBaselineImportPolicy(
-    approval: OfficialRepositoryBootstrapBaselineApproval,
+    approval: ReviewedSchemaBaselineImportApproval,
     targets: readonly ReviewedSchemaBaselineImportTarget[],
 ): Promise<string> {
-    assertBootstrapBaselineApproval(approval);
+    assertBaselineImportApproval(approval);
     const identities = new Set<string>();
     const normalized = [...targets].sort(compareTargets);
     for (const target of normalized) {

@@ -1,9 +1,0 @@
-{
-    "id": "protectedC2c",
-    "label": "Protected C2C",
-    "children": [
-        {
-            "$include": "../../protected-c2c-policy-settings.json"
-        }
-    ]
-}

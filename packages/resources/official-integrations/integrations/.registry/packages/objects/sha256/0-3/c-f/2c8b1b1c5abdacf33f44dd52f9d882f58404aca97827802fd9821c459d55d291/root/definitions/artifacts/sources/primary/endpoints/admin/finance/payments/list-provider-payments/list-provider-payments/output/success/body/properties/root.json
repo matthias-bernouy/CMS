@@ -1,8 +1,0 @@
-{
-    "payments": {
-        "$include": "payments/root.json"
-    },
-    "total": {
-        "type": "number"
-    }
-}

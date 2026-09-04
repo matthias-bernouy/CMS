@@ -1,5 +1,0 @@
-[
-    {
-        "$include": "reconcile-shipments/root.json"
-    }
-]

@@ -1,6 +1,0 @@
-{
-  "type": "dashboard-view",
-  "view": {
-        "$include": "dashboard/root.json"
-    }
-}

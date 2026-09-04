@@ -24,11 +24,23 @@ describe("local integration repository", () => {
             version: resolved.envelope.version,
             packageDigest: resolved.digest,
         });
+        const reviewedSchemaBaseline = {
+            connector: { provider: "supabase", root: "connectors/supabase" },
+            packageDigest: resolved.digest,
+            dependencies: [],
+            schema: { namespaces: [] },
+            provenance: {
+                evidenceId: `reviewed-schema-baseline-${"a".repeat(64)}`,
+                source: "legacy-backfill:reviewed@1.0.0",
+                reviewedAt: "2026-09-04T10:00:00.000Z",
+            },
+        } as const;
 
         const first = await fixture.repository.store({
             package: resolved,
             definition: integrationDefinition(),
             verification,
+            reviewedSchemaBaselines: [reviewedSchemaBaseline],
             source: "https://repository.example.test",
         });
         const second = await fixture.repository.store({
@@ -42,6 +54,7 @@ describe("local integration repository", () => {
         expect(await fixture.repository.list()).toEqual([first.record]);
         expect((await fixture.repository.getPackage(first.record)).digest).toBe(resolved.digest);
         expect((await fixture.repository.getVerification(first.record))?.digest).toBe(verification.digest);
+        expect(await fixture.repository.getReviewedSchemaBaselines(first.record)).toEqual([reviewedSchemaBaseline]);
     });
 
     test("persists remote admission without mutating immutable package bytes", async () => {

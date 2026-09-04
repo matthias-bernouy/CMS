@@ -26,12 +26,5 @@
     },
     "peerDependencies": {
         "typescript": "^5.9.3"
-    },
-    "devDependencies": {
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-official-integrations": "workspace:*",
-        "@bernouy/cms-repository-server": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/rate-limiter": "workspace:*"
     }
 }

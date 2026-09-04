@@ -1,5 +1,0 @@
-[
-    {
-        "$include": "shipment-detail/root.json"
-    }
-]

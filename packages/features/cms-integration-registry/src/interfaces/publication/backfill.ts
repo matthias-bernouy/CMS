@@ -43,3 +43,15 @@ export type IntegrationVerificationBackfillResult = Readonly<{
 export interface IntegrationVerificationBackfiller {
     backfill(request: IntegrationVerificationBackfillRequest): Promise<IntegrationVerificationBackfillResult>;
 }
+
+export type PreparedIntegrationVerificationBackfill = Readonly<{
+    verification: Readonly<{
+        envelope: IntegrationVerificationEnvelopeV1;
+        canonicalBytes: Uint8Array;
+        digest: string;
+    }>;
+    compatibilityReport: CompatibilityReportV2;
+    verificationReport: VerificationReport;
+    statefulChanges: StatefulChangeSelectionV1;
+    decision: ReleaseAdmissionDecision;
+}>;

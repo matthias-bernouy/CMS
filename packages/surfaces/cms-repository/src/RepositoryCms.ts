@@ -21,6 +21,8 @@ import {
     integrationReleaseRouteHandler,
     integrationVerificationBundleRouteHandler,
 } from "cms-repository/compatibility/releaseRoutes";
+import type { RepositorySchemaBaselineReader } from "cms-repository/compatibility/schema-baselines/contracts";
+import { integrationSchemaBaselinesRouteHandler } from "cms-repository/compatibility/schema-baselines/routes";
 import { integrationPackageRouteHandlers } from "cms-repository/integrationPackageRoutes";
 import {
     assertPackageDownloadProtection,
@@ -49,6 +51,7 @@ type RepositoryCmsBaseConfig = {
     integrationReleases?: RepositoryReleaseReader;
     integrationProjectedReleases?: RepositoryProjectedReleaseReader;
     integrationVerificationBundles?: RepositoryVerificationBundleReader;
+    integrationSchemaBaselines?: RepositorySchemaBaselineReader;
     observeRead?: PublicRepositoryReadObserver;
 };
 
@@ -70,6 +73,7 @@ export class RepositoryCms {
     private readonly integrationReleases?: RepositoryReleaseReader;
     private readonly integrationProjectedReleases?: RepositoryProjectedReleaseReader;
     private readonly integrationVerificationBundles?: RepositoryVerificationBundleReader;
+    private readonly integrationSchemaBaselines?: RepositorySchemaBaselineReader;
     private readonly integrationPackages?: IntegrationPackageSource;
     private readonly packageDownloadProtection?: PublicPackageDownloadProtection;
     private readonly observeRead?: PublicRepositoryReadObserver;
@@ -83,6 +87,7 @@ export class RepositoryCms {
         this.integrationReleases = config.integrationReleases;
         this.integrationProjectedReleases = config.integrationProjectedReleases;
         this.integrationVerificationBundles = config.integrationVerificationBundles;
+        this.integrationSchemaBaselines = config.integrationSchemaBaselines;
         this.integrationPackages = config.integrationPackages;
         this.packageDownloadProtection = config.packageDownloadProtection;
         this.observeRead = config.observeRead;
@@ -190,6 +195,14 @@ export class RepositoryCms {
                 "/api/integrations/verification-bundle",
                 "integration-verification-bundle",
                 integrationVerificationBundleRouteHandler(this.integrationVerificationBundles),
+            );
+        }
+
+        if (this.integrationSchemaBaselines) {
+            this.registerPublicRead(
+                "/api/integrations/schema-baselines",
+                "integration-schema-baselines",
+                integrationSchemaBaselinesRouteHandler(this.integrationSchemaBaselines),
             );
         }
 

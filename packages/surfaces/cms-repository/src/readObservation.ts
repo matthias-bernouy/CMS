@@ -8,6 +8,7 @@ export type PublicRepositoryReadResource =
     | "integration-compatibility"
     | "integration-release"
     | "integration-verification-bundle"
+    | "integration-schema-baselines"
     | "integration-package"
     | "integration-release-notes";
 

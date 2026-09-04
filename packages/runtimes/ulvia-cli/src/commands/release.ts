@@ -5,7 +5,6 @@ import { listLocalReleaseKinds } from "../release/source";
 import { orderLocalReleaseKinds } from "../release/source/dependencyOrder";
 import type { LocalReleaseVerifier } from "../release/types";
 import { parseSourceCommandFlags } from "./source-flags";
-import { importLocalPackageSeed } from "../repository/seed";
 
 export async function releaseCommand(
     args: readonly string[],
@@ -15,10 +14,6 @@ export async function releaseCommand(
     log: (message: string) => void,
 ): Promise<void> {
     const flags = parseSourceCommandFlags("release", args, cwd, { allowAll: true });
-    const imported = await importLocalPackageSeed(flags.root, local);
-    if (imported) {
-        log(`+ imported ${imported} immutable historical package(s) from the local source tree`);
-    }
     const discovered = flags.all ? await listLocalReleaseKinds(flags.root) : [flags.kind!];
     const kinds = flags.all ? await orderLocalReleaseKinds(flags.root, discovered) : discovered;
     const failures: { kind: string; error: unknown }[] = [];

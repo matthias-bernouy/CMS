@@ -1,6 +1,6 @@
 import type { IntegrationRegistryCatalogSnapshotProvider } from "../../../../../interfaces/catalog";
 import type { IntegrationRegistryMutationCoordinator } from "../../../../../interfaces/mutations";
-import type { OfficialRepositoryBootstrapBaselineApproval } from "../../../../../interfaces/publication";
+import type { ReviewedSchemaBaselineImportApproval } from "../../../../../interfaces/publication";
 import type { ReviewedSchemaBaselineStore } from "../../../../../interfaces/reportStore";
 import type { FsReviewedSchemaBaselineImportPhase } from "./document";
 
@@ -26,7 +26,7 @@ export type FsReviewedSchemaBaselineImporterConfig = Readonly<{
     snapshots: IntegrationRegistryCatalogSnapshotProvider;
     store: ReviewedSchemaBaselineStore;
     mutations: IntegrationRegistryMutationCoordinator;
-    approval: OfficialRepositoryBootstrapBaselineApproval;
+    approval: ReviewedSchemaBaselineImportApproval;
     approvedTargets: readonly ReviewedSchemaBaselineImportTarget[];
     createOperationId?: () => string;
     now?: () => string;

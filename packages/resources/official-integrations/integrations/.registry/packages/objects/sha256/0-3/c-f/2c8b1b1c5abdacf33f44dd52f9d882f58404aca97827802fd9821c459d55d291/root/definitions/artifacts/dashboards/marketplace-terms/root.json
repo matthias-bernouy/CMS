@@ -1,9 +1,0 @@
-{
-    "type": "dashboard",
-    "dashboard": {
-        "id": "{{answers.id}}-marketplace-terms",
-        "source": "{{answers.id}}",
-        "meta": { "name": "Seller terms", "icon": "file-check" },
-        "views": { "$include": "views.json" }
-    }
-}

@@ -19,7 +19,6 @@ import { InMemoryTriggerRepository, validateTrigger } from "@bernouy/cms-trigger
 import { stripeWebhookProvisioner } from "../helpers/stripeWebhookProvisioner";
 
 const kinds = [
-    "basic-blocs",
     "user-account",
     "commerce",
     "mondial-relay",
@@ -71,7 +70,6 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
             },
         };
 
-        await install("basic-blocs", {}, definitions, deps, installations);
         await install("user-account", { id: "accounts" }, definitions, deps, installations);
         await install(
             "commerce",
@@ -191,7 +189,7 @@ function afterInstallationResponse(request: Request): Response {
             hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         });
     }
-    if (request.url.includes("/cms-stripe-connect/payments/seller-capabilities")) {
+    if (request.url.includes("/cms-stripe-connect-management/seller-capabilities")) {
         return Response.json({
             readySellerCmsUserIds: [],
             snapshot: "seller-capabilities:test-empty",

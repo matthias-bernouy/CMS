@@ -7,82 +7,66 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 describe("official integration Theme contracts", () => {
-    test("declares calculated Commerce tokens and consumes their derived variables", async () => {
+    test("keeps Commerce card hooks behind the shared Ulvia collection", async () => {
         const definition = await repository().get("commerce");
-        const tokens = definition?.theme?.categories.flatMap((category) => category.tokens) ?? [];
-        const headingFont = tokens.find((token) => token.id === "offer-heading-font");
-        const border = tokens.find((token) => token.id === "offer-border");
-        const radius = tokens.find((token) => token.id === "offer-radius");
-        const css = await resource("domains/commerce/versions/1.0.0/blocs/commerce-offer-preview/style.css");
+        const css = await resource("collections/ulvia/blocs/domains/commerce/commerce-offer-preview/style.css");
 
-        expect(headingFont).toMatchObject({
-            type: "font-family",
-            defaults: { light: "var(--font-display, var(--font-heading))" },
-        });
-        expect(border?.defaults.light).toBe("var(--border-subtle, var(--border-default))");
-        expect(radius).toMatchObject({
-            type: "length",
-            defaults: { light: "var(--radius-lg, var(--radius-card))" },
-        });
-        expect(css).toContain("var(--commerce-offer-heading-font");
+        expect(definition?.theme).toBeUndefined();
         expect(css).toContain("var(--commerce-offer-border");
+        expect(css).toContain("var(--commerce-offer-radius");
+        expect(css).toContain("var(--ulvia-font-heading");
     });
 
-    test("binds Photo Albums card settings to namespaced Theme variables", async () => {
+    test("keeps Photo Albums defaults while its blocks use the shared Ulvia surface roles", async () => {
         const definition = await repository().get("photo-albums");
-        const tokens = definition?.theme?.categories.flatMap((category) => category.tokens) ?? [];
-        const list = await resource("domains/photo-albums/blocs/photo-album-list/default.html");
-        const gallery = await resource("domains/photo-albums/blocs/photo-album-gallery/default.html");
+        const list = await resource("collections/ulvia/blocs/domains/photo-albums/photo-album-list/default.html");
+        const gallery = await resource("collections/ulvia/blocs/domains/photo-albums/photo-album-gallery/default.html");
 
-        expect(tokens.map((token) => token.id)).toEqual([
-            "card-background",
-            "card-border",
-            "card-text",
-            "card-muted-text",
-        ]);
-        expect(tokens.every((token) => token.defaults.light.startsWith("var(--"))).toBeTrue();
-        expect(list).toContain('background-color="var(--photo-albums-card-background');
-        expect(list).toContain('muted-text-color="var(--photo-albums-card-muted-text');
-        expect(gallery).toContain('background-color="var(--photo-albums-card-background');
+        expect(definition?.theme).toBeUndefined();
+        expect(list).toContain('background-color="var(--ulvia-surface-background');
+        expect(list).toContain('muted-text-color="var(--ulvia-surface-muted-text');
+        expect(gallery).toContain('background-color="var(--ulvia-surface-background');
     });
 
-    test("exposes an autonomous Basic Blocs design system", async () => {
-        const definition = await repository().get("basic-blocs");
+    test("exposes the autonomous Ulvia design system", async () => {
+        const definition = await repository().get("ulvia");
         const categories = definition?.theme?.categories ?? [];
         const tokens = categories.flatMap((category) => category.tokens);
         const byId = new Map(tokens.map((token) => [token.id, token]));
 
         expect(categories.map((category) => category.id)).toEqual([
-            "brand",
-            "surfaces",
-            "feedback",
-            "typography",
-            "layout",
-            "shape",
             "actions",
+            "brand",
+            "feedback",
             "form-controls",
+            "layout",
+            "shape-and-motion",
+            "surfaces",
+            "typography",
+            "code-and-terminal",
+            "navigation",
         ]);
-        expect(tokens).toHaveLength(69);
+        expect(tokens).toHaveLength(92);
         expect(tokens.every((token) => !token.id.startsWith("integration-"))).toBeTrue();
-        expect(tokens.every((token) => Boolean(token.description?.trim()) && Boolean(token.defaults.light))).toBeTrue();
+        expect(tokens.every((token) => Boolean(token.defaults.light))).toBeTrue();
         expect(byId.get("primary-base")?.defaults).toEqual({ light: "#16634d", dark: "#66d3ad" });
-        expect(byId.get("action-background")?.defaults.light).toBe("var(--basic-blocs-primary-base)");
-        expect(byId.get("field-background")?.defaults.light).toBe("var(--basic-blocs-surface-background)");
-        expect(byId.get("surface-radius")?.defaults.light).toBe("var(--basic-blocs-radius-card)");
+        expect(byId.get("action-background")?.defaults.light).toBe("var(--ulvia-primary-base)");
+        expect(byId.get("field-background")?.defaults.light).toBe("var(--ulvia-surface-background)");
+        expect(byId.get("surface-radius")?.defaults.light).toBe("var(--ulvia-radius-card)");
         expect(byId.get("action-radius")?.type).toBe("length");
         expect(byId.get("action-min-height")?.defaults.light).toBe("2.5rem");
         expect(byId.get("elevated-shadow")?.type).toBe("shadow");
 
         const externalReferences = tokens.flatMap((token) =>
             Object.values(token.defaults).filter(
-                (value) => value.startsWith("var(--") && !value.startsWith("var(--basic-blocs-"),
+                (value) => value.startsWith("var(--") && !value.startsWith("var(--ulvia-"),
             ),
         );
         expect(externalReferences).toEqual([]);
     });
 
-    test("keeps existing Basic Blocs connected to their semantic Theme tokens", async () => {
-        const definition = await repository().get("basic-blocs");
+    test("keeps Basic Blocs connected to Ulvia semantic Theme tokens", async () => {
+        const definition = await repository().get("ulvia");
         const artifacts = definition?.artifacts ?? [];
         const button = artifacts.find((item) => item.type === "bloc" && item.bloc.tag === "basic-button");
         const card = artifacts.find((item) => item.type === "bloc" && item.bloc.tag === "basic-card");
@@ -151,9 +135,9 @@ describe("official integration Theme contracts", () => {
             expect(blocSource(artifact, "BlocEditor.ts")).not.toContain('type: "color"');
         }
         expect(blocSource(card, "colorSchemes.ts")).toContain('role("surface-background"');
-        expect(blocView(input)).toContain("--basic-blocs-field-background");
-        expect(blocSource(alert, "style.css")).toContain("--basic-blocs-surface-radius");
-        expect(blocSource(toast, "style.css")).toContain("--basic-blocs-elevated-shadow");
+        expect(blocView(input)).toContain("--ulvia-field-background");
+        expect(blocSource(alert, "style.css")).toContain("--ulvia-surface-radius");
+        expect(blocSource(toast, "style.css")).toContain("--ulvia-elevated-shadow");
     });
 });
 

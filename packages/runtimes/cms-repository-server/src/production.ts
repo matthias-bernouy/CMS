@@ -1,16 +1,5 @@
-import {
-    InMemoryIntegrationRegistryMutationCoordinator,
-    IntegrationRegistryCatalogSnapshotReference,
-    type IntegrationRegistryCatalogSnapshot,
-} from "@bernouy/cms-integration-registry";
-import {
-    buildFsIntegrationRegistryCatalogSnapshot,
-    FsOfficialIntegrationRegistryBootstrapPublisher,
-} from "@bernouy/cms-integration-registry/fs";
-import {
-    buildOfficialRepositoryBootstrapPlan,
-    OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
-} from "@bernouy/cms-official-integrations/publication";
+import type { IntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry";
+import { buildFsIntegrationRegistryCatalogSnapshot } from "@bernouy/cms-integration-registry/fs";
 import {
     createRepositoryMaintenanceGuard,
     createRepositoryManagementGuard,
@@ -33,26 +22,13 @@ import {
 } from "./credentials";
 import { createProductionRepositoryManagement } from "./management";
 import { productionMigrationVerificationEnvironment, productionReleaseAdmissionPolicy } from "./core/candidates/policy";
-import {
-    bootstrapRepositoryRegistryIfEmpty,
-    type EmptyRegistryBootstrap,
-    validateRepositoryRegistryRoot,
-} from "./registryRoot";
+import { validateRepositoryRegistryRoot } from "./registryRoot";
 import { startRepositoryServer, type RepositoryServer } from "./core/repositoryServer";
 import { readRepositoryRuntimeEnv, type RepositoryRuntimeEnvSource } from "./runtimeEnv";
 
-export async function startProductionRepositoryServer(
-    source: RepositoryRuntimeEnvSource,
-    options: Readonly<{
-        bootstrapEmptyRegistry?: EmptyRegistryBootstrap;
-    }> = {},
-): Promise<RepositoryServer> {
+export async function startProductionRepositoryServer(source: RepositoryRuntimeEnvSource): Promise<RepositoryServer> {
     const env = readRepositoryRuntimeEnv(source);
     await validateRepositoryRegistryRoot(env.registryRoot);
-    await bootstrapRepositoryRegistryIfEmpty(
-        env.registryRoot,
-        options.bootstrapEmptyRegistry ?? prepareOfficialRepositoryBootstrap,
-    );
     const [managementToken, maintenanceToken, workerToken, workerCapabilitySigningKey] = await Promise.all([
         readRepositoryManagementToken(env.managementTokenFile),
         readRepositoryMaintenanceToken(env.maintenanceTokenFile),
@@ -68,25 +44,11 @@ export async function startProductionRepositoryServer(
         throw new Error("Initial integration repository catalog snapshot could not be built");
     }
     const telemetry = createProductionRepositoryOperationalTelemetry();
-    const officialPlan = await buildOfficialRepositoryBootstrapPlan();
     const migrationEnvironment = await productionMigrationVerificationEnvironment(env.verifierRunner);
     const repositoryManagement = await createProductionRepositoryManagement({
         root: env.registryRoot,
         catalog,
         telemetry,
-        baselineImports: {
-            approval: OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
-            approvedTargets: officialPlan.reviewedSchemaBaselines.map(
-                ({ kind, version, packageDigest, connectorKey, lineageId }) => ({
-                    kind,
-                    version,
-                    packageDigest,
-                    connectorKey,
-                    lineageId,
-                }),
-            ),
-        },
-        verificationBackfills: officialPlan.verificationBackfills,
         candidateProtocol: {
             capabilitySigningKey: workerCapabilitySigningKey,
             candidateTtlMs: env.candidateTtlMs,
@@ -140,6 +102,7 @@ export async function startProductionRepositoryServer(
                 integrationCompatibility: repositoryManagement.compatibility,
                 integrationReleases: repositoryManagement.releases,
                 integrationVerificationBundles: repositoryManagement.verificationBundles,
+                integrationSchemaBaselines: repositoryManagement.schemaBaselines,
                 managementGuard,
                 mountManagement: repositoryManagement.mount,
                 maintenance: { guard: maintenanceGuard, mount: repositoryManagement.mountMaintenance },
@@ -152,26 +115,6 @@ export async function startProductionRepositoryServer(
             }),
     });
 }
-
-export const prepareOfficialRepositoryBootstrap: EmptyRegistryBootstrap = async (root) => {
-    const plan = await buildOfficialRepositoryBootstrapPlan();
-    const snapshots = new IntegrationRegistryCatalogSnapshotReference(
-        await buildFsIntegrationRegistryCatalogSnapshot({ root }),
-    );
-    const publisher = new FsOfficialIntegrationRegistryBootstrapPublisher({
-        root,
-        snapshots,
-        mutations: new InMemoryIntegrationRegistryMutationCoordinator(),
-        baselineApproval: OFFICIAL_REPOSITORY_BOOTSTRAP_BASELINE_APPROVAL,
-    });
-    const preparation = await publisher.prepare(plan);
-    return {
-        planDigest: preparation.planDigest,
-        commit: async () => {
-            await publisher.publishPrepared(preparation);
-        },
-    };
-};
 
 export {
     createProductionRepositoryOperationalTelemetry,

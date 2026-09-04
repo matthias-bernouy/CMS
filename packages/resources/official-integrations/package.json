@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-official-integrations",
     "version": "0.1.0",
-    "description": "Local repository of official CmsCore integration resources.",
+    "description": "Authoring sources for official CmsCore integration resources.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./index.ts",
@@ -46,12 +46,11 @@
     },
     "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "semver": "^7.8.2"
     },
     "devDependencies": {
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@types/semver": "^7.7.1"
     }
 }

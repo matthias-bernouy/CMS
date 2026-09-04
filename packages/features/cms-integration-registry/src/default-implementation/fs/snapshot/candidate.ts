@@ -89,7 +89,7 @@ async function validateVersion(
         definition: paths.definition,
         ...release,
         ...(manifest ? { expectedEnvelope: manifest.envelope } : {}),
-        ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
+        ...(entry.path === "." ? { excludeRootEntries: ["integration.json", "tests"] } : {}),
         limits,
     });
     if (manifest && result.digest !== manifest.digest) {

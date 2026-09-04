@@ -68,7 +68,7 @@ describe("integration SQL schema compatibility", () => {
                     schema: parseConnectorSchemaContract(schemaContract(), "supabase"),
                     provenance: {
                         evidenceId: "ci-schema-1",
-                        source: "official-bootstrap",
+                        source: "reviewed-baseline-import",
                         reviewedAt: "2026-07-26T09:00:00.000Z",
                     },
                 },

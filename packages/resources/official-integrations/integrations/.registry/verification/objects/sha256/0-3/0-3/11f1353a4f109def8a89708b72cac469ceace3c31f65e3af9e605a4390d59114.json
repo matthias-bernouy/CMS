@@ -1,1 +1,0 @@
-{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-schema-generator","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"user-account","packageDigest":"7a953a82543e4dd9aac7075e6d26776e31fc78b6956ea1f8be91387678a96bb9","version":"1.0.0"}}

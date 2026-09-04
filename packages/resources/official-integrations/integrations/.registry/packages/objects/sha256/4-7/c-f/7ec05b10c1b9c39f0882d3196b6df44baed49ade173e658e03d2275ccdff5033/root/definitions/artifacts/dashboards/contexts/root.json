@@ -1,9 +1,0 @@
-{
-    "type": "dashboard",
-    "dashboard": {
-        "id": "{{answers.id}}-contexts",
-        "source": "{{answers.id}}",
-        "meta": { "name": "Consent policies", "icon": "file-check" },
-        "views": { "$include": "views.json" }
-    }
-}

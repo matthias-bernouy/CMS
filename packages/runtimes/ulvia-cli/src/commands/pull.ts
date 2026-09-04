@@ -23,12 +23,12 @@ export async function pullCommand(
     }
     for (const { kind, version } of targets) {
         const existing = await local.getRecord(kind, version);
-        if (existing) {
-            log(`= ${kind}@${version} already exists locally (${shortDigest(existing.digest)})`);
-            continue;
-        }
         const result = await local.store(await remote.pull(kind, version));
-        log(`+ ${kind}@${version} (${shortDigest(result.record.digest)})`);
+        log(
+            existing
+                ? `= ${kind}@${version} already exists locally; refreshed repository evidence (${shortDigest(existing.digest)})`
+                : `+ ${kind}@${version} (${shortDigest(result.record.digest)})`,
+        );
     }
 }
 

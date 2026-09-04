@@ -6,18 +6,24 @@ import {
     type IntegrationDefinitionVersion,
 } from "@bernouy/cms-integrations";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
+import { parseStrictJsonDocument } from "@bernouy/cms-integration-packages";
 import type { PulledPackage } from "./local";
+import { parseReviewedSchemaBaselines } from "./reviewed-schema";
+
+const MAX_SCHEMA_BASELINES_BYTES = 16 * 1_024 * 1_024;
 
 export const DEFAULT_REPOSITORY_URL = "https://repo.cms.ulvia.fr/.cms/repository";
 
 export class RemoteIntegrationRepository {
     private readonly definitions: IntegrationDefinitionRepository;
     private readonly packages: IntegrationPackageSource;
+    private readonly fetchImpl: typeof fetch;
 
     constructor(
         readonly url: string,
         fetchImpl?: typeof fetch,
     ) {
+        this.fetchImpl = fetchImpl ?? fetch;
         this.definitions = new HttpIntegrationDefinitionRepository({
             baseUrl: url,
             ...(fetchImpl ? { fetch: fetchImpl } : {}),
@@ -62,6 +68,32 @@ export class RemoteIntegrationRepository {
         if (!definition || !resolved) {
             throw new Error(`Integration package ${kind}@${version} does not exist in ${this.url}`);
         }
-        return { package: resolved, definition, source: this.url };
+        const target = { kind, version, packageDigest: resolved.digest };
+        const reviewedSchemaBaselines = parseReviewedSchemaBaselines(await this.fetchSchemaBaselines(target), target);
+        return { package: resolved, definition, reviewedSchemaBaselines, source: this.url };
+    }
+
+    private async fetchSchemaBaselines(target: {
+        kind: string;
+        version: string;
+        packageDigest: string;
+    }): Promise<unknown> {
+        const endpoint = new URL(`${this.url.replace(/\/$/u, "")}/api/integrations/schema-baselines`);
+        endpoint.search = new URLSearchParams(target).toString();
+        const response = await this.fetchImpl(endpoint, { headers: { accept: "application/json" } });
+        if (!response.ok) {
+            throw new Error(
+                `Repository reviewed schema baselines for ${target.kind}@${target.version} returned HTTP ${response.status}`,
+            );
+        }
+        const declaredLength = Number(response.headers.get("content-length"));
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_SCHEMA_BASELINES_BYTES) {
+            throw new Error("Repository reviewed schema baseline response is too large");
+        }
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (bytes.byteLength > MAX_SCHEMA_BASELINES_BYTES) {
+            throw new Error("Repository reviewed schema baseline response is too large");
+        }
+        return parseStrictJsonDocument(bytes, MAX_SCHEMA_BASELINES_BYTES);
     }
 }

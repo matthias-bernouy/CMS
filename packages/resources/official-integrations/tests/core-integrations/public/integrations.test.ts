@@ -29,7 +29,7 @@ describe("public integrations", () => {
             kind: "consent",
             sourceId: "consent",
             dashboardId: "consent-acceptances",
-            blocTags: ["consent-field"],
+            blocTags: [],
             answers: {
                 id: "consent",
                 enabled: false,
@@ -51,7 +51,7 @@ describe("public integrations", () => {
             kind: "newsletter",
             sourceId: "newsletter",
             dashboardId: "newsletter-subscriptions",
-            blocTags: ["newsletter-subscription"],
+            blocTags: [],
             answers: { id: "newsletter" },
             functionName: "cms-newsletter",
             schemas: ["newsletter"],
@@ -87,7 +87,7 @@ describe("public integrations", () => {
             kind: "stripe-connect",
             sourceId: "stripe-connect",
             dashboardId: "stripe-connect-dashboard",
-            blocTags: ["stripe-connect-onboarding"],
+            blocTags: [],
             answers: {
                 id: "stripe-connect",
                 stripeSecretKey: "sk_test_123",
@@ -96,7 +96,7 @@ describe("public integrations", () => {
                 defaultCurrency: "eur",
                 sellerActivityDescription: "Sale of second-hand goods between individuals.",
             },
-            functionName: "cms-stripe-connect",
+            functionNames: ["cms-stripe-connect", "cms-stripe-connect-management"],
             schemas: ["stripe_connect"],
             expectedEndpoints: ["getConnectStatus", "createOnboardingSession", "listProviderPayments"],
             installsDashboard: false,
@@ -105,7 +105,7 @@ describe("public integrations", () => {
             kind: "user-account",
             sourceId: "user-account",
             dashboardId: "user-account-users",
-            blocTags: ["user-account-avatar", "user-account-form", "user-account-form-controller"],
+            blocTags: [],
             answers: { id: "user-account" },
             functionName: "cms-user-account",
             schemas: ["user_account"],
@@ -115,14 +115,7 @@ describe("public integrations", () => {
             kind: "sales-configurator",
             sourceId: "sales-configurator",
             dashboardId: "sales-configurator-catalog",
-            blocTags: [
-                "sales-client-directory",
-                "sales-catalog-browser",
-                "sales-proposal-list",
-                "sales-proposal-starter",
-                "sales-proposal-builder",
-                "sales-proposal-view",
-            ],
+            blocTags: [],
             answers: { id: "sales-configurator" },
             functionName: "cms-sales-configurator",
             schemas: ["sales_configurator"],
@@ -140,7 +133,7 @@ describe("public integrations", () => {
             kind: "photo-albums",
             sourceId: "photo-albums",
             dashboardId: "photo-albums",
-            blocTags: ["photo-album-list", "photo-album-gallery"],
+            blocTags: [],
             answers: { id: "photo-albums" },
             functionName: "cms-photo-albums",
             schemas: ["photo_albums"],
@@ -157,7 +150,7 @@ describe("public integrations", () => {
                 "settings",
             ],
         },
-    ])("installs $kind source, dashboard, connector, and blocs", async (scenario) => {
+    ])("installs $kind source, dashboard, and connector", async (scenario) => {
         const harness = await importScenario(scenario.kind, scenario.answers);
         const source = await harness.sources.getSource(`urn:${scenario.sourceId}`);
         const dashboard = await harness.dashboards.getDashboard(scenario.sourceId);
@@ -275,24 +268,13 @@ export async function importScenario(kind: string, answers: Record<string, Integ
     const functions = new InMemoryFunctionRepository();
     const triggers = new InMemoryTriggerRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
-    await installations.create({
-        id: "basic-blocs",
-        label: "Basic Blocs",
-        definitionVersion: "1.0.0",
-        status: "success",
-        answersSnapshot: {},
-        secretRefs: {},
-        secretInputs: [],
-        artifacts: [{ type: "bloc", id: "basic-input", action: "created" }],
-        runs: [],
-    });
     if (kind === "emailer") {
         await secrets.set("NEWSLETTER_KEY", "newsletter-key");
         await sources.createSource(newsletterDependencySource());
         await installations.create({
             id: "newsletter",
             label: "Newsletter",
-            definitionVersion: "1.0.0",
+            definitionVersion: "3.1.0",
             status: "success",
             answersSnapshot: { id: "newsletter" },
             secretRefs: { cmsApiKey: "NEWSLETTER_KEY" },

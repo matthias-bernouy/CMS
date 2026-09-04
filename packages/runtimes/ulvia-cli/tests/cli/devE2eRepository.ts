@@ -2,7 +2,6 @@ import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runCli } from "../../src/cli";
 import { LocalIntegrationRepository } from "../../src/repository/local";
-import { importLocalPackageSeed } from "../../src/repository/seed";
 import { readLocalReleaseSource } from "../../src/release/source";
 import { ensureUlviaPaths, resolveUlviaPaths } from "../../src/runtime/paths";
 
@@ -20,7 +19,7 @@ export async function prepareDevRepository(input: {
     };
     await mkdir(input.fixtureRoot, { recursive: true });
     await seedMondialRelayThree(input.integrations, input.fixtureRoot);
-    await storeHistoricalFixture(input.integrations, input.fixtureRoot, input.data);
+    await storeDependencyFixture(input.fixtureRoot, input.data);
     await runCli(["release", "--all", "--root", input.integrations], options);
     const collectionRoot = join(input.integrations, "collections", "ulvia");
     const upgradeRoot = join(input.fixtureRoot, "ulvia");
@@ -31,12 +30,11 @@ export async function prepareDevRepository(input: {
     await runCli(["release", "ulvia", "--root", input.fixtureRoot], options);
 }
 
-async function storeHistoricalFixture(integrations: string, fixtureRoot: string, data: string): Promise<void> {
+async function storeDependencyFixture(fixtureRoot: string, data: string): Promise<void> {
     const paths = resolveUlviaPaths({ ULVIA_DATA_DIR: data });
     await ensureUlviaPaths(paths);
     const local = new LocalIntegrationRepository(paths.repository, paths.packages);
     await local.init();
-    await importLocalPackageSeed(integrations, local);
     const source = await readLocalReleaseSource(fixtureRoot, "mondial-relay");
     await local.store({
         package: source.package,

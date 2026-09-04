@@ -1,7 +1,0 @@
-{
-  "id": "modules",
-  "label": "Modules",
-  "children": {
-    "$include": "../../modules/root.json"
-  }
-}

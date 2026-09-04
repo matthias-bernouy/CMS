@@ -1,8 +1,0 @@
-{
-  "$files": [
-    "manage-partners.json",
-    "manage-partner.json",
-    "upsert-partner.json",
-    "set-partner-capability.json"
-  ]
-}

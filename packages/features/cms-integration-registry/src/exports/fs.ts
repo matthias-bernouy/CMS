@@ -38,11 +38,6 @@ export {
     type WrittenIntegrationRegistryVersionManifest,
 } from "../default-implementation/fs/manifest/writer";
 export {
-    FsOfficialIntegrationRegistryBootstrapPublisher,
-    type FsOfficialIntegrationRegistryBootstrapPublisherConfig,
-    type PreparedFsOfficialIntegrationRegistryBootstrap,
-} from "../default-implementation/fs/registry/publication/official-bootstrap";
-export {
     prepareFsIntegrationRegistryCandidate,
     type PreparedFsIntegrationRegistryCandidate,
 } from "../default-implementation/fs/registry/publication/candidate";

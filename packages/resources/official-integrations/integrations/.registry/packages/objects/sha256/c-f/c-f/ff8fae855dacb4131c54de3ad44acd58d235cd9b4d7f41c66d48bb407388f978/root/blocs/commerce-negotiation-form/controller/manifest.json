@@ -1,9 +1,0 @@
-{
-    "internal": true,
-    "default-tag": "commerce-negotiation-form-controller",
-    "bloc": "./Bloc.ts",
-    "meta": {
-        "title": "commerce-negotiation-form controller",
-        "description": "Internal behavior controller for commerce-negotiation-form."
-    }
-}

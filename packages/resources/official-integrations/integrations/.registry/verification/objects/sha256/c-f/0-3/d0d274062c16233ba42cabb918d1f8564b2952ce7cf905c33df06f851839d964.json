@@ -1,1 +1,0 @@
-{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-schema-generator","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"stripe-connect","packageDigest":"af2347ce86b795209c00ac0ad0de8d7f36158e106197b75d67284598df0ad4bd","version":"1.0.0"}}

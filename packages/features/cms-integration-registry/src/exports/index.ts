@@ -46,21 +46,12 @@ export type {
     IntegrationVerificationBackfiller,
     IntegrationVerificationBackfillRequest,
     IntegrationVerificationBackfillResult,
-    IdentifiedOfficialRepositoryBootstrapPlan,
-    OfficialBootstrapAnonymousConstraintFinding,
-    OfficialBootstrapAnonymousConstraintGrandfathering,
-    OfficialRepositoryBootstrapBaselineApproval,
-    OfficialRepositoryBootstrapPlan,
-    OfficialRepositoryBootstrapPlanProjection,
-    OfficialRepositoryBootstrapProjectedPackage,
-    OfficialRepositoryBootstrapProjectedVerificationBackfill,
-    PreparedOfficialIntegrationPackage,
-    PreparedOfficialVerificationBackfill,
+    PreparedIntegrationVerificationBackfill,
+    ReviewedSchemaBaselineImportApproval,
 } from "../interfaces/publication";
 export {
     INTEGRATION_VERIFICATION_BACKFILL_SCHEMA,
     INTEGRATION_REGISTRY_CANDIDATE_RECORD_SCHEMA,
-    OFFICIAL_REPOSITORY_BOOTSTRAP_PLAN_SCHEMA,
 } from "../interfaces/publication";
 export type {
     IntegrationRegistryRecoverer,
@@ -178,7 +169,6 @@ export {
     IntegrationCompatibilityReevaluationValidationError,
 } from "../core/compatibility/reevaluation/errors";
 export { changedIntegrationPackagePaths } from "../core/publication/changedPaths";
-export { identifyOfficialRepositoryBootstrapPlan } from "../core/publication/bootstrapPlan";
 export {
     IntegrationRegistryVersionConflictError,
     IntegrationRegistryVersionOrderError,

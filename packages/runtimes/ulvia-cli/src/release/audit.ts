@@ -8,7 +8,12 @@ import {
     evaluateLocalCompatibility,
     type LocalCompatibilityResult,
 } from "./compatibility";
-import { ensureLocalBaselines, loadLocalReleasePackages, resolveRequiredPackages } from "./packages";
+import {
+    ensureLocalBaselines,
+    loadLocalReleasePackage,
+    loadLocalReleasePackages,
+    resolveRequiredPackages,
+} from "./packages";
 import { readLocalReleaseSource, type LocalReleaseSource } from "./source";
 import type { LocalReleasePackage, LocalReleaseVerifier } from "./types";
 import { assertSafeMigrationReleasePolicy } from "./verification/policy";
@@ -52,10 +57,7 @@ export async function prepareLocalRelease(
     const { kind, version } = candidate.package.envelope;
     const existing = await local.getRecord(kind, version);
     if (existing && existing.digest !== candidate.package.digest) {
-        const baseline = {
-            package: await local.getPackage(existing),
-            definition: await local.getDefinition(existing),
-        };
+        const baseline = await loadLocalReleasePackage(existing, local);
         throw immutableCoordinateError("Local", candidate, baseline);
     }
     const localVersions = (await local.list())
@@ -86,13 +88,10 @@ export async function auditPreparedLocalRelease(
     await prepareFsIntegrationRegistryCandidate(candidate.package);
     dependencies.log("✓ repository admission: package and SQL policies passed");
     const baselineRecords = await ensureLocalBaselines(kind, version, dependencies.local, publishedVersions);
-    const baselines = (await loadLocalReleasePackages(baselineRecords, dependencies.local)).map((baseline) =>
-        attachReviewedSchemaEvidence(baseline, candidate.reviewedSchemaEvidence),
-    );
-    const candidateWithEvidence = attachReviewedSchemaEvidence(candidate, candidate.reviewedSchemaEvidence);
-    const compatibility = evaluateLocalCompatibility(candidateWithEvidence, baselines);
+    const baselines = await loadLocalReleasePackages(baselineRecords, dependencies.local);
+    const compatibility = evaluateLocalCompatibility(candidate, baselines);
     assertLocalCompatibility(compatibility);
-    assertSafeMigrationReleasePolicy(candidateWithEvidence, compatibility, baselines);
+    assertSafeMigrationReleasePolicy(candidate, compatibility, baselines);
     dependencies.log(
         `✓ compatibility: ${compatibility.releaseLevel} release, requires ${compatibility.requiredReleaseLevel}`,
     );
@@ -105,20 +104,4 @@ export async function auditPreparedLocalRelease(
         availablePackages,
     });
     return { prepared, compatibility, scenarioCount: verification?.scenarioCount ?? 1 + baselines.length };
-}
-
-function attachReviewedSchemaEvidence(
-    releasePackage: LocalReleasePackage,
-    evidence: LocalReleaseSource["reviewedSchemaEvidence"],
-): LocalReleasePackage {
-    const { kind, version } = releasePackage.package.envelope;
-    const matching = evidence
-        .filter(
-            (entry) =>
-                entry.kind === kind &&
-                entry.version === version &&
-                entry.packageDigest === releasePackage.package.digest,
-        )
-        .map((entry) => entry.baseline);
-    return matching.length ? { ...releasePackage, reviewedSchemaBaselines: matching } : releasePackage;
 }

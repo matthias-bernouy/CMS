@@ -1,7 +1,0 @@
-{
-  "id": "variants",
-  "label": "Variants",
-  "children": {
-    "$include": "../../variants/root.json"
-  }
-}

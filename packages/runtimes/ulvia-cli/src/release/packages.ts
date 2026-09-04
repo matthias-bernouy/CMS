@@ -12,12 +12,19 @@ export async function loadLocalReleasePackages(
     records: readonly LocalPackageRecord[],
     repository: LocalIntegrationRepository,
 ): Promise<readonly LocalReleasePackage[]> {
-    return await Promise.all(
-        records.map(async (record) => ({
-            package: await repository.getPackage(record),
-            definition: await repository.getDefinition(record),
-        })),
-    );
+    return await Promise.all(records.map((record) => loadLocalReleasePackage(record, repository)));
+}
+
+export async function loadLocalReleasePackage(
+    record: LocalPackageRecord,
+    repository: LocalIntegrationRepository,
+): Promise<LocalReleasePackage> {
+    const reviewedSchemaBaselines = await repository.getReviewedSchemaBaselines(record);
+    return {
+        package: await repository.getPackage(record),
+        definition: await repository.getDefinition(record),
+        ...(reviewedSchemaBaselines.length ? { reviewedSchemaBaselines } : {}),
+    };
 }
 
 export async function ensureLocalBaselines(
@@ -84,7 +91,7 @@ async function resolveDependency(
             `Required dependency ${kind}${versionRange ? `@${versionRange}` : ""} is unavailable locally; release or pull it first`,
         );
     }
-    return { package: await local.getPackage(record), definition: await local.getDefinition(record) };
+    return await loadLocalReleasePackage(record, local);
 }
 
 function requiredDependencies(definition: LocalReleasePackage["definition"]): Array<{

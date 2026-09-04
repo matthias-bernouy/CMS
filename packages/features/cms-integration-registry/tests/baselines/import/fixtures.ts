@@ -1,7 +1,7 @@
 import { identifyReviewedSchemaBaseline } from "@bernouy/cms-integration-verification";
 import {
     REVIEWED_SCHEMA_BASELINE_IMPORT_SCHEMA,
-    type OfficialRepositoryBootstrapBaselineApproval,
+    type ReviewedSchemaBaselineImportApproval,
     type ReviewedSchemaBaselineImportRequest,
 } from "@bernouy/cms-integration-registry";
 import {
@@ -11,7 +11,7 @@ import {
 import { reviewedBaseline } from "../fixtures";
 import { registryFixture, seedLegacySqlBaseline } from "../../publication/fixtures";
 
-export const IMPORT_APPROVAL: OfficialRepositoryBootstrapBaselineApproval = Object.freeze({
+export const IMPORT_APPROVAL: ReviewedSchemaBaselineImportApproval = Object.freeze({
     generator: { name: "cms-schema-generator", version: "1.0.0", imageDigest: `sha256:${"c".repeat(64)}` },
     environments: [{ digest: "b".repeat(64), postgresVersion: "16.10" }],
     policy: { name: "legacy-schema-baseline", version: "1.0.0" },

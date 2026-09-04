@@ -9,7 +9,10 @@ export async function temporaryRoot(roots: string[]): Promise<string> {
     return root;
 }
 
-export function remoteFixture(resolved: Awaited<ReturnType<typeof integrationPackage>>): typeof fetch {
+export function remoteFixture(
+    resolved: Awaited<ReturnType<typeof integrationPackage>>,
+    reviewedSchemaBaselines: readonly unknown[] = [],
+): typeof fetch {
     const definition = integrationDefinition(resolved.envelope.kind, resolved.envelope.version);
     const version = {
         version: resolved.envelope.version,
@@ -40,6 +43,9 @@ export function remoteFixture(resolved: Awaited<ReturnType<typeof integrationPac
                     [INTEGRATION_PACKAGE_DIGEST_HEADER]: resolved.digest,
                 },
             });
+        }
+        if (url.pathname.endsWith("/api/integrations/schema-baselines")) {
+            return Response.json(reviewedSchemaBaselines);
         }
         return Response.json({ error: "not found" }, { status: 404, headers });
     };

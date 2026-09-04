@@ -1,1 +1,0 @@
-{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-official-package-audit","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"commerce-mondial-relay-fulfillment","packageDigest":"bbde928a6fabf8d5f0656549916ea1a1331ecf724ee8e8791fe11e8a2d281962","version":"1.0.0"}}

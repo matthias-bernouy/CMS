@@ -1,1 +1,0 @@
-{"files":{},"manifest":{"conformance":[],"contracts":[],"fixtures":[],"runnerRequirements":[{"name":"cms-schema-generator","versionRange":"1.0.0"}]},"schema":"cms.integration.verification.v1","target":{"kind":"commerce-negotiation","packageDigest":"d2793f71a4b7d2fdc3e1ed56b2cef35f76c75119adc983da0f452530a160ff34","version":"1.0.0"}}

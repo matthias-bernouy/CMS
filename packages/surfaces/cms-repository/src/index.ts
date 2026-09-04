@@ -35,3 +35,7 @@ export type {
     RepositoryReleaseReader,
     RepositoryVerificationBundleReader,
 } from "cms-repository/compatibility/releaseContracts";
+export type {
+    PublicRepositorySchemaBaseline,
+    RepositorySchemaBaselineReader,
+} from "cms-repository/compatibility/schema-baselines/contracts";
