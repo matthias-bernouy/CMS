@@ -42,8 +42,8 @@ An official source or collection normally lives below
 ```
 
 `integration.json` declares the current version with `path: "."`. The package
-builder excludes `integration.json`, `tests/`, and `.registry/` from runtime
-package bytes. Tests remain beside the source they specify, while immutable
+builder excludes `integration.json` and `tests/` from runtime package bytes.
+Tests remain beside the source they specify, while immutable
 repositories retain every released package.
 
 The definition version and the version declared by `integration.json` must

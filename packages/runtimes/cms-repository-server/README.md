@@ -54,9 +54,9 @@ separate, consumer-owned stores with a different recovery policy; see the CMS
 image backup documentation. Never merge a cache backup into the registry or
 restore registry files selectively from a cache.
 
-On a completely empty registry root, production prevalidates and publishes the
-closed historical bootstrap set of 14 official packages before starting either
-listener. Later checked-in releases use explicit publication. A durable
-in-progress marker makes an interrupted seed fail closed on every later start;
-an initialized volume is never reconciled with a newer image. The operator
-procedure is documented in `infra/images/cms-repository/README.md`.
+Production starts from the exact contents of the configured registry root. An
+empty root produces an empty catalog and is never populated from image or Git
+contents. Initialize a new repository through the authenticated publication
+protocol, and restore an existing repository only from a complete registry
+backup. The operator procedure is documented in
+`infra/images/cms-repository/README.md`.

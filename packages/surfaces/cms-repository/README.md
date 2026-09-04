@@ -21,7 +21,10 @@ instances do not mount this surface on Delivery.
 - `GET /api/integrations/package?kind=<kind>&version=<semver>` returns one exact
   canonical version package and its digest metadata.
 - `GET /api/integrations/release-notes?kind=<kind>&version=<semver>` returns the
-  exact immutable Markdown notes, or `404` for a bootstrapped legacy package.
+  exact immutable Markdown notes when the package contains them.
+- `GET /api/integrations/schema-baselines?kind=<kind>&version=<semver>&packageDigest=<sha256>`
+  returns the reviewed connector-schema projections bound to one immutable
+  package. Private actors and evidence locations are never exposed.
 
 When a `RepositoryCatalogReader` is injected as `repositoryCatalog`, the
 surface also mounts `GET /api/integrations/catalog`. The response schema is

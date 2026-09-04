@@ -25,15 +25,9 @@ The directory name must match the integration `kind`. The authoring tree owns
 only the current version. Released history is immutable repository data and is
 not copied into source version directories.
 
-The checked-in `.registry/packages/` tree is the bootstrap seed for historical
-official releases. Its digest-addressed canonical envelopes are repository data,
-not authoring sources; extracted files are materialized in an external local
-cache only when needed. A developer's pulled local repository remains outside
-Git.
-
 `integration.json` declares the integration kind, display metadata, current
 version, and `path: "."`. It is authoring metadata and is excluded from the
-runtime package, as are `tests/` and `.registry/`.
+runtime package, as are `tests/`.
 
 `definition.json` is the version entry point. It may contain the definition
 directly or declare a recursive bundle rooted under `definitions/`; resolution
@@ -50,5 +44,6 @@ contains durable public behavior, `checks/` contains current implementation and
 platform checks, and `fixtures/` contains test-only data. None of these files
 enter runtime package bytes.
 
-Legacy integrations may still have `versions/<semver>/` during the migration.
-Do not remove one until every released package is recoverable from a repository.
+Released coordinates and their verification bundles live only in integration
+repositories. Pull remote history into Ulvia's persistent local repository when
+an audit needs upgrade baselines; never copy repository objects back into Git.

@@ -18,6 +18,11 @@ is expected. For an existing integration, do not audit against an incomplete
 local history: upgrade coverage is only meaningful for the baselines the CLI
 knows.
 
+Pulling synchronizes both immutable package bytes and the repository's current
+reviewed connector-schema evidence. Repeating the command refreshes that
+evidence even when the package coordinate is already present. The evidence is
+private local repository data and never belongs beside integration sources.
+
 ## 2. Change the current source tree
 
 Edit the integration directly; do not create a copied `versions/<version>`
@@ -28,7 +33,7 @@ in both:
 - the resolved definition, normally `definitions/root.json`.
 
 Use `path: "."` for the current source entry. Runtime package construction
-excludes author tests and registry evidence. The transitive source closure for
+excludes author tests and source-only metadata. The transitive source closure for
 `tests/integration-contracts/upgrade-fixtures.ts` is stored separately in a
 digest-bound verification bundle, so it can be executed again without placing
 test code in the installed runtime package.

@@ -36,9 +36,8 @@ baselines. It first runs the integration-owned Bun suites under `tests/`, then
 verifies a fresh installation and an upgrade from each older, installable
 version in disposable CMS, MongoDB, and Supabase services. Required legacy
 connector baselines are explicitly adopted before migration. `audit` never
-stores the candidate package. With no local history for a kind, it may discover
-remote baselines; missing required dependencies may also be pulled into the
-persistent local repository.
+stores the candidate package. Remote history and its reviewed schema evidence
+enter the persistent local repository only through an explicit `pull`.
 
 This audit proves package compatibility, integration-owned source behavior,
 real resource application, fresh installation, and upgrades. Source tests are
@@ -114,14 +113,16 @@ and loopback development.
 dependency-aware order. It stops at the first rejection and can be rerun safely:
 already published exact coordinates are reported as unchanged.
 
-## Source history transition
+## Source and repository ownership
 
-Source discovery accepts both legacy versioned indexes and one current
-authoring tree per integration. A current tree uses `path: "."`; its
-`integration.json`, `tests/`, and `.registry/` roots are excluded from runtime
-package bytes. Immutable local and remote repositories retain released history.
-A historical source directory can be removed only after its exact package is
-recoverable from a repository.
+Each integration has one current authoring tree using `path: "."`.
+`integration.json` and `tests/` are excluded from runtime package bytes.
+Immutable local and remote repositories retain released history; no repository
+objects or historical version copies belong in the source tree.
+
+`pull` also refreshes the reviewed schema evidence for coordinates that already
+exist locally. That mutable review metadata is stored under the local
+repository's private `.registry`; it is not part of package bytes or source Git.
 
 ## Persistent data
 
