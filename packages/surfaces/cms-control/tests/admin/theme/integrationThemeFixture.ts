@@ -31,16 +31,16 @@ export function integrationThemeFixture(): ThemeSettings {
                         description: "Gallery presentation.",
                         tokens: [
                             {
-                                id: "integration-photo-albums-font",
-                                variable: "integration-photo-albums-font",
+                                id: "photo-albums-font",
+                                variable: "photo-albums-font",
                                 label: "Gallery font",
                                 description: "Titles and captions",
                                 type: "font-family",
                                 defaults: { light: "Inter, system-ui, sans-serif", dark: "system-ui, sans-serif" },
                             },
                             {
-                                id: "integration-photo-albums-accent",
-                                variable: "integration-photo-albums-accent",
+                                id: "photo-albums-accent",
+                                variable: "photo-albums-accent",
                                 label: "Gallery accent",
                                 description: "Selected media",
                                 type: "color",
@@ -54,8 +54,8 @@ export function integrationThemeFixture(): ThemeSettings {
                         description: "Viewer presentation.",
                         tokens: [
                             {
-                                id: "integration-photo-albums-shadow",
-                                variable: "integration-photo-albums-shadow",
+                                id: "photo-albums-shadow",
+                                variable: "photo-albums-shadow",
                                 label: "Viewer shadow",
                                 description: "Full-screen viewer depth",
                                 type: "shadow",
@@ -71,7 +71,7 @@ export function integrationThemeFixture(): ThemeSettings {
                 id: "default",
                 name: "Default",
                 values: {
-                    light: { "integration-photo-albums-font": "var(--font-body)" },
+                    light: { "photo-albums-font": "var(--font-body)" },
                     dark: {},
                 },
             },

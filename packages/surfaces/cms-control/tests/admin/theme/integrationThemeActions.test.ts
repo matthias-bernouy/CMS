@@ -27,12 +27,12 @@ describe("integration theme editor actions", () => {
         value.dispatchEvent(new Event("input", { bubbles: true }));
 
         expect(settings.sources[0]!.categories[0]!.tokens[0]!.label).toBe("Accent");
-        expect(settings.themes[0]!.values.light["integration-demo-accent"]).toBe("var(--primary-base)");
-        expect(updateToken(settings, selection, "integration-demo-accent", "Compromised label", "Changed")).toBeFalse();
+        expect(settings.themes[0]!.values.light["demo-accent"]).toBe("var(--primary-base)");
+        expect(updateToken(settings, selection, "demo-accent", "Compromised label", "Changed")).toBeFalse();
         expect(addCategory(settings, selection)).toBeUndefined();
         addToken(settings, selection);
         expect(settings.sources[0]!.categories[0]!.tokens).toHaveLength(1);
-        expect(removeToken(settings, selection, "integration-demo-accent")).toBeFalse();
+        expect(removeToken(settings, selection, "demo-accent")).toBeFalse();
         expect(removeCategory(settings, selection)).toBeUndefined();
     });
 
@@ -40,9 +40,9 @@ describe("integration theme editor actions", () => {
         const settings = fixture();
         const selection = { sourceId: "integration-demo", categoryId: "surface" };
 
-        expect(resetTokenValue(settings, selection, "default", "light", "integration-demo-accent")).toBeTrue();
-        expect(settings.themes[0]!.values.light).not.toHaveProperty("integration-demo-accent");
-        expect(resetTokenValue(settings, selection, "default", "light", "integration-demo-accent")).toBeFalse();
+        expect(resetTokenValue(settings, selection, "default", "light", "demo-accent")).toBeTrue();
+        expect(settings.themes[0]!.values.light).not.toHaveProperty("demo-accent");
+        expect(resetTokenValue(settings, selection, "default", "light", "demo-accent")).toBeFalse();
     });
 
     test("resets a site token when its catalogue declares a default", () => {
@@ -79,7 +79,8 @@ describe("integration theme editor actions", () => {
         expect(added.category.tokens).toHaveLength(1);
         expect(added.category.description).toBe("Variables for Site variables.");
         expect(added.category.tokens[0]).toMatchObject({
-            id: expect.stringMatching(/^variable-/),
+            id: expect.stringMatching(/^site-variable-/),
+            variable: expect.stringMatching(/^site-variable-/),
             label: "Campaign accent",
             type: "color",
             description: "Accent used by campaign content.",
@@ -191,7 +192,7 @@ function eventRoot(): ShadowRoot {
     const host = document.createElement("div");
     const root = host.attachShadow({ mode: "open" });
     root.innerHTML = `<section data-category-section></section>
-        <div data-token-id="integration-demo-accent"><input data-value-control></div>`;
+        <div data-token-id="demo-accent"><input data-value-control></div>`;
     return root;
 }
 
@@ -211,8 +212,8 @@ function fixture(): ThemeSettings {
                         description: "Demo surface.",
                         tokens: [
                             {
-                                id: "integration-demo-accent",
-                                variable: "integration-demo-accent",
+                                id: "demo-accent",
+                                variable: "demo-accent",
                                 label: "Accent",
                                 description: "Demo accent",
                                 type: "color",
@@ -227,7 +228,7 @@ function fixture(): ThemeSettings {
             {
                 id: "default",
                 name: "Default",
-                values: { light: { "integration-demo-accent": "#654321" }, dark: {} },
+                values: { light: { "demo-accent": "#654321" }, dark: {} },
             },
         ],
     };

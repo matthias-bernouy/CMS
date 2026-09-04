@@ -23,18 +23,18 @@ describe("integration theme contributions", () => {
         });
         expect(source.categories[0]?.tokens).toEqual([
             expect.objectContaining({
-                id: "integration-photo-albums-accent",
-                variable: "integration-photo-albums-accent",
+                id: "photo-albums-accent",
+                variable: "photo-albums-accent",
                 defaults: { light: "var(--primary-base)", dark: "var(--secondary-base)" },
             }),
             expect.objectContaining({
-                id: "integration-photo-albums-title-font",
+                id: "photo-albums-title-font",
                 type: "font-family",
             }),
         ]);
-        expect(css).toContain("--integration-photo-albums-accent: var(--primary-base);");
-        expect(css).toContain('--integration-photo-albums-title-font: "Fraunces", Georgia, serif;');
-        expect(css).toContain("--integration-photo-albums-accent: var(--secondary-base);");
+        expect(css).toContain("--photo-albums-accent: var(--primary-base);");
+        expect(css).toContain('--photo-albums-title-font: "Fraunces", Georgia, serif;');
+        expect(css).toContain("--photo-albums-accent: var(--secondary-base);");
     });
 
     test("keeps configured overrides while provider defaults evolve", () => {
@@ -98,6 +98,21 @@ describe("integration theme contributions", () => {
         expect(composed.themes[0]!.values.light[tokenId]).toBe("#123456");
     });
 
+    test("migrates configured values from the former integration-prefixed token names", () => {
+        const base = defaultThemeSettings();
+        const legacy = createIntegrationThemeSource(photoTheme());
+        const token = legacy.categories[0]!.tokens[0]!;
+        token.id = "integration-photo-albums-accent";
+        token.variable = token.id;
+        base.sources.push(legacy);
+        base.themes[0]!.values.light[token.id] = "#123456";
+
+        const composed = composeThemeSettings(base, [photoTheme()]);
+
+        expect(composed.themes[0]!.values.light["photo-albums-accent"]).toBe("#123456");
+        expect(composed.themes[0]!.values.light["integration-photo-albums-accent"]).toBeUndefined();
+    });
+
     test("rejects duplicate owners, foreign names and malformed var references", () => {
         expect(() => composeThemeSettings(defaultThemeSettings(), [photoTheme(), photoTheme()])).toThrow(
             "duplicate integration theme owner",
@@ -122,7 +137,7 @@ describe("integration theme contributions", () => {
     test("carries declared dependencies into owned theme sources", () => {
         const dependent = photoTheme();
         dependent.dependencies = ["commerce"];
-        dependent.categories[0]!.tokens[0]!.defaults.light = "var(--integration-commerce-accent)";
+        dependent.categories[0]!.tokens[0]!.defaults.light = "var(--commerce-accent)";
 
         const settings = composeThemeSettings(defaultThemeSettings(), [dependent, commerceTheme()]);
 

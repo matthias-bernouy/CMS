@@ -27,7 +27,7 @@ describe("integration Theme delivery assets", () => {
         const entry = cache.get(P9R_CACHE.STYLE);
         const css = new TextDecoder().decode(entry!.raw);
 
-        expect(css).toContain("--integration-photo-albums-accent: var(--primary-base);");
+        expect(css).toContain("--photo-albums-accent: var(--primary-base);");
         expect(assets.styleUrl).toBe(`/.cms/style?v=${entry!.hash}`);
     });
 });

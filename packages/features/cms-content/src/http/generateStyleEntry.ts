@@ -8,21 +8,21 @@ const THEME_SEMANTIC_BASELINE = `@layer cms-theme-base {
   :where(body) {
     min-block-size: 100dvh;
     margin: 0;
-    background: var(--integration-basic-blocs-page-background, Canvas);
-    color: var(--integration-basic-blocs-body-text, CanvasText);
-    font-family: var(--integration-basic-blocs-font-body, system-ui, sans-serif);
-    font-size: var(--integration-basic-blocs-font-size-body, 1rem);
-    line-height: var(--integration-basic-blocs-line-height-body, 1.5);
+    background: var(--ulvia-page-background, Canvas);
+    color: var(--ulvia-body-text, CanvasText);
+    font-family: var(--ulvia-font-body, system-ui, sans-serif);
+    font-size: var(--ulvia-font-size-body, 1rem);
+    line-height: var(--ulvia-line-height-body, 1.5);
   }
 
   :where(h1, h2, h3, h4, h5, h6) {
-    font-family: var(--integration-basic-blocs-font-heading, var(--integration-basic-blocs-font-body, system-ui, sans-serif));
+    font-family: var(--ulvia-font-heading, var(--ulvia-font-body, system-ui, sans-serif));
     line-height: 1.15;
     text-wrap: balance;
   }
 
   :where(h1) {
-    font-size: var(--integration-basic-blocs-font-size-display, 3.5rem);
+    font-size: var(--ulvia-font-size-display, 3.5rem);
   }
 
   :where(a) {
@@ -48,7 +48,7 @@ const THEME_SEMANTIC_BASELINE = `@layer cms-theme-base {
  * The low-specificity document baseline is emitted first, free-form site CSS
  * can style over it, and structured tokens remain authoritative for custom
  * properties managed by the theme editor. Its configurable values belong to
- * Basic Blocs rather than to an implicit global token catalogue.
+ * Ulvia rather than to an implicit global token catalogue.
  */
 export async function generateStyleEntry(
     reader: ContentReader,

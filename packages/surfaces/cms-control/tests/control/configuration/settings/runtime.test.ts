@@ -47,7 +47,7 @@ describe("settings runtime", () => {
         expect(source).toMatchObject({
             label: "Photo Albums",
             owner: { kind: "integration", integrationId: "photo-albums" },
-            categories: [{ tokens: [{ id: "integration-photo-albums-accent" }] }],
+            categories: [{ tokens: [{ id: "photo-albums-accent" }] }],
         });
         expect(system.theme.sources.some((item) => item.id === "integration-photo-albums")).toBeFalse();
     });
@@ -83,7 +83,7 @@ describe("settings runtime", () => {
         const submitted = composeThemeSettings(system.theme, [contribution]);
         const tokenId = integrationThemeTokenId("photo-albums", "accent");
         submitted.themes[0]!.values.light[tokenId] = "var(--danger-base)";
-        submitted.themes[0]!.values.light["integration-photo-albums-retired"] = "red";
+        submitted.themes[0]!.values.light["photo-albums-retired"] = "red";
         const submittedSource = submitted.sources.find((source) => source.id === "integration-photo-albums")!;
         submittedSource.label = "Forged";
         delete submittedSource.owner;
@@ -101,7 +101,7 @@ describe("settings runtime", () => {
         expect(source.label).toBe("Photo Albums");
         expect(source.owner).toEqual({ kind: "integration", integrationId: "photo-albums" });
         expect(persisted.themes[0]!.values.light[tokenId]).toBe("var(--danger-base)");
-        expect(persisted.themes[0]!.values.light["integration-photo-albums-retired"]).toBeUndefined();
+        expect(persisted.themes[0]!.values.light["photo-albums-retired"]).toBeUndefined();
     });
 });
 

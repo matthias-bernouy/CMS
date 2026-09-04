@@ -116,7 +116,7 @@ export function addToken(settings: ThemeSettings, selection: ThemeSelection, dra
             .filter(isThemeCatalogEditable)
             .flatMap((item) => item.categories)
             .reduce((count, item) => count + item.tokens.length, 0) + 1;
-    const id = uniqueId(`variable-${number}`, existingNames);
+    const id = uniqueId(`site-variable-${number}`, existingNames);
     category.tokens.push({
         id,
         variable: id,

@@ -24,8 +24,8 @@ describe("official integration Theme contracts", () => {
             type: "length",
             defaults: { light: "var(--radius-lg, var(--radius-card))" },
         });
-        expect(css).toContain("var(--integration-commerce-offer-heading-font");
-        expect(css).toContain("var(--integration-commerce-offer-border");
+        expect(css).toContain("var(--commerce-offer-heading-font");
+        expect(css).toContain("var(--commerce-offer-border");
     });
 
     test("binds Photo Albums card settings to namespaced Theme variables", async () => {
@@ -41,9 +41,9 @@ describe("official integration Theme contracts", () => {
             "card-muted-text",
         ]);
         expect(tokens.every((token) => token.defaults.light.startsWith("var(--"))).toBeTrue();
-        expect(list).toContain('background-color="var(--integration-photo-albums-card-background');
-        expect(list).toContain('muted-text-color="var(--integration-photo-albums-card-muted-text');
-        expect(gallery).toContain('background-color="var(--integration-photo-albums-card-background');
+        expect(list).toContain('background-color="var(--photo-albums-card-background');
+        expect(list).toContain('muted-text-color="var(--photo-albums-card-muted-text');
+        expect(gallery).toContain('background-color="var(--photo-albums-card-background');
     });
 
     test("exposes an autonomous Basic Blocs design system", async () => {
@@ -66,16 +66,16 @@ describe("official integration Theme contracts", () => {
         expect(tokens.every((token) => !token.id.startsWith("integration-"))).toBeTrue();
         expect(tokens.every((token) => Boolean(token.description?.trim()) && Boolean(token.defaults.light))).toBeTrue();
         expect(byId.get("primary-base")?.defaults).toEqual({ light: "#16634d", dark: "#66d3ad" });
-        expect(byId.get("action-background")?.defaults.light).toBe("var(--integration-basic-blocs-primary-base)");
-        expect(byId.get("field-background")?.defaults.light).toBe("var(--integration-basic-blocs-surface-background)");
-        expect(byId.get("surface-radius")?.defaults.light).toBe("var(--integration-basic-blocs-radius-card)");
+        expect(byId.get("action-background")?.defaults.light).toBe("var(--basic-blocs-primary-base)");
+        expect(byId.get("field-background")?.defaults.light).toBe("var(--basic-blocs-surface-background)");
+        expect(byId.get("surface-radius")?.defaults.light).toBe("var(--basic-blocs-radius-card)");
         expect(byId.get("action-radius")?.type).toBe("length");
         expect(byId.get("action-min-height")?.defaults.light).toBe("2.5rem");
         expect(byId.get("elevated-shadow")?.type).toBe("shadow");
 
         const externalReferences = tokens.flatMap((token) =>
             Object.values(token.defaults).filter(
-                (value) => value.startsWith("var(--") && !value.startsWith("var(--integration-basic-blocs-"),
+                (value) => value.startsWith("var(--") && !value.startsWith("var(--basic-blocs-"),
             ),
         );
         expect(externalReferences).toEqual([]);
@@ -151,9 +151,9 @@ describe("official integration Theme contracts", () => {
             expect(blocSource(artifact, "BlocEditor.ts")).not.toContain('type: "color"');
         }
         expect(blocSource(card, "colorSchemes.ts")).toContain('role("surface-background"');
-        expect(blocView(input)).toContain("--integration-basic-blocs-field-background");
-        expect(blocSource(alert, "style.css")).toContain("--integration-basic-blocs-surface-radius");
-        expect(blocSource(toast, "style.css")).toContain("--integration-basic-blocs-elevated-shadow");
+        expect(blocView(input)).toContain("--basic-blocs-field-background");
+        expect(blocSource(alert, "style.css")).toContain("--basic-blocs-surface-radius");
+        expect(blocSource(toast, "style.css")).toContain("--basic-blocs-elevated-shadow");
     });
 });
 

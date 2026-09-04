@@ -11,7 +11,7 @@ export function integrationThemeSourceId(integrationId: string): string {
 export function integrationThemeTokenId(integrationId: string, localTokenId: string): string {
     assertIdentifier("integration id", integrationId);
     assertIdentifier("integration theme token id", localTokenId);
-    return `integration-${integrationId}-${localTokenId}`;
+    return `${integrationId}-${localTokenId}`;
 }
 
 export function integrationThemeVariable(integrationId: string, localTokenId: string): string {
@@ -102,6 +102,12 @@ function replaceIntegrationSources(
     shouldReplace: (source: ThemeSource) => boolean,
 ): ThemeSettings {
     const next = structuredClone(base);
+    migrateLegacyIntegrationValues(next, replacements);
+    const replacedTokenIds = new Set(
+        next.sources
+            .filter(shouldReplace)
+            .flatMap((source) => source.categories.flatMap((category) => category.tokens.map((token) => token.id))),
+    );
     const retained = next.sources.filter((source) => {
         if (!shouldReplace(source)) {
             return true;
@@ -118,13 +124,37 @@ function replaceIntegrationSources(
                 continue;
             }
             for (const tokenId of Object.keys(values)) {
-                if (tokenId.startsWith("integration-") && !remainingTokenIds.has(tokenId)) {
+                if (
+                    (!remainingTokenIds.has(tokenId) && replacedTokenIds.has(tokenId)) ||
+                    tokenId.startsWith("integration-")
+                ) {
                     delete values[tokenId];
                 }
             }
         }
     }
     return validateThemeSettings(next);
+}
+
+function migrateLegacyIntegrationValues(settings: ThemeSettings, replacements: ThemeSource[]): void {
+    for (const source of replacements) {
+        const integrationId = source.owner?.kind === "integration" ? source.owner.integrationId : undefined;
+        if (!integrationId) {
+            continue;
+        }
+        for (const token of source.categories.flatMap((category) => category.tokens)) {
+            const localId = token.id.slice(integrationId.length + 1);
+            const legacyId = `integration-${integrationId}-${localId}`;
+            for (const theme of settings.themes) {
+                for (const mode of ["light", "dark"] as const) {
+                    const legacyValue = theme.values[mode]?.[legacyId];
+                    if (legacyValue !== undefined && theme.values[mode]![token.id] === undefined) {
+                        theme.values[mode]![token.id] = legacyValue;
+                    }
+                }
+            }
+        }
+    }
 }
 
 function assertContribution(contribution: IntegrationThemeContribution): void {

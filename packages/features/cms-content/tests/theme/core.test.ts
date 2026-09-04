@@ -124,8 +124,7 @@ describe("structured themes", () => {
             integrationSource("gallery", "Gallery accent"),
             integrationSource("commerce", "Commerce accent"),
         );
-        settings.themes[0]!.values.light["integration-gallery-accent"] =
-            "var(--integration-commerce-accent, var(--primary-base))";
+        settings.themes[0]!.values.light["gallery-accent"] = "var(--commerce-accent, var(--primary-base))";
 
         expect(() => validateThemeSettings(settings)).toThrow("integration token cannot reference another integration");
     });
@@ -135,8 +134,7 @@ describe("structured themes", () => {
         const gallery = integrationSource("gallery", "Gallery accent");
         gallery.owner.dependencies = ["commerce"];
         settings.sources.push(gallery, integrationSource("commerce", "Commerce accent"));
-        settings.themes[0]!.values.light["integration-gallery-accent"] =
-            "var(--integration-commerce-accent, var(--primary-base))";
+        settings.themes[0]!.values.light["gallery-accent"] = "var(--commerce-accent, var(--primary-base))";
 
         expect(validateThemeSettings(settings)).toEqual(settings);
     });
@@ -153,7 +151,7 @@ function addCustomToken(settings: ReturnType<typeof defaultThemeSettings>, id: s
 }
 
 function integrationSource(integrationId: string, label: string) {
-    const id = `integration-${integrationId}-accent`;
+    const id = `${integrationId}-accent`;
     return {
         id: `integration-${integrationId}`,
         label: integrationId,

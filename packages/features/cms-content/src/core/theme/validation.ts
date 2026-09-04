@@ -20,8 +20,10 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
     const variableSources = new Map<string, ThemeSource>();
     for (const source of settings.sources) {
         validateSource(source, sourceIds, integrationOwners);
+    }
+    for (const source of settings.sources) {
         for (const token of source.categories.flatMap((category) => category.tokens)) {
-            validateToken(source, token);
+            validateToken(source, token, integrationOwners);
             assertUnique(tokenIds, token.id, "token id");
             assertUnique(variables, token.variable, "CSS variable");
             tokenSources.set(token.id, source);
@@ -129,7 +131,7 @@ function validateSource(source: ThemeSource, sourceIds: Set<string>, integration
     }
 }
 
-function validateToken(source: ThemeSource, token: ThemeToken): void {
+function validateToken(source: ThemeSource, token: ThemeToken, integrationOwners: ReadonlySet<string>): void {
     assertIdentifier("theme token id", token.id);
     assertIdentifier("theme CSS variable", token.variable);
     assertString("theme token label", token.label);
@@ -144,12 +146,15 @@ function validateToken(source: ThemeSource, token: ThemeToken): void {
     }
 
     if (source.owner?.kind !== "integration") {
-        if (token.id.startsWith("integration-") || token.variable.startsWith("integration-")) {
+        const usesReservedNamespace = (value: string) =>
+            value.startsWith("integration-") ||
+            [...integrationOwners].some((integrationId) => value.startsWith(`${integrationId}-`));
+        if (usesReservedNamespace(token.id) || usesReservedNamespace(token.variable)) {
             throw new ContentValidationError("theme", `reserved integration token namespace: ${token.id}`);
         }
         return;
     }
-    const expectedPrefix = `integration-${source.owner.integrationId}-`;
+    const expectedPrefix = `${source.owner.integrationId}-`;
     if (token.id !== token.variable || !token.id.startsWith(expectedPrefix)) {
         throw new ContentValidationError("theme", `token name is not derived for integration: ${token.id}`);
     }

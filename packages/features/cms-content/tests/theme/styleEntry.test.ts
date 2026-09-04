@@ -29,7 +29,7 @@ describe("Theme style entry", () => {
         const css = new TextDecoder().decode(entry.raw);
 
         expect(css).toContain("@layer cms-theme-base");
-        expect(css).toContain("font-family: var(--integration-basic-blocs-font-body, system-ui, sans-serif)");
+        expect(css).toContain("font-family: var(--ulvia-font-body, system-ui, sans-serif)");
         expect(css).toContain(":where(a) {\n    color: inherit;");
         expect(css).toContain(":where(img:not([slot]), video:not([slot])) {\n    block-size: auto;");
         expect(css).not.toContain("--cms-link-color");
@@ -37,8 +37,8 @@ describe("Theme style entry", () => {
         expect(css).not.toContain("var(--font-body");
         expect(css.indexOf("@layer cms-theme-base")).toBeLessThan(css.indexOf(".site { display: block; }"));
         expect(css).toContain(".site { display: block; }");
-        expect(css).toContain("--integration-photo-albums-accent: var(--primary-base);");
-        expect(css).toContain("--integration-photo-albums-accent: #ffffff;");
+        expect(css).toContain("--photo-albums-accent: var(--primary-base);");
+        expect(css).toContain("--photo-albums-accent: #ffffff;");
         expect(system.theme.sources.some((source) => source.id === "integration-photo-albums")).toBeFalse();
     });
 });

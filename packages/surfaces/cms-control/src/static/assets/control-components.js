@@ -21072,7 +21072,7 @@ circle.endpoint-timeline__errors {
     }
     const existingNames = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.flatMap((token) => [token.id, token.variable]))));
     const number = settings.sources.filter(isThemeCatalogEditable).flatMap((item) => item.categories).reduce((count, item) => count + item.tokens.length, 0) + 1;
-    const id2 = uniqueId(`variable-${number}`, existingNames);
+    const id2 = uniqueId(`site-variable-${number}`, existingNames);
     category.tokens.push({
       id: id2,
       variable: id2,
@@ -23426,6 +23426,9 @@ ${ThemeNavActions_default}`;
   }
   // ../../features/cms-integrations/src/core/definitions/versioning.ts
   var import_semver = __toESM(require_semver2(), 1);
+
+  // ../../features/cms-integrations/src/core/resources/dependencySelection.ts
+  var import_semver2 = __toESM(require_semver2(), 1);
 
   // ../../features/cms-integrations/src/core/resources/selection.ts
   function collectionSelectableResources(definition) {

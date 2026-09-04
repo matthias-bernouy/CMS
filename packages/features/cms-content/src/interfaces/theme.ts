@@ -53,7 +53,7 @@ export type ThemeCategoryContribution = {
     tokens: ThemeTokenContribution[];
 };
 
-/** A local token catalog whose public names are derived by the CMS. */
+/** A local token catalog emitted as `--<integrationId>-<localTokenId>`. */
 export type IntegrationThemeContribution = {
     integrationId: string;
     label: string;
