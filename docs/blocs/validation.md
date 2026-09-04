@@ -1,23 +1,18 @@
 # Develop, Validate, And Publish
 
-The CLI has no Bloc scaffolding command. Create the group and Bloc directories
-manually, then use the local runtime as the contract test.
+The CLI has no Bloc scaffolding command. Add the Bloc to a collection source,
+declare it as a selectable resource, then use the local stack and release audit
+as the contract test.
 
 ## Local Loop
 
-Configure the one required public integration repository in the project `.env`
-or process environment before starting either local runtime:
-
-```dotenv
-P9R_INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository
-```
-
 ```bash
-p9r dev
+bun run ulvia -- dev
 ```
 
-`p9r dev` runs the local editor, watches site resources, and builds authored
-blocs for browser execution. Test all of the following before publishing:
+`ulvia dev` runs a persistent local CMS, repository, MongoDB, and Supabase
+stack. Release the collection locally, install it in that CMS, and test all of
+the following before publishing:
 
 - insert the Bloc from its expected catalogue group;
 - save, reload, duplicate, move, and delete it;
@@ -31,14 +26,15 @@ blocs for browser execution. Test all of the following before publishing:
   optional content;
 - inspect image requests when the Bloc renders CMS images.
 
-Then exercise production-like local assembly:
+Run the repeatable source and upgrade checks separately:
 
 ```bash
-p9r preview
+bun run ulvia -- audit example-collection
 ```
 
-Preview enables production caching, minification, and security headers while
-remaining a local development runtime. It must not be exposed as production.
+The audit builds the canonical package, runs collection-owned tests, verifies a
+fresh installation, and exercises every supported upgrade baseline in
+disposable services. It does not write a release.
 
 ## Validation Rules
 
@@ -74,33 +70,34 @@ bun run check:all
 Inspect formatter changes before committing. Add focused tests for behavior,
 editor contracts, cleanup, bindings, accessibility, and resource compilation.
 
-## Publish And Pull
+## Release, Publish, And Pull
 
-Inspect the remote change first:
-
-```bash
-p9r push --type=blocs --dry-run
-```
-
-Publish all blocs or a selected set:
+Store a candidate locally only after its complete audit passes:
 
 ```bash
-p9r push --type=blocs
-p9r push --type=blocs --only=site-card,site-label
+bun run ulvia -- release example-collection
 ```
 
-The command asks for confirmation unless `--yes` is supplied. Existing remote
-tags are conflict-protected; `--force` bypasses conflict and cross-reference
-validation and should be an explicit decision, not the default workflow.
-
-Materialize remote sources locally with:
+Publication submits immutable local releases to the remote repository, whose
+admission service runs its own verification before exposing package bytes:
 
 ```bash
-p9r pull --type=blocs
+bun run ulvia -- push example-collection
 ```
 
-Pull can reconstruct a Bloc only when its published record includes the source
-bundle.
+Existing coordinates are immutable. Change the collection version whenever its
+package bytes change; there is no force flag that overwrites a published
+coordinate.
+
+Materialize remote immutable packages in the persistent local repository with:
+
+```bash
+bun run ulvia -- pull example-collection --all-versions
+```
+
+`pull` stores packaged baselines for audits and installations. Authoring source
+continues to live in the collection directory and is never reconstructed from a
+runtime package.
 
 ## Delivery Model
 

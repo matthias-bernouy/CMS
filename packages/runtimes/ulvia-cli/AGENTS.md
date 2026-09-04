@@ -5,8 +5,10 @@ Local-first Ulvia developer CLI.
 ## Responsibilities
 
 - Own the persistent local integration repository and development runtime.
-- Keep remote repository access read-only until publishing is implemented.
-- Compose local infrastructure without importing the legacy `cms-cli` package.
+- Submit only locally released immutable packages through the authenticated
+  remote admission protocol.
+- Compose local infrastructure without depending on removed site-folder sync
+  or template tooling.
 
 ## Rules
 

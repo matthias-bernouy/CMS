@@ -52,7 +52,7 @@ export function isValidCustomElementTag(tag: string): boolean {
 }
 
 /**
- * Folder name used by `p9r pull/push` to carry a resource category.
+ * Folder name used by resource import/export tooling to carry a category.
  * One filesystem segment, no separators, no traversal, no hidden files.
  * Permissive otherwise — the category itself is human-authored and may
  * already contain spaces/accents on existing sites.

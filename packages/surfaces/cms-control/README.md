@@ -140,12 +140,12 @@ production. Import it from `@bernouy/cms-auth`.
 ```ts
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
 
-const auth = new InMemoryAuthentication({ role: "admin", displayName: "p9r dev" });
+const auth = new InMemoryAuthentication({ role: "admin", displayName: "Ulvia local development" });
 new ControlCms(sub, repo, auth, {}, …);
 ```
 
-`p9r dev` (the CLI in `@bernouy/cms-cli`) wires this exact pattern so the
-local editor is reachable without a backend.
+`ulvia dev` wires the complete local stack and exposes development credentials
+through `ulvia dev credentials`.
 
 ---
 
@@ -172,7 +172,7 @@ The auth guard (`createAuthGuard` from `@bernouy/cms-auth`) checks the
 
 ## Sub-entries for Bloc authoring
 
-Bloc files imported by `p9r` need two browser-safe entry points the
+Bloc files compiled from collection integrations need two browser-safe entry points; the
 visitor bundle (`Bloc.ts`) must NEVER reach editor code:
 
 - `@bernouy/cms-control/component` — `export { Component }` only.

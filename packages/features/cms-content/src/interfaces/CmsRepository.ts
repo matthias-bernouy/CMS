@@ -86,7 +86,7 @@ export interface CmsRepository extends ContentReader {
     getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]>;
     getBlocsList(options?: BlocListOptions): Promise<BlocListItemResponse[]>;
     getBlocViewJS(htmlTag: string): Promise<string | null>;
-    /** Author-side source map for `p9r pull`. Returns null when the bloc has no source bundle. */
+    /** Author-side source map for resource export. Returns null when the bloc has no source bundle. */
     getBlocSource(htmlTag: string): Promise<Record<string, string> | null>;
 
     // PAGE

@@ -69,7 +69,7 @@ export class SiteCardEditor extends Editor {
 ```
 
 The site CLI discovers the exported class and registers it. Do not call
-`registerEditor()` in a site-authored editor.
+`registerEditor()` in a collection-owned editor.
 
 ## Settings
 

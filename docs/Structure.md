@@ -40,11 +40,9 @@ Resources:
   versioned CMS integration resources. It stores manifests, source contracts,
   connector assets, and deployment blueprints without executing installs. It may
   depend on feature contracts to express typed integration definitions.
-- `packages/resources/sites`: pushable CMS-authored P9R sites built from pages,
-  themes, bindings, and existing integration Blocs. It includes the public
-  repository hub without forming a workspace package.
-- `packages/resources/templates`: reusable P9R project templates that can be
-  copied and configured independently. The collection is not a workspace package.
+- `packages/resources/sites`: retained declarative CMS site references built
+  from pages, themes, bindings, and integration Blocs. New sites are initialized
+  through the CMS onboarding flow rather than copied from repository templates.
 
 Feature packages:
 
@@ -84,11 +82,9 @@ Surface packages:
 
 Runtime packages:
 
-- `@bernouy/cms-cli`: `p9r` CLI for scaffolding, local development, push/pull,
-  files reindexing, secrets, and bloc listing.
 - `@bernouy/ulvia-cli`: local-first `ulvia` CLI for the persistent integration
-  package store and isolated CMS development infrastructure. It coexists with
-  `@bernouy/cms-cli` during the migration.
+  package store, audited release and publication workflows, and isolated CMS
+  development infrastructure.
 - `@bernouy/cms-server`: production composition root. It reads environment,
   wires Mongo/local filesystem/crypto/auth/sources/integrations/analytics, and starts
   Control and Delivery runners.

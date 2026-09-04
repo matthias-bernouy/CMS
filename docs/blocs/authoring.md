@@ -1,16 +1,16 @@
 # Create A Bloc
 
-This guide uses a small `site-card` custom element. The default site root is
-`site/`; `p9r.config.json` may replace it with `siteDir`.
+This guide uses a small `site-card` custom element owned by a collection
+integration.
 
 ## Folder And Manifest
 
 Put every Bloc below a group directory:
 
 ```text
-site/
+integrations/collections/example/
 └── blocs/
-    └── Content/
+    └── content/
         └── site-card/
             ├── manifest.json
             ├── Bloc.ts
@@ -20,9 +20,8 @@ site/
             └── default.html
 ```
 
-The immediate parent directory defines the catalogue group. Use
-`_uncategorized` for no group. A Bloc directly below `site/blocs/` is ignored;
-there is no `default-group` manifest field.
+The collection definition decides which resource group exposes the Bloc. Keep
+the source hierarchy descriptive and declare its category metadata explicitly.
 
 ```json
 {
@@ -92,13 +91,10 @@ export class SiteCard extends Component {
 template. It deliberately provides no reactive framework. Use standard custom
 element callbacks and DOM APIs when the Bloc needs behavior.
 
-For a site-authored Bloc, export one runtime class and do not call
-`customElements.define()`. The CLI wrapper selects the exported class and owns
-registration with the manifest tag. Likewise, a site `BlocEditor.ts` exports
-its editor class without registering it. Integration resource sources compiled
-directly through the lower-level `prepare_bloc` API follow their package's
-placeholder-registration convention; do not copy that convention into
-`site/blocs/`.
+Export one runtime class and do not call `customElements.define()`. The
+integration compiler selects the exported class and owns registration with the
+manifest tag. Likewise, `BlocEditor.ts` exports its editor class without
+registering it.
 
 ## Runtime Behavior
 

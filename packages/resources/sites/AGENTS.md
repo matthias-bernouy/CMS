@@ -1,11 +1,12 @@
-# CmsCore Official Sites
+# CmsCore Site References
 
-Versioned, declarative site resources maintained by CmsCore.
+Retained declarative site snapshots used as migration and visual references.
 
 ## Boundaries
 
-- Keep each site below its own directory with a `p9r.config.json` composition
-  file and a pushable `site/` tree.
+- Keep each site below its own directory. Existing `p9r.config.json` and
+  `.p9r-state.json` files are historical metadata, not an active deployment
+  contract.
 - Site resources may consume installed integration Blocs and public CMS APIs.
   They must not mount routes, connect to databases, or select runtime adapters.
 - Do not embed credentials, deployment domains, repository origins, or other
@@ -16,13 +17,14 @@ Versioned, declarative site resources maintained by CmsCore.
 - Do not place site- or component-specific CSS in the legacy `theme.css`
   resource. Keep it in a local Bloc's scoped `style.css`; use structured CMS
   theme tokens for global design values.
-- Imported integrations must already exist in the integration repository. Do
-  not inline or duplicate official integration definitions here.
+- Do not add new deployable site projects or repository templates here. New
+  sites are initialized in the CMS and consume released collection and source
+  integrations.
 
-## Site Changes
+## Reference Changes
 
 - Keep authored labels, HTML, CSS classes, tests, and documentation in English.
 - Treat query parameters as the public UI state until CMS path parameters are
   explicitly supported for authored pages.
-- Add static contract tests for source paths, query parameters, imported
-  integrations, and unsafe browser behavior when a site changes.
+- Preserve static contract tests when changing a snapshot used by a migration
+  or visual comparison.

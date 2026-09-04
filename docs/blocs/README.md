@@ -26,7 +26,7 @@ layout and semantics.
 - [Make A Bloc Themeable](./theming.md) covers global themes, tokens, local CSS
   variables, attributes, `::part`, slots, dark mode, and responsive layout.
 - [Develop, Validate, And Publish](./validation.md) covers the local loop,
-  validation rules, Delivery loading, pull/push, and a release checklist.
+  validation rules, Delivery loading, audited releases, and publication.
 
 ## End-To-End Model
 
@@ -34,9 +34,9 @@ layout and semantics.
 manifest.json + Bloc.ts + BlocEditor.ts + default.html
                          |
                          v
-                 p9r dev / preview
+                ulvia audit / release
                     |           |
-                    |           +--> Editor loads view + editor contracts
+                    |           +--> ulvia dev loads the CMS editor
                     |
                     +--------------> Delivery loads only required view bundles
 
@@ -50,10 +50,10 @@ view wait for authoring controls.
 
 ## Scope Of This Guide
 
-These pages document site-authored blocs under `site/blocs/`, built and
-published by the `p9r` CLI. Integration-owned resource packages use the same
-browser and editor concepts, but their release layout and low-level compilation
-conventions are governed by the integration package that owns them.
+These pages document Blocs owned by collection integrations. Collections keep
+their source under their integration directory, declare selectable resources,
+and are audited and released with the `ulvia` CLI. Site-specific composition
+lives as CMS data rather than as a copied repository template.
 
 Responsive image behavior is documented separately in
 [Responsive Images](../images/README.md).

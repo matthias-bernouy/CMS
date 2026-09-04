@@ -84,7 +84,7 @@ export interface CmsFilesMetadataRepository {
     /** Direct children of a folder (`null` = root), filtered / sorted / paged. */
     listChildren(parentId: string | null, opts?: FilesListOptions): Promise<FilesPage>;
     getItem(id: string): Promise<FilesItem | null>;
-    /** Resolve a readable path ("images/hero.png") to its item — for `p9r pull/push`. */
+    /** Resolve a readable path ("images/hero.png") to its item for resource import/export. */
     getItemByPath(path: string): Promise<FilesItem | null>;
     /** Every descendant of a folder (any depth) — for recursive delete + blob cleanup. */
     listSubtree(folderId: string): Promise<FilesItem[]>;

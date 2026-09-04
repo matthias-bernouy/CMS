@@ -50,7 +50,8 @@ server-only modules.
 
 - Stable authoring contracts live in `@bernouy/cms-content/editor`.
 - Built-in HTML/CMS editors live under `src/core/editorSystemV2/builtInEditors/`.
-- App bloc editors belong to site resources, not to `cms-control`.
+- App bloc editors belong to collection integration resources, not to
+  `cms-control`.
 - Editor frame assets are served by `src/api/editor/*`.
 - Keep authored bloc behavior independent from Control internals.
 

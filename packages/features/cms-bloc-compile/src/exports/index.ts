@@ -1,6 +1,6 @@
 /**
- * @bernouy/cms-bloc-compile — the bloc compile pipeline (admin `bloc.post`
- * upload + `p9r` CLI).
+ * @bernouy/cms-bloc-compile — the bloc compile pipeline for admin uploads and
+ * collection integration packaging.
  *
  * Editor authoring imports are rewritten by `p9rExternalsPlugin` during
  * `Bun.build`, so they resolve to the editor runtime globals instead of

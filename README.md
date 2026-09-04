@@ -41,14 +41,13 @@ CmsCore/
 |   |   `-- cms-editor-system-v2/ @bernouy/cms-editor-system-v2
 |   |-- resources/
 |   |   |-- official-integrations/ @bernouy/cms-official-integrations
-|   |   |-- sites/                 Pushable P9R sites
-|   |   `-- templates/             Reusable P9R site templates
+|   |   `-- sites/                 Declarative CMS site references
 |   |-- surfaces/
 |   |   |-- cms-control/       @bernouy/cms-control
 |   |   |-- cms-repository/    @bernouy/cms-repository
 |   |   `-- cms-delivery/      @bernouy/cms-delivery
 |   `-- runtimes/
-|       |-- cms-cli/           @bernouy/cms-cli
+|       |-- ulvia-cli/         @bernouy/ulvia-cli
 |       `-- cms-server/        @bernouy/cms-server
 |
 |-- infra/

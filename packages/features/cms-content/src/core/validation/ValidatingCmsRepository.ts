@@ -27,8 +27,8 @@ import {
 /**
  * Decorator that VALIDATES + NORMALIZES every authored-content write before
  * delegating to the wrapped repository — the single, unbypassable barrier so
- * the same rules apply whether the writer is the admin API, the `p9r` CLI, or
- * anything else. Reads (and non-content writes: blocs, settings, deletes) are
+ * the same rules apply whether the writer is the admin API, migration tooling,
+ * or anything else. Reads (and non-content writes: blocs, settings, deletes) are
  * passed straight through.
  *
  * Compose it at the composition root around any real implementation:

@@ -25,8 +25,9 @@ disable transforms. A residual `cms-width` request received after transforms
 are disabled returns `503`; CmsCore never serves an original under a false width
 descriptor.
 
-`p9r dev` and `p9r preview` enable public and private Source images by default.
-Use `--no-source-images` to exercise the original-only path.
+The `ulvia dev` stack exercises Source images against its local CMS and
+Supabase services. Production flags remain explicit so rollout and rollback can
+be tested independently.
 
 CMS File optimization has no rollout flag. It is available when Delivery is
 configured with file metadata, the original blob store, and a variant store.

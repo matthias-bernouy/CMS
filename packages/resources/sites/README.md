@@ -1,7 +1,8 @@
-# CmsCore Official Sites
+# CmsCore Site References
 
-Declarative sites authored with the same pages, integrations, Blocs, bindings,
-and theme resources that CmsCore exposes to its users.
+These directories retain declarative site snapshots for migration and visual
+comparison. They are not templates and no longer have a supported repository
+push workflow. New sites are initialized and edited directly through the CMS.
 
 ## Sites
 
@@ -12,40 +13,22 @@ and theme resources that CmsCore exposes to its users.
 - `restaurant-demo` is a self-contained visual preview of the three
   `restaurant` hero layouts and their shared configurable header.
 
-## Authoring And Deployment
+## Migration Status
 
-Each site directory is a regular `p9r` project. From that directory, update its
-code-managed Blocs first, then deploy the complete `site/` tree. Before either
-command, publish every pinned integration version that is not part of the
-historical repository bootstrap. For `cms-repository-hub`, this currently means
-publishing the checked-in official releases so that
-`documentation-blocs@1.0.0` exists in the registry.
+Existing `p9r.config.json`, `.p9r-state.json`, and `site/` trees are historical
+inputs only. Do not use them to start a new site. A migration or onboarding
+flow may read their data explicitly, but the removed legacy CLI no longer
+publishes these directories.
 
-```bash
-p9r push --type=blocs --force --dry-run
-p9r push --type=blocs --force --yes
-p9r push --dry-run
-p9r push --yes
-```
-
-The targeted force is required because a normal push deliberately skips an
-existing code-managed Bloc; it does not bypass remote ownership. The full push
-then installs pinned integrations before publishing pages without forcing their
-rerun. Deployment credentials and the target CMS Control URL are supplied to
-the CLI; they are never stored here.
-
-The production target must be the designated repository hub CMS, because only
-that instance enables the enriched catalogue projection consumed by the page.
-The runtime does not generate a fallback catalogue page, so this site must be
-deployed before `/integrations` is announced publicly. The
-current clean-clone `p9r dev` and `p9r preview` composition does not provide that
-projection or materialize imported integration Blocs automatically; use a
-deployed CMS preview until that development composition is added.
+The repository hub snapshot still documents the intended catalogue experience,
+but deploying that experience now requires CMS-managed onboarding or an
+explicit migration. The runtime does not silently import this directory.
 
 The repository hub pins the existing `basic-blocs@1.0.0` and
 `documentation-blocs@1.0.0` integrations. Its catalogue endpoint is provided
 by the repository surface, not by a site-specific integration.
 
-Repository-specific presentation lives in the small code-managed Blocs under
-`site/blocs/Repository/`. The site deliberately has no legacy `theme.css`;
-global colors, type, and spacing come from the CMS structured theme.
+Repository-specific presentation in `site/blocs/Repository/` is also retained
+only as migration reference. New reusable Blocs belong to a collection
+integration; global colors, type, and spacing come from the CMS structured
+theme.

@@ -1,7 +1,7 @@
 # @bernouy/ulvia-cli
 
-The new local-first Ulvia CLI. It is intentionally independent from the legacy
-`@bernouy/cms-cli` package, which remains available during the transition.
+The local-first CLI for integration development, audited releases, remote
+publication, and the persistent local CMS stack.
 
 See the workspace [integration development guide](../../../docs/integrations/README.md)
 for the source/collection model, release workflow, local runtime, SemVer policy,

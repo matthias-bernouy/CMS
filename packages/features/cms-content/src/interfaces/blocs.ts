@@ -30,9 +30,8 @@ export type TBloc = {
     ownership: BlocOwnership;
     /**
      * Author-side source folder, base64-encoded per relative path.
-     * Optional — `p9r pull` skips blocs without source and reports them.
-     * Lets a fresh checkout reconstruct the editable bloc tree in
-     * `site/blocs/<tag>/`.
+     * Optional source bundle retained for explicit resource export and
+     * provenance.
      */
     source?: Record<string, string>;
 };
