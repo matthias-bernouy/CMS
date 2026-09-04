@@ -422,8 +422,8 @@ Use `infra/images/cms-repository/repository-hub.override.yml` only for that CMS
 instance. Every ordinary CMS configures the anonymous
 `P9R_INTEGRATION_REPOSITORY_URL` but leaves
 `CMS_REPOSITORY_HUB_FACADE_ENABLED=false`, so its Delivery listener never
-mirrors repository routes. Remote publication is a `p9r repository` CLI concern;
-the optional dedicated TLS ingress and token-file procedure live in
+mirrors repository routes. Remote publication is an `ulvia push` concern; the
+repository deployment and authenticated management gateway are documented in
 `infra/images/cms-repository/README.md`.
 
 Configure Supabase connector deployments after the CMS is running: open

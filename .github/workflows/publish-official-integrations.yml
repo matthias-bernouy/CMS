@@ -26,11 +26,8 @@ on:
         default: false
         type: boolean
     secrets:
-      P9R_TOKEN:
-        description: CMS Personal Access Token accepted by the repository manager
-        required: false
-      REPOSITORY_MAINTENANCE_TOKEN:
-        description: Bearer token accepted by the privileged maintenance capability
+      ULVIA_TOKEN:
+        description: CMS Personal Access Token exposed to the Ulvia CLI for publication
         required: false
 
 permissions:
@@ -45,9 +42,9 @@ env:
 
 jobs:
   plan:
-    name: Build deterministic publication plan
+    name: Audit every official integration
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -57,71 +54,22 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Build every official package without credentials
+      - name: Audit every official package without publication credentials
         run: >-
-          bun run packages/runtimes/cms-cli/src/index.ts
-          repository publish-official --dry-run
-
-      - name: Validate maintenance evidence plans without credentials
-        run: |
-          bun run packages/runtimes/cms-cli/src/index.ts repository import-official-schema-baselines --dry-run
-          bun run packages/runtimes/cms-cli/src/index.ts repository backfill-official-verification --dry-run
-
-  import-baselines:
-    name: Import reviewed legacy schema baselines
-    needs: plan
-    if: ${{ ! inputs.dry_run }}
-    runs-on: [self-hosted, linux, repository-management]
-    environment: integration-repository
-    timeout-minutes: 30
-    env:
-      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_URL: ${{ vars.REPOSITORY_MAINTENANCE_URL }}
-      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TOKEN_FILE: ${{ runner.temp }}/repository-maintenance-token
-      # Maintenance requests are individually bounded to two minutes by the CLI.
-      # Candidate admission keeps the independently configurable polling timeout.
-      P9R_INTEGRATION_REPOSITORY_MAINTENANCE_TIMEOUT_MS: "120000"
-      REPOSITORY_MAINTENANCE_TOKEN_FILE: ${{ runner.temp }}/repository-maintenance-token
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Set up workspace
-        uses: ./.github/actions/setup-workspace
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Materialize the ephemeral maintenance credential
-        shell: bash
-        env:
-          MAINTENANCE_TOKEN: ${{ secrets.REPOSITORY_MAINTENANCE_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [[ -z "$MAINTENANCE_TOKEN" || "$MAINTENANCE_TOKEN" =~ [[:space:]] ]]; then
-            echo "::error::REPOSITORY_MAINTENANCE_TOKEN must contain one non-whitespace token"
-            exit 1
-          fi
-          umask 077
-          printf '%s' "$MAINTENANCE_TOKEN" > "$REPOSITORY_MAINTENANCE_TOKEN_FILE"
-
-      - name: Import reviewed baselines and legacy verification in deterministic order
-        run: |
-          bun run packages/runtimes/cms-cli/src/index.ts repository import-official-schema-baselines
-          bun run packages/runtimes/cms-cli/src/index.ts repository backfill-official-verification
-
-      - name: Remove the ephemeral maintenance credential
-        if: ${{ always() }}
-        run: rm -f -- "$REPOSITORY_MAINTENANCE_TOKEN_FILE"
+          bun run ulvia -- audit --all
+          --root packages/resources/official-integrations/integrations
 
   publish:
     name: Verify and publish through the repository-manager CMS
-    needs: [plan, import-baselines]
+    needs: plan
     if: ${{ ! inputs.dry_run }}
     runs-on: ubuntu-24.04
     environment: integration-repository
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
-      P9R_URL: ${{ vars.REPOSITORY_CMS_URL }}
-      P9R_INTEGRATION_REPOSITORY_MANAGEMENT_TIMEOUT_MS: ${{ inputs.timeout_ms }}
+      ULVIA_URL: ${{ vars.REPOSITORY_CMS_URL }}
+      ULVIA_REPOSITORY_URL: ${{ vars.REPOSITORY_PUBLIC_URL }}
+      ULVIA_PUSH_TIMEOUT_MS: ${{ inputs.timeout_ms }}
     steps:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -134,17 +82,23 @@ jobs:
       - name: Validate the CMS publication credential
         shell: bash
         env:
-          P9R_TOKEN: ${{ secrets.P9R_TOKEN }}
+          ULVIA_TOKEN: ${{ secrets.ULVIA_TOKEN }}
         run: |
           set -euo pipefail
-          if [[ -z "${P9R_TOKEN:-}" || "$P9R_TOKEN" =~ [[:space:]] ]]; then
-            echo "::error::P9R_TOKEN must contain one non-whitespace CMS Personal Access Token"
+          if [[ -z "${ULVIA_TOKEN:-}" || "$ULVIA_TOKEN" =~ [[:space:]] ]]; then
+            echo "::error::ULVIA_TOKEN must contain one non-whitespace CMS Personal Access Token"
             exit 1
           fi
 
-      - name: Submit and poll official candidates in deterministic order
-        env:
-          P9R_TOKEN: ${{ secrets.P9R_TOKEN }}
+      - name: Pull immutable remote history
+        run: bun run ulvia -- pull --all
+
+      - name: Release official packages locally
         run: >-
-          bun run packages/runtimes/cms-cli/src/index.ts
-          repository publish-official
+          bun run ulvia -- release --all
+          --root packages/resources/official-integrations/integrations
+
+      - name: Submit and verify changed packages in deterministic order
+        env:
+          ULVIA_TOKEN: ${{ secrets.ULVIA_TOKEN }}
+        run: bun run ulvia -- push --all

@@ -128,7 +128,7 @@ describe("registry lifecycle documentation", () => {
         expect(readmeSource).toContain("verifier-sandbox-ed25519-public.pem");
         expect(readmeSource).toContain("verifier-worker-token");
         expect(readmeSource).toContain("verifier-postgres-server-password");
-        expect(readmeSource).toContain("`REPOSITORY_MAINTENANCE_TOKEN`");
+        expect(readmeSource).toContain("`ULVIA_TOKEN`");
         expect(readmeSource).toContain("sudo chown 1001:1001");
         expect(readmeSource).toContain("sudo chown 70:70");
         expect(readmeSource).toContain("sudo chown 1002:1002");
@@ -136,9 +136,7 @@ describe("registry lifecycle documentation", () => {
 
     test("documents empty-only bootstrap and image-upgrade immutability", () => {
         expect(readmeSource).toMatch(/closed historical bootstrap\s+set of 14 official packages/);
-        expect(readmeSource).toMatch(
-            /First publish[\s\S]*documentation-blocs@1\.0\.0[\s\S]*Then deploy[\s\S]*cms-repository-hub/,
-        );
+        expect(readmeSource).toMatch(/First publish[\s\S]*cms-repository-hub[^\n]*migration\s+reference/);
         expect(readmeSource).toContain(".official-bootstrap-in-progress");
         expect(readmeSource).toContain("every later startup fails closed");
         expect(readmeSource).toContain("Any non-empty registry without that marker is already initialized");

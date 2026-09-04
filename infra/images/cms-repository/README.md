@@ -156,15 +156,11 @@ docker compose \
 
 The override exposes the catalog API but does not create public pages or a
 repository-management tab in the CMS database. First publish the checked-in
-official releases through the normal candidate workflow described below; the
-hub pins the post-bootstrap
-`documentation-blocs@1.0.0` release. Then deploy
-`packages/resources/sites/cms-repository-hub` to this CMS before announcing the
-public hub, following the
-[official-sites deployment runbook](../../../packages/resources/sites/README.md).
-Until that explicit `p9r push` succeeds, `/integrations` returns the site's
-normal not-found response. There is deliberately no code-rendered catalog
-fallback: the public UI is entirely made of CMS pages, integrations, and Blocs.
+official releases through the normal candidate workflow described below. The
+retained `packages/resources/sites/cms-repository-hub` directory is a migration
+reference, not a deployable template. Initialize the public pages through the
+CMS onboarding or an explicit migration before announcing the hub. There is no
+code-rendered catalog fallback.
 
 The standard deployment applies end-user package-download limiting at the CMS
 Delivery gateway. Server-to-server repository calls do not carry
@@ -182,19 +178,18 @@ it to `cms_proxy`, add a raw `3000:3000` mapping, or place a second public proxy
 in front of it: port 3000 also carries the separately authenticated maintenance
 and verifier protocols.
 
-Remote operators use the existing CMS CLI authentication mechanism against the
-designated manager's normal HTTPS Control origin. Create a Personal Access Token
-from the CMS Profile page and store it through the standard `P9R_TOKEN` or
-`~/.config/p9r/credentials.json` mechanism. The PAT identifies one CMS user; the
-gateway reloads that user's current role on every request and permits repository
-management only while it is `admin`.
+Remote operators use the Ulvia CLI against the designated manager's normal
+HTTPS Control origin. Create a Personal Access Token from the CMS Profile page
+and expose it only to the publication process as `ULVIA_TOKEN`. The PAT
+identifies one CMS user; the gateway reloads that user's current role on every
+request and permits repository management only while it is `admin`.
 
-With the PAT stored for the manager CMS URL, publication needs no repository
-service credential on the workstation:
+Publication needs no repository service credential on the workstation:
 
 ```bash
-P9R_URL=https://admin.integrations.example.com \
-p9r repository publish /path/to/integration
+ULVIA_URL=https://admin.integrations.example.com \
+ULVIA_TOKEN=pat_example \
+bun run ulvia -- push commerce
 ```
 
 The external path remains `/.cms/repository-management`, but it is mounted by
@@ -244,86 +239,60 @@ source of truth. Pulling a newer image does not merge newly bundled resources.
 
 ### Publishing one integration
 
-`p9r repository publish` reads the integration index at the supplied root; no
-version flag is accepted because the versions are already declared there. It
-builds the complete immutable package for every declared version, including
-SQL, functions, text assets, and binary assets, then processes them in ascending
-SemVer order:
+An integration is built and fully verified before it enters the persistent
+local repository. Pull remote history first when the machine does not already
+have the required baselines:
 
 ```bash
-p9r repository publish /path/to/integration --dry-run
-p9r repository publish /path/to/integration
+bun run ulvia -- pull commerce --all-versions
+bun run ulvia -- audit commerce --root packages/resources/official-integrations/integrations
+bun run ulvia -- release commerce --root packages/resources/official-integrations/integrations
+ULVIA_URL=https://admin.integrations.example.com \
+ULVIA_TOKEN=pat_example \
+bun run ulvia -- push commerce
 ```
 
-Every version published through this generic command must also provide a valid
-`cms.integration.verification.v1` document at
-`verification/<version>.json`, outside the corresponding `versions/<version>/`
-runtime package. The document targets the exact package digest, retains the
-`cms-postgres` `^1.0.0` runner requirement, and declares at least one author
-contract or conformance suite. Its source closure is validated before upload;
-putting an undeclared test under the runtime version directory does not make it
-an executable admission test. The source JSON may be formatted for humans; the
-CLI canonicalizes the combined candidate before hashing and upload.
-When authoring a new bundle, a temporary 64-zero package digest is sufficient
-to make the document structurally valid: `--dry-run` then reports the exact
-`package-sha256` expected for that version. Replace the placeholder and rerun;
-any later runtime-package change intentionally makes that binding stale again.
+The local release contains the canonical package and its digest. The remote
+repository rebuilds the authoritative verification plan from its own catalog,
+runs it in server-owned disposable infrastructure, and publishes only after
+admission succeeds. Existing coordinates are immutable: identical bytes are an
+idempotent no-op and different bytes require a new version.
 
-An absent version enters the normal candidate verification and publication
-workflow. An existing coordinate is reported as `UNCHANGED` only when both its
-package and verification digests match the rebuilt candidate, even if its later
-release state is blocked or no longer admissible. Any digest mismatch is an
-immutable-version conflict and returns `409`; any hard failure stops the
-remaining versions. Stable promotion, emergency blocking, and compatibility
-reevaluation remain explicit management operations, separate from publication:
-
-```bash
-p9r repository promote-stable commerce 1.1.0 --reason="Approved release"
-p9r repository block commerce 1.1.0 --reason="Confirmed security regression"
-p9r repository reevaluate commerce 1.1.0 --reason="Compatibility policy update"
-```
-
-These commands read the current immutable report and decision references before
-submitting their compare-and-swap mutation. They use the same manager CMS URL
-and administrator PAT as publication.
+Stable promotion, emergency blocking, and compatibility reevaluation remain
+separate compare-and-swap management operations. They currently have no public
+Ulvia CLI command and must not be emulated by editing registry files.
 
 ### Publishing the official catalog
 
-The non-interactive publisher builds every checked-in official version with the
-shared canonical package reader before making any request. A credential-free
-validation is available from the workspace root:
+The non-interactive publisher audits every checked-in current source without
+credentials:
 
 ```bash
-bun run packages/runtimes/cms-cli/src/index.ts \
-  repository publish-official --dry-run
+bun run ulvia -- audit --all \
+  --root packages/resources/official-integrations/integrations
 ```
 
-Actual publication uses the same manager CMS URL and administrator PAT as a
-workstation publication. The CLI derives the management gateway path; it never
-needs the internal repository URL or service credential:
+Actual publication pulls immutable remote history, releases changed sources to
+the local repository, and pushes only those local releases whose coordinates
+are absent remotely:
 
 ```bash
-P9R_URL=https://admin.integrations.example.com \
-P9R_TOKEN=pat_example \
-bun run packages/runtimes/cms-cli/src/index.ts repository publish-official
+bun run ulvia -- pull --all
+bun run ulvia -- release --all \
+  --root packages/resources/official-integrations/integrations
+ULVIA_URL=https://admin.integrations.example.com \
+ULVIA_TOKEN=pat_example \
+bun run ulvia -- push --all
 ```
 
-Prefer the normal credentials store over an inline `P9R_TOKEN` on an operator
-machine. The environment form is useful for a secret-scoped CI step.
-
-Packages are published sequentially by kind and ascending SemVer. Re-running
-the command is idempotent only when the registry's immutable package and
-verification digests exactly match the rebuilt candidate. A digest conflict,
+Keep `ULVIA_TOKEN` scoped to the publication process. A digest conflict,
 compatibility rejection, rate limit, invalid response, timeout, or transport
 failure returns a non-zero exit status.
 
 `.github/workflows/publish-official-integrations.yml` exposes the same operation
 through both `workflow_dispatch` and `workflow_call`. Every run first executes a
-credential-free plan on a hosted runner. The privileged baseline and legacy
-backfill step stays on the private self-hosted `repository-management` runner
-with its separate `REPOSITORY_MAINTENANCE_TOKEN`; it writes that credential to
-an ephemeral mode-0600 file and removes it afterward. Normal publication runs
-on a hosted runner through the HTTPS CMS gateway with the `P9R_TOKEN` secret,
+credential-free audit on a hosted runner. Normal publication then runs on a
+hosted runner through the HTTPS CMS gateway with the `ULVIA_TOKEN` secret,
 scoped only to the validation and publication steps. Image builds and pulls
 never invoke this workflow automatically. The first empty-volume seed is
 performed locally by the repository runtime; every later official update
@@ -331,10 +300,10 @@ remains an explicit, reviewable publication operation.
 
 The fixed, protected `integration-repository` GitHub environment owns both
 destinations as environment variables: `REPOSITORY_CMS_URL` for the public CMS
-Control origin and `REPOSITORY_MAINTENANCE_URL` for the private listener. They
-are deliberately not workflow inputs, so an invoker cannot redirect either
-credential to an arbitrary host. The same environment owns the `P9R_TOKEN` and
-`REPOSITORY_MAINTENANCE_TOKEN` secrets.
+Control origin and `REPOSITORY_PUBLIC_URL` for anonymous digest verification.
+They are deliberately not workflow inputs, so an invoker cannot redirect the
+credential to an arbitrary host. The same environment owns the `ULVIA_TOKEN`
+secret.
 
 ## Probes and shutdown
 
