@@ -60,6 +60,15 @@ function fieldControl(field: ReorderableListItemField, value: unknown): HTMLElem
                 return element;
             }),
         );
+        if (field.type === "combobox") {
+            if (field.lookupKey) {
+                control.dataset.lookupTarget = field.lookupKey;
+            }
+            control.toggleAttribute("remote-search", field.remoteSearch === true);
+            control.toggleAttribute("remote-pagination", field.remotePagination === true);
+            control.toggleAttribute("loading", field.lookupLoading === true);
+            control.toggleAttribute("has-more", field.lookupHasMore === true);
+        }
         control.value = text;
         return control;
     }

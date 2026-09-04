@@ -34,13 +34,13 @@ export async function runCreate(
     }
     const resolvedPackage = await resolveCreatePackage(request.packageResolver, definition);
     const importDefinition = resolvedPackage?.definition ?? definition;
-    if (importDefinition.schema === "cms.integration.definition.v2" && importDefinition.type === "collection") {
-        assertCollectionConformance(importDefinition, request.siteIntegrations ?? []);
-    }
     const selection =
         importDefinition.schema === "cms.integration.definition.v2" && importDefinition.type === "collection"
             ? resolveCollectionSelection(importDefinition, request.dto.resources, undefined, request.siteIntegrations)
             : undefined;
+    if (importDefinition.schema === "cms.integration.definition.v2" && importDefinition.type === "collection") {
+        assertCollectionConformance(importDefinition, request.siteIntegrations ?? [], selection?.activeResources);
+    }
     const instanceIds = connectorInstanceIds(importDefinition);
 
     const secretInputs = declarativeSecretBindingNames(importDefinition);

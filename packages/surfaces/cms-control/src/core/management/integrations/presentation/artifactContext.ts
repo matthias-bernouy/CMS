@@ -6,6 +6,7 @@ export type IntegrationArtifactContext = {
     sourceOverlayIds: Set<string> | null;
     functionIds: Set<string> | null;
     dashboardIds: Set<string> | null;
+    dashboardViewIds: Set<string> | null;
     relationIds: Set<string> | null;
     dashboardRelationProjectionIds: Set<string> | null;
     blocIds: Set<string> | null;
@@ -26,6 +27,10 @@ export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<I
     const dashboardIds = await cms.dashboards
         .getAllDashboards()
         .then((dashboards) => new Set(dashboards.map((dashboard) => dashboard.id)))
+        .catch(() => null);
+    const dashboardViewIds = await cms.dashboardViews
+        .getAllViews()
+        .then((views) => new Set(views.map((view) => view.id)))
         .catch(() => null);
     const relationIds = await cms.relations
         .getAllRelations()
@@ -56,6 +61,7 @@ export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<I
         sourceOverlayIds,
         functionIds,
         dashboardIds,
+        dashboardViewIds,
         relationIds,
         dashboardRelationProjectionIds,
         blocIds,

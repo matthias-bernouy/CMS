@@ -5,7 +5,7 @@ import { loadIntegrationDefinition } from "../../../../../../../tests/helpers/in
 import { loadDefinitionFragment } from "../../../../../../../tests/helpers/definitionFragment";
 
 type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape }> };
-type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] }; dashboard?: unknown }> };
+type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] }; view?: unknown }> };
 
 describe("commerce financial operations read contracts", () => {
     test("preserves allocated refund facts in protected-payment timelines", async () => {
@@ -89,13 +89,13 @@ describe("commerce financial operations read contracts", () => {
     });
 
     test("keeps dashboards bound to persisted terms, limits, and allocation fields", async () => {
-        const artifact = await loadDefinitionFragment<{ dashboard: unknown }>(
+        const artifact = await loadDefinitionFragment<{ view: unknown }>(
             resolve(
                 import.meta.dir,
                 "../../../../../../extensions/commerce-stripe-payments/definitions/artifacts/dashboards/commerce-stripe-payments-operations/definition.json",
             ),
         );
-        const serialized = JSON.stringify(artifact.dashboard);
+        const serialized = JSON.stringify(artifact.view);
 
         for (const path of [
             "financialTerms.merchandiseSubtotalAmount",

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     InMemoryIntegrationInstallationRepository,
@@ -16,18 +17,22 @@ import { buildOfficialIntegrationPackages } from "@bernouy/cms-official-integrat
 
 const integrationsRoot = new URL("../../..", import.meta.url).pathname;
 
-test("Forms 3.0.0 imports only its source backend and connector", async () => {
+test("Forms 3.1.0 imports its source backend, dashboard views, and connector", async () => {
     const definitions = new FsIntegrationDefinitionRepository(integrationsRoot);
     const definition = await definitions.get("forms");
     expect(definition).toBeTruthy();
 
     const sources = new InMemorySourceRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
+    const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
-    await importIntegration(
+    const result = await importIntegration(
         {
             sources,
             installations,
+            dashboards,
+            dashboardViews,
             secrets: new InMemorySecretStore(),
             roles: new InMemoryRolesRepository(),
             sourceOverlays: new InMemorySourceOverlayRepository(),
@@ -60,8 +65,19 @@ test("Forms 3.0.0 imports only its source backend and connector", async () => {
     expect(validateSource(source!)).toEqual([]);
     expect(source?.endpoints.map((endpoint) => endpoint.urn)).toContain("urn:forms:submitAuthenticated");
 
-    expect(definition).toMatchObject({ version: "3.0.0", type: "source" });
-    expect(definition?.artifacts?.map((artifact) => artifact.type)).toEqual(["source"]);
+    expect(definition).toMatchObject({ version: "3.1.0", type: "source" });
+    expect(definition?.artifacts?.map((artifact) => artifact.type)).toEqual([
+        "source",
+        "dashboard-view",
+        "dashboard-view",
+    ]);
+    expect(result.artifacts.map((artifact) => artifact.type)).toEqual([
+        "source",
+        "dashboard-view",
+        "dashboard-view",
+        "dashboard",
+    ]);
+    expect((await dashboards.getAllDashboards()).map((dashboard) => dashboard.id)).toEqual(["forms"]);
     expect(deployment?.dataApiSchemas).toEqual(["forms"]);
     expect(deployment?.functions.map((fn) => fn.name)).toEqual(["cms-forms"]);
 });

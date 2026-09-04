@@ -73,9 +73,16 @@ function publicArtifactContract(artifact: DeclarativeArtifactTemplate): unknown 
             };
         case "dashboard":
             return {
-                source: artifact.dashboard.source,
+                homeView: artifact.dashboard.homeView,
                 views: artifact.dashboard.views,
-                requires: artifact.dashboard.requires,
+                status: artifact.dashboard.status,
+            };
+        case "dashboard-view":
+            return {
+                source: artifact.view.source,
+                view: artifact.view.view,
+                availability: artifact.view.availability,
+                requires: artifact.view.requires,
             };
         case "sourceOverlay":
             return artifact.overlay;
@@ -100,6 +107,8 @@ function artifactIdentity(artifact: DeclarativeArtifactTemplate): string {
             return `source:${artifact.source.id}`;
         case "dashboard":
             return `dashboard:${artifact.dashboard.id}`;
+        case "dashboard-view":
+            return `dashboard-view:${artifact.view.id}`;
         case "sourceOverlay":
             return `sourceOverlay:${artifact.overlay.id}`;
         case "relation":

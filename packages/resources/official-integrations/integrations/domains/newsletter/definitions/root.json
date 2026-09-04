@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "newsletter",
     "label": "Newsletter",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "category": "Marketing",
     "description": "Store newsletter subscription state with the configured connector.",
     "icon": {
@@ -22,7 +22,8 @@
     },
     "artifacts": {
         "$files": [
-            "artifacts/sources/primary/definition.json"
+            "artifacts/sources/primary/definition.json",
+            "artifacts/dashboards/subscriptions.json"
         ]
     },
     "type": "source"

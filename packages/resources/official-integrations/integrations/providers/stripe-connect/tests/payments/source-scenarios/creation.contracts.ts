@@ -76,7 +76,7 @@ export function registerProtectedPaymentCreationScenario(createHarness: CreateHa
                 clientReferenceId: "order-1",
             }),
         );
-        const dashboard = await harness.dashboards.getDashboard("stripe-connect-dashboard");
+        const dashboard = await harness.dashboardViews.getView("stripe-connect-marketplace-terms");
         const userRole = await harness.roles.get(USER_ROLE);
 
         expect(config).toEqual({ publishableKey: "pk_test_123" });
@@ -134,7 +134,8 @@ export function registerProtectedPaymentCreationScenario(createHarness: CreateHa
         expect(missingByReference).toEqual({ exists: false });
         expect(hiddenByReference).toEqual({ exists: false });
         expect(harness.rest.rows("payments")).toHaveLength(1);
-        expect(dashboard).toBeNull();
+        expect(dashboard).toBeTruthy();
+        expect(dashboard?.source).toBe("stripe-connect");
         const userPermissions = userRole?.grants.map((grant) => grant.permission) ?? [];
         expect(userPermissions).toEqual(
             expect.arrayContaining([

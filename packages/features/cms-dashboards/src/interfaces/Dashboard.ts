@@ -35,8 +35,26 @@ export type {
     Dashboard,
     DashboardAction,
     DashboardDetailMainItem,
-    DashboardDefinition,
     DashboardDto,
+    LegacyDashboardDefinition,
     DashboardNavigationListWidget,
     DashboardWidget,
 } from "./dashboard/widgets";
+export {
+    DASHBOARD_MAX_VIEW_DEPTH,
+    DASHBOARD_SCHEMA_VERSION,
+} from "./dashboard/composition";
+export type {
+    DashboardAllowedCall,
+    DashboardDefinition,
+    DashboardExecutionPlan,
+    DashboardOrigin,
+    DashboardViewAvailability,
+    DashboardViewDefinition,
+    DashboardViewMount,
+    DashboardViewNode,
+    DashboardViewOrigin,
+    ComposedDashboard,
+    ResolvedDashboard,
+    ResolvedDashboardView,
+} from "./dashboard/composition";

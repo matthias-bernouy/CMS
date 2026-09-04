@@ -1,1 +1,1 @@
-Major release: User Personal Information is now a backend-only Source package. UI blocks moved to the Ulvia Collection.
+Minor release: publish reusable User Account dashboard views while site dashboard composition remains CMS-owned.

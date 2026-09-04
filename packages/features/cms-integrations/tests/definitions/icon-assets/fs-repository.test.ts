@@ -17,11 +17,11 @@ describe("filesystem integration icon assets", () => {
             icon: "assets/shared.svg",
             svg: expect.stringContaining('data-name="shared"'),
         });
-        expect(dashboard?.type === "dashboard" ? dashboard.dashboard.meta : null).toMatchObject({
+        expect(dashboard?.type === "dashboard-view" ? dashboard.view.meta : null).toMatchObject({
             icon: "assets/shared.svg",
             svg: expect.stringContaining('data-name="shared"'),
         });
-        expect(semantic?.type === "dashboard" ? semantic.dashboard.meta : null).toEqual({
+        expect(semantic?.type === "dashboard-view" ? semantic.view.meta : null).toEqual({
             name: "Semantic",
             icon: "layout",
         });

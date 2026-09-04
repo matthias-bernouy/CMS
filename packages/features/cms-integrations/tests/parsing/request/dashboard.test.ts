@@ -10,6 +10,18 @@ describe("@bernouy/cms-integrations dashboard DTO parsing", () => {
             answers: {},
         });
 
-        expect(request.siteIntegrations[0]?.artifacts?.[0]).toEqual(EXPECTED_MANUAL_DASHBOARD_ARTIFACT);
+        const artifact = request.siteIntegrations[0]?.artifacts?.[0];
+        expect(artifact).toMatchObject({
+            type: "dashboard-view",
+            view: {
+                schemaVersion: 2,
+                id: EXPECTED_MANUAL_DASHBOARD_ARTIFACT.dashboard.id,
+                source: EXPECTED_MANUAL_DASHBOARD_ARTIFACT.dashboard.source,
+                meta: EXPECTED_MANUAL_DASHBOARD_ARTIFACT.dashboard.meta,
+            },
+        });
+        expect(artifact?.type === "dashboard-view" ? artifact.view.view.widgets : null).toEqual(
+            EXPECTED_MANUAL_DASHBOARD_ARTIFACT.dashboard.views,
+        );
     });
 });

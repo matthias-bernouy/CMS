@@ -75,6 +75,15 @@ export function isLookupField(field: DashboardField): field is LookupField {
     return (field.type === "combobox" || field.type === "tokens") && Boolean(field.lookup);
 }
 
+export function lookupUsesRemoteSearch(lookup: DashboardEmbeddedLookupRef): boolean {
+    return Object.values(lookup.params ?? {}).includes("$search");
+}
+
+export function lookupUsesOffsetPagination(lookup: DashboardEmbeddedLookupRef): boolean {
+    const expressions = Object.values(lookup.params ?? {});
+    return expressions.includes("$limit") && expressions.includes("$offset");
+}
+
 function detailFields(widget: DetailWidget): DashboardField[] {
     return [...widget.main.filter(isDetailSection), ...(widget.aside ?? [])].flatMap((section) => section.fields);
 }

@@ -1,4 +1,4 @@
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import {
     importIntegration,
@@ -28,6 +28,7 @@ export async function createStripeConnectHarness() {
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     const importedBlocs: IntegrationBlocArtifact[] = [];
     const identities = new InMemoryIdentityService();
     let deployment: IntegrationConnectorDeployment | undefined;
@@ -56,6 +57,7 @@ export async function createStripeConnectHarness() {
             secrets,
             roles,
             dashboards,
+            dashboardViews,
             connectorDeployers: [deployer],
             provisioners: [stripeWebhookProvisioner()],
             blocs: {
@@ -96,6 +98,7 @@ export async function createStripeConnectHarness() {
         secrets,
         roles,
         dashboards,
+        dashboardViews,
         importedBlocs,
         identities,
         deployment,

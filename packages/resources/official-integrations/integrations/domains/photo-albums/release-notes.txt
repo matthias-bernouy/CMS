@@ -1,1 +1,1 @@
-Major release: Photo Albums is now a backend-only Source package. UI blocks moved to the Ulvia Collection.
+Minor release: publish reusable Photo Albums dashboard views while site dashboard composition remains CMS-owned.

@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "forms",
     "label": "Forms",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "category": "Content",
     "description": "Build versioned multi-step forms, publish them through CMS Sources, and review their submissions.",
     "icon": {
@@ -25,7 +25,9 @@
     },
     "artifacts": {
         "$files": [
-            "artifacts/sources/primary/definition.json"
+            "artifacts/sources/primary/definition.json",
+            "artifacts/dashboards/forms/root.json",
+            "artifacts/dashboards/submissions/root.json"
         ]
     },
     "type": "source"

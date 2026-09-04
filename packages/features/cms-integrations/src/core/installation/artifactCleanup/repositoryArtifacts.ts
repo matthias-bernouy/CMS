@@ -34,10 +34,35 @@ export async function deleteArtifact(
         }
         case "dashboard": {
             const repository = deps.dashboards ?? missingRepository("dashboard");
+            const previous = await repository.getDashboard(id);
+            if (!previous) {
+                return null;
+            }
+            const subjectIds = (await deps.dashboardAssignments?.getSubjectIdsForDashboard(id)) ?? [];
+            if (!(await repository.deleteDashboard(id))) {
+                return null;
+            }
+            try {
+                await deps.dashboardAssignments?.deleteForDashboard(id);
+            } catch (error) {
+                await repository.createDashboard(previous);
+                throw error;
+            }
+            return async () => {
+                if (!(await repository.getDashboard(id))) {
+                    await repository.createDashboard(previous);
+                }
+                for (const subjectId of subjectIds) {
+                    await deps.dashboardAssignments?.assign({ subjectId, dashboardId: id });
+                }
+            };
+        }
+        case "dashboard-view": {
+            const repository = deps.dashboardViews ?? missingRepository("dashboard view");
             return deleteAndRestore(
-                () => repository.getDashboard(id),
-                () => repository.deleteDashboard(id),
-                (previous) => repository.createDashboard(previous),
+                () => repository.getView(id),
+                () => repository.deleteView(id),
+                (previous) => repository.createView(previous),
             );
         }
         case "sourceOverlay": {

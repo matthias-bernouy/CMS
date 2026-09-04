@@ -9,7 +9,12 @@ import {
     type IntegrationConnectorDeployment,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import {
+    InMemoryDashboardRepository,
+    InMemoryDashboardViewRepository,
+    dashboardViewAsLegacyDashboard,
+    validateDashboard,
+} from "@bernouy/cms-dashboards";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
@@ -17,10 +22,11 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository, validateSource, type Source } from "@bernouy/cms-sources";
 import { declaredBlocViewSources } from "./support";
 
-describe("commerce negotiation 3.0.0", () => {
+describe("commerce negotiation 3.1.0", () => {
     test("installs its Commerce-backed source and connector", async () => {
         const sources = new InMemorySourceRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const secrets = new InMemorySecretStore();
         const installations = new InMemoryIntegrationInstallationRepository();
         const functions = new InMemoryFunctionRepository();
@@ -65,6 +71,7 @@ describe("commerce negotiation 3.0.0", () => {
             {
                 sources,
                 dashboards,
+                dashboardViews,
                 secrets,
                 functions,
                 installations,
@@ -86,11 +93,35 @@ describe("commerce negotiation 3.0.0", () => {
         );
 
         const source = await sources.getSource("urn:commerce-negotiation");
-        expect(result.artifacts.map((artifact) => artifact.type)).toEqual(["source", "function", "function"]);
+        const proposalsView = await dashboardViews.getView("commerce-negotiation-proposals");
+        const settingsView = await dashboardViews.getView("commerce-negotiation-settings");
+        const proposals = proposalsView ? dashboardViewAsLegacyDashboard(proposalsView) : null;
+        const settings = settingsView ? dashboardViewAsLegacyDashboard(settingsView) : null;
+        expect(result.artifacts.map((artifact) => artifact.type)).toEqual([
+            "source",
+            "function",
+            "function",
+            "dashboard-view",
+            "dashboard-view",
+            "dashboard",
+        ]);
         expect(importedBlocs).toEqual([]);
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
-        expect(await dashboards.getAllDashboards()).toEqual([]);
+        expect(proposals).toBeTruthy();
+        expect(settings).toBeTruthy();
+        expect(validateDashboard(proposals!, { source })).toEqual([]);
+        expect(validateDashboard(settings!, { source })).toEqual([]);
+        expect((await dashboards.getAllDashboards()).map((dashboard) => dashboard.id)).toEqual([
+            "commerce-negotiation",
+        ]);
+        const settingsDetail = settings?.views.find((view) => view.id === "negotiationSettings");
+        if (settingsDetail?.widget !== "w-detail") {
+            throw new Error("negotiation settings detail not installed");
+        }
+        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
+            resource: "$result",
+        });
         expect(deployment?.dataApiSchemas).toEqual(["commerce_negotiation"]);
         expect(deployment?.functions[0]?.name).toBe("cms-commerce-negotiation");
         expect(deployment?.functions[0]?.secrets).not.toHaveProperty("CMS_COMMERCE_API_KEY");

@@ -1,4 +1,4 @@
-import { InMemoryDashboardRepository, type Dashboard } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardViewRepository, type DashboardViewDefinition } from "@bernouy/cms-dashboards";
 
 export function overlayLookupDefinition(selected: unknown) {
     return {
@@ -30,32 +30,39 @@ export function overlayLookupDefinition(selected: unknown) {
 
 export function dashboardArtifact(id: string, source: string) {
     return {
-        type: "dashboard" as const,
-        dashboard: {
+        type: "dashboard-view" as const,
+        view: {
+            schemaVersion: 2 as const,
             id,
             source,
-            views: [
-                {
-                    widget: "w-table" as const,
-                    id: "itemsTable",
-                    source: { endpoint: "list", itemsPath: "items" },
-                    rowKey: "id",
-                    columns: [{ id: "id", label: "ID", path: "id" }],
-                },
-            ],
+            meta: { name: id },
+            view: {
+                id,
+                label: id,
+                widgets: [
+                    {
+                        widget: "w-table" as const,
+                        id: "itemsTable",
+                        source: { endpoint: "list", itemsPath: "items" },
+                        rowKey: "id",
+                        columns: [{ id: "id", label: "ID", path: "id" }],
+                    },
+                ],
+            },
+            availability: { catalog: true, defaultPlacement: { dashboardId: id } },
         },
     };
 }
 
-export class FailingCreateDashboardRepository extends InMemoryDashboardRepository {
+export class FailingCreateDashboardViewRepository extends InMemoryDashboardViewRepository {
     constructor(private readonly failId: string) {
         super();
     }
 
-    override createDashboard(dashboard: Dashboard): Promise<Dashboard> {
-        if (dashboard.id === this.failId) {
-            throw new Error(`dashboard create failed for ${dashboard.id}`);
+    override createView(view: DashboardViewDefinition): Promise<DashboardViewDefinition> {
+        if (view.id === this.failId) {
+            throw new Error(`dashboard view create failed for ${view.id}`);
         }
-        return super.createDashboard(dashboard);
+        return super.createView(view);
     }
 }

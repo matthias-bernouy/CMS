@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "stripe-connect",
     "label": "Stripe Connect C2C protected payments",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "category": "Payments",
     "description": "Onboard C2C recipients and execute protected platform charges, separate Transfers, Reversals, Refunds, Stripe disputes, signed webhooks, and reconciliation.",
     "icon": {
@@ -31,7 +31,8 @@
     },
     "artifacts": {
         "$files": [
-            "artifacts/sources/primary/definition.json"
+            "artifacts/sources/primary/definition.json",
+            "artifacts/dashboards/marketplace-terms/root.json"
         ]
     },
     "type": "source"

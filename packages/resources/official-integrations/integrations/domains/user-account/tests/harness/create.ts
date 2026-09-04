@@ -1,3 +1,4 @@
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     type IntegrationConnectorDeployer,
@@ -27,6 +28,8 @@ export async function createHarness() {
     const sourceOverlays = new InMemorySourceOverlayRepository();
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
+    const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
         provider: "supabase",
@@ -48,6 +51,8 @@ export async function createHarness() {
             sources,
             secrets,
             roles,
+            dashboards,
+            dashboardViews,
             sourceOverlays,
             connectorDeployers: [deployer],
         },
@@ -93,6 +98,8 @@ export async function createHarness() {
         sourceOverlays,
         secrets,
         roles,
+        dashboards,
+        dashboardViews,
         deployment,
         rest,
         async materializedOverlays() {

@@ -1,6 +1,6 @@
 {
-    "type": "dashboard",
-    "dashboard": {
+  "type": "dashboard-view",
+  "view": {
         "id": "{{answers.id}}-subscriptions",
         "meta": {
             "name": "Newsletter",

@@ -1,4 +1,4 @@
-import { emptyItem, renderComboItem } from "./list";
+import { emptyItem, renderComboItem, statusItem } from "./list";
 import { ComboListPopover } from "./listPopover";
 import type { ComboItem } from "./types";
 
@@ -123,6 +123,7 @@ export class ComboboxView {
         activeIndex: number,
         selectedValue: string,
         onSelect: (item: ComboItem) => void,
+        remote: { loading: boolean; hasMore: boolean; loadMore: () => void } | null = null,
     ): void {
         if (!this.listbox) {
             return;
@@ -130,8 +131,13 @@ export class ComboboxView {
         this.listbox.replaceChildren(
             ...items.map((item, index) => renderComboItem(item, index, activeIndex, selectedValue, onSelect)),
         );
-        if (items.length === 0) {
+        if (items.length === 0 && !remote?.loading) {
             this.listbox.append(emptyItem());
+        }
+        if (remote?.loading) {
+            this.listbox.append(statusItem("Loading…", "loading"));
+        } else if (remote?.hasMore) {
+            this.listbox.append(statusItem("Load more", "load-more", remote.loadMore));
         }
         this.listPopover?.show();
         this.input?.setAttribute("aria-expanded", "true");

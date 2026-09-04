@@ -50,6 +50,55 @@ describe("integration resource model", () => {
         ).toThrow(/can publish only blocs/);
     });
 
+    test("lets sources publish reusable dashboard views but not site dashboard compositions", () => {
+        const source = parseIntegrationDefinition({
+            schema: "cms.integration.definition.v2",
+            type: "source",
+            kind: "catalog",
+            label: "Catalog",
+            version: "1.0.0",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "dashboard-view",
+                    view: {
+                        schemaVersion: 2,
+                        id: "catalog-products",
+                        source: "catalog",
+                        meta: { name: "Products" },
+                        view: { id: "products", label: "Products", widgets: [] },
+                        availability: { catalog: true, defaultPlacement: { dashboardId: "catalog" } },
+                    },
+                },
+            ],
+        });
+        expect(source.artifacts?.map((artifact) => artifact.type)).toEqual(["dashboard-view"]);
+
+        expect(() =>
+            parseIntegrationDefinition({
+                schema: "cms.integration.definition.v2",
+                type: "source",
+                kind: "catalog",
+                label: "Catalog",
+                version: "1.0.0",
+                inputs: [],
+                artifacts: [
+                    {
+                        type: "dashboard",
+                        dashboard: {
+                            schemaVersion: 2,
+                            id: "catalog",
+                            meta: { name: "Catalog" },
+                            homeView: "products",
+                            views: [],
+                            status: "published",
+                        },
+                    },
+                ],
+            }),
+        ).toThrow(/cannot publish blocs or dashboards/);
+    });
+
     test("preserves active resources on upgrade and leaves additions inactive", () => {
         const collection = collectionDefinition();
         expect(resolveCollectionSelection(collection)).toEqual({
@@ -230,6 +279,17 @@ describe("integration resource model", () => {
         strictArtifact.source.endpoints[0]!.params[0]!.required = true;
         expect(() => assertCollectionConformance(invalidBinding, [strictSource])).toThrow(
             /missing required input bindings: params.page/,
+        );
+    });
+
+    test("validates only selected resources while retaining their internal requirements", () => {
+        const collection = collectionDefinition();
+        const source = sourceDefinition();
+        source.version = "4.0.0";
+
+        expect(() => assertCollectionConformance(collection, [source], ["ulvia/blocs/basic-paragraph"])).not.toThrow();
+        expect(() => assertCollectionConformance(collection, [source], ["ulvia/blocs/commerce-offer-list"])).toThrow(
+            /requires source "commerce" version \^3\.0\.0, got 4\.0\.0/,
         );
     });
 

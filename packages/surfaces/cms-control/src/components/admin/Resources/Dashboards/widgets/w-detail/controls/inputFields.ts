@@ -1,6 +1,13 @@
 import type { WDetailField } from "../types";
 import { formatMinorUnits } from "../../../runtime/mapping/money";
-import { bindFieldControl, optionElement, selectOptionElements, type TokenControl, type ValueControl } from "./shared";
+import {
+    applyRemoteLookupMetadata,
+    bindFieldControl,
+    optionElement,
+    selectOptionElements,
+    type TokenControl,
+    type ValueControl,
+} from "./shared";
 
 export function textInput(field: WDetailField): HTMLElement {
     const input = document.createElement("p9r-input") as ValueControl;
@@ -78,6 +85,7 @@ export function combobox(field: WDetailField): HTMLElement {
         input.setAttribute("creatable", "");
     }
     applyFeedbackMetadata(input, field);
+    applyRemoteLookupMetadata(input, field);
     input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
     input.value = String(field.value);
     bindFieldControl(input, field);

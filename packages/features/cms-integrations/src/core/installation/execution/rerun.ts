@@ -245,13 +245,13 @@ async function runRerunImport(
     resolvedPackage?: ResolvedIntegrationPackageRoot,
 ): Promise<RunIntegrationInstallationResult> {
     const dto = await buildRerunDto(request.deps, installation, definition, request.body ?? {}, siteIntegrations);
-    if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
-        assertCollectionConformance(definition, siteIntegrations);
-    }
     const selection =
         definition.schema === "cms.integration.definition.v2" && definition.type === "collection"
             ? resolveCollectionSelection(definition, dto.resources, installation.activeResources, siteIntegrations)
             : undefined;
+    if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
+        assertCollectionConformance(definition, siteIntegrations, selection?.activeResources);
+    }
     const secretInputs = declarativeSecretBindingNames(definition);
     const plannedSecretRefs = resolveDeclarativeSecretRefs(definition, dto.answers);
     await assertSecretKeysAvailable(request.installations, installation.id, plannedSecretRefs);

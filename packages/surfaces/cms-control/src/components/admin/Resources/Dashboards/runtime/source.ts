@@ -80,8 +80,10 @@ async function sendSourceResponse(
 
 function sourceUrl(sourceId: string, ref: DashboardEndpointRef, vars: RuntimeVars): URL {
     const targetSourceId = ref.sourceId ?? sourceId;
+    const dashboardId = document.documentElement.dataset.dashboardScope;
+    const prefix = dashboardId ? `/.cms/dashboards/${encodeURIComponent(dashboardId)}/sources` : "/.cms/sources";
     const url = new URL(
-        route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`),
+        route(`${prefix}/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`),
         window.location.origin,
     );
     for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {

@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "user-account",
     "label": "User Personal Information",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "category": "Users",
     "description": "Store personal information for CMS users with the configured connector.",
     "icon": {
@@ -24,7 +24,9 @@
         "$files": [
             "artifacts/sources/primary/definition.json",
             "artifacts/source-overlays/extra-fields.json",
-            "artifacts/source-overlays/flat-metadata-fields.json"
+            "artifacts/source-overlays/flat-metadata-fields.json",
+            "artifacts/dashboards/fields/root.json",
+            "artifacts/dashboards/users/root.json"
         ]
     },
     "resources": [],

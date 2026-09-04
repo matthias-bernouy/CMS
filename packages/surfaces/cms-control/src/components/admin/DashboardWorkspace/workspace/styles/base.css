@@ -1,0 +1,84 @@
+:host {
+    display: block;
+    min-width: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.workspace,
+.profile-view,
+.navigation-row > * {
+    min-width: 0;
+}
+
+slot[name="profile"]::slotted(*) {
+    display: block;
+}
+
+.message {
+    color: var(--text-muted, #66736f);
+    padding: 1rem 0;
+}
+
+.dashboard-icon {
+    display: inline-grid;
+    height: 1.5rem;
+    place-items: center;
+    width: 1.5rem;
+}
+
+.dashboard-icon :is(svg) {
+    height: 1.15rem;
+    width: 1.15rem;
+}
+
+.view-navigation {
+    display: grid;
+    gap: .5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tab-row {
+    border-bottom: 1px solid var(--border-default, #dfe5e2);
+    display: flex;
+    gap: .25rem;
+    overflow-x: auto;
+}
+
+.tab-row button {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted, #66736f);
+    cursor: pointer;
+    display: flex;
+    font: inherit;
+    gap: .4rem;
+    padding: .65rem .8rem;
+    white-space: nowrap;
+}
+
+.tab-row button[aria-selected="true"] {
+    border-bottom-color: var(--primary-base, #087f5b);
+    color: var(--text-main, #0f1f1a);
+    font-weight: 700;
+}
+
+.tab-icon {
+    display: inline-grid;
+    height: 1rem;
+    place-items: center;
+    width: 1rem;
+}
+
+.tab-icon :is(svg) {
+    height: .9rem;
+    width: .9rem;
+}

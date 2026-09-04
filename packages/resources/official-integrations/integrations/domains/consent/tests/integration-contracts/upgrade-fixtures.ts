@@ -7,7 +7,7 @@ import {
 
 const publishedConsent = defineUpgradeScenario({
     name: "preserves a published policy and its immutable acceptance evidence",
-    from: ">=1.0.0 <4.0.0",
+    from: ">=1.0.0 <4.1.0",
     async seedBeforeUpgrade(context) {
         await context.database.query(
             `with page as (

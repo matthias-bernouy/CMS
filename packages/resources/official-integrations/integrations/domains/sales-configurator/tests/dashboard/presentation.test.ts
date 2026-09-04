@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
 import { loadDefinitionFragment } from "../../../../../tests/helpers/definitionFragment";
 
 const integrationRoot = new URL("../..", import.meta.url).pathname;
@@ -10,8 +10,8 @@ describe("sales-configurator dashboard presentation", () => {
             ["catalog", "proposals", "partners"].map(async (kind) => {
                 const artifact = (await loadDefinitionFragment(
                     `${integrationRoot}/definitions/artifacts/dashboards/${kind}/definition.json`,
-                )) as { dashboard: { id: string; views: DashboardWidget[] } };
-                return artifact.dashboard;
+                )) as { view: DashboardDto };
+                return artifact.view;
             }),
         );
         const catalog = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-catalog")!;

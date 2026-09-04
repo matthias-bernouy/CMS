@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardViewRepository, normalizeLegacyDashboardView } from "@bernouy/cms-dashboards";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import listDashboards from "cms-control/api/_platform/dashboards.get";
@@ -9,25 +9,27 @@ const list = () => new Request("http://localhost/cms/api/dashboards", { method: 
 describe("GET /api/dashboards relation projections", () => {
     test("includes projections for matching dashboards", async () => {
         const sources = new InMemorySourceRepository();
-        const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const relations = new InMemoryRelationRepository();
         await sources.createSource({
             urn: "urn:products",
             meta: { name: "Products" },
             endpoints: [],
         });
-        await dashboards.createDashboard({
-            id: "products-products",
-            source: "products",
-            views: [
-                {
-                    widget: "w-detail",
-                    id: "productDetail",
-                    source: { endpoint: "product", params: { id: "$selection.id" } },
-                    main: [{ id: "details", title: "Details", fields: [] }],
-                },
-            ],
-        });
+        await dashboardViews.createView(
+            normalizeLegacyDashboardView({
+                id: "products-products",
+                source: "products",
+                views: [
+                    {
+                        widget: "w-detail",
+                        id: "productDetail",
+                        source: { endpoint: "product", params: { id: "$selection.id" } },
+                        main: [{ id: "details", title: "Details", fields: [] }],
+                    },
+                ],
+            }),
+        );
         await relations.createDashboardRelationProjection({
             type: "dashboardRelation",
             relationId: "product-offers",
@@ -38,7 +40,7 @@ describe("GET /api/dashboards relation projections", () => {
             columns: [{ id: "title", label: "Offer", path: "title", primary: true }],
         });
 
-        const body = await (await listDashboards(list(), { sources, dashboards, relations } as any)).json();
+        const body = await (await listDashboards(list(), { sources, dashboardViews, relations } as any)).json();
 
         expect(body[0].dashboardRelationProjections).toEqual([
             {

@@ -2,7 +2,7 @@
     {
         "endpointId": "health",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/health",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/health",
         "params": [],
         "headers": [
             {
@@ -34,7 +34,7 @@
     {
         "endpointId": "migration-health",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/migration-health",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/migration-health",
         "params": [],
         "headers": [
             {

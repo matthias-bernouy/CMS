@@ -1,0 +1,1 @@
+export { DetailLookups } from "./DetailLookups";

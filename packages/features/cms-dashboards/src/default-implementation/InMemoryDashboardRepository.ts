@@ -1,4 +1,4 @@
-import type { Dashboard } from "../interfaces/Dashboard";
+import type { DashboardDefinition } from "../interfaces/Dashboard";
 import type { DashboardRepository } from "../interfaces/DashboardRepository";
 import { DuplicateDashboardError } from "../core/errors";
 
@@ -8,9 +8,9 @@ import { DuplicateDashboardError } from "../core/errors";
  * state through object references.
  */
 export class InMemoryDashboardRepository implements DashboardRepository {
-    private readonly dashboards = new Map<string, Dashboard>();
+    private readonly dashboards = new Map<string, DashboardDefinition>();
 
-    async createDashboard(dashboard: Dashboard): Promise<Dashboard> {
+    async createDashboard(dashboard: DashboardDefinition): Promise<DashboardDefinition> {
         if (this.dashboards.has(dashboard.id)) {
             throw new DuplicateDashboardError(dashboard.id);
         }
@@ -18,7 +18,7 @@ export class InMemoryDashboardRepository implements DashboardRepository {
         return structuredClone(dashboard);
     }
 
-    async updateDashboard(dashboard: Dashboard): Promise<Dashboard | null> {
+    async updateDashboard(dashboard: DashboardDefinition): Promise<DashboardDefinition | null> {
         if (!this.dashboards.has(dashboard.id)) {
             return null;
         }
@@ -30,18 +30,12 @@ export class InMemoryDashboardRepository implements DashboardRepository {
         return this.dashboards.delete(id);
     }
 
-    async getDashboard(id: string): Promise<Dashboard | null> {
+    async getDashboard(id: string): Promise<DashboardDefinition | null> {
         const found = this.dashboards.get(id);
         return found ? structuredClone(found) : null;
     }
 
-    async getDashboardsForSource(sourceId: string): Promise<Dashboard[]> {
-        return Array.from(this.dashboards.values())
-            .filter((dashboard) => dashboard.source === sourceId)
-            .map((dashboard) => structuredClone(dashboard));
-    }
-
-    async getAllDashboards(): Promise<Dashboard[]> {
+    async getAllDashboards(): Promise<DashboardDefinition[]> {
         return Array.from(this.dashboards.values(), (dashboard) => structuredClone(dashboard));
     }
 }

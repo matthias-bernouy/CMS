@@ -1,1 +1,1 @@
-Major release: Forms is now a backend-only Source package. UI blocks moved to the Ulvia Collection.
+Minor release: publish reusable Forms dashboard views while site dashboard composition remains CMS-owned.

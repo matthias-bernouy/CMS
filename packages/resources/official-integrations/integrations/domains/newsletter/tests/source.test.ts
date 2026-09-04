@@ -7,7 +7,7 @@ import {
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { handleSourceRequest, InMemorySourceRepository, type SourceRepository } from "@bernouy/cms-sources";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
@@ -161,6 +161,7 @@ async function importNewsletter() {
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     const importedBlocs: IntegrationBlocArtifact[] = [];
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
@@ -184,6 +185,7 @@ async function importNewsletter() {
             secrets,
             roles,
             dashboards,
+            dashboardViews,
             connectorDeployers: [deployer],
             blocs: {
                 async importBloc(artifact) {

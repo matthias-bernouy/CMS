@@ -9,6 +9,7 @@ export type {
     DeclarativeArtifactTemplate,
     DeclarativeBlocArtifactTemplate,
     DeclarativeDashboardArtifactTemplate,
+    DeclarativeDashboardViewArtifactTemplate,
     IntegrationAnswerValue,
     DeclarativeDashboardRelationProjectionArtifactTemplate,
     DeclarativeConnectorCompatibility,

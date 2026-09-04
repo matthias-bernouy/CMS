@@ -1,4 +1,4 @@
-import type { DashboardDto } from "@bernouy/cms-dashboards";
+import type { DashboardDefinition, DashboardViewDefinition } from "@bernouy/cms-dashboards";
 import type { FunctionDto } from "@bernouy/cms-functions";
 import type { CmsRelation, DashboardRelationProjection } from "@bernouy/cms-relations";
 import type { SourceDto, SourceOverlay } from "@bernouy/cms-sources";
@@ -13,7 +13,12 @@ export type DeclarativeSourceArtifactTemplate = {
 
 export type DeclarativeDashboardArtifactTemplate = {
     type: "dashboard";
-    dashboard: DashboardDto;
+    dashboard: Omit<DashboardDefinition, "origin" | "revision"> & { revision?: string };
+};
+
+export type DeclarativeDashboardViewArtifactTemplate = {
+    type: "dashboard-view";
+    view: DashboardViewDefinition;
 };
 
 export type DeclarativeSourceOverlayArtifactTemplate = {
@@ -66,6 +71,7 @@ export type DeclarativeArtifactTemplate =
     | DeclarativeSourceArtifactTemplate
     | DeclarativeFunctionArtifactTemplate
     | DeclarativeTriggerArtifactTemplate
+    | DeclarativeDashboardViewArtifactTemplate
     | DeclarativeDashboardArtifactTemplate
     | DeclarativeSourceOverlayArtifactTemplate
     | DeclarativeRelationArtifactTemplate

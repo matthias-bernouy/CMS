@@ -44,7 +44,12 @@ describe("local release source", () => {
             log: () => undefined,
         });
 
-        expect(files).toEqual(["definition.json", "release-notes.txt"]);
+        expect(files).toEqual([
+            "assets/dashboards/admin.svg",
+            "definition.json",
+            "definitions/artifacts/dashboards/admin.json",
+            "release-notes.txt",
+        ]);
     });
 
     test("builds a digest-bound portable upgrade fixture bundle outside runtime bytes", async () => {

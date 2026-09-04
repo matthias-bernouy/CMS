@@ -48,9 +48,14 @@ export class FixedAdminLayout extends Component {
         this._pageTabs = root.querySelector(".admin-page-tabs");
 
         this._syncRoutes(root, basePath);
+        if (this.hasAttribute("operator")) {
+            this._configureOperatorNavigation(root);
+        }
         this._setBrandName(root, DEFAULT_BRAND_NAME);
         this._syncPageChrome();
-        void this._syncSiteName(root);
+        if (!this.hasAttribute("operator")) {
+            void this._syncSiteName(root);
+        }
 
         document.addEventListener("settings:saved", this._onSettingsSaved);
         this._titleSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
@@ -79,6 +84,19 @@ export class FixedAdminLayout extends Component {
             }
             item.setAttribute("href", `${basePath}/admin/${route}`);
         }
+    }
+
+    private _configureOperatorNavigation(root: ShadowRoot): void {
+        const menu = root.querySelector("w13c-lateral-menu");
+        for (const child of Array.from(menu?.children ?? [])) {
+            if (!(child instanceof HTMLElement)) {
+                continue;
+            }
+            child.hidden = !child.hasAttribute("data-operator-navigation");
+        }
+        root.querySelectorAll<HTMLElement>("[data-operator-navigation]").forEach((node) => {
+            node.hidden = false;
+        });
     }
 
     private async _syncSiteName(root: ShadowRoot): Promise<void> {

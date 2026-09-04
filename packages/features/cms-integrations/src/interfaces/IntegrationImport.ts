@@ -1,4 +1,8 @@
-import type { DashboardRepository } from "@bernouy/cms-dashboards";
+import type {
+    DashboardAssignmentRepository,
+    DashboardRepository,
+    DashboardViewRepository,
+} from "@bernouy/cms-dashboards";
 import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { TriggerRepository } from "@bernouy/cms-triggers";
@@ -62,6 +66,7 @@ export type IntegrationArtifactType =
     | "source"
     | "function"
     | "trigger"
+    | "dashboard-view"
     | "dashboard"
     | "bloc"
     | "sourceOverlay"
@@ -124,7 +129,9 @@ export type IntegrationImportDeps = {
     triggers?: TriggerRepository;
     roles?: RolesRepository;
     secrets: SecretStore;
+    dashboardViews?: DashboardViewRepository;
     dashboards?: DashboardRepository;
+    dashboardAssignments?: DashboardAssignmentRepository;
     relations?: RelationRepository;
     sourceOverlays?: SourceOverlayRepository;
     installations?: IntegrationInstallationRepository;

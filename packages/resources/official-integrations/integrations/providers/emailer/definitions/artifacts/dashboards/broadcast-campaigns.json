@@ -1,6 +1,6 @@
 {
-    "type": "dashboard",
-    "dashboard": {
+  "type": "dashboard-view",
+  "view": {
         "id": "{{answers.id}}-broadcast-campaigns",
         "meta": {
             "name": "Broadcast Campaigns",

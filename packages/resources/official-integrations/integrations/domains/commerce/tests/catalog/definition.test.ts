@@ -17,14 +17,14 @@ type View = {
 type Artifact = {
     type: string;
     source?: { endpoints: Array<{ endpointId: string }> };
-    dashboard?: { id: string; views: View[] };
+    view?: { id: string; views: View[] };
 };
 
 describe("commerce product dashboard definition", () => {
     test("keeps variants, axes, and media inside Product without tabs", async () => {
         const definition = await commerceDefinitionWithDeferredDashboards<{ artifacts: Artifact[] }>();
         const source = definition.artifacts.find((artifact) => artifact.type === "source")?.source;
-        const dashboards = definition.artifacts.flatMap((artifact) => (artifact.dashboard ? [artifact.dashboard] : []));
+        const dashboards = definition.artifacts.flatMap((artifact) => (artifact.view ? [artifact.view] : []));
         const products = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-products");
         const views = products?.views ?? [];
         const productDetail = products?.views.find((view) => view.id === "productDetail");
@@ -85,8 +85,8 @@ describe("commerce taxonomy dashboard definition", () => {
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "upsertCategory");
         const dashboard = definition.artifacts.find(
-            (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy",
-        ).dashboard;
+            (artifact: any) => artifact.view?.id === "{{answers.id}}-taxonomy",
+        ).view;
         const detail = dashboard.views.find((view: any) => view.id === "categoryDetail");
 
         expect(endpoint.body.properties.parentId).toEqual({ type: "string" });
@@ -106,8 +106,8 @@ describe("commerce taxonomy dashboard definition", () => {
     test("uses reorderable navigation lists and keeps state in detail asides", async () => {
         const definition = await commerceDefinitionWithDeferredDashboards<any>();
         const taxonomy = definition.artifacts.find(
-            (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy",
-        ).dashboard;
+            (artifact: any) => artifact.view?.id === "{{answers.id}}-taxonomy",
+        ).view;
         const brands = taxonomy.views.find((view: any) => view.id === "brandsTable");
         const categories = taxonomy.views.find((view: any) => view.id === "categoriesTable");
         const details = taxonomy.views.filter((view: any) => ["brandDetail", "categoryDetail"].includes(view.id));
@@ -125,9 +125,7 @@ describe("commerce taxonomy dashboard definition", () => {
     test("exposes confirmed deletion actions for metadata and taxonomy details", async () => {
         const definition = await commerceDefinitionWithDeferredDashboards<any>();
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
-        const dashboards = definition.artifacts.flatMap((artifact: any) =>
-            artifact.dashboard ? [artifact.dashboard] : [],
-        );
+        const dashboards = definition.artifacts.flatMap((artifact: any) => (artifact.view ? [artifact.view] : []));
         const taxonomy = dashboards.find((dashboard: any) => dashboard.id === "{{answers.id}}-taxonomy");
         const metadata = dashboards.find((dashboard: any) => dashboard.id === "{{answers.id}}-metadata");
         const brand = taxonomy.views.find((view: any) => view.id === "brandDetail");
@@ -175,8 +173,8 @@ describe("commerce taxonomy dashboard definition", () => {
         const definition = await commerceDefinitionWithDeferredDashboards<any>();
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const taxonomy = definition.artifacts.find(
-            (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy",
-        ).dashboard;
+            (artifact: any) => artifact.view?.id === "{{answers.id}}-taxonomy",
+        ).view;
         const detail = taxonomy.views.find((view: any) => view.id === "categoryDetail");
         const field = detail.main[0].fields.find((candidate: any) => candidate.id === "categoryFields");
         const save = detail.actions.find((action: any) => action.id === "saveCategory");

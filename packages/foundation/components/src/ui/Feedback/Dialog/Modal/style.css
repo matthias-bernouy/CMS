@@ -68,7 +68,7 @@ dialog[open]::backdrop { opacity: 1; }
 
 :host(:has(> [slot="title"])) .header,
 :host(:not([no-close])) .header { display: flex; }
-:host(:has(> [slot="footer"])) .footer { display: flex; }
+:host([has-footer]) .footer { display: flex; }
 
 .title { font-weight: 600; font-size: 1.05rem; }
 

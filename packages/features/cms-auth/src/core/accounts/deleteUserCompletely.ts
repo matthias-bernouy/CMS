@@ -6,6 +6,7 @@ export type UserDeletionStores<Role extends string> = {
     users: UsersRepository<Role>;
     credentials: LocalCredentialStore;
     pats: PatRepository;
+    beforeMembershipDelete?: (user: TUser<Role>) => Promise<void>;
 };
 
 /**
@@ -13,6 +14,7 @@ export type UserDeletionStores<Role extends string> = {
  *   - the local credential (authn) when it's a `local` account,
  *   - their Personal Access Tokens (orphans would resolve to no user anyway,
  *     but we purge for hygiene + to free the names),
+ *   - any host-owned identity records through `beforeMembershipDelete`,
  *   - the membership row (authz) — done LAST so a failure mid-way leaves the
  *     user still listed (and thus retry-able) rather than a half-deleted ghost.
  *
@@ -32,5 +34,6 @@ export async function deleteUserCompletely<Role extends string>(
     for (const p of pats) {
         await stores.pats.revoke(user.sub, p.id);
     }
+    await stores.beforeMembershipDelete?.(user);
     await stores.users.delete(user.sub);
 }

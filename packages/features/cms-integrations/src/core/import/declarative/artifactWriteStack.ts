@@ -1,5 +1,10 @@
 import { IntegrationRuntimeError } from "../../errors";
-import { writeDashboardsWithRollback, type IntegrationDashboardWrite } from "../writes/dashboardWrites";
+import {
+    writeDashboardsWithRollback,
+    writeSiteDashboardRefreshesWithRollback,
+    type IntegrationDashboardWrite,
+} from "../writes/dashboardWrites";
+import { writeDashboardViewsWithRollback, type IntegrationDashboardViewWrite } from "../writes/dashboardViewWrites";
 import { writeFunctionsWithRollback, type IntegrationFunctionWrite } from "../writes/functionWrites";
 import {
     writeDashboardRelationProjectionsWithRollback,
@@ -15,6 +20,7 @@ export type DeclarativeArtifactWriteResults = {
     sourceResults: IntegrationArtifactResult[];
     functionResults: IntegrationArtifactResult[];
     triggerResults: IntegrationArtifactResult[];
+    dashboardViewResults: IntegrationArtifactResult[];
     dashboardResults: IntegrationArtifactResult[];
     sourceOverlayResults: IntegrationArtifactResult[];
     relationResults: IntegrationArtifactResult[];
@@ -26,6 +32,8 @@ export type DeclarativeArtifactWriteStack<T> = {
     sourceResults: IntegrationArtifactResult[];
     functionWrites: IntegrationFunctionWrite[];
     triggerWrites: IntegrationTriggerWrite[];
+    dashboardViewWrites: IntegrationDashboardViewWrite[];
+    siteDashboardRefreshWrites: IntegrationDashboardWrite[];
     dashboardWrites: IntegrationDashboardWrite[];
     sourceOverlayWrites: IntegrationSourceOverlayWrite[];
     relationWrites: IntegrationRelationWrite[];
@@ -37,6 +45,7 @@ export function writeDeclarativeArtifactStack<T>(stack: DeclarativeArtifactWrite
     const done = (
         functionResults: IntegrationArtifactResult[],
         triggerResults: IntegrationArtifactResult[],
+        dashboardViewResults: IntegrationArtifactResult[],
         dashboardResults: IntegrationArtifactResult[],
         sourceOverlayResults: IntegrationArtifactResult[],
         relationResults: IntegrationArtifactResult[],
@@ -46,6 +55,7 @@ export function writeDeclarativeArtifactStack<T>(stack: DeclarativeArtifactWrite
             sourceResults: stack.sourceResults,
             functionResults,
             triggerResults,
+            dashboardViewResults,
             dashboardResults,
             sourceOverlayResults,
             relationResults,
@@ -55,12 +65,21 @@ export function writeDeclarativeArtifactStack<T>(stack: DeclarativeArtifactWrite
     const writeProjections = (
         functionResults: IntegrationArtifactResult[],
         triggerResults: IntegrationArtifactResult[],
+        dashboardViewResults: IntegrationArtifactResult[],
         dashboardResults: IntegrationArtifactResult[],
         sourceOverlayResults: IntegrationArtifactResult[],
         relationResults: IntegrationArtifactResult[],
     ) => {
         if (!stack.dashboardRelationProjectionWrites.length) {
-            return done(functionResults, triggerResults, dashboardResults, sourceOverlayResults, relationResults, []);
+            return done(
+                functionResults,
+                triggerResults,
+                dashboardViewResults,
+                dashboardResults,
+                sourceOverlayResults,
+                relationResults,
+                [],
+            );
         }
         return writeDashboardRelationProjectionsWithRollback(
             stack.deps.relations ?? missingRelationRepository(),
@@ -69,6 +88,7 @@ export function writeDeclarativeArtifactStack<T>(stack: DeclarativeArtifactWrite
                 done(
                     functionResults,
                     triggerResults,
+                    dashboardViewResults,
                     dashboardResults,
                     sourceOverlayResults,
                     relationResults,
@@ -80,11 +100,19 @@ export function writeDeclarativeArtifactStack<T>(stack: DeclarativeArtifactWrite
     const writeRelations = (
         functionResults: IntegrationArtifactResult[],
         triggerResults: IntegrationArtifactResult[],
+        dashboardViewResults: IntegrationArtifactResult[],
         dashboardResults: IntegrationArtifactResult[],
         sourceOverlayResults: IntegrationArtifactResult[],
     ) => {
         if (!stack.relationWrites.length) {
-            return writeProjections(functionResults, triggerResults, dashboardResults, sourceOverlayResults, []);
+            return writeProjections(
+                functionResults,
+                triggerResults,
+                dashboardViewResults,
+                dashboardResults,
+                sourceOverlayResults,
+                [],
+            );
         }
         return writeRelationsWithRollback(
             stack.deps.relations ?? missingRelationRepository(),
@@ -93,6 +121,7 @@ export function writeDeclarativeArtifactStack<T>(stack: DeclarativeArtifactWrite
                 writeProjections(
                     functionResults,
                     triggerResults,
+                    dashboardViewResults,
                     dashboardResults,
                     sourceOverlayResults,
                     relationResults,
@@ -103,40 +132,67 @@ export function writeDeclarativeArtifactStack<T>(stack: DeclarativeArtifactWrite
     const writeOverlays = (
         functionResults: IntegrationArtifactResult[],
         triggerResults: IntegrationArtifactResult[],
+        dashboardViewResults: IntegrationArtifactResult[],
         dashboardResults: IntegrationArtifactResult[],
     ) => {
         if (!stack.sourceOverlayWrites.length) {
-            return writeRelations(functionResults, triggerResults, dashboardResults, []);
+            return writeRelations(functionResults, triggerResults, dashboardViewResults, dashboardResults, []);
         }
         return writeSourceOverlaysWithRollback(
             stack.deps.sourceOverlays ?? missingSourceOverlayRepository(),
             stack.sourceOverlayWrites,
-            (overlayResults) => writeRelations(functionResults, triggerResults, dashboardResults, overlayResults),
+            (overlayResults) =>
+                writeRelations(functionResults, triggerResults, dashboardViewResults, dashboardResults, overlayResults),
         );
     };
 
     const writeDashboards = (
         functionResults: IntegrationArtifactResult[],
         triggerResults: IntegrationArtifactResult[],
+        dashboardViewResults: IntegrationArtifactResult[],
     ) => {
         if (!stack.dashboardWrites.length) {
-            return writeOverlays(functionResults, triggerResults, []);
+            return writeOverlays(functionResults, triggerResults, dashboardViewResults, []);
         }
         return writeDashboardsWithRollback(
             stack.deps.dashboards ?? missingDashboardRepository(),
             stack.dashboardWrites,
-            (dashboardResults) => writeOverlays(functionResults, triggerResults, dashboardResults),
+            (dashboardResults) =>
+                writeOverlays(functionResults, triggerResults, dashboardViewResults, dashboardResults),
         );
+    };
+
+    const writeDashboardViews = (
+        functionResults: IntegrationArtifactResult[],
+        triggerResults: IntegrationArtifactResult[],
+    ) => {
+        const writeSiteDashboards = (viewResults: IntegrationArtifactResult[]) => {
+            if (!stack.siteDashboardRefreshWrites.length) {
+                return writeDashboards(functionResults, triggerResults, viewResults);
+            }
+            return writeSiteDashboardRefreshesWithRollback(
+                stack.deps.dashboards ?? missingDashboardRepository(),
+                stack.siteDashboardRefreshWrites,
+                () => writeDashboards(functionResults, triggerResults, viewResults),
+            );
+        };
+        return stack.dashboardViewWrites.length
+            ? writeDashboardViewsWithRollback(
+                  stack.deps.dashboardViews ?? missingDashboardViewRepository(),
+                  stack.dashboardViewWrites,
+                  writeSiteDashboards,
+              )
+            : writeSiteDashboards([]);
     };
 
     const writeTriggers = (functionResults: IntegrationArtifactResult[]) => {
         if (!stack.triggerWrites.length) {
-            return writeDashboards(functionResults, []);
+            return writeDashboardViews(functionResults, []);
         }
         return writeTriggersWithRollback(
             stack.deps.triggers ?? missingTriggerRepository(),
             stack.triggerWrites,
-            (triggerResults) => writeDashboards(functionResults, triggerResults),
+            (triggerResults) => writeDashboardViews(functionResults, triggerResults),
         );
     };
 
@@ -152,6 +208,10 @@ export function writeDeclarativeArtifactStack<T>(stack: DeclarativeArtifactWrite
 
 function missingDashboardRepository(): never {
     throw new IntegrationRuntimeError("dashboard repository not configured");
+}
+
+function missingDashboardViewRepository(): never {
+    throw new IntegrationRuntimeError("dashboard view repository not configured");
 }
 
 function missingFunctionRepository(): never {

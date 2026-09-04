@@ -1,0 +1,25 @@
+<div data-navigation-editor></div>
+
+<p9r-modal data-navigation-item-dialog aria-label="Navigation item settings">
+    <span slot="title">Navigation item settings</span>
+    <form id="dashboard-navigation-item-form" data-navigation-item-form>
+        <p9r-stack gap="md">
+            <p9r-segmented-switch name="type" label="Item type" value="view" data-navigation-type>
+                <option value="view">View</option>
+                <option value="group">Group</option>
+            </p9r-segmented-switch>
+            <div data-navigation-view-field>
+                <p9r-select name="view" label="View" required data-navigation-view></p9r-select>
+            </div>
+            <p9r-input name="label" label="Label" maxlength="16" max-count="16" required data-navigation-label></p9r-input>
+            <p9r-select name="icon" label="Icon" required data-navigation-icon></p9r-select>
+        </p9r-stack>
+    </form>
+    <div slot="footer" class="modal-actions">
+        <p9r-button type="button" color="danger" variant="outlined" data-action="delete-navigation-item">
+            Delete item
+        </p9r-button>
+        <p9r-button type="button" variant="outlined" data-action="close-navigation-item">Cancel</p9r-button>
+        <p9r-button type="submit" form="dashboard-navigation-item-form" color="primary">Save item</p9r-button>
+    </div>
+</p9r-modal>

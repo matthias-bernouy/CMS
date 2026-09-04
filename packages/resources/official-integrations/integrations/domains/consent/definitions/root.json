@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "consent",
     "label": "Consent",
-    "version": "4.0.0",
+    "version": "4.1.0",
     "category": "Identity & Legal",
     "description": "Collect immutable, versioned consent evidence without coupling business policy to CMS Auth.",
     "icon": {
@@ -29,7 +29,9 @@
             "artifacts/functions/stage-consent-acceptance.json",
             "artifacts/functions/commit-consent-acceptance.json",
             "artifacts/triggers/stage-target-consent.json",
-            "artifacts/triggers/commit-target-consent.json"
+            "artifacts/triggers/commit-target-consent.json",
+            "artifacts/dashboards/acceptances.json",
+            "artifacts/dashboards/contexts/root.json"
         ]
     },
     "type": "source"

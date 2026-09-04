@@ -87,7 +87,11 @@ export type DashboardWidget =
           tabs: Array<{ id: string; label: string; children: DashboardWidget[] }>;
       };
 
-export type DashboardDefinition = {
+/**
+ * Legacy V1 presentation artifact. Its `views` property contains widgets,
+ * despite the historical name. New integrations must use DashboardView.
+ */
+export type LegacyDashboardDefinition = {
     id: string;
     meta?: DashboardMeta;
     source: string;
@@ -95,5 +99,7 @@ export type DashboardDefinition = {
     requires?: string;
 };
 
-export type DashboardDto = DashboardDefinition;
-export type Dashboard = DashboardDefinition;
+/** @deprecated Read-only V1 compatibility shape. */
+export type DashboardDto = LegacyDashboardDefinition;
+/** @deprecated Use DashboardViewDefinition or DashboardDefinition. */
+export type Dashboard = LegacyDashboardDefinition;

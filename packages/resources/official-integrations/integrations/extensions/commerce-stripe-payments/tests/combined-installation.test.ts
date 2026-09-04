@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { isNativeBlocTag, prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
-import { InMemoryDashboardRepository, validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
+import {
+    InMemoryDashboardRepository,
+    InMemoryDashboardViewRepository,
+    dashboardViewAsLegacyDashboard,
+    validateDashboard,
+    type Dashboard,
+} from "@bernouy/cms-dashboards";
 import { functionEndpointUrn, InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import {
     InMemoryIntegrationInstallationRepository,
@@ -41,6 +47,7 @@ describe("Commerce protected Stripe combined installation", () => {
         const functions = new InMemoryFunctionRepository();
         const triggers = new InMemoryTriggerRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const roles = new InMemoryRolesRepository();
         const relations = new InMemoryRelationRepository();
         const secrets = new InMemorySecretStore();
@@ -66,6 +73,7 @@ describe("Commerce protected Stripe combined installation", () => {
             functions,
             triggers,
             dashboards,
+            dashboardViews,
             roles,
             relations,
             secrets,
@@ -133,6 +141,8 @@ describe("Commerce protected Stripe combined installation", () => {
         expect(linkingResult.artifacts.map((artifact) => artifact.type)).toEqual([
             ...Array(17).fill("function"),
             ...Array(15).fill("trigger"),
+            "dashboard-view",
+            "dashboard",
         ]);
         for (const kind of INTEGRATION_KINDS) {
             expect((await installations.get(kind))?.status).toBe("success");
@@ -273,8 +283,52 @@ describe("Commerce protected Stripe combined installation", () => {
             },
         ]);
 
-        const installedDashboards = await dashboards.getAllDashboards();
-        expect(installedDashboards).toEqual([]);
+        const installedViews = await dashboardViews.getAllViews();
+        const installedDashboards = installedViews.map(dashboardViewAsLegacyDashboard);
+        expect(installedDashboards.map((dashboard) => dashboard.id).sort()).toEqual([
+            "commerce-configuration",
+            "commerce-metadata",
+            "commerce-offers",
+            "commerce-orders",
+            "commerce-products",
+            "commerce-sellers",
+            "commerce-stripe-payments-operations",
+            "commerce-taxonomy",
+            "commerce-workflow",
+            "stripe-connect-marketplace-terms",
+        ]);
+        for (const dashboard of installedDashboards) {
+            const source = await sources.getSource(makeSourceUrn(dashboard.source));
+            expect(source).not.toBeNull();
+            expect(validateDashboard(dashboard, { source })).toEqual([]);
+            await assertDashboardEndpointRefs(dashboard, sources);
+        }
+        expect(await dashboardViews.getView("stripe-connect-marketplace-terms")).toBeTruthy();
+        expect(installedViews.filter((view) => view.source === "stripe-connect").map((view) => view.id)).toEqual([
+            "stripe-connect-marketplace-terms",
+        ]);
+
+        const operationsView = await dashboardViews.getView("commerce-stripe-payments-operations");
+        const operationsDashboard = operationsView ? dashboardViewAsLegacyDashboard(operationsView) : null;
+        if (!operationsDashboard) {
+            throw new Error("protected operations dashboard not installed");
+        }
+        const operationRefs = collectEndpointRefs(operationsDashboard).map(
+            (ref) => `${ref.sourceId ?? operationsDashboard.source}:${ref.endpoint}`,
+        );
+        expect(operationRefs).not.toContain("stripe-connect:createProtectedPayment");
+        expect(operationRefs).not.toContain("stripe-connect:requestSettlementRelease");
+        expect(operationRefs).not.toContain("stripe-connect:requestProtectedRefund");
+        expect(operationRefs).toEqual(
+            expect.arrayContaining([
+                "commerce:protectedPayments",
+                "commerce:claims",
+                "commerce:refundRequests",
+                "stripe-connect:listProviderPayments",
+                "stripe-connect:listStripeDisputes",
+                "stripe-connect:listProviderExceptions",
+            ]),
+        );
 
         await assertImportedAccessGrants(sources, functions, roles);
         expect(

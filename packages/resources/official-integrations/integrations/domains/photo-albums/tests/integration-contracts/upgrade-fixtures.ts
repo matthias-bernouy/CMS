@@ -9,7 +9,7 @@ const image = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 85, 76, 86, 73, 6
 
 const publishedAlbum = defineUpgradeScenario({
     name: "preserves a published album and its original image",
-    from: ">=1.0.0 <3.0.0",
+    from: ">=1.0.0 <3.1.0",
     async seedBeforeUpgrade(context) {
         const [category] = await context.database.query(
             `insert into photo_albums.categories (slug, name, description, created_by)

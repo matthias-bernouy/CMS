@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "photo-albums",
     "label": "Photo Albums",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "category": "Media",
     "description": "Publish categorized photo albums with managed originals, responsive Source images, and backoffice editing.",
     "icon": {
@@ -25,7 +25,10 @@
     },
     "artifacts": {
         "$files": [
-            "artifacts/sources/primary/definition.json"
+            "artifacts/sources/primary/definition.json",
+            "artifacts/dashboards/albums/definition.json",
+            "artifacts/dashboards/categories/definition.json",
+            "artifacts/dashboards/settings.json"
         ]
     },
     "type": "source"

@@ -2,7 +2,7 @@
     "endpointId": "saveRelaySelection",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/relay-selections",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/relay-selections",
     "params": [],
     "headers": [
         {

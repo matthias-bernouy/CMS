@@ -1,6 +1,6 @@
 {
-    "type": "dashboard",
-    "dashboard": {
+    "type": "dashboard-view",
+    "view": {
         "id": "{{answers.id}}-marketplace-terms",
         "source": "{{answers.id}}",
         "meta": { "name": "Seller terms", "icon": "file-check" },

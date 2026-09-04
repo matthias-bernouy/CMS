@@ -1,1 +1,1 @@
-Major release: Commerce Stripe payments is now a backend-only Source package. UI blocks moved to the Ulvia Collection. Existing Commerce 2 and Stripe Connect 2 installations remain valid during the staged transition to the new Source versions.
+Minor release: publish the reusable protected-payments operations view while site dashboard composition remains CMS-owned.

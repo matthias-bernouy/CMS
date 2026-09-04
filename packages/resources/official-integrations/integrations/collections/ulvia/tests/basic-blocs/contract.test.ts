@@ -6,7 +6,7 @@ import { registerFileInputTest } from "./file-input";
 import { registerLayoutTests } from "./layout";
 import { registerTableTests } from "./table";
 
-describe("basic-blocs 2.0.0", () => {
+describe("basic-blocs 2.1.0", () => {
     registerCatalogTests();
     registerControlTests();
     registerLayoutTests();

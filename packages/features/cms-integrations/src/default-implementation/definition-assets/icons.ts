@@ -28,6 +28,9 @@ function hasUnhydratedIconAsset(artifact: DeclarativeArtifactTemplate): boolean 
     if (artifact.type === "dashboard") {
         return isAssetIcon(artifact.dashboard.meta?.icon) && !artifact.dashboard.meta?.svg;
     }
+    if (artifact.type === "dashboard-view") {
+        return isAssetIcon(artifact.view.meta.icon) && !artifact.view.meta.svg;
+    }
     return false;
 }
 
@@ -44,6 +47,10 @@ async function hydrateArtifactIcon(
         return meta === artifact.dashboard.meta
             ? artifact
             : { ...artifact, dashboard: { ...artifact.dashboard, meta } };
+    }
+    if (artifact.type === "dashboard-view") {
+        const meta = await hydrateMeta(artifact.view.meta, resolveSvg);
+        return meta === artifact.view.meta ? artifact : { ...artifact, view: { ...artifact.view, meta } };
     }
     return artifact;
 }

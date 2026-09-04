@@ -1,6 +1,6 @@
 {
-    "type": "dashboard",
-    "dashboard": {
+    "type": "dashboard-view",
+    "view": {
         "id": "{{answers.id}}-contexts",
         "source": "{{answers.id}}",
         "meta": { "name": "Consent policies", "icon": "file-check" },

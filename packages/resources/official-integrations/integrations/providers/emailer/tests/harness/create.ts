@@ -1,4 +1,4 @@
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import {
     importIntegration,
@@ -63,6 +63,7 @@ async function importEmailer() {
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     const functions = new InMemoryFunctionRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
     await secrets.set("NEWSLETTER_KEY", "newsletter-key");
@@ -109,6 +110,7 @@ async function importEmailer() {
             secrets,
             roles,
             dashboards,
+            dashboardViews,
             functions,
             installations,
             connectorDeployers: [deployer],
@@ -123,7 +125,7 @@ async function importEmailer() {
         [definition],
     );
 
-    return { result, sources, secrets, dashboards, functions, deployment };
+    return { result, sources, secrets, dashboards, dashboardViews, functions, deployment };
 }
 
 export type Harness = Awaited<ReturnType<typeof createHarness>>;

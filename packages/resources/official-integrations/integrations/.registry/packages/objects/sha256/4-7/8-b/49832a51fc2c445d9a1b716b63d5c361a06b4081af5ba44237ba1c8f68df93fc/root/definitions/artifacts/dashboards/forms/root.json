@@ -1,6 +1,6 @@
 {
-    "type": "dashboard",
-    "dashboard": {
+  "type": "dashboard-view",
+  "view": {
         "id": "{{answers.id}}-forms",
         "source": "{{answers.id}}",
         "meta": { "name": "Forms", "icon": "list-checks" },

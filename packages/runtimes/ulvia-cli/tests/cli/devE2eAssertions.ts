@@ -34,6 +34,17 @@ export async function catalogueIds(client: DevClient): Promise<string[]> {
     return (await client.json<Array<{ tag: string }>>("/api/bloc/catalogue")).map(({ tag }) => tag);
 }
 
+export async function dashboardIds(client: DevClient, sourceId: string): Promise<string[]> {
+    const groups =
+        await client.json<Array<{ source: { id: string }; dashboards: Array<{ id: string }> }>>("/api/dashboards");
+    return (
+        groups
+            .find(({ source }) => source.id === sourceId)
+            ?.dashboards.map(({ id }) => id)
+            .sort() ?? []
+    );
+}
+
 export async function setSubscription(client: DevClient, email: string): Promise<void> {
     const response = await fetch(`${client.deliveryUrl}/.cms/sources/newsletter/setSubscription`, {
         method: "POST",

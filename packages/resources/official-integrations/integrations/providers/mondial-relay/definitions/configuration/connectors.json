@@ -23,7 +23,7 @@
         ],
         "functions": [
             {
-                "name": "cms-delivery-v3",
+                "name": "cms-delivery-v4",
                 "directory": "functions/cms-delivery",
                 "configPath": "supabase.config.toml",
                 "secrets": {

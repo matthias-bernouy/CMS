@@ -5,7 +5,7 @@ import {
     type CmsRelation,
     type DashboardRelationProjection,
 } from "@bernouy/cms-relations";
-import type { Dashboard, DashboardWidget } from "@bernouy/cms-dashboards";
+import { dashboardViewAsLegacyDashboard, type Dashboard, type DashboardWidget } from "@bernouy/cms-dashboards";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../../errors";
 import type { IntegrationDashboardRelationProjectionWrite } from "../../writes/relationWrites";
 import type { IntegrationImportDeps, IntegrationImportOptions } from "../../../../interfaces/IntegrationImport";
@@ -23,8 +23,8 @@ export async function buildDashboardRelationProjectionWrites(
     if (!deps.relations) {
         throw new IntegrationRuntimeError("relation repository not configured");
     }
-    if (!deps.dashboards) {
-        throw new IntegrationRuntimeError("dashboard repository not configured");
+    if (!deps.dashboardViews) {
+        throw new IntegrationRuntimeError("dashboard view repository not configured");
     }
 
     const relationById = new Map(relationArtifacts.map((relation) => [relation.id, relation]));
@@ -70,8 +70,12 @@ async function validateProjectionTarget(
         );
     }
 
+    const installedView = dashboardById.has(projection.dashboardId)
+        ? null
+        : await deps.dashboardViews!.getView(projection.dashboardId);
     const dashboard =
-        dashboardById.get(projection.dashboardId) ?? (await deps.dashboards!.getDashboard(projection.dashboardId));
+        dashboardById.get(projection.dashboardId) ??
+        (installedView ? dashboardViewAsLegacyDashboard(installedView) : null);
     if (!dashboard) {
         throw new IntegrationInputError(
             "artifacts",

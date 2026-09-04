@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import {
+    InMemoryDashboardRepository,
+    InMemoryDashboardViewRepository,
+    dashboardViewAsLegacyDashboard,
+} from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     InMemoryIntegrationInstallationRepository,
@@ -24,7 +28,7 @@ import { expectedEndpointUrns } from "./expectations";
 import { connectorDeployer } from "./setup";
 import { installCommerceTestEnvironment, supabaseUrl } from "../../harness";
 installCommerceTestEnvironment();
-describe("commerce 3.0.0 contract", () => {
+describe("commerce 3.1.0 contract", () => {
     test("loads and imports the official Commerce contract", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const catalog = await repository.list();
@@ -35,6 +39,7 @@ describe("commerce 3.0.0 contract", () => {
         const sources = new InMemorySourceRepository(),
             sourceOverlays = new InMemorySourceOverlayRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const triggers = new InMemoryTriggerRepository();
         const secrets = new InMemorySecretStore(),
             roles = new InMemoryRolesRepository();
@@ -48,6 +53,7 @@ describe("commerce 3.0.0 contract", () => {
                 sources,
                 sourceOverlays,
                 dashboards,
+                dashboardViews,
                 secrets,
                 roles,
                 installations,
@@ -59,7 +65,19 @@ describe("commerce 3.0.0 contract", () => {
         );
         const source = await sources.getSource("urn:commerce");
         const overlays = await sourceOverlays.getAllOverlays();
-        const installedDashboards = await dashboards.getDashboardsForSource("commerce");
+        const installedDashboards = (await dashboardViews.getAllViews())
+            .filter((view) => view.source === "commerce")
+            .map(dashboardViewAsLegacyDashboard);
+        const dashboardIds = [
+            "commerce-configuration",
+            "commerce-metadata",
+            "commerce-offers",
+            "commerce-orders",
+            "commerce-products",
+            "commerce-sellers",
+            "commerce-taxonomy",
+            "commerce-workflow",
+        ];
         const endpointUrns = source?.endpoints.map((endpoint) => endpoint.urn) ?? [];
         const endpointTargets = Object.fromEntries(
             source?.endpoints.map((endpoint) => [endpoint.urn, endpoint.targetUrl]) ?? [],
@@ -67,7 +85,7 @@ describe("commerce 3.0.0 contract", () => {
         const functionSecrets = deployment?.functions[0]?.secrets ?? {};
 
         expect(catalog.map((entry) => entry.kind)).toContain("commerce");
-        expect(definition).toMatchObject({ kind: "commerce", version: "3.0.0", type: "source" });
+        expect(definition).toMatchObject({ kind: "commerce", version: "3.1.0", type: "source" });
         expect(definition.dependencies).toEqual([
             { name: "emailer", kind: "emailer", optional: true, versionRange: "^3.0.0" },
         ]);
@@ -82,10 +100,12 @@ describe("commerce 3.0.0 contract", () => {
                 })),
                 { type: "sourceOverlay", id: "commerce-product-classification", action: "created" },
                 { type: "trigger", id: "schedule-dispatch-commerce-notifications", action: "created" },
+                ...dashboardIds.map((id) => ({ type: "dashboard-view", id, action: "created" })),
+                { type: "dashboard", id: "commerce", action: "created" },
             ]),
         );
         expect(result.artifacts).not.toContainEqual(
-            expect.objectContaining({ type: "dashboard", id: "commerce-dashboard" }),
+            expect.objectContaining({ type: "dashboard-view", id: "commerce-dashboard" }),
         );
         expect(endpointUrns).toHaveLength(175);
         expect(endpointUrns).not.toEqual(
@@ -312,12 +332,21 @@ describe("commerce 3.0.0 contract", () => {
             icon: "assets/icon.svg",
             svg: expect.stringContaining("<svg"),
         });
-        expect(installedDashboards).toEqual([]);
+        expect(installedDashboards.map(({ id }) => id).sort()).toEqual(dashboardIds);
         expect(
             source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:manageOffer")?.output?.[0]?.body
                 ?.properties?.wholeUnitPrices,
         ).toMatchObject({ type: "boolean" });
-        expect(await dashboards.getDashboard("commerce-dashboard")).toBeNull();
+        for (const dashboard of installedDashboards) {
+            expect(dashboard.meta).toMatchObject({
+                icon:
+                    dashboard.id === "commerce-taxonomy"
+                        ? "assets/dashboards/products.svg"
+                        : `assets/dashboards/${dashboard.id.replace("commerce-", "")}.svg`,
+                svg: expect.stringContaining("<svg"),
+            });
+        }
+        expect(await dashboardViews.getView("commerce-dashboard")).toBeNull();
         expect(deployment?.dataApiSchemas).toEqual(["commerce"]);
         expect(deployment?.functions.map((fn) => fn.name)).toEqual(["cms-commerce"]);
         expect(String(functionSecrets.CMS_COMMERCE_API_KEY)).toStartWith("cms_co_");

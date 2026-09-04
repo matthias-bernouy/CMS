@@ -11,6 +11,8 @@ const PARAM_EXPRESSION_ROOTS = [
     "param",
     "selection",
     "search",
+    "limit",
+    "offset",
     "value",
     "input",
     "user",

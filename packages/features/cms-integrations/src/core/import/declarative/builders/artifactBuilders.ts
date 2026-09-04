@@ -1,4 +1,3 @@
-import { type Dashboard } from "@bernouy/cms-dashboards";
 import { type CmsFunction } from "@bernouy/cms-functions";
 import type { CmsRelation, DashboardRelationProjection } from "@bernouy/cms-relations";
 import { sourceDtoToSource, type Source, type SourceOverlay } from "@bernouy/cms-sources";
@@ -7,6 +6,8 @@ import { IntegrationInputError } from "../../../errors";
 import { resolveTemplate, resolveTemplates, type TemplateContext } from "../../../definitions/templating/templates";
 import type { DeclarativeBlocArtifactTemplate, IntegrationDefinition } from "../../../../interfaces/Integration";
 import type { IntegrationBlocArtifact } from "../../../../interfaces/IntegrationImport";
+
+export { buildDashboardArtifacts, buildDashboardViewArtifacts } from "./dashboardArtifactBuilders";
 
 export function buildSourceArtifacts(definition: IntegrationDefinition, context: TemplateContext): Source[] {
     return buildArtifacts("source", () =>
@@ -37,14 +38,6 @@ export function buildTriggerArtifacts(
         (definition.artifacts ?? [])
             .filter((artifact) => artifact.type === "trigger")
             .map((artifact) => resolveTemplates(artifact.trigger, context)),
-    );
-}
-
-export function buildDashboardArtifacts(definition: IntegrationDefinition, context: TemplateContext): Dashboard[] {
-    return buildArtifacts("dashboard", () =>
-        (definition.artifacts ?? [])
-            .filter((artifact) => artifact.type === "dashboard")
-            .map((artifact) => resolveTemplates(artifact.dashboard, context)),
     );
 }
 

@@ -14,7 +14,7 @@ export function decodeSource(value: string | undefined): string {
 }
 
 export async function loadDefinition(): Promise<IntegrationDefinition> {
-    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia", "2.0.0");
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("ulvia", "2.1.0");
     if (!definition) {
         throw new Error('Integration "restaurant" definition not found');
     }

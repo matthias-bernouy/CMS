@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "sales-configurator",
     "label": "Sales Configurator",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "category": "Sales",
     "description": "Configure a commercial catalogue and publish immutable, partner-owned sales proposals.",
     "icon": {
@@ -22,7 +22,10 @@
     },
     "artifacts": {
         "$files": [
-            "artifacts/sources/primary/definition.json"
+            "artifacts/sources/primary/definition.json",
+            "artifacts/dashboards/catalog/definition.json",
+            "artifacts/dashboards/partners/definition.json",
+            "artifacts/dashboards/proposals/definition.json"
         ]
     },
     "type": "source"

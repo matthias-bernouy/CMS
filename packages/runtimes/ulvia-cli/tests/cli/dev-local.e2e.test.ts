@@ -11,6 +11,7 @@ import { removeReadonlyTree } from "../fixtures";
 import {
     authenticatedClient,
     catalogueIds,
+    dashboardIds,
     expectRenderedPage,
     expectSubscription,
     installationIds,
@@ -77,13 +78,14 @@ describe.skipIf(!enabled)("ulvia dev local system", () => {
             options: {},
         });
         await setSubscription(client, "PERSIST@Example.COM ");
-        await client.post("/api/integrations/installations/upgrade?id=newsletter", { version: "3.0.0" });
+        await client.post("/api/integrations/installations/upgrade?id=newsletter", { version: "3.1.0" });
         await expectSubscription(client, "persist@example.com");
+        expect(await dashboardIds(client, "newsletter")).toEqual(["newsletter-subscriptions"]);
 
         const baseResources = ["ulvia/blocs/h1", "ulvia/blocs/p"];
         await client.post("/api/integrations/import", {
             kind: "ulvia",
-            version: "1.0.0",
+            version: "2.1.0",
             answers: {},
             options: {},
             resources: baseResources,
@@ -125,25 +127,26 @@ describe.skipIf(!enabled)("ulvia dev local system", () => {
         client = await authenticatedClient(config, ports);
         await expectRenderedPage(client);
         await expectSubscription(client, "persist@example.com");
+        expect(await dashboardIds(client, "newsletter")).toEqual(["newsletter-subscriptions"]);
         expect(
             (await client.json<{ activeResources: string[] }>("/api/integrations/installations?id=ulvia"))
                 .activeResources,
         ).toEqual([...selected].sort());
 
-        await client.post("/api/integrations/installations/upgrade?id=ulvia", { version: "1.1.0" });
+        await client.post("/api/integrations/installations/upgrade?id=ulvia", { version: "2.2.0" });
         const upgraded = await client.json<{ definitionVersion: string; activeResources: string[] }>(
             "/api/integrations/installations?id=ulvia",
         );
-        expect(upgraded.definitionVersion).toBe("1.1.0");
+        expect(upgraded.definitionVersion).toBe("2.2.0");
         expect(upgraded.activeResources).toEqual([...selected].sort());
         expect(await catalogueIds(client)).not.toContain("ulvia-e2e-new-resource");
 
         await expect(
-            client.post("/api/integrations/installations/upgrade?id=ulvia", { version: "2.0.0" }),
+            client.post("/api/integrations/installations/upgrade?id=ulvia", { version: "3.0.0" }),
         ).rejects.toThrow(/resource|ulvia\/blocs\/p/i);
         expect(
             await client.json<{ definitionVersion: string }>("/api/integrations/installations?id=ulvia"),
-        ).toMatchObject({ definitionVersion: "1.1.0" });
+        ).toMatchObject({ definitionVersion: "2.2.0" });
     }, 600_000);
 });
 

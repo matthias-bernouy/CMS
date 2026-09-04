@@ -73,6 +73,8 @@ export async function assertArtifactContracts({
         { type: "trigger", id: "schedule-dispatch-pending-payment-cancellations", action: "created" },
         { type: "trigger", id: "schedule-dispatch-pending-protected-refunds", action: "created" },
         { type: "trigger", id: "schedule-dispatch-due-protected-settlements", action: "created" },
+        { type: "dashboard-view", id: "commerce-stripe-payments-operations", action: "created" },
+        { type: "dashboard", id: "commerce-stripe-payments", action: "created" },
     ]);
     expect(await validateFunction(fn, { sources })).toEqual([]);
     expect(await validateFunction(legalFn, { sources })).toEqual([]);

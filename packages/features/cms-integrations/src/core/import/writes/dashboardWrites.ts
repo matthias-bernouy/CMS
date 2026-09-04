@@ -1,11 +1,11 @@
-import type { Dashboard, DashboardRepository } from "@bernouy/cms-dashboards";
+import type { DashboardDefinition, DashboardRepository } from "@bernouy/cms-dashboards";
 import { DuplicateDashboardError } from "@bernouy/cms-dashboards";
 import { IntegrationRuntimeError } from "../../errors";
 import type { IntegrationArtifactResult } from "../../../interfaces/IntegrationImport";
 
 export type IntegrationDashboardWrite = {
-    dashboard: Dashboard;
-    previous: Dashboard | null;
+    dashboard: DashboardDefinition;
+    previous: DashboardDefinition | null;
 };
 
 export function writeDashboardsWithRollback(
@@ -44,6 +44,29 @@ export async function writeDashboardsWithRollback<T>(
             }
         }
         return operation ? await operation(artifacts) : (artifacts as T);
+    } catch (error) {
+        await rollbackDashboards(dashboardRepository, completed);
+        throw error;
+    }
+}
+
+export async function writeSiteDashboardRefreshesWithRollback<T>(
+    dashboardRepository: DashboardRepository,
+    writes: IntegrationDashboardWrite[],
+    operation: () => Promise<T>,
+): Promise<T> {
+    const completed: IntegrationDashboardWrite[] = [];
+    try {
+        for (const write of writes) {
+            if (!(await dashboardRepository.updateDashboard(write.dashboard))) {
+                throw new IntegrationRuntimeError(
+                    `site dashboard disappeared during integration update: ${write.dashboard.id}`,
+                    409,
+                );
+            }
+            completed.push(write);
+        }
+        return await operation();
     } catch (error) {
         await rollbackDashboards(dashboardRepository, completed);
         throw error;

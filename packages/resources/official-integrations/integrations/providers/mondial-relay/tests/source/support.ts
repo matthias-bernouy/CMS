@@ -1,7 +1,7 @@
 export { expect, setSystemTime, test } from "bun:test";
 export { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 export { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-export { validateDashboard } from "@bernouy/cms-dashboards";
+export { dashboardViewAsLegacyDashboard, validateDashboard } from "@bernouy/cms-dashboards";
 export { validateSource } from "@bernouy/cms-sources";
 export { md5 } from "../../connectors/supabase/functions/cms-delivery/provider/md5.ts";
 export {

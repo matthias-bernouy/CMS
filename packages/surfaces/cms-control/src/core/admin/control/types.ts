@@ -10,7 +10,11 @@ import type {
 } from "@bernouy/cms-auth";
 import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceReports } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { DashboardRepository } from "@bernouy/cms-dashboards";
+import type {
+    DashboardAssignmentRepository,
+    DashboardRepository,
+    DashboardViewRepository,
+} from "@bernouy/cms-dashboards";
 import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { FunctionRepository } from "@bernouy/cms-functions";
@@ -59,6 +63,8 @@ export type ControlCmsOptions = Configuration & {
     integrationProvisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     integrationConnectorProviders?: IntegrationConnectorProviderRepository;
     dashboards?: DashboardRepository;
+    dashboardViews?: DashboardViewRepository;
+    dashboardAssignments?: DashboardAssignmentRepository;
     relations?: RelationRepository;
     functions?: FunctionRepository;
     triggers?: TriggerRepository;
@@ -107,6 +113,8 @@ export type ControlCmsState = {
     integrationInstallations: IntegrationInstallationRepository | null;
     integrationConnectorProviders: IntegrationConnectorProviderRepository;
     dashboards: DashboardRepository;
+    dashboardViews: DashboardViewRepository;
+    dashboardAssignments: DashboardAssignmentRepository;
     relations: RelationRepository;
     functions: FunctionRepository | null;
     triggers: TriggerRepository | null;

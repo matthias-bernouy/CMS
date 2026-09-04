@@ -144,6 +144,10 @@ export abstract class DashboardStateController extends Component {
     }
 
     protected async reloadDefinitions(): Promise<void> {
+        if (this.hasAttribute("external")) {
+            window.dispatchEvent(new CustomEvent("cms-dashboard-workspace:reload"));
+            return;
+        }
         const generation = ++this.definitionsReloadGeneration;
         const groups = await fetchDashboards();
         if (generation !== this.definitionsReloadGeneration) {

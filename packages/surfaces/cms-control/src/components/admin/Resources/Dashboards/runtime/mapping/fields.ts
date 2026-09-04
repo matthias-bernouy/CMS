@@ -92,6 +92,7 @@ export function detailField(
             value: textValue(value),
             options: optionList(field.options, options[field.id] ?? []),
             creatable: isCreatable(field),
+            ...lookupMetadata(field.id, field.lookup),
         };
     }
     if (field.type === "tokens") {
@@ -163,6 +164,23 @@ export function detailField(
         return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     }
     return { ...base, input: "text", value: textValue(value) };
+}
+
+function lookupMetadata(
+    lookupKey: string,
+    lookup: Extract<DashboardField, { type: "combobox" }>["lookup"],
+): Partial<WDetailField> {
+    if (!lookup) {
+        return {};
+    }
+    const expressions = Object.values(lookup.params ?? {});
+    const remoteSearch = expressions.includes("$search");
+    const remotePagination = expressions.includes("$limit") && expressions.includes("$offset");
+    return {
+        lookupKey,
+        ...(remoteSearch ? { remoteSearch: true } : {}),
+        ...(remotePagination ? { remotePagination: true } : {}),
+    };
 }
 
 function reorderableValue(

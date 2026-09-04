@@ -13,8 +13,6 @@ import { buildLocalVerificationBundle } from "./verification";
 const MAX_DEPTH = 10;
 const MAX_ENTRIES = 50_000;
 const SKIPPED_DIRECTORIES = new Set([".git", ".registry", "dist", "node_modules"]);
-const DEFERRED_SOURCE_PACKAGE_PATHS = ["assets/dashboards", "definitions/artifacts/dashboards"];
-
 export type LocalReleaseSource = LocalReleasePackage &
     Readonly<{
         integrationRoot: string;
@@ -64,9 +62,6 @@ export async function readLocalReleaseSource(
         definition,
         releaseNotes,
         ...(entry.path === "." ? { excludeRootEntries: [".registry", "integration.json", "tests"] } : {}),
-        ...(parsedDefinition.schema === "cms.integration.definition.v2" && parsedDefinition.type === "source"
-            ? { excludePathPrefixes: DEFERRED_SOURCE_PACKAGE_PATHS }
-            : {}),
     });
     const verification = await buildLocalVerificationBundle(integrationRoot, {
         kind,

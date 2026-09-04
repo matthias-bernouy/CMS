@@ -2,7 +2,7 @@
     "endpointId": "createShipment",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/shipments",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/shipments",
     "params": [],
     "headers": [
         {

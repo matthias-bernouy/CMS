@@ -5,7 +5,7 @@
     {
         "endpointId": "setting",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/settings",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/settings",
         "params": [
             {
                 "name": "id",

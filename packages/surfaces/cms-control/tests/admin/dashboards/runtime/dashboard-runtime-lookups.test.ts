@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { DashboardSection, DashboardWidget } from "@bernouy/cms-dashboards";
-import { detailLookupOptions } from "cms-control/components/admin/Resources/Dashboards/runtime/lookups";
+import {
+    detailLookupOptions,
+    loadDetailLookupOptions,
+} from "cms-control/components/admin/Resources/Dashboards/runtime/lookups";
 
 const realFetch = globalThis.fetch;
 
@@ -131,6 +134,43 @@ describe("dashboard runtime lookup contracts", () => {
         expect(requests).toHaveLength(1);
         expect(new URL(requests[0]!.url).searchParams.toString()).toBe("productId=product-1&limit=20");
         expect(options.variantId).toEqual([{ value: "variant-1", label: "L2" }]);
+    });
+
+    test("resolves bounded search and offset pagination expressions", async () => {
+        let requestUrl: URL | undefined;
+        globalThis.fetch = (async (input, init) => {
+            requestUrl = new URL(new Request(input, init).url);
+            return Response.json({ items: [{ id: "product-26", title: "Racket" }], total: 41 });
+        }) as typeof fetch;
+        const widget = offerDetailWidget([
+            {
+                id: "productId",
+                label: "Product",
+                path: "productId",
+                type: "combobox",
+                lookup: {
+                    endpoint: "products",
+                    params: { q: "$search", take: "$limit", skip: "$offset" },
+                    itemsPath: "items",
+                    totalPath: "total",
+                    valuePath: "id",
+                    labelPath: "title",
+                },
+            },
+        ]);
+
+        const result = await loadDetailLookupOptions(
+            "products",
+            widget,
+            {},
+            {},
+            {
+                vars: { search: "racket", limit: 25, offset: 25 },
+            },
+        );
+
+        expect(requestUrl?.searchParams.toString()).toBe("q=racket&take=25&skip=25");
+        expect(result.pages.productId).toEqual({ received: 1, total: 41 });
     });
 });
 

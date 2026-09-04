@@ -8,7 +8,7 @@
         "access": {
             "mode": "admin"
         },
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v3/admin/projection-exceptions/review",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/admin/projection-exceptions/review",
         "params": [],
         "headers": [
             {

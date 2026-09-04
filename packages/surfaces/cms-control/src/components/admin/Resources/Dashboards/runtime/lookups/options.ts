@@ -15,10 +15,13 @@ export type DetailDataLoader = (sourceId: string, ref: DashboardDataRef, vars: R
 type DetailLookupRequestOptions = {
     targetKeys?: ReadonlySet<string>;
     loadData?: DetailDataLoader;
+    vars?: Pick<RuntimeVars, "search" | "limit" | "offset">;
 };
+export type DetailLookupPage = { received: number; total?: number };
 export type DetailLookupResult = {
     failedTargetKeys: Set<string>;
     options: DetailOptions;
+    pages: Record<string, DetailLookupPage>;
 };
 
 export async function detailLookupOptions(
@@ -41,11 +44,12 @@ export async function loadDetailLookupOptions(
     const entries = await Promise.all(
         detailLookupTargets(widget)
             .filter((target) => !requestOptions.targetKeys || requestOptions.targetKeys.has(target.key))
-            .map((target) => lookupEntry(sourceId, target, resource, fields, loadData)),
+            .map((target) => lookupEntry(sourceId, target, resource, fields, loadData, requestOptions.vars)),
     );
     return {
         failedTargetKeys: new Set(entries.filter((entry) => entry.failed).map((entry) => entry.key)),
         options: Object.fromEntries(entries.map((entry) => [entry.key, entry.options])),
+        pages: Object.fromEntries(entries.map((entry) => [entry.key, entry.page])),
     };
 }
 
@@ -55,17 +59,19 @@ async function lookupEntry(
     resource: unknown,
     fields: Record<string, unknown>,
     loadData: DetailDataLoader,
-): Promise<{ failed: boolean; key: string; options: DashboardOption[] }> {
+    requestVars: DetailLookupRequestOptions["vars"],
+): Promise<{ failed: boolean; key: string; options: DashboardOption[]; page: DetailLookupPage }> {
     const selected = selectedOptions(target, resource, fields);
     try {
-        const items = await lookupItems(sourceId, target.lookup, resource, fields, loadData);
+        const { items, total } = await lookupItems(sourceId, target.lookup, resource, fields, loadData, requestVars);
         return {
             failed: false,
             key: target.key,
             options: dedupeOptions([...optionsFromItems(items, target.lookup), ...selected]),
+            page: { received: items.length, ...(total !== undefined ? { total } : {}) },
         };
     } catch {
-        return { failed: true, key: target.key, options: selected };
+        return { failed: true, key: target.key, options: selected, page: { received: 0 } };
     }
 }
 
@@ -75,12 +81,15 @@ async function lookupItems(
     resource: unknown,
     fields: Record<string, unknown>,
     loadData: DetailDataLoader,
-): Promise<unknown[]> {
-    const vars = { resource, fields };
+    requestVars: DetailLookupRequestOptions["vars"],
+): Promise<{ items: unknown[]; total?: number }> {
+    const vars = { resource, fields, ...requestVars };
     if (!lookupDependenciesResolved(lookup, vars)) {
-        return [];
+        return { items: [] };
     }
-    return itemsFrom(await loadData(sourceId, lookup, vars), lookup);
+    const payload = await loadData(sourceId, lookup, vars);
+    const total = numericTotal(payload, lookup.totalPath);
+    return { items: itemsFrom(payload, lookup), ...(total !== undefined ? { total } : {}) };
 }
 
 function optionsFromItems(items: unknown[], lookup: DashboardEmbeddedLookupRef): DashboardOption[] {
@@ -142,12 +151,18 @@ function selectedValues(value: unknown): string[] {
 
 function lookupDependenciesResolved(lookup: DashboardEmbeddedLookupRef, vars: RuntimeVars): boolean {
     return Object.values(lookup.params ?? {}).every((expression) => {
-        if (expression === "$search" || !expression.startsWith("$")) {
+        if (["$search", "$limit", "$offset"].includes(expression) || !expression.startsWith("$")) {
             return true;
         }
         const value = resolveExpression(expression, vars);
         return value !== undefined && value !== null && value !== "";
     });
+}
+
+function numericTotal(payload: unknown, path: string | undefined): number | undefined {
+    const value = path ? valueAt(payload, path) : undefined;
+    const total = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(total) && total >= 0 ? total : undefined;
 }
 
 function dedupeOptions(options: DashboardOption[]): DashboardOption[] {

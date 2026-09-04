@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { importIntegration, type IntegrationDefinition } from "@bernouy/cms-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
@@ -13,13 +13,14 @@ describe("@bernouy/cms-integrations runtime artifact imports", () => {
         const functions = new InMemoryFunctionRepository();
         const triggers = new InMemoryTriggerRepository();
         const dashboards = new InMemoryDashboardRepository();
+        const dashboardViews = new InMemoryDashboardViewRepository();
         const sourceOverlays = new InMemorySourceOverlayRepository();
         const relations = new InMemoryRelationRepository();
         const secrets = new InMemorySecretStore();
         const definition = runtimeArtifactsDefinition();
 
         const result = await importIntegration(
-            { sources, functions, triggers, dashboards, sourceOverlays, relations, secrets },
+            { sources, functions, triggers, dashboards, dashboardViews, sourceOverlays, relations, secrets },
             { kind: "products-offers-link", answers: {}, options: {} },
             [definition],
         );
@@ -73,7 +74,7 @@ function runtimeArtifactsDefinition(): IntegrationDefinition {
                 },
             },
             { type: "sourceOverlay", overlay: productOverlay() },
-            { type: "dashboard", dashboard: productDashboard() },
+            { type: "dashboard-view", view: productDashboard() },
             { type: "relation", relation: productOffersRelation() },
             {
                 type: "dashboardRelation",
@@ -118,24 +119,31 @@ function productOverlay(): Extract<Artifact, { type: "sourceOverlay" }>["overlay
     };
 }
 
-function productDashboard(): Extract<Artifact, { type: "dashboard" }>["dashboard"] {
+function productDashboard(): Extract<Artifact, { type: "dashboard-view" }>["view"] {
     return {
+        schemaVersion: 2,
         id: "products",
         source: "products",
-        views: [
-            {
-                widget: "w-detail",
-                id: "productDetail",
-                source: { endpoint: "product", itemPath: "item" },
-                main: [
-                    {
-                        id: "details",
-                        title: "Details",
-                        fields: [{ id: "title", label: "Title", type: "text", path: "title" }],
-                    },
-                ],
-            },
-        ],
+        meta: { name: "Products" },
+        view: {
+            id: "products",
+            label: "Products",
+            widgets: [
+                {
+                    widget: "w-detail",
+                    id: "productDetail",
+                    source: { endpoint: "product", itemPath: "item" },
+                    main: [
+                        {
+                            id: "details",
+                            title: "Details",
+                            fields: [{ id: "title", label: "Title", type: "text", path: "title" }],
+                        },
+                    ],
+                },
+            ],
+        },
+        availability: { catalog: true, defaultPlacement: { dashboardId: "products" } },
     };
 }
 

@@ -1,1 +1,1 @@
-Declare transitive block requirements while keeping support blocks hidden from the authoring catalogue.
+Accept Mondial Relay Source 4.x for the picker while retaining its stable endpoint contract and exact resource selection behavior.

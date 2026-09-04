@@ -1,10 +1,9 @@
-import type { Dashboard } from "./Dashboard";
+import type { DashboardDefinition } from "./Dashboard";
 
 export interface DashboardRepository {
-    createDashboard(dashboard: Dashboard): Promise<Dashboard>;
-    updateDashboard(dashboard: Dashboard): Promise<Dashboard | null>;
+    createDashboard(dashboard: DashboardDefinition): Promise<DashboardDefinition>;
+    updateDashboard(dashboard: DashboardDefinition): Promise<DashboardDefinition | null>;
     deleteDashboard(id: string): Promise<boolean>;
-    getDashboard(id: string): Promise<Dashboard | null>;
-    getDashboardsForSource(sourceId: string): Promise<Dashboard[]>;
-    getAllDashboards(): Promise<Dashboard[]>;
+    getDashboard(id: string): Promise<DashboardDefinition | null>;
+    getAllDashboards(): Promise<DashboardDefinition[]>;
 }

@@ -30,10 +30,10 @@ export function parsedDetail(mainFields: unknown[], asideFields?: unknown[]) {
         ],
     });
     const artifact = parsed.artifacts?.[0];
-    if (artifact?.type !== "dashboard" || artifact.dashboard.views[0]?.widget !== "w-detail") {
+    if (artifact?.type !== "dashboard-view" || artifact.view.view.widgets[0]?.widget !== "w-detail") {
         throw new Error("invalid fixture");
     }
-    return artifact.dashboard.views[0];
+    return artifact.view.view.widgets[0];
 }
 
 export const base = (id: string, type: string) => ({ id, label: id, path: id, type });

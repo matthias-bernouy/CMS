@@ -12,6 +12,7 @@ export type {
     DeclarativeArtifactTemplate,
     DeclarativeBlocArtifactTemplate,
     DeclarativeDashboardArtifactTemplate,
+    DeclarativeDashboardViewArtifactTemplate,
     DeclarativeDashboardRelationProjectionArtifactTemplate,
     DeclarativeFunctionArtifactTemplate,
     DeclarativeRelationArtifactTemplate,

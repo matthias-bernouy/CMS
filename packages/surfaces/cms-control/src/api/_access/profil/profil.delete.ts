@@ -22,6 +22,16 @@ export default async function deleteOwnAccount(req: Request, cms: ControlCms) {
         throw new HttpError(403, "You are the last admin — promote another admin first to delete your account.");
     }
 
-    await deleteUserCompletely({ users: cms.users, credentials: cms.credentials, pats: cms.pats }, user);
+    await deleteUserCompletely(
+        {
+            users: cms.users,
+            credentials: cms.credentials,
+            pats: cms.pats,
+            beforeMembershipDelete: async ({ sub: subjectId }) => {
+                await cms.dashboardAssignments.deleteForSubject(subjectId);
+            },
+        },
+        user,
+    );
     return Response.json({ ok: true });
 }

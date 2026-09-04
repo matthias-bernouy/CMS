@@ -28,7 +28,7 @@ describe("official source and collection boundaries", () => {
         }
 
         const ulvia = collections[0]!;
-        expect(ulvia.version).toBe("2.0.0");
+        expect(ulvia.version).toBe("2.1.0");
         expect(ulvia.resources).toHaveLength(131);
         expect(new Set(ulvia.resources.map(({ id }) => id)).size).toBe(ulvia.resources.length);
         expect(ulvia.resources.every(({ id }) => id.startsWith("ulvia/blocs/"))).toBe(true);

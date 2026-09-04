@@ -38,13 +38,13 @@ const EXPECTED_TAGS = [
     "doc-version",
 ];
 
-describe("documentation-blocs 2.0.0 catalogue", () => {
+describe("documentation-blocs 2.1.0 catalogue", () => {
     test("hydrates the complete official documentation catalog", async () => {
         const definition = await loadDefinition();
         const blocs = documentationBlocs(definition.artifacts);
 
         expect(definition.kind).toBe("ulvia");
-        expect(definition.version).toBe("2.0.0");
+        expect(definition.version).toBe("2.1.0");
         expect(definition.inputs).toEqual([]);
         expect(blocs.map((artifact) => artifact.bloc.tag).sort()).toEqual(EXPECTED_TAGS);
 

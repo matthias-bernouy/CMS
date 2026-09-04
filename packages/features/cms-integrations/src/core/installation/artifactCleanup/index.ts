@@ -21,9 +21,10 @@ const DELETE_ORDER: Record<IntegrationArtifactType, number> = {
     sourceOverlay: 2,
     trigger: 3,
     dashboard: 4,
-    function: 5,
-    source: 6,
-    bloc: 7,
+    "dashboard-view": 5,
+    function: 6,
+    source: 7,
+    bloc: 8,
 };
 
 /**

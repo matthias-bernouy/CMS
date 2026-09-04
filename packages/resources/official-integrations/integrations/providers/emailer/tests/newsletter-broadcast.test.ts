@@ -5,7 +5,7 @@ import {
     type IntegrationConnectorDeployer,
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { executeFunction, InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
@@ -42,6 +42,7 @@ describe("emailer newsletter broadcast 1.0.0", () => {
                 functions,
                 installations,
                 dashboards: new InMemoryDashboardRepository(),
+                dashboardViews: new InMemoryDashboardViewRepository(),
                 roles: new InMemoryRolesRepository(),
                 connectorDeployers: [deployer],
             },

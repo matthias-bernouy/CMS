@@ -61,6 +61,10 @@ function hydrateArtifact(
             ? artifact
             : { ...artifact, dashboard: { ...artifact.dashboard, meta } };
     }
+    if (artifact.type === "dashboard-view") {
+        const meta = hydrateMeta(artifact.view.meta, envelope);
+        return meta === artifact.view.meta ? artifact : { ...artifact, view: { ...artifact.view, meta } };
+    }
     return hydrateBloc(artifact, envelope);
 }
 

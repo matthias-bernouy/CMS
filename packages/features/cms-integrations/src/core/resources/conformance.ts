@@ -14,17 +14,21 @@ import { resolveCollectionDependencies } from "./dependencySelection";
 export function assertCollectionConformance(
     collection: CollectionIntegrationDefinition,
     availableDefinitions: readonly IntegrationDefinition[],
+    selectedResources?: readonly string[],
 ): void {
-    resolveCollectionDependencies(
+    const selection = resolveCollectionDependencies(
         collection,
-        collection.resources.map(({ id }) => id),
+        selectedResources ?? collection.resources.map(({ id }) => id),
         availableDefinitions,
+    );
+    const effectiveResources = new Set(
+        selection.effectiveResources.find(({ kind }) => kind === collection.kind)?.resources ?? [],
     );
     const definitions = new Map(availableDefinitions.map((definition) => [definition.kind, definition]));
     const themeTokens = new Set(
         (collection.theme?.categories ?? []).flatMap(({ tokens }) => tokens.map(({ id }) => id)),
     );
-    for (const resource of collection.resources) {
+    for (const resource of collection.resources.filter(({ id }) => effectiveResources.has(id))) {
         assertThemeReferences(resource, themeTokens);
         for (const requirement of resource.endpoints ?? []) {
             assertEndpointRequirement(resource, requirement, definitions);

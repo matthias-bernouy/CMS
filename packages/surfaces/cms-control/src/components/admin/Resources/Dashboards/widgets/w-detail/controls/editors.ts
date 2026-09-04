@@ -1,5 +1,12 @@
 import type { WDetailTableColumn } from "../types";
-import { isTokenControl, isValueControl, optionElement, type TokenControl, type ValueControl } from "./shared";
+import {
+    applyRemoteLookupMetadata,
+    isTokenControl,
+    isValueControl,
+    optionElement,
+    type TokenControl,
+    type ValueControl,
+} from "./shared";
 
 export function createTableEditor(column: WDetailTableColumn, value: unknown): HTMLElement {
     if (column.editable !== true) {
@@ -49,6 +56,7 @@ function comboboxEditor(column: Extract<WDetailTableColumn, { type: "combobox" }
     const text = textValue(value);
     input.setAttribute("value", text);
     input.replaceChildren(...column.options.map((option) => optionElement(option, text)));
+    applyRemoteLookupMetadata(input, column);
     input.value = text;
     return input;
 }

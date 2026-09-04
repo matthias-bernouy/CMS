@@ -11,6 +11,11 @@ export type ReorderableListItemField = {
     required?: boolean;
     placeholder?: string;
     secondary?: boolean;
+    lookupKey?: string;
+    remoteSearch?: boolean;
+    remotePagination?: boolean;
+    lookupLoading?: boolean;
+    lookupHasMore?: boolean;
 };
 
 export type ReorderableListData = {

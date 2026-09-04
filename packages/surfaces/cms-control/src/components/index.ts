@@ -135,6 +135,22 @@ import "./admin/Theme/ThemeEditor";
 import "./admin/Theme/ThemeNav";
 import "./admin/Resources/Dashboards/navigation/DashboardNav";
 import "./admin/Resources/Dashboards/view/DashboardView";
+import "./admin/DashboardWorkspace/DashboardNav";
+import "./admin/DashboardWorkspace/DashboardWorkspace";
+import {
+    CmsDashboardAdminNav,
+    CmsDashboardAdminStyles,
+    CmsDashboardIcon,
+} from "./admin/DashboardWorkspace/configuration/AdminSupport";
+import { CmsDashboardCreateController } from "./admin/DashboardWorkspace/configuration/CreateController";
+import { CmsDashboardMemberFilter } from "./admin/DashboardWorkspace/configuration/MemberFilter";
+import { CmsDashboardNavigationEditor } from "./admin/DashboardWorkspace/configuration/NavigationEditor";
+define("cms-dashboard-admin-styles", CmsDashboardAdminStyles);
+define("cms-dashboard-admin-nav", CmsDashboardAdminNav);
+define("cms-dashboard-icon", CmsDashboardIcon);
+define("cms-dashboard-create-controller", CmsDashboardCreateController);
+define("cms-dashboard-member-filter", CmsDashboardMemberFilter);
+define("cms-dashboard-navigation-editor", CmsDashboardNavigationEditor);
 import "./admin/Resources/Functions/detail/FunctionDetail";
 import "./admin/Resources/Functions/create/FunctionCreate";
 import "./admin/Resources/Integrations/IntegrationBrowser";

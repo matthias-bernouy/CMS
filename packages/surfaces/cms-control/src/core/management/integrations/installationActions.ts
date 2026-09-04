@@ -23,6 +23,8 @@ export function integrationInstallationDeps(cms: ControlCms): IntegrationImportD
         roles: cms.roles,
         secrets: cms.secrets,
         dashboards: cms.dashboards,
+        dashboardViews: cms.dashboardViews,
+        dashboardAssignments: cms.dashboardAssignments,
         relations: cms.relations,
         installations: cms.integrationInstallations,
         ...(cms.triggers ? { triggers: cms.triggers } : {}),
@@ -62,7 +64,6 @@ export async function installRequiredCollectionSources(
     if (!collection || collection.schema !== "cms.integration.definition.v2" || collection.type !== "collection") {
         return;
     }
-    assertCollectionConformance(collection, request.siteIntegrations);
     const installedCollection = await cms.integrationInstallations.get(collection.kind);
     const selection = resolveCollectionSelection(
         collection,
@@ -70,6 +71,7 @@ export async function installRequiredCollectionSources(
         installedCollection?.activeResources,
         request.siteIntegrations,
     );
+    assertCollectionConformance(collection, request.siteIntegrations, selection.activeResources);
     const installing = new Set<string>();
     for (const requirement of selection.requiredSources) {
         await installSource(requirement, request.siteIntegrations, cms, deps, installing);

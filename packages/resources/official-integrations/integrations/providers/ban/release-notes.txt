@@ -1,1 +1,1 @@
-Major release: Base Adresse Nationale is now a backend-only Source package. UI blocks moved to the Ulvia Collection.
+Minor release: publish the reusable BAN addresses dashboard view while site dashboard composition remains CMS-owned.

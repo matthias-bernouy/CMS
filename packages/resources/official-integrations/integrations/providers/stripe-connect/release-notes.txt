@@ -1,1 +1,1 @@
-Major release: Stripe Connect is now a backend-only Source package. UI blocks moved to the Ulvia Collection.
+Minor release: publish the reusable Stripe Connect marketplace terms view while site dashboard composition remains CMS-owned.

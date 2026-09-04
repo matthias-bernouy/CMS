@@ -29,24 +29,31 @@ export function runtimeRepositoryArtifacts(): NonNullable<IntegrationDefinition[
             },
         },
         {
-            type: "dashboard",
-            dashboard: {
+            type: "dashboard-view",
+            view: {
+                schemaVersion: 2,
                 id: "products",
                 source: "products",
-                views: [
-                    {
-                        widget: "w-detail",
-                        id: "productDetail",
-                        source: { endpoint: "product", itemPath: "item" },
-                        main: [
-                            {
-                                id: "details",
-                                title: "Details",
-                                fields: [{ id: "title", label: "Title", type: "text", path: "title" }],
-                            },
-                        ],
-                    },
-                ],
+                meta: { name: "Products" },
+                view: {
+                    id: "products",
+                    label: "Products",
+                    widgets: [
+                        {
+                            widget: "w-detail",
+                            id: "productDetail",
+                            source: { endpoint: "product", itemPath: "item" },
+                            main: [
+                                {
+                                    id: "details",
+                                    title: "Details",
+                                    fields: [{ id: "title", label: "Title", type: "text", path: "title" }],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                availability: { catalog: true, defaultPlacement: { dashboardId: "products" } },
             },
         },
         {

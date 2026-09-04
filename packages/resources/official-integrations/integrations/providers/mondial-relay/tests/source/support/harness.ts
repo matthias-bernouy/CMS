@@ -6,7 +6,7 @@ import {
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
@@ -21,6 +21,7 @@ export async function createHarness(options: HarnessOptions = {}) {
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
     const importedBlocs: IntegrationBlocArtifact[] = [];
     const deployer: IntegrationConnectorDeployer = {
@@ -32,7 +33,7 @@ export async function createHarness(options: HarnessOptions = {}) {
                 outputs: { functionsBaseUrl },
                 resources: [
                     { type: "schema", id: "install/sql/schema.manifest.json", action: "applied" },
-                    { type: "function", id: "cms-delivery-v3", action: "deployed" },
+                    { type: "function", id: "cms-delivery-v4", action: "deployed" },
                 ],
             };
         },
@@ -50,6 +51,7 @@ export async function createHarness(options: HarnessOptions = {}) {
             secrets,
             roles,
             dashboards,
+            dashboardViews,
             connectorDeployers: [deployer],
             connectorInstanceIds: { primary: "mondial-relay-test-primary" },
             blocs: {
@@ -83,6 +85,7 @@ export async function createHarness(options: HarnessOptions = {}) {
         secrets,
         roles,
         dashboards,
+        dashboardViews,
         importedBlocs,
         deployment,
         insertedShipments: state.insertedShipments,
@@ -114,7 +117,7 @@ export async function createHarness(options: HarnessOptions = {}) {
         async sourceFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
             try {
                 const request = requestFromFetchInput(input, init);
-                if (!request.url.startsWith(`${functionsBaseUrl}/cms-delivery-v3/`)) {
+                if (!request.url.startsWith(`${functionsBaseUrl}/cms-delivery-v4/`)) {
                     throw new Error(`unexpected source proxy fetch: ${request.method} ${request.url}`);
                 }
                 return await handler(request);

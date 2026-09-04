@@ -53,8 +53,13 @@ describe("Photo Albums declarative contract", () => {
         const parsed = parseIntegrationDefinition(definition);
 
         expect(parsed.kind).toBe("photo-albums");
-        expect(parsed.version).toBe("3.0.0");
-        expect(parsed.artifacts).toHaveLength(1);
+        expect(parsed.version).toBe("3.1.0");
+        expect(parsed.artifacts?.map((artifact) => artifact.type)).toEqual([
+            "source",
+            "dashboard-view",
+            "dashboard-view",
+            "dashboard-view",
+        ]);
         expect(parsed.afterInstallation?.[0]?.steps).toHaveLength(1);
     });
 

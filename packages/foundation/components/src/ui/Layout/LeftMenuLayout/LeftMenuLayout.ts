@@ -9,6 +9,7 @@ export class LeftMenuLayout extends Component {
     private _sidebar: HTMLElement | null;
     private _secondarySidebar: HTMLElement | null;
     private _secondarySlot: HTMLSlotElement | null;
+    private _secondaryNavigationObserver: MutationObserver | null = null;
     private _content: HTMLElement | null;
     private _primaryMobileToggle: HTMLButtonElement | null;
     private _secondaryMobileToggle: HTMLButtonElement | null;
@@ -38,6 +39,7 @@ export class LeftMenuLayout extends Component {
         }
 
         this._syncAriaState();
+        this._observeSecondaryNavigation();
         this._syncSecondarySidebar();
         this._mobileMedia = window.matchMedia(MOBILE_MEDIA_QUERY);
         this._syncMobileNavigation();
@@ -53,6 +55,8 @@ export class LeftMenuLayout extends Component {
 
     disconnectedCallback() {
         this._secondarySlot?.removeEventListener("slotchange", this._onSecondarySlotChange);
+        this._secondaryNavigationObserver?.disconnect();
+        this._secondaryNavigationObserver = null;
         this._primaryMobileToggle?.removeEventListener("click", this._onPrimaryMobileToggle);
         this._secondaryMobileToggle?.removeEventListener("click", this._onSecondaryMobileToggle);
         this._mobileBackdrop?.removeEventListener("click", this._onMobileBackdropClick);
@@ -109,7 +113,21 @@ export class LeftMenuLayout extends Component {
         this._syncMobileNavigation();
     }
 
-    private _onSecondarySlotChange = () => this._syncSecondarySidebar();
+    private _observeSecondaryNavigation(): void {
+        this._secondaryNavigationObserver?.disconnect();
+        this._secondaryNavigationObserver = new MutationObserver(() => this._syncSecondarySidebar());
+        for (const element of this._secondarySlot?.assignedElements({ flatten: true }) ?? []) {
+            this._secondaryNavigationObserver.observe(element, {
+                attributes: true,
+                attributeFilter: ["hidden"],
+            });
+        }
+    }
+
+    private _onSecondarySlotChange = (): void => {
+        this._observeSecondaryNavigation();
+        this._syncSecondarySidebar();
+    };
 
     private _onPrimaryMobileToggle = (): void => {
         const open = !this.hasAttribute("mobile-primary-open");

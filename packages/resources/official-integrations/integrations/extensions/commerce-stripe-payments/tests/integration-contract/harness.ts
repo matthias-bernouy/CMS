@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     InMemoryIntegrationInstallationRepository,
@@ -24,6 +24,7 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
     const roles = new InMemoryRolesRepository();
     const triggers = new InMemoryTriggerRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     const importedBlocs: IntegrationBlocArtifact[] = [];
     await sources.createSource(commerceSource());
     await sources.createSource(stripeSource());
@@ -46,6 +47,7 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
             roles,
             triggers,
             dashboards,
+            dashboardViews,
             blocs: {
                 async importBloc(artifact) {
                     importedBlocs.push(artifact);
@@ -114,6 +116,7 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
         roles,
         triggers,
         dashboards,
+        dashboardViews,
         importedBlocs,
         result,
         fn,

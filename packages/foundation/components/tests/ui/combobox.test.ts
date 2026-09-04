@@ -18,6 +18,7 @@ type MountOptions = {
     hint?: string;
     hintLevel?: string;
     creatable?: boolean;
+    remoteSearch?: boolean;
 };
 
 function addOption(control: Combobox, value: string, label: string): void {
@@ -50,6 +51,7 @@ function mountCombobox(options: MountOptions = {}): Combobox {
         control.setAttribute("hint-level", options.hintLevel);
     }
     control.toggleAttribute("creatable", options.creatable ?? false);
+    control.toggleAttribute("remote-search", options.remoteSearch ?? false);
     document.body.append(control);
     return control;
 }
@@ -258,5 +260,49 @@ describe("Combobox", () => {
         list.hidden = true;
         input.dispatchEvent(new FocusEvent("focus"));
         expect(list.hidden).toBe(true);
+    });
+
+    test("keeps local filtering as the default and only emits remote searches when opted in", () => {
+        const local = mountCombobox();
+        const localInput = shadowElement<HTMLInputElement>(local, "input");
+        let localSearches = 0;
+        local.addEventListener("combobox-search", () => {
+            localSearches += 1;
+        });
+        localInput.focus();
+        write(localInput, "bet");
+        expect(shadowElement<HTMLElement>(local, "[role='listbox']").textContent).toContain("Beta");
+        expect(shadowElement<HTMLElement>(local, "[role='listbox']").textContent).not.toContain("Alpha");
+        expect(localSearches).toBe(0);
+
+        document.body.replaceChildren();
+        const remote = mountCombobox({ remoteSearch: true });
+        const remoteInput = shadowElement<HTMLInputElement>(remote, "input");
+        let query = "";
+        remote.addEventListener("combobox-search", (event) => {
+            query = (event as CustomEvent<{ query: string }>).detail.query;
+        });
+        remoteInput.focus();
+        write(remoteInput, "server query");
+        expect(query).toBe("server query");
+        expect(shadowElement<HTMLElement>(remote, "[role='listbox']").textContent).toContain("Alpha");
+    });
+
+    test("exposes opt-in loading and pagination actions", () => {
+        const control = mountCombobox({ remoteSearch: true });
+        const input = shadowElement<HTMLInputElement>(control, "input");
+        input.focus();
+        control.setAttribute("loading", "");
+        expect(shadowElement<HTMLElement>(control, ".loading").textContent).toBe("Loading…");
+        control.removeAttribute("loading");
+        control.setAttribute("has-more", "");
+        let loads = 0;
+        control.addEventListener("combobox-load-more", () => {
+            loads += 1;
+        });
+        shadowElement<HTMLButtonElement>(control, ".load-more").dispatchEvent(
+            new MouseEvent("mousedown", { bubbles: true, cancelable: true }),
+        );
+        expect(loads).toBe(1);
     });
 });

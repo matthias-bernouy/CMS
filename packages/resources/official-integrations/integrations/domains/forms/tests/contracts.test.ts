@@ -37,7 +37,7 @@ afterEach(() => {
     Reflect.deleteProperty(globalThis, "Deno");
 });
 
-describe("Forms 3.0.0 contracts", () => {
+describe("Forms 3.1.0 contracts", () => {
     test("declares no UI dependency and keeps paired visitor endpoints", async () => {
         const dependencies = (await json("definitions/configuration/dependencies.json")) as Array<
             Record<string, string>

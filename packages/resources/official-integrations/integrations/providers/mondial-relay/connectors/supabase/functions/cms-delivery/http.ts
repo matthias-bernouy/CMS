@@ -42,7 +42,9 @@ export function optionsResponse(): Response {
 
 export function routePath(request: Request): string {
     const pathname = new URL(request.url).pathname;
-    const marker = ["/cms-delivery-v3", "/cms-delivery"].find((candidate) => pathname.includes(candidate));
+    const marker = ["/cms-delivery-v4", "/cms-delivery-v3", "/cms-delivery"].find((candidate) =>
+        pathname.includes(candidate),
+    );
     const index = marker ? pathname.indexOf(marker) : -1;
     const route = index === -1 ? pathname : pathname.slice(index + marker.length);
     return route || "/";
