@@ -1,0 +1,22 @@
+<figure class="testimonial" part="testimonial">
+    <span class="mark" part="mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="currentColor"><path d="M12 10H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h4v2a4 4 0 0 1-4 4v2a6 6 0 0 0 6-6v-10a2 2 0 0 0 0-2zm16 0h-6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h4v2a4 4 0 0 1-4 4v2a6 6 0 0 0 6-6v-10a2 2 0 0 0 0-2z"/></svg>
+    </span>
+    <div class="rating" part="rating" role="img">
+        <span class="star" data-i="1"></span>
+        <span class="star" data-i="2"></span>
+        <span class="star" data-i="3"></span>
+        <span class="star" data-i="4"></span>
+        <span class="star" data-i="5"></span>
+    </div>
+    <blockquote class="quote" part="quote">
+        <slot name="quote"></slot>
+    </blockquote>
+    <figcaption class="person" part="person">
+        <span class="avatar" part="avatar"><slot name="avatar"></slot></span>
+        <span class="meta" part="meta">
+            <span class="name" part="name"><slot name="name"></slot></span>
+            <span class="role" part="role"><slot name="role"></slot></span>
+        </span>
+    </figcaption>
+</figure>

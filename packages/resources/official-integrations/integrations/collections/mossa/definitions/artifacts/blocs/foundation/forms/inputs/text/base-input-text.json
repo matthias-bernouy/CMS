@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-input-text",
+        "name": "Text input",
+        "group": "Form",
+        "description": "Single-line text input.",
+        "path": "blocs/foundation/forms/inputs/text/base-input-text",
+        "view": "Bloc.ts"
+    }
+}

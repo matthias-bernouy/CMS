@@ -27,6 +27,7 @@
             "default": "./publication/index.ts"
         },
         "./integrations/ban/*": "./integrations/providers/ban/*",
+        "./integrations/mossa/*": "./integrations/collections/mossa/*",
         "./integrations/ulvia/*": "./integrations/collections/ulvia/*",
         "./integrations/commerce/*": "./integrations/domains/commerce/*",
         "./integrations/consent/*": "./integrations/domains/consent/*",

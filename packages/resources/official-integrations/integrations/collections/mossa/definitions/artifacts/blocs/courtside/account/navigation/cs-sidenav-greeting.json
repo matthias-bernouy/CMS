@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-sidenav-greeting",
+        "name": "Sidenav greeting",
+        "group": "Courtside",
+        "description": "Sidebar header — small caps eyebrow + display name with optional emoji.",
+        "path": "blocs/courtside/account/navigation/cs-sidenav-greeting",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-spec-list",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Spec list (card)",
+        "description": "Card wrapper for a series of label / value rows. Used for product specs, order details, payment info, etc.",
+        "categories": [
+            "courtside",
+            "content"
+        ]
+    }
+}

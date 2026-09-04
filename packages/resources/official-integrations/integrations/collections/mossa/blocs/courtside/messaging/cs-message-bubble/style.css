@@ -1,0 +1,62 @@
+:host {
+    --bubble-bg:        var(--ulvia-surface-background);
+    --bubble-fg:        var(--ulvia-surface-text);
+    --bubble-meta:      var(--ulvia-surface-muted-text);
+    --bubble-border:    var(--ulvia-surface-border);
+    --bubble-radius:    var(--ulvia-radius-card);
+    --bubble-pad-y:     0.65rem;
+    --bubble-pad-x:     0.9rem;
+    --bubble-max:       72%;
+
+    display: block;
+    box-sizing: border-box;
+}
+
+.row {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.bubble {
+    background: var(--bubble-bg);
+    color: var(--bubble-fg);
+    border: 1px solid var(--bubble-border);
+    border-radius: var(--bubble-radius);
+    padding: var(--bubble-pad-y) var(--bubble-pad-x);
+    max-width: var(--bubble-max);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.text {
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+::slotted(p), ::slotted(span) {
+    margin: 0;
+}
+
+.meta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--bubble-meta);
+}
+
+.author {
+    font-weight: 600;
+}
+
+/* "me" side — own messages, right-aligned, primary tint */
+:host([side="me"]) .row {
+    justify-content: flex-end;
+}
+:host([side="me"]) {
+    --bubble-bg:     var(--ulvia-secondary-base);
+    --bubble-fg:     var(--ulvia-secondary-foreground);
+    --bubble-meta:   var(--ulvia-secondary-foreground);
+    --bubble-border: var(--ulvia-secondary-foreground);
+}

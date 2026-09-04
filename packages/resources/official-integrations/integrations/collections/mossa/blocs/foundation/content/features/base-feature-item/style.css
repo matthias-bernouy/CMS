@@ -1,0 +1,54 @@
+:host {
+    --item-icon-color: var(--ulvia-secondary-base);
+    --item-icon-size: 1.25rem;
+    --item-gap: 0.75rem;
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--item-gap);
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: var(--item-gap);
+    min-width: 0;
+}
+
+.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--item-icon-size);
+    height: var(--item-icon-size);
+    flex: 0 0 auto;
+    color: var(--item-icon-color);
+}
+
+.icon ::slotted(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+::slotted([slot="label"]) {
+    margin: 0 !important;
+    font-size: 0.95rem;
+    color: var(--ulvia-surface-text);
+}
+
+:host([size="sm"]) {
+    --item-icon-size: 1rem;
+    --item-gap: 0.5rem;
+}
+:host([size="sm"]) ::slotted([slot="label"]) {
+    font-size: 0.85rem;
+}
+
+:host([size="lg"]) {
+    --item-icon-size: 1.5rem;
+    --item-gap: 0.9rem;
+}
+:host([size="lg"]) ::slotted([slot="label"]) {
+    font-size: 1.05rem;
+}

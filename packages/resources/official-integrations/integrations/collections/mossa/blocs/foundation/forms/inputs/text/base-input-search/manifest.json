@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-input-search",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Search input",
+        "description": "Search field with clear control.",
+        "categories": [
+            "form",
+            "input"
+        ]
+    }
+}

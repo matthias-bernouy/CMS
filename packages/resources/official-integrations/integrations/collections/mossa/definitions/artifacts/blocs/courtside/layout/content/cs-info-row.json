@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-info-row",
+        "name": "Info row",
+        "group": "Courtside",
+        "description": "A 3-part row: square icon tile, eyebrow label and value. Used in detail cards (order summary, account overview, contact info).",
+        "path": "blocs/courtside/layout/content/cs-info-row",
+        "view": "Bloc.ts"
+    }
+}

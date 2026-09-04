@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-brands-row",
+        "name": "Brands row",
+        "group": "Courtside",
+        "description": "Centered list of brand names (or logos) with a small caps caption above.",
+        "path": "blocs/courtside/commerce/catalogue/listing/cs-brands-row",
+        "view": "Bloc.ts"
+    }
+}

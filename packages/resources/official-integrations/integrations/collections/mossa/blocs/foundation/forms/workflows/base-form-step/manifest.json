@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-form-step",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Form step",
+        "description": "A single step inside a base-form-stepper. Holds the active inputs and an auto-rendered summary, with three states: pending / active / complete.",
+        "categories": [
+            "form"
+        ]
+    }
+}

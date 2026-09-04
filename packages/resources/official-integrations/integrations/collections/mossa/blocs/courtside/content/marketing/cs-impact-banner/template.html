@@ -1,0 +1,13 @@
+<section class="banner" part="banner">
+    <div class="content" part="content">
+        <span class="icon" part="icon"><slot name="icon"></slot></span>
+        <div class="body" part="body">
+            <header class="head" part="head">
+                <span class="eyebrow" part="eyebrow"><slot name="eyebrow"></slot></span>
+                <slot name="title"></slot>
+            </header>
+            <slot name="text"></slot>
+            <div class="stats" part="stats"><slot name="stats"></slot></div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-input-search",
+        "name": "Search input",
+        "group": "Form",
+        "description": "Search field with clear control.",
+        "path": "blocs/foundation/forms/inputs/text/base-input-search",
+        "view": "Bloc.ts"
+    }
+}

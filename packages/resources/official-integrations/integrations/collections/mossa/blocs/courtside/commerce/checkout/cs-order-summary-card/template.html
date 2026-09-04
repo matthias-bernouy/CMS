@@ -1,0 +1,16 @@
+<article class="card" part="card">
+    <div class="top" part="top">
+        <div class="media" part="media">
+            <slot name="image"></slot>
+            <span class="badge" part="badge"><slot name="badge"></slot></span>
+        </div>
+        <div class="body" part="body">
+            <div class="title" part="title"><slot name="title"></slot></div>
+            <div class="prices" part="prices"><slot></slot></div>
+        </div>
+    </div>
+    <footer class="total" part="total">
+        <span class="total-label" part="total-label"><slot name="total-label"></slot></span>
+        <span class="total-value" part="total-value"><slot name="total-value"></slot></span>
+    </footer>
+</article>

@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "cs-public-offer-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "Public offer controller",
+        "description": "Internal behavior controller for cs-public-offer."
+    }
+}

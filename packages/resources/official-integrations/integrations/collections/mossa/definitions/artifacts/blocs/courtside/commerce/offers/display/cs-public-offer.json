@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-public-offer",
+        "name": "Public offer",
+        "group": "Courtside",
+        "description": "Dynamic Courtside public offer page with gallery, valuation, seller and actions.",
+        "path": "blocs/courtside/commerce/offers/display/cs-public-offer",
+        "composition": "template.html"
+    }
+}

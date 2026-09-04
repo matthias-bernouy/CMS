@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-notif-dropdown",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Notifications dropdown",
+        "description": "Bell trigger button + popover panel — header title, notifications list slot.",
+        "categories": [
+            "navigation",
+            "action"
+        ]
+    }
+}

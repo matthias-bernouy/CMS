@@ -1,0 +1,9 @@
+{
+    "dependencies": [
+        {
+            "kind": "ulvia",
+            "versionRange": "^4.0.0"
+        }
+    ],
+    "categories": []
+}

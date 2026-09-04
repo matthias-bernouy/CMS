@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-section-header",
+        "name": "Section header",
+        "group": "Courtside",
+        "description": "Eyebrow + title + subtitle. Used to introduce content sections.",
+        "path": "blocs/courtside/layout/structure/cs-section-header",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "pre",
+        "name": "Code block",
+        "group": "Text",
+        "description": "Native preformatted code block.",
+        "path": "blocs/text/pre",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "site-footer",
+        "name": "Footer global",
+        "group": "composition",
+        "description": "Composition globale pour le pied de page Courtside.",
+        "path": "blocs/compositions/site-footer",
+        "composition": "template.html"
+    }
+}

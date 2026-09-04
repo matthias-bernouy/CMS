@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "strong",
+        "name": "Strong",
+        "group": "Text",
+        "description": "Native strong importance text.",
+        "path": "blocs/text/strong",
+        "view": "Bloc.ts"
+    }
+}

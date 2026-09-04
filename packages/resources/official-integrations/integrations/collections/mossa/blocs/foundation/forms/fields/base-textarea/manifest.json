@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-textarea",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Textarea",
+        "description": "Multi-line text input with optional autogrow.",
+        "categories": [
+            "form",
+            "input"
+        ]
+    }
+}

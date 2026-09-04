@@ -1,0 +1,25 @@
+<article class="article" part="article">
+    <div class="cover" part="cover">
+        <slot name="cover"></slot>
+    </div>
+
+    <header class="head" part="head">
+        <span class="eyebrow" part="eyebrow"><slot name="eyebrow"></slot></span>
+        <slot name="title"></slot>
+        <slot name="lead"></slot>
+
+        <div class="byline" part="byline">
+            <span class="avatar" part="avatar">
+                <slot name="author-avatar"></slot>
+            </span>
+            <div class="author" part="author">
+                <span class="author-name" part="author-name"><slot name="author-name"></slot></span>
+                <span class="meta" part="meta"><slot name="meta"></slot></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="body" part="body">
+        <slot></slot>
+    </div>
+</article>

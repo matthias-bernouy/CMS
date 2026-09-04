@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-form-step",
+        "name": "Form step",
+        "group": "Form",
+        "description": "A single step inside a base-form-stepper. Holds the active inputs and an auto-rendered summary, with three states: pending / active / complete.",
+        "path": "blocs/foundation/forms/workflows/base-form-step",
+        "view": "Bloc.ts"
+    }
+}

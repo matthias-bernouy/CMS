@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-shipping-option",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Shipping option",
+        "description": "A rich radio-card for shipping choices: icon, title, subtitle, optional note, price and a native radio. Cards sharing the same `name` behave as a radio group.",
+        "categories": [
+            "form"
+        ]
+    }
+}

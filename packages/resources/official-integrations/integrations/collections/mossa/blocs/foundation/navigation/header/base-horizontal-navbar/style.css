@@ -1,0 +1,178 @@
+:host {
+    --_mossa-navbar-padding-block: 0.75rem;
+    --_mossa-navbar-padding-inline: 1.25rem;
+    --_mossa-navbar-gap: 1.5rem;
+    --mossa-navbar-background: var(--ulvia-page-background);
+    --mossa-navbar-color: var(--ulvia-surface-text);
+    --mossa-navbar-muted-color: var(--ulvia-surface-muted-text);
+    --mossa-navbar-border-color: var(--ulvia-surface-border);
+
+    display: block;
+    width: 100%;
+    background: var(--mossa-navbar-background);
+    color: var(--mossa-navbar-color);
+    border-bottom: 1px solid var(--mossa-navbar-border-color);
+    font-family: var(--ulvia-font-body);
+}
+
+/* Variants explicitly select Ulvia roles for this component. */
+:host([variant="surface"]) {
+    --mossa-navbar-background: var(--ulvia-surface-background);
+}
+:host([variant="primary"]) {
+    --mossa-navbar-background:        var(--ulvia-primary-base);
+    --mossa-navbar-color:        var(--ulvia-primary-foreground);
+    --mossa-navbar-muted-color:  color-mix(in srgb, var(--ulvia-primary-foreground) 75%, transparent);
+    --mossa-navbar-border-color:    color-mix(in srgb, var(--ulvia-primary-foreground) 20%, transparent);
+}
+:host([variant="secondary"]) {
+    --mossa-navbar-background:        var(--ulvia-secondary-base);
+    --mossa-navbar-color:        var(--ulvia-secondary-foreground);
+    --mossa-navbar-muted-color:  color-mix(in srgb, var(--ulvia-secondary-foreground) 75%, transparent);
+    --mossa-navbar-border-color:    color-mix(in srgb, var(--ulvia-secondary-foreground) 20%, transparent);
+}
+
+:host([sticky="yes"]) {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar {
+    display: flex;
+    align-items: center;
+    gap: var(--_mossa-navbar-gap);
+    padding: var(--_mossa-navbar-padding-block) var(--_mossa-navbar-padding-inline);
+    max-width: 1280px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    container-type: inline-size;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+::slotted(a[slot="brand"]) {
+    --cms-link-color: inherit;
+    --cms-link-visited-color: inherit;
+    --cms-link-hover-color: inherit;
+    display: inline-flex;
+    align-items: center;
+    color: inherit;
+    line-height: 0;
+    text-decoration: none;
+}
+
+::slotted(a[slot="navigation"]) {
+    --cms-link-color: var(--mossa-navbar-muted-color);
+    --cms-link-visited-color: var(--mossa-navbar-muted-color);
+    --cms-link-hover-color: var(--mossa-navbar-color);
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.35rem 0.25rem;
+    border-bottom: 2px solid transparent;
+    color: var(--mossa-navbar-muted-color);
+    font-weight: 500;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    transition: color var(--ulvia-duration-fast) ease, border-color var(--ulvia-duration-fast) ease;
+}
+
+::slotted(a[slot="navigation"]:hover),
+::slotted(a[slot="navigation"][aria-current="page"]) {
+    border-bottom-color: var(--mossa-navbar-color);
+    color: var(--mossa-navbar-color);
+}
+
+::slotted(a:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+.links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.panel {
+    display: contents;
+}
+
+.burger-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--mossa-navbar-border-color);
+    border-radius: var(--ulvia-radius-sm);
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.burger-toggle span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: var(--mossa-navbar-color);
+    border-radius: 2px;
+}
+
+@container (max-width: 768px) {
+    .links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .burger-toggle {
+        display: flex;
+    }
+
+    .panel {
+        display: none;
+        flex-direction: column;
+        flex-basis: 100%;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--mossa-navbar-border-color);
+        margin-top: 0.75rem;
+    }
+
+    :host([open]) .panel {
+        display: flex;
+    }
+
+    ::slotted([slot="actions"]),
+    ::slotted(a[slot="navigation"]) {
+        width: fit-content;
+    }
+
+    ::slotted([slot="actions"]) {
+        --user-menu-panel-left: 0;
+        --user-menu-panel-right: auto;
+    }
+}

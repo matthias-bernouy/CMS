@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-price-line",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Price line",
+        "description": "A label / value pair, side-by-side. Used in price breakdowns and order summaries. Emphasis variants for primary value or total line with top divider.",
+        "categories": [
+            "content"
+        ]
+    }
+}

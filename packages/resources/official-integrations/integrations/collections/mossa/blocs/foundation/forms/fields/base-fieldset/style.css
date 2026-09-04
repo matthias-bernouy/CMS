@@ -1,0 +1,68 @@
+:host {
+    --fs-gap:           1rem;
+    --fs-border:        var(--ulvia-surface-border);
+    --fs-legend-color:  var(--ulvia-surface-muted-text);
+    --fs-pad-y:         1rem;
+    --fs-pad-x:         1.1rem;
+    --fs-radius:        var(--ulvia-radius-sm);
+
+    display: block;
+    font-family: var(--ulvia-font-body);
+    color: inherit;
+    box-sizing: border-box;
+}
+
+.fieldset {
+    all: unset;
+    display: block;
+    padding: var(--fs-pad-y) var(--fs-pad-x);
+    border: 1px solid var(--fs-border);
+    border-radius: var(--fs-radius);
+    box-sizing: border-box;
+}
+
+.legend {
+    padding: 0 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fs-legend-color);
+}
+
+.legend ::slotted(*) {
+    margin: 0 !important;
+    font: inherit !important;
+    color: inherit !important;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--fs-gap);
+    margin-top: 0.75rem;
+}
+
+/* Inline layout — items flow horizontally with wrap. Used in compact
+   filter toolbars / horizontal field groups. */
+:host([layout="inline"]) .body {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.9rem;
+}
+
+:host([variant="plain"]) .fieldset {
+    border: none;
+    padding: 0;
+}
+
+:host([variant="plain"]) .body { margin-top: 0.5rem; }
+
+:host([gap="xs"]) { --fs-gap: 0.4rem; }
+:host([gap="sm"]) { --fs-gap: 0.7rem; }
+:host([gap="md"]) { --fs-gap: 1rem; }
+:host([gap="lg"]) { --fs-gap: 1.4rem; }
+:host([gap="xl"]) { --fs-gap: 2rem; }
+
+:host([disabled]) .fieldset { opacity: 0.55; pointer-events: none; }

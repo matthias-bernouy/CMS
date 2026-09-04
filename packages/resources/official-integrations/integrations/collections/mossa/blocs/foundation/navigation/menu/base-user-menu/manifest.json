@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-user-menu",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "User menu",
+        "description": "Avatar + name trigger with a popover header (logged-in user + role badge), menu items and a logout link.",
+        "categories": [
+            "navigation",
+            "action"
+        ]
+    }
+}

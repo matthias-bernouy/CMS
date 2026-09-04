@@ -1,0 +1,36 @@
+:host {
+    --stepper-gap: 32px;
+
+    display: block;
+    box-sizing: border-box;
+    color: inherit;
+    font-family: var(--ulvia-font-body);
+}
+
+.stepper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stepper-gap);
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stepper-gap);
+}
+
+/* Final slot (typically a submit button) is held back until every step
+   reports complete. The parent toggles `all-complete` on its host once
+   it observes that condition. */
+.final {
+    display: none;
+}
+
+:host([all-complete]) .final {
+    display: block;
+}
+
+/* Gap presets, mirroring base-form. */
+:host([gap="sm"]) { --stepper-gap: 20px; }
+:host([gap="md"]) { --stepper-gap: 32px; }
+:host([gap="lg"]) { --stepper-gap: 48px; }

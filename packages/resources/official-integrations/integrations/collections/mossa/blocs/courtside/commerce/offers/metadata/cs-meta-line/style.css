@@ -1,0 +1,35 @@
+:host {
+    display: block;
+    box-sizing: border-box;
+    font-family: var(--ulvia-font-body);
+}
+
+.line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--ulvia-surface-muted-text);
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+}
+
+.icon ::slotted(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+:host([size="sm"]) .line { font-size: 0.8rem; }
+:host([size="md"]) .line { font-size: 0.95rem; }
+
+:host([tone="default"]) .line { color: var(--ulvia-body-text); }
+:host([tone="strong"])  .line { color: var(--ulvia-surface-text); }

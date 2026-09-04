@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-hero-editorial",
+        "name": "Editorial hero",
+        "group": "Courtside",
+        "description": "Centered or left-aligned hero — eyebrow + title + subtitle + optional bottom slot.",
+        "path": "blocs/courtside/content/editorial/cs-hero-editorial",
+        "view": "Bloc.ts"
+    }
+}

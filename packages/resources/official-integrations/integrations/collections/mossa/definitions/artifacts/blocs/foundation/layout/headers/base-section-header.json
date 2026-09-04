@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-section-header",
+        "name": "Section header",
+        "group": "Header",
+        "description": "Eyebrow + title + subtitle. Used to introduce content sections.",
+        "path": "blocs/foundation/layout/headers/base-section-header",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "code",
+        "name": "Inline code",
+        "group": "Text",
+        "description": "Native inline code text.",
+        "path": "blocs/text/code",
+        "view": "Bloc.ts"
+    }
+}

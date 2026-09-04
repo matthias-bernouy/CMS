@@ -1,0 +1,41 @@
+:host {
+    display: block;
+    font-family: var(--ulvia-font-body);
+}
+
+::slotted(a) {
+    --cms-link-color: var(--ulvia-surface-text);
+    --cms-link-visited-color: var(--ulvia-surface-text);
+    --cms-link-hover-color: var(--ulvia-surface-text);
+    --cms-link-active-color: var(--ulvia-surface-text);
+    --cms-link-focus-ring: currentColor;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.6rem 1rem;
+    color: var(--ulvia-surface-text);
+    font-size: 0.92rem;
+    text-decoration: none !important;
+    transition: background var(--ulvia-duration-fast) ease-out;
+}
+
+::slotted(a:hover) {
+    background: var(--ulvia-subtle-background);
+}
+
+::slotted(a:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+}
+
+:host([variant="danger"]) ::slotted(a) {
+    --cms-link-color: var(--ulvia-danger-base);
+    --cms-link-visited-color: var(--ulvia-danger-base);
+    --cms-link-hover-color: var(--ulvia-danger-base);
+    --cms-link-active-color: var(--ulvia-danger-base);
+    color: var(--ulvia-danger-base);
+}
+
+:host([variant="danger"]) ::slotted(a:hover) {
+    background: var(--ulvia-danger-muted);
+}

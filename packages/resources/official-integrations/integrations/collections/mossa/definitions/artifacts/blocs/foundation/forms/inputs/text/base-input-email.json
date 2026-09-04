@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-input-email",
+        "name": "Email input",
+        "group": "Form",
+        "description": "Email address input with native validation.",
+        "path": "blocs/foundation/forms/inputs/text/base-input-email",
+        "view": "Bloc.ts"
+    }
+}

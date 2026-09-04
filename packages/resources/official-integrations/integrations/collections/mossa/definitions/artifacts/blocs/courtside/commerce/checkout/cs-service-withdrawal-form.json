@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-service-withdrawal-form",
+        "name": "Service withdrawal form",
+        "group": "Courtside",
+        "description": "Courtside-specific presentation for the Commerce service-withdrawal evidence workflow.",
+        "path": "blocs/courtside/commerce/checkout/cs-service-withdrawal-form",
+        "view": "Bloc.ts"
+    }
+}

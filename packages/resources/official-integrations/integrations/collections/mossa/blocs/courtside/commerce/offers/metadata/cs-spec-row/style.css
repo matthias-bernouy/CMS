@@ -1,0 +1,30 @@
+:host {
+    display: block;
+    box-sizing: border-box;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+}
+
+.label {
+    color: var(--ulvia-surface-muted-text);
+    font-size: 0.9rem;
+}
+
+.value {
+    font-weight: 600;
+    color: var(--ulvia-surface-text);
+    text-align: right;
+}
+
+:host([emphasis="price"]) .value {
+    font-family: var(--ulvia-font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ulvia-secondary-base);
+}

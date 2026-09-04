@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-testimonial",
+        "name": "Testimonial",
+        "group": "Content",
+        "description": "Customer quote with avatar, name, role and rating.",
+        "path": "blocs/foundation/content/cards/base-testimonial",
+        "view": "Bloc.ts"
+    }
+}

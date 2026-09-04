@@ -1,0 +1,14 @@
+<cs-offer-card layout="listing" variant="outlined" interactive>
+    <a slot="navigation" href="/annonce" aria-label="Voir l’annonce"></a>
+    <svg slot="media" viewBox="0 0 640 480" role="img" aria-label="Aperçu de la raquette">
+        <rect width="640" height="480" fill="#fdf8eb"></rect>
+        <ellipse cx="320" cy="185" rx="96" ry="142" fill="none" stroke="#a85424" stroke-width="28"></ellipse>
+        <line x1="320" y1="322" x2="320" y2="430" stroke="#1a1108" stroke-width="34" stroke-linecap="round"></line>
+    </svg>
+    <base-badge slot="badge" color="success" variant="filled">État</base-badge>
+    <span slot="eyebrow">Marque · Année · Ville</span>
+    <span slot="title">Nom de la raquette</span>
+    <span slot="description">Sport · Manche · État</span>
+    <span slot="price">189 €</span>
+    <basic-button slot="action" appearance="filled" style="--cms-button-color: var(--ulvia-primary-foreground); --cms-button-background: var(--ulvia-primary-base); --cms-button-border-color: var(--ulvia-primary-base); --cms-focus-color: var(--ulvia-primary-contrasted);"><a href="/annonce">Voir l’annonce</a></basic-button>
+</cs-offer-card>

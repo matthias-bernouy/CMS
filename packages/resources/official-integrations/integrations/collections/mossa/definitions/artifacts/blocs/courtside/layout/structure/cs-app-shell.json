@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-app-shell",
+        "name": "App shell",
+        "group": "Courtside",
+        "description": "Two-column layout with a left sidebar slot and a main content slot. Used for /mon-espace.",
+        "path": "blocs/courtside/layout/structure/cs-app-shell",
+        "view": "Bloc.ts"
+    }
+}

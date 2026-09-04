@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-gallery-item",
+        "name": "Gallery item",
+        "group": "Content",
+        "description": "Single gallery tile with optional label overlay.",
+        "path": "blocs/foundation/media/base-gallery-item",
+        "view": "Bloc.ts"
+    }
+}

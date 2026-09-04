@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-radio-group",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Radio group",
+        "description": "Group of Radio options sharing a single name.",
+        "categories": [
+            "form",
+            "input"
+        ]
+    }
+}

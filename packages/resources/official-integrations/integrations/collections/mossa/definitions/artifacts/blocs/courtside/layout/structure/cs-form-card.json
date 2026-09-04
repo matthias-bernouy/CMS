@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-form-card",
+        "name": "Form card",
+        "group": "Courtside",
+        "description": "Card wrapper with a title and a body slot. Used to group form fields.",
+        "path": "blocs/courtside/layout/structure/cs-form-card",
+        "view": "Bloc.ts"
+    }
+}

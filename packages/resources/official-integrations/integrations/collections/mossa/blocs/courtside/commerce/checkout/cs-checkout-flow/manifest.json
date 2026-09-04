@@ -1,0 +1,10 @@
+{
+    "default-tag": "cs-checkout-flow",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Checkout flow",
+        "description": "Authenticated Courtside checkout using user-account, Mondial Relay and the trusted payment integration."
+    }
+}

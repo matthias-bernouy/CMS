@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-club-lookup",
+        "name": "Club lookup",
+        "group": "Courtside",
+        "description": "Searches the canonical checkout club field and submits the selected club in a parent form.",
+        "path": "blocs/courtside/commerce/checkout/cs-club-lookup",
+        "view": "Bloc.ts"
+    }
+}

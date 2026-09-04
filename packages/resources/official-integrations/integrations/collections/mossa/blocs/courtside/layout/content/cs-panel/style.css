@@ -1,0 +1,48 @@
+:host {
+    --panel-padding: 24px;
+    --panel-gap:     16px;
+
+    display: block;
+    box-sizing: border-box;
+    font-family: var(--ulvia-font-body);
+}
+
+.panel {
+    background: var(--ulvia-surface-background);
+    border-radius: var(--ulvia-radius-lg);
+    padding: var(--panel-padding);
+    box-shadow: var(--ulvia-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--panel-gap);
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ulvia-surface-text);
+}
+
+.icon {
+    font-size: 18px;
+    line-height: 1;
+    color: var(--ulvia-primary-contrasted);
+}
+
+/* Title row hidden by default; revealed when either the icon or title
+   slot has content (host attr is mirrored from JS — rule 12). */
+.title { display: none; }
+:host([has-title-content]) .title { display: flex; }
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--panel-gap);
+}
+
+/* Density variants */
+:host([density="compact"])  { --panel-padding: 16px 20px; --panel-gap: 10px; }
+:host([density="spacious"]) { --panel-padding: 32px;      --panel-gap: 20px; }

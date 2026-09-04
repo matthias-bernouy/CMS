@@ -1,0 +1,13 @@
+:host {
+    display: inline-flex;
+}
+
+.actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+@media (max-width: 480px) {
+    .actions { gap: 0.4rem; }
+}

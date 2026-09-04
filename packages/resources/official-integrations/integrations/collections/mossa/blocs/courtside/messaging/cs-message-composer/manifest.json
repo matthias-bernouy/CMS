@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-message-composer",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Message composer",
+        "description": "Single-line input + send button for chat threads. Slots: input, send.",
+        "categories": [
+            "courtside",
+            "form"
+        ]
+    }
+}

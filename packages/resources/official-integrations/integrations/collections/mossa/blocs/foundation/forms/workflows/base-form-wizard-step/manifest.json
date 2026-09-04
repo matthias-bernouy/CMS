@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-form-wizard-step",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Form wizard step",
+        "description": "A single full-page step inside a base-form-wizard. Carries the page content and a Next / Back CTA. Visibility is exclusive — only the active step renders.",
+        "categories": [
+            "form"
+        ]
+    }
+}

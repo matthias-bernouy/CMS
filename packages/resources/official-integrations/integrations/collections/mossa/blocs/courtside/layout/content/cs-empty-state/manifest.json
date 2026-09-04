@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-empty-state",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Empty state",
+        "description": "Illustration + title + description + optional action. Inline or card variant.",
+        "categories": [
+            "content"
+        ]
+    }
+}

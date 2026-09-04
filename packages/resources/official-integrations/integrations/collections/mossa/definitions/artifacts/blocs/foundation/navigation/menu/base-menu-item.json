@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-menu-item",
+        "name": "Menu item",
+        "group": "Navigation",
+        "description": "Link row with an icon and a label. Designed to be slotted into a base-user-menu, sidenav, or similar grouped navigation surface. Supports a `danger` variant for destructive actions (logout, delete, etc.).",
+        "path": "blocs/foundation/navigation/menu/base-menu-item",
+        "view": "Bloc.ts"
+    }
+}

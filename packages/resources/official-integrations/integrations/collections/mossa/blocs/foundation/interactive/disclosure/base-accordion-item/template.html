@@ -1,0 +1,15 @@
+<div class="item" part="item">
+    <button class="header" part="header" type="button" aria-expanded="false">
+        <span class="title" part="title"><slot name="title"></slot></span>
+        <span class="indicator" part="indicator" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </span>
+    </button>
+    <div class="panel" part="panel">
+        <div class="content" part="content">
+            <slot name="content"></slot>
+        </div>
+    </div>
+</div>

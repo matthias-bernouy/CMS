@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-form-card",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Form card",
+        "description": "Card wrapper with a title and a body slot. Used to group form fields.",
+        "categories": [
+            "layout",
+            "content"
+        ]
+    }
+}

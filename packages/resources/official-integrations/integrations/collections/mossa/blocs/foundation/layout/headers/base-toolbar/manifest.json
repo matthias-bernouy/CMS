@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-toolbar",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Toolbar",
+        "description": "Title + inline meta on the left, controls on the right. Generic page/section toolbar.",
+        "categories": [
+            "header",
+            "layout"
+        ]
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-search-input-prominent",
+        "name": "Prominent search input",
+        "group": "Courtside",
+        "description": "Large rounded search input with magnifier icon and clear button.",
+        "path": "blocs/courtside/forms/search/cs-search-input-prominent",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-offer-detail",
+        "name": "Offer detail",
+        "group": "Courtside",
+        "description": "Responsive offer gallery and information layout.",
+        "path": "blocs/courtside/commerce/offers/display/cs-offer-detail",
+        "view": "Bloc.ts"
+    }
+}

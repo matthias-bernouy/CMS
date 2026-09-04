@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-step-card",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Step card",
+        "description": "Numbered step card with optional icon, title and description.",
+        "categories": [
+            "content"
+        ]
+    }
+}

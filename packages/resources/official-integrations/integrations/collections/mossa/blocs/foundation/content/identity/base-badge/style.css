@@ -1,0 +1,152 @@
+:host {
+    /* Role token 4-tuple (defaults to neutral surface tones — no role
+       color picked yet). Each [color] rule below rebinds these aliases. */
+    --badge-base:       var(--ulvia-surface-text);
+    --badge-strong:     var(--ulvia-surface-text);
+    --badge-muted:      var(--ulvia-subtle-background);
+    --badge-contrasted: var(--ulvia-page-background);
+
+    /* Variant-resolved bg/fg/border — defaults to "soft": muted bg, strong fg.
+       Each [variant] rule below overrides these. */
+    --badge-bg:     var(--badge-muted);
+    --badge-fg:     var(--badge-strong);
+    --badge-border: transparent;
+
+    /* Layout */
+    --badge-radius:      999px;
+    --badge-padding:     0.25rem 0.65rem;
+    --badge-gap:         0.35rem;
+    --badge-font-size:   0.75rem;
+    --badge-font-weight: 600;
+
+    display: inline-flex;
+    vertical-align: middle;
+    font-family: var(--ulvia-font-body);
+    line-height: 1;
+}
+
+:host([placement="overlay"]) {
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    z-index: 1;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--badge-gap);
+    padding: var(--badge-padding);
+    background: var(--badge-bg);
+    color: var(--badge-fg);
+    border: 1px solid var(--badge-border);
+    border-radius: var(--badge-radius);
+    font-size: var(--badge-font-size);
+    font-weight: var(--badge-font-weight);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+.label ::slotted(*),
+.leading ::slotted(*) {
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    line-height: inherit;
+}
+
+/* Leading icon slot — hidden by default, shown when a [slot="leading"]
+   child is present (signal set by Bloc.ts via slotchange — `:host(:has(...))`
+   is silently dropped by the CSS parser, cf rule 12). */
+.leading { display: none; }
+:host([has-leading]) .leading { display: inline-flex; }
+
+/* Sizes */
+
+:host([size="sm"]) {
+    --badge-padding:     0.15rem 0.5rem;
+    --badge-font-size:   0.68rem;
+    --badge-gap:         0.25rem;
+}
+
+:host([size="lg"]) {
+    --badge-padding:     0.4rem 0.9rem;
+    --badge-font-size:   0.88rem;
+    --badge-gap:         0.45rem;
+}
+
+/* Shape */
+
+:host([shape="square"])  { --badge-radius: var(--ulvia-radius-sm); }
+:host([shape="rounded"]) { --badge-radius: var(--ulvia-radius-card); }
+:host([shape="pill"])    { --badge-radius: 999px; }
+
+/* Colors — rebind the role token aliases. `[color]` is set explicitly
+   by the user; `[data-auto-color]` is set by BlocEditor by hashing the
+   label. Both reach the same 6 role roles via the same alias mechanism.
+   The variant rule below redefines `--badge-bg/fg/border` via these
+   aliases, so no cascade conflict (different properties at each level). */
+
+:host([color="primary"]),
+:host([data-auto-color="0"]) {
+    --badge-base:       var(--ulvia-primary-base);
+    --badge-strong:     var(--ulvia-primary-contrasted);
+    --badge-muted:      var(--ulvia-primary-muted);
+    --badge-contrasted: var(--ulvia-primary-foreground);
+}
+:host([color="secondary"]),
+:host([data-auto-color="1"]) {
+    --badge-base:       var(--ulvia-secondary-base);
+    --badge-strong:     var(--ulvia-secondary-contrasted);
+    --badge-muted:      var(--ulvia-secondary-muted);
+    --badge-contrasted: var(--ulvia-secondary-foreground);
+}
+:host([color="success"]),
+:host([data-auto-color="2"]) {
+    --badge-base:       var(--ulvia-success-base);
+    --badge-strong:     var(--ulvia-success-contrasted);
+    --badge-muted:      var(--ulvia-success-muted);
+    --badge-contrasted: var(--ulvia-success-foreground);
+}
+:host([color="warning"]),
+:host([data-auto-color="3"]) {
+    --badge-base:       var(--ulvia-warning-base);
+    --badge-strong:     var(--ulvia-warning-contrasted);
+    --badge-muted:      var(--ulvia-warning-muted);
+    --badge-contrasted: var(--ulvia-warning-foreground);
+}
+:host([color="danger"]),
+:host([data-auto-color="4"]) {
+    --badge-base:       var(--ulvia-danger-base);
+    --badge-strong:     var(--ulvia-danger-contrasted);
+    --badge-muted:      var(--ulvia-danger-muted);
+    --badge-contrasted: var(--ulvia-danger-foreground);
+}
+:host([color="info"]),
+:host([data-auto-color="5"]) {
+    --badge-base:       var(--ulvia-info-base);
+    --badge-strong:     var(--ulvia-info-contrasted);
+    --badge-muted:      var(--ulvia-info-muted);
+    --badge-contrasted: var(--ulvia-info-foreground);
+}
+
+/* Variants — Soft is the :host default (muted bg, strong fg). Filled,
+   Outlined and Ghost override. */
+
+:host([variant="filled"]) {
+    --badge-bg:     var(--badge-base);
+    --badge-fg:     var(--badge-contrasted);
+    --badge-border: transparent;
+}
+
+:host([variant="outlined"]) {
+    --badge-bg:     transparent;
+    --badge-fg:     var(--badge-strong);
+    --badge-border: var(--badge-strong);
+}
+
+:host([variant="ghost"]) {
+    --badge-bg:     transparent;
+    --badge-fg:     var(--badge-strong);
+    --badge-border: transparent;
+}

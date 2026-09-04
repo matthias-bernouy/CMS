@@ -1,0 +1,33 @@
+:host {
+    display: block;
+    box-sizing: border-box;
+    font-family: var(--ulvia-font-body);
+}
+
+.line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    font-size: 14px;
+}
+
+.label  { color: var(--ulvia-surface-muted-text); }
+.value  { color: var(--ulvia-surface-muted-text); font-weight: 400; }
+
+:host([emphasis="primary"]) .value {
+    color: var(--ulvia-primary-contrasted);
+    font-weight: 600;
+}
+
+:host([emphasis="total"]) {
+    border-top: 1px solid var(--ulvia-surface-border);
+    margin-top: 8px;
+    padding-top: 12px;
+}
+:host([emphasis="total"]) .line  { font-size: 16px; }
+:host([emphasis="total"]) .label,
+:host([emphasis="total"]) .value {
+    color: var(--ulvia-surface-text);
+    font-weight: 700;
+}

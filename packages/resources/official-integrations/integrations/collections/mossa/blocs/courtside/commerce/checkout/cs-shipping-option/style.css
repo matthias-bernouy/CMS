@@ -1,0 +1,103 @@
+:host {
+    display: block;
+    box-sizing: border-box;
+    font-family: var(--ulvia-font-body);
+}
+
+.opt {
+    display: grid;
+    grid-template-columns: 56px 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--ulvia-surface-background);
+    border-radius: var(--ulvia-radius-card);
+    border: 2px solid transparent;
+    box-shadow: var(--ulvia-shadow-sm);
+    cursor: pointer;
+    transition: border-color var(--ulvia-duration-fast) ease, background var(--ulvia-duration-fast) ease;
+}
+
+.opt:hover {
+    border-color: var(--ulvia-surface-border);
+}
+
+.opt:has(.radio:checked) {
+    border-color: var(--ulvia-primary-base);
+    background: var(--ulvia-primary-muted);
+}
+
+:host([disabled]) .opt {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.icon {
+    font-size: 32px;
+    text-align: center;
+    line-height: 1;
+    color: var(--ulvia-primary-contrasted);
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.title {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ulvia-surface-text);
+}
+
+.subtitle {
+    font-size: 13px;
+    color: var(--ulvia-surface-muted-text);
+}
+
+.note {
+    font-size: 12px;
+    color: var(--ulvia-primary-contrasted);
+    margin-top: 2px;
+}
+
+/* Note row hidden by default; revealed when the host gets `has-note`
+   from a JS observer on the `note` slot (rule 12 — :host(:has) is broken). */
+.note { display: none; }
+:host([has-note]) .note { display: block; }
+
+.price {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ulvia-primary-contrasted);
+    white-space: nowrap;
+}
+
+.radio {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--ulvia-surface-border);
+    border-radius: 50%;
+    margin: 0;
+    cursor: pointer;
+    background: var(--ulvia-surface-background);
+    transition: border-color var(--ulvia-duration-fast) ease, background var(--ulvia-duration-fast) ease, box-shadow var(--ulvia-duration-fast) ease;
+    flex-shrink: 0;
+}
+
+.radio:checked {
+    border-color: var(--ulvia-primary-base);
+    background: var(--ulvia-primary-base);
+    box-shadow: inset 0 0 0 4px var(--ulvia-surface-background);
+}
+
+.radio:focus-visible {
+    outline: 2px solid var(--ulvia-primary-base);
+    outline-offset: 2px;
+}
+
+:host([disabled]) .radio { cursor: not-allowed; }

@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-stat-tile",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Stat tile",
+        "description": "Big number + label tile. Light or dark surface.",
+        "categories": [
+            "content"
+        ]
+    }
+}

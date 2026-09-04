@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-sidenav",
+        "name": "Sidenav",
+        "group": "Navigation",
+        "description": "Lateral navigation: brand, sections, footer. Desktop collapse to icon-only, mobile off-canvas drawer.",
+        "path": "blocs/foundation/navigation/sidenav/base-sidenav",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,126 @@
+:host {
+    --banner-bg:      var(--ulvia-secondary-base);
+    --banner-fg:      var(--ulvia-secondary-foreground);
+    --banner-muted:   var(--ulvia-secondary-foreground);
+    --banner-accent:  var(--ulvia-primary-base);
+    --banner-radius:  var(--ulvia-radius-lg, 16px);
+    --banner-pad-y:   3rem;
+    --banner-pad-x:   2rem;
+    --banner-max:     72rem;
+
+    display: block;
+}
+
+.banner {
+    background: var(--banner-bg);
+    color: var(--banner-fg);
+    border-radius: var(--banner-radius);
+    padding: var(--banner-pad-y) var(--banner-pad-x);
+}
+
+.content {
+    max-width: var(--banner-max);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--banner-accent);
+}
+
+.icon {
+    display: inline-flex;
+    line-height: 0;
+    color: var(--banner-accent);
+}
+
+::slotted([slot="icon"]) {
+    width: 2rem;
+    height: 2rem;
+}
+
+:host(:not(:has([slot="icon"]))) .icon { display: none; }
+:host(:not(:has([slot="eyebrow"]))) .eyebrow { display: none; }
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading, Georgia, serif);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--banner-fg);
+}
+
+::slotted([slot="text"]) {
+    margin: 0;
+    color: var(--banner-muted);
+    font-size: 1rem;
+    line-height: 1.55;
+    max-width: 56rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    padding-top: 1.5rem;
+}
+
+:host(:not(:has([slot="stats"]))) .stats { display: none; }
+
+/* Layout — horizontal (big icon left, body right, keeps card style) */
+:host([variant="horizontal"]) .banner {
+    --banner-pad-y: 2rem;
+}
+:host([variant="horizontal"]) .content {
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+}
+:host([variant="horizontal"]) .icon {
+    color: var(--banner-fg);
+    flex: 0 0 auto;
+}
+:host([variant="horizontal"]) ::slotted([slot="icon"]) {
+    width: 3rem;
+    height: 3rem;
+}
+:host([variant="horizontal"]) .body {
+    gap: 0.5rem;
+}
+
+/* Layout — inline (slim, no radius — used as a strip) */
+:host([variant="inline"]) {
+    --banner-radius: 0;
+    --banner-pad-y:  1.25rem;
+}
+:host([variant="inline"]) .content {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+:host([variant="inline"]) .body { flex-direction: row; gap: 0.75rem; align-items: center; }
+:host([variant="inline"]) .head { flex-direction: row; align-items: center; }
+:host([variant="inline"]) ::slotted([slot="title"]) { font-size: 1rem; }
+:host([variant="inline"]) .stats { display: none; }

@@ -1,0 +1,12 @@
+{
+    "runtime": "native",
+    "default-tag": "small",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Small",
+        "description": "Native small print text.",
+        "categories": ["Text", "Inline"],
+        "icon": "type"
+    }
+}

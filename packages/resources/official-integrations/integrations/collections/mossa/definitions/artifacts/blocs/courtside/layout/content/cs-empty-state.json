@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-empty-state",
+        "name": "Empty state",
+        "group": "Courtside",
+        "description": "Illustration + title + description + optional action. Inline or card variant.",
+        "path": "blocs/courtside/layout/content/cs-empty-state",
+        "view": "Bloc.ts"
+    }
+}

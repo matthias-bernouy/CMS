@@ -1,0 +1,73 @@
+:host {
+    --es-fg:      var(--ulvia-surface-text, #1a1108);
+    --es-muted:   var(--ulvia-surface-muted-text, #6b5642);
+    --es-bg:      var(--ulvia-surface-background, #ffffff);
+    --es-border:  var(--ulvia-surface-border, #ebe1d0);
+    --es-radius:  var(--ulvia-radius-lg, 16px);
+    --es-pad:     2.5rem 1.5rem;
+
+    display: block;
+}
+
+.state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    color: var(--es-fg);
+}
+
+.icon {
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    color: color-mix(in srgb, var(--ulvia-secondary-base) 72%, white);
+    display: inline-flex;
+}
+
+::slotted([slot="icon"]) {
+    width: 3rem;
+    height: 3rem;
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading, Georgia, serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--es-fg);
+}
+
+::slotted([slot="description"]) {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--es-muted);
+    max-width: 32rem;
+}
+
+.action {
+    margin-top: 1rem;
+    display: inline-flex;
+    gap: 0.5rem;
+}
+
+:host(:not(:has([slot="icon"]))) .icon { display: none; }
+:host(:not(:has([slot="action"]))) .action { display: none; }
+
+/* Variant — card (boxed) */
+:host([variant="card"]) {
+    background: var(--es-bg);
+    border: 1px solid var(--es-border);
+    border-radius: var(--es-radius);
+    padding: var(--es-pad);
+}
+
+:host([variant="card"][size="lg"]) {
+    --es-pad: 4rem 2rem;
+}
+
+/* Alignment */
+:host([align="left"]) .state {
+    align-items: flex-start;
+    text-align: left;
+}

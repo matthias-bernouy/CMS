@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-money",
+        "name": "Money",
+        "group": "Courtside",
+        "description": "Formats a minor-unit monetary amount.",
+        "path": "blocs/courtside/commerce/offers/metadata/cs-money",
+        "view": "Bloc.ts"
+    }
+}

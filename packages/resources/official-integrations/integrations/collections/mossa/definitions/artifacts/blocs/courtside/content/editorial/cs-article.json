@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-article",
+        "name": "Article",
+        "group": "Courtside",
+        "description": "Article template — cover image, eyebrow, title, lead, author block and rich body content.",
+        "path": "blocs/courtside/content/editorial/cs-article",
+        "view": "Bloc.ts"
+    }
+}

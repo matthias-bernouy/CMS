@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-tab",
+        "name": "Tab",
+        "group": "Interactive",
+        "description": "Single tab panel — use inside a Tabs bloc.",
+        "path": "blocs/foundation/interactive/tabs/base-tab",
+        "view": "Bloc.ts"
+    }
+}

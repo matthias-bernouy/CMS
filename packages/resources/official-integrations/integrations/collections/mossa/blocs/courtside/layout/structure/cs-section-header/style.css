@@ -1,0 +1,101 @@
+:host {
+    --header-fg:      var(--ulvia-surface-text, #1a1108);
+    --header-muted:   var(--ulvia-surface-muted-text, #6b5642);
+    --header-eyebrow: var(--accent, #c9e44d);
+    --header-gap:     0.75rem;
+    --header-max:     56rem;
+
+    --duration: 320ms;
+    --ease:     cubic-bezier(0.22, 1, 0.36, 1);
+
+    display: block;
+}
+
+.header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--header-gap);
+    max-width: var(--header-max);
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.action {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+:host(:not(:has([slot="action"]))) .action { display: none; }
+
+.eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--header-eyebrow);
+}
+
+:host(:not(:has([slot="eyebrow"]))) .eyebrow { display: none; }
+
+::slotted([slot="title"]) {
+    margin: 0;
+    color: var(--header-fg);
+    font-family: var(--ulvia-font-heading, Georgia, serif);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+}
+
+::slotted([slot="subtitle"]) {
+    margin: 0;
+    color: var(--header-muted);
+    font-size: 1rem;
+    line-height: 1.55;
+    max-width: 38rem;
+}
+
+/* Alignment */
+
+:host([align="center"]) .header {
+    justify-content: center;
+}
+:host([align="center"]) .text {
+    align-items: center;
+    text-align: center;
+    margin-inline: auto;
+}
+:host([align="right"]) .text {
+    align-items: flex-end;
+    text-align: right;
+    margin-inline-start: auto;
+}
+
+/* Tone — used on dark/orange backgrounds */
+
+:host([tone="inverted"]) {
+    --header-fg:    #ffffff;
+    --header-muted: rgba(255, 255, 255, 0.78);
+}
+
+/* Size variants — drive the title only */
+
+:host([size="sm"]) ::slotted([slot="title"]) {
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+:host([size="lg"]) ::slotted([slot="title"]) {
+    font-size: clamp(2rem, 5vw, 3.4rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :host { --duration: 0ms; }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-input-date",
+        "name": "Date picker",
+        "group": "Form",
+        "description": "Calendar date picker.",
+        "path": "blocs/foundation/forms/inputs/date-time/base-input-date",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,128 @@
+:host {
+    display: block;
+}
+
+.withdrawal,
+.fields {
+    display: grid;
+    gap: 1rem;
+}
+
+label {
+    display: grid;
+    gap: .45rem;
+    color: var(--ulvia-surface-text);
+    font-weight: 700;
+}
+
+select,
+textarea {
+    box-sizing: border-box;
+    width: 100%;
+    border: 1px solid var(--ulvia-surface-border);
+    border-radius: var(--ulvia-radius-control, .5rem);
+    padding: .8rem .9rem;
+    background: var(--ulvia-surface-background);
+    color: var(--ulvia-surface-text);
+    font: inherit;
+    font-weight: 400;
+}
+
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--ulvia-secondary-base);
+    outline-offset: 2px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.confirmation {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    border: 1px solid var(--ulvia-surface-border);
+    border-radius: var(--ulvia-radius-control, .5rem);
+    padding: .9rem;
+    font-weight: 600;
+}
+
+.confirmation input {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: .15rem 0 0;
+    accent-color: var(--ulvia-secondary-base);
+}
+
+.notice,
+.validation {
+    margin: 0;
+}
+
+.notice {
+    color: var(--ulvia-surface-muted-text);
+    font-size: .9rem;
+}
+
+.validation {
+    min-height: 1.5em;
+    color: var(--ulvia-danger-contrasted, #b42318);
+    font-weight: 700;
+}
+
+.submit {
+    min-height: 2.75rem;
+    border: 1px solid var(--ulvia-primary-base);
+    border-radius: var(--ulvia-radius-control, .5rem);
+    padding: .65rem 1rem;
+    background: var(--ulvia-primary-base);
+    color: var(--ulvia-primary-foreground);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+}
+
+.submit:hover {
+    background: var(--ulvia-primary-hover, var(--ulvia-primary-base));
+}
+
+.submit:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.receipt {
+    display: grid;
+    gap: .7rem;
+    margin: 1rem 0 0;
+}
+
+.receipt div {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1fr) minmax(0, 1.4fr);
+    gap: 1rem;
+    border-bottom: 1px solid var(--ulvia-surface-border);
+    padding-bottom: .7rem;
+}
+
+.receipt dt {
+    color: var(--ulvia-surface-muted-text);
+}
+
+.receipt dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-weight: 700;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 36rem) {
+    .receipt div {
+        grid-template-columns: 1fr;
+        gap: .2rem;
+    }
+}

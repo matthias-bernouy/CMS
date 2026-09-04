@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-stat-tile",
+        "name": "Stat tile",
+        "group": "Content",
+        "description": "Big number + label tile. Light or dark surface.",
+        "path": "blocs/foundation/content/stats/base-stat-tile",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,73 @@
+:host {
+    --_mossa-wallet-card-background: var(--ulvia-surface-text);
+    --_mossa-wallet-card-color: #ffffff;
+    --_mossa-wallet-card-muted-color: rgba(255, 255, 255, 0.70);
+    --_mossa-wallet-card-border-color: rgba(255, 255, 255, 0.20);
+    --_mossa-wallet-card-radius: var(--ulvia-radius-lg);
+    --_mossa-wallet-card-padding: 1.5rem;
+
+    display: block;
+}
+
+/* Orange tone uses the shared Ulvia secondary role. */
+:host([tone="orange"]) {
+    --_mossa-wallet-card-background: var(--ulvia-secondary-base);
+    --_mossa-wallet-card-color: var(--ulvia-secondary-foreground);
+    --_mossa-wallet-card-muted-color: var(--ulvia-secondary-foreground);
+    --_mossa-wallet-card-border-color: var(--ulvia-secondary-foreground);
+}
+
+.wallet {
+    background: var(--_mossa-wallet-card-background);
+    color: var(--_mossa-wallet-card-color);
+    border-radius: var(--_mossa-wallet-card-radius);
+    padding: var(--_mossa-wallet-card-padding);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.icon {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+    font-size: 1.1rem;
+}
+
+::slotted([slot="label"]) {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--_mossa-wallet-card-color);
+    font-weight: 600;
+}
+
+::slotted([slot="amount"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading, Georgia, serif);
+    font-size: clamp(2rem, 4.5vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--_mossa-wallet-card-color);
+}
+
+::slotted([slot="caption"]) {
+    margin: 0;
+    color: var(--_mossa-wallet-card-muted-color);
+    font-size: 0.85rem;
+}
+
+.actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+:host(:not(:has([slot="actions"]))) .actions { display: none; }

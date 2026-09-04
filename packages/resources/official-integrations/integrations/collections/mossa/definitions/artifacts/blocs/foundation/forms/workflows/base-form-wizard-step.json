@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-form-wizard-step",
+        "name": "Form wizard step",
+        "group": "Form",
+        "description": "A single full-page step inside a base-form-wizard. Carries the page content and a Next / Back CTA. Visibility is exclusive — only the active step renders.",
+        "path": "blocs/foundation/forms/workflows/base-form-wizard-step",
+        "view": "Bloc.ts"
+    }
+}

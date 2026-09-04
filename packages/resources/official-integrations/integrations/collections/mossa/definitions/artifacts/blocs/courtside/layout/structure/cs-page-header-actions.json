@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-page-header-actions",
+        "name": "Page header with actions",
+        "group": "Courtside",
+        "description": "Page title (and optional subtitle) on the left, primary actions on the right.",
+        "path": "blocs/courtside/layout/structure/cs-page-header-actions",
+        "view": "Bloc.ts"
+    }
+}

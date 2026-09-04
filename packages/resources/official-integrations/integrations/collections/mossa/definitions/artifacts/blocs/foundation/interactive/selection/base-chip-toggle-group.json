@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-chip-toggle-group",
+        "name": "Chip toggle group",
+        "group": "Form",
+        "description": "Group of chip-toggle pills with single or multiple selection.",
+        "path": "blocs/foundation/interactive/selection/base-chip-toggle-group",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,158 @@
+:host {
+    /* Badge tokens are overridable from the parent stepper or per-bloc
+       so the accent of the step number doesn't pin to a single role. */
+    --step-badge-bg:         var(--ulvia-secondary-base);
+    --step-badge-fg:         var(--ulvia-secondary-foreground);
+    --step-badge-bg-pending: var(--ulvia-surface-border);
+    --step-badge-fg-pending: var(--ulvia-surface-muted-text);
+
+    --step-card-bg:      var(--ulvia-subtle-background);
+    --step-card-radius:  var(--ulvia-radius-lg);
+    --step-card-padding: 24px;
+
+    display: block;
+    box-sizing: border-box;
+    color: inherit;
+    font-family: var(--ulvia-font-body);
+    text-align: left;
+}
+
+/* ── State-driven visibility ── */
+
+.step-content-active,
+.step-content-summary {
+    display: none;
+}
+
+:host([state="pending"]) {
+    display: none;
+}
+
+:host([state="active"]) .step-content-active {
+    display: block;
+}
+
+:host([state="complete"]) .step-content-summary {
+    display: block;
+}
+
+/* Stay-open mode: when `collapse-on-complete="no"`, a validated step keeps
+   showing its active content (inputs stay visible, editable as before)
+   instead of swapping to the auto-summary. The next step still reveals
+   via the parent stepper. */
+:host([state="complete"][collapse-on-complete="no"]) .step-content-active {
+    display: block;
+}
+
+:host([state="complete"][collapse-on-complete="no"]) .step-content-summary {
+    display: none;
+}
+
+/* Edit button only when the step is collapsed into a summary. */
+.step-edit-btn {
+    display: none;
+}
+
+:host([state="complete"]:not([collapse-on-complete="no"])) .step-edit-btn {
+    display: inline-flex;
+}
+
+/* Auto-rendered summary is the fallback — hide it if the author has
+   slotted custom summary content. `has-summary` is set from `Bloc.ts`
+   on slotchange (rule 12 — :host(:has()) is broken). */
+.step-auto-summary {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 0;
+}
+
+:host([has-summary]) .step-auto-summary {
+    display: none;
+}
+
+.step-auto-summary:empty {
+    display: none;
+}
+
+/* ── Header (number + title + edit on the right) ── */
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--step-badge-bg);
+    color: var(--step-badge-fg);
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1;
+}
+
+:host([state="pending"]) .step-number {
+    background: var(--step-badge-bg-pending);
+    color: var(--step-badge-fg-pending);
+}
+
+.step-title {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+
+.step-title ::slotted(*) {
+    margin: 0;
+}
+
+.step-edit-btn {
+    background: var(--ulvia-surface-background);
+    border: 1px solid var(--ulvia-surface-border);
+    border-radius: var(--ulvia-radius-card);
+    padding: 8px 16px;
+    color: var(--ulvia-surface-text);
+    cursor: pointer;
+    font-family: var(--ulvia-font-body);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background var(--ulvia-duration-fast) ease;
+}
+
+.step-edit-btn:hover {
+    background: var(--ulvia-surface-border);
+}
+
+/* ── Content cards ── */
+
+.step-content-active,
+.step-content-summary {
+    background: var(--step-card-bg);
+    border-radius: var(--step-card-radius);
+    padding: var(--step-card-padding);
+    text-align: left;
+}
+
+.step-content-active > ::slotted(*) + ::slotted(*) {
+    margin-top: 16px;
+}
+
+.step-auto-summary dt {
+    color: var(--ulvia-surface-muted-text);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.step-auto-summary dd {
+    margin: 0;
+    color: var(--ulvia-surface-text);
+    font-weight: 600;
+}

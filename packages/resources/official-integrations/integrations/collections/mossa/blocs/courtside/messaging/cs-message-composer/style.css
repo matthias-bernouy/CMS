@@ -1,0 +1,34 @@
+:host {
+    --composer-bg:      var(--ulvia-surface-background);
+    --composer-border:  var(--ulvia-surface-border);
+    --composer-radius:  var(--ulvia-radius-card);
+    --composer-pad-y:   0.5rem;
+    --composer-pad-x:   0.75rem;
+    --composer-gap:     0.5rem;
+
+    display: block;
+    box-sizing: border-box;
+}
+
+.composer {
+    background: var(--composer-bg);
+    border: 1px solid var(--composer-border);
+    border-radius: var(--composer-radius);
+    padding: var(--composer-pad-y) var(--composer-pad-x);
+    display: flex;
+    align-items: center;
+    gap: var(--composer-gap);
+}
+
+.input-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.send-wrap {
+    flex: 0 0 auto;
+}
+
+::slotted([slot="input"]) {
+    width: 100%;
+}

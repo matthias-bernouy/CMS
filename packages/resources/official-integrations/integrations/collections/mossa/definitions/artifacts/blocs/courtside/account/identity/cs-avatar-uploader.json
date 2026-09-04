@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-avatar-uploader",
+        "name": "Avatar uploader",
+        "group": "Courtside",
+        "description": "Circular avatar with a camera-icon overlay button to upload a new image, plus name + email aside.",
+        "path": "blocs/courtside/account/identity/cs-avatar-uploader",
+        "view": "Bloc.ts"
+    }
+}

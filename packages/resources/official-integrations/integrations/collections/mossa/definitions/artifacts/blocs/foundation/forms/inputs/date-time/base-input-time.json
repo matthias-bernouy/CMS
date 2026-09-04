@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-input-time",
+        "name": "Time picker",
+        "group": "Form",
+        "description": "Time-of-day picker.",
+        "path": "blocs/foundation/forms/inputs/date-time/base-input-time",
+        "view": "Bloc.ts"
+    }
+}

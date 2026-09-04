@@ -1,0 +1,67 @@
+[
+    {
+        "id": "account",
+        "label": "Account",
+        "description": "Courtside customer account interfaces."
+    },
+    {
+        "id": "action",
+        "label": "Actions",
+        "description": "Buttons and prominent actions."
+    },
+    {
+        "id": "commerce",
+        "label": "Commerce",
+        "description": "Courtside marketplace journeys."
+    },
+    {
+        "id": "compositions",
+        "label": "Compositions",
+        "description": "Global Courtside page compositions."
+    },
+    {
+        "id": "content",
+        "label": "Content",
+        "description": "Reusable editorial and marketing content."
+    },
+    {
+        "id": "feedback",
+        "label": "Feedback",
+        "description": "Loading and status interfaces."
+    },
+    {
+        "id": "form",
+        "label": "Forms",
+        "description": "Form fields, controls and workflows."
+    },
+    {
+        "id": "interactive",
+        "label": "Interactive",
+        "description": "Disclosure and selection interfaces."
+    },
+    {
+        "id": "layout",
+        "label": "Layout",
+        "description": "Containers, headers and structural blocks."
+    },
+    {
+        "id": "media",
+        "label": "Media",
+        "description": "Image and gallery interfaces."
+    },
+    {
+        "id": "messaging",
+        "label": "Messaging",
+        "description": "Conversation interfaces."
+    },
+    {
+        "id": "navigation",
+        "label": "Navigation",
+        "description": "Site and account navigation."
+    },
+    {
+        "id": "text",
+        "label": "Text",
+        "description": "Native semantic text elements."
+    }
+]

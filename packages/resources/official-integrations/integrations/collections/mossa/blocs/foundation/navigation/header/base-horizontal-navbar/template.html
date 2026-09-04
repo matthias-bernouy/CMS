@@ -1,0 +1,14 @@
+<nav class="navbar">
+    <div class="brand"><slot name="brand"></slot></div>
+    <button class="burger-toggle" type="button" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="panel">
+        <div class="links">
+            <slot name="navigation"></slot>
+        </div>
+        <div class="actions">
+            <slot name="actions"></slot>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,144 @@
+:host {
+    --item-padding-y: var(--acc-item-padding-y, 1rem);
+    --item-padding-x: var(--acc-item-padding-x, 1.25rem);
+    --item-font-size: var(--acc-item-font-size, 1rem);
+    --item-accent:    var(--ulvia-secondary-base);
+    --item-fg:        var(--ulvia-surface-text);
+    --item-fg-muted:  var(--ulvia-surface-muted-text);
+    --item-hover-bg:  color-mix(in srgb, var(--item-accent) 6%, transparent);
+
+    display: block;
+    font-family: var(--ulvia-font-body);
+    font-size: var(--item-font-size);
+    color: var(--item-fg);
+    box-sizing: border-box;
+}
+
+.item {
+    display: block;
+    position: relative;
+}
+
+.header {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: var(--item-padding-y) var(--item-padding-x);
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    transition: background-color var(--ulvia-duration-normal) ease,
+                color var(--ulvia-duration-normal) ease;
+}
+
+.header:hover {
+    background: var(--item-hover-bg);
+}
+
+.header:focus-visible {
+    outline: 2px solid var(--item-accent);
+    outline-offset: -2px;
+    border-radius: inherit;
+}
+
+:host([open]) .header {
+    color: var(--item-accent);
+}
+
+:host([disabled]) .header {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.title {
+    flex: 1 1 auto;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+}
+
+.title ::slotted(*) {
+    margin: 0 !important;
+    font-family: var(--ulvia-font-body) !important;
+    font-size: inherit !important;
+    font-weight: 600 !important;
+    color: inherit !important;
+    letter-spacing: inherit !important;
+}
+
+.indicator {
+    flex: 0 0 auto;
+    width: 1.15em;
+    height: 1.15em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--item-accent);
+    transition: transform var(--ulvia-duration-normal) ease,
+                color var(--ulvia-duration-normal) ease;
+}
+
+.indicator svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+:host([open]) .indicator {
+    transform: rotate(-180deg);
+}
+
+.panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--ulvia-duration-normal) ease;
+}
+
+.content {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 var(--item-padding-x);
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity var(--ulvia-duration-normal) ease,
+                transform var(--ulvia-duration-normal) ease,
+                padding var(--ulvia-duration-normal) ease;
+    color: var(--item-fg-muted);
+}
+
+:host([open]) .panel {
+    grid-template-rows: 1fr;
+}
+
+:host([open]) .content {
+    overflow: visible;
+    padding: 0.25rem var(--item-padding-x) var(--item-padding-y);
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.content ::slotted(*) {
+    margin: 0 0 0.6rem;
+}
+.content ::slotted(*:last-child) {
+    margin-bottom: 0;
+}
+
+:host-context(base-accordion[icon-position="left"]) .header {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.9rem;
+}
+
+:host-context(base-accordion[icon="none"]) .indicator {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .header, .indicator, .panel, .content { transition: none; }
+}

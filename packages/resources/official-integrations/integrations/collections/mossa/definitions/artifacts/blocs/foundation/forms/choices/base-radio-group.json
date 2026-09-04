@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-radio-group",
+        "name": "Radio group",
+        "group": "Form",
+        "description": "Group of Radio options sharing a single name.",
+        "path": "blocs/foundation/forms/choices/base-radio-group",
+        "view": "Bloc.ts"
+    }
+}

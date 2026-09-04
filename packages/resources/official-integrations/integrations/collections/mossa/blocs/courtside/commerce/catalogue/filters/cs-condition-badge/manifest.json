@@ -1,0 +1,6 @@
+{
+    "default-tag": "cs-condition-badge",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": { "title": "Condition badge", "description": "Displays a Courtside condition label." }
+}

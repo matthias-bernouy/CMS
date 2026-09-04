@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-input-time",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Time picker",
+        "description": "Time-of-day picker.",
+        "categories": [
+            "form",
+            "input"
+        ]
+    }
+}

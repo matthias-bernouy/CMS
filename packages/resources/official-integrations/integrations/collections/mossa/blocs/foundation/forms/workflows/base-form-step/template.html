@@ -1,0 +1,20 @@
+<div class="step" part="step">
+    <header class="step-header" part="header">
+        <div class="step-number" part="number">
+            <span></span>
+        </div>
+        <div class="step-title" part="title">
+            <slot name="title"></slot>
+        </div>
+        <button type="button" class="step-edit-btn" part="edit-btn" data-step-edit>
+            <slot name="edit-label">Modifier</slot>
+        </button>
+    </header>
+    <div class="step-content step-content-active" part="content-active">
+        <slot name="active"></slot>
+    </div>
+    <div class="step-content step-content-summary" part="content-summary">
+        <slot name="summary"></slot>
+        <dl class="step-auto-summary" part="auto-summary"></dl>
+    </div>
+</div>

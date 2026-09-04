@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-toolbar",
+        "name": "Toolbar",
+        "group": "Header",
+        "description": "Title + inline meta on the left, controls on the right. Generic page/section toolbar.",
+        "path": "blocs/foundation/layout/headers/base-toolbar",
+        "view": "Bloc.ts"
+    }
+}

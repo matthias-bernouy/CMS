@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-purchase-list",
+        "name": "Purchase list",
+        "group": "Courtside",
+        "description": "Paginated private list of the current Courtside buyer orders.",
+        "path": "blocs/courtside/account/orders/cs-purchase-list",
+        "view": "Bloc.ts"
+    }
+}

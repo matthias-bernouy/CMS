@@ -1,0 +1,78 @@
+<form novalidate>
+    <section class="step" data-step="1" data-state="active">
+        <header><span class="number">1</span><h2>Quelle raquette&nbsp;?</h2><button class="edit" type="button" data-edit="1">Modifier</button></header>
+        <p class="summary" data-summary="1"></p>
+        <div class="content">
+            <div class="search">
+                <basic-input id="product-search" type="search" label="Modèle" autocomplete="off" placeholder="Rechercher un modèle…" required text-color="var(--ulvia-surface-text)" background-color="var(--ulvia-surface-background)" border-color="var(--ulvia-surface-border)" accent-color="var(--ulvia-secondary-base)"></basic-input>
+                <div class="results" role="listbox" hidden></div>
+            </div>
+            <p class="selected-product" hidden></p>
+            <div class="variant" hidden>
+                <div class="variant-fields"></div>
+            </div>
+            <button class="next" type="button" data-next="2">Continuer</button>
+        </div>
+    </section>
+
+    <section class="step" data-step="2" data-state="pending">
+        <header><span class="number">2</span><h2>Quelle estimation&nbsp;?</h2><button class="edit" type="button" data-edit="2">Modifier</button></header>
+        <p class="summary" data-summary="2"></p>
+        <div class="content">
+            <div class="estimate" aria-live="polite">
+                <p class="estimate-kicker">Estimation Courtside</p>
+                <strong class="estimate-value">Sélectionne ton modèle pour voir sa cote.</strong>
+                <p class="estimate-detail"></p>
+            </div>
+            <fieldset>
+                <legend>État estimé</legend>
+                <div class="grades">
+                    <label><input type="radio" name="condition" value="very_good" required><span><strong>Ace</strong><small>Excellent état</small></span></label>
+                    <label><input type="radio" name="condition" value="good"><span><strong>Break</strong><small>Bon état, traces d’utilisation</small></span></label>
+                    <label><input type="radio" name="condition" value="poor"><span><strong>Coup droit</strong><small>État joueur, usure visible</small></span></label>
+                </div>
+            </fieldset>
+            <button class="next" type="button" data-next="3">Continuer</button>
+        </div>
+    </section>
+
+    <section class="step" data-step="3" data-state="pending">
+        <header><span class="number">3</span><h2>Décris-la en quelques mots</h2><button class="edit" type="button" data-edit="3">Modifier</button></header>
+        <p class="summary" data-summary="3"></p>
+        <div class="content">
+            <div class="auth-gate">
+                <slot name="auth-link"></slot>
+            </div>
+            <div class="seller-details" hidden>
+                <basic-textarea id="description" label="Description" maxlength="20000" rows="5" placeholder="Année, fréquence de jeu, défauts visibles, cordage…" text-color="var(--ulvia-surface-text)" background-color="var(--ulvia-surface-background)" border-color="var(--ulvia-surface-border)" accent-color="var(--ulvia-secondary-base)"></basic-textarea>
+                <div class="photo-field">
+                    <span class="field-label">Photos</span>
+                    <div class="photo-grid">
+                        <div class="photo-previews" data-photo-previews hidden></div>
+                        <label class="photo-picker">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
+                            <span data-photo-picker-label>Ajouter des photos</span>
+                            <input class="photos-upload" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+                        </label>
+                    </div>
+                    <small class="photo-hint" data-photo-hint>Ajoute entre 3 et 5 images JPEG, PNG, WebP ou AVIF, 5 Mo maximum par image.</small>
+                    <small class="photo-count" data-photo-count aria-live="polite">Aucune photo sélectionnée</small>
+                </div>
+                <div class="photo-actions">
+                    <button class="next" type="button" data-next="4">Continuer</button>
+                    <slot name="photo-guide"></slot>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="step final-step" data-step="4" data-state="pending">
+        <header><span class="number">4</span><h2>Envoie ton annonce</h2></header>
+        <div class="content">
+            <p>Courtside vérifie les photos, confirme l’état et le prix, puis met l’annonce en ligne.</p>
+            <button class="submit" type="submit">Envoyer mon annonce pour validation</button>
+            <p class="status" role="status"></p>
+        </div>
+    </section>
+</form>
+<slot name="success-navigation"></slot>

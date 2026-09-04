@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "default-tag": "cs-account-icon",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Icône Mon espace",
+        "description": "Jeu d’icônes partagé par les navigations du compte Courtside.",
+        "categories": [
+            "Courtside"
+        ]
+    }
+}

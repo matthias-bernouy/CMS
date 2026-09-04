@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-select-option",
+        "name": "Select option",
+        "group": "Form",
+        "description": "One option inside a Select bloc.",
+        "path": "blocs/foundation/forms/choices/base-select-option",
+        "view": "Bloc.ts"
+    }
+}

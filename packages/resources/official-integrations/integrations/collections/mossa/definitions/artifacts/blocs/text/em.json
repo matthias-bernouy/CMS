@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "em",
+        "name": "Emphasis",
+        "group": "Text",
+        "description": "Native emphasized text.",
+        "path": "blocs/text/em",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,12 @@
+<label class="wrap" part="wrap">
+    <input class="native" type="radio" part="input" />
+    <span class="box" part="box" aria-hidden="true">
+        <span class="dot" part="dot"></span>
+    </span>
+    <span class="label" part="label">
+        <slot></slot>
+    </span>
+</label>
+<div class="sr-only" aria-hidden="true">
+    <slot name="field-value"></slot>
+</div>

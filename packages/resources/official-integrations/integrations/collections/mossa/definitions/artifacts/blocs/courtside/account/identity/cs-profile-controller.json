@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-profile-controller",
+        "name": "Profile controller",
+        "group": "Courtside",
+        "description": "Connects the Courtside profile page UI to user account and seller verification sources.",
+        "path": "blocs/courtside/account/identity/cs-profile-controller",
+        "view": "Bloc.ts"
+    }
+}

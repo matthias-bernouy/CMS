@@ -1,0 +1,48 @@
+:host {
+    --scp-bg:     var(--ulvia-secondary-base, #a85432);
+    --scp-fg:     #ffffff;
+    --scp-muted:  rgba(255, 255, 255, 0.85);
+    --scp-radius: var(--ulvia-radius-lg, 16px);
+    --scp-pad:    1.5rem;
+
+    display: block;
+}
+
+.card {
+    background: var(--scp-bg);
+    color: var(--scp-fg);
+    border-radius: var(--scp-radius);
+    padding: var(--scp-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading, Georgia, serif);
+    font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--scp-fg);
+}
+
+::slotted([slot="description"]) {
+    margin: 0;
+    color: var(--scp-muted);
+    font-size: 0.95rem;
+}
+
+.search {
+    margin-top: 0.5rem;
+}
+
+/* Tone */
+:host([tone="dark"]) {
+    --scp-bg: var(--ulvia-surface-text, #1a1108);
+}
+:host([tone="lime"]) {
+    --scp-bg: var(--ulvia-primary-base, #c9e44d);
+    --scp-fg: var(--ulvia-surface-text, #1a1108);
+    --scp-muted: var(--ulvia-body-text, #3a2a1c);
+}

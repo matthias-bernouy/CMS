@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-listing-layout",
+        "name": "Listing layout",
+        "group": "Courtside",
+        "description": "Responsive listing with a desktop sidebar and mobile filter drawer.",
+        "path": "blocs/courtside/commerce/catalogue/listing/cs-listing-layout",
+        "view": "Bloc.ts"
+    }
+}

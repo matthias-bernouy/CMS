@@ -1,0 +1,17 @@
+<section class="layout" part="layout">
+    <div class="gallery" part="gallery">
+        <div class="main-media" part="main-media"><slot name="main-media"></slot></div>
+        <div class="thumbnails" part="thumbnails"><slot name="thumbnails"></slot></div>
+    </div>
+    <div class="information" part="information">
+        <slot name="title"></slot>
+        <slot name="meta"></slot>
+        <slot name="badge"></slot>
+        <slot name="description"></slot>
+        <slot name="valuation"></slot>
+        <slot name="price"></slot>
+        <slot name="specifications"></slot>
+        <slot name="shipping"></slot>
+        <div class="actions" part="actions"><slot name="actions"></slot></div>
+    </div>
+</section>

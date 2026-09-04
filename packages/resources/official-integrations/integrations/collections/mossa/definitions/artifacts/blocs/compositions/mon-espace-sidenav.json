@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mon-espace-sidenav",
+        "name": "Sidenav Mon espace",
+        "group": "composition",
+        "description": "Composition de navigation pour les pages Mon espace.",
+        "path": "blocs/compositions/mon-espace-sidenav",
+        "composition": "template.html"
+    }
+}

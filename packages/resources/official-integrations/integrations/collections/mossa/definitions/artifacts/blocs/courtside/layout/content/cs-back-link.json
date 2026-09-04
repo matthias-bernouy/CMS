@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-back-link",
+        "name": "Back link",
+        "group": "Courtside",
+        "description": "Lien de retour avec flèche, muted/small. Slot: text label.",
+        "path": "blocs/courtside/layout/content/cs-back-link",
+        "view": "Bloc.ts"
+    }
+}

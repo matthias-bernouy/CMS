@@ -1,0 +1,60 @@
+:host {
+    --logo-fg:        var(--ulvia-surface-text, #1a1108);
+    --logo-mark-bg:   var(--ulvia-secondary-base, #a85432);
+    --logo-mark-fg:   #ffffff;
+    --logo-mark-size: 1.85rem;
+    --logo-radius:    var(--ulvia-radius-card, 10px);
+    --logo-gap:       0.55rem;
+
+    display: inline-block;
+}
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--logo-gap);
+    color: var(--logo-fg);
+    text-decoration: none;
+    font-family: var(--ulvia-font-heading, "Recoleta", Georgia, serif);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--logo-mark-size);
+    height: var(--logo-mark-size);
+    background: var(--logo-mark-bg);
+    color: var(--logo-mark-fg);
+    border-radius: var(--logo-radius);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    font-family: var(--ulvia-font-body, "Inter", system-ui, sans-serif);
+    flex-shrink: 0;
+}
+
+.word {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+/* Tone — invert for dark backgrounds (footer, dark hero, etc.) */
+:host([tone="inverted"]) {
+    --logo-fg:      #ffffff;
+    --logo-mark-bg: #ffffff;
+    --logo-mark-fg: var(--ulvia-secondary-base, #a85432);
+}
+
+/* Size variants */
+:host([size="sm"]) {
+    --logo-mark-size: 1.5rem;
+    --logo-gap:       0.45rem;
+}
+:host([size="lg"]) {
+    --logo-mark-size: 2.4rem;
+    --logo-gap:       0.7rem;
+}
+:host([size="lg"]) .word { font-size: 1.3rem; }

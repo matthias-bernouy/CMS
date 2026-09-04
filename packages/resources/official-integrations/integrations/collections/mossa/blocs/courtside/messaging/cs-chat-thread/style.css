@@ -1,0 +1,37 @@
+:host {
+    --thread-bg:        var(--ulvia-surface-background);
+    --thread-border:    var(--ulvia-surface-border);
+    --thread-radius:    var(--ulvia-radius-lg);
+    --thread-pad-y:     1.25rem;
+    --thread-pad-x:     1.25rem;
+    --thread-gap:       0.6rem;
+    --thread-max-h:     520px;
+
+    display: block;
+    box-sizing: border-box;
+}
+
+.thread {
+    background: var(--thread-bg);
+    border: 1px solid var(--thread-border);
+    border-radius: var(--thread-radius);
+    padding: var(--thread-pad-y) var(--thread-pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: var(--thread-gap);
+    max-height: var(--thread-max-h);
+    overflow-y: auto;
+}
+
+::slotted(cs-message-bubble) {
+    width: 100%;
+}
+
+::slotted([slot="day-separator"]) {
+    align-self: center;
+    font-size: 0.75rem;
+    color: var(--ulvia-surface-muted-text);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0.5rem 0;
+}

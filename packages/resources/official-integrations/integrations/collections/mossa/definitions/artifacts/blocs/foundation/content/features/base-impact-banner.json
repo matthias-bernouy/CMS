@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-impact-banner",
+        "name": "Impact banner",
+        "group": "Content",
+        "description": "Wide orange banner with icon + title + paragraphs, with optional stats grid below.",
+        "path": "blocs/foundation/content/features/base-impact-banner",
+        "view": "Bloc.ts"
+    }
+}

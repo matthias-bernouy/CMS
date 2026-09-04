@@ -1,0 +1,62 @@
+:host {
+    --chip-bg:        #ffffff;
+    --chip-fg:        var(--ulvia-surface-text, #1a1108);
+    --chip-border:    var(--ulvia-surface-border, #ebe1d0);
+    --chip-hover-bg:  color-mix(in srgb, var(--ulvia-secondary-base, #a85432) 8%, #ffffff);
+    --chip-active-bg: var(--ulvia-secondary-base, #a85432);
+    --chip-active-fg: #ffffff;
+    --chip-radius:    999px;
+    --chip-pad:       0.45rem 0.95rem;
+
+    display: inline-flex;
+    background: var(--chip-bg);
+    color: var(--chip-fg);
+    border: 1px solid var(--chip-border);
+    border-radius: var(--chip-radius);
+    padding: var(--chip-pad);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--duration, 240ms) var(--ease, ease-out),
+                color var(--duration, 240ms) var(--ease, ease-out),
+                border-color var(--duration, 240ms) var(--ease, ease-out),
+                transform 120ms var(--ease, ease-out);
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+:host(:hover) {
+    background: var(--chip-hover-bg);
+    border-color: color-mix(in srgb, var(--ulvia-secondary-base) 72%, white);
+}
+
+:host(:active) {
+    transform: translateY(1px);
+}
+
+:host([selected]) {
+    background: var(--chip-active-bg);
+    color: var(--chip-active-fg);
+    border-color: var(--chip-active-bg);
+}
+
+:host([disabled]) {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+:host(:focus-visible) {
+    outline: 2px solid var(--ulvia-secondary-base, #a85432);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :host { transition: none; }
+}

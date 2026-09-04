@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-tabs",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Tabs",
+        "description": "Tabbed panels with animated active indicator.",
+        "categories": [
+            "content",
+            "layout"
+        ]
+    }
+}

@@ -1,0 +1,30 @@
+:host {
+    --card-bg:      var(--ulvia-surface-background);
+    --card-border:  var(--ulvia-surface-border);
+    --card-radius:  var(--ulvia-radius-card);
+    --card-pad-x:   1.25rem;
+
+    display: block;
+    box-sizing: border-box;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    padding: 0.25rem var(--card-pad-x);
+}
+
+:host([variant="flat"]) {
+    --card-bg:     transparent;
+    --card-border: transparent;
+    --card-pad-x:  0;
+}
+
+::slotted(cs-spec-row) {
+    border-bottom: 1px solid var(--ulvia-surface-border);
+}
+
+::slotted(cs-spec-row:last-child) {
+    border-bottom: 0;
+}

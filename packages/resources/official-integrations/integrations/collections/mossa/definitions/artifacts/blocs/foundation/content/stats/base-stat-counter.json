@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-stat-counter",
+        "name": "Stat counter",
+        "group": "Content",
+        "description": "Animated numeric stat with label and optional trend.",
+        "path": "blocs/foundation/content/stats/base-stat-counter",
+        "view": "Bloc.ts"
+    }
+}

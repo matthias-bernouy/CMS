@@ -1,0 +1,48 @@
+:host {
+    --br-bg:      var(--ulvia-page-background, #f6efe2);
+    --br-fg:      var(--ulvia-surface-text, #1a1108);
+    --br-muted:   var(--ulvia-surface-muted-text, #6b5642);
+    --br-pad:     2.5rem 1.5rem;
+
+    display: block;
+    background: var(--br-bg);
+}
+
+.row {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: var(--br-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.caption {
+    margin: 0;
+    font-size: 0.875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--br-muted);
+}
+
+.items {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+::slotted(*) {
+    font-family: var(--ulvia-font-heading, Georgia, serif);
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--ulvia-surface-muted-text);
+    transition: color 160ms var(--ease, ease-out);
+}
+
+::slotted(*:hover) {
+    color: var(--br-fg);
+}

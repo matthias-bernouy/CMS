@@ -1,0 +1,15 @@
+<div class="mobile-actions">
+    <button class="open" type="button" aria-expanded="false" aria-controls="listing-filters">Filtres</button>
+</div>
+<div class="backdrop" aria-hidden="true" hidden></div>
+<div class="layout">
+    <aside class="sidebar" id="listing-filters" aria-label="Filtres">
+        <header class="drawer-header">
+            <button class="close" type="button" aria-label="Fermer les filtres">×</button>
+        </header>
+        <div class="drawer-scroll">
+            <slot name="filters"></slot>
+        </div>
+    </aside>
+    <main><slot></slot></main>
+</div>

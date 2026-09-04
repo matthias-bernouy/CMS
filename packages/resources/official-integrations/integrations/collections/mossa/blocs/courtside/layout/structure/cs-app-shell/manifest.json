@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-app-shell",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "App shell",
+        "description": "Two-column layout with a left sidebar slot and a main content slot. Used for /mon-espace.",
+        "categories": [
+            "layout"
+        ]
+    }
+}

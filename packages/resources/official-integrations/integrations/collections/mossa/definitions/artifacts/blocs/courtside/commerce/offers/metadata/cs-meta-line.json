@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-meta-line",
+        "name": "Meta line (icon + text)",
+        "group": "Courtside",
+        "description": "Petite ligne icône + texte muted (ex. livraison, durée, lieu). Icône SVG swap-able.",
+        "path": "blocs/courtside/commerce/offers/metadata/cs-meta-line",
+        "view": "Bloc.ts"
+    }
+}

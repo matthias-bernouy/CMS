@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-form-stepper",
+        "name": "Form stepper",
+        "group": "Form",
+        "description": "Orchestrates a sequence of base-form-step children, revealing each one as the previous is validated. Numbering, cascade-edit and final-submit reveal are handled here.",
+        "path": "blocs/foundation/forms/workflows/base-form-stepper",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-order-summary-card",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Order summary card",
+        "description": "Product summary for the checkout recap step: image left, title + price breakdown right, Total à payer footer underneath. Accepts cs-price-line children for the breakdown.",
+        "categories": [
+            "content"
+        ]
+    }
+}

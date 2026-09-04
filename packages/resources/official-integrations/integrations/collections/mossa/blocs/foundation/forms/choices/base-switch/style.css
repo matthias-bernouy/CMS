@@ -1,0 +1,87 @@
+:host {
+    --sw-w: 2.35rem;
+    --sw-h: 1.3rem;
+    --sw-pad: 2px;
+    --sw-bg-off: #cbd5e1;
+    --sw-bg-on: var(--primary, #4f46e5);
+    --sw-thumb: #ffffff;
+    --sw-fg: #0f172a;
+    --sw-gap: 0.6rem;
+    --sw-duration: 180ms;
+    --sw-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    display: inline-block;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--sw-fg);
+    font-size: 0.95rem;
+}
+
+.wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sw-gap);
+    cursor: pointer;
+    user-select: none;
+    line-height: 1.35;
+}
+
+.native {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0; height: 0;
+}
+
+.track {
+    position: relative;
+    display: inline-block;
+    width: var(--sw-w);
+    height: var(--sw-h);
+    border-radius: 999px;
+    background: var(--sw-bg-off);
+    flex: 0 0 auto;
+    transition: background var(--sw-duration) var(--sw-ease),
+                box-shadow var(--sw-duration) var(--sw-ease);
+}
+
+.thumb {
+    position: absolute;
+    top: var(--sw-pad);
+    left: var(--sw-pad);
+    width: calc(var(--sw-h) - (var(--sw-pad) * 2));
+    height: calc(var(--sw-h) - (var(--sw-pad) * 2));
+    border-radius: 50%;
+    background: var(--sw-thumb);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+    transition: transform var(--sw-duration) var(--sw-ease);
+}
+
+.native:checked + .track {
+    background: var(--sw-bg-on);
+}
+
+.native:checked + .track .thumb {
+    transform: translateX(calc(var(--sw-w) - var(--sw-h)));
+}
+
+.native:focus-visible + .track {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sw-bg-on) 25%, transparent);
+}
+
+.label { display: inline-block; }
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:host([disabled]) .wrap { opacity: 0.55; cursor: not-allowed; }
+
+:host([size="sm"]) { --sw-w: 1.95rem; --sw-h: 1.1rem; font-size: 0.85rem; }
+:host([size="lg"]) { --sw-w: 2.8rem; --sw-h: 1.55rem; font-size: 1.05rem; }
+
+@media (prefers-reduced-motion: reduce) { :host { --sw-duration: 0ms; } }

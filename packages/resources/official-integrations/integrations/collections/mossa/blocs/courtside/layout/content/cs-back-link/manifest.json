@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-back-link",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Back link",
+        "description": "Lien de retour avec flèche, muted/small. Slot: text label.",
+        "categories": [
+            "courtside",
+            "navigation"
+        ]
+    }
+}

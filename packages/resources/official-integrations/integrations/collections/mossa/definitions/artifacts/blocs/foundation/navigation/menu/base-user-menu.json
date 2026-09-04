@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-user-menu",
+        "name": "User menu",
+        "group": "Navigation",
+        "description": "Avatar + name trigger with a popover header (logged-in user + role badge), menu items and a logout link.",
+        "path": "blocs/foundation/navigation/menu/base-user-menu",
+        "view": "Bloc.ts"
+    }
+}

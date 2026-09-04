@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "composition": "./template.html",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mon-espace-sidenav",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Sidenav Mon espace",
+        "description": "Composition de navigation pour les pages Mon espace.",
+        "categories": [
+            "composition"
+        ]
+    }
+}

@@ -1,0 +1,31 @@
+:host {
+    --ctg-gap: 0.5rem;
+    --ctg-legend-color: var(--ulvia-surface-muted-text, #6b5642);
+
+    display: block;
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.legend {
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ctg-legend-color);
+}
+
+:host(:not(:has([slot="legend"]))) .legend { display: none; }
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ctg-gap);
+}
+
+:host([align="center"]) .chips { justify-content: center; }
+:host([align="right"])  .chips { justify-content: flex-end; }

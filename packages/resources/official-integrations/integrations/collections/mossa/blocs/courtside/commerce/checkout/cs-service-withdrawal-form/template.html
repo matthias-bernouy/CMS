@@ -1,0 +1,78 @@
+<section class="withdrawal">
+    <div data-loading>
+        <basic-skeleton height="20rem" animation="wave" label="Chargement des commandes"></basic-skeleton>
+    </div>
+
+    <basic-card data-error hidden appearance="outlined" density="spacious">
+        <strong slot="title">Demande indisponible</strong>
+        <span slot="description" data-error-message></span>
+        <basic-button slot="actions" data-retry appearance="outlined"><button type="button">Réessayer</button></basic-button>
+    </basic-card>
+
+    <form data-form hidden novalidate>
+        <basic-card appearance="outlined" density="spacious">
+            <strong slot="title">Exercer mon droit de rétractation</strong>
+            <span slot="description">
+                Cette démarche concerne le service d’intermédiation Courtside associé à une commande.
+                Elle ne vaut pas automatiquement annulation de la vente du produit ni remboursement :
+                la demande est enregistrée, horodatée et examinée selon le contrat applicable.
+            </span>
+
+            <div class="fields">
+                <label>
+                    <span>Commande concernée</span>
+                    <select data-order required></select>
+                </label>
+
+                <label>
+                    <span>Précisions facultatives</span>
+                    <textarea
+                        data-reason
+                        maxlength="4000"
+                        rows="5"
+                        placeholder="Tu peux préciser ici la raison ou le contexte de ta demande."
+                    ></textarea>
+                </label>
+
+                <label class="confirmation">
+                    <input data-confirmed type="checkbox" required>
+                    <span>
+                        Je confirme sans ambiguïté vouloir me rétracter du service d’intermédiation
+                        Courtside associé à la commande sélectionnée.
+                    </span>
+                </label>
+
+                <p class="notice">
+                    Consulte les <slot name="terms-link"></slot>
+                    pour connaître le périmètre du service et les règles applicables.
+                </p>
+                <p class="validation" data-validation role="alert" aria-live="polite"></p>
+            </div>
+
+            <button
+                slot="actions"
+                class="submit"
+                data-submit
+                type="submit"
+            >Confirmer ma demande</button>
+        </basic-card>
+    </form>
+
+    <basic-card data-success hidden appearance="outlined" density="spacious">
+        <strong slot="title">Ta demande est enregistrée</strong>
+        <span slot="description">
+            Conserve cet accusé. Courtside examinera séparément les conséquences contractuelles,
+            logistiques et financières éventuelles.
+        </span>
+        <dl class="receipt">
+            <div><dt>Référence de la demande</dt><dd data-request-reference></dd></div>
+            <div><dt>Commande</dt><dd data-order-reference></dd></div>
+            <div><dt>Date et heure</dt><dd data-confirmed-at></dd></div>
+            <div><dt>Statut</dt><dd data-status></dd></div>
+        </dl>
+        <basic-button slot="actions" data-download appearance="outlined"><button type="button">
+            Télécharger l’accusé
+        </button></basic-button>
+        <slot name="back-action" slot="actions"></slot>
+    </basic-card>
+</section>

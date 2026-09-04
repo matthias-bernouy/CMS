@@ -1,0 +1,3456 @@
+[
+    {
+        "id": "mossa/blocs/base-accordion",
+        "type": "bloc",
+        "artifact": "base-accordion",
+        "category": "interactive",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-accordion-item"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-normal",
+                "radius-card",
+                "radius-sm",
+                "secondary-base",
+                "shadow-sm",
+                "shadow-soft",
+                "surface-background",
+                "surface-border",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-accordion-item",
+        "type": "bloc",
+        "artifact": "base-accordion-item",
+        "category": "interactive",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-normal",
+                "font-body",
+                "secondary-base",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-article-header",
+        "type": "bloc",
+        "artifact": "base-article-header",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-article-meta",
+                "mossa/blocs/base-person-chip"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-article-meta",
+        "type": "bloc",
+        "artifact": "base-article-meta",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-person-chip"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-avatar-uploader",
+        "type": "bloc",
+        "artifact": "base-avatar-uploader",
+        "category": "form",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-badge",
+        "type": "bloc",
+        "artifact": "base-badge",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-base",
+                "danger-contrasted",
+                "danger-foreground",
+                "danger-muted",
+                "font-body",
+                "info-base",
+                "info-contrasted",
+                "info-foreground",
+                "info-muted",
+                "page-background",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "primary-muted",
+                "radius-card",
+                "radius-sm",
+                "secondary-base",
+                "secondary-contrasted",
+                "secondary-foreground",
+                "secondary-muted",
+                "subtle-background",
+                "success-base",
+                "success-contrasted",
+                "success-foreground",
+                "success-muted",
+                "surface-text",
+                "warning-base",
+                "warning-contrasted",
+                "warning-foreground",
+                "warning-muted"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-brands-row",
+        "type": "bloc",
+        "artifact": "base-brands-row",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-button",
+        "type": "bloc",
+        "artifact": "base-button",
+        "category": "action",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-base",
+                "danger-contrasted",
+                "danger-foreground",
+                "danger-hover",
+                "danger-muted",
+                "duration-fast",
+                "duration-normal",
+                "font-body",
+                "info-base",
+                "info-contrasted",
+                "info-foreground",
+                "info-hover",
+                "info-muted",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "primary-hover",
+                "primary-muted",
+                "radius-card",
+                "radius-lg",
+                "radius-sm",
+                "secondary-base",
+                "secondary-contrasted",
+                "secondary-foreground",
+                "secondary-hover",
+                "secondary-muted",
+                "shadow-sm",
+                "shadow-soft",
+                "success-base",
+                "success-contrasted",
+                "success-foreground",
+                "success-hover",
+                "success-muted",
+                "surface-border",
+                "surface-text",
+                "warning-base",
+                "warning-contrasted",
+                "warning-foreground",
+                "warning-hover",
+                "warning-muted"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-card",
+        "type": "bloc",
+        "artifact": "base-card",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "page-background",
+                "primary-base",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-checkbox",
+        "type": "bloc",
+        "artifact": "base-checkbox",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-checkbox-with-badge",
+        "type": "bloc",
+        "artifact": "base-checkbox-with-badge",
+        "category": "form",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-chip-toggle",
+        "type": "bloc",
+        "artifact": "base-chip-toggle",
+        "category": "form",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-chip-toggle-group",
+        "type": "bloc",
+        "artifact": "base-chip-toggle-group",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-chip-toggle"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-container",
+        "type": "bloc",
+        "artifact": "base-container",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-card",
+                "mossa/blocs/base-grid"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "container-lg",
+                "container-md",
+                "container-sm",
+                "container-xl",
+                "container-xs"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-cta-card",
+        "type": "bloc",
+        "artifact": "base-cta-card",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-divider",
+        "type": "bloc",
+        "artifact": "base-divider",
+        "category": "layout",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-border"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-empty-state",
+        "type": "bloc",
+        "artifact": "base-empty-state",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-feature-item",
+        "type": "bloc",
+        "artifact": "base-feature-item",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "secondary-base",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-feature-strip",
+        "type": "bloc",
+        "artifact": "base-feature-strip",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-feature-item"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-fieldset",
+        "type": "bloc",
+        "artifact": "base-fieldset",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "radius-sm",
+                "surface-border",
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-file-upload",
+        "type": "bloc",
+        "artifact": "base-file-upload",
+        "category": "form",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "body-text",
+                "danger-base",
+                "duration-normal",
+                "font-body",
+                "radius-card",
+                "secondary-base",
+                "secondary-muted",
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-filter-panel",
+        "type": "bloc",
+        "artifact": "base-filter-panel",
+        "category": "interactive",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-fieldset"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-normal",
+                "font-body",
+                "radius-card",
+                "radius-sm",
+                "secondary-base",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-footer",
+        "type": "bloc",
+        "artifact": "base-footer",
+        "category": "navigation",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-footer-column",
+                "mossa/blocs/base-grid",
+                "mossa/blocs/base-nav-item"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "page-background",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "secondary-base",
+                "secondary-foreground",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-footer-column",
+        "type": "bloc",
+        "artifact": "base-footer-column",
+        "category": "navigation",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-nav-item"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-heading",
+                "primary-contrasted",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-form",
+        "type": "bloc",
+        "artifact": "base-form",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-contrasted",
+                "success-contrasted",
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-form-card",
+        "type": "bloc",
+        "artifact": "base-form-card",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-form-field",
+        "type": "bloc",
+        "artifact": "base-form-field",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-input-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-form-step",
+        "type": "bloc",
+        "artifact": "base-form-step",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "font-body",
+                "radius-card",
+                "radius-lg",
+                "secondary-base",
+                "secondary-foreground",
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-form-stepper",
+        "type": "bloc",
+        "artifact": "base-form-stepper",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-form-step"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-form-wizard",
+        "type": "bloc",
+        "artifact": "base-form-wizard",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-form-wizard-step"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "font-body",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "primary-muted",
+                "secondary-contrasted",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-form-wizard-step",
+        "type": "bloc",
+        "artifact": "base-form-wizard-step",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "secondary-contrasted"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-gallery",
+        "type": "bloc",
+        "artifact": "base-gallery",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-gallery-item"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-gallery-item",
+        "type": "bloc",
+        "artifact": "base-gallery-item",
+        "category": "content",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-grid",
+        "type": "bloc",
+        "artifact": "base-grid",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-card"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "container-lg",
+                "container-md",
+                "container-sm",
+                "container-xl",
+                "space-2xl",
+                "space-lg",
+                "space-md",
+                "space-sm",
+                "space-xl"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-hero-editorial",
+        "type": "bloc",
+        "artifact": "base-hero-editorial",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "secondary-base",
+                "secondary-foreground"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-hero-marketing",
+        "type": "bloc",
+        "artifact": "base-hero-marketing",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-heading",
+                "page-background",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "secondary-base",
+                "secondary-foreground",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-hero-section",
+        "type": "bloc",
+        "artifact": "base-hero-section",
+        "category": "layout",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-horizontal-navbar",
+        "type": "bloc",
+        "artifact": "base-horizontal-navbar",
+        "category": "navigation",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "font-body",
+                "page-background",
+                "primary-base",
+                "primary-foreground",
+                "radius-sm",
+                "secondary-base",
+                "secondary-foreground",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-impact-banner",
+        "type": "bloc",
+        "artifact": "base-impact-banner",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-stat-tile"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-heading",
+                "page-background",
+                "primary-base",
+                "primary-foreground",
+                "radius-lg",
+                "secondary-base",
+                "secondary-foreground",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-input-date",
+        "type": "bloc",
+        "artifact": "base-input-date",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-datetime",
+        "type": "bloc",
+        "artifact": "base-input-datetime",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-email",
+        "type": "bloc",
+        "artifact": "base-input-email",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-number",
+        "type": "bloc",
+        "artifact": "base-input-number",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-password",
+        "type": "bloc",
+        "artifact": "base-input-password",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-search",
+        "type": "bloc",
+        "artifact": "base-input-search",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-tel",
+        "type": "bloc",
+        "artifact": "base-input-tel",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-text",
+        "type": "bloc",
+        "artifact": "base-input-text",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-time",
+        "type": "bloc",
+        "artifact": "base-input-time",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-input-url",
+        "type": "bloc",
+        "artifact": "base-input-url",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-menu-item",
+        "type": "bloc",
+        "artifact": "base-menu-item",
+        "category": "navigation",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-base",
+                "danger-muted",
+                "duration-fast",
+                "font-body",
+                "subtle-background",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-nav-item",
+        "type": "bloc",
+        "artifact": "base-nav-item",
+        "category": "navigation",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "font-body",
+                "primary-contrasted",
+                "radius-card",
+                "shadow-lg",
+                "shadow-sm",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-newsletter-card",
+        "type": "bloc",
+        "artifact": "base-newsletter-card",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-form"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button",
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-heading",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "primary-muted",
+                "radius-lg",
+                "secondary-base",
+                "shadow-sm",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-page-header-actions",
+        "type": "bloc",
+        "artifact": "base-page-header-actions",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-person-chip",
+        "type": "bloc",
+        "artifact": "base-person-chip",
+        "category": "content",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-photo-album",
+        "type": "bloc",
+        "artifact": "base-photo-album",
+        "category": "media",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "container-lg",
+                "container-md",
+                "container-sm",
+                "container-xl",
+                "primary-base",
+                "primary-foreground",
+                "space-2xl",
+                "space-lg",
+                "space-md",
+                "space-sm",
+                "space-xl",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-radio",
+        "type": "bloc",
+        "artifact": "base-radio",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-radio-group",
+        "type": "bloc",
+        "artifact": "base-radio-group",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-radio"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-range-slider-double",
+        "type": "bloc",
+        "artifact": "base-range-slider-double",
+        "category": "form",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "font-body",
+                "secondary-base",
+                "shadow-sm",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-search-card-prominent",
+        "type": "bloc",
+        "artifact": "base-search-card-prominent",
+        "category": "action",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-search-input-prominent"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-search-input-prominent",
+        "type": "bloc",
+        "artifact": "base-search-input-prominent",
+        "category": "action",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-section-header",
+        "type": "bloc",
+        "artifact": "base-section-header",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-heading",
+                "primary-contrasted",
+                "secondary-base",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-select",
+        "type": "bloc",
+        "artifact": "base-select",
+        "category": "form",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-select-option"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-select-option",
+        "type": "bloc",
+        "artifact": "base-select-option",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-sidenav",
+        "type": "bloc",
+        "artifact": "base-sidenav",
+        "category": "navigation",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-sidenav-item",
+                "mossa/blocs/base-sidenav-section"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-normal",
+                "duration-slow",
+                "font-body",
+                "page-background",
+                "primary-base",
+                "primary-foreground",
+                "radius-card",
+                "radius-lg",
+                "radius-sm",
+                "secondary-base",
+                "secondary-foreground",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-sidenav-item",
+        "type": "bloc",
+        "artifact": "base-sidenav-item",
+        "category": "navigation",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "font-body",
+                "radius-sm",
+                "secondary-base",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-sidenav-section",
+        "type": "bloc",
+        "artifact": "base-sidenav-section",
+        "category": "navigation",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-sidenav-item"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "duration-slow",
+                "font-body",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-skeleton",
+        "type": "bloc",
+        "artifact": "base-skeleton",
+        "category": "feedback",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "page-background",
+                "surface-border"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-spacing",
+        "type": "bloc",
+        "artifact": "base-spacing",
+        "category": "layout",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-stat-counter",
+        "type": "bloc",
+        "artifact": "base-stat-counter",
+        "category": "content",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-stat-tile",
+        "type": "bloc",
+        "artifact": "base-stat-tile",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-step-card",
+        "type": "bloc",
+        "artifact": "base-step-card",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "duration-normal",
+                "font-heading",
+                "primary-muted",
+                "radius-lg",
+                "radius-sm",
+                "secondary-base",
+                "shadow-soft",
+                "subtle-background",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-step-section",
+        "type": "bloc",
+        "artifact": "base-step-section",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-switch",
+        "type": "bloc",
+        "artifact": "base-switch",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-tab",
+        "type": "bloc",
+        "artifact": "base-tab",
+        "category": "interactive",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-tabs",
+        "type": "bloc",
+        "artifact": "base-tabs",
+        "category": "interactive",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-tab"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-testimonial",
+        "type": "bloc",
+        "artifact": "base-testimonial",
+        "category": "content",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-textarea",
+        "type": "bloc",
+        "artifact": "base-textarea",
+        "category": "form",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/base-toggle-row",
+        "type": "bloc",
+        "artifact": "base-toggle-row",
+        "category": "interactive",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-checkbox"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-toolbar",
+        "type": "bloc",
+        "artifact": "base-toolbar",
+        "category": "layout",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-option",
+                        "ulvia/blocs/basic-select"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/base-user-menu",
+        "type": "bloc",
+        "artifact": "base-user-menu",
+        "category": "navigation",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-normal",
+                "duration-slow",
+                "font-body",
+                "font-heading",
+                "radius-card",
+                "radius-sm",
+                "secondary-base",
+                "secondary-foreground",
+                "shadow-lg",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/code",
+        "type": "bloc",
+        "artifact": "code",
+        "category": "text",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/cs-account-icon",
+        "type": "bloc",
+        "artifact": "cs-account-icon",
+        "category": "account",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/cs-app-shell",
+        "type": "bloc",
+        "artifact": "cs-app-shell",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-sidenav",
+                "mossa/blocs/base-sidenav-item",
+                "mossa/blocs/base-sidenav-section"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "surface-background"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-article",
+        "type": "bloc",
+        "artifact": "cs-article",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "body-text",
+                "page-background",
+                "primary-base",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-avatar-uploader",
+        "type": "bloc",
+        "artifact": "cs-avatar-uploader",
+        "category": "account",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-back-link",
+        "type": "bloc",
+        "artifact": "cs-back-link",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "font-body",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-brands-row",
+        "type": "bloc",
+        "artifact": "cs-brands-row",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-category-filters",
+        "type": "bloc",
+        "artifact": "cs-category-filters",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-range-slider-double"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button",
+                        "ulvia/blocs/basic-stack"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-sm",
+                "secondary-base",
+                "secondary-foreground",
+                "surface-background",
+                "surface-border",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-chat-thread",
+        "type": "bloc",
+        "artifact": "cs-chat-thread",
+        "category": "messaging",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-message-bubble"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-checkbox-with-badge",
+        "type": "bloc",
+        "artifact": "cs-checkbox-with-badge",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-checkout-flow",
+        "type": "bloc",
+        "artifact": "cs-checkout-flow",
+        "category": "commerce",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:offer",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "route.offerId"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:getMyPriceAgreementCheckout",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.agreementId": "route.agreementId"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:myOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.order.id"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:entityCustomFields",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.entityType": "state.fields.entityType"
+                    }
+                }
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccount",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:updateAccount",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:createProtectedOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.idempotencyKey": "state.order.idempotencyKey",
+                        "body.items": "state.order.items",
+                        "body.agreementId": "state.order.agreementId",
+                        "body.shippingAddress": "state.order.shippingAddress",
+                        "body.billingAddress": "state.order.billingAddress",
+                        "body.metadata": "state.order.metadata"
+                    }
+                }
+            },
+            {
+                "source": "commerce-mondial-relay-delivery",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:setRelayPointForOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.orderId": "state.delivery.orderId",
+                        "body.relayLocation": "state.delivery.relayLocation",
+                        "body.country": "state.delivery.country",
+                        "body.postalCode": "state.delivery.postalCode",
+                        "body.city": "state.delivery.city"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button",
+                        "ulvia/blocs/basic-card",
+                        "ulvia/blocs/basic-grid",
+                        "ulvia/blocs/basic-input",
+                        "ulvia/blocs/basic-option",
+                        "ulvia/blocs/basic-select",
+                        "ulvia/blocs/basic-skeleton",
+                        "ulvia/blocs/commerce-stripe-payment",
+                        "ulvia/blocs/mondial-relay-picker"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-base",
+                "primary-hover",
+                "radius-control",
+                "secondary-base",
+                "secondary-foreground",
+                "shadow-lg",
+                "subtle-background",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-chip-toggle",
+        "type": "bloc",
+        "artifact": "cs-chip-toggle",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-chip-toggle-group",
+        "type": "bloc",
+        "artifact": "cs-chip-toggle-group",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-chip-toggle"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-club-lookup",
+        "type": "bloc",
+        "artifact": "cs-club-lookup",
+        "category": "commerce",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:entityCustomFields",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.entityType": "state.fields.entityType"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-control",
+                "secondary-base",
+                "shadow-lg",
+                "subtle-background",
+                "surface-background",
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-condition-badge",
+        "type": "bloc",
+        "artifact": "cs-condition-badge",
+        "category": "commerce",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "shadow-sm",
+                "surface-background",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-confirmation-success",
+        "type": "bloc",
+        "artifact": "cs-confirmation-success",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "shadow-soft",
+                "success-base",
+                "success-muted",
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-cote-table",
+        "type": "bloc",
+        "artifact": "cs-cote-table",
+        "category": "commerce",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:products",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.q": "state.products.query",
+                        "params.limit": "state.products.limit",
+                        "params.offset": "state.products.offset"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-empty-state",
+                "mossa/blocs/cs-info-row",
+                "mossa/blocs/cs-panel",
+                "mossa/blocs/cs-search-input-prominent",
+                "mossa/blocs/cs-section-header"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-contrasted",
+                "primary-muted",
+                "radius-card",
+                "radius-sm",
+                "shadow-lg",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-cta-card",
+        "type": "bloc",
+        "artifact": "cs-cta-card",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-detail-grid",
+        "type": "bloc",
+        "artifact": "cs-detail-grid",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-badge",
+                "mossa/blocs/cs-offer-card"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-empty-state",
+        "type": "bloc",
+        "artifact": "cs-empty-state",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-feature-strip",
+        "type": "bloc",
+        "artifact": "cs-feature-strip",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-feature-item"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-background",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-filter-panel",
+        "type": "bloc",
+        "artifact": "cs-filter-panel",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-form-card",
+        "type": "bloc",
+        "artifact": "cs-form-card",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-grade-card",
+        "type": "bloc",
+        "artifact": "cs-grade-card",
+        "category": "commerce",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "duration-normal",
+                "font-body",
+                "radius-lg",
+                "secondary-base",
+                "secondary-contrasted",
+                "secondary-muted",
+                "shadow-soft",
+                "subtle-background",
+                "success-base",
+                "success-contrasted",
+                "success-muted",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-hero-editorial",
+        "type": "bloc",
+        "artifact": "cs-hero-editorial",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "secondary-base",
+                "secondary-foreground"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-impact-banner",
+        "type": "bloc",
+        "artifact": "cs-impact-banner",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-stat-tile"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "radius-lg",
+                "secondary-base",
+                "secondary-foreground"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-info-row",
+        "type": "bloc",
+        "artifact": "cs-info-row",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "primary-contrasted",
+                "primary-muted",
+                "radius-sm",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-listing-layout",
+        "type": "bloc",
+        "artifact": "cs-listing-layout",
+        "category": "commerce",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-normal",
+                "page-background",
+                "radius-card",
+                "surface-background",
+                "surface-border",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-listing-toolbar",
+        "type": "bloc",
+        "artifact": "cs-listing-toolbar",
+        "category": "commerce",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-option",
+                        "ulvia/blocs/basic-select"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-logo",
+        "type": "bloc",
+        "artifact": "cs-logo",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "radius-card",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-message-bubble",
+        "type": "bloc",
+        "artifact": "cs-message-bubble",
+        "category": "messaging",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "secondary-base",
+                "secondary-foreground",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-message-composer",
+        "type": "bloc",
+        "artifact": "cs-message-composer",
+        "category": "messaging",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button",
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "radius-card",
+                "surface-background",
+                "surface-border"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-meta-line",
+        "type": "bloc",
+        "artifact": "cs-meta-line",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "body-text",
+                "font-body",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-money",
+        "type": "bloc",
+        "artifact": "cs-money",
+        "category": "content",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/cs-navbar-actions",
+        "type": "bloc",
+        "artifact": "cs-navbar-actions",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-notif-dropdown",
+                "mossa/blocs/cs-user-menu"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-newsletter-card",
+        "type": "bloc",
+        "artifact": "cs-newsletter-card",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-input"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-notif-dropdown",
+        "type": "bloc",
+        "artifact": "cs-notif-dropdown",
+        "category": "account",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "shadow-soft",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-offer-card",
+        "type": "bloc",
+        "artifact": "cs-offer-card",
+        "category": "commerce",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-badge"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-heading",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "radius-lg",
+                "secondary-base",
+                "shadow-sm",
+                "subtle-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-offer-detail",
+        "type": "bloc",
+        "artifact": "cs-offer-detail",
+        "category": "commerce",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-badge",
+                "mossa/blocs/cs-spec-list",
+                "mossa/blocs/cs-spec-row"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "radius-card",
+                "radius-lg",
+                "secondary-base",
+                "subtle-background"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-order-detail",
+        "type": "bloc",
+        "artifact": "cs-order-detail",
+        "category": "commerce",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:myOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "route.orderId"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:offer",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.offer.id"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:publicOfferImage",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.image.id"
+                    }
+                }
+            },
+            {
+                "source": "commerce-stripe-payments",
+                "sourceVersion": "^4.0.0",
+                "endpoint": "urn:system-functions:getPaymentForOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.orderId": "route.orderId"
+                    }
+                }
+            },
+            {
+                "source": "commerce-mondial-relay-delivery",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:getRelayPointForOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.orderId": "route.orderId"
+                    }
+                }
+            },
+            {
+                "source": "commerce-mondial-relay-fulfillment",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:system-functions:getShipmentForOrder",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.orderId": "route.orderId"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button",
+                        "ulvia/blocs/basic-card",
+                        "ulvia/blocs/basic-grid",
+                        "ulvia/blocs/basic-skeleton",
+                        "ulvia/blocs/basic-stack"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-contrasted",
+                "danger-muted",
+                "primary-base",
+                "primary-foreground",
+                "radius-control",
+                "secondary-base",
+                "secondary-contrasted",
+                "secondary-foreground",
+                "secondary-muted",
+                "success-contrasted",
+                "success-muted",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text",
+                "warning-contrasted",
+                "warning-muted"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-order-summary-card",
+        "type": "bloc",
+        "artifact": "cs-order-summary-card",
+        "category": "commerce",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-badge",
+                "mossa/blocs/cs-price-line"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "page-background",
+                "radius-card",
+                "radius-lg",
+                "shadow-sm",
+                "surface-background",
+                "surface-border",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-page-header-actions",
+        "type": "bloc",
+        "artifact": "cs-page-header-actions",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-panel",
+        "type": "bloc",
+        "artifact": "cs-panel",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "primary-contrasted",
+                "radius-lg",
+                "shadow-sm",
+                "surface-background",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-price-line",
+        "type": "bloc",
+        "artifact": "cs-price-line",
+        "category": "commerce",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "primary-contrasted",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-profile-controller",
+        "type": "bloc",
+        "artifact": "cs-profile-controller",
+        "category": "account",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccount",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:updateAccount",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:uploadAccountAvatar",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:getConnectStatus",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:getConnectClientConfig",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "stripe-connect",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:stripe-connect:createOnboardingSession",
+                "contractVersion": "^1.0.0"
+            }
+        ]
+    },
+    {
+        "id": "mossa/blocs/cs-public-offer",
+        "type": "bloc",
+        "artifact": "cs-public-offer",
+        "category": "commerce",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-condition-badge",
+                "mossa/blocs/cs-meta-line",
+                "mossa/blocs/cs-offer-detail",
+                "mossa/blocs/cs-public-offer-controller",
+                "mossa/blocs/cs-spec-list",
+                "mossa/blocs/cs-spec-row",
+                "mossa/blocs/cs-trust-badge"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button",
+                        "ulvia/blocs/basic-card",
+                        "ulvia/blocs/basic-grid",
+                        "ulvia/blocs/basic-skeleton",
+                        "ulvia/blocs/basic-stack",
+                        "ulvia/blocs/basic-toast"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "secondary-contrasted",
+                "space-lg",
+                "space-xl",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-public-offer-controller",
+        "type": "bloc",
+        "artifact": "cs-public-offer-controller",
+        "category": "commerce",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:offer",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.slug": "route.slug"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:product",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.product.id"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:publicOfferImage",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.image.id"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-condition-badge",
+                "mossa/blocs/cs-meta-line",
+                "mossa/blocs/cs-offer-detail",
+                "mossa/blocs/cs-spec-list",
+                "mossa/blocs/cs-spec-row",
+                "mossa/blocs/cs-trust-badge"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-card",
+                        "ulvia/blocs/basic-grid",
+                        "ulvia/blocs/basic-skeleton",
+                        "ulvia/blocs/basic-stack",
+                        "ulvia/blocs/basic-toast"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-purchase-list",
+        "type": "bloc",
+        "artifact": "cs-purchase-list",
+        "category": "commerce",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:myOrders",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.limit": "state.orders.limit",
+                        "params.offset": "state.orders.offset"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button",
+                        "ulvia/blocs/basic-card",
+                        "ulvia/blocs/basic-skeleton",
+                        "ulvia/blocs/basic-stack"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-contrasted",
+                "danger-muted",
+                "primary-base",
+                "primary-foreground",
+                "secondary-base",
+                "secondary-contrasted",
+                "secondary-muted",
+                "success-contrasted",
+                "success-muted",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-range-slider-double",
+        "type": "bloc",
+        "artifact": "cs-range-slider-double",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-search-card-prominent",
+        "type": "bloc",
+        "artifact": "cs-search-card-prominent",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-search-input-prominent"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-search-input-prominent",
+        "type": "bloc",
+        "artifact": "cs-search-input-prominent",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-section-header",
+        "type": "bloc",
+        "artifact": "cs-section-header",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-contrasted",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-sell-flow",
+        "type": "bloc",
+        "artifact": "cs-sell-flow",
+        "category": "commerce",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:products",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.q": "state.products.query",
+                        "params.limit": "state.products.limit"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:product",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.product.id"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:mySeller",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:registerMySeller",
+                "contractVersion": "^1.0.0"
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:createMyOffer",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.slug": "state.offer.slug",
+                        "body.productId": "state.offer.productId",
+                        "body.conditionCode": "state.offer.conditionCode"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:uploadMyOfferImage",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.offerId": "state.offer.id"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:submitMyOffer",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.id": "state.offer.id",
+                        "body.expectedVersion": "state.offer.version"
+                    }
+                }
+            },
+            {
+                "source": "user-account",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:user-account:getAccount",
+                "contractVersion": "^1.0.0"
+            }
+        ],
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-input",
+                        "ulvia/blocs/basic-textarea"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-contrasted",
+                "primary-base",
+                "primary-foreground",
+                "primary-muted",
+                "radius-card",
+                "radius-lg",
+                "radius-sm",
+                "secondary-base",
+                "secondary-contrasted",
+                "secondary-foreground",
+                "secondary-muted",
+                "shadow-lg",
+                "shadow-sm",
+                "shadow-soft",
+                "subtle-background",
+                "success-contrasted",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-service-withdrawal-form",
+        "type": "bloc",
+        "artifact": "cs-service-withdrawal-form",
+        "category": "content",
+        "defaultActive": false,
+        "endpoints": [
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:myOrders",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "params.limit": "state.orders.limit",
+                        "params.offset": "state.orders.offset"
+                    }
+                }
+            },
+            {
+                "source": "commerce",
+                "sourceVersion": "^3.0.0",
+                "endpoint": "urn:commerce:submitMyMarketplaceServiceWithdrawalRequest",
+                "contractVersion": "^1.0.0",
+                "bindings": {
+                    "input": {
+                        "body.orderId": "state.withdrawal.orderId",
+                        "body.serviceScope": "state.withdrawal.serviceScope",
+                        "body.confirmed": "state.withdrawal.confirmed",
+                        "body.idempotencyKey": "state.withdrawal.idempotencyKey"
+                    }
+                }
+            }
+        ],
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button",
+                        "ulvia/blocs/basic-card",
+                        "ulvia/blocs/basic-skeleton"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-contrasted",
+                "primary-base",
+                "primary-foreground",
+                "primary-hover",
+                "radius-control",
+                "secondary-base",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-shipping-option",
+        "type": "bloc",
+        "artifact": "cs-shipping-option",
+        "category": "commerce",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "duration-fast",
+                "font-body",
+                "primary-base",
+                "primary-contrasted",
+                "primary-muted",
+                "radius-card",
+                "shadow-sm",
+                "surface-background",
+                "surface-border",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-sidenav-greeting",
+        "type": "bloc",
+        "artifact": "cs-sidenav-greeting",
+        "category": "account",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-spec-list",
+        "type": "bloc",
+        "artifact": "cs-spec-list",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/cs-spec-row"
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "surface-background",
+                "surface-border"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-spec-row",
+        "type": "bloc",
+        "artifact": "cs-spec-row",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-heading",
+                "secondary-base",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-stat-tile",
+        "type": "bloc",
+        "artifact": "cs-stat-tile",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-step-card",
+        "type": "bloc",
+        "artifact": "cs-step-card",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-lg",
+                "shadow-soft",
+                "surface-background",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-step-section",
+        "type": "bloc",
+        "artifact": "cs-step-section",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-toggle-row",
+        "type": "bloc",
+        "artifact": "cs-toggle-row",
+        "category": "content",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-checkbox"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-trust-badge",
+        "type": "bloc",
+        "artifact": "cs-trust-badge",
+        "category": "content",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "font-body",
+                "primary-contrasted",
+                "radius-card",
+                "shadow-sm",
+                "surface-background",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-user-menu",
+        "type": "bloc",
+        "artifact": "cs-user-menu",
+        "category": "account",
+        "defaultActive": false,
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "radius-card",
+                "shadow-soft",
+                "surface-muted-text",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/cs-wallet-card",
+        "type": "bloc",
+        "artifact": "cs-wallet-card",
+        "category": "account",
+        "defaultActive": false,
+        "requires": {
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground",
+                "radius-lg",
+                "secondary-base",
+                "secondary-foreground",
+                "surface-text"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/em",
+        "type": "bloc",
+        "artifact": "em",
+        "category": "text",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/mon-espace-sidenav",
+        "type": "bloc",
+        "artifact": "mon-espace-sidenav",
+        "category": "compositions",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-sidenav",
+                "mossa/blocs/base-sidenav-item",
+                "mossa/blocs/base-sidenav-section",
+                "mossa/blocs/cs-account-icon"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/pre",
+        "type": "bloc",
+        "artifact": "pre",
+        "category": "text",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/site-footer",
+        "type": "bloc",
+        "artifact": "site-footer",
+        "category": "compositions",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/site-header",
+        "type": "bloc",
+        "artifact": "site-header",
+        "category": "compositions",
+        "defaultActive": false,
+        "requires": {
+            "resources": [
+                "mossa/blocs/base-badge",
+                "mossa/blocs/base-horizontal-navbar",
+                "mossa/blocs/base-menu-item",
+                "mossa/blocs/base-user-menu",
+                "mossa/blocs/cs-account-icon",
+                "mossa/blocs/cs-logo"
+            ],
+            "collections": [
+                {
+                    "kind": "ulvia",
+                    "versionRange": "^4.0.0",
+                    "resources": [
+                        "ulvia/blocs/basic-button"
+                    ]
+                }
+            ]
+        },
+        "theme": {
+            "contract": "ulvia-theme@3",
+            "required": [
+                "danger-base",
+                "primary-base",
+                "primary-contrasted",
+                "primary-foreground"
+            ]
+        }
+    },
+    {
+        "id": "mossa/blocs/small",
+        "type": "bloc",
+        "artifact": "small",
+        "category": "text",
+        "defaultActive": false
+    },
+    {
+        "id": "mossa/blocs/strong",
+        "type": "bloc",
+        "artifact": "strong",
+        "category": "text",
+        "defaultActive": false
+    }
+]

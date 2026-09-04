@@ -1,0 +1,46 @@
+:host {
+    --lt-fg:    var(--ulvia-surface-text, #1a1108);
+    --lt-muted: var(--ulvia-surface-muted-text, #6b5642);
+    --lt-gap:   1rem;
+
+    display: block;
+}
+
+.toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--lt-gap);
+    flex-wrap: wrap;
+}
+
+.title-area {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    flex: 1 1 18rem;
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading, Georgia, serif);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--lt-fg);
+}
+
+::slotted([slot="meta"]) {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--lt-muted);
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    max-width: 100%;
+}

@@ -1,0 +1,15 @@
+<article class="card" part="card">
+    <slot name="navigation"></slot>
+    <header class="header" part="header" data-card-header>
+        <div class="media" part="media"><slot name="media"></slot></div>
+        <div class="badges" part="badges"><slot name="badge"></slot></div>
+    </header>
+    <section class="body" part="body">
+        <p class="eyebrow" part="eyebrow"><slot name="eyebrow"></slot></p>
+        <h3 class="title" part="title"><slot name="title"></slot></h3>
+        <p class="description" part="description"><slot name="description"></slot></p>
+        <p class="price" part="price"><slot name="price"></slot></p>
+        <div class="content" part="content"><slot></slot></div>
+    </section>
+    <footer class="footer" part="footer" data-card-footer><slot name="action"></slot></footer>
+</article>

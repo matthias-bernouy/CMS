@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-filter-panel",
+        "name": "Filter panel",
+        "group": "Courtside",
+        "description": "Sidebar wrapper for filter sections — header with title and reset button + body slot.",
+        "path": "blocs/courtside/commerce/catalogue/filters/cs-filter-panel",
+        "view": "Bloc.ts"
+    }
+}

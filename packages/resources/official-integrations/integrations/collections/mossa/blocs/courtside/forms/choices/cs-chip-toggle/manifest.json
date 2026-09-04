@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-chip-toggle",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Chip toggle",
+        "description": "Selectable pill — used inside cs-chip-toggle-group for single or multi selection.",
+        "categories": [
+            "form",
+            "action"
+        ]
+    }
+}

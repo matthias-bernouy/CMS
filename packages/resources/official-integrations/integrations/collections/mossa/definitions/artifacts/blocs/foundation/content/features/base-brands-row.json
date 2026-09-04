@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-brands-row",
+        "name": "Brands row",
+        "group": "Content",
+        "description": "Centered list of brand names (or logos) with a small caps caption above.",
+        "path": "blocs/foundation/content/features/base-brands-row",
+        "view": "Bloc.ts"
+    }
+}

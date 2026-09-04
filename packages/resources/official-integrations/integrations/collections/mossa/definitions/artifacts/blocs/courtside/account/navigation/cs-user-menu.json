@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-user-menu",
+        "name": "User menu",
+        "group": "Courtside",
+        "description": "Avatar + name trigger with a popover header (logged-in user + role badge), menu items and a logout link.",
+        "path": "blocs/courtside/account/navigation/cs-user-menu",
+        "view": "Bloc.ts"
+    }
+}

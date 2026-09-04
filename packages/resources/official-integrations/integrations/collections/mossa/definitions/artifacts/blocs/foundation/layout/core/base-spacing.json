@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-spacing",
+        "name": "Spacing",
+        "group": "Layout",
+        "description": "Vertical spacer to separate blocks (XS / S / M / L / XL).",
+        "path": "blocs/foundation/layout/core/base-spacing",
+        "view": "Bloc.ts"
+    }
+}

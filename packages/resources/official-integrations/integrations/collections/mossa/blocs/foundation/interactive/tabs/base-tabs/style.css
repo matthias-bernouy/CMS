@@ -1,0 +1,152 @@
+:host {
+    --tabs-accent: var(--primary, #4f46e5);
+    --tabs-border: color-mix(in srgb, currentColor 12%, transparent);
+    --tabs-muted-fg: color-mix(in srgb, currentColor 60%, transparent);
+    --tabs-duration: 360ms;
+    --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --tabs-radius: 10px;
+    --tabs-pad-y: 0.7rem;
+    --tabs-pad-x: 1.1rem;
+    --tabs-font: 0.95rem;
+
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #0f172a;
+    box-sizing: border-box;
+}
+
+:host([size="sm"]) { --tabs-pad-y: 0.5rem; --tabs-pad-x: 0.85rem; --tabs-font: 0.85rem; }
+:host([size="lg"]) { --tabs-pad-y: 0.9rem; --tabs-pad-x: 1.4rem; --tabs-font: 1.05rem; }
+
+.tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* ---------- Tablist ---------- */
+
+.tablist {
+    position: relative;
+    display: flex;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-bottom: 1px solid var(--tabs-border);
+    scrollbar-width: thin;
+}
+
+.triggers {
+    display: flex;
+    gap: 0.25rem;
+    flex: 0 0 max-content;
+    min-width: max-content;
+}
+
+:host([align="center"]) .triggers { margin: 0 auto; }
+:host([align="stretch"]) .triggers {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
+:host([align="stretch"]) .trigger  {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.trigger {
+    all: unset;
+    box-sizing: border-box;
+    padding: var(--tabs-pad-y) var(--tabs-pad-x);
+    flex: 0 0 auto;
+    font-size: var(--tabs-font);
+    font-weight: 600;
+    color: var(--tabs-muted-fg);
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
+    border-radius: var(--tabs-radius) var(--tabs-radius) 0 0;
+    transition: color var(--tabs-duration) var(--tabs-ease),
+                background-color var(--tabs-duration) var(--tabs-ease);
+}
+.trigger:hover { color: #0f172a; background: color-mix(in srgb, var(--tabs-accent) 6%, transparent); }
+.trigger:focus-visible { outline: 2px solid var(--tabs-accent); outline-offset: -4px; }
+.trigger.is-active { color: var(--tabs-accent); }
+
+/* ---------- Indicator (underline variant) ---------- */
+
+.indicator {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    height: 2px;
+    width: 0;
+    background: var(--tabs-accent);
+    border-radius: 2px;
+    opacity: 0;
+    transform: translateX(0);
+    transition: transform var(--tabs-duration) var(--tabs-ease),
+                width var(--tabs-duration) var(--tabs-ease),
+                opacity 200ms var(--tabs-ease);
+    pointer-events: none;
+}
+
+/* ---------- Variants ---------- */
+
+/* Pill — indicator becomes a soft rounded background */
+:host([variant="pill"]) .tablist {
+    border-bottom: none;
+    padding: 0.25rem;
+    background: color-mix(in srgb, currentColor 5%, transparent);
+    border-radius: 999px;
+    display: inline-flex;
+    align-self: flex-start;
+}
+:host([variant="pill"][align="center"]) .tablist { align-self: center; }
+:host([variant="pill"][align="stretch"]) .tablist { align-self: stretch; }
+:host([variant="pill"]) .trigger { border-radius: 999px; }
+:host([variant="pill"]) .trigger.is-active { color: #fff; }
+:host([variant="pill"]) .trigger:hover:not(.is-active) { background: transparent; color: #0f172a; }
+:host([variant="pill"]) .indicator {
+    top: 0.25rem; bottom: 0.25rem;
+    height: auto;
+    background: var(--tabs-accent);
+    border-radius: 999px;
+    box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--tabs-accent) 50%, transparent);
+}
+
+/* Segmented — indicator becomes a card-like highlight */
+:host([variant="segmented"]) .tablist {
+    border-bottom: none;
+    padding: 0.3rem;
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    border-radius: 12px;
+    display: inline-flex;
+    align-self: flex-start;
+}
+:host([variant="segmented"][align="center"]) .tablist { align-self: center; }
+:host([variant="segmented"][align="stretch"]) .tablist { align-self: stretch; }
+:host([variant="segmented"]) .trigger { border-radius: 9px; }
+:host([variant="segmented"]) .trigger.is-active { color: #0f172a; }
+:host([variant="segmented"]) .trigger:hover:not(.is-active) { background: transparent; }
+:host([variant="segmented"]) .indicator {
+    top: 0.3rem; bottom: 0.3rem;
+    height: auto;
+    background: #fff;
+    border-radius: 9px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 12px -4px rgba(15, 23, 42, 0.1);
+}
+
+/* ---------- Panels ---------- */
+
+.panels ::slotted(base-tab) { display: none; }
+.panels ::slotted(base-tab[active]) { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+    :host { --tabs-duration: 0ms; }
+}

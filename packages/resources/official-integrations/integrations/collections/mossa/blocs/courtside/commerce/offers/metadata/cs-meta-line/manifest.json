@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-meta-line",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Meta line (icon + text)",
+        "description": "Petite ligne icône + texte muted (ex. livraison, durée, lieu). Icône SVG swap-able.",
+        "categories": [
+            "courtside",
+            "content"
+        ]
+    }
+}

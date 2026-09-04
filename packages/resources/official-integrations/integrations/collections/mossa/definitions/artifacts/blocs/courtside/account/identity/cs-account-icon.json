@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-account-icon",
+        "name": "Icône Mon espace",
+        "group": "Courtside",
+        "description": "Jeu d’icônes partagé par les navigations du compte Courtside.",
+        "path": "blocs/courtside/account/identity/cs-account-icon",
+        "view": "Bloc.ts"
+    }
+}

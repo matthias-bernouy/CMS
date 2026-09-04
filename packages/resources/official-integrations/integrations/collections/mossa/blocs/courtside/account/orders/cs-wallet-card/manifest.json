@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-wallet-card",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Seller payout card",
+        "description": "Seller-facing Stripe Connect payout summary; never present it as a wallet or escrow.",
+        "categories": [
+            "content",
+            "action"
+        ]
+    }
+}

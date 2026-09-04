@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-range-slider-double",
+        "name": "Range slider (double)",
+        "group": "Form",
+        "description": "Two-handle range slider for a min/max value pair, with live label.",
+        "path": "blocs/foundation/forms/fields/base-range-slider-double",
+        "view": "Bloc.ts"
+    }
+}

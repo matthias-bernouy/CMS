@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "small",
+        "name": "Small",
+        "group": "Text",
+        "description": "Native small print text.",
+        "path": "blocs/text/small",
+        "view": "Bloc.ts"
+    }
+}

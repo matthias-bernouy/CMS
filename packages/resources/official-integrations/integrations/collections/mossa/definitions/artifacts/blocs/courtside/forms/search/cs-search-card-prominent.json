@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-search-card-prominent",
+        "name": "Prominent search card",
+        "group": "Courtside",
+        "description": "Bold orange card with a heading, helper text and a large search input.",
+        "path": "blocs/courtside/forms/search/cs-search-card-prominent",
+        "view": "Bloc.ts"
+    }
+}

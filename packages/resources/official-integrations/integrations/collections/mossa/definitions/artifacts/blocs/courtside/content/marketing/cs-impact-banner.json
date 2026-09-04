@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-impact-banner",
+        "name": "Impact banner",
+        "group": "Courtside",
+        "description": "Wide orange banner with icon + title + paragraphs, with optional stats grid below.",
+        "path": "blocs/courtside/content/marketing/cs-impact-banner",
+        "view": "Bloc.ts"
+    }
+}

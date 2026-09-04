@@ -1,0 +1,1 @@
+Consume Ulvia theme contract 3 through --ulvia-* variables and expose only explicitly named Mossa component hooks.

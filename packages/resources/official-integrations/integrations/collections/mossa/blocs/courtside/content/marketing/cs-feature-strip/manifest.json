@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-feature-strip",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Feature strip",
+        "description": "Horizontal strip of icon + text feature items separated by dividers.",
+        "categories": [
+            "content",
+            "layout"
+        ]
+    }
+}

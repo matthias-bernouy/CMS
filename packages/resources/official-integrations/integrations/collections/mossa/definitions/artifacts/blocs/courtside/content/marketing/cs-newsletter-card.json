@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-newsletter-card",
+        "name": "Newsletter card",
+        "group": "Courtside",
+        "description": "Inline newsletter banner — icon + heading + description on the left, email + submit on the right.",
+        "path": "blocs/courtside/content/marketing/cs-newsletter-card",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-trust-badge",
+        "name": "Trust badge",
+        "group": "Courtside",
+        "description": "A small reassurance card with a centered icon and a short label. Stack three or four inside a base-grid to form a trust strip.",
+        "path": "blocs/courtside/content/marketing/cs-trust-badge",
+        "view": "Bloc.ts"
+    }
+}

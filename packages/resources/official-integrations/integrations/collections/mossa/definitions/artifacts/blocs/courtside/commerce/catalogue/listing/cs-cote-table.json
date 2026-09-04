@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-cote-table",
+        "name": "Estimateur de cote",
+        "group": "Courtside",
+        "description": "Estimateur automatique fondé sur le catalogue et l'historique de prix Commerce.",
+        "path": "blocs/courtside/commerce/catalogue/listing/cs-cote-table",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,98 @@
+:host {
+    --form-gap: 1rem;
+    --form-max-width: 100%;
+    --form-duration: 160ms;
+    --form-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    display: block;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: inherit;
+    box-sizing: border-box;
+}
+
+.state-host { display: contents; }
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--form-gap);
+    max-width: var(--form-max-width);
+    margin-inline: var(--form-margin-start) var(--form-margin-end);
+    box-sizing: border-box;
+}
+
+:host {
+    --form-margin-start: 0;
+    --form-margin-end: 0;
+}
+
+:host([align="center"]) { --form-margin-start: auto; --form-margin-end: auto; }
+:host([align="end"])    { --form-margin-start: auto; --form-margin-end: 0; }
+
+.state-slot { display: none; }
+
+.message {
+    display: none;
+    margin: 0.75rem 0 0;
+    color: var(--ulvia-surface-muted-text, currentColor);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.message:not(:empty) {
+    display: block;
+}
+
+.message[data-state="error"] {
+    color: var(--ulvia-danger-contrasted, #b42318);
+}
+
+.message[data-state="success"] {
+    color: var(--ulvia-success-contrasted, #0d6633);
+}
+
+[data-state="loading"] .form    { display: none; }
+[data-state="loading"] .state-loading { display: block; }
+
+[data-state="error"]   .form    { display: none; }
+[data-state="error"]   .state-error   { display: block; }
+
+[data-state="success"] .form    { display: none; }
+[data-state="success"] .state-success { display: block; }
+
+:host([layout="inline"]) .form {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+:host([layout="grid"]) .form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+:host([gap="xs"]) { --form-gap: 0.4rem; }
+:host([gap="sm"]) { --form-gap: 0.7rem; }
+:host([gap="md"]) { --form-gap: 1rem; }
+:host([gap="lg"]) { --form-gap: 1.4rem; }
+:host([gap="xl"]) { --form-gap: 2rem; }
+
+:host([busy]) {
+    cursor: wait;
+}
+
+:host([width="sm"]) { --form-max-width: 420px; }
+:host([width="md"]) { --form-max-width: 640px; }
+:host([width="lg"]) { --form-max-width: 860px; }
+:host([width="full"]) { --form-max-width: 100%; }
+
+@media (max-width: 600px) {
+    :host([layout="inline"]) .form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :host { --form-duration: 0ms; }
+}

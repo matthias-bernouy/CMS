@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-chip-toggle-group",
+        "name": "Chip toggle group",
+        "group": "Courtside",
+        "description": "Group of chip-toggle pills with single or multiple selection.",
+        "path": "blocs/courtside/forms/choices/cs-chip-toggle-group",
+        "view": "Bloc.ts"
+    }
+}

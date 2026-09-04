@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-article-meta",
+        "name": "Article meta",
+        "group": "Header",
+        "description": "Author + date + category badges row for articles.",
+        "path": "blocs/foundation/content/articles/base-article-meta",
+        "view": "Bloc.ts"
+    }
+}

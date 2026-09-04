@@ -1,0 +1,13 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-public-offer-controller",
+        "name": "Public offer controller",
+        "group": "cs-public-offer",
+        "description": "Internal behavior controller for cs-public-offer.",
+        "path": "blocs/courtside/commerce/offers/display/cs-public-offer",
+        "internal": true,
+        "view": "controller/Bloc.ts",
+        "editor": null
+    }
+}

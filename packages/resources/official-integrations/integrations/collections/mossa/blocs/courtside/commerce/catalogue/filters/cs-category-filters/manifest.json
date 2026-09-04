@@ -1,0 +1,11 @@
+{
+    "default-tag": "cs-category-filters",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Category filters",
+        "description": "Shows category-specific catalogue filters while keeping every control editable.",
+        "categories": ["Courtside", "Commerce"]
+    }
+}

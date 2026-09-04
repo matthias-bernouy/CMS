@@ -1,0 +1,10 @@
+{
+    "default-tag": "cs-purchase-list",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Purchase list",
+        "description": "Paginated private list of the current Courtside buyer orders."
+    }
+}

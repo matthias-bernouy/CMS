@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-sidenav-greeting",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Sidenav greeting",
+        "description": "Sidebar header — small caps eyebrow + display name with optional emoji.",
+        "categories": [
+            "navigation",
+            "content"
+        ]
+    }
+}

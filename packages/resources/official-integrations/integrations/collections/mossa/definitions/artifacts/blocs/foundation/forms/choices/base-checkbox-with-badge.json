@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-checkbox-with-badge",
+        "name": "Checkbox with badge",
+        "group": "Form",
+        "description": "Checkbox with a label and a colored badge on the right (used for grade filters).",
+        "path": "blocs/foundation/forms/choices/base-checkbox-with-badge",
+        "view": "Bloc.ts"
+    }
+}

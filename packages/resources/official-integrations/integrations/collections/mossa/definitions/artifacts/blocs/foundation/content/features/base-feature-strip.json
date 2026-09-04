@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-feature-strip",
+        "name": "Feature strip",
+        "group": "Content",
+        "description": "Horizontal strip of icon + text feature items separated by dividers.",
+        "path": "blocs/foundation/content/features/base-feature-strip",
+        "view": "Bloc.ts"
+    }
+}

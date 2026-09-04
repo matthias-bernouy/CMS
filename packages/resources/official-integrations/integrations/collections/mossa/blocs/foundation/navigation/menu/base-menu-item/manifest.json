@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-menu-item",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author":      "Be5 Solutions",
+        "title":       "Menu item",
+        "description": "Link row with an icon and a label. Designed to be slotted into a base-user-menu, sidenav, or similar grouped navigation surface. Supports a `danger` variant for destructive actions (logout, delete, etc.).",
+        "categories":  ["navigation"]
+    }
+}

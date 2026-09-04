@@ -1,0 +1,220 @@
+:host {
+    /* Role tokens (5-tuple aliased per [color] attribute). Defined on :host so
+       a parent (e.g. <base-hero-marketing>'s ::slotted rule) can override them. */
+    --btn-base:        var(--ulvia-primary-base);
+    --btn-base-hover:  var(--ulvia-primary-hover);
+    --btn-strong:      var(--ulvia-primary-contrasted);
+    --btn-muted:       var(--ulvia-primary-muted);
+    --btn-contrasted:  var(--ulvia-primary-foreground);
+
+    /* Variant-resolved tokens. Same rationale: variants set these on :host,
+       not on .cta, so external overrides survive. */
+    --btn-bg:          var(--btn-base);
+    --btn-fg:          var(--btn-contrasted);
+    --btn-border:      transparent;
+    --btn-hover-bg:    var(--btn-base-hover);
+    --btn-shadow:      var(--ulvia-shadow-sm);
+    --btn-shadow-hover: var(--ulvia-shadow-soft);
+
+    /* Size — overridden per [size] */
+    --btn-padding-y: 0.6rem;
+    --btn-padding-x: 1.25rem;
+    --btn-font-size: 0.95rem;
+    --btn-radius: var(--ulvia-radius-card);
+
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+:host([width="full"]) {
+    display: block;
+}
+
+/* Colors — map [color] to the role token 4-tuple */
+
+:host([color="secondary"]) {
+    --btn-base:        var(--ulvia-secondary-base);
+    --btn-base-hover:  var(--ulvia-secondary-hover);
+    --btn-strong:      var(--ulvia-secondary-contrasted);
+    --btn-muted:       var(--ulvia-secondary-muted);
+    --btn-contrasted:  var(--ulvia-secondary-foreground);
+}
+:host([color="success"]) {
+    --btn-base:        var(--ulvia-success-base);
+    --btn-base-hover:  var(--ulvia-success-hover);
+    --btn-strong:      var(--ulvia-success-contrasted);
+    --btn-muted:       var(--ulvia-success-muted);
+    --btn-contrasted:  var(--ulvia-success-foreground);
+}
+:host([color="warning"]) {
+    --btn-base:        var(--ulvia-warning-base);
+    --btn-base-hover:  var(--ulvia-warning-hover);
+    --btn-strong:      var(--ulvia-warning-contrasted);
+    --btn-muted:       var(--ulvia-warning-muted);
+    --btn-contrasted:  var(--ulvia-warning-foreground);
+}
+:host([color="danger"]) {
+    --btn-base:        var(--ulvia-danger-base);
+    --btn-base-hover:  var(--ulvia-danger-hover);
+    --btn-strong:      var(--ulvia-danger-contrasted);
+    --btn-muted:       var(--ulvia-danger-muted);
+    --btn-contrasted:  var(--ulvia-danger-foreground);
+}
+:host([color="info"]) {
+    --btn-base:        var(--ulvia-info-base);
+    --btn-base-hover:  var(--ulvia-info-hover);
+    --btn-strong:      var(--ulvia-info-contrasted);
+    --btn-muted:       var(--ulvia-info-muted);
+    --btn-contrasted:  var(--ulvia-info-foreground);
+}
+
+/* Variants — Filled (default), Outlined, Ghost.
+   Variant=primary keeps the :host defaults; only outlined/ghost override. */
+
+:host([variant="secondary"]) {
+    --btn-bg:           transparent;
+    --btn-fg:           var(--btn-strong);
+    --btn-border:       var(--btn-strong);
+    --btn-hover-bg:     var(--btn-muted);
+    --btn-shadow:       none;
+    --btn-shadow-hover: none;
+}
+
+:host([variant="ghost"]) {
+    --btn-bg:           transparent;
+    --btn-fg:           var(--btn-strong);
+    --btn-border:       transparent;
+    --btn-hover-bg:     var(--btn-muted);
+    --btn-shadow:       none;
+    --btn-shadow-hover: none;
+}
+
+/* Contextual — a neutral outline that can be customized explicitly through
+   the component's existing --cms-button-* properties. */
+:host([variant="contextual"]) {
+    --btn-bg:           transparent;
+    --btn-fg:           var(--ulvia-surface-text);
+    --btn-border:       var(--ulvia-surface-border);
+    --btn-hover-bg:     color-mix(in srgb, var(--ulvia-surface-text) 12%, transparent);
+    --btn-shadow:       none;
+    --btn-shadow-hover: none;
+}
+
+/* Sizes — radius snaps to the global scale: sm tier for xs/sm, md tier for
+   md/lg (default), lg tier for xl. Padding/font-size remain per-size to keep
+   the visual progression. */
+
+:host([size="xs"]) {
+    --btn-padding-y: 0.3rem;
+    --btn-padding-x: 0.7rem;
+    --btn-font-size: 0.78rem;
+    --btn-radius: var(--ulvia-radius-sm);
+}
+:host([size="sm"]) {
+    --btn-padding-y: 0.45rem;
+    --btn-padding-x: 0.9rem;
+    --btn-font-size: 0.85rem;
+    --btn-radius: var(--ulvia-radius-sm);
+}
+:host([size="lg"]) {
+    --btn-padding-y: 0.8rem;
+    --btn-padding-x: 1.6rem;
+    --btn-font-size: 1.05rem;
+    --btn-radius: var(--ulvia-radius-card);
+}
+:host([size="xl"]) {
+    --btn-padding-y: 1rem;
+    --btn-padding-x: 2rem;
+    --btn-font-size: 1.15rem;
+    --btn-radius: var(--ulvia-radius-lg);
+}
+
+.cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    border: 1px solid var(--btn-border);
+    border-radius: var(--btn-radius);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    font-family: var(--ulvia-font-body);
+    font-weight: 600;
+    font-size: var(--btn-font-size);
+    line-height: 1.2;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: var(--btn-shadow);
+    transition: background-color var(--ulvia-duration-fast) ease, box-shadow var(--ulvia-duration-normal) ease, transform var(--ulvia-duration-fast) ease;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}
+
+/* Layout */
+
+:host([width="full"]) .cta {
+    display: flex;
+    width: 100%;
+}
+
+:host([align="left"]) .cta {
+    justify-content: left;
+}
+
+:host([align="right"]) .cta {
+    justify-content: right;
+}
+
+/* Icons */
+
+.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    flex: 0 0 auto;
+}
+
+.icon ::slotted(svg) {
+    width: 1em;
+    height: 1em;
+    display: block;
+}
+
+/* Hidden by default. Icons are supplied through the light-DOM slot;
+   visibility is driven by the `has-icon-*` toggle. */
+.icon-left, .icon-right { display: none; }
+
+:host([has-icon-left="yes"]) .icon-left {
+    display: inline-flex;
+}
+:host([has-icon-right="yes"]) .icon-right {
+    display: inline-flex;
+}
+
+/* Disabled */
+
+:host([disabled="yes"]) .cta {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.cta:hover {
+    background: var(--btn-hover-bg);
+    box-shadow: var(--btn-shadow-hover);
+}
+
+.cta:active {
+    transform: translateY(1px);
+}
+
+.cta:focus-visible {
+    outline: 2px solid var(--btn-strong);
+    outline-offset: 2px;
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-avatar-uploader",
+        "name": "Avatar uploader",
+        "group": "Form",
+        "description": "Circular avatar with a camera-icon overlay button to upload a new image, plus name + email aside.",
+        "path": "blocs/foundation/forms/uploads/base-avatar-uploader",
+        "view": "Bloc.ts"
+    }
+}

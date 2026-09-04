@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-listing-toolbar",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Listing toolbar",
+        "description": "Page title + count on the left, sort/filter controls on the right.",
+        "categories": [
+            "navigation",
+            "layout"
+        ]
+    }
+}

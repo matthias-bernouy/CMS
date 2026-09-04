@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-range-slider-double",
+        "name": "Range slider (double)",
+        "group": "Courtside",
+        "description": "Two-handle range slider for a min/max value pair, with live label.",
+        "path": "blocs/courtside/forms/choices/cs-range-slider-double",
+        "view": "Bloc.ts"
+    }
+}

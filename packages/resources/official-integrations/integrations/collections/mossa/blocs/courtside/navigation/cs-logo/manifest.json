@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-logo",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Courtside",
+        "title": "Logo",
+        "description": "Courtside logo with an editable square mark and wordmark.",
+        "categories": [
+            "navigation",
+            "branding"
+        ]
+    }
+}

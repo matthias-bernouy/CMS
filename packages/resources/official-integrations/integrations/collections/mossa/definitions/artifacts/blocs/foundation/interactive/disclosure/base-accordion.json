@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-accordion",
+        "name": "Accordion",
+        "group": "Interactive",
+        "description": "Collapsible panels — FAQ, details list, nested content.",
+        "path": "blocs/foundation/interactive/disclosure/base-accordion",
+        "view": "Bloc.ts"
+    }
+}

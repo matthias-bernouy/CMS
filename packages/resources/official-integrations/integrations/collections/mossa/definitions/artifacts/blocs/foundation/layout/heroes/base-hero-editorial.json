@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "base-hero-editorial",
+        "name": "Editorial hero",
+        "group": "Layout",
+        "description": "Centered or left-aligned hero — eyebrow + title + subtitle + optional bottom slot.",
+        "path": "blocs/foundation/layout/heroes/base-hero-editorial",
+        "view": "Bloc.ts"
+    }
+}

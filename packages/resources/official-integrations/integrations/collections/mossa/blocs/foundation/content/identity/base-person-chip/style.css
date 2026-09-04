@@ -1,0 +1,228 @@
+:host {
+    --chip-bg: #ffffff;
+    --chip-fg: #0f172a;
+    --chip-muted: #64748b;
+    --chip-border: rgba(15, 23, 42, 0.08);
+    --chip-radius: 14px;
+    --chip-padding: 0.75rem 0.9rem;
+    --chip-gap: 0.85rem;
+    --chip-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --chip-shadow-hover: 0 6px 16px -8px rgba(15, 23, 42, 0.2);
+
+    --avatar-size: 40px;
+    --avatar-radius: 50%;
+    --avatar-fg: #4f46e5;
+    --avatar-bg: #eef2ff;
+    --avatar-font-size: 0.82rem;
+
+    --name-size: 0.95rem;
+    --subtitle-size: 0.85rem;
+
+    display: block;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--chip-fg);
+    height: 100%;
+}
+
+.chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--chip-gap);
+    padding: var(--chip-padding);
+    background: var(--chip-bg);
+    border: 1px solid var(--chip-border);
+    border-radius: var(--chip-radius);
+    box-shadow: var(--chip-shadow);
+    height: 100%;
+    box-sizing: border-box;
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.chip-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    text-decoration: none;
+    border-radius: inherit;
+}
+
+.chip-link:focus { outline: none; }
+
+:host(:not([href])) .chip-link { display: none; }
+
+:host([href]) .chip { cursor: pointer; }
+:host([href]:hover) .chip {
+    transform: translateY(-2px);
+    box-shadow: var(--chip-shadow-hover);
+    border-color: color-mix(in srgb, var(--avatar-fg) 25%, var(--chip-border));
+}
+
+/* Avatar */
+
+.avatar {
+    position: relative;
+    flex: 0 0 auto;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: var(--avatar-radius);
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-weight: 700;
+    font-size: var(--avatar-font-size);
+    letter-spacing: 0.02em;
+}
+
+.avatar ::slotted(*) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.initials {
+    pointer-events: none;
+}
+
+:host([has-avatar]) .initials {
+    display: none;
+}
+
+/* Body */
+
+.body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.name {
+    font-size: var(--name-size);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--chip-fg);
+}
+
+.name ::slotted(*) {
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    line-height: inherit;
+}
+
+.subtitle {
+    font-size: var(--subtitle-size);
+    color: var(--chip-muted);
+    line-height: 1.2;
+}
+
+.subtitle ::slotted(*) {
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    line-height: inherit;
+}
+
+:host(:not(:has(*[slot="subtitle"]))) .subtitle {
+    display: none;
+}
+
+/* Sizes */
+
+:host([size="sm"]) {
+    --avatar-size: 32px;
+    --avatar-font-size: 0.72rem;
+    --chip-padding: 0.55rem 0.75rem;
+    --chip-gap: 0.65rem;
+    --name-size: 0.88rem;
+    --subtitle-size: 0.78rem;
+    --chip-radius: 12px;
+}
+
+:host([size="lg"]) {
+    --avatar-size: 52px;
+    --avatar-font-size: 1rem;
+    --chip-padding: 1rem 1.15rem;
+    --chip-gap: 1rem;
+    --name-size: 1.05rem;
+    --subtitle-size: 0.92rem;
+    --chip-radius: 16px;
+}
+
+/* Avatar shape */
+
+:host([avatar-shape="square"]) { --avatar-radius: 10px; }
+:host([avatar-shape="pill"])   { --avatar-radius: 50%; }
+
+/* Variants */
+
+:host([variant="ghost"]) {
+    --chip-bg: transparent;
+    --chip-border: transparent;
+    --chip-shadow: none;
+}
+
+:host([variant="outlined"]) {
+    --chip-shadow: none;
+}
+
+:host([variant="filled"]) {
+    --chip-bg: #f8fafc;
+    --chip-border: transparent;
+    --chip-shadow: none;
+}
+
+/* Theme */
+
+:host([theme="dark"]) {
+    --chip-bg: #111827;
+    --chip-fg: #f8fafc;
+    --chip-muted: #94a3b8;
+    --chip-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Avatar color presets */
+
+:host([color="indigo"])  { --avatar-fg: #4f46e5; --avatar-bg: #eef2ff; }
+:host([color="sky"])     { --avatar-fg: #0ea5e9; --avatar-bg: #e0f2fe; }
+:host([color="emerald"]) { --avatar-fg: #10b981; --avatar-bg: #d1fae5; }
+:host([color="amber"])   { --avatar-fg: #d97706; --avatar-bg: #fef3c7; }
+:host([color="rose"])    { --avatar-fg: #ef4444; --avatar-bg: #fee2e2; }
+:host([color="violet"])  { --avatar-fg: #8b5cf6; --avatar-bg: #ede9fe; }
+:host([color="pink"])    { --avatar-fg: #ec4899; --avatar-bg: #fce7f3; }
+:host([color="teal"])    { --avatar-fg: #14b8a6; --avatar-bg: #ccfbf1; }
+:host([color="slate"])   { --avatar-fg: #475569; --avatar-bg: #e2e8f0; }
+
+/* Auto color — resolved in JS via [data-auto-color] */
+
+:host([data-auto-color="0"]) { --avatar-fg: #4f46e5; --avatar-bg: #eef2ff; }
+:host([data-auto-color="1"]) { --avatar-fg: #0ea5e9; --avatar-bg: #e0f2fe; }
+:host([data-auto-color="2"]) { --avatar-fg: #10b981; --avatar-bg: #d1fae5; }
+:host([data-auto-color="3"]) { --avatar-fg: #d97706; --avatar-bg: #fef3c7; }
+:host([data-auto-color="4"]) { --avatar-fg: #ef4444; --avatar-bg: #fee2e2; }
+:host([data-auto-color="5"]) { --avatar-fg: #8b5cf6; --avatar-bg: #ede9fe; }
+:host([data-auto-color="6"]) { --avatar-fg: #ec4899; --avatar-bg: #fce7f3; }
+:host([data-auto-color="7"]) { --avatar-fg: #14b8a6; --avatar-bg: #ccfbf1; }
+
+/* Layout: stacked (avatar on top, centered) */
+
+:host([layout="stacked"]) .chip {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.6rem;
+}
+
+:host([layout="stacked"]) .body {
+    align-items: center;
+}
+
+:host(:has(.chip-link:focus-visible)) .chip {
+    outline: 2px solid var(--avatar-fg);
+    outline-offset: 2px;
+}

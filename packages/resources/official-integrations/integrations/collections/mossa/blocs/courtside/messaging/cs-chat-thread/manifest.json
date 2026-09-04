@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "cs-chat-thread",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Chat thread",
+        "description": "Scrollable column of message bubbles with vertical spacing and a soft surface.",
+        "categories": [
+            "courtside",
+            "content"
+        ]
+    }
+}

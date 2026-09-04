@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "cs-category-filters",
+        "name": "Category filters",
+        "group": "Courtside",
+        "description": "Shows category-specific catalogue filters while keeping every control editable.",
+        "path": "blocs/courtside/commerce/catalogue/filters/cs-category-filters",
+        "view": "Bloc.ts"
+    }
+}
