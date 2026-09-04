@@ -1,6 +1,13 @@
 export const INTEGRATION_DEFINITION_SCHEMA_V1 = "cms.integration.definition.v1" as const;
 export const INTEGRATION_DEFINITION_SCHEMA_V2 = "cms.integration.definition.v2" as const;
 export const ULVIA_THEME_CONTRACT_V1 = "ulvia-theme@1" as const;
+export const ULVIA_THEME_CONTRACT_V2 = "ulvia-theme@2" as const;
+export const ULVIA_THEME_CONTRACT_V3 = "ulvia-theme@3" as const;
+
+export type UlviaThemeContract =
+    | typeof ULVIA_THEME_CONTRACT_V1
+    | typeof ULVIA_THEME_CONTRACT_V2
+    | typeof ULVIA_THEME_CONTRACT_V3;
 
 export type IntegrationType = "source" | "collection";
 
@@ -36,7 +43,7 @@ export type CollectionThemeOptionalToken = {
 };
 
 export type CollectionThemeRequirement = {
-    contract: typeof ULVIA_THEME_CONTRACT_V1;
+    contract: UlviaThemeContract;
     required?: string[];
     optional?: CollectionThemeOptionalToken[];
 };

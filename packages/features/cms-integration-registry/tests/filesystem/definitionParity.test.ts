@@ -20,18 +20,15 @@ afterEach(() => {
 
 describe("bounded snapshot definition hydration", () => {
     test("matches the existing loader for an official fragmented definition with blocs", async () => {
-        const officialRoot = resolve(
-            import.meta.dir,
-            "../../../../resources/official-integrations/integrations/foundation",
-        );
+        const officialRoot = resolve(import.meta.dir, "../../../../resources/official-integrations/integrations");
         const snapshot = await buildFsIntegrationRegistryCatalogSnapshot({ root: officialRoot });
         const snapshotRepository = new SnapshotIntegrationDefinitionRepository({
             snapshots: new IntegrationRegistryCatalogSnapshotReference(snapshot),
         });
         const filesystemRepository = new FsIntegrationDefinitionRepository(officialRoot);
 
-        expect(await snapshotRepository.get("basic-blocs", "1.0.0")).toEqual(
-            await filesystemRepository.get("basic-blocs", "1.0.0"),
+        expect(await snapshotRepository.get("ulvia", "4.0.0")).toEqual(
+            await filesystemRepository.get("ulvia", "4.0.0"),
         );
     });
 

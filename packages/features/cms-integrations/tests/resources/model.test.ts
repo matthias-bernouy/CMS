@@ -334,6 +334,44 @@ describe("integration resource model", () => {
 
         expect(() => assertCollectionConformance(collection, [source])).not.toThrow();
     });
+
+    test("lets a collection consume declared provider theme tokens directly", () => {
+        const ulvia = collectionDefinition({ version: "3.0.0" });
+        const previousUlvia = collectionDefinition({ version: "2.1.0" });
+        const client = clientCollection();
+        client.theme = {
+            dependencies: [{ kind: "ulvia", versionRange: "^3.0.0" }],
+            categories: [],
+        };
+        client.resources[0]!.requires!.collections![0]!.versionRange = "^3.0.0";
+        client.resources[0]!.theme = {
+            contract: "ulvia-theme@2",
+            required: ["surface-background"],
+        };
+
+        expect(() =>
+            assertCollectionConformance(client, [client, ulvia, previousUlvia, sourceDefinition()]),
+        ).not.toThrow();
+
+        client.resources[0]!.theme.required = ["missing-token"];
+        expect(() => assertCollectionConformance(client, [client, ulvia, previousUlvia, sourceDefinition()])).toThrow(
+            'references missing theme token "missing-token"',
+        );
+    });
+
+    test("keeps site variables out of published collection theme defaults", () => {
+        const collection = collectionDefinition();
+        collection.theme!.categories[0]!.tokens.push({
+            id: "local-alias",
+            label: "Local alias",
+            type: "color",
+            defaults: { light: "var(--site-campaign-accent)" },
+        });
+
+        expect(() => assertCollectionConformance(collection, [collection, sourceDefinition()])).toThrow(
+            'published theme token cannot depend on site variable "site-campaign-accent"',
+        );
+    });
 });
 
 function collectionInstallation(activeResources: string[]): IntegrationInstallation {

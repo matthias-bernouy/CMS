@@ -168,7 +168,13 @@ export type IntegrationThemeCategory = {
     tokens: IntegrationThemeToken[];
 };
 
+export type IntegrationThemeDependency = {
+    kind: string;
+    versionRange: string;
+};
+
 export type IntegrationThemeDefinition = {
+    dependencies?: IntegrationThemeDependency[];
     categories: IntegrationThemeCategory[];
 };
 

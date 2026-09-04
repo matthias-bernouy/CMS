@@ -73,6 +73,37 @@ export async function installRequiredCollectionSources(
     );
     assertCollectionConformance(collection, request.siteIntegrations, selection.activeResources);
     const installing = new Set<string>();
+    for (const dependency of collection.theme?.dependencies ?? []) {
+        const definition = request.siteIntegrations.find(({ kind }) => kind === dependency.kind);
+        if (
+            !definition?.version ||
+            (dependency.versionRange && !integrationVersionSatisfies(definition.version, dependency.versionRange))
+        ) {
+            throw new IntegrationInputError(
+                "resources",
+                `required integration "${dependency.kind}"${dependency.versionRange ? ` at ${dependency.versionRange}` : ""} is unavailable`,
+            );
+        }
+        if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
+            await installCollection(
+                { kind: definition.kind, version: definition.version },
+                request.siteIntegrations,
+                cms,
+                deps,
+            );
+            continue;
+        }
+        await installSource(
+            {
+                kind: dependency.kind,
+                ...(dependency.versionRange ? { versionRange: dependency.versionRange } : {}),
+            },
+            request.siteIntegrations,
+            cms,
+            deps,
+            installing,
+        );
+    }
     for (const requirement of selection.requiredSources) {
         await installSource(requirement, request.siteIntegrations, cms, deps, installing);
     }

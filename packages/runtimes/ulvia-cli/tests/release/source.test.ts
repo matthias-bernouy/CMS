@@ -4,9 +4,11 @@ import { identifyObservedSchemaContract } from "@bernouy/cms-integrations";
 import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runCli } from "../../src/cli";
+import { LocalIntegrationRepository } from "../../src/repository/local";
+import { resolveRequiredPackages } from "../../src/release/packages";
 import { readLocalReleaseSource } from "../../src/release/source";
 import { writeDirectIntegrationSource } from "../fixtures";
-import { emptyRemote, temporaryRoot } from "./support";
+import { emptyRemote, releasePackage, temporaryRoot } from "./support";
 
 describe("local release source", () => {
     test("packages a direct source tree from a workspace containing unrelated symlinks", async () => {
@@ -158,5 +160,42 @@ describe("local release source", () => {
             packageDigest: initial.package.digest,
             baseline: { connector: { provider: "supabase", root: "connectors/supabase" } },
         });
+    });
+
+    test("loads collections required by selectable resources", async () => {
+        const root = await temporaryRoot();
+        const repositoryRoot = join(root, "repository");
+        await mkdir(repositoryRoot, { recursive: true });
+        const repository = new LocalIntegrationRepository(repositoryRoot, join(repositoryRoot, "packages"));
+        await repository.init();
+        const ulvia = await releasePackage("2.1.0", {}, "ulvia");
+        await repository.store({ ...ulvia, source: "local:/ulvia" });
+        const mossa = await releasePackage(
+            "1.0.0",
+            {
+                schema: "cms.integration.definition.v2",
+                type: "collection",
+                resourceCategories: [{ id: "content", label: "Content" }],
+                resources: [
+                    {
+                        id: "mossa/blocs/card",
+                        type: "bloc",
+                        artifact: "card",
+                        category: "content",
+                        requires: {
+                            collections: [{ kind: "ulvia", versionRange: "^2.1.0", resources: ["ulvia/blocs/button"] }],
+                        },
+                    },
+                ],
+                artifacts: [{ type: "bloc", bloc: { tag: "card", name: "Card", compositionHTML: "<p></p>" } }],
+            },
+            "mossa",
+        );
+
+        const dependencies = await resolveRequiredPackages([mossa], repository);
+
+        expect(dependencies.map(({ definition }) => `${definition.kind}@${definition.version}`)).toEqual([
+            "ulvia@2.1.0",
+        ]);
     });
 });

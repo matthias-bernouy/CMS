@@ -40,6 +40,10 @@ function compareArtifact(
         compareSource(baseline.source, candidate.source, path, add);
         return;
     }
+    if (baseline.type === "bloc" && candidate.type === "bloc") {
+        compareBlocVisibility(baseline.bloc.internal === true, candidate.bloc.internal === true, path, add);
+        return;
+    }
     const previousContract = publicArtifactContract(baseline);
     const nextContract = publicArtifactContract(candidate);
     if (!isDeepStrictEqual(previousContract, nextContract)) {
@@ -53,6 +57,25 @@ function compareArtifact(
     }
 }
 
+function compareBlocVisibility(
+    baselineInternal: boolean,
+    candidateInternal: boolean,
+    path: string,
+    add: CompatibilityChangeSink,
+): void {
+    if (baselineInternal === candidateInternal) {
+        return;
+    }
+    const madePublic = baselineInternal && !candidateInternal;
+    add(
+        madePublic ? "additive" : "breaking",
+        "artifact",
+        madePublic ? "bloc-made-public" : "bloc-made-internal",
+        `${path}.internal`,
+        madePublic ? "Bloc became publicly selectable" : "Public bloc became internal",
+    );
+}
+
 function publicArtifactContract(artifact: DeclarativeArtifactTemplate): unknown {
     switch (artifact.type) {
         case "function":
@@ -64,7 +87,7 @@ function publicArtifactContract(artifact: DeclarativeArtifactTemplate): unknown 
                 output: artifact.function.output,
             };
         case "bloc":
-            return { source: artifact.bloc.source };
+            return undefined;
         case "trigger":
             return {
                 event: artifact.trigger.event,

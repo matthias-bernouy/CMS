@@ -88,6 +88,61 @@ describe("integration definition compatibility", () => {
         expect(decision.contractAdmissible).toBeTrue();
         expect(decision.evidence).toEqual([]);
     });
+
+    test("allows bloc implementation and catalogue metadata changes in a patch release", () => {
+        const baseline = packageState("1.0.0", {
+            artifacts: [
+                blocArtifact({
+                    name: "Old logo",
+                    group: "Brand",
+                    description: "Old description",
+                    path: "blocs/logo",
+                    view: "Bloc.ts",
+                    editor: "BlocEditor.ts",
+                    viewJS: "old view",
+                    editorJS: "old editor",
+                    source: { "style.css": "old style" },
+                }),
+            ],
+        });
+        const candidate = packageState("1.0.1", {
+            artifacts: [
+                blocArtifact({
+                    name: "Logo",
+                    group: "Navigation",
+                    description: "Corrected description",
+                    path: "blocs/logo-v2",
+                    composition: "template.html",
+                    editor: null,
+                    compositionHTML: "<span>Logo</span>",
+                    editorJS: null,
+                    source: { "style.css": "new style" },
+                }),
+            ],
+        });
+
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: true, outcome: "compatible" });
+        expect(decision.evidence).toEqual([]);
+    });
+
+    test("classifies bloc catalogue visibility changes", () => {
+        const madeInternal = evaluator().evaluate({
+            baseline: packageState("1.0.0", { artifacts: [blocArtifact()] }),
+            candidate: packageState("1.0.1", { artifacts: [blocArtifact({ internal: true })] }),
+        });
+        const madePublic = evaluator().evaluate({
+            baseline: packageState("1.0.0", { artifacts: [blocArtifact({ internal: true })] }),
+            candidate: packageState("1.1.0", { artifacts: [blocArtifact()] }),
+        });
+
+        expect(madeInternal).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(madeInternal.evidence).toContainEqual(expect.objectContaining({ code: "bloc-made-internal" }));
+        expect(madePublic).toMatchObject({ contractAdmissible: true, outcome: "compatible" });
+        expect(madePublic.evidence).toContainEqual(
+            expect.objectContaining({ classification: "additive", code: "bloc-made-public" }),
+        );
+    });
 });
 
 function dependencyPackage(version: string, versionRange?: string) {
@@ -129,6 +184,18 @@ function functionArtifact(steps: unknown[]) {
             output: [{ status: "200", body: { type: "object" } }],
             steps,
             return: { status: 200, body: {} },
+        },
+    };
+}
+
+function blocArtifact(overrides: Record<string, unknown> = {}) {
+    return {
+        type: "bloc",
+        bloc: {
+            tag: "brand-logo",
+            name: "Logo",
+            compositionHTML: "<span>Logo</span>",
+            ...overrides,
         },
     };
 }

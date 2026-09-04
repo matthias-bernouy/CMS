@@ -24,10 +24,13 @@ export function assertCollectionConformance(
     const effectiveResources = new Set(
         selection.effectiveResources.find(({ kind }) => kind === collection.kind)?.resources ?? [],
     );
-    const definitions = new Map(availableDefinitions.map((definition) => [definition.kind, definition]));
+    const definitions = groupDefinitions(availableDefinitions);
     const themeTokens = new Set(
         (collection.theme?.categories ?? []).flatMap(({ tokens }) => tokens.map(({ id }) => id)),
     );
+    for (const token of assertThemeDependencies(collection, definitions)) {
+        themeTokens.add(token);
+    }
     for (const resource of collection.resources.filter(({ id }) => effectiveResources.has(id))) {
         assertThemeReferences(resource, themeTokens);
         for (const requirement of resource.endpoints ?? []) {
@@ -36,26 +39,108 @@ export function assertCollectionConformance(
     }
 }
 
+function assertThemeDependencies(
+    collection: CollectionIntegrationDefinition,
+    definitions: ReadonlyMap<string, readonly IntegrationDefinition[]>,
+): ReadonlySet<string> {
+    const dependencies = collection.theme?.dependencies ?? [];
+    const localTokens = new Set(collection.theme?.categories.flatMap(({ tokens }) => tokens.map(({ id }) => id)) ?? []);
+    const providers = new Map<string, Set<string>>();
+    for (const dependency of dependencies) {
+        const candidates = (definitions.get(dependency.kind) ?? []).filter(
+            (definition): definition is CollectionIntegrationDefinition =>
+                definition.schema === "cms.integration.definition.v2" &&
+                definition.type === "collection" &&
+                definition.theme !== undefined,
+        );
+        const definition = candidates.find(
+            ({ version }) => version && integrationVersionSatisfies(version, dependency.versionRange),
+        );
+        const path = `theme.dependencies.${dependency.kind}`;
+        if (candidates.length === 0) {
+            throw new IntegrationInputError(path, `requires missing theme collection "${dependency.kind}"`);
+        }
+        if (!definition) {
+            throw new IntegrationInputError(
+                path,
+                `requires theme collection "${dependency.kind}" version ${dependency.versionRange}, got ${candidates.map(({ version }) => version ?? "unversioned").join(", ")}`,
+            );
+        }
+        const theme = definition.theme;
+        if (!theme) {
+            throw new IntegrationInputError(path, `theme collection "${dependency.kind}" does not publish a theme`);
+        }
+        providers.set(dependency.kind, new Set(theme.categories.flatMap(({ tokens }) => tokens.map(({ id }) => id))));
+    }
+    const knownThemeKinds = [...definitions.entries()]
+        .filter(([, candidates]) =>
+            candidates.some(
+                (definition) =>
+                    definition.schema === "cms.integration.definition.v2" &&
+                    definition.type === "collection" &&
+                    definition.theme !== undefined,
+            ),
+        )
+        .map(([kind]) => kind)
+        .sort((left, right) => right.length - left.length);
+    for (const token of collection.theme?.categories.flatMap(({ tokens }) => tokens) ?? []) {
+        for (const value of Object.values(token.defaults)) {
+            for (const match of value.matchAll(/var\s*\(\s*--([a-z][a-z0-9-]*)/giu)) {
+                const variable = match[1]!.toLowerCase();
+                if (variable.startsWith("site-")) {
+                    throw new IntegrationInputError(
+                        `theme.tokens.${token.id}`,
+                        `published theme token cannot depend on site variable "${variable}"`,
+                    );
+                }
+                if (variable.startsWith(`${collection.kind}-`)) {
+                    const localToken = variable.slice(collection.kind.length + 1);
+                    if (!localTokens.has(localToken)) {
+                        throw new IntegrationInputError(
+                            `theme.tokens.${token.id}`,
+                            `references missing local theme token "${variable}"`,
+                        );
+                    }
+                    continue;
+                }
+                const provider = dependencies.find(({ kind }) => variable.startsWith(`${kind}-`));
+                const providerToken = provider ? variable.slice(provider.kind.length + 1) : "";
+                const knownProvider = knownThemeKinds.find((kind) => variable.startsWith(`${kind}-`));
+                if (knownProvider && (!provider || !providers.get(provider.kind)?.has(providerToken))) {
+                    throw new IntegrationInputError(
+                        `theme.tokens.${token.id}`,
+                        `references undeclared or missing collection theme token "${variable}"`,
+                    );
+                }
+            }
+        }
+    }
+    return new Set([...providers.values()].flatMap((tokens) => [...tokens]));
+}
+
 function assertEndpointRequirement(
     resource: CollectionResource,
     requirement: CollectionEndpointRequirement,
-    definitions: ReadonlyMap<string, IntegrationDefinition>,
+    definitions: ReadonlyMap<string, readonly IntegrationDefinition[]>,
 ): void {
-    const sourceDefinition = definitions.get(requirement.source);
+    const candidates = definitions.get(requirement.source) ?? [];
     const path = `resources.${resource.id}.endpoints.${requirement.endpoint}`;
-    if (!sourceDefinition) {
+    if (candidates.length === 0) {
         throw new IntegrationInputError(path, `requires missing source integration "${requirement.source}"`);
     }
-    if (sourceDefinition.schema === "cms.integration.definition.v2" && sourceDefinition.type !== "source") {
+    const sources = candidates.filter(
+        (definition) => definition.schema !== "cms.integration.definition.v2" || definition.type === "source",
+    );
+    if (sources.length === 0) {
         throw new IntegrationInputError(path, `"${requirement.source}" is not a source integration`);
     }
-    if (
-        !sourceDefinition.version ||
-        !integrationVersionSatisfies(sourceDefinition.version, requirement.sourceVersion)
-    ) {
+    const sourceDefinition = sources.find(
+        ({ version }) => version && integrationVersionSatisfies(version, requirement.sourceVersion),
+    );
+    if (!sourceDefinition) {
         throw new IntegrationInputError(
             path,
-            `requires source "${requirement.source}" version ${requirement.sourceVersion}, got ${sourceDefinition.version ?? "unversioned"}`,
+            `requires source "${requirement.source}" version ${requirement.sourceVersion}, got ${sources.map(({ version }) => version ?? "unversioned").join(", ")}`,
         );
     }
     const endpoints = (sourceDefinition.artifacts ?? []).flatMap((artifact): ConformanceEndpoint[] => {
@@ -197,4 +282,18 @@ function assertThemeReferences(resource: CollectionResource, tokens: ReadonlySet
             throw new IntegrationInputError(`resources.${resource.id}.theme`, `references missing theme token "${id}"`);
         }
     }
+}
+
+function groupDefinitions(
+    definitions: readonly IntegrationDefinition[],
+): ReadonlyMap<string, readonly IntegrationDefinition[]> {
+    const grouped = new Map<string, IntegrationDefinition[]>();
+    for (const definition of definitions) {
+        const candidates = grouped.get(definition.kind) ?? [];
+        if (!candidates.some(({ version }) => version === definition.version)) {
+            candidates.push(definition);
+            grouped.set(definition.kind, candidates);
+        }
+    }
+    return grouped;
 }

@@ -12,17 +12,20 @@ export function collectIntegrationInstallationThemeContributions(
     const contributions: IntegrationThemeContribution[] = [];
     for (const installation of installations) {
         const snapshot = installation.definitionSnapshot;
-        if (installation.status !== "success" || !snapshot?.theme) {
+        if (installation.status !== "success" || !snapshot?.theme || snapshot.theme.categories.length === 0) {
             continue;
         }
         contributions.push({
             integrationId: installation.id,
             label: snapshot.label,
-            ...(snapshot.dependencies?.length
+            ...(snapshot.theme.dependencies?.length || snapshot.dependencies?.length
                 ? {
-                      dependencies: [...new Set(snapshot.dependencies.map((dependency) => dependency.kind))].sort(
-                          compareText,
-                      ),
+                      dependencies: [
+                          ...new Set([
+                              ...(snapshot.theme.dependencies ?? []).map(({ kind }) => kind),
+                              ...(snapshot.dependencies ?? []).map(({ kind }) => kind),
+                          ]),
+                      ].sort(compareText),
                   }
                 : {}),
             categories: structuredClone(snapshot.theme.categories),

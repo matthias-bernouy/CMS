@@ -40,6 +40,7 @@ export function verifyCollectionRelease(
             candidate,
             undefined,
             collectionSelectableResources(previous).map(({ id }) => id),
+            available,
         );
     }
     const scenarioCount = 1 + input.baselines.length;

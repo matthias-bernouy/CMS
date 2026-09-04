@@ -4,6 +4,7 @@ describe("integration theme definitions", () => {
     test("parses local tokens, mode defaults, aliases, and specialized control types", () => {
         const definition = parseIntegrationDefinition(
             themedDefinition({
+                dependencies: [{ kind: "ulvia", versionRange: "^2.1.0" }],
                 categories: [
                     {
                         id: "gallery",
@@ -50,6 +51,7 @@ describe("integration theme definitions", () => {
         );
 
         expect(definition.theme).toEqual({
+            dependencies: [{ kind: "ulvia", versionRange: "^2.1.0" }],
             categories: [
                 {
                     id: "gallery",
@@ -109,6 +111,42 @@ describe("integration theme definitions", () => {
                 ),
             ),
         ).toThrow("must not be declared; the CMS generates it");
+    });
+
+    test("accepts a dependency-only theme without redundant local aliases", () => {
+        const definition = parseIntegrationDefinition(
+            themedDefinition({
+                dependencies: [{ kind: "ulvia", versionRange: "^3.0.0" }],
+                categories: [],
+            }),
+        );
+
+        expect(definition.theme).toEqual({
+            dependencies: [{ kind: "ulvia", versionRange: "^3.0.0" }],
+            categories: [],
+        });
+    });
+
+    test("rejects an empty standalone theme", () => {
+        expect(() => parseIntegrationDefinition(themedDefinition({ categories: [] }))).toThrow(
+            "must contain a category unless the theme declares a dependency",
+        );
+    });
+
+    test.each([
+        [[{ kind: "photo-albums", versionRange: "^1.0.0" }], "must not reference the integration itself"],
+        [
+            [
+                { kind: "ulvia", versionRange: "^1.0.0" },
+                { kind: "ulvia", versionRange: "^2.0.0" },
+            ],
+            "duplicate theme dependency",
+        ],
+        [[{ kind: "ulvia", versionRange: "latest" }], "bounded comparator range"],
+    ])("rejects invalid theme dependencies", (dependencies, error) => {
+        expect(() => parseIntegrationDefinition(themedDefinition({ dependencies, ...oneToken(validToken()) }))).toThrow(
+            error,
+        );
     });
 
     test.each([

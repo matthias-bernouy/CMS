@@ -167,7 +167,10 @@ export async function collectionDependencyDefinitions(
         return [];
     }
     const collections = new Map<string, IntegrationDefinition>();
-    const pending = definition.resources.flatMap((resource) => resource.requires?.collections ?? []);
+    const pending = [
+        ...definition.resources.flatMap((resource) => resource.requires?.collections ?? []),
+        ...(definition.theme?.dependencies ?? []),
+    ];
     while (pending.length) {
         const requirement = pending.shift()!;
         if (collections.has(requirement.kind)) {
@@ -187,7 +190,10 @@ export async function collectionDependencyDefinitions(
             );
         }
         collections.set(dependency.kind, dependency);
-        pending.push(...dependency.resources.flatMap((resource) => resource.requires?.collections ?? []));
+        pending.push(
+            ...dependency.resources.flatMap((resource) => resource.requires?.collections ?? []),
+            ...(dependency.theme?.dependencies ?? []),
+        );
     }
     const allCollections = [definition, ...collections.values()].filter(
         (candidate) => candidate.schema === "cms.integration.definition.v2" && candidate.type === "collection",

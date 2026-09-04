@@ -53,6 +53,21 @@ describe("collection definition compatibility", () => {
         );
     });
 
+    test("requires a major release when a resource changes theme contract", () => {
+        const baseline = collectionPackage("1.0.0", [
+            { ...resource(), theme: { contract: "ulvia-theme@1", required: ["surface-background"] } },
+        ]);
+        const candidate = collectionPackage("1.1.0", [
+            { ...resource(), theme: { contract: "ulvia-theme@2", required: ["surface-background"] } },
+        ]);
+        const decision = evaluator().evaluate({ baseline, candidate });
+
+        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(decision.evidence).toContainEqual(
+            expect.objectContaining({ code: "collection-theme-contract-changed" }),
+        );
+    });
+
     test("detects integration type changes", () => {
         const baseline = collectionPackage("1.0.0", [resource()]);
         const candidate = packageState("1.0.1", {

@@ -156,6 +156,15 @@ function compareTheme(
     path: string,
     add: CompatibilityChangeSink,
 ): void {
+    if (baseline.theme?.contract !== candidate.theme?.contract) {
+        add(
+            "breaking",
+            "definition",
+            "collection-theme-contract-changed",
+            `${path}.theme.contract`,
+            `Theme contract changed from ${baseline.theme?.contract ?? "none"} to ${candidate.theme?.contract ?? "none"}`,
+        );
+    }
     compareStringRequirements(
         baseline.theme?.required,
         candidate.theme?.required,

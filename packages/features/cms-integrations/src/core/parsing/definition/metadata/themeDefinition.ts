@@ -1,6 +1,8 @@
 import { IntegrationInputError } from "../../../errors";
+import { isSupportedIntegrationVersionRange } from "../../../definitions/versioning";
 import type {
     IntegrationThemeCategory,
+    IntegrationThemeDependency,
     IntegrationThemeDefinition,
     IntegrationThemeToken,
     IntegrationThemeTokenDefaults,
@@ -19,8 +21,15 @@ export function parseThemeDefinition(value: unknown, integrationKind: string): I
         throw new IntegrationInputError("definition.theme", "must be an object");
     }
     assertLocalId(integrationKind, "definition.kind");
-    if (!Array.isArray(value.categories) || value.categories.length === 0) {
-        throw new IntegrationInputError("definition.theme.categories", "must be a non-empty array");
+    const dependencies = parseDependencies(value.dependencies, integrationKind);
+    if (!Array.isArray(value.categories)) {
+        throw new IntegrationInputError("definition.theme.categories", "must be an array");
+    }
+    if (value.categories.length === 0 && dependencies.length === 0) {
+        throw new IntegrationInputError(
+            "definition.theme.categories",
+            "must contain a category unless the theme declares a dependency",
+        );
     }
 
     const categoryIds = new Set<string>();
@@ -28,11 +37,44 @@ export function parseThemeDefinition(value: unknown, integrationKind: string): I
     const categories = value.categories.map((category, index) =>
         parseCategory(category, `definition.theme.categories.${index}`, categoryIds, tokenIds),
     );
-    return { categories };
+    return { ...(dependencies.length ? { dependencies } : {}), categories };
 }
 
 export function validateThemeDefinition(theme: IntegrationThemeDefinition, integrationKind: string): void {
     parseThemeDefinition(theme, integrationKind);
+}
+
+function parseDependencies(value: unknown, integrationKind: string): IntegrationThemeDependency[] {
+    if (value === undefined) {
+        return [];
+    }
+    if (!Array.isArray(value)) {
+        throw new IntegrationInputError("definition.theme.dependencies", "must be an array");
+    }
+    const kinds = new Set<string>();
+    return value.map((entry, index) => {
+        const name = `definition.theme.dependencies.${index}`;
+        if (!isRecord(entry)) {
+            throw new IntegrationInputError(name, "must be an object");
+        }
+        const kind = requiredText(entry.kind, `${name}.kind`);
+        assertLocalId(kind, `${name}.kind`);
+        if (kind === integrationKind) {
+            throw new IntegrationInputError(`${name}.kind`, "must not reference the integration itself");
+        }
+        if (kinds.has(kind)) {
+            throw new IntegrationInputError(`${name}.kind`, `duplicate theme dependency: ${kind}`);
+        }
+        kinds.add(kind);
+        const versionRange = requiredText(entry.versionRange, `${name}.versionRange`);
+        if (!isSupportedIntegrationVersionRange(versionRange)) {
+            throw new IntegrationInputError(
+                `${name}.versionRange`,
+                "must be an exact, caret, tilde, or bounded comparator range",
+            );
+        }
+        return { kind, versionRange };
+    });
 }
 
 function parseCategory(

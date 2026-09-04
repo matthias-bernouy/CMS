@@ -30,6 +30,24 @@ describe("integration Theme contributions", () => {
 
         expect(source.definitionSnapshot?.theme?.categories[0]?.tokens[0]?.label).toBe("Accent");
     });
+
+    test("exposes theme-specific dependencies for collection token isolation", () => {
+        const source = installation("mossa", "success");
+        source.definitionSnapshot!.dependencies = undefined;
+        source.definitionSnapshot!.theme!.dependencies = [{ kind: "ulvia", versionRange: "^2.1.0" }];
+
+        expect(collectIntegrationInstallationThemeContributions([source])[0]?.dependencies).toEqual(["ulvia"]);
+    });
+
+    test("omits dependency-only themes without local tokens", () => {
+        const source = installation("mossa", "success");
+        source.definitionSnapshot!.theme = {
+            dependencies: [{ kind: "ulvia", versionRange: "^3.0.0" }],
+            categories: [],
+        };
+
+        expect(collectIntegrationInstallationThemeContributions([source])).toEqual([]);
+    });
 });
 
 function installation(id: string, status: IntegrationInstallationStatus, withTheme = true): IntegrationInstallation {

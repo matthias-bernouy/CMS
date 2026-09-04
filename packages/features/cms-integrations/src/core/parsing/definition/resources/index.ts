@@ -1,7 +1,12 @@
 import { isEndpointUrn } from "@bernouy/cms-sources";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
 import { isSupportedIntegrationVersionRange } from "../../../definitions/versioning";
-import { ULVIA_THEME_CONTRACT_V1 } from "../../../../interfaces/IntegrationResources";
+import {
+    ULVIA_THEME_CONTRACT_V1,
+    ULVIA_THEME_CONTRACT_V2,
+    ULVIA_THEME_CONTRACT_V3,
+    type UlviaThemeContract,
+} from "../../../../interfaces/IntegrationResources";
 import type {
     CollectionEndpointRequirement,
     CollectionResource,
@@ -119,8 +124,16 @@ function parseEndpoint(value: unknown, name: string): CollectionEndpointRequirem
 }
 
 function parseTheme(value: unknown, name: string): CollectionThemeRequirement {
-    if (!isRecord(value) || value.contract !== ULVIA_THEME_CONTRACT_V1) {
-        throw new IntegrationInputError(`${name}.contract`, `must be ${ULVIA_THEME_CONTRACT_V1}`);
+    if (
+        !isRecord(value) ||
+        (value.contract !== ULVIA_THEME_CONTRACT_V1 &&
+            value.contract !== ULVIA_THEME_CONTRACT_V2 &&
+            value.contract !== ULVIA_THEME_CONTRACT_V3)
+    ) {
+        throw new IntegrationInputError(
+            `${name}.contract`,
+            `must be ${ULVIA_THEME_CONTRACT_V1}, ${ULVIA_THEME_CONTRACT_V2}, or ${ULVIA_THEME_CONTRACT_V3}`,
+        );
     }
     const required = parseStringList(value.required, `${name}.required`);
     const optional = value.optional;
@@ -128,7 +141,7 @@ function parseTheme(value: unknown, name: string): CollectionThemeRequirement {
         throw new IntegrationInputError(`${name}.optional`, "must be an array");
     }
     return {
-        contract: ULVIA_THEME_CONTRACT_V1,
+        contract: value.contract as UlviaThemeContract,
         ...(required ? { required } : {}),
         ...(optional
             ? {

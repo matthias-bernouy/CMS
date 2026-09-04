@@ -96,6 +96,7 @@ function requiredDependencies(definition: LocalReleasePackage["definition"]): Ar
         return declared;
     }
     const sources = new Map<string, string>();
+    const collections = new Map<string, string>();
     for (const endpoint of definition.resources.flatMap((resource) => resource.endpoints ?? [])) {
         const existing = sources.get(endpoint.source);
         if (existing && existing !== endpoint.sourceVersion) {
@@ -103,7 +104,25 @@ function requiredDependencies(definition: LocalReleasePackage["definition"]): Ar
         }
         sources.set(endpoint.source, endpoint.sourceVersion);
     }
-    return [...declared, ...[...sources].map(([kind, versionRange]) => ({ kind, versionRange }))];
+    for (const requirement of definition.resources.flatMap((resource) => resource.requires?.collections ?? [])) {
+        const existing = collections.get(requirement.kind);
+        if (existing && existing !== requirement.versionRange) {
+            throw new Error(`Collection ${definition.kind} declares conflicting ranges for ${requirement.kind}`);
+        }
+        collections.set(requirement.kind, requirement.versionRange);
+    }
+    for (const dependency of definition.theme?.dependencies ?? []) {
+        const existing = collections.get(dependency.kind);
+        if (existing && existing !== dependency.versionRange) {
+            throw new Error(`Collection ${definition.kind} declares conflicting ranges for ${dependency.kind}`);
+        }
+        collections.set(dependency.kind, dependency.versionRange);
+    }
+    return [
+        ...declared,
+        ...[...collections].map(([kind, versionRange]) => ({ kind, versionRange })),
+        ...[...sources].map(([kind, versionRange]) => ({ kind, versionRange })),
+    ];
 }
 
 function olderRecords(records: readonly LocalPackageRecord[], kind: string, version: string): LocalPackageRecord[] {

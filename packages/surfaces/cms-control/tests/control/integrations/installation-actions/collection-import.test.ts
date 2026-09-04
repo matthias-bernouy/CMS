@@ -67,6 +67,16 @@ describe("collection imports", () => {
         expect((await fixture.repository.getBlocsList()).map(({ id }) => id)).toEqual(["client-feature"]);
         expect(await fixture.repository.getBlocRecord("basic-paragraph")).not.toBeNull();
     });
+
+    test("installs a collection declared as a top-level dependency for its theme", async () => {
+        const fixture = collectionCms([collectionDefinition(), clientCollectionDefinition()]);
+
+        const response = await postIntegrationImport(postImport({ kind: "client", resources: [] }), fixture.cms);
+
+        expect(response.status).toBe(200);
+        expect((await fixture.integrationInstallations.get("ulvia"))?.activeResources).toEqual([]);
+        expect((await fixture.integrationInstallations.get("client"))?.activeResources).toEqual([]);
+    });
 });
 
 function collectionCms(collections: IntegrationDefinition[] = [collectionDefinition()]) {
@@ -116,6 +126,15 @@ function collectionDefinition(version = "1.0.0"): IntegrationDefinition {
         label: "Ulvia",
         version,
         inputs: [],
+        theme: {
+            categories: [
+                {
+                    id: "appearance",
+                    label: "Appearance",
+                    tokens: [{ id: "accent", label: "Accent", type: "color", defaults: { light: "blue" } }],
+                },
+            ],
+        },
         resourceCategories: [
             { id: "content", label: "Content" },
             { id: "commerce", label: "Commerce" },
@@ -163,6 +182,23 @@ function clientCollectionDefinition(): IntegrationDefinition {
         label: "Client",
         version: "1.0.0",
         inputs: [],
+        theme: {
+            dependencies: [{ kind: "ulvia", versionRange: "^1.0.0" }],
+            categories: [
+                {
+                    id: "appearance",
+                    label: "Appearance",
+                    tokens: [
+                        {
+                            id: "accent",
+                            label: "Accent",
+                            type: "color",
+                            defaults: { light: "var(--ulvia-accent)" },
+                        },
+                    ],
+                },
+            ],
+        },
         resourceCategories: [{ id: "content", label: "Content" }],
         resources: [
             {
