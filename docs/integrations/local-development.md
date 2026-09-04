@@ -24,6 +24,11 @@ No repository HTTP server is required as a separate command. While `ulvia dev`
 is running, it exposes the persistent local repository to its CMS through an
 internal loopback bridge.
 
+The repository contains only coordinates explicitly pulled or released on
+this machine. It is not a checkout mirror and it does not fetch a missing
+package during an install. Pull remote history deliberately; release current
+source deliberately.
+
 ## Workflow
 
 Release current packages into the local repository, then start the stack:
@@ -63,6 +68,11 @@ A meaningful local acceptance pass should:
 8. upgrade a collection and prove old selections remain exact and new
    resources remain inactive.
 
+For a complete site reconstruction, also use the
+[site acceptance guide](./site-acceptance.md). It covers the boundary between a
+collection and site-owned branding, fictional marketplace data, safe provider
+simulation, and desktop/mobile screenshot comparisons.
+
 Stop the persistent infrastructure explicitly when it is no longer needed:
 
 ```bash
@@ -80,6 +90,11 @@ fresh-install and upgrade scenario. It is deterministic and is the release
 gate. `ulvia dev` is a persistent site used for integrated product behavior and
 manual or automated acceptance checks. Both use the same CMS runtime and local
 package format, but their state lifecycles are intentionally different.
+
+Neither command accepts a `--from` version. The audit derives applicable older
+versions from the immutable coordinates already present in the local
+repository. Use a separate `ULVIA_DATA_DIR` when a clean site or an isolated
+history is required.
 
 Neither command needs production Supabase credentials. The local runtime
 creates its own keys and keeps service credentials inside its composition

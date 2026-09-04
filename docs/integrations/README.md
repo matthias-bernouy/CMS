@@ -8,10 +8,15 @@ This section documents the supported workflow:
 
 - [Source and collection model](./model.md) defines ownership, resource
   selection, endpoint bindings, contracts, themes, and dependency closure.
+- [Integration theme contracts](./themes.md) defines shared Ulvia tokens,
+  collection hooks, private variables, and site-owned overrides.
 - [Creating a release](./releases.md) covers source layout, SemVer, audits,
   local releases, dependencies, and operational practices.
 - [Local integration development](./local-development.md) covers the persistent
   CMS, MongoDB, Supabase, selective installation, and end-to-end acceptance.
+- [Site acceptance with local data](./site-acceptance.md) explains how to
+  reproduce a real site safely with public configuration, fictional business
+  data, provider simulations, and visual checks.
 - [Business upgrade fixtures](./upgrade-fixtures.md) explains how an
   integration creates realistic old-version state and verifies it after an
   upgrade.
@@ -48,6 +53,11 @@ Current definitions use `cms.integration.definition.v2` and explicitly declare
 `type: "source"` or `type: "collection"`. Legacy definitions remain readable
 only as immutable upgrade baselines.
 
+The current model deliberately has no `template` package type. Pages, site
+blocs, logos, favicons, public organization settings, and `--site-*` variables
+belong to CMS site data. A reusable collection must not become coupled to the
+first site that used it.
+
 ## Command summary
 
 Commands below use the workspace script. An installed CLI can use the same
@@ -63,6 +73,11 @@ bun run ulvia -- push --all
 bun run ulvia -- status
 bun run ulvia -- dev
 ```
+
+`audit` and `release` do not need a `--from` argument. They discover every
+known, installable older coordinate from the local repository and verify each
+applicable upgrade. Use `pull --all-versions` before authoring when remote
+history is authoritative.
 
 The persistent local repository is application data under
 `$XDG_DATA_HOME/ulvia` or `~/.local/share/ulvia`. Set `ULVIA_DATA_DIR` to an

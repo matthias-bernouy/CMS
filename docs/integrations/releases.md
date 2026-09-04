@@ -1,8 +1,7 @@
 # Creating an integration release
 
-This workflow applies to a new integration and to every subsequent version.
-Run commands from the workspace root unless an integration documents an
-additional requirement.
+This workflow applies to new integrations and every subsequent version. Run
+commands from the workspace root.
 
 ## 1. Synchronize known history
 
@@ -34,17 +33,15 @@ excludes author tests and registry evidence. The transitive source closure for
 digest-bound verification bundle, so it can be executed again without placing
 test code in the installed runtime package.
 
-Mutable business policy does not belong in installation answers. Installation
-inputs are appropriate for stable deployment settings, secret references, and
-initial bootstrap identity. Documents, legal text, prices, feature state, and
-other operator-owned values should live in runtime persistence and be managed
-through an authenticated dashboard or API. An `afterInstallation` hook must be
-idempotent and must not overwrite an existing runtime value.
+Keep mutable business policy in runtime persistence, managed through an
+authenticated view or API. Installation inputs are for stable deployment
+settings, secret references, and bootstrap identity. An `afterInstallation`
+hook must be idempotent and preserve existing runtime values.
 
 Keep package responsibilities strict. A `source` contains backend/data
-artifacts and their tests. A `collection` contains blocs, resource metadata,
-endpoint bindings, and theme contracts. See the
-[source and collection model](./model.md).
+artifacts, operator `dashboard-view` artifacts, and their tests. A `collection`
+contains blocs, resource metadata, endpoint bindings, and theme contracts. See
+the [source and collection model](./model.md).
 
 ## 3. Choose the version
 
@@ -54,7 +51,7 @@ happened to fail.
 | Release | Use it for | Typical examples |
 | --- | --- | --- |
 | Patch | A compatible correction | Fix an implementation that violated the existing contract; strengthen a test without changing supported behavior |
-| Minor | An additive contract | Add an optional field, endpoint, dashboard, function, or expand-only schema capability |
+| Minor | An additive contract | Add an optional field, endpoint, dashboard view, function, or expand-only schema capability |
 | Major | A contract clients must change for | Remove or rename fields, add required input, narrow accepted behavior, or remove an endpoint |
 
 If an old test was wrong, first decide which behavior is the intended contract.
@@ -89,11 +86,9 @@ When a linking integration starts using a newer dependency contract, declare a
 `versionRange`. Never let repository resolution silently select an older
 provider that lacks the endpoint or schema being called.
 
-Plan dependency-major transitions explicitly. The sandbox keeps an installed
-dependency when it still satisfies the target range, which permits a dependent
-package to upgrade before that dependency. If the new dependent cannot run
-against both dependency majors, publish a bridge release or design an atomic
-upgrade plan; do not bypass the installed-dependent guard.
+Plan dependency-major transitions explicitly. The sandbox retains an installed
+dependency while it satisfies the target range. If a dependent cannot run
+against both majors, publish a bridge or design an atomic upgrade plan.
 
 ## 5. Add tests and upgrade fixtures
 
@@ -122,9 +117,8 @@ bun run ulvia -- audit <kind>
 5. every known, installable baseline upgrade;
 6. business fixtures and migration crash/restart recovery where applicable.
 
-No production Supabase credentials are required. The verifier starts disposable
-local services and keeps service-role credentials inside its runtime boundary.
-Docker and the local Supabase toolchain must be available.
+The verifier needs Docker and the local Supabase toolchain, but no production
+credentials. Service-role keys stay inside its disposable runtime.
 
 ## 7. Release to the local repository
 
@@ -161,21 +155,25 @@ Install the locally released integration into the persistent development CMS,
 exercise its Source endpoints, Storage, Auth, Edge Functions, and collection
 blocs, then stop the stack with `bun run ulvia -- dev stop`.
 
-For collections, begin with an exact source-free selection, then add one
-source-backed resource and verify that only its dependency closure is installed.
-Create and publish a real page, write business data through a Source, restart
-the process, and perform at least one representative upgrade. The complete
-acceptance sequence is documented in
+For collections, begin with a source-free selection, then add one source-backed
+resource and verify its dependency closure. Publish a page, write data through
+a Source, restart, and perform a representative upgrade. Follow
 [Local integration development](./local-development.md).
+
+When reproducing a customer site, keep branding and pages out of the
+collection, use fictional local business data, and document any simulated
+third-party callback. Follow [Site acceptance with local data](./site-acceptance.md).
 
 ## Release checklist
 
 - Remote baselines were pulled before authoring.
 - Definition, index, release notes, and dependency ranges agree.
 - The package declares exactly one current type: `source` or `collection`.
-- Sources contain no blocs, dashboards, pages, or theme declarations.
+- Sources contain no blocs, dashboard shells, pages, or theme declarations;
+  their operator UI is published as `dashboard-view` artifacts.
 - Collection resources use stable namespaced IDs and explicit endpoint,
   contract, binding, theme, and transitive resource requirements.
+- Collection category labels do not repeat old package or collection names.
 - Mutable business state is runtime-owned and survives reinstall/reload.
 - Tests cover authorization, malformed input, retries, and concurrency.
 - Fixtures cover every immutable baseline and valuable business state.

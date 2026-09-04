@@ -18,26 +18,22 @@ value sets, and one active theme. The default catalogue includes:
 
 | Family | Default variables |
 | --- | --- |
-| Brand | `--primary-base`, `--primary-contrasted`, `--secondary-base`, `--secondary-contrasted` |
-| Surfaces | `--bg-base`, `--bg-surface`, `--border-default` |
-| Text | `--text-main`, `--text-muted` |
-| Feedback | `--success-base`, `--warning-base`, `--danger-base` |
-| Typography | `--font-heading`, `--font-body`, `--font-size-body`, `--font-size-display` |
-| Spacing and widths | `--space-sm`, `--space-md`, `--space-xl`, `--content-width`, `--wide-width` |
-| Shape and elevation | `--radius-control`, `--radius-card`, `--shadow-soft` |
+| Brand | `--ulvia-primary-base`, `--ulvia-primary-foreground`, `--ulvia-secondary-base` |
+| Surfaces | `--ulvia-page-background`, `--ulvia-surface-background`, `--ulvia-surface-border` |
+| Text | `--ulvia-body-text`, `--ulvia-surface-text`, `--ulvia-surface-muted-text` |
+| Feedback | `--ulvia-success-base`, `--ulvia-warning-base`, `--ulvia-danger-base` |
+| Typography | `--ulvia-font-heading`, `--ulvia-font-body`, `--ulvia-font-size-display` |
+| Spacing and widths | `--ulvia-space-sm`, `--ulvia-space-md`, `--ulvia-content-width` |
+| Shape and elevation | `--ulvia-radius-control`, `--ulvia-radius-card`, `--ulvia-shadow-soft` |
 
-When it is loaded, the component-toolkit stylesheet also defines contextual
-aliases such as `--ctx-bg`, `--ctx-fg`, `--ctx-fg-muted`, and `--ctx-border`. It
-is an extended catalogue, not part of the guaranteed structured theme token
-set in Delivery. Always fall back from these aliases to a structured token. A
-coloured parent surface can reroute them so nested blocs remain readable
-without knowing the parent's variant.
+Generic `--ctx-*` aliases are not a public cross-collection API. Consume the
+documented Ulvia vocabulary or a documented hook from the collection that owns
+the component. The complete ownership and naming rules live in
+[Integration theme contracts](../integrations/themes.md).
 
-Control edits structured theme values. In a local site, `p9r pull` materializes
-those settings in `site/system.json` and free-form CSS in `site/theme.css`.
-Delivery serves both through `/.cms/style`: free-form CSS is emitted first and
-the active structured token values follow. Therefore structured values are
-authoritative when both layers assign the same managed variable.
+Control edits structured theme values. Delivery serves free-form site CSS and
+the active structured values through `/.cms/style`; structured values follow
+and are authoritative when both layers assign the same managed variable.
 
 When an active theme defines dark values, they apply through
 `prefers-color-scheme: dark` and may be forced with
@@ -51,43 +47,42 @@ fallback:
 
 ```css
 :host {
-  --site-card-background: var(--bg-surface, Canvas);
-  --site-card-color: var(--ctx-fg, var(--text-main, CanvasText));
-  --site-card-muted-color: var(--ctx-fg-muted, var(--text-muted, currentColor));
-  --site-card-border-color: var(--ctx-border, var(--border-default, currentColor));
-  --site-card-radius: var(--radius-card, 0.5rem);
-  --site-card-padding: var(--space-md, 1rem);
+  --acme-card-background: var(--ulvia-surface-background, Canvas);
+  --acme-card-color: var(--ulvia-surface-text, CanvasText);
+  --_acme-card-muted-color: var(--ulvia-surface-muted-text, currentColor);
+  --_acme-card-border-color: var(--ulvia-surface-border, currentColor);
+  --_acme-card-radius: var(--ulvia-radius-card, 0.5rem);
+  --_acme-card-padding: var(--ulvia-space-md, 1rem);
 
   display: block;
-  color: var(--site-card-color);
+  color: var(--acme-card-color);
   font: inherit;
 }
 
 [part="card"] {
   display: grid;
-  padding: var(--site-card-padding);
-  border: 1px solid var(--site-card-border-color);
-  border-radius: var(--site-card-radius);
-  background: var(--site-card-background);
+  padding: var(--_acme-card-padding);
+  border: 1px solid var(--_acme-card-border-color);
+  border-radius: var(--_acme-card-radius);
+  background: var(--acme-card-background);
 }
 
 [part="description"] {
-  color: var(--site-card-muted-color);
+  color: var(--_acme-card-muted-color);
 }
 ```
 
 A site may now tune the component without reaching into its Shadow DOM:
 
 ```css
-site-card {
-  --site-card-radius: 1.25rem;
-  --site-card-padding: 2rem;
+acme-card {
+  --acme-card-background: var(--ulvia-subtle-background);
 }
 ```
 
-Use namespaced Bloc variables for supported knobs. Avoid exposing internal
-implementation variables accidentally, and avoid hardcoded brand colours in a
-reusable Bloc.
+Use documented collection variables for supported knobs. Prefix private
+implementation variables with `--_<collection>-*`; sites and other collections
+must not depend on them. Avoid hardcoded brand colours in a reusable Bloc.
 
 ## Attributes, Color Settings, Parts, And Slots
 
@@ -101,7 +96,7 @@ Use attributes for finite semantic choices:
 }
 
 :host([appearance="elevated"]) [part="card"] {
-  box-shadow: var(--site-card-shadow, var(--shadow-soft, 0 0.5rem 1.5rem rgb(0 0 0 / 12%)));
+  box-shadow: var(--acme-card-shadow, var(--ulvia-shadow-soft, 0 0.5rem 1.5rem rgb(0 0 0 / 12%)));
 }
 ```
 
@@ -114,9 +109,9 @@ static observedAttributes = ["background-color"];
 attributeChangedCallback(): void {
     const value = this.getAttribute("background-color")?.trim();
     if (value) {
-        this.style.setProperty("--site-card-background", value);
+        this.style.setProperty("--acme-card-background", value);
     } else {
-        this.style.removeProperty("--site-card-background");
+        this.style.removeProperty("--acme-card-background");
     }
 }
 ```

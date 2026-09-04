@@ -15,10 +15,17 @@ A source is a backend capability. It may own:
 - CMS Source endpoints, triggers, and source overlays;
 - secrets and stable deployment configuration.
 
-A source must not publish blocs, dashboards, theme tokens, pages, or visual
-defaults. Operator-owned business values also do not belong in installation
-answers. Legal documents, prices, consent policy, and similar mutable state are
-stored at runtime and changed through authenticated APIs or dashboards.
+A source must not publish blocs, dashboard shells, theme tokens, pages, or
+visual defaults. Operator-owned business values also do not belong in
+installation answers. Legal documents, prices, consent policy, and similar
+mutable state are stored at runtime and changed through authenticated APIs or
+dashboard views.
+
+The CMS owns the dashboard shell. A source may publish `dashboard-view`
+artifacts that operate its data, endpoints, and source overlays, but it cannot
+publish a legacy dashboard container or relation projection. This keeps the
+business administration surface beside its source contract without coupling
+the source to CMS navigation chrome.
 
 Every public endpoint declares a `contractVersion`. Changing implementation
 without changing that observable contract is compatible. A breaking request or
@@ -29,12 +36,19 @@ package itself also receives a major version.
 
 A collection is a declarative set of blocs and theme requirements. It does not
 mount HTTP routes, connect to a database, or deploy backend infrastructure.
+It also does not publish dashboard views: operator views follow the source that
+owns the managed business data.
 
 Ulvia is the official monolithic collection. It physically contains every
 official bloc, including the default presentation for every official source.
 Monolithic packaging does not mean monolithic installation: each site stores
 an exact list of active resource IDs and the authoring catalogue exposes only
 that selection.
+
+Category labels are local to their collection and should stay concise: use
+`Actions`, `Brand`, or `API reference`, not historical package prefixes such as
+`Basic Blocs · Actions` or `Documentation Blocs · API reference`. Resource IDs
+remain namespaced and stable regardless of their catalogue label.
 
 A collection resource has a stable namespaced ID, for example:
 
@@ -61,8 +75,8 @@ A collection resource has a stable namespaced ID, for example:
         }
     ],
     "theme": {
-        "contract": "ulvia-theme@1",
-        "required": ["newsletter-accent"]
+        "contract": "ulvia-theme@3",
+        "required": ["primary-base"]
     }
 }
 ```
@@ -73,10 +87,16 @@ range, and the bloc values bound to request, response, or error paths.
 Conformance rejects a missing source, incompatible version, unknown endpoint,
 contract mismatch, invalid binding path, or unknown theme token.
 
-Theme variables are contracts too. A resource declares `ulvia-theme@1` and
-lists required tokens plus optional tokens with fallbacks. A future breaking
-theme vocabulary uses another contract major instead of silently changing the
-meaning of an existing token.
+The provider identity is intentionally exact today. A bloc requiring an
+endpoint from `commerce` cannot silently bind to a different source merely
+because that source advertises a similar shape. Provider substitution needs a
+separate typed capability-resolution contract and is outside v2.
+
+Theme variables are contracts too. Resources name the `ulvia-theme@3` tokens
+they require and optional tokens with fallbacks. Collections consume shared
+`--ulvia-*` values, publish deliberate `--<kind>-*` hooks, keep
+`--_<kind>-*` details private, and never require site-owned `--site-*` values.
+See [Integration theme contracts](./themes.md).
 
 ## Selection and dependency closure
 
@@ -95,7 +115,7 @@ with an explicit version range:
         "collections": [
             {
                 "kind": "ulvia",
-                "versionRange": "^2.0.0",
+                "versionRange": "^4.0.0",
                 "resources": ["ulvia/blocs/basic-button"]
             }
         ]
@@ -136,9 +156,19 @@ Page HTML remains site data. Obsolete integration-owned bloc artifacts are
 removed through an ownership-checked transactional operation and restored if
 the installation commit fails.
 
-Legacy dashboard definition files remain in each source tree under
-`definitions/artifacts/dashboards` so that the deferred dashboard work is not
-silently lost. Current v2 source roots do not reference those files, package
-building does not include them, and installing a source does not install a
-dashboard. They must be reviewed against the future dashboard model before
-they can become published resources again.
+## Collection and site boundaries
+
+Mossa is a reusable collection even though some historical tags still use the
+`cs-*` prefix. It may provide specialized marketplace layouts and consume the
+Ulvia design system, but it must not contain the Courtside logo, favicon,
+organization data, pages, or customer-specific theme values.
+
+Site identity is CMS data. A site composes installed collection blocs into
+pages and site blocs, owns its public configuration and assets, and may provide
+a small number of `--site-*` overrides. This lets several collections coexist
+without forcing each one to recreate primary, feedback, surface, typography,
+spacing, and shape variables.
+
+Templates and onboarding are intentionally deferred. When introduced, they
+should create site-owned content from versioned input without becoming the
+permanent owner of pages or mutable business data.

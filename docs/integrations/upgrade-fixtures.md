@@ -5,6 +5,10 @@ shipment, or acceptance remains usable. An integration-owned upgrade fixture
 creates that state with the old package installed and verifies it after the new
 package becomes active.
 
+The integration author implements both lifecycle callbacks. The verifier owns
+the services, installs the versions, invokes the callbacks, serializes their
+state, and fails the release when an assertion or bounded capability fails.
+
 Define fixtures at the exact path:
 
 ```text
@@ -110,9 +114,19 @@ Assertions should cover identifiers, money and quantities, actor ownership,
 version/hash evidence, timestamps when meaningful, and replay behavior. Avoid
 asserting volatile implementation details that are not part of the contract.
 
-## Limitations
+## Packaging and immutability
 
-Fixtures and other author tests are currently executed from the source tree.
-They are not embedded in runtime package bytes, and their exact immutable
-verification bundle is not yet published. Remote publication must close that
-evidence gap before it can trust a local result without rerunning verification.
+The installed runtime package never contains author tests. During release, the
+CLI collects the transitive source closure of `upgrade-fixtures.ts` into a
+separate canonical verification bundle. The bundle records scenario names,
+ranges, declared dependencies, and its target package digest. Its own digest is
+stored with the local release and submitted during remote publication.
+
+The remote repository still reruns the bundle in server-owned disposable
+infrastructure; local success is evidence, not authority. It rejects missing,
+extra, reordered, or changed fixture inputs.
+
+A verification bundle is immutable for its `kind@version`. Changing an upgrade
+fixture after that coordinate has been released requires another integration
+version, even when installed runtime bytes would otherwise be identical.
+Ordinary author tests remain source-only and run during each local audit.
