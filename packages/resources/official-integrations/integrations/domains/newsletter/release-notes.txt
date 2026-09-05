@@ -1,1 +1,1 @@
-Minor release: publish the reusable Newsletter dashboard view while site dashboard composition remains CMS-owned.
+Initial Newsletter release: publish the source contracts and reusable operator view while dashboard composition remains CMS-owned.
