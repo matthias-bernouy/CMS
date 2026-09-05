@@ -86,6 +86,7 @@ describe("editor binding conditions", () => {
             sourcePublish: "cms-source-publish",
             sourceStateForce: "cms-source-state-force",
             sourceSuccessRedirect: "cms-source-success-redirect",
+            sourceSuccessRedirectParam: "cms-source-success-redirect-param",
             sourceSuccessReset: "cms-source-success-reset",
             sourceTrigger: "cms-source-trigger",
         });

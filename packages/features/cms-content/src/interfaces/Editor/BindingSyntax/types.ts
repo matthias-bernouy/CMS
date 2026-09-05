@@ -12,6 +12,7 @@ export const CMS_BINDING_ATTRIBUTES = {
     sourceMethod: "cms-source-method",
     sourcePublish: "cms-source-publish",
     sourceSuccessRedirect: "cms-source-success-redirect",
+    sourceSuccessRedirectParam: "cms-source-success-redirect-param",
     sourceSuccessReset: "cms-source-success-reset",
     sourceStateForce: "cms-source-state-force",
     sourceTrigger: "cms-source-trigger",

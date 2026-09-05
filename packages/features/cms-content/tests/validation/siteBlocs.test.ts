@@ -200,6 +200,11 @@ describe("site bloc validation", () => {
                     cms-source-body='{"safe":{"from":"raw","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
+            [
+                `<form cms-source="/.cms/auth/login" cms-source-method="POST"
+                    cms-source-trigger="submit" cms-source-success-redirect-param="bad param"></form>`,
+                /redirect parameter is invalid/,
+            ],
         ] as const) {
             expect(() => validateSiteBlocSnapshot(siteBlocSnapshot({ defaultContent }), "site-feature-panel")).toThrow(
                 message,
@@ -212,11 +217,12 @@ describe("site bloc validation", () => {
                     cms-source="/.cms/sources/forms/contact"
                     cms-source-method="POST"
                     cms-source-trigger="submit"
-                    cms-source-success-redirect="/thanks"></form>`,
+                    cms-source-success-redirect="/thanks" cms-source-success-redirect-param="returnTo"></form>`,
             }),
             "site-feature-panel",
         );
         expect(valid.defaultContent).toContain('cms-source="/.cms/sources/forms/contact"');
+        expect(valid.defaultContent).toContain('cms-source-success-redirect-param="returnTo"');
     });
 
     test("rejects native forms from binding-free private structure", () => {

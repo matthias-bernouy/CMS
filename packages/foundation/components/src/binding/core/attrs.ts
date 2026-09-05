@@ -9,6 +9,7 @@ export const SOURCE_METHOD_ATTR = "cms-source-method";
 export const SOURCE_PUBLISH_ATTR = "cms-source-publish";
 export const SOURCE_SUCCESS_RESET_ATTR = "cms-source-success-reset";
 export const SOURCE_SUCCESS_REDIRECT_ATTR = "cms-source-success-redirect";
+export const SOURCE_SUCCESS_REDIRECT_PARAM_ATTR = "cms-source-success-redirect-param";
 export const REPEAT_ATTR = "cms-repeat";
 export const CONDITION_ATTR = "cms-condition";
 export const PARAM_SYNC_ATTR = "cms-param-sync";

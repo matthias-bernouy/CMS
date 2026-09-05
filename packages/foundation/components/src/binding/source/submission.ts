@@ -3,6 +3,7 @@ import {
     SOURCE_METHOD_ATTR,
     SOURCE_PUBLISH_ATTR,
     SOURCE_SUCCESS_REDIRECT_ATTR,
+    SOURCE_SUCCESS_REDIRECT_PARAM_ATTR,
     SOURCE_SUCCESS_RESET_ATTR,
     type SourceMethod,
 } from "../core/attrs";
@@ -112,6 +113,11 @@ export class SourceSubmission {
     }
 
     private successRedirect(result: FormSubmitResult, alias: string | undefined): string {
+        const param = this.element.getAttribute(SOURCE_SUCCESS_REDIRECT_PARAM_ATTR)?.trim();
+        const requested = param ? new URLSearchParams(location.search).get(param)?.trim() : "";
+        if (requested && this.redirectUrl(requested)) {
+            return requested;
+        }
         const template = this.element.getAttribute(SOURCE_SUCCESS_REDIRECT_ATTR)?.trim();
         if (!template) {
             return "";
@@ -135,15 +141,23 @@ export class SourceSubmission {
     }
 
     private redirect(target: string): void {
+        const url = this.redirectUrl(target);
+        if (url) {
+            location.href = `${url.pathname}${url.search}${url.hash}`;
+        }
+    }
+
+    private redirectUrl(target: string): URL | null {
         let url: URL;
         try {
             url = new URL(target, location.href);
         } catch {
-            return;
+            return null;
         }
         if (url.origin === location.origin && (url.protocol === "http:" || url.protocol === "https:")) {
-            location.href = `${url.pathname}${url.search}${url.hash}`;
+            return url;
         }
+        return null;
     }
 }
 

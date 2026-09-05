@@ -81,6 +81,7 @@ export const p9rExternalsPlugin: BunPlugin = {
                     `    sourceMethod: "cms-source-method",\n` +
                     `    sourcePublish: "cms-source-publish",\n` +
                     `    sourceSuccessRedirect: "cms-source-success-redirect",\n` +
+                    `    sourceSuccessRedirectParam: "cms-source-success-redirect-param",\n` +
                     `    sourceSuccessReset: "cms-source-success-reset",\n` +
                     `    sourceStateForce: "cms-source-state-force",\n` +
                     `    sourceTrigger: "cms-source-trigger",\n` +

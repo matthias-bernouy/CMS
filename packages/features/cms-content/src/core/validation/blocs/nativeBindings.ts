@@ -56,6 +56,9 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     if (name === CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect) {
         return isSafeInternalRedirect(value) ? null : "CMS source success redirect must stay on this site";
     }
+    if (name === CMS_BINDING_ATTRIBUTES.sourceSuccessRedirectParam) {
+        return isCmsQueryParamName(value) ? null : "CMS source redirect parameter is invalid";
+    }
     if (name === CMS_BINDING_ATTRIBUTES.sourcePublish) {
         const events = value.split(/\s+/).filter(Boolean);
         return events.length > 0 && events.every((event) => PUBLISHED_EVENT.test(event))
@@ -96,6 +99,7 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
         CMS_BINDING_ATTRIBUTES.sourceId,
         CMS_BINDING_ATTRIBUTES.sourcePublish,
         CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect,
+        CMS_BINDING_ATTRIBUTES.sourceSuccessRedirectParam,
         CMS_BINDING_ATTRIBUTES.sourceSuccessReset,
     ]) {
         const value = attributes[name];
