@@ -226,6 +226,7 @@ export {
     parseIntegrationImportDto,
 } from "../core/parsing/parseIntegrationImportDto";
 export { parseIntegrationDefinition } from "../core/parsing/definition/definition";
+export { assertIntegrationBlocTagPublishable } from "../core/parsing/artifacts/bloc";
 export { assertCollectionConformance } from "../core/resources/conformance";
 export { resolveCollectionDependencies } from "../core/resources/dependencySelection";
 export {

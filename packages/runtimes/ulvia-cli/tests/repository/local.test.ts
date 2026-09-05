@@ -3,6 +3,7 @@ import { mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
+import { parseIntegrationDefinition } from "@bernouy/cms-integrations";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { LocalRepositoryCatalog } from "../../src/repository/catalog";
 import { LocalIntegrationRepository } from "../../src/repository/local";
@@ -85,6 +86,34 @@ describe("local integration repository", () => {
         expect((await reopened.list())[0]?.admission).toEqual(updated.admission);
         expect((await reopened.getPackage(updated)).digest).toBe(resolved.digest);
         expect(await new LocalRepositoryCatalog(reopened).list()).toEqual([]);
+    });
+
+    test("loads an immutable legacy package whose blocs historically owned native HTML tags", async () => {
+        const fixture = await repositoryFixture();
+        const overrides = {
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: { tag: "h1", name: "Heading", compositionHTML: "<h1>Heading</h1>" },
+                },
+            ],
+        };
+        const resolved = await integrationPackage("basic-blocs", "1.0.0", overrides);
+        const stored = await fixture.repository.store({
+            package: resolved,
+            definition: parseIntegrationDefinition(integrationDefinition("basic-blocs", "1.0.0", overrides)),
+            source: "https://repository.example.test",
+        });
+        const reopened = new LocalIntegrationRepository(
+            join(fixture.root, "repository"),
+            join(fixture.root, "repository", "packages"),
+        );
+        await reopened.init();
+
+        expect((await reopened.getDefinition(stored.record)).artifacts?.[0]).toMatchObject({
+            type: "bloc",
+            bloc: { tag: "h1" },
+        });
     });
 
     test("serves the same contracts consumed by a CMS runtime", async () => {

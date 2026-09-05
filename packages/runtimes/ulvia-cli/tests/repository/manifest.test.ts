@@ -35,6 +35,14 @@ describe("local repository manifest", () => {
     test("reads legacy manifests and rewrites them compactly on the next mutation", async () => {
         const fixture = await repositoryFixture();
         const resolved = await integrationPackage();
+        const legacyDefinition = integrationDefinition("demo", "1.0.0", {
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: { tag: "h1", name: "Heading", compositionHTML: "<h1>Heading</h1>" },
+                },
+            ],
+        });
         const stored = await fixture.repository.store({
             package: resolved,
             definition: integrationDefinition(),
@@ -51,7 +59,7 @@ describe("local repository manifest", () => {
                         digest: stored.record.digest,
                         source: stored.record.source,
                         pulledAt: stored.record.pulledAt,
-                        definition: integrationDefinition(),
+                        definition: legacyDefinition,
                     },
                 ],
             }),

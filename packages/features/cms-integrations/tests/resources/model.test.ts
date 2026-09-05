@@ -50,6 +50,48 @@ describe("integration resource model", () => {
         ).toThrow(/can publish only blocs/);
     });
 
+    test("rejects integration artifacts that claim a native HTML root", () => {
+        expect(() =>
+            collectionDefinition({
+                resources: [
+                    {
+                        id: "ulvia/blocs/paragraph",
+                        type: "bloc",
+                        artifact: "p",
+                        category: "content",
+                    },
+                ],
+                artifacts: [
+                    {
+                        type: "bloc",
+                        bloc: { tag: "p", name: "Paragraph", compositionHTML: "<p></p>" },
+                    },
+                ],
+            }),
+        ).toThrow(/native HTML tag "p" is platform-owned/);
+    });
+
+    test("rejects collection bloc artifacts outside the collection namespace", () => {
+        expect(() =>
+            collectionDefinition({
+                resources: [
+                    {
+                        id: "ulvia/blocs/card",
+                        type: "bloc",
+                        artifact: "foreign-card",
+                        category: "content",
+                    },
+                ],
+                artifacts: [
+                    {
+                        type: "bloc",
+                        bloc: { tag: "foreign-card", name: "Card", compositionHTML: "<article></article>" },
+                    },
+                ],
+            }),
+        ).toThrow(/definition\.resources\.0\.artifact.*must use the namespace ulvia-<id>/);
+    });
+
     test("lets sources publish reusable dashboard views but not site dashboard compositions", () => {
         const source = parseIntegrationDefinition({
             schema: "cms.integration.definition.v2",
@@ -168,7 +210,7 @@ describe("integration resource model", () => {
                 {
                     id: "ulvia/blocs/commerce-offer-list-controller",
                     type: "bloc",
-                    artifact: "commerce-offer-list-controller",
+                    artifact: "ulvia-commerce-offer-list-controller",
                     category: "commerce",
                 },
             ],
@@ -177,10 +219,10 @@ describe("integration resource model", () => {
                 {
                     type: "bloc",
                     bloc: {
-                        tag: "commerce-offer-list-controller",
+                        tag: "ulvia-commerce-offer-list-controller",
                         name: "Offer list controller",
                         internal: true,
-                        viewJS: "customElements.define('commerce-offer-list-controller', class extends HTMLElement {})",
+                        viewJS: "customElements.define('ulvia-commerce-offer-list-controller', class extends HTMLElement {})",
                     },
                 },
             ],
@@ -200,14 +242,14 @@ describe("integration resource model", () => {
                 {
                     id: "ulvia/blocs/basic-paragraph",
                     type: "bloc",
-                    artifact: "basic-paragraph",
+                    artifact: "ulvia-basic-paragraph",
                     category: "content",
                 },
             ],
             artifacts: [
                 {
                     type: "bloc",
-                    bloc: { tag: "basic-paragraph", name: "Paragraph", compositionHTML: "<p></p>" },
+                    bloc: { tag: "ulvia-basic-paragraph", name: "Paragraph", compositionHTML: "<p></p>" },
                 },
             ],
         });
@@ -419,7 +461,7 @@ function clientCollection(resource = "ulvia/blocs/basic-paragraph") {
                 bloc: {
                     tag: "client-feature",
                     name: "Feature",
-                    compositionHTML: "<basic-paragraph></basic-paragraph>",
+                    compositionHTML: "<ulvia-basic-paragraph></ulvia-basic-paragraph>",
                 },
             },
         ],

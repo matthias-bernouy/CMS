@@ -190,25 +190,41 @@ function collectionDefinition(): IntegrationDefinition {
         inputs: [],
         resourceCategories: [{ id: "content", label: "Content" }],
         resources: [
-            { id: "stripe-connect/blocs/card", type: "bloc", artifact: "card", category: "content" },
-            { id: "stripe-connect/blocs/list", type: "bloc", artifact: "list", category: "content" },
+            {
+                id: "stripe-connect/blocs/card",
+                type: "bloc",
+                artifact: "stripe-connect-card",
+                category: "content",
+            },
+            {
+                id: "stripe-connect/blocs/list",
+                type: "bloc",
+                artifact: "stripe-connect-list",
+                category: "content",
+            },
             {
                 id: "stripe-connect/blocs/internal-controller",
                 type: "bloc",
-                artifact: "internal-controller",
+                artifact: "stripe-connect-internal-controller",
                 category: "content",
             },
         ],
         artifacts: [
-            { type: "bloc", bloc: { tag: "card", name: "Card", compositionHTML: "<article></article>" } },
-            { type: "bloc", bloc: { tag: "list", name: "List", compositionHTML: "<section></section>" } },
+            {
+                type: "bloc",
+                bloc: { tag: "stripe-connect-card", name: "Card", compositionHTML: "<article></article>" },
+            },
+            {
+                type: "bloc",
+                bloc: { tag: "stripe-connect-list", name: "List", compositionHTML: "<section></section>" },
+            },
             {
                 type: "bloc",
                 bloc: {
-                    tag: "internal-controller",
+                    tag: "stripe-connect-internal-controller",
                     name: "Internal controller",
                     internal: true,
-                    viewJS: "customElements.define('internal-controller', class extends HTMLElement {})",
+                    viewJS: "customElements.define('stripe-connect-internal-controller', class extends HTMLElement {})",
                 },
             },
         ],

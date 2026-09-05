@@ -12,7 +12,7 @@ describe("collection definition compatibility", () => {
 
     test("allows a new inactive resource in a minor release", () => {
         const baseline = collectionPackage("1.0.0", [resource()]);
-        const candidate = collectionPackage("1.1.0", [resource(), resource("demo/blocs/card", "card")]);
+        const candidate = collectionPackage("1.1.0", [resource(), resource("demo/blocs/card", "demo-card")]);
         const decision = evaluator().evaluate({ baseline, candidate });
 
         expect(decision).toMatchObject({ contractAdmissible: true, outcome: "compatible" });
@@ -21,7 +21,7 @@ describe("collection definition compatibility", () => {
 
     test("rejects endpoint requirements added to an existing resource", () => {
         const baseline = collectionPackage("1.0.0", [resource()]);
-        const candidate = collectionPackage("1.1.0", [resource("demo/blocs/text", "text", [endpoint()])]);
+        const candidate = collectionPackage("1.1.0", [resource("demo/blocs/text", "demo-text", [endpoint()])]);
         const decision = evaluator().evaluate({ baseline, candidate });
 
         expect(decision).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
@@ -31,8 +31,8 @@ describe("collection definition compatibility", () => {
     });
 
     test("accepts widened source and endpoint contract ranges", () => {
-        const baseline = collectionPackage("1.0.0", [resource("demo/blocs/text", "text", [endpoint("^1.1.0")])]);
-        const candidate = collectionPackage("1.1.0", [resource("demo/blocs/text", "text", [endpoint("^1.0.0")])]);
+        const baseline = collectionPackage("1.0.0", [resource("demo/blocs/text", "demo-text", [endpoint("^1.1.0")])]);
+        const candidate = collectionPackage("1.1.0", [resource("demo/blocs/text", "demo-text", [endpoint("^1.0.0")])]);
         const decision = evaluator().evaluate({ baseline, candidate });
 
         expect(decision.contractAdmissible).toBeTrue();
@@ -43,7 +43,7 @@ describe("collection definition compatibility", () => {
         const baseline = collectionPackage("1.0.0", [resource()]);
         const candidate = collectionPackage("1.1.0", [
             { ...resource(), requires: { resources: ["demo/blocs/button"] } },
-            resource("demo/blocs/button", "button"),
+            resource("demo/blocs/button", "demo-button"),
         ]);
         const decision = evaluator().evaluate({ baseline, candidate });
 
@@ -95,7 +95,7 @@ function collectionPackage(version: string, resources: unknown[]) {
     });
 }
 
-function resource(id = "demo/blocs/text", artifact = "text", endpoints?: unknown[]) {
+function resource(id = "demo/blocs/text", artifact = "demo-text", endpoints?: unknown[]) {
     return { id, type: "bloc", artifact, category: "content", ...(endpoints ? { endpoints } : {}) };
 }
 

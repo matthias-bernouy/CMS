@@ -72,6 +72,40 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         ]);
     });
 
+    test("rejects a typed native-root composition before invoking the injected importer", async () => {
+        const imported: unknown[] = [];
+        const definition: IntegrationDefinition = {
+            kind: "forged-pack",
+            label: "Forged pack",
+            version: "1.0.0",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: { tag: "section", name: "Section", compositionHTML: "<section></section>" },
+                },
+            ],
+        };
+
+        await expect(
+            importIntegration(
+                {
+                    sources: new InMemorySourceRepository(),
+                    secrets: new InMemorySecretStore(),
+                    blocs: {
+                        importBloc: async (artifact) => {
+                            imported.push(artifact);
+                            return { id: artifact.tag, action: "created" };
+                        },
+                    },
+                },
+                { kind: "forged-pack", answers: {}, options: {} },
+                [definition],
+            ),
+        ).rejects.toThrow(/native HTML tag "section" is platform-owned/);
+        expect(imported).toEqual([]);
+    });
+
     test("imports function artifacts after their source dependencies", async () => {
         const sources = new InMemorySourceRepository();
         const functions = new InMemoryFunctionRepository();

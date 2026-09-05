@@ -1,3 +1,4 @@
+import { isNativeHtmlTag } from "@bernouy/cms-content";
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import type { DeclarativeArtifactTemplate } from "../../../interfaces/Integration";
 import { isRecord, text } from "../definition/values";
@@ -5,6 +6,7 @@ import { isRecord, text } from "../definition/values";
 export function parseBlocTemplate(
     value: Record<string, unknown>,
     name: string,
+    allowLegacyNativeTag = false,
 ): Extract<DeclarativeArtifactTemplate, { type: "bloc" }>["bloc"] {
     const tag = text(value.tag);
     const blocName = text(value.name);
@@ -16,6 +18,9 @@ export function parseBlocTemplate(
     }
     if (!blocName) {
         throw new MissingIntegrationParam(`${name}.name`);
+    }
+    if (!allowLegacyNativeTag) {
+        assertIntegrationBlocTagPublishable(tag, `${name}.tag`);
     }
     return {
         tag,
@@ -32,6 +37,15 @@ export function parseBlocTemplate(
         ...(value.editorJS === null ? { editorJS: null } : editorJS !== undefined ? { editorJS } : {}),
         ...(value.source !== undefined ? { source: parseSourceBundle(value.source, `${name}.source`) } : {}),
     };
+}
+
+export function assertIntegrationBlocTagPublishable(tag: string, field: string): void {
+    if (isNativeHtmlTag(tag)) {
+        throw new IntegrationInputError(
+            field,
+            `native HTML tag "${tag}" is platform-owned and cannot be published by an integration`,
+        );
+    }
 }
 
 function executableSource(value: unknown): string | undefined {

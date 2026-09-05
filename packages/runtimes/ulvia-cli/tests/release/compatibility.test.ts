@@ -74,4 +74,41 @@ describe("local release compatibility", () => {
             ),
         ).toEqual({ scenarioCount: 2, resilienceScenarioCount: 0 });
     });
+
+    test("rejects a native-root composition even when definition parsing was bypassed", async () => {
+        const candidate = await releasePackage("1.0.0", {
+            schema: "cms.integration.definition.v2",
+            type: "collection",
+            resourceCategories: [{ id: "content", label: "Content" }],
+            resources: [{ id: "demo/blocs/card", type: "bloc", artifact: "demo-card", category: "content" }],
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: { tag: "demo-card", name: "Card", compositionHTML: "<p>Card</p>" },
+                },
+            ],
+        });
+        const nativeDefinition = {
+            ...candidate.definition,
+            resources: [{ id: "demo/blocs/paragraph", type: "bloc", artifact: "p", category: "content" }],
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: { tag: "p", name: "Paragraph", compositionHTML: "<p>Text</p>" },
+                },
+            ],
+        } as typeof candidate.definition;
+
+        expect(() =>
+            verifyCollectionRelease(
+                {
+                    candidate: { ...candidate, definition: nativeDefinition },
+                    sourceRoot: ".",
+                    baselines: [],
+                    availablePackages: [],
+                },
+                () => undefined,
+            ),
+        ).toThrow(/Native HTML tag "p" is platform-owned/);
+    });
 });

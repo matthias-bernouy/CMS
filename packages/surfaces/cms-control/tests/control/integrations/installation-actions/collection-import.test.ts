@@ -18,8 +18,8 @@ describe("collection imports", () => {
         expect((await fixture.integrationInstallations.get("ulvia"))?.activeResources).toEqual([
             "ulvia/blocs/basic-paragraph",
         ]);
-        expect((await fixture.repository.getBlocsList()).map(({ id }) => id)).toEqual(["basic-paragraph"]);
-        expect(await fixture.repository.getBlocViewJS("commerce-offer-list")).toBe("");
+        expect((await fixture.repository.getBlocsList()).map(({ id }) => id)).toEqual(["ulvia-basic-paragraph"]);
+        expect(await fixture.repository.getBlocViewJS("ulvia-commerce-offer-list")).toBe("");
     });
 
     test("installs exactly the source required by an active bloc", async () => {
@@ -31,8 +31,8 @@ describe("collection imports", () => {
 
         expect(await fixture.integrationInstallations.get("commerce")).not.toBeNull();
         expect(await fixture.sources.getSource("urn:commerce")).not.toBeNull();
-        expect((await fixture.repository.getBlocsList()).map(({ id }) => id)).toEqual(["commerce-offer-list"]);
-        expect(await fixture.repository.getBlocRecord("basic-paragraph")).not.toBeNull();
+        expect((await fixture.repository.getBlocsList()).map(({ id }) => id)).toEqual(["ulvia-commerce-offer-list"]);
+        expect(await fixture.repository.getBlocRecord("ulvia-basic-paragraph")).not.toBeNull();
     });
 
     test("loads inactive source contracts for an upgrade without installing those sources", async () => {
@@ -65,7 +65,7 @@ describe("collection imports", () => {
             "client/blocs/feature",
         ]);
         expect((await fixture.repository.getBlocsList()).map(({ id }) => id)).toEqual(["client-feature"]);
-        expect(await fixture.repository.getBlocRecord("basic-paragraph")).not.toBeNull();
+        expect(await fixture.repository.getBlocRecord("ulvia-basic-paragraph")).not.toBeNull();
     });
 
     test("installs a collection declared as a top-level dependency for its theme", async () => {
@@ -143,13 +143,13 @@ function collectionDefinition(version = "1.0.0"): IntegrationDefinition {
             {
                 id: "ulvia/blocs/basic-paragraph",
                 type: "bloc",
-                artifact: "basic-paragraph",
+                artifact: "ulvia-basic-paragraph",
                 category: "content",
             },
             {
                 id: "ulvia/blocs/commerce-offer-list",
                 type: "bloc",
-                artifact: "commerce-offer-list",
+                artifact: "ulvia-commerce-offer-list",
                 category: "commerce",
                 endpoints: [
                     {
@@ -164,11 +164,15 @@ function collectionDefinition(version = "1.0.0"): IntegrationDefinition {
         artifacts: [
             {
                 type: "bloc",
-                bloc: { tag: "basic-paragraph", name: "Paragraph", compositionHTML: "<p>Text</p>" },
+                bloc: { tag: "ulvia-basic-paragraph", name: "Paragraph", compositionHTML: "<p>Text</p>" },
             },
             {
                 type: "bloc",
-                bloc: { tag: "commerce-offer-list", name: "Offers", compositionHTML: "<section>Offers</section>" },
+                bloc: {
+                    tag: "ulvia-commerce-offer-list",
+                    name: "Offers",
+                    compositionHTML: "<section>Offers</section>",
+                },
             },
         ],
     });
@@ -223,7 +227,7 @@ function clientCollectionDefinition(): IntegrationDefinition {
                 bloc: {
                     tag: "client-feature",
                     name: "Feature",
-                    compositionHTML: "<basic-paragraph></basic-paragraph>",
+                    compositionHTML: "<ulvia-basic-paragraph></ulvia-basic-paragraph>",
                 },
             },
         ],

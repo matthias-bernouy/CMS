@@ -115,7 +115,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     }
     const provisions = parseProvisionTemplates(value.provisions);
     const afterInstallation = parseAfterInstallationTemplates(value.afterInstallation);
-    const artifacts = parseArtifactTemplates(value.artifacts);
+    const artifacts = parseArtifactTemplates(value.artifacts, schema !== INTEGRATION_DEFINITION_SCHEMA_V2);
     const dependencies = parseDependencies(value.dependencies, kind);
     validateAfterInstallationTemplates(afterInstallation, dependencies);
     const icon = parseIntegrationIcon(value.icon);

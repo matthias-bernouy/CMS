@@ -122,14 +122,14 @@ describe("local release source", () => {
                     {
                         id: "mossa/blocs/card",
                         type: "bloc",
-                        artifact: "card",
+                        artifact: "mossa-card",
                         category: "content",
                         requires: {
                             collections: [{ kind: "ulvia", versionRange: "^2.1.0", resources: ["ulvia/blocs/button"] }],
                         },
                     },
                 ],
-                artifacts: [{ type: "bloc", bloc: { tag: "card", name: "Card", compositionHTML: "<p></p>" } }],
+                artifacts: [{ type: "bloc", bloc: { tag: "mossa-card", name: "Card", compositionHTML: "<p></p>" } }],
             },
             "mossa",
         );

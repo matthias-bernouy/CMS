@@ -14,8 +14,8 @@ export function integrationDefinition(kind = "demo", version = "1.0.0", override
     };
 }
 
-export async function integrationPackage(kind = "demo", version = "1.0.0") {
-    const definition = integrationDefinition(kind, version);
+export async function integrationPackage(kind = "demo", version = "1.0.0", overrides: Record<string, unknown> = {}) {
+    const definition = integrationDefinition(kind, version, overrides);
     const envelope = validateIntegrationPackageEnvelope({
         schema: "cms.integration.package.v1",
         kind,

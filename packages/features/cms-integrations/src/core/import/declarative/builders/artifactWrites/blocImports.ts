@@ -4,6 +4,7 @@ import type {
     IntegrationImportDeps,
     IntegrationImportOptions,
 } from "../../../../../interfaces/IntegrationImport";
+import { isNativeHtmlTag } from "@bernouy/cms-content";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../../../errors";
 
 export async function importBlocArtifacts(
@@ -22,6 +23,12 @@ export async function importBlocArtifacts(
     const seen = new Set<string>();
     const results = [];
     for (const artifact of artifacts) {
+        if (isNativeHtmlTag(artifact.tag)) {
+            throw new IntegrationInputError(
+                "artifacts",
+                `native HTML tag "${artifact.tag}" is platform-owned and cannot reach an integration bloc importer`,
+            );
+        }
         if (seen.has(artifact.tag)) {
             throw new IntegrationInputError("artifacts", `duplicate bloc artifact "${artifact.tag}"`);
         }

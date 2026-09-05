@@ -45,4 +45,21 @@ describe("trusted prepared filesystem package publication", () => {
         expect(readFileSync(join(fixture.root, "demo", "integration.json"))).toEqual(indexBefore);
         expect(readdirSync(join(fixture.root, ".staging"))).toEqual([]);
     });
+
+    test("rejects a new legacy candidate that claims a platform-owned native tag", async () => {
+        const fixture = registryFixture();
+        const input = await publicationPackage("legacy-native", "1.0.0", {
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: { tag: "h1", name: "Heading", compositionHTML: "<h1>Heading</h1>" },
+                },
+            ],
+        });
+
+        await expect(fixture.publisher.publish({ package: input })).rejects.toThrow(
+            /native HTML tag "h1" is platform-owned/,
+        );
+        expect(fixture.snapshots.current().getIndex("legacy-native")).toBeNull();
+    });
 });

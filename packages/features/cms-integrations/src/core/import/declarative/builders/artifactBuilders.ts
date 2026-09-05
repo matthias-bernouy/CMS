@@ -1,3 +1,4 @@
+import { isNativeHtmlTag } from "@bernouy/cms-content";
 import { type CmsFunction } from "@bernouy/cms-functions";
 import type { CmsRelation, DashboardRelationProjection } from "@bernouy/cms-relations";
 import { sourceDtoToSource, type Source, type SourceOverlay } from "@bernouy/cms-sources";
@@ -86,6 +87,12 @@ export function buildBlocArtifacts(
             .map((artifact) => {
                 const tag = resolveTemplate(artifact.bloc.tag, context);
                 const name = resolveTemplate(artifact.bloc.name, context);
+                if (isNativeHtmlTag(tag)) {
+                    throw new IntegrationInputError(
+                        "artifacts",
+                        `native HTML tag "${tag}" is platform-owned and cannot be imported from an integration`,
+                    );
+                }
                 if (!artifact.bloc.viewJS && artifact.bloc.compositionHTML === undefined) {
                     throw new IntegrationInputError("artifacts", `bloc "${tag}" is missing a view or composition`);
                 }

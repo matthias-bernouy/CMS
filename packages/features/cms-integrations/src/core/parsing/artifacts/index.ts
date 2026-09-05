@@ -10,17 +10,26 @@ import { parseSourceOverlayTemplate } from "./sourceOverlay";
 import { parseTriggerTemplate } from "./workflows/trigger";
 import { isExactIntegrationVersion } from "../../definitions/versioning";
 
-export function parseArtifactTemplates(value: unknown): DeclarativeArtifactTemplate[] {
+export function parseArtifactTemplates(
+    value: unknown,
+    allowLegacyNativeBlocTags = false,
+): DeclarativeArtifactTemplate[] {
     if (value === undefined || value === null) {
         return [];
     }
     if (!Array.isArray(value)) {
         throw new IntegrationInputError("definition.artifacts", "must be an array");
     }
-    return value.map((entry, index) => parseArtifactTemplate(entry, `definition.artifacts.${index}`));
+    return value.map((entry, index) =>
+        parseArtifactTemplate(entry, `definition.artifacts.${index}`, allowLegacyNativeBlocTags),
+    );
 }
 
-function parseArtifactTemplate(value: unknown, name: string): DeclarativeArtifactTemplate {
+function parseArtifactTemplate(
+    value: unknown,
+    name: string,
+    allowLegacyNativeBlocTags: boolean,
+): DeclarativeArtifactTemplate {
     if (!isRecord(value)) {
         throw new IntegrationInputError(name, "must be an object");
     }
@@ -109,7 +118,10 @@ function parseArtifactTemplate(value: unknown, name: string): DeclarativeArtifac
         if (!isRecord(value.bloc)) {
             throw new IntegrationInputError(`${name}.bloc`, "must be an object");
         }
-        return { type: "bloc", bloc: parseBlocTemplate(value.bloc, `${name}.bloc`) };
+        return {
+            type: "bloc",
+            bloc: parseBlocTemplate(value.bloc, `${name}.bloc`, allowLegacyNativeBlocTags),
+        };
     }
     throw new IntegrationInputError(
         `${name}.type`,

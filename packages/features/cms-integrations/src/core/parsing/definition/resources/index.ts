@@ -36,7 +36,7 @@ export function parseCollectionResources(value: unknown, kind: string): Collecti
     if (!Array.isArray(value)) {
         throw new IntegrationInputError("definition.resources", "must be an array");
     }
-    const resources = value.map((entry, index) => parseResource(entry, `${kind}/blocs/`, index));
+    const resources = value.map((entry, index) => parseResource(entry, kind, index));
     assertUnique(
         resources.map(({ id }) => id),
         "definition.resources",
@@ -63,7 +63,7 @@ function parseCategory(value: unknown, name: string): CollectionResourceCategory
     };
 }
 
-function parseResource(value: unknown, namespace: string, index: number): CollectionResource {
+function parseResource(value: unknown, kind: string, index: number): CollectionResource {
     const name = `definition.resources.${index}`;
     if (!isRecord(value)) {
         throw new IntegrationInputError(name, "must be an object");
@@ -71,15 +71,25 @@ function parseResource(value: unknown, namespace: string, index: number): Collec
     if (value.type !== "bloc") {
         throw new IntegrationInputError(`${name}.type`, "must be bloc");
     }
+    const namespace = `${kind}/blocs/`;
     const id = requiredText(value.id, `${name}.id`);
     if (!id.startsWith(namespace) || !SIMPLE_ID.test(id.slice(namespace.length))) {
         throw new IntegrationInputError(`${name}.id`, `must use the namespace ${namespace}<id>`);
+    }
+    const artifact = requiredText(value.artifact, `${name}.artifact`);
+    const artifactNamespace = `${kind}-`;
+    if (
+        !SIMPLE_ID.test(artifact) ||
+        !artifact.startsWith(artifactNamespace) ||
+        !SIMPLE_ID.test(artifact.slice(artifactNamespace.length))
+    ) {
+        throw new IntegrationInputError(`${name}.artifact`, `must use the namespace ${artifactNamespace}<id>`);
     }
     const context = parseStringList(value.context, `${name}.context`);
     return {
         id,
         type: "bloc",
-        artifact: requiredText(value.artifact, `${name}.artifact`),
+        artifact,
         category: requiredText(value.category, `${name}.category`),
         ...(value.defaultActive === true ? { defaultActive: true } : {}),
         ...(value.endpoints === undefined ? {} : { endpoints: parseEndpoints(value.endpoints, `${name}.endpoints`) }),

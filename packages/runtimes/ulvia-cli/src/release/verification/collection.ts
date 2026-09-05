@@ -20,12 +20,15 @@ export function verifyCollectionRelease(
 
     for (const artifact of candidate.artifacts ?? []) {
         const source = artifact.bloc.viewJS;
-        if (source) {
-            const validation = validateBloc({ tag: artifact.bloc.tag, viewSource: source });
-            if (validation.errors.length) {
-                throw new Error(`Invalid bloc ${artifact.bloc.tag}: ${validation.errors.join("; ")}`);
-            }
-        } else if (!artifact.bloc.compositionHTML?.trim()) {
+        const validation = validateBloc({
+            tag: artifact.bloc.tag,
+            ...(source ? { viewSource: source } : {}),
+            ...(artifact.bloc.editorJS ? { editorSource: artifact.bloc.editorJS } : {}),
+        });
+        if (validation.errors.length) {
+            throw new Error(`Invalid bloc ${artifact.bloc.tag}: ${validation.errors.join("; ")}`);
+        }
+        if (!source && !artifact.bloc.compositionHTML?.trim()) {
             throw new Error(`Bloc ${artifact.bloc.tag} has no hydrated view or composition`);
         }
     }

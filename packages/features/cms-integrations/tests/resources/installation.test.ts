@@ -40,8 +40,8 @@ describe("collection installation resources", () => {
 
         expect(created.installation.activeResources).toEqual(["ulvia/blocs/basic-paragraph"]);
         expect(imported.map(({ tag, catalogue }) => [tag, catalogue])).toEqual([
-            ["basic-paragraph", "active"],
-            ["commerce-offer-list", "inactive"],
+            ["ulvia-basic-paragraph", "active"],
+            ["ulvia-commerce-offer-list", "inactive"],
         ]);
 
         imported.length = 0;
@@ -58,9 +58,9 @@ describe("collection installation resources", () => {
 
         expect(upgraded.installation.activeResources).toEqual(["ulvia/blocs/basic-paragraph"]);
         expect(imported.map(({ tag, catalogue }) => [tag, catalogue])).toEqual([
-            ["basic-paragraph", "active"],
-            ["commerce-offer-list", "inactive"],
-            ["basic-heading", "inactive"],
+            ["ulvia-basic-paragraph", "active"],
+            ["ulvia-commerce-offer-list", "inactive"],
+            ["ulvia-basic-heading", "inactive"],
         ]);
     });
 
@@ -97,8 +97,8 @@ describe("collection installation resources", () => {
 
         expect(rerun.installation.activeResources).toEqual(["ulvia/blocs/commerce-offer-list"]);
         expect(imported.slice(-2).map(({ tag, catalogue }) => [tag, catalogue])).toEqual([
-            ["basic-paragraph", "inactive"],
-            ["commerce-offer-list", "active"],
+            ["ulvia-basic-paragraph", "inactive"],
+            ["ulvia-commerce-offer-list", "active"],
         ]);
     });
 });
@@ -112,7 +112,7 @@ function withAdditionalBloc(definition: CollectionIntegrationDefinition): Collec
             {
                 id: "ulvia/blocs/basic-heading",
                 type: "bloc",
-                artifact: "basic-heading",
+                artifact: "ulvia-basic-heading",
                 category: "content",
             },
         ],
@@ -120,7 +120,7 @@ function withAdditionalBloc(definition: CollectionIntegrationDefinition): Collec
             ...(definition.artifacts ?? []),
             {
                 type: "bloc",
-                bloc: { tag: "basic-heading", name: "Heading", compositionHTML: "<h2></h2>" },
+                bloc: { tag: "ulvia-basic-heading", name: "Heading", compositionHTML: "<h2></h2>" },
             },
         ],
     };

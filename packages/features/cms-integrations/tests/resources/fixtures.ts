@@ -32,7 +32,7 @@ export function collectionDefinition(overrides: Record<string, unknown> = {}): C
             {
                 id: "ulvia/blocs/basic-paragraph",
                 type: "bloc",
-                artifact: "basic-paragraph",
+                artifact: "ulvia-basic-paragraph",
                 category: "content",
                 defaultActive: true,
                 theme: { contract: "ulvia-theme@1", required: ["surface-background"] },
@@ -40,7 +40,7 @@ export function collectionDefinition(overrides: Record<string, unknown> = {}): C
             {
                 id: "ulvia/blocs/commerce-offer-list",
                 type: "bloc",
-                artifact: "commerce-offer-list",
+                artifact: "ulvia-commerce-offer-list",
                 category: "commerce",
                 endpoints: [
                     {
@@ -59,11 +59,11 @@ export function collectionDefinition(overrides: Record<string, unknown> = {}): C
         artifacts: [
             {
                 type: "bloc",
-                bloc: { tag: "basic-paragraph", name: "Paragraph", compositionHTML: "<p></p>" },
+                bloc: { tag: "ulvia-basic-paragraph", name: "Paragraph", compositionHTML: "<p></p>" },
             },
             {
                 type: "bloc",
-                bloc: { tag: "commerce-offer-list", name: "Offers", compositionHTML: "<section></section>" },
+                bloc: { tag: "ulvia-commerce-offer-list", name: "Offers", compositionHTML: "<section></section>" },
             },
         ],
         ...overrides,
