@@ -133,7 +133,7 @@ function versionValues(form: HTMLFormElement): string[] {
 }
 
 function currentField(form: HTMLFormElement): HTMLElement & { attemptId: string } {
-    const field = form.querySelector("consent-field") as (HTMLElement & { attemptId: string }) | null;
+    const field = form.querySelector("mossa-consent-field") as (HTMLElement & { attemptId: string }) | null;
     if (!field) {
         throw new Error("Consent field is unavailable");
     }

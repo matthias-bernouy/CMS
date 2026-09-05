@@ -26,6 +26,9 @@ export class ConsentBackend {
         if (!request.headers.get("authorization")?.startsWith("Bearer cms_consent_")) {
             return json({ error: "unauthorized" }, 401);
         }
+        if (path.endsWith("/context/bootstrap")) {
+            return this.bootstrap(await request.json());
+        }
         if (path.endsWith("/context/sync")) {
             return this.sync(await request.json());
         }
@@ -49,17 +52,31 @@ export class ConsentBackend {
         }));
     }
 
-    private sync(body: unknown): Response {
-        const payload = record(body);
-        const configuration = record(
-            typeof payload.configuration === "string" ? JSON.parse(payload.configuration) : payload.configuration,
-        );
+    configure(value: unknown): void {
+        const configuration = record(value);
         this.enabled = configuration.enabled === true;
         this.contextKey = String(configuration.contextKey ?? "signup");
         const documents = Array.isArray(configuration.documents) ? configuration.documents : [];
         this.documents = documents
             .filter((candidate) => record(candidate).enabled !== false)
             .map((candidate, index) => documentOf(record(candidate), index));
+    }
+
+    private bootstrap(body: unknown): Response {
+        const contextKey = String(record(body).contextKey ?? "").trim();
+        if (!contextKey) {
+            return json({ error: "context key is required" }, 400);
+        }
+        this.contextKey = contextKey;
+        return json({ contextKey, enabled: this.enabled, documentCount: this.documents.length });
+    }
+
+    private sync(body: unknown): Response {
+        const payload = record(body);
+        const configuration = record(
+            typeof payload.configuration === "string" ? JSON.parse(payload.configuration) : payload.configuration,
+        );
+        this.configure(configuration);
         return json({ contextKey: this.contextKey, enabled: this.enabled, documentCount: this.documents.length });
     }
 

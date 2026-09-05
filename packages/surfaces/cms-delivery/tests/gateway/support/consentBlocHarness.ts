@@ -4,7 +4,7 @@ import { BINDING_CORE_TAG, BindingCore } from "@bernouy/components/binding";
 import type { IntegrationBlocArtifact } from "@bernouy/cms-integrations";
 import type { ConsentSignupHarness } from "./consentSignupHarness";
 
-const tag = "consent-field";
+const tag = "mossa-consent-field";
 const realFetch = globalThis.fetch;
 const realAttachInternals = HTMLElement.prototype.attachInternals;
 let blocInstalled = false;

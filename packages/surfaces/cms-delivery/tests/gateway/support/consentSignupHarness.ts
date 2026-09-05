@@ -1,4 +1,4 @@
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import {
@@ -31,44 +31,63 @@ export async function consentSignupHarness(enabled = true) {
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     const functions = new InMemoryFunctionRepository();
     const triggers = new InMemoryTriggerRepository();
     const sourceOverlays = new InMemorySourceOverlayRepository();
     const installations = new InMemoryIntegrationInstallationRepository();
     const importedBlocs: IntegrationBlocArtifact[] = [];
-    const definition = await consentDefinition();
-    await seedBasicBlocs(installations);
-    await runIntegrationInstallation({
-        mode: "create",
-        deps: {
-            sources,
-            secrets,
-            roles,
-            dashboards,
-            functions,
-            triggers,
-            sourceOverlays,
-            installations,
-            connectorDeployers: [supabaseDeployer()],
-            sourceExecutorDeps: { fetchImpl: backend.fetch, resolveSecret: createSecretResolver(secrets) },
-            resolvePublishedPage: async (path) => ({
-                id: path.slice(1),
-                path,
-                title: `Legal ${path}`,
-                description: `Published ${path}`,
-                content: `<main>${path}</main>`,
-            }),
-            blocs: {
-                async importBloc(artifact) {
-                    importedBlocs.push(artifact);
-                    return { id: artifact.tag, action: "created" };
-                },
+    const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    const consent = await requiredDefinition(repository, "consent");
+    const mossa = await requiredDefinition(repository, "mossa");
+    const ulvia = await requiredDefinition(repository, "ulvia");
+    const siteIntegrations = [consent, mossa, ulvia];
+    const deps = {
+        sources,
+        secrets,
+        roles,
+        dashboards,
+        dashboardViews,
+        functions,
+        triggers,
+        sourceOverlays,
+        installations,
+        connectorDeployers: [supabaseDeployer()],
+        sourceExecutorDeps: { fetchImpl: backend.fetch, resolveSecret: createSecretResolver(secrets) },
+        resolvePublishedPage: async (path: string) => ({
+            id: path.slice(1),
+            path,
+            title: `Legal ${path}`,
+            description: `Published ${path}`,
+            content: `<main>${path}</main>`,
+        }),
+        blocs: {
+            async importBloc(artifact: IntegrationBlocArtifact) {
+                importedBlocs.push(artifact);
+                return { id: artifact.tag, action: "created" as const };
             },
         },
+    };
+    await runIntegrationInstallation({
+        mode: "create",
+        deps,
         installations,
-        siteIntegrations: [definition],
-        dto: { kind: "consent", answers: consentAnswers(enabled), options: {} },
+        siteIntegrations,
+        dto: { kind: "consent", answers: { id: "consent", contextKey: "signup" }, options: {} },
     });
+    await runIntegrationInstallation({
+        mode: "create",
+        deps,
+        installations,
+        siteIntegrations,
+        dto: {
+            kind: "mossa",
+            answers: {},
+            options: {},
+            resources: ["mossa/blocs/consent-field"],
+        },
+    });
+    backend.configure(consentConfiguration(enabled));
 
     const runner = new CaptureRunner();
     const { auth, users, credentials, emailer } = consentAuthHarness();
@@ -82,9 +101,9 @@ export async function consentSignupHarness(enabled = true) {
         triggers,
         sourceResolveSecret: createSecretResolver(secrets),
     });
-    const bloc = importedBlocs.find((candidate) => candidate.tag === "consent-field");
+    const bloc = importedBlocs.find((candidate) => candidate.tag === "mossa-consent-field");
     if (!bloc) {
-        throw new Error("the Consent installation did not import consent-field");
+        throw new Error("the Mossa installation did not import mossa-consent-field");
     }
     return {
         backend,
@@ -98,17 +117,19 @@ export async function consentSignupHarness(enabled = true) {
     };
 }
 
-async function consentDefinition(): Promise<IntegrationDefinition> {
-    const value = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("consent");
+async function requiredDefinition(
+    repository: FsIntegrationDefinitionRepository,
+    kind: string,
+): Promise<IntegrationDefinition> {
+    const value = await repository.get(kind);
     if (!value) {
-        throw new Error("Consent integration definition not found");
+        throw new Error(`${kind} integration definition not found`);
     }
     return value;
 }
 
-function consentAnswers(enabled: boolean) {
+function consentConfiguration(enabled: boolean) {
     return {
-        id: "consent",
         enabled,
         contextKey: "signup",
         documents: enabled
@@ -124,20 +145,6 @@ function consentAnswers(enabled: boolean) {
               ]
             : [],
     };
-}
-
-async function seedBasicBlocs(installations: InMemoryIntegrationInstallationRepository): Promise<void> {
-    await installations.create({
-        id: "basic-blocs",
-        label: "Basic Blocs",
-        definitionVersion: "1.0.0",
-        status: "success",
-        answersSnapshot: {},
-        secretRefs: {},
-        secretInputs: [],
-        artifacts: [{ type: "bloc", id: "basic-input", action: "created" }],
-        runs: [],
-    });
 }
 
 function supabaseDeployer(): IntegrationConnectorDeployer {
