@@ -1,0 +1,11 @@
+<mossa-checkout locale="en-US">
+    <mossa-button slot="login-action"><a data-login-link>Sign in</a></mossa-button>
+    <mossa-button slot="error-action" appearance="outlined"><a href="#">Back to offers</a></mossa-button>
+    <a slot="order-navigation" data-order-link hidden aria-hidden="true" tabindex="-1"></a>
+    <mossa-commerce-stripe-payment
+        slot="checkout-payment"
+        data-checkout-payment
+        appearance="embedded"
+        title="Secure payment"
+    ></mossa-commerce-stripe-payment>
+</mossa-checkout>

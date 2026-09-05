@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-category-filters",
+        "name": "Category filters",
+        "group": "Commerce",
+        "description": "Shows category-specific catalogue filters while keeping every control editable.",
+        "path": "blocs/domains/commerce/offers/catalogue/category-filters",
+        "view": "Bloc.ts"
+    }
+}

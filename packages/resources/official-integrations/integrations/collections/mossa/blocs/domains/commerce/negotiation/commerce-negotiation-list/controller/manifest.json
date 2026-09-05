@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "mossa-commerce-negotiation-list-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "Mossa commerce negotiation list controller",
+        "description": "Internal behavior controller for mossa-commerce-negotiation-list."
+    }
+}

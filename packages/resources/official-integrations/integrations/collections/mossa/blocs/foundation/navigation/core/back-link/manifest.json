@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-back-link",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Back link",
+        "description": "Muted, compact back link with an arrow and a text-label slot.",
+        "categories": [
+            "navigation"
+        ]
+    }
+}

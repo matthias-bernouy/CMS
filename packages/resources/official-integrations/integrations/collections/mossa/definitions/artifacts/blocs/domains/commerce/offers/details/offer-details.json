@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-offer-details",
+        "name": "Offer details",
+        "group": "Commerce",
+        "description": "Responsive offer gallery and information layout.",
+        "path": "blocs/domains/commerce/offers/details/offer-details",
+        "view": "Bloc.ts"
+    }
+}

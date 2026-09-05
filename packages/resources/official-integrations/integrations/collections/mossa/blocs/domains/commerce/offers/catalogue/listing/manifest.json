@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-listing",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Listing",
+        "description": "Responsive listing with a desktop sidebar and mobile filter drawer."
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "id": "mossa/blocs/commerce-account-sales-controller",
+    "type": "bloc",
+    "artifact": "mossa-commerce-account-sales-controller",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:mySales",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.status": "state.mySales.status",
+                    "params.limit": "state.mySales.limit",
+                    "params.offset": "state.mySales.offset"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/commerce-account-sales"
+        ]
+    },
+    "defaultActive": false
+}

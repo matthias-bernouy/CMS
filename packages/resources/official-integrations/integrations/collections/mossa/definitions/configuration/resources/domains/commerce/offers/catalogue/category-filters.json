@@ -1,0 +1,25 @@
+{
+    "id": "mossa/blocs/category-filters",
+    "type": "bloc",
+    "artifact": "mossa-category-filters",
+    "category": "commerce",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/range-filter",
+            "mossa/blocs/stack"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "radius-sm",
+            "secondary-base",
+            "secondary-foreground",
+            "surface-background",
+            "surface-border",
+            "surface-text"
+        ]
+    }
+}

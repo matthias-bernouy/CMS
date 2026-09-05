@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-editorial-hero",
+        "name": "Editorial hero",
+        "group": "Content",
+        "description": "Centered or left-aligned hero — eyebrow + title + subtitle + optional bottom slot.",
+        "path": "blocs/foundation/content/editorial/editorial-hero",
+        "view": "Bloc.ts"
+    }
+}

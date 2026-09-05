@@ -1,0 +1,30 @@
+:host {
+    --_mossa-card-bg:      var(--ulvia-surface-background);
+    --_mossa-card-border:  var(--ulvia-surface-border);
+    --_mossa-card-radius:  var(--ulvia-radius-card);
+    --_mossa-card-pad-x:   1.25rem;
+
+    display: block;
+    box-sizing: border-box;
+}
+
+.card {
+    background: var(--_mossa-card-bg);
+    border: 1px solid var(--_mossa-card-border);
+    border-radius: var(--_mossa-card-radius);
+    padding: 0.25rem var(--_mossa-card-pad-x);
+}
+
+:host([variant="flat"]) {
+    --_mossa-card-bg:     transparent;
+    --_mossa-card-border: transparent;
+    --_mossa-card-pad-x:  0;
+}
+
+::slotted(mossa-specification) {
+    border-bottom: 1px solid var(--ulvia-surface-border);
+}
+
+::slotted(mossa-specification:last-child) {
+    border-bottom: 0;
+}

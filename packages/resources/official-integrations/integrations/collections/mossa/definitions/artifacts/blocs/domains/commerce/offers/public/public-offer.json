@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-public-offer",
+        "name": "Public offer",
+        "group": "Commerce",
+        "description": "Dynamic public offer page with gallery, valuation, seller information, and actions.",
+        "path": "blocs/domains/commerce/offers/public/public-offer",
+        "composition": "template.html"
+    }
+}

@@ -1,0 +1,94 @@
+<form novalidate>
+    <section class="step" data-step="1" data-state="active">
+        <header><span class="number">1</span><h2 data-copy="stepProduct"></h2><button class="edit" type="button" data-edit="1" data-copy="change"></button></header>
+        <p class="summary" data-summary="1"></p>
+        <div class="content">
+            <div class="search">
+                <mossa-input id="product-search" type="search" autocomplete="off" required></mossa-input>
+                <div class="results" role="listbox" hidden></div>
+            </div>
+            <p class="selected-product" hidden></p>
+            <div class="variant" hidden>
+                <div class="variant-fields"></div>
+            </div>
+            <button class="next" type="button" data-next="2" data-copy="continue"></button>
+        </div>
+    </section>
+
+    <section class="step" data-step="2" data-state="pending">
+        <header><span class="number">2</span><h2 data-copy="stepValuation"></h2><button class="edit" type="button" data-edit="2" data-copy="change"></button></header>
+        <p class="summary" data-summary="2"></p>
+        <div class="content">
+            <div class="estimate" aria-live="polite">
+                <p class="estimate-kicker" data-copy="estimateKicker"></p>
+                <strong class="estimate-value" data-copy="selectValuation"></strong>
+                <p class="estimate-detail"></p>
+            </div>
+            <fieldset>
+                <legend data-copy="estimatedCondition"></legend>
+                <div class="grades" data-condition-options></div>
+            </fieldset>
+            <button class="next" type="button" data-next="3" data-copy="continue"></button>
+        </div>
+    </section>
+
+    <section class="step" data-step="3" data-state="pending">
+        <header><span class="number">3</span><h2 data-copy="stepDescription"></h2><button class="edit" type="button" data-edit="3" data-copy="change"></button></header>
+        <p class="summary" data-summary="3"></p>
+        <div class="content">
+            <div class="auth-gate">
+                <slot name="auth-link"></slot>
+            </div>
+            <div class="seller-details" hidden>
+                <mossa-textarea id="description" maxlength="20000" rows="5"></mossa-textarea>
+                <div class="photo-field">
+                    <span class="field-label" data-copy="photos"></span>
+                    <div class="photo-grid">
+                        <div class="photo-previews" data-photo-previews hidden></div>
+                        <label class="photo-picker">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
+                            <span data-photo-picker-label data-copy="addPhotos"></span>
+                            <input class="photos-upload" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+                        </label>
+                    </div>
+                    <small class="photo-hint" data-photo-hint></small>
+                    <small class="photo-count" data-photo-count aria-live="polite"></small>
+                </div>
+                <div class="photo-actions">
+                    <button class="next" type="button" data-next="4" data-copy="continue"></button>
+                    <slot name="photo-guide"></slot>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="step final-step" data-step="4" data-state="pending">
+        <header><span class="number">4</span><h2 data-copy="stepSubmit"></h2></header>
+        <div class="content">
+            <p data-copy="review"></p>
+            <button class="submit" type="submit" data-copy="submit"></button>
+            <p class="status" role="status"></p>
+        </div>
+    </section>
+</form>
+<slot name="success-navigation"></slot>
+<div hidden>
+    <slot name="copy-change"></slot><slot name="copy-continue"></slot><slot name="copy-step-product"></slot>
+    <slot name="copy-model"></slot><slot name="copy-search-placeholder"></slot><slot name="copy-step-valuation"></slot>
+    <slot name="copy-estimate-kicker"></slot><slot name="copy-select-valuation"></slot><slot name="copy-estimated-condition"></slot>
+    <slot name="copy-step-description"></slot><slot name="copy-description"></slot><slot name="copy-description-placeholder"></slot>
+    <slot name="copy-photos"></slot><slot name="copy-step-submit"></slot><slot name="copy-review"></slot><slot name="copy-submit"></slot>
+    <slot name="copy-search-failed"></slot><slot name="copy-model-failed"></slot><slot name="copy-exact-version"></slot>
+    <slot name="copy-choose-variant"></slot><slot name="copy-choose"></slot><slot name="copy-range-pending"></slot>
+    <slot name="copy-range-pending-detail"></slot><slot name="copy-range-between"></slot><slot name="copy-range-detail"></slot>
+    <slot name="copy-maximum-photos"></slot><slot name="copy-preview-alt"></slot><slot name="copy-remove-photo"></slot>
+    <slot name="copy-main-photo"></slot><slot name="copy-photo-count-one"></slot><slot name="copy-photo-count-many"></slot>
+    <slot name="copy-no-photo"></slot><slot name="copy-add-more-photos"></slot><slot name="copy-add-photos"></slot>
+    <slot name="copy-photo-requirement-exact"></slot><slot name="copy-photo-requirement-range"></slot>
+    <slot name="copy-session-expired"></slot><slot name="copy-submission-failed"></slot><slot name="copy-summary-photos"></slot>
+    <slot name="copy-description-added"></slot><slot name="copy-preparing"></slot><slot name="copy-seller"></slot>
+    <slot name="copy-uploading"></slot><slot name="copy-submitting"></slot><slot name="copy-submitted"></slot>
+    <slot name="copy-choose-product"></slot><slot name="copy-provide"></slot><slot name="copy-choose-exact-variant"></slot>
+    <slot name="copy-choose-condition"></slot><slot name="copy-invalid-photo-count-exact"></slot><slot name="copy-invalid-photo-count-range"></slot>
+    <slot name="copy-invalid-image"></slot><slot name="copy-unable"></slot>
+</div>

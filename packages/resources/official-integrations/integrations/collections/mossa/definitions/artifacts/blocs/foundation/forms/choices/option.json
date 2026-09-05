@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-option",
+        "name": "Option",
+        "group": "Forms",
+        "description": "Option used by a Mossa select.",
+        "path": "blocs/foundation/forms/choices/option"
+    }
+}

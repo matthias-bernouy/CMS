@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-condition",
+        "name": "Condition",
+        "group": "Commerce",
+        "description": "Displays a condition label.",
+        "path": "blocs/domains/commerce/offers/catalogue/condition",
+        "view": "Bloc.ts"
+    }
+}

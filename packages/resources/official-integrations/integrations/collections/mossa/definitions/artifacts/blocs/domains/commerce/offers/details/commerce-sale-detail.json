@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-sale-detail",
+        "name": "Commerce sale detail",
+        "group": "Commerce",
+        "description": "Authenticated seller order detail with immutable line snapshots, totals, status, and a fulfillment composition slot.",
+        "path": "blocs/domains/commerce/offers/details/commerce-sale-detail"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-offer-list",
+        "name": "Commerce offer list",
+        "group": "Commerce",
+        "description": "Transparent public offer source controller with URL-aware filters and pagination.",
+        "path": "blocs/domains/commerce/offers/catalogue/commerce-offer-list"
+    }
+}

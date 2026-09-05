@@ -1,9 +1,0 @@
-{
-    "default-tag": "cs-profile-controller",
-    "bloc": "./Bloc.ts",
-    "defaultContent": "./default.html",
-    "meta": {
-        "title": "Profile controller",
-        "description": "Connects the Courtside profile page UI to user account and seller verification sources."
-    }
-}

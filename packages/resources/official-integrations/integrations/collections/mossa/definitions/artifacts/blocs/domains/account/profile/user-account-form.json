@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-user-account-form",
+        "name": "User account form",
+        "group": "Account",
+        "description": "Public personal-information form backed by the User Account source.",
+        "path": "blocs/domains/account/profile/user-account-form",
+        "composition": "template.html"
+    }
+}

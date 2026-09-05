@@ -1,0 +1,68 @@
+{
+    "id": "mossa/blocs/mondial-relay-picker",
+    "type": "bloc",
+    "artifact": "mossa-mondial-relay-picker",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "mondial-relay",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:delivery:relayPoints",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.country": "state.relayPoints.country",
+                    "params.postalCode": "state.relayPoints.postalCode",
+                    "params.city": "state.relayPoints.city",
+                    "params.weightGrams": "state.relayPoints.weightGrams",
+                    "params.modeDelivery": "state.relayPoints.modeDelivery",
+                    "params.limit": "state.relayPoints.limit",
+                    "params.latitude": "state.relayPoints.latitude",
+                    "params.longitude": "state.relayPoints.longitude"
+                }
+            }
+        },
+        {
+            "source": "commerce-mondial-relay-delivery",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:getRelayPointForOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.orderId": "state.getRelayPointForOrder.orderId"
+                }
+            }
+        },
+        {
+            "source": "commerce-mondial-relay-delivery",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:setRelayPointForOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.orderId": "state.setRelayPointForOrder.orderId",
+                    "body.relayLocation": "state.setRelayPointForOrder.relayLocation",
+                    "body.country": "state.setRelayPointForOrder.country",
+                    "body.postalCode": "state.setRelayPointForOrder.postalCode",
+                    "body.city": "state.setRelayPointForOrder.city"
+                }
+            }
+        }
+    ],
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "danger-base",
+            "primary-base",
+            "primary-contrasted",
+            "radius-card",
+            "radius-control",
+            "shadow-soft",
+            "success-base",
+            "surface-background",
+            "surface-border"
+        ]
+    }
+}

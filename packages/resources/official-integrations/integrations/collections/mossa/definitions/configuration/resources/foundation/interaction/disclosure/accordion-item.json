@@ -1,0 +1,19 @@
+{
+    "id": "mossa/blocs/accordion-item",
+    "type": "bloc",
+    "artifact": "mossa-accordion-item",
+    "category": "interaction",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-normal",
+            "font-body",
+            "secondary-base",
+            "space-md",
+            "space-xs",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

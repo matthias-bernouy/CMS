@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-account-shell",
+        "name": "Account shell",
+        "group": "Account",
+        "description": "Two-column account layout with a left sidebar slot and a main content slot.",
+        "path": "blocs/domains/account/shell/account-shell",
+        "view": "Bloc.ts"
+    }
+}

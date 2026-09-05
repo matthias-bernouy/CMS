@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-trust-item",
+        "name": "Trust item",
+        "group": "Content",
+        "description": "A small reassurance card with a centered icon and a short label. Combine several in a responsive grid to form a trust strip.",
+        "path": "blocs/foundation/content/marketing/trust-item",
+        "view": "Bloc.ts"
+    }
+}

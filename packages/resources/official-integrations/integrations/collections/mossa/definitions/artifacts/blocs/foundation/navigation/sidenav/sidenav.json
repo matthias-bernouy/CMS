@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-sidenav",
+        "name": "Sidenav",
+        "group": "Navigation",
+        "description": "Lateral navigation: brand, sections, footer. Desktop collapse to icon-only, mobile off-canvas drawer.",
+        "path": "blocs/foundation/navigation/sidenav/sidenav",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-page-header",
+        "name": "Page header",
+        "group": "Layout",
+        "description": "Page title (and optional subtitle) on the left, primary actions on the right.",
+        "path": "blocs/foundation/layout/headers/page-header",
+        "view": "Bloc.ts"
+    }
+}

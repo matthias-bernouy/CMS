@@ -1,0 +1,13 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-user-account-form-controller",
+        "name": "User account form controller",
+        "group": "Account",
+        "description": "Internal behavior controller for user-account-form.",
+        "internal": true,
+        "path": "blocs/domains/account/profile/user-account-form",
+        "view": "controller/Bloc.ts",
+        "editor": null
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-option",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Option",
+        "description": "Option used by a Mossa select."
+    }
+}

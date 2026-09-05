@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-checkout",
+        "name": "Checkout",
+        "group": "Commerce",
+        "description": "Authenticated checkout using user-account, Mondial Relay and the trusted payment integration.",
+        "path": "blocs/domains/commerce/checkout/checkout",
+        "view": "Bloc.ts"
+    }
+}

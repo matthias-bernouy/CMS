@@ -1,0 +1,25 @@
+{
+    "id": "mossa/blocs/user-menu",
+    "type": "bloc",
+    "artifact": "mossa-user-menu",
+    "category": "navigation",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-normal",
+            "duration-slow",
+            "font-body",
+            "font-heading",
+            "radius-card",
+            "radius-sm",
+            "secondary-base",
+            "secondary-foreground",
+            "shadow-lg",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

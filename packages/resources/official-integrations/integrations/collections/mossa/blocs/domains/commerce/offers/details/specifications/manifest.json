@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-specifications",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Specifications",
+        "description": "Card wrapper for a series of label / value rows. Used for product specs, order details, payment info, etc.",
+        "categories": [
+            "commerce"
+        ]
+    }
+}

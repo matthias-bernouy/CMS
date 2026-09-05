@@ -1,0 +1,79 @@
+:host {
+    --_mossa-es-fg:      var(--ulvia-surface-text);
+    --_mossa-es-muted:   var(--ulvia-surface-muted-text);
+    --_mossa-es-bg:      var(--ulvia-surface-background);
+    --_mossa-es-border:  var(--ulvia-surface-border);
+    --_mossa-es-radius:  var(--ulvia-radius-lg);
+    --_mossa-es-icon:    color-mix(
+        in srgb,
+        var(--ulvia-secondary-base) 72%,
+        var(--ulvia-secondary-foreground)
+    );
+    --_mossa-es-pad:     2.5rem 1.5rem;
+
+    display: block;
+}
+
+.state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    color: var(--_mossa-es-fg);
+}
+
+.icon {
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    color: var(--_mossa-es-icon);
+    display: inline-flex;
+}
+
+::slotted([slot="icon"]) {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--_mossa-es-fg);
+}
+
+::slotted([slot="description"]) {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--_mossa-es-muted);
+    max-width: 32rem;
+}
+
+.action {
+    margin-top: 1rem;
+    display: inline-flex;
+    gap: 0.5rem;
+}
+
+:host(:not(:has([slot="icon"]))) .icon { display: none; }
+:host(:not(:has([slot="action"]))) .action { display: none; }
+
+/* Variant — card (boxed) */
+:host([variant="card"]) {
+    background: var(--_mossa-es-bg);
+    border: 1px solid var(--_mossa-es-border);
+    border-radius: var(--_mossa-es-radius);
+    padding: var(--_mossa-es-pad);
+}
+
+:host([variant="card"][size="lg"]) {
+    --_mossa-es-pad: 4rem 2rem;
+}
+
+/* Alignment */
+:host([align="left"]) .state {
+    align-items: flex-start;
+    text-align: left;
+}

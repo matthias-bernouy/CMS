@@ -1,0 +1,45 @@
+<section>
+    <div data-loading>
+        <mossa-responsive-grid min="md" gap="md">
+            <mossa-skeleton height="20rem" animation="wave" label="Loading sale"></mossa-skeleton>
+            <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        </mossa-responsive-grid>
+    </div>
+
+    <mossa-surface-card data-error hidden appearance="outlined" density="compact" role="alert">
+        <strong slot="title" data-error-title>Sale not found</strong>
+        <span slot="description" data-error-message></span>
+        <slot name="error-action" slot="actions"></slot>
+    </mossa-surface-card>
+
+    <div data-content hidden class="content">
+        <header>
+            <div class="heading">
+                <span class="eyebrow" data-eyebrow>SALE</span>
+                <h2 data-order-number></h2>
+                <span class="muted" data-order-date></span>
+            </div>
+            <span class="status" data-order-status></span>
+        </header>
+
+        <div class="layout">
+            <main>
+                <mossa-surface-card data-articles-card appearance="outlined" density="compact">
+                    <strong slot="title" data-articles-title>Sold items</strong>
+                    <div class="lines" data-lines></div>
+                </mossa-surface-card>
+                <div data-fulfillment hidden><slot name="fulfillment"></slot></div>
+            </main>
+
+            <aside>
+                <mossa-surface-card data-summary-card appearance="outlined" density="compact">
+                    <strong slot="title" data-summary-title>Summary</strong>
+                    <div class="summary-row"><span data-subtotal-label>Sale price</span><strong data-subtotal></strong></div>
+                    <div class="summary-row"><span data-commission-label>Platform commission</span><strong data-commission></strong></div>
+                    <div class="summary-row"><span data-shipping-label>Delivery</span><strong data-shipping></strong></div>
+                    <div class="summary-row total"><span data-total-label>Net amount to receive</span><strong data-total></strong></div>
+                </mossa-surface-card>
+            </aside>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,24 @@
+<mossa-commerce-offer-list locale="en-US" page-size="12" grid-min="md" grid-max="lg" grid-gap="md" grid-packing="fill" card-stretch="true">
+    <mossa-responsive-grid min="md" max="lg" gap="md" packing="fill" justify-items="stretch" data-offers-grid cms-condition="$source.loading">
+        <mossa-skeleton height="20rem" animation="wave" label="Loading offers"></mossa-skeleton>
+        <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+    </mossa-responsive-grid>
+
+    <mossa-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">Offers could not be loaded.</mossa-toast>
+
+    <mossa-surface-card appearance="outlined" cms-condition="$source.loaded && data.total == 0">
+        <strong slot="title">No offer available</strong>
+    </mossa-surface-card>
+
+    <mossa-responsive-grid min="md" max="lg" gap="md" packing="fill" justify-items="stretch" data-offers-grid cms-condition="$source.loaded && data.total > 0">
+        <mossa-commerce-offer-preview amount="{{ offer.acceptedPriceAmount }}" currency="{{ offer.currency }}" whole-unit-prices="{{ data.wholeUnitPrices }}" stretch data-offer-card cms-repeat="data.items as offer">
+            <a slot="navigation" data-offer-link data-offer-slug="{{ offer.slug }}" aria-label="View {{ offer.title }}"></a>
+            <img slot="media" src="/.cms/sources/commerce/publicOfferImage?id={{ offer.mainImageMediaId }}" data-source-image-access="public" data-source-width="{{ offer.mainImageWidth }}" data-source-height="{{ offer.mainImageHeight }}" alt="{{ offer.title }}" loading="lazy" decoding="async" cms-condition="offer.mainImageMediaId">
+            <span slot="title">{{ offer.title }}</span>
+            <span slot="description">{{ offer.description }}</span>
+        </mossa-commerce-offer-preview>
+    </mossa-responsive-grid>
+
+    <mossa-pagination page="1" page-size="12" total="{{ data.total }}" cms-condition="$source.loaded && data.total > data.limit"></mossa-pagination>
+</mossa-commerce-offer-list>

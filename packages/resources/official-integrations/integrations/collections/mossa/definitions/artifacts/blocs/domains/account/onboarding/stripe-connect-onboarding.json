@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-stripe-connect-onboarding",
+        "name": "Stripe connect onboarding",
+        "group": "Account",
+        "description": "Seller-facing Stripe identity, bank tokenization, onboarding, wallet, and payout-risk status.",
+        "path": "blocs/domains/account/onboarding/stripe-connect-onboarding"
+    }
+}

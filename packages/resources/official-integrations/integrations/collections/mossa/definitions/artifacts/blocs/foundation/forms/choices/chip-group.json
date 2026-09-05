@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-chip-group",
+        "name": "Chip group",
+        "group": "Forms",
+        "description": "Form-associated single or multiple choice chip group.",
+        "path": "blocs/foundation/forms/choices/chip-group"
+    }
+}

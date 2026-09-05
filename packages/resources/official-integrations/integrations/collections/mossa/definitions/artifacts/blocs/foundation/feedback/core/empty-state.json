@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-empty-state",
+        "name": "Empty state",
+        "group": "Feedback",
+        "description": "Illustration + title + description + optional action. Inline or card variant.",
+        "path": "blocs/foundation/feedback/core/empty-state",
+        "view": "Bloc.ts"
+    }
+}

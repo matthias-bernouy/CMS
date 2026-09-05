@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-checkbox",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Checkbox",
+        "description": "Form-associated checkbox whose label is rendered inside its shadow root."
+    }
+}

@@ -1,0 +1,169 @@
+:host {
+    --_mossa-toast-background: var(--_mossa-tone-muted);
+    --_mossa-toast-border: var(--_mossa-tone-border);
+    --_mossa-toast-color: var(--_mossa-tone-contrasted);
+    --_mossa-toast-close-color: var(--_mossa-toast-color);
+    --_mossa-toast-padding: .75rem .875rem;
+    --_mossa-toast-radius: var(--ulvia-radius-card);
+    --_mossa-toast-shadow: none;
+    --_mossa-toast-width: max-content;
+
+    position: fixed;
+    z-index: 10000;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    box-sizing: border-box;
+    width: var(--_mossa-toast-width);
+    min-width: min(18rem, calc(100vw - 2rem));
+    max-width: min(26rem, calc(100vw - 2rem));
+    align-items: flex-start;
+    gap: .625rem;
+    padding: var(--_mossa-toast-padding);
+    border: 1px solid var(--_mossa-toast-border);
+    border-radius: var(--_mossa-toast-radius);
+    background: var(--_mossa-toast-background);
+    color: var(--_mossa-toast-color);
+    box-shadow: var(--_mossa-toast-shadow);
+    font: inherit;
+    line-height: 1.4;
+    animation: mossa-toast-in 180ms ease-out;
+}
+
+:host([hidden]) {
+    display: none !important;
+}
+
+:host([appearance="filled"]) {
+    --_mossa-toast-background: var(--_mossa-tone-base);
+    --_mossa-toast-color: var(--_mossa-tone-foreground);
+}
+
+:host([appearance="outlined"]) {
+    --_mossa-toast-background: var(--_mossa-tone-foreground);
+}
+
+:host([appearance="ghost"]) {
+    --_mossa-toast-background: var(--_mossa-tone-foreground);
+    --_mossa-toast-border: transparent;
+}
+
+:host([position="top-left"]) {
+    right: auto;
+    left: 1.5rem;
+}
+
+:host([position="bottom-right"]) {
+    top: auto;
+    bottom: 1.5rem;
+}
+
+:host([position="bottom-left"]) {
+    top: auto;
+    right: auto;
+    bottom: 1.5rem;
+    left: 1.5rem;
+}
+
+:host([width="sm"]) { --_mossa-toast-width: min(18rem, calc(100vw - 2rem)); }
+:host([width="md"]) { --_mossa-toast-width: min(22rem, calc(100vw - 2rem)); }
+:host([width="lg"]) { --_mossa-toast-width: min(26rem, calc(100vw - 2rem)); }
+:host([width="full"]) { --_mossa-toast-width: calc(100vw - 3rem); }
+
+:host([density="compact"]) { --_mossa-toast-padding: .5rem .625rem; }
+:host([density="spacious"]) { --_mossa-toast-padding: 1rem 1.125rem; }
+
+:host([radius="none"]) { --_mossa-toast-radius: 0; }
+:host([radius="sm"]) { --_mossa-toast-radius: var(--ulvia-radius-sm); }
+:host([radius="md"]) { --_mossa-toast-radius: var(--ulvia-radius-card); }
+:host([radius="lg"]) { --_mossa-toast-radius: var(--ulvia-radius-lg); }
+:host([radius="pill"]) { --_mossa-toast-radius: 999px; }
+
+:host([shadow="sm"]) { --_mossa-toast-shadow: var(--ulvia-shadow-sm); }
+:host([shadow="md"]) { --_mossa-toast-shadow: var(--ulvia-shadow-soft); }
+:host([shadow="lg"]) { --_mossa-toast-shadow: var(--ulvia-shadow-lg); }
+
+.icon {
+    flex: 0 0 auto;
+    line-height: 1;
+}
+
+:host(:not(:has([slot="icon"]))) .icon {
+    display: none;
+}
+
+::slotted([slot="icon"]) {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.message {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+button {
+    flex: 0 0 auto;
+    margin: -.25rem -.25rem 0 0;
+    padding: .125rem .25rem;
+    border: 0;
+    background: transparent;
+    color: var(--_mossa-toast-close-color);
+    cursor: pointer;
+    font: inherit;
+    font-size: 1.25rem;
+    line-height: 1;
+    opacity: .6;
+}
+
+button:hover { opacity: 1; }
+button:focus-visible {
+    outline: 2px solid var(--_mossa-tone-focus);
+    outline-offset: 2px;
+}
+
+:host([leaving]) {
+    pointer-events: none;
+    animation: mossa-toast-out 180ms ease-in forwards;
+}
+
+[hidden] { display: none !important; }
+
+@keyframes mossa-toast-in {
+    from { opacity: 0; transform: translateY(-.5rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mossa-toast-out {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-.5rem); }
+}
+
+@media (max-width: 32rem) {
+    :host,
+    :host([position]) {
+        right: 1rem;
+        left: 1rem;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+    }
+
+    :host([position="top-left"]),
+    :host([position="top-right"]) {
+        top: 1rem;
+    }
+
+    :host([position="bottom-left"]),
+    :host([position="bottom-right"]) {
+        top: auto;
+        bottom: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :host,
+    :host([leaving]) { animation: none; }
+}

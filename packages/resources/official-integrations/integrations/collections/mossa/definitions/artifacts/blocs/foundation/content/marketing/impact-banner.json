@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-impact-banner",
+        "name": "Impact banner",
+        "group": "Content",
+        "description": "Wide semantic-color banner with icon, title, paragraphs, and an optional statistics grid.",
+        "path": "blocs/foundation/content/marketing/impact-banner",
+        "view": "Bloc.ts"
+    }
+}

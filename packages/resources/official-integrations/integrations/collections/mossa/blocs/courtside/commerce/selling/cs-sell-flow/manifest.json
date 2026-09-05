@@ -1,9 +1,0 @@
-{
-    "default-tag": "cs-sell-flow",
-    "bloc": "./Bloc.ts",
-    "defaultContent": "./default.html",
-    "meta": {
-        "title": "Sell flow",
-        "description": "Guides a visitor from racket selection and estimation to authenticated offer submission."
-    }
-}

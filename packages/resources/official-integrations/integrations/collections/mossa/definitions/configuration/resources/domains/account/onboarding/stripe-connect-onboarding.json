@@ -1,0 +1,91 @@
+{
+    "id": "mossa/blocs/stripe-connect-onboarding",
+    "type": "bloc",
+    "artifact": "mossa-stripe-connect-onboarding",
+    "category": "account",
+    "endpoints": [
+        {
+            "source": "stripe-connect",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:stripe-connect:enrollConnectSeller",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.accountToken": "state.enrollConnectSeller.accountToken",
+                    "body.contactEmail": "state.enrollConnectSeller.contactEmail",
+                    "body.marketplaceTermsAccepted": "state.enrollConnectSeller.marketplaceTermsAccepted",
+                    "body.marketplaceTermsVersion": "state.enrollConnectSeller.marketplaceTermsVersion",
+                    "body.marketplaceTermsHash": "state.enrollConnectSeller.marketplaceTermsHash",
+                    "body.expectedMarketplaceTermsVersion": "state.enrollConnectSeller.expectedMarketplaceTermsVersion",
+                    "body.expectedMarketplaceTermsHash": "state.enrollConnectSeller.expectedMarketplaceTermsHash"
+                }
+            }
+        },
+        {
+            "source": "stripe-connect",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:stripe-connect:getConnectClientConfig",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "stripe-connect",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:stripe-connect:getConnectStatus",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.marketplaceTermsVersion": "state.getConnectStatus.marketplaceTermsVersion",
+                    "params.marketplaceTermsHash": "state.getConnectStatus.marketplaceTermsHash"
+                }
+            }
+        },
+        {
+            "source": "stripe-connect",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:stripe-connect:getConnectWallet",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "stripe-connect",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:stripe-connect:submitConnectVerification",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.accountToken": "state.submitConnectVerification.accountToken",
+                    "body.bankAccountToken": "state.submitConnectVerification.bankAccountToken",
+                    "body.contactEmail": "state.submitConnectVerification.contactEmail",
+                    "body.marketplaceTermsAccepted": "state.submitConnectVerification.marketplaceTermsAccepted",
+                    "body.expectedMarketplaceTermsVersion": "state.submitConnectVerification.expectedMarketplaceTermsVersion",
+                    "body.expectedMarketplaceTermsHash": "state.submitConnectVerification.expectedMarketplaceTermsHash"
+                }
+            }
+        },
+        {
+            "source": "user-account",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:user-account:getAccount",
+            "contractVersion": "^1.0.0"
+        }
+    ],
+    "context": [
+        "authenticated-user"
+    ],
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-base",
+            "radius-card",
+            "radius-control",
+            "radius-sm",
+            "secondary-base",
+            "secondary-contrasted",
+            "shadow-lg",
+            "shadow-soft",
+            "surface-background",
+            "surface-border",
+            "surface-text"
+        ]
+    }
+}

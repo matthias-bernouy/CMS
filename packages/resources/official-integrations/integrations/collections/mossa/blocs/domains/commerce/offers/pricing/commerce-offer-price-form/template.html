@@ -1,0 +1,107 @@
+<mossa-commerce-offer-price-form-controller data-p9r-composition-controller>
+<mossa-stack gap="lg" data-layout>
+    <div data-loading>
+        <mossa-responsive-grid min="none" max="none" gap="md">
+            <mossa-skeleton height="8rem" animation="wave" label="Loading offer"></mossa-skeleton>
+            <mossa-skeleton height="22rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        </mossa-responsive-grid>
+    </div>
+
+    <mossa-toast data-error tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="0" hidden></mossa-toast>
+
+    <div data-card hidden>
+        <mossa-surface-card data-card-surface appearance="outlined" density="regular">
+            <strong slot="title" data-title>Set my price</strong>
+            <span slot="description" data-description>Choose a selling price within the proposed range.</span>
+
+            <mossa-stack gap="lg">
+                <mossa-stack gap="xs">
+                    <small data-offer-label>Offer</small>
+                    <strong data-offer-title></strong>
+                </mossa-stack>
+
+                <mossa-stack gap="xs" data-range-section>
+                    <small data-range-label>Proposed price range</small>
+                    <strong data-range></strong>
+                    <span data-range-message>Your price must be within this range.</span>
+                </mossa-stack>
+
+                <form data-form novalidate>
+                    <mossa-stack gap="lg">
+                        <mossa-stack gap="xs">
+                            <mossa-input data-amount name="amount" type="number" step="0.01" required label="Your price" hint="Amount in the offer currency"></mossa-input>
+                            <small data-validation role="alert" aria-live="polite"></small>
+                        </mossa-stack>
+
+                        <mossa-surface-card data-activation-panel data-card-surface appearance="outlined" density="compact" hidden>
+                            <strong slot="title" data-activation-title>Activate your seller account</strong>
+                            <span slot="description" data-activation-copy>This information is required to publish your offer and receive future sale proceeds. No bank account is requested here.</span>
+
+                            <mossa-stack gap="md">
+                                <section data-profile-panel aria-label="Seller information">
+                                    <mossa-stack gap="md">
+                                        <p data-profile-summary>Only missing information is requested here. Existing values come from your profile.</p>
+                                        <mossa-responsive-grid min="14rem" max="1fr" gap="md">
+                                            <mossa-input data-profile-control="givenName" name="givenName" type="text" autocomplete="given-name" required label="First name"></mossa-input>
+                                            <mossa-input data-profile-control="surname" name="surname" type="text" autocomplete="family-name" required label="Name"></mossa-input>
+                                            <mossa-input data-profile-control="birthDate" name="birthDate" type="date" date-format="day-month-year" invalid-date-message="Enter a date in DD/MM/YYYY format." autocomplete="bday" required label="Birth date"></mossa-input>
+                                            <mossa-input data-profile-control="email" name="email" type="email" autocomplete="email" required label="Email address"></mossa-input>
+                                            <mossa-input data-profile-control="phone" name="phone" type="tel" autocomplete="tel" required label="Phone"></mossa-input>
+                                            <mossa-input data-profile-control="addressLine1" name="addressLine1" type="text" autocomplete="address-line1" required label="Address"></mossa-input>
+                                            <mossa-input data-profile-control="postalCode" name="postalCode" type="text" autocomplete="postal-code" required label="Postal code"></mossa-input>
+                                            <mossa-input data-profile-control="city" name="city" type="text" autocomplete="address-level2" required label="City"></mossa-input>
+                                            <mossa-input data-profile-control="countryCode" name="countryCode" type="text" autocomplete="country" maxlength="2" readonly required label="Country"></mossa-input>
+                                        </mossa-responsive-grid>
+                                        <small data-profile-validation role="alert" aria-live="polite"></small>
+                                    </mossa-stack>
+                                </section>
+
+                                <section data-consent-panel>
+                                    <mossa-stack gap="xs">
+                                        <label>
+                                            <input data-consent name="sellerTermsAccepted" type="checkbox">
+                                            <span><span data-seller-consent><span data-consent-prefix>I accept the</span> <a data-seller-terms-link target="_blank" rel="noopener noreferrer">seller terms</a>.</span><span data-stripe-consent-fragment> <span data-stripe-consent-prefix>I accept the</span> <a data-stripe-terms-link href="https://stripe.com/connect-account/legal" target="_blank" rel="noopener noreferrer">payment service terms</a>.</span></span>
+                                        </label>
+                                        <small data-consent-validation role="alert" aria-live="polite"></small>
+                                        <p><span data-privacy-notice>The information provided is processed to activate the seller account and secure payments.</span> <a data-privacy-link target="_blank" rel="noopener">Read the privacy notice</a>.</p>
+                                    </mossa-stack>
+                                </section>
+                            </mossa-stack>
+                        </mossa-surface-card>
+
+                        <mossa-button><button data-submit type="submit">Submit my price</button></mossa-button>
+                    </mossa-stack>
+                </form>
+            </mossa-stack>
+        </mossa-surface-card>
+    </div>
+
+    <div data-unavailable hidden>
+        <mossa-surface-card data-card-surface appearance="outlined" density="regular">
+            <strong slot="title" data-unavailable-title>This action is unavailable</strong>
+            <span slot="description" data-unavailable-message>This offer no longer requires a price proposal.</span>
+            <mossa-button slot="actions" appearance="outlined">
+                <a data-back>Back to offers</a>
+            </mossa-button>
+        </mossa-surface-card>
+    </div>
+
+    <div data-technical hidden>
+        <mossa-surface-card data-card-surface appearance="outlined" density="regular">
+            <strong slot="title" data-technical-title>Price could not be loaded</strong>
+            <span slot="description" data-technical-message>This offer cannot be loaded right now. Try again shortly.</span>
+            <mossa-button slot="actions" data-technical-retry><button data-retry type="button">Try again</button></mossa-button>
+        </mossa-surface-card>
+    </div>
+
+    <div data-success hidden>
+        <mossa-surface-card data-card-surface appearance="outlined" density="regular">
+            <strong slot="title" data-success-title>Price submitted</strong>
+            <span slot="description" data-success-message>Your proposal was submitted and will now be reviewed.</span>
+            <mossa-button slot="actions">
+                <a data-success-link>Back to offers</a>
+            </mossa-button>
+        </mossa-surface-card>
+    </div>
+</mossa-stack>
+</mossa-commerce-offer-price-form-controller>

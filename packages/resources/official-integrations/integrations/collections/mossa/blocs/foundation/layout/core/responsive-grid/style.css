@@ -1,0 +1,68 @@
+:host {
+    --_mossa-responsive-grid-min: 15rem;
+    --_mossa-responsive-grid-max: none;
+    --_mossa-responsive-grid-gap: var(--ulvia-space-md);
+    --_mossa-responsive-grid-justify: stretch;
+    --_mossa-responsive-grid-background: transparent;
+    --_mossa-responsive-grid-color: inherit;
+
+    display: grid;
+    box-sizing: border-box;
+    width: 100%;
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--_mossa-responsive-grid-min), 100%), 1fr));
+    gap: var(--_mossa-responsive-grid-gap);
+    justify-items: var(--_mossa-responsive-grid-justify);
+    background: var(--_mossa-responsive-grid-background, transparent);
+    color: var(--_mossa-responsive-grid-color, inherit);
+}
+
+:host([appearance="soft"]) {
+    --_mossa-responsive-grid-background: var(--_mossa-tone-muted);
+    --_mossa-responsive-grid-color: var(--_mossa-tone-contrasted);
+}
+
+:host([appearance="plain"]) {
+    --_mossa-responsive-grid-color: var(--_mossa-tone-contrasted);
+}
+
+:host([appearance="filled"]) {
+    --_mossa-responsive-grid-background: var(--_mossa-tone-base);
+    --_mossa-responsive-grid-color: var(--_mossa-tone-foreground);
+}
+
+:host([packing="fit"]) {
+    grid-template-columns: repeat(auto-fit, minmax(min(var(--_mossa-responsive-grid-min), 100%), 1fr));
+}
+
+:host([packing="fill"]) {
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--_mossa-responsive-grid-min), 100%), 1fr));
+}
+
+::slotted(*) {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--_mossa-responsive-grid-max);
+}
+
+:host([min="sm"]) { --_mossa-responsive-grid-min: 11.25rem; }
+:host([min="md"]) { --_mossa-responsive-grid-min: 15rem; }
+:host([min="lg"]) { --_mossa-responsive-grid-min: 18.75rem; }
+:host([min="xl"]) { --_mossa-responsive-grid-min: 22.5rem; }
+
+:host([max="none"]) { --_mossa-responsive-grid-max: none; }
+:host([max="sm"]) { --_mossa-responsive-grid-max: 15rem; }
+:host([max="md"]) { --_mossa-responsive-grid-max: 20rem; }
+:host([max="lg"]) { --_mossa-responsive-grid-max: 26.25rem; }
+:host([max="xl"]) { --_mossa-responsive-grid-max: 35rem; }
+
+:host([justify-items="start"]) { --_mossa-responsive-grid-justify: start; }
+:host([justify-items="center"]) { --_mossa-responsive-grid-justify: center; }
+:host([justify-items="end"]) { --_mossa-responsive-grid-justify: end; }
+:host([justify-items="stretch"]) { --_mossa-responsive-grid-justify: stretch; }
+
+:host([gap="none"]) { --_mossa-responsive-grid-gap: 0; }
+:host([gap="xs"]) { --_mossa-responsive-grid-gap: var(--ulvia-space-xs); }
+:host([gap="sm"]) { --_mossa-responsive-grid-gap: var(--ulvia-space-sm); }
+:host([gap="md"]) { --_mossa-responsive-grid-gap: var(--ulvia-space-md); }
+:host([gap="lg"]) { --_mossa-responsive-grid-gap: var(--ulvia-space-lg); }
+:host([gap="xl"]) { --_mossa-responsive-grid-gap: var(--ulvia-space-xl); }

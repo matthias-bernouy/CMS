@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-offer-price-form",
+        "name": "Commerce offer price form",
+        "group": "Commerce",
+        "description": "Authenticated seller form for choosing a price within an administrator-defined range.",
+        "path": "blocs/domains/commerce/offers/pricing/commerce-offer-price-form",
+        "composition": "template.html"
+    }
+}

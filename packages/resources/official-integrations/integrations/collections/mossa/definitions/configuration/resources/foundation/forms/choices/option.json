@@ -1,0 +1,7 @@
+{
+    "id": "mossa/blocs/option",
+    "type": "bloc",
+    "artifact": "mossa-option",
+    "category": "forms",
+    "defaultActive": false
+}

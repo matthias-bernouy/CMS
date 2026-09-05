@@ -1,0 +1,48 @@
+:host {
+    --_mossa-br-bg:      var(--ulvia-page-background);
+    --_mossa-br-fg:      var(--ulvia-surface-text);
+    --_mossa-br-muted:   var(--ulvia-surface-muted-text);
+    --_mossa-br-pad:     2.5rem 1.5rem;
+
+    display: block;
+    background: var(--_mossa-br-bg);
+}
+
+.row {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: var(--_mossa-br-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.caption {
+    margin: 0;
+    font-size: 0.875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--_mossa-br-muted);
+}
+
+.items {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+::slotted(*) {
+    font-family: var(--ulvia-font-heading);
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--ulvia-surface-muted-text);
+    transition: color var(--ulvia-duration-normal) var(--_mossa-ease, ease-out);
+}
+
+::slotted(*:hover) {
+    color: var(--_mossa-br-fg);
+}

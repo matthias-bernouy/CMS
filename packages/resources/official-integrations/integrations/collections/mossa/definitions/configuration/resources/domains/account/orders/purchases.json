@@ -1,0 +1,44 @@
+{
+    "id": "mossa/blocs/purchases",
+    "type": "bloc",
+    "artifact": "mossa-purchases",
+    "category": "account",
+    "defaultActive": false,
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:myOrders",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.limit": "state.orders.limit",
+                    "params.offset": "state.orders.offset"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-contrasted",
+            "danger-muted",
+            "font-heading",
+            "secondary-contrasted",
+            "secondary-muted",
+            "subtle-background",
+            "success-contrasted",
+            "success-muted",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

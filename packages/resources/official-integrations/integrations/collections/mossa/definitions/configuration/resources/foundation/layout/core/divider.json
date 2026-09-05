@@ -1,0 +1,13 @@
+{
+    "id": "mossa/blocs/divider",
+    "type": "bloc",
+    "artifact": "mossa-divider",
+    "category": "layout",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "surface-border"
+        ]
+    }
+}

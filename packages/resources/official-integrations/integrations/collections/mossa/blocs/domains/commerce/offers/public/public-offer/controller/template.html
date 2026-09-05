@@ -1,0 +1,73 @@
+<div data-loading>
+    <mossa-responsive-grid min="md" packing="fit" gap="lg">
+        <mossa-skeleton height="34rem" animation="wave" label="Loading offer"></mossa-skeleton>
+        <mossa-skeleton height="34rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+    </mossa-responsive-grid>
+</div>
+
+<div data-error hidden>
+    <mossa-surface-card appearance="outlined" density="spacious">
+        <strong slot="title" data-error-title>Offer not found</strong>
+        <span slot="description" data-error-message>This offer is no longer available or does not exist.</span>
+        <slot name="back" slot="actions"></slot>
+    </mossa-surface-card>
+</div>
+
+<div data-content hidden>
+    <mossa-offer-details balance="even" ratio="landscape" data-detail>
+        <img slot="main-media" data-main-image data-source-image-access="public" alt="" loading="eager" decoding="async">
+
+        <h1 slot="title" data-title></h1>
+        <p slot="meta" data-meta></p>
+        <mossa-condition slot="badge" data-condition></mossa-condition>
+        <p slot="description" data-description></p>
+
+        <mossa-specifications slot="valuation" data-valuation>
+            <mossa-specification emphasis="price">
+                <span slot="label" data-valuation-label>Reference value</span>
+                <span slot="value" data-valuation-value></span>
+            </mossa-specification>
+        </mossa-specifications>
+
+        <mossa-specifications slot="price">
+            <mossa-specification emphasis="price">
+                <span slot="label" data-price-label>Seller price</span>
+                <span slot="value" data-price></span>
+            </mossa-specification>
+        </mossa-specifications>
+
+        <mossa-stack slot="specifications" gap="md">
+            <mossa-specifications data-specifications></mossa-specifications>
+        </mossa-stack>
+
+        <mossa-meta slot="shipping" data-shipping>
+            <svg slot="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"></path>
+                <path d="m3 7.5 9 4.5 9-4.5M12 12v9"></path>
+            </svg>
+            <span data-shipping-message>Pickup-point delivery available</span>
+        </mossa-meta>
+
+        <slot name="buy" slot="actions"></slot>
+        <slot name="negotiate" slot="actions"></slot>
+    </mossa-offer-details>
+
+    <mossa-stack gap="md" data-trust>
+        <mossa-responsive-grid min="sm" packing="fit" gap="sm">
+            <mossa-trust-item>
+                <svg slot="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+                Secure payment
+            </mossa-trust-item>
+            <mossa-trust-item>
+                <svg slot="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                Buyer protection
+            </mossa-trust-item>
+            <mossa-trust-item>
+                <svg slot="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="17" cy="18" r="2"></circle></svg>
+                Tracked delivery
+            </mossa-trust-item>
+        </mossa-responsive-grid>
+    </mossa-stack>
+
+    <mossa-toast data-toast role="status" aria-live="polite" position="top-right" duration="5000" hidden></mossa-toast>
+</div>

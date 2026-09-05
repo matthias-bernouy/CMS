@@ -1,0 +1,15 @@
+{
+    "runtime": "foundation",
+    "default-tag": "mossa-offer-card",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Offer card",
+        "description": "Commerce card for an offer, with optional media, grade, price and action.",
+        "categories": [
+            "commerce"
+        ],
+        "icon": "badge"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "runtime": "foundation",
+    "default-tag": "mossa-offer-details",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Offer details",
+        "description": "Responsive offer gallery and information layout.",
+        "categories": [
+            "commerce"
+        ],
+        "icon": "layout-dashboard"
+    }
+}

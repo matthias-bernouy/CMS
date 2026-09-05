@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-commerce-offer-price-form",
+    "composition": "./template.html",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Commerce offer price form",
+        "description": "Authenticated seller form for choosing a price, collecting only the legally required seller and payment service agreements, and displaying privacy information separately. Site-owned legal page URLs must be configured explicitly."
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-search-input",
+        "name": "Search input",
+        "group": "Forms",
+        "description": "Large rounded search input with magnifier icon and clear button.",
+        "path": "blocs/foundation/forms/fields/search-input",
+        "view": "Bloc.ts"
+    }
+}

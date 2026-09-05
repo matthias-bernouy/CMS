@@ -1,0 +1,17 @@
+{
+    "id": "mossa/blocs/chip",
+    "type": "bloc",
+    "artifact": "mossa-chip",
+    "category": "forms",
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "primary-base",
+            "primary-foreground",
+            "surface-background",
+            "surface-border",
+            "surface-text"
+        ]
+    },
+    "defaultActive": false
+}

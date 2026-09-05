@@ -1,0 +1,152 @@
+:host {
+    /* Role token 4-tuple (defaults to neutral surface tones — no role
+       tone picked yet). Each [tone] rule below rebinds these aliases. */
+    --_mossa-badge-base:       var(--ulvia-surface-text);
+    --_mossa-badge-strong:     var(--ulvia-surface-text);
+    --_mossa-badge-muted:      var(--ulvia-subtle-background);
+    --_mossa-badge-contrasted: var(--ulvia-page-background);
+
+    /* Variant-resolved bg/fg/border — defaults to "soft": muted bg, strong fg.
+       Each [variant] rule below overrides these. */
+    --_mossa-badge-bg:     var(--_mossa-badge-muted);
+    --_mossa-badge-fg:     var(--_mossa-badge-strong);
+    --_mossa-badge-border: transparent;
+
+    /* Layout */
+    --_mossa-badge-radius:      999px;
+    --_mossa-badge-padding:     0.25rem 0.65rem;
+    --_mossa-badge-gap:         0.35rem;
+    --_mossa-badge-font-size:   0.75rem;
+    --_mossa-badge-font-weight: 600;
+
+    display: inline-flex;
+    vertical-align: middle;
+    font-family: var(--ulvia-font-body);
+    line-height: 1;
+}
+
+:host([placement="overlay"]) {
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    z-index: 1;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_mossa-badge-gap);
+    padding: var(--_mossa-badge-padding);
+    background: var(--_mossa-badge-bg);
+    color: var(--_mossa-badge-fg);
+    border: 1px solid var(--_mossa-badge-border);
+    border-radius: var(--_mossa-badge-radius);
+    font-size: var(--_mossa-badge-font-size);
+    font-weight: var(--_mossa-badge-font-weight);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+.label ::slotted(*),
+.leading ::slotted(*) {
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    line-height: inherit;
+}
+
+/* Leading icon slot — hidden by default, shown when a [slot="leading"]
+   child is present (signal set by Bloc.ts via slotchange — `:host(:has(...))`
+   is silently dropped by the CSS parser, cf rule 12). */
+.leading { display: none; }
+:host([has-leading]) .leading { display: inline-flex; }
+
+/* Sizes */
+
+:host([size="sm"]) {
+    --_mossa-badge-padding:     0.15rem 0.5rem;
+    --_mossa-badge-font-size:   0.68rem;
+    --_mossa-badge-gap:         0.25rem;
+}
+
+:host([size="lg"]) {
+    --_mossa-badge-padding:     0.4rem 0.9rem;
+    --_mossa-badge-font-size:   0.88rem;
+    --_mossa-badge-gap:         0.45rem;
+}
+
+/* Shape */
+
+:host([shape="square"])  { --_mossa-badge-radius: var(--ulvia-radius-sm); }
+:host([shape="rounded"]) { --_mossa-badge-radius: var(--ulvia-radius-card); }
+:host([shape="pill"])    { --_mossa-badge-radius: 999px; }
+
+/* Tones — rebind the role token aliases. `[tone]` is set explicitly
+   by the user; `[data-auto-tone]` is set by BlocEditor by hashing the
+   label. Both reach the same six semantic roles via the same alias mechanism.
+   The variant rule below redefines `--_mossa-badge-bg/fg/border` via these
+   aliases, so no cascade conflict (different properties at each level). */
+
+:host([tone="primary"]),
+:host([data-auto-tone="0"]) {
+    --_mossa-badge-base:       var(--ulvia-primary-base);
+    --_mossa-badge-strong:     var(--ulvia-primary-contrasted);
+    --_mossa-badge-muted:      var(--ulvia-primary-muted);
+    --_mossa-badge-contrasted: var(--ulvia-primary-foreground);
+}
+:host([tone="secondary"]),
+:host([data-auto-tone="1"]) {
+    --_mossa-badge-base:       var(--ulvia-secondary-base);
+    --_mossa-badge-strong:     var(--ulvia-secondary-contrasted);
+    --_mossa-badge-muted:      var(--ulvia-secondary-muted);
+    --_mossa-badge-contrasted: var(--ulvia-secondary-foreground);
+}
+:host([tone="success"]),
+:host([data-auto-tone="2"]) {
+    --_mossa-badge-base:       var(--ulvia-success-base);
+    --_mossa-badge-strong:     var(--ulvia-success-contrasted);
+    --_mossa-badge-muted:      var(--ulvia-success-muted);
+    --_mossa-badge-contrasted: var(--ulvia-success-foreground);
+}
+:host([tone="warning"]),
+:host([data-auto-tone="3"]) {
+    --_mossa-badge-base:       var(--ulvia-warning-base);
+    --_mossa-badge-strong:     var(--ulvia-warning-contrasted);
+    --_mossa-badge-muted:      var(--ulvia-warning-muted);
+    --_mossa-badge-contrasted: var(--ulvia-warning-foreground);
+}
+:host([tone="danger"]),
+:host([data-auto-tone="4"]) {
+    --_mossa-badge-base:       var(--ulvia-danger-base);
+    --_mossa-badge-strong:     var(--ulvia-danger-contrasted);
+    --_mossa-badge-muted:      var(--ulvia-danger-muted);
+    --_mossa-badge-contrasted: var(--ulvia-danger-foreground);
+}
+:host([tone="info"]),
+:host([data-auto-tone="5"]) {
+    --_mossa-badge-base:       var(--ulvia-info-base);
+    --_mossa-badge-strong:     var(--ulvia-info-contrasted);
+    --_mossa-badge-muted:      var(--ulvia-info-muted);
+    --_mossa-badge-contrasted: var(--ulvia-info-foreground);
+}
+
+/* Variants — Soft is the :host default (muted bg, strong fg). Filled,
+   Outlined and Ghost override. */
+
+:host([variant="filled"]) {
+    --_mossa-badge-bg:     var(--_mossa-badge-base);
+    --_mossa-badge-fg:     var(--_mossa-badge-contrasted);
+    --_mossa-badge-border: transparent;
+}
+
+:host([variant="outlined"]) {
+    --_mossa-badge-bg:     transparent;
+    --_mossa-badge-fg:     var(--_mossa-badge-strong);
+    --_mossa-badge-border: var(--_mossa-badge-strong);
+}
+
+:host([variant="ghost"]) {
+    --_mossa-badge-bg:     transparent;
+    --_mossa-badge-fg:     var(--_mossa-badge-strong);
+    --_mossa-badge-border: transparent;
+}

@@ -1,0 +1,40 @@
+:host {
+    --_mossa-fs-bg:      transparent;
+    --_mossa-fs-border:  var(--ulvia-surface-border);
+    --_mossa-fs-pad:     1rem 1.5rem;
+    --_mossa-fs-gap:     2rem;
+
+    display: block;
+    background: var(--_mossa-fs-bg);
+    color: var(--ulvia-surface-text);
+    border-top: 1px solid var(--_mossa-fs-border);
+    border-bottom: 1px solid var(--_mossa-fs-border);
+}
+
+.strip {
+    padding: var(--_mossa-fs-pad);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--_mossa-fs-gap);
+    align-items: center;
+}
+
+::slotted(*:not(:first-child)) {
+    border-left: 1px solid var(--_mossa-fs-border);
+    padding-left: var(--_mossa-fs-gap);
+}
+
+@media (max-width: 768px) {
+    ::slotted(*:not(:first-child)) {
+        border-left: 0;
+        padding-left: 0;
+    }
+}
+
+:host([tone="surface"]) {
+    --_mossa-fs-bg: var(--ulvia-surface-background);
+}
+
+:host([tone="overlay"]) {
+    --_mossa-fs-bg: var(--ulvia-subtle-background);
+}

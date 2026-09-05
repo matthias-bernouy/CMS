@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-grade",
+        "name": "Grade",
+        "group": "Commerce",
+        "description": "Quality-grade card with a configurable tone, label, and bullet list of criteria.",
+        "path": "blocs/domains/commerce/offers/catalogue/grade",
+        "view": "Bloc.ts"
+    }
+}

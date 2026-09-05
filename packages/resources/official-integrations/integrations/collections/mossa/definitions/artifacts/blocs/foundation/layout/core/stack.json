@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-stack",
+        "name": "Stack",
+        "group": "Layout",
+        "description": "Vertical layout with token-based spacing.",
+        "path": "blocs/foundation/layout/core/stack"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "id": "mossa/blocs/menu-item",
+    "type": "bloc",
+    "artifact": "mossa-menu-item",
+    "category": "navigation",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-base",
+            "danger-muted",
+            "duration-fast",
+            "font-body",
+            "subtle-background",
+            "surface-text"
+        ]
+    }
+}

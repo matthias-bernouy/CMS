@@ -1,0 +1,68 @@
+{
+    "id": "mossa/blocs/public-offer-controller",
+    "type": "bloc",
+    "artifact": "mossa-public-offer-controller",
+    "category": "commerce",
+    "defaultActive": false,
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:offer",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.slug": "route.slug"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:product",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.product.id"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:publicOfferImage",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.image.id"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/condition",
+            "mossa/blocs/meta",
+            "mossa/blocs/offer-details",
+            "mossa/blocs/responsive-grid",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/specification",
+            "mossa/blocs/specifications",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card",
+            "mossa/blocs/toast",
+            "mossa/blocs/trust-item"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "secondary-contrasted",
+            "space-lg",
+            "space-xl",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

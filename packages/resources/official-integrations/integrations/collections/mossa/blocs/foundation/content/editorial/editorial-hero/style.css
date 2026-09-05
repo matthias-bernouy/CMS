@@ -1,0 +1,96 @@
+:host {
+    --_mossa-hero-bg:       var(--ulvia-secondary-base);
+    --_mossa-hero-fg:       var(--ulvia-secondary-foreground);
+    --_mossa-hero-muted:    var(--ulvia-secondary-foreground);
+    --_mossa-hero-eyebrow:  var(--ulvia-primary-base);
+    --_mossa-hero-pad-y:    5rem;
+    --_mossa-hero-pad-x:    1.5rem;
+    --_mossa-hero-max:      48rem;
+    --_mossa-hero-gap:      1.25rem;
+
+    display: block;
+}
+
+.hero {
+    background: var(--_mossa-hero-bg);
+    color: var(--_mossa-hero-fg);
+    padding: var(--_mossa-hero-pad-y) var(--_mossa-hero-pad-x);
+}
+
+.content {
+    max-width: var(--_mossa-hero-max);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--_mossa-hero-gap);
+    text-align: center;
+    align-items: center;
+}
+
+.eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--_mossa-hero-eyebrow);
+}
+
+:host(:not(:has([slot="eyebrow"]))) .eyebrow { display: none; }
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading);
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--_mossa-hero-fg);
+}
+
+::slotted([slot="subtitle"]) {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: var(--_mossa-hero-muted);
+    max-width: 38rem;
+}
+
+.bottom {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+:host(:not(:has([slot="bottom"]))) .bottom { display: none; }
+
+/* Alignment */
+:host([align="left"]) .content {
+    text-align: left;
+    align-items: flex-start;
+    margin: 0;
+}
+:host([align="left"]) .bottom {
+    justify-content: flex-start;
+}
+
+/* Tone */
+:host([tone="cream"]) {
+    --_mossa-hero-bg:       var(--ulvia-page-background);
+    --_mossa-hero-fg:       var(--ulvia-surface-text);
+    --_mossa-hero-muted:    var(--ulvia-surface-muted-text);
+    --_mossa-hero-eyebrow:  var(--ulvia-secondary-base);
+}
+:host([tone="white"]) {
+    --_mossa-hero-bg:       var(--ulvia-surface-background);
+    --_mossa-hero-fg:       var(--ulvia-surface-text);
+    --_mossa-hero-muted:    var(--ulvia-surface-muted-text);
+    --_mossa-hero-eyebrow:  var(--ulvia-secondary-base);
+}
+
+/* Padding density */
+:host([density="compact"])  { --_mossa-hero-pad-y: 3rem; }
+:host([density="spacious"]) { --_mossa-hero-pad-y: 7rem; }

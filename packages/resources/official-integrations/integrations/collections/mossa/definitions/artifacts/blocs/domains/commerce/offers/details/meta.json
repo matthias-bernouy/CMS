@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-meta",
+        "name": "Meta",
+        "group": "Commerce",
+        "description": "Petite ligne icône + texte muted (ex. livraison, durée, lieu). Icône SVG swap-able.",
+        "path": "blocs/domains/commerce/offers/details/meta",
+        "view": "Bloc.ts"
+    }
+}

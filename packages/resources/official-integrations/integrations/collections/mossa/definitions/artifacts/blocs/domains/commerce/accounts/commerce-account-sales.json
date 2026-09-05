@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-account-sales",
+        "name": "Commerce account sales",
+        "group": "Commerce",
+        "description": "Authenticated seller sales list with status filters, compact cards, and pagination.",
+        "path": "blocs/domains/commerce/accounts/commerce-account-sales",
+        "composition": "template.html"
+    }
+}

@@ -1,0 +1,30 @@
+:host {
+    --_mossa-divider-color:     var(--ulvia-surface-border);
+    --_mossa-divider-thickness: 1px;
+    --_mossa-divider-spacing:   2rem;
+    --_mossa-divider-inset:     0;
+
+    display: block;
+    width: 100%;
+    padding: var(--_mossa-divider-spacing) var(--_mossa-divider-inset);
+}
+
+.divider {
+    height: var(--_mossa-divider-thickness);
+    width: 100%;
+    background: var(--_mossa-divider-color);
+    border: 0;
+}
+
+/* Spacing variants */
+:host([spacing="none"]) { --_mossa-divider-spacing: 0; }
+:host([spacing="sm"])   { --_mossa-divider-spacing: 1rem; }
+:host([spacing="lg"])   { --_mossa-divider-spacing: 3rem; }
+
+/* Thickness variants */
+:host([thickness="thick"]) { --_mossa-divider-thickness: 2px; }
+
+/* Inset — narrows the line relative to its container */
+:host([inset="sm"]) { --_mossa-divider-inset: clamp(1rem, 6vw, 4rem); }
+:host([inset="md"]) { --_mossa-divider-inset: clamp(2rem, 12vw, 8rem); }
+:host([inset="lg"]) { --_mossa-divider-inset: clamp(3rem, 20vw, 14rem); }

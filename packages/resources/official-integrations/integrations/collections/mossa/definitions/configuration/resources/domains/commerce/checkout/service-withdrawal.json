@@ -1,0 +1,57 @@
+{
+    "id": "mossa/blocs/service-withdrawal",
+    "type": "bloc",
+    "artifact": "mossa-service-withdrawal",
+    "category": "commerce",
+    "defaultActive": false,
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:myOrders",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.limit": "state.orders.limit",
+                    "params.offset": "state.orders.offset"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:submitMyMarketplaceServiceWithdrawalRequest",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.orderId": "state.withdrawal.orderId",
+                    "body.serviceScope": "state.withdrawal.serviceScope",
+                    "body.confirmed": "state.withdrawal.confirmed",
+                    "body.idempotencyKey": "state.withdrawal.idempotencyKey"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/surface-card"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-contrasted",
+            "primary-base",
+            "primary-foreground",
+            "primary-hover",
+            "radius-control",
+            "secondary-base",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

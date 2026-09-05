@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "mossa-commerce-account-offers-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "Mossa commerce account offers controller",
+        "description": "Internal behavior controller for mossa-commerce-account-offers."
+    }
+}

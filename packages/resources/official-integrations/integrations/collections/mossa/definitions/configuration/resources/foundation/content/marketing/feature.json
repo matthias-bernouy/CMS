@@ -1,0 +1,14 @@
+{
+    "id": "mossa/blocs/feature",
+    "type": "bloc",
+    "artifact": "mossa-feature",
+    "category": "content",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "secondary-base",
+            "surface-text"
+        ]
+    }
+}

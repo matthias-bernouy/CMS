@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-order",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Order",
+        "description": "Private order view with trusted payment, shipment progress, and Mondial Relay tracking."
+    }
+}

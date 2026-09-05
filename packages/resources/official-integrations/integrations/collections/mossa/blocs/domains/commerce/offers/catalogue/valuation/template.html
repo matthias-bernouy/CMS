@@ -1,0 +1,45 @@
+<section class="valuation-shell">
+    <mossa-section-header>
+        <slot name="heading-eyebrow" slot="eyebrow"></slot>
+        <slot name="heading-title" slot="title"></slot>
+        <slot name="heading-subtitle" slot="subtitle"></slot>
+    </mossa-section-header>
+    <mossa-panel class="search-panel">
+        <slot name="choose-model-label" slot="title"></slot>
+        <div class="search-wrap">
+            <mossa-search-input size="lg"><slot name="search-accessible-label" slot="accessible-label"></slot><slot name="search-placeholder" slot="placeholder"></slot><slot name="clear-search-label" slot="clear-label"></slot></mossa-search-input>
+            <div class="results" role="listbox" hidden></div>
+        </div>
+        <p class="search-status" role="status"></p>
+    </mossa-panel>
+    <section class="valuation-result" data-valuation-result hidden aria-labelledby="valuation-title">
+        <mossa-section-header size="sm">
+            <slot name="result-eyebrow" slot="eyebrow"></slot>
+            <h2 slot="title" id="valuation-title" data-product-title></h2>
+            <p slot="subtitle" data-product-description></p>
+        </mossa-section-header>
+        <div class="valuation-range">
+            <span class="range-label"><slot name="reference-range-label"></slot></span>
+            <strong class="estimate" data-estimate></strong>
+            <p class="detail" data-detail></p>
+        </div>
+        <mossa-info-row>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"></path><path d="M12 11v6M12 7h.01"></path></svg>
+            <slot name="model-reference-label" slot="label"></slot>
+            <slot name="model-reference-description"></slot>
+        </mossa-info-row>
+    </section>
+    <mossa-empty-state class="initial-state" variant="card">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><ellipse cx="10" cy="8" rx="5" ry="7"></ellipse><path d="m13 14 6 7M17 19l2-2"></path></svg>
+        <slot name="initial-title" slot="title"></slot>
+        <slot name="initial-description" slot="description"></slot>
+    </mossa-empty-state>
+    <div class="copy-templates" hidden>
+        <slot name="start-typing-message"></slot><slot name="searching-message"></slot>
+        <slot name="model-count-one-message"></slot><slot name="model-count-many-message"></slot>
+        <slot name="no-model-message"></slot><slot name="unavailable-message"></slot>
+        <slot name="selected-model-message"></slot><slot name="catalogue-product-label"></slot>
+        <slot name="range-pending-label"></slot><slot name="range-pending-description"></slot>
+        <slot name="range-description"></slot>
+    </div>
+</section>

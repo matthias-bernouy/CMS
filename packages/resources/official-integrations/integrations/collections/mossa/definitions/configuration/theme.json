@@ -2,7 +2,7 @@
     "dependencies": [
         {
             "kind": "ulvia",
-            "versionRange": "^4.0.0"
+            "versionRange": "^1.0.0"
         }
     ],
     "categories": []

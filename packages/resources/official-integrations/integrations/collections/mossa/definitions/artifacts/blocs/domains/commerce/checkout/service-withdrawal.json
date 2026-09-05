@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-service-withdrawal",
+        "name": "Service withdrawal",
+        "group": "Commerce",
+        "description": "Presentation for the Commerce service-withdrawal evidence workflow.",
+        "path": "blocs/domains/commerce/checkout/service-withdrawal",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-section-header",
+        "name": "Section header",
+        "group": "Layout",
+        "description": "Eyebrow + title + subtitle. Used to introduce content sections.",
+        "path": "blocs/foundation/layout/headers/section-header",
+        "view": "Bloc.ts"
+    }
+}

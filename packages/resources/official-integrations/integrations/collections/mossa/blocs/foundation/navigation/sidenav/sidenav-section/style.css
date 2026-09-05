@@ -1,0 +1,150 @@
+:host {
+    --_mossa-sns-fg:     var(--ulvia-surface-text);
+    --_mossa-sns-muted:  var(--ulvia-surface-muted-text);
+    --_mossa-sns-border: var(--ulvia-surface-border);
+    --_mossa-sns-gap: 0.15rem;
+    --_mossa-sns-header-padding-y: 0.4rem;
+    --_mossa-sns-header-padding-x: 0.75rem;
+    --_mossa-sns-duration: var(--ulvia-duration-slow);
+    --_mossa-sns-duration-quick: var(--ulvia-duration-fast);
+    --_mossa-sns-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --_mossa-title-display: block;
+    --_mossa-chevron-display: none;
+    --_mossa-header-cursor: default;
+
+    display: block;
+    color: var(--_mossa-sns-fg);
+    font-family: var(--ulvia-font-body);
+    min-width: 0;
+}
+
+:host(:not([has-title])) { --_mossa-title-display: none; }
+:host([collapsible])               { --_mossa-chevron-display: inline-block; --_mossa-header-cursor: pointer; }
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--_mossa-sns-gap);
+    min-width: 0;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: var(--_mossa-sns-header-padding-y) var(--_mossa-sns-header-padding-x);
+    background: transparent;
+    border: 0;
+    color: var(--_mossa-sns-muted);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align: left;
+    cursor: var(--_mossa-header-cursor);
+    min-width: 0;
+    transition: color var(--_mossa-sns-duration-quick) var(--_mossa-sns-ease);
+}
+
+:host(:not([collapsible])) .header {
+    pointer-events: none;
+}
+
+.header:hover {
+    color: var(--_mossa-sns-fg);
+}
+
+.header:focus-visible {
+    outline: 2px solid var(--ulvia-primary-base);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.title {
+    display: var(--_mossa-title-display);
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chevron {
+    display: var(--_mossa-chevron-display);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+    flex: 0 0 auto;
+    transition: transform var(--_mossa-sns-duration) var(--_mossa-sns-ease);
+}
+
+:host([collapsible]:not([open])) .chevron {
+    transform: rotate(-90deg);
+}
+
+.body {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows var(--_mossa-sns-duration) var(--_mossa-sns-ease);
+}
+
+.body-inner {
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--_mossa-sns-gap);
+}
+
+:host([collapsible]:not([open])) .body {
+    grid-template-rows: 0fr;
+}
+
+:host(:not([has-title])) .header {
+    display: none;
+}
+
+@container style(--_mossa-sidenav-collapsed: 1) {
+    :host {
+        --_mossa-title-display: none;
+        --_mossa-chevron-display: none;
+    }
+
+    .header {
+        display: none;
+    }
+
+    :host([collapsible]) .body {
+        grid-template-rows: 1fr;
+    }
+}
+
+/* ---------- Nested section (section inside section) ---------- */
+/* Flag set by Bloc.ts when a same-nodeName ancestor is detected.
+   Tag-agnostic: survives renaming of the bloc's default-tag. */
+
+:host([data-nested]) .header {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.78rem;
+    color: var(--_mossa-sns-fg);
+    font-weight: 600;
+}
+
+:host([data-nested]) .body-inner {
+    padding-left: 0.6rem;
+    margin-left: 0.4rem;
+    border-left: 1px solid var(--_mossa-sns-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :host {
+        --_mossa-sns-duration: 0ms;
+        --_mossa-sns-duration-quick: 0ms;
+    }
+}

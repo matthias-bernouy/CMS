@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-valuation",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Valuation",
+        "description": "Automatic estimate based on the Commerce catalogue and price history.",
+        "categories": [
+            "commerce"
+        ]
+    }
+}

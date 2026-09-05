@@ -1,0 +1,22 @@
+:host {
+    display: block;
+    color: inherit;
+    font: inherit;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: var(--_mossa-pagination-justify, space-between);
+    gap: var(--_mossa-pagination-gap, calc(var(--ulvia-space-sm) + var(--ulvia-space-xs)));
+}
+
+[data-summary] {
+    color: var(--_mossa-pagination-color, inherit);
+    text-align: center;
+}
+
+:host([summary="hidden"]) [data-summary] {
+    display: none;
+}

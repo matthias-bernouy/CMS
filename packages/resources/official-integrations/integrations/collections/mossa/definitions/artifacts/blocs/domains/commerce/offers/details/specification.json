@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-specification",
+        "name": "Specification",
+        "group": "Commerce",
+        "description": "A single label / value row inside a <mossa-spec-list>. Slots: label, value.",
+        "path": "blocs/domains/commerce/offers/details/specification",
+        "view": "Bloc.ts"
+    }
+}

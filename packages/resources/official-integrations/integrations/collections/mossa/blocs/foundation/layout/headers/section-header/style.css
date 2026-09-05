@@ -1,0 +1,86 @@
+:host {
+    --_mossa-header-eyebrow:  var(--ulvia-secondary-base);
+    --_mossa-header-gap:      0.75rem;
+    --_mossa-header-max:      56rem;
+
+    display: block;
+    color: var(--ulvia-surface-text);
+}
+
+.header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--_mossa-header-gap);
+    max-width: var(--_mossa-header-max);
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.action {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+:host(:not([has-action])) .action { display: none; }
+
+.eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--_mossa-header-eyebrow);
+}
+
+:host(:not([has-eyebrow])) .eyebrow { display: none; }
+
+::slotted([slot="title"]) {
+    margin: 0 !important;
+    color: var(--ulvia-surface-text) !important;
+    font-family: var(--ulvia-font-heading) !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.02em !important;
+    font-size: clamp(1.6rem, 4vw, 2.4rem) !important;
+}
+
+::slotted([slot="subtitle"]) {
+    margin: 0;
+    color: var(--ulvia-surface-muted-text);
+    font-size: 1rem;
+    max-width: 38rem;
+}
+
+:host([align="center"]) .header {
+    justify-content: center;
+}
+:host([align="center"]) .text {
+    align-items: center;
+    text-align: center;
+    margin-inline: auto;
+}
+:host([align="right"]) .text {
+    align-items: flex-end;
+    text-align: right;
+    margin-inline-start: auto;
+}
+
+/* Eyebrow accent palette */
+:host([eyebrow="primary"]) { --_mossa-header-eyebrow: var(--ulvia-primary-contrasted); }
+:host([eyebrow="muted"])   { --_mossa-header-eyebrow: var(--ulvia-surface-muted-text); }
+
+/* Size variants — drive the title only */
+:host([size="sm"]) ::slotted([slot="title"]) {
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem) !important;
+}
+:host([size="lg"]) ::slotted([slot="title"]) {
+    font-size: clamp(2rem, 5vw, 3.4rem) !important;
+}

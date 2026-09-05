@@ -1,0 +1,94 @@
+<section>
+    <div data-loading>
+        <mossa-stack gap="md">
+            <mossa-skeleton height="7rem" animation="wave" label="Loading order"></mossa-skeleton>
+            <mossa-skeleton height="18rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+            <mossa-responsive-grid min="md" gap="md">
+                <mossa-skeleton height="15rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+                <mossa-skeleton height="15rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+            </mossa-responsive-grid>
+        </mossa-stack>
+    </div>
+
+    <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
+        <strong slot="title">Order not found</strong>
+        <span slot="description" data-error-message></span>
+        <slot name="error-action" slot="actions"></slot>
+    </mossa-surface-card>
+
+    <div data-content hidden class="content">
+        <header class="order-header">
+            <div class="order-identity">
+                <span class="eyebrow">ORDER</span>
+                <h1 data-order-number></h1>
+                <p data-order-date></p>
+            </div>
+            <span class="status-badge" data-order-status></span>
+        </header>
+
+        <div class="layout">
+            <main>
+                <mossa-surface-card class="tracking-card" appearance="outlined" density="regular">
+                    <strong slot="title" data-delivery-title>Delivery tracking</strong>
+                    <span slot="description" data-delivery-description></span>
+
+                    <ol class="progress" aria-label="Delivery progress">
+                        <li data-progress-step><span class="dot">1</span><span>Confirmed</span></li>
+                        <li data-progress-step><span class="dot">2</span><span>Prepared</span></li>
+                        <li data-progress-step><span class="dot">3</span><span>Shipped</span></li>
+                        <li data-progress-step><span class="dot">4</span><span>At pickup point</span></li>
+                    </ol>
+
+                    <div class="shipment-meta">
+                        <div class="estimate">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                            <span data-delivery-estimate></span>
+                        </div>
+                        <div class="latest-event" data-latest-event hidden>
+                            <strong data-latest-event-label></strong>
+                            <span data-latest-event-date></span>
+                        </div>
+                        <span class="tracking-number" data-tracking-number hidden></span>
+                    </div>
+
+                    <slot name="tracking-action" slot="actions"></slot>
+                </mossa-surface-card>
+
+                <mossa-surface-card appearance="outlined" density="compact">
+                    <strong slot="title">Ordered item</strong>
+                    <div class="line">
+                        <img data-image data-source-image-access="public" alt="" hidden>
+                        <div class="line-copy">
+                            <strong data-line-title></strong>
+                            <span data-line-variant></span>
+                            <span data-line-condition></span>
+                        </div>
+                        <strong class="line-price" data-line-price></strong>
+                    </div>
+                </mossa-surface-card>
+            </main>
+
+            <aside>
+                <mossa-surface-card appearance="outlined" density="compact">
+                    <strong slot="title">Summary</strong>
+                    <div class="row"><span>Item</span><strong data-subtotal></strong></div>
+                    <div class="row"><span>Delivery</span><strong data-shipping></strong></div>
+                    <div class="row"><span>Buyer protection</span><strong data-protection></strong></div>
+                    <div class="row total"><span>Total</span><strong data-total></strong></div>
+                    <div class="payment-confirmation" data-payment-confirmation></div>
+                    <slot name="resume-action"></slot>
+                </mossa-surface-card>
+
+                <mossa-surface-card appearance="outlined" density="compact">
+                    <strong slot="title">Selected pickup point</strong>
+                    <div class="relay">
+                        <span class="provider">Mondial Relay</span>
+                        <strong data-relay-name></strong>
+                        <span data-relay-address></span>
+                        <span class="relay-confirmation" data-relay-confirmation></span>
+                    </div>
+                </mossa-surface-card>
+            </aside>
+        </div>
+    </div>
+</section>

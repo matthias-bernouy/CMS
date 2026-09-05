@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-mondial-relay-picker",
+        "name": "Mondial Relay picker",
+        "group": "Commerce",
+        "description": "Customizable pickup point picker with optional persistence on an authenticated Commerce order.",
+        "path": "blocs/domains/commerce/fulfillment/mondial-relay-picker"
+    }
+}

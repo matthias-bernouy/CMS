@@ -1,0 +1,35 @@
+{
+    "id": "mossa/blocs/public-offer",
+    "type": "bloc",
+    "artifact": "mossa-public-offer",
+    "category": "commerce",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/condition",
+            "mossa/blocs/meta",
+            "mossa/blocs/offer-details",
+            "mossa/blocs/public-offer-controller",
+            "mossa/blocs/responsive-grid",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/specification",
+            "mossa/blocs/specifications",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card",
+            "mossa/blocs/toast",
+            "mossa/blocs/trust-item"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "secondary-contrasted",
+            "space-lg",
+            "space-xl",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

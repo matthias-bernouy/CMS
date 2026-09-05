@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-offer-card",
+        "name": "Offer card",
+        "group": "Commerce",
+        "description": "Commerce card for an offer, with optional media, grade, price and action.",
+        "path": "blocs/domains/commerce/offers/details/offer-card",
+        "view": "Bloc.ts"
+    }
+}

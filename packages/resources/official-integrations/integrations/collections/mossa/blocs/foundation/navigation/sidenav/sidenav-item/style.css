@@ -1,0 +1,59 @@
+:host {
+    --_mossa-sni-fg: var(--ulvia-surface-text);
+    --_mossa-sni-muted: var(--ulvia-surface-muted-text);
+    --_mossa-sni-accent: var(--_mossa-sn-accent, var(--ulvia-secondary-base));
+    --_mossa-sni-hover-bg: color-mix(in srgb, currentColor 8%, transparent);
+    --_mossa-sni-active-bg: color-mix(in srgb, var(--_mossa-sni-accent) 12%, transparent);
+    --_mossa-sni-radius: var(--ulvia-radius-sm);
+    --_mossa-sni-duration-quick: var(--ulvia-duration-fast);
+
+    display: block;
+    min-width: 0;
+    color: var(--_mossa-sni-fg);
+    font-family: var(--ulvia-font-body);
+    font-size: 0.925rem;
+    line-height: 1.3;
+}
+
+::slotted(a) {
+    --_mossa-link-color: var(--_mossa-sni-fg);
+    --_mossa-link-visited-color: var(--_mossa-sni-fg);
+    --_mossa-link-hover-color: var(--_mossa-sni-fg);
+    --_mossa-link-active-color: var(--_mossa-sni-fg);
+    --_mossa-link-focus-ring: var(--_mossa-sni-accent);
+    position: relative;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--_mossa-sni-radius);
+    color: inherit;
+    font-weight: 500;
+    text-decoration: none !important;
+    transition: background-color var(--_mossa-sni-duration-quick) ease, color var(--_mossa-sni-duration-quick) ease;
+}
+
+::slotted(a:hover) {
+    background: var(--_mossa-sni-hover-bg);
+}
+
+::slotted(a:focus-visible) {
+    outline: 2px solid var(--_mossa-sni-accent);
+    outline-offset: -2px;
+}
+
+::slotted(a[aria-current="page"]) {
+    --_mossa-link-color: var(--_mossa-sni-accent);
+    --_mossa-link-visited-color: var(--_mossa-sni-accent);
+    --_mossa-link-hover-color: var(--_mossa-sni-accent);
+    --_mossa-link-active-color: var(--_mossa-sni-accent);
+    background: var(--_mossa-sni-active-bg);
+    color: var(--_mossa-sni-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::slotted(a) {
+        transition: none;
+    }
+}

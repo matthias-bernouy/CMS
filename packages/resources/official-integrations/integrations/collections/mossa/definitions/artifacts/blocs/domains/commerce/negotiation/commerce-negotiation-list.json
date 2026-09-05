@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-negotiation-list",
+        "name": "Commerce negotiation list",
+        "group": "Commerce",
+        "description": "Customizable received and sent proposal list composed from Mossa controls.",
+        "path": "blocs/domains/commerce/negotiation/commerce-negotiation-list",
+        "composition": "template.html"
+    }
+}

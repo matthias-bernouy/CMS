@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-commerce-negotiation-form",
+    "composition": "./template.html",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Commerce negotiation form",
+        "description": "Customizable buyer proposal form backed by Commerce negotiation."
+    }
+}

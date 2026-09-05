@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-navbar",
+        "name": "Navbar",
+        "group": "Navigation",
+        "description": "Top navigation bar",
+        "path": "blocs/foundation/navigation/core/navbar",
+        "view": "Bloc.ts"
+    }
+}

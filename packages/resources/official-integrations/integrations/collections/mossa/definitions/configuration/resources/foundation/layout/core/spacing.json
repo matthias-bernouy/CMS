@@ -1,0 +1,7 @@
+{
+    "id": "mossa/blocs/spacing",
+    "type": "bloc",
+    "artifact": "mossa-spacing",
+    "category": "layout",
+    "defaultActive": false
+}

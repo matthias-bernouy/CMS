@@ -1,0 +1,41 @@
+{
+    "id": "mossa/blocs/newsletter-card",
+    "type": "bloc",
+    "artifact": "mossa-newsletter-card",
+    "category": "content",
+    "defaultActive": false,
+    "endpoints": [
+        {
+            "source": "newsletter",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:newsletter:setSubscription",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.email": "state.subscription.email",
+                    "body.subscribed": "state.subscription.subscribed"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/input"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "primary-muted",
+            "radius-lg",
+            "secondary-base",
+            "shadow-sm",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

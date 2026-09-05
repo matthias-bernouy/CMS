@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-accordion",
+        "name": "Accordion",
+        "group": "Interaction",
+        "description": "Collapsible panels — FAQ, details list, nested content.",
+        "path": "blocs/foundation/interaction/disclosure/accordion",
+        "view": "Bloc.ts"
+    }
+}

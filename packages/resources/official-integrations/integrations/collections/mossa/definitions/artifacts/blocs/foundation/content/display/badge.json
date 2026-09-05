@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-badge",
+        "name": "Badge",
+        "group": "Content",
+        "description": "Compact colored chip for tags, categories or status.",
+        "path": "blocs/foundation/content/display/badge",
+        "view": "Bloc.ts"
+    }
+}

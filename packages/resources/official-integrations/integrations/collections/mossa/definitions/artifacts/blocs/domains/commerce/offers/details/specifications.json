@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-specifications",
+        "name": "Specifications",
+        "group": "Commerce",
+        "description": "Card wrapper for a series of label / value rows. Used for product specs, order details, payment info, etc.",
+        "path": "blocs/domains/commerce/offers/details/specifications",
+        "view": "Bloc.ts"
+    }
+}

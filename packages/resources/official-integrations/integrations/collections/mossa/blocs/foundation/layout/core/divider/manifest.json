@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-divider",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Divider",
+        "description": "Horizontal separator line with token-based color, thickness, spacing and inset.",
+        "categories": [
+            "layout"
+        ]
+    }
+}

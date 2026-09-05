@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-search-input",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Search input",
+        "description": "Large rounded search input with magnifier icon and clear button.",
+        "categories": [
+            "forms"
+        ]
+    }
+}

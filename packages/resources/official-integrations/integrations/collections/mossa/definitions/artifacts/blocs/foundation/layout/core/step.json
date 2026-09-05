@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-step",
+        "name": "Step",
+        "group": "Layout",
+        "description": "Numbered step card with optional icon, title and description.",
+        "path": "blocs/foundation/layout/core/step",
+        "view": "Bloc.ts"
+    }
+}

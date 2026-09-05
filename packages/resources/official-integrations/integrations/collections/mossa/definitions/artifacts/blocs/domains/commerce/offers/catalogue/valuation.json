@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-valuation",
+        "name": "Valuation",
+        "group": "Commerce",
+        "description": "Estimateur automatique fondé sur le catalogue et l'historique de prix Commerce.",
+        "path": "blocs/domains/commerce/offers/catalogue/valuation",
+        "view": "Bloc.ts"
+    }
+}

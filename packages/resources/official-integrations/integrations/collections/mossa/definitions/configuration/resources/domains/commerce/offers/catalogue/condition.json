@@ -1,0 +1,15 @@
+{
+    "id": "mossa/blocs/condition",
+    "type": "bloc",
+    "artifact": "mossa-condition",
+    "category": "commerce",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "shadow-sm",
+            "surface-background",
+            "surface-text"
+        ]
+    }
+}

@@ -1,67 +1,47 @@
 [
     {
-        "id": "account",
-        "label": "Account",
-        "description": "Courtside customer account interfaces."
+        "id": "actions",
+        "label": "Actions",
+        "description": "Buttons and direct calls to action."
     },
     {
-        "id": "action",
-        "label": "Actions",
-        "description": "Buttons and prominent actions."
+        "id": "account",
+        "label": "Account",
+        "description": "Reusable member-account interfaces."
     },
     {
         "id": "commerce",
         "label": "Commerce",
-        "description": "Courtside marketplace journeys."
-    },
-    {
-        "id": "compositions",
-        "label": "Compositions",
-        "description": "Global Courtside page compositions."
+        "description": "Catalogue, offer, checkout, sale, and fulfillment journeys."
     },
     {
         "id": "content",
         "label": "Content",
-        "description": "Reusable editorial and marketing content."
+        "description": "Editorial, marketing, and structured content."
     },
     {
         "id": "feedback",
         "label": "Feedback",
-        "description": "Loading and status interfaces."
+        "description": "Loading, empty, and transient status interfaces."
     },
     {
-        "id": "form",
+        "id": "forms",
         "label": "Forms",
-        "description": "Form fields, controls and workflows."
+        "description": "Form fields and selection controls."
     },
     {
-        "id": "interactive",
-        "label": "Interactive",
-        "description": "Disclosure and selection interfaces."
+        "id": "interaction",
+        "label": "Interaction",
+        "description": "Disclosure and interactive content patterns."
     },
     {
         "id": "layout",
         "label": "Layout",
-        "description": "Containers, headers and structural blocks."
-    },
-    {
-        "id": "media",
-        "label": "Media",
-        "description": "Image and gallery interfaces."
-    },
-    {
-        "id": "messaging",
-        "label": "Messaging",
-        "description": "Conversation interfaces."
+        "description": "Containers, grids, panels, and page structure."
     },
     {
         "id": "navigation",
         "label": "Navigation",
-        "description": "Site and account navigation."
-    },
-    {
-        "id": "text",
-        "label": "Text",
-        "description": "Native semantic text elements."
+        "description": "Site, menu, pagination, and account navigation."
     }
 ]

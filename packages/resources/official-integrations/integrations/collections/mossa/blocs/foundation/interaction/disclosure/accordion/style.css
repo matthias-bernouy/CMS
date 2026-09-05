@@ -1,0 +1,87 @@
+:host {
+    --_mossa-acc-border:        var(--ulvia-surface-border);
+    --_mossa-acc-border-strong: var(--ulvia-surface-border);
+    --_mossa-acc-radius:        var(--ulvia-radius-card);
+    --_mossa-acc-radius-sm:     var(--ulvia-radius-sm);
+    --_mossa-acc-gap:           0;
+    --_mossa-acc-bg:            transparent;
+    --_mossa-acc-surface:       var(--ulvia-surface-background);
+    --_mossa-acc-shadow:        var(--ulvia-shadow-sm);
+    --_mossa-acc-accent:        var(--ulvia-secondary-base);
+
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--ulvia-surface-text);
+}
+
+.accordion {
+    display: flex;
+    flex-direction: column;
+    gap: var(--_mossa-acc-gap);
+    background: var(--_mossa-acc-bg);
+    border-radius: var(--_mossa-acc-radius);
+    transition: background-color var(--ulvia-duration-normal) ease,
+                box-shadow var(--ulvia-duration-normal) ease;
+}
+
+/* Default — subtle surface + soft dividers */
+:host([variant="default"]) .accordion,
+:host(:not([variant])) .accordion {
+    background: var(--_mossa-acc-surface);
+    box-shadow: var(--_mossa-acc-shadow);
+    overflow: hidden;
+}
+:host([variant="default"]) ::slotted(mossa-accordion-item:not(:last-child)),
+:host(:not([variant])) ::slotted(mossa-accordion-item:not(:last-child)) {
+    border-bottom: 1px solid var(--_mossa-acc-border);
+}
+
+/* Bordered — clean outline */
+:host([variant="bordered"]) .accordion {
+    border: 1px solid var(--_mossa-acc-border-strong);
+    overflow: hidden;
+}
+:host([variant="bordered"]) ::slotted(mossa-accordion-item:not(:last-child)) {
+    border-bottom: 1px solid var(--_mossa-acc-border);
+}
+
+/* Separated — each item as its own card */
+:host([variant="separated"]) {
+    --_mossa-acc-gap: 0.65rem;
+}
+:host([variant="separated"]) ::slotted(mossa-accordion-item) {
+    border: 1px solid var(--_mossa-acc-border);
+    border-radius: var(--_mossa-acc-radius-sm);
+    background: var(--_mossa-acc-surface);
+    overflow: hidden;
+    transition: border-color var(--ulvia-duration-normal) ease,
+                box-shadow var(--ulvia-duration-normal) ease;
+}
+:host([variant="separated"]) ::slotted(mossa-accordion-item[open]) {
+    border-color: var(--_mossa-acc-accent);
+    box-shadow: var(--ulvia-shadow-soft);
+}
+
+/* Ghost — minimal, no background */
+:host([variant="ghost"]) .accordion {
+    background: transparent;
+    box-shadow: none;
+}
+:host([variant="ghost"]) ::slotted(mossa-accordion-item:not(:last-child)) {
+    border-bottom: 1px solid var(--_mossa-acc-border);
+}
+
+/* Sizes — forwarded to items via inherited custom props */
+
+:host([size="sm"]) {
+    --_mossa-acc-item-padding-y: 0.7rem;
+    --_mossa-acc-item-padding-x: 1rem;
+    --_mossa-acc-item-font-size: 0.9rem;
+}
+
+:host([size="lg"]) {
+    --_mossa-acc-item-padding-y: 1.25rem;
+    --_mossa-acc-item-padding-x: 1.5rem;
+    --_mossa-acc-item-font-size: 1.1rem;
+}

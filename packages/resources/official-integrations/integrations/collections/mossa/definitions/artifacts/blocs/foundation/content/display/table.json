@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-table",
+        "name": "Table",
+        "group": "Content",
+        "description": "Structured, responsive table with editor-owned columns and rows.",
+        "path": "blocs/foundation/content/display/table",
+        "view": "Bloc.ts"
+    }
+}

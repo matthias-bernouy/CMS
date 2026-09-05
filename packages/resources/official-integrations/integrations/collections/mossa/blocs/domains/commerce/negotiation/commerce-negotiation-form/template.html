@@ -1,0 +1,41 @@
+<mossa-commerce-negotiation-form-controller data-p9r-composition-controller>
+<mossa-surface-card appearance="ghost" density="regular" data-card>
+    <strong slot="title" data-title>Make a proposal</strong>
+    <span slot="description" data-copy>Propose a price to the seller within the allowed range.</span>
+
+    <mossa-stack gap="md" data-loading>
+        <mossa-skeleton height="1.5rem" width="45%" animation="wave" label="Loading proposal terms"></mossa-skeleton>
+        <mossa-skeleton height="3rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        <mossa-skeleton height="5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+    </mossa-stack>
+
+    <mossa-stack gap="md" data-content hidden>
+        <mossa-responsive-grid min="sm" max="none" gap="sm">
+            <mossa-stack gap="xs">
+                <small data-current-label>Current price</small>
+                <strong data-current-price>—</strong>
+            </mossa-stack>
+            <mossa-stack gap="xs">
+                <small data-range-label>Allowed proposal</small>
+                <strong data-range>—</strong>
+            </mossa-stack>
+        </mossa-responsive-grid>
+
+        <form data-form novalidate>
+            <mossa-stack gap="md">
+                <mossa-input data-amount name="amount" type="number" step="0.01" required></mossa-input>
+                <mossa-textarea data-message name="message" rows="3" maxlength="2000"></mossa-textarea>
+                <mossa-button><button data-submit type="submit">Submit my proposal</button></mossa-button>
+            </mossa-stack>
+        </form>
+    </mossa-stack>
+
+    <p data-existing role="status" hidden>You already submitted a proposal for this offer.</p>
+
+    <p data-unavailable role="status" hidden>This offer is not available for proposals.</p>
+    <div data-toast-region aria-live="polite"></div>
+    <template data-toast-template>
+        <mossa-toast duration="5000"></mossa-toast>
+    </template>
+</mossa-surface-card>
+</mossa-commerce-negotiation-form-controller>

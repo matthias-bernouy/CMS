@@ -1,0 +1,19 @@
+{
+    "id": "mossa/blocs/user-account-avatar",
+    "type": "bloc",
+    "artifact": "mossa-user-account-avatar",
+    "category": "account",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "page-background",
+            "primary-base",
+            "primary-foreground",
+            "shadow-sm",
+            "subtle-background",
+            "surface-border",
+            "surface-muted-text"
+        ]
+    }
+}

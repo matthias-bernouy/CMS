@@ -1,0 +1,17 @@
+{
+    "id": "mossa/blocs/brands-row",
+    "type": "bloc",
+    "artifact": "mossa-brands-row",
+    "category": "content",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-normal",
+            "font-heading",
+            "page-background",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

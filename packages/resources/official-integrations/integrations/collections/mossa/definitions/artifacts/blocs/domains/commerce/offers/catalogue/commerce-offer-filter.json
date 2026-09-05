@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-offer-filter",
+        "name": "Commerce offer filter",
+        "group": "Commerce",
+        "description": "Maps a URL-synchronized control to a contextual product field.",
+        "path": "blocs/domains/commerce/offers/catalogue/commerce-offer-filter"
+    }
+}

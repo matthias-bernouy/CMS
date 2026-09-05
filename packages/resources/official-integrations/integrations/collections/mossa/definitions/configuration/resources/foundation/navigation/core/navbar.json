@@ -1,0 +1,29 @@
+{
+    "id": "mossa/blocs/navbar",
+    "type": "bloc",
+    "artifact": "mossa-navbar",
+    "category": "navigation",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/button"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-fast",
+            "font-body",
+            "page-background",
+            "primary-base",
+            "primary-foreground",
+            "radius-sm",
+            "secondary-base",
+            "secondary-foreground",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

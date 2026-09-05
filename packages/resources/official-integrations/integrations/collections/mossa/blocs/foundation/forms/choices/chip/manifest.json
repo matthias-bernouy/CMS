@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-chip",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Chip",
+        "description": "Selectable choice used inside a Mossa chip group."
+    }
+}

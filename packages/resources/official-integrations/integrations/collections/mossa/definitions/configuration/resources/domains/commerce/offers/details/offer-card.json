@@ -1,0 +1,32 @@
+{
+    "id": "mossa/blocs/offer-card",
+    "type": "bloc",
+    "artifact": "mossa-offer-card",
+    "category": "commerce",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/badge",
+            "mossa/blocs/button"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "page-background",
+            "primary-base",
+            "primary-contrasted",
+            "radius-card",
+            "radius-lg",
+            "secondary-base",
+            "shadow-sm",
+            "shadow-soft",
+            "subtle-background",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

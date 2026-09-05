@@ -1,0 +1,51 @@
+<mossa-commerce-account-offers-controller data-p9r-composition-controller>
+<mossa-stack gap="lg" data-offers-layout>
+    <mossa-stack direction="row" justify-content="space-between" align-items="end" wrap="true" gap="sm" data-offers-toolbar>
+        <mossa-select data-status-filter accessible-label="Filter by status" value="all">
+            <mossa-option value="all">All</mossa-option>
+            <mossa-option value="draft">Drafts</mossa-option>
+            <mossa-option value="action_required">Action required</mossa-option>
+            <mossa-option value="under_review">Under review</mossa-option>
+            <mossa-option value="online">Online</mossa-option>
+            <mossa-option value="paused">Paused</mossa-option>
+            <mossa-option value="rejected">Rejected</mossa-option>
+            <mossa-option value="archived">Archived</mossa-option>
+        </mossa-select>
+        <mossa-button><a data-create-button>Create an offer</a></mossa-button>
+    </mossa-stack>
+
+    <section data-offers-source>
+        <mossa-responsive-grid min="md" max="xl" gap="md" cms-condition="$source.loading">
+            <mossa-skeleton height="20rem" animation="wave" label="Loading your offers"></mossa-skeleton>
+            <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+            <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        </mossa-responsive-grid>
+
+        <mossa-toast data-error-toast tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Your offers could not be loaded.</mossa-toast>
+
+        <mossa-stack gap="lg" cms-condition="$source.loaded">
+            <mossa-surface-card appearance="outlined" density="regular" data-empty-state cms-condition="total == 0">
+                <strong slot="title" data-empty-title>No offers yet</strong>
+                <span slot="description" data-empty-message>Create your first offer to start selling.</span>
+            </mossa-surface-card>
+
+            <mossa-responsive-grid min="md" max="xl" gap="md" data-offers-grid cms-condition="total > 0">
+                <mossa-surface-card appearance="outlined" density="compact" data-offer-card cms-repeat="items as offer">
+                    <img slot="media" data-offer-image data-media-id="{{ offer.mainImageMediaId }}" data-source-width="{{ offer.mainImageWidth }}" data-source-height="{{ offer.mainImageHeight }}" alt="{{ offer.title }}" loading="lazy" decoding="async">
+                    <strong slot="title">{{ offer.title }}</strong>
+                    <span slot="description" data-offer-status="{{ offer.displayStatus }}"></span>
+                    <mossa-stack gap="xs">
+                        <strong data-offer-price data-display-amount="{{ offer.sellerDisplayPriceAmount }}" data-currency="{{ offer.currency }}"></strong>
+                        <small data-offer-updated data-date="{{ offer.updatedAt }}"></small>
+                    </mossa-stack>
+                    <mossa-button slot="actions" appearance="outlined" size="sm">
+                        <a data-edit-button data-offer-id="{{ offer.id }}" data-offer-slug="{{ offer.slug }}" data-workflow-state="{{ offer.workflowState }}" data-publicly-visible="{{ offer.publiclyVisible }}">View</a>
+                    </mossa-button>
+                </mossa-surface-card>
+            </mossa-responsive-grid>
+
+            <mossa-pagination data-pagination page="1" page-size="12" total="{{ total }}" cms-condition="total > limit"></mossa-pagination>
+        </mossa-stack>
+    </section>
+</mossa-stack>
+</mossa-commerce-account-offers-controller>

@@ -1,0 +1,37 @@
+{
+    "id": "mossa/blocs/commerce-account-sales",
+    "type": "bloc",
+    "artifact": "mossa-commerce-account-sales",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:mySales",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.status": "state.mySales.status",
+                    "params.limit": "state.mySales.limit",
+                    "params.offset": "state.mySales.offset"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/badge",
+            "mossa/blocs/button",
+            "mossa/blocs/commerce-account-sales-controller",
+            "mossa/blocs/option",
+            "mossa/blocs/pagination",
+            "mossa/blocs/responsive-grid",
+            "mossa/blocs/select",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card",
+            "mossa/blocs/toast"
+        ]
+    },
+    "defaultActive": false
+}

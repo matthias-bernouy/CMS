@@ -1,0 +1,50 @@
+{
+    "id": "mossa/blocs/select",
+    "type": "bloc",
+    "artifact": "mossa-select",
+    "category": "forms",
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-base",
+            "danger-contrasted",
+            "danger-foreground",
+            "danger-muted",
+            "info-base",
+            "info-contrasted",
+            "info-foreground",
+            "info-muted",
+            "primary-base",
+            "primary-contrasted",
+            "primary-foreground",
+            "primary-muted",
+            "radius-card",
+            "secondary-base",
+            "secondary-contrasted",
+            "secondary-foreground",
+            "secondary-muted",
+            "shadow-lg",
+            "space-sm",
+            "space-xs",
+            "subtle-background",
+            "success-base",
+            "success-contrasted",
+            "success-foreground",
+            "success-muted",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text",
+            "warning-base",
+            "warning-contrasted",
+            "warning-foreground",
+            "warning-muted"
+        ]
+    },
+    "requires": {
+        "resources": [
+            "mossa/blocs/option"
+        ]
+    },
+    "defaultActive": false
+}

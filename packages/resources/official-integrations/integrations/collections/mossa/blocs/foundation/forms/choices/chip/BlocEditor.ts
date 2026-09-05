@@ -1,0 +1,45 @@
+import { Editor, registerEditor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
+
+export class MossaChipEditor extends Editor {
+    protected override settings(): SettingSection[] {
+        return [
+            {
+                kind: "self",
+                label: "Choice",
+                settings: [
+                    {
+                        type: "text",
+                        label: "Value",
+                        attribute: "value",
+                    },
+                    {
+                        type: "segmented",
+                        label: "Selected by default",
+                        attribute: "selected",
+                        defaultValue: "",
+                        options: [
+                            { label: "No", value: "" },
+                            { label: "Yes", value: "true" },
+                        ],
+                    },
+                    {
+                        type: "segmented",
+                        label: "Disabled",
+                        attribute: "disabled",
+                        defaultValue: "",
+                        options: [
+                            { label: "No", value: "" },
+                            { label: "Yes", value: "true" },
+                        ],
+                    },
+                ],
+            },
+        ];
+    }
+
+    protected override textCapability(): TextCapability {
+        return { format: "text", dynamic: true };
+    }
+}
+
+registerEditor({ editor: MossaChipEditor });

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-responsive-grid",
+        "name": "Responsive grid",
+        "group": "Layout",
+        "description": "Intrinsic responsive grid driven by minimum and maximum item widths.",
+        "path": "blocs/foundation/layout/core/responsive-grid"
+    }
+}

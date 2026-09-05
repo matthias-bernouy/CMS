@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-toolbar",
+        "name": "Toolbar",
+        "group": "Layout",
+        "description": "Title + inline meta on the left, controls on the right. Generic page/section toolbar.",
+        "path": "blocs/foundation/layout/headers/toolbar",
+        "view": "Bloc.ts"
+    }
+}

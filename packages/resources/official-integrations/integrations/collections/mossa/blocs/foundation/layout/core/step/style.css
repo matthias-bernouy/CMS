@@ -1,0 +1,118 @@
+:host {
+    --_mossa-sc-bg:         var(--ulvia-surface-background);
+    --_mossa-sc-fg:         var(--ulvia-surface-text);
+    --_mossa-sc-fg-muted:   var(--ulvia-surface-muted-text);
+    --_mossa-sc-border:     var(--ulvia-surface-border);
+    --_mossa-sc-radius:     var(--ulvia-radius-lg);
+    --_mossa-sc-pad:        1.75rem 1.5rem 1.75rem;
+
+    --_mossa-sc-badge-bg:    var(--ulvia-subtle-background);
+    --_mossa-sc-badge-fg:    var(--ulvia-surface-text);
+    --_mossa-sc-badge-size:  2.5rem;
+    --_mossa-sc-icon-size:   1.25rem;
+
+    --_mossa-sc-num-color:   var(--ulvia-surface-text);
+    --_mossa-sc-num-opacity: 0.07;
+    --_mossa-sc-num-size:    clamp(5rem, 11vw, 8rem);
+
+    display: block;
+}
+
+.card {
+    position: relative;
+    overflow: hidden;
+    background: var(--_mossa-sc-bg);
+    color: var(--_mossa-sc-fg);
+    border: 1px solid var(--_mossa-sc-border);
+    border-radius: var(--_mossa-sc-radius);
+    padding: var(--_mossa-sc-pad);
+    height: 100%;
+    box-sizing: border-box;
+    transition: border-color var(--ulvia-duration-normal) ease,
+                box-shadow var(--ulvia-duration-normal) ease,
+                transform var(--ulvia-duration-fast) ease;
+}
+
+.card:hover {
+    border-color: var(--ulvia-secondary-base);
+    box-shadow: var(--ulvia-shadow-soft);
+    transform: translateY(-2px);
+}
+
+.number {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 0.25rem;
+    font-family: var(--ulvia-font-heading);
+    font-size: var(--_mossa-sc-num-size);
+    font-weight: 700;
+    color: var(--_mossa-sc-num-color);
+    opacity: var(--_mossa-sc-num-opacity);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    pointer-events: none;
+    z-index: 0;
+}
+
+:host(:not([has-number])) .number { display: none; }
+
+.content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--_mossa-sc-badge-size);
+    height: var(--_mossa-sc-badge-size);
+    border-radius: var(--ulvia-radius-sm);
+    background: var(--_mossa-sc-badge-bg);
+    color: var(--_mossa-sc-badge-fg);
+    margin-bottom: 0.25rem;
+}
+
+.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--_mossa-sc-icon-size);
+    height: var(--_mossa-sc-icon-size);
+}
+
+.icon ::slotted(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+:host(:not([has-icon])) .icon-badge { display: none; }
+
+::slotted([slot="title"]) {
+    margin: 0 !important;
+    font-family: var(--ulvia-font-heading) !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    color: var(--_mossa-sc-fg) !important;
+}
+
+::slotted([slot="description"]) {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--_mossa-sc-fg-muted);
+}
+
+/* Variant — primary-muted semantic badge. */
+:host([variant="accent"]) {
+    --_mossa-sc-badge-bg: var(--ulvia-primary-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+    .card:hover { transform: none; }
+}

@@ -1,0 +1,137 @@
+{
+    "id": "mossa/blocs/checkout",
+    "type": "bloc",
+    "artifact": "mossa-checkout",
+    "category": "commerce",
+    "defaultActive": false,
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:offer",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "route.offerId"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:getMyPriceAgreementCheckout",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.agreementId": "route.agreementId"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:myOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.order.id"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:entityCustomFields",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.entityType": "state.fields.entityType"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:publicOfferImage",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.offer.media.id"
+                }
+            }
+        },
+        {
+            "source": "user-account",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:user-account:getAccount",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "user-account",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:user-account:updateAccount",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "commerce-stripe-payments",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:createProtectedOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.idempotencyKey": "state.order.idempotencyKey",
+                    "body.items": "state.order.items",
+                    "body.agreementId": "state.order.agreementId",
+                    "body.shippingAddress": "state.order.shippingAddress",
+                    "body.billingAddress": "state.order.billingAddress",
+                    "body.metadata": "state.order.metadata"
+                }
+            }
+        },
+        {
+            "source": "commerce-mondial-relay-delivery",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:setRelayPointForOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.orderId": "state.delivery.orderId",
+                    "body.relayLocation": "state.delivery.relayLocation",
+                    "body.country": "state.delivery.country",
+                    "body.postalCode": "state.delivery.postalCode",
+                    "body.city": "state.delivery.city"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/commerce-stripe-payment",
+            "mossa/blocs/input",
+            "mossa/blocs/mondial-relay-picker",
+            "mossa/blocs/option",
+            "mossa/blocs/responsive-grid",
+            "mossa/blocs/select",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/surface-card"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-base",
+            "page-background",
+            "primary-hover",
+            "radius-control",
+            "secondary-base",
+            "secondary-foreground",
+            "shadow-lg",
+            "subtle-background",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

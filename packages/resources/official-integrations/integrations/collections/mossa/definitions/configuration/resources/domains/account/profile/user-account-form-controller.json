@@ -1,0 +1,65 @@
+{
+    "id": "mossa/blocs/user-account-form-controller",
+    "type": "bloc",
+    "artifact": "mossa-user-account-form-controller",
+    "category": "account",
+    "endpoints": [
+        {
+            "source": "user-account",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:user-account:getAccount",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "user-account",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:user-account:updateAccount",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.phone": "state.updateAccount.phone",
+                    "body.givenName": "state.updateAccount.givenName",
+                    "body.surname": "state.updateAccount.surname",
+                    "body.birthDate": "state.updateAccount.birthDate",
+                    "body.addressLine1": "state.updateAccount.addressLine1",
+                    "body.addressLine2": "state.updateAccount.addressLine2",
+                    "body.addressLine3": "state.updateAccount.addressLine3",
+                    "body.postalCode": "state.updateAccount.postalCode",
+                    "body.city": "state.updateAccount.city",
+                    "body.region": "state.updateAccount.region",
+                    "body.countryCode": "state.updateAccount.countryCode",
+                    "body.avatarUrl": "state.updateAccount.avatarUrl",
+                    "body.avatarFileId": "state.updateAccount.avatarFileId",
+                    "body.locale": "state.updateAccount.locale",
+                    "body.timezone": "state.updateAccount.timezone"
+                }
+            }
+        },
+        {
+            "source": "user-account",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:user-account:uploadAccountAvatar",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "user-account",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:user-account:getAccountAvatar",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.fileId": "state.getAccountAvatar.fileId"
+                }
+            }
+        }
+    ],
+    "context": [
+        "authenticated-user"
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/user-account-form"
+        ]
+    },
+    "defaultActive": false
+}

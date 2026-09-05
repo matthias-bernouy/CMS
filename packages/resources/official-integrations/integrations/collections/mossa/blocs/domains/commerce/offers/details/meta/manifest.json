@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-meta",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Meta",
+        "description": "Compact icon and muted text row for delivery, duration, or location metadata.",
+        "categories": [
+            "commerce"
+        ]
+    }
+}

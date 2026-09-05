@@ -1,0 +1,94 @@
+:host {
+  display: block;
+
+  --_mossa-bg: var(--ulvia-surface-background);
+  --_mossa-border-color: var(--ulvia-surface-border);
+  --_mossa-border-width: 1px;
+  --_mossa-radius: var(--ulvia-radius-card);
+  --_mossa-shadow: none;
+  --_mossa-padding: 1.25rem;
+  --_mossa-gap: 0.75rem;
+  --_mossa-text: var(--ulvia-surface-text);
+
+}
+
+:host([variant="outlined"]) {
+  --_mossa-bg: var(--ulvia-surface-background);
+  --_mossa-shadow: none;
+}
+
+:host([variant="elevated"]) {
+  --_mossa-border-width: 0;
+  --_mossa-shadow: var(--ulvia-shadow-sm);
+}
+
+:host([variant="filled"]) {
+  --_mossa-bg: var(--ulvia-page-background);
+  --_mossa-border-width: 0;
+  --_mossa-shadow: none;
+}
+
+:host([padding="none"]) { --_mossa-padding: 0; }
+:host([padding="sm"])   { --_mossa-padding: 0.75rem; }
+:host([padding="md"])   { --_mossa-padding: 1.25rem; }
+:host([padding="lg"])   { --_mossa-padding: 2rem; }
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--_mossa-bg);
+  color: var(--_mossa-text);
+  border: var(--_mossa-border-width) solid var(--_mossa-border-color);
+  border-radius: var(--_mossa-radius);
+  box-shadow: var(--_mossa-shadow);
+  overflow: hidden;
+}
+
+::slotted(a[slot="navigation"]) {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+::slotted(a[slot="navigation"]:focus-visible) {
+  outline: 3px solid var(--ulvia-primary-base);
+  outline-offset: -3px;
+}
+
+.header,
+.body,
+.footer {
+  padding: var(--_mossa-padding);
+}
+
+.header { border-bottom: 1px solid var(--_mossa-border-color); }
+.footer { border-top: 1px solid var(--_mossa-border-color); }
+
+.body { flex: 1; }
+
+.footer {
+  position: relative;
+  z-index: 2;
+}
+
+:host(:not([has-header])) .header,
+:host(:not([has-footer])) .footer {
+  display: none;
+}
+
+:host([interactive]) {
+  cursor: pointer;
+}
+
+:host([interactive]) .card {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host([interactive]) .card:hover {
+    box-shadow: var(--ulvia-shadow-soft);
+    transform: translateY(-1px);
+  }
+}

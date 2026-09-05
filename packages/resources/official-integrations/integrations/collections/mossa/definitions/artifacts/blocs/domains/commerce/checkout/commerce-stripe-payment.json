@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-stripe-payment",
+        "name": "Commerce stripe payment",
+        "group": "Commerce",
+        "description": "Collects payment for a trusted Commerce order with a theme-aware Stripe Payment Element.",
+        "path": "blocs/domains/commerce/checkout/commerce-stripe-payment"
+    }
+}

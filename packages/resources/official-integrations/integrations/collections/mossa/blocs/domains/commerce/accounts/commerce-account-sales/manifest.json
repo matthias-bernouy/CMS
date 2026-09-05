@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-commerce-account-sales",
+    "composition": "./template.html",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Commerce account sales",
+        "description": "Authenticated seller sales list with status filters, compact cards, and pagination."
+    }
+}

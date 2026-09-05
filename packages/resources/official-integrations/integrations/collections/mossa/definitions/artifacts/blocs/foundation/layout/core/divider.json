@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-divider",
+        "name": "Divider",
+        "group": "Layout",
+        "description": "Horizontal separator line with token-based color, thickness, spacing and inset.",
+        "path": "blocs/foundation/layout/core/divider",
+        "view": "Bloc.ts"
+    }
+}

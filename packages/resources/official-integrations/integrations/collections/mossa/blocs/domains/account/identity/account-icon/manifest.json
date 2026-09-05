@@ -1,0 +1,14 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "default-tag": "mossa-account-icon",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Account icon",
+        "description": "Shared icon set for account navigation.",
+        "categories": [
+            "account"
+        ]
+    }
+}

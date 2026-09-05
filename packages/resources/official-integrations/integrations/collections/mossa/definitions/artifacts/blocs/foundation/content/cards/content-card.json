@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-content-card",
+        "name": "Content card",
+        "group": "Content",
+        "description": "Content card with optional image, title, description and actions.",
+        "path": "blocs/foundation/content/cards/content-card",
+        "view": "Bloc.ts"
+    }
+}

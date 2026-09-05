@@ -1,0 +1,103 @@
+<section class="checkout">
+    <template data-runtime-dependencies>
+        <mossa-select><mossa-option></mossa-option></mossa-select>
+    </template>
+    <div data-loading>
+        <mossa-responsive-grid min="md" gap="lg">
+            <mossa-skeleton height="30rem" animation="wave" label="Loading payment"></mossa-skeleton>
+            <mossa-skeleton height="18rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        </mossa-responsive-grid>
+    </div>
+
+    <mossa-surface-card data-login hidden appearance="outlined" density="spacious">
+        <strong slot="title">Sign in to continue</strong>
+        <span slot="description">An account is required to secure the order and track delivery.</span>
+        <slot name="login-action" slot="actions"></slot>
+    </mossa-surface-card>
+
+    <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
+        <strong slot="title">Unable to continue</strong>
+        <span slot="description" data-error-message></span>
+        <slot name="error-action" slot="actions"></slot>
+    </mossa-surface-card>
+
+    <div data-content hidden>
+        <h1 data-title>Complete my order</h1>
+        <nav class="steps" aria-label="Payment steps">
+            <span data-step="information"><b>1</b><span data-information-label>Information</span></span>
+            <span data-step="delivery"><b>2</b><span data-delivery-label>Delivery</span></span>
+            <span data-step="payment"><b>3</b><span data-payment-label>Payment</span></span>
+        </nav>
+
+        <div class="layout">
+            <main>
+                <mossa-surface-card data-panel="information" appearance="outlined" density="spacious">
+                    <strong slot="title">Your information</strong>
+                    <span slot="description">Check the information used for delivery.</span>
+                    <form class="fields" data-information-form>
+                        <div class="pair">
+                            <mossa-input name="givenName" label="First name" autocomplete="given-name" required></mossa-input>
+                            <mossa-input name="surname" label="Name" autocomplete="family-name" required></mossa-input>
+                        </div>
+                        <mossa-input name="email" label="E-mail" autocomplete="email" readonly></mossa-input>
+                        <mossa-input name="phone" type="tel" label="Phone" autocomplete="tel" hint="Required for delivery notifications" required></mossa-input>
+                        <mossa-input name="addressLine1" label="Address" autocomplete="address-line1" required></mossa-input>
+                        <mossa-input name="addressLine2" label="Address line 2" autocomplete="address-line2"></mossa-input>
+                        <div class="pair postal">
+                            <mossa-input name="postalCode" label="Postal code" autocomplete="postal-code" required></mossa-input>
+                            <mossa-input name="city" label="City" autocomplete="address-level2" required></mossa-input>
+                        </div>
+                        <div class="metadata-fields" data-order-metadata-fields hidden></div>
+                    </form>
+                    <mossa-button slot="actions" data-save-information size="lg" width="full"><button type="button">Continue to delivery</button></mossa-button>
+                    <p slot="footer" class="status" data-information-status aria-live="polite"></p>
+                </mossa-surface-card>
+
+                <mossa-surface-card data-panel="delivery" hidden appearance="outlined" density="spacious">
+                    <strong slot="title">Choose your pickup point</strong>
+                    <span slot="description">Delivery is provided exclusively by the configured carrier.</span>
+                    <mossa-mondial-relay-picker
+                        data-relay-picker
+                        appearance="embedded"
+                        name="deliveryRelayLocation"
+                        title="Mondial Relay pickup point"
+                        button-label="Search"
+                        limit="8"
+                        weight-grams="500"
+                    ></mossa-mondial-relay-picker>
+                    <div slot="actions" class="actions">
+                        <mossa-button data-back-information appearance="outlined"><button type="button">Back</button></mossa-button>
+                        <mossa-button data-create-order size="lg"><button type="button" disabled>Continue to payment</button></mossa-button>
+                    </div>
+                    <p slot="footer" class="status" data-delivery-status aria-live="polite"></p>
+                </mossa-surface-card>
+
+                <mossa-surface-card data-panel="payment" hidden appearance="outlined" density="spacious">
+                    <strong slot="title">Payment</strong>
+                    <span slot="description">Pay for your order with secure payment.</span>
+                    <slot name="checkout-payment"></slot>
+                    <p slot="footer" class="status" data-payment-status aria-live="polite"></p>
+                </mossa-surface-card>
+            </main>
+
+            <aside>
+                <mossa-surface-card appearance="outlined" density="regular">
+                    <strong slot="title">Your order</strong>
+                    <div class="product">
+                        <img data-offer-image data-source-image-access="public" alt="" hidden>
+                        <div><strong data-offer-title></strong><span data-offer-variant></span></div>
+                    </div>
+                    <div class="price-row"><span>Item</span><strong data-subtotal></strong></div>
+                    <div class="price-row"><span>Delivery</span><strong data-shipping>To calculate</strong></div>
+                    <div class="price-row"><span>Buyer protection</span><strong data-protection>To calculate</strong></div>
+                    <div class="price-row total"><span>Total</span><strong data-total>To calculate</strong></div>
+                    <div slot="footer" class="secure-note">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+                        Prices and fees verified by the server
+                    </div>
+                </mossa-surface-card>
+            </aside>
+        </div>
+        <slot name="order-navigation"></slot>
+    </div>
+</section>

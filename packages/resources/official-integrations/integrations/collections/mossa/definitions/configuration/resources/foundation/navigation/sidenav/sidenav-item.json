@@ -1,0 +1,18 @@
+{
+    "id": "mossa/blocs/sidenav-item",
+    "type": "bloc",
+    "artifact": "mossa-sidenav-item",
+    "category": "navigation",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-fast",
+            "font-body",
+            "radius-sm",
+            "secondary-base",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

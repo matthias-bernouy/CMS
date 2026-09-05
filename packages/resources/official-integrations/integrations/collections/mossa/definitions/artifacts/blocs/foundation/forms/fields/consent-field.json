@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-consent-field",
+        "name": "Consent field",
+        "group": "Forms",
+        "description": "Binding-aware, form-associated field for one versioned consent context.",
+        "path": "blocs/foundation/forms/fields/consent-field"
+    }
+}

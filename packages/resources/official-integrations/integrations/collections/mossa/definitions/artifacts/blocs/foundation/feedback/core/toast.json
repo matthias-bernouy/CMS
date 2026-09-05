@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-toast",
+        "name": "Toast",
+        "group": "Feedback",
+        "description": "Neutral, customizable transient notification.",
+        "path": "blocs/foundation/feedback/core/toast"
+    }
+}

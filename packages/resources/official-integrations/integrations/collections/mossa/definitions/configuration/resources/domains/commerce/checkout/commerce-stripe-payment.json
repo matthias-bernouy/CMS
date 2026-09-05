@@ -1,0 +1,64 @@
+{
+    "id": "mossa/blocs/commerce-stripe-payment",
+    "type": "bloc",
+    "artifact": "mossa-commerce-stripe-payment",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce-stripe-payments",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:createPaymentForOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.orderId": "state.createPaymentForOrder.orderId",
+                    "body.acceptedLegalDocumentVersionIds": "state.createPaymentForOrder.acceptedLegalDocumentVersionIds"
+                }
+            }
+        },
+        {
+            "source": "commerce-stripe-payments",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:getPaymentLegalRequirements",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.orderId": "state.getPaymentLegalRequirements.orderId"
+                }
+            }
+        },
+        {
+            "source": "commerce-stripe-payments",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:getStripePaymentClientConfig",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "commerce-stripe-payments",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:refreshPaymentForOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.orderId": "state.refreshPaymentForOrder.orderId"
+                }
+            }
+        }
+    ],
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "danger-base",
+            "primary-base",
+            "primary-foreground",
+            "radius-card",
+            "radius-control",
+            "shadow-soft",
+            "success-base",
+            "surface-background",
+            "surface-border"
+        ]
+    }
+}

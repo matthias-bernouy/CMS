@@ -1,0 +1,57 @@
+:host {
+    display: block;
+    color: var(--_mossa-fulfillment-text, var(--ulvia-body-text));
+}
+
+.summary {
+    display: grid;
+    gap: .85rem;
+}
+
+.summary > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--_mossa-fulfillment-border, var(--ulvia-surface-border));
+}
+
+.summary strong {
+    text-align: right;
+}
+
+.status {
+    color: var(--_mossa-fulfillment-accent, var(--ulvia-secondary-base));
+}
+
+.summary p,
+.message {
+    margin: 0;
+    color: var(--ulvia-surface-muted-text);
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+}
+
+.message[data-error] {
+    color: var(--ulvia-danger-base);
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 36rem) {
+    .summary > div,
+    .actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .summary strong {
+        text-align: left;
+    }
+}

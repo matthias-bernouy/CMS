@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-sidenav",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Sidenav",
+        "description": "Lateral navigation: brand, sections, footer. Desktop collapse to icon-only, mobile off-canvas drawer.",
+        "categories": [
+            "navigation"
+        ]
+    }
+}

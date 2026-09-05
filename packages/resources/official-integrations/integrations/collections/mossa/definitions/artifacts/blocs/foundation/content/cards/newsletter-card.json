@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-newsletter-card",
+        "name": "Newsletter card",
+        "group": "Content",
+        "description": "Inline newsletter banner — icon + heading + description on the left, email + submit on the right.",
+        "path": "blocs/foundation/content/cards/newsletter-card",
+        "view": "Bloc.ts"
+    }
+}

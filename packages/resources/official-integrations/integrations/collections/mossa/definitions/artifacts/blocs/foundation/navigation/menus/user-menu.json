@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-user-menu",
+        "name": "User menu",
+        "group": "Navigation",
+        "description": "Avatar + name trigger with a popover header (logged-in user + role badge), menu items and a logout link.",
+        "path": "blocs/foundation/navigation/menus/user-menu",
+        "view": "Bloc.ts"
+    }
+}

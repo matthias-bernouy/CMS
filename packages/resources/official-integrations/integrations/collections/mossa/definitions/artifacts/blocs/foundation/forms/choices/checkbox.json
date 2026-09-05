@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-checkbox",
+        "name": "Checkbox",
+        "group": "Forms",
+        "description": "Form-associated checkbox whose label is rendered inside its shadow root.",
+        "path": "blocs/foundation/forms/choices/checkbox"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-sidenav-section",
+        "name": "Sidenav section",
+        "group": "Navigation",
+        "description": "Titled group of items inside a lateral navigation. Optionally collapsible.",
+        "path": "blocs/foundation/navigation/sidenav/sidenav-section",
+        "view": "Bloc.ts"
+    }
+}

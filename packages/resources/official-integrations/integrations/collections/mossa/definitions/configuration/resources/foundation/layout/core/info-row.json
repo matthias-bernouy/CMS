@@ -1,0 +1,18 @@
+{
+    "id": "mossa/blocs/info-row",
+    "type": "bloc",
+    "artifact": "mossa-info-row",
+    "category": "layout",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-body",
+            "primary-contrasted",
+            "primary-muted",
+            "radius-sm",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

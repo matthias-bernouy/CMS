@@ -1,0 +1,20 @@
+{
+    "id": "mossa/blocs/content-card",
+    "type": "bloc",
+    "artifact": "mossa-content-card",
+    "category": "content",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "page-background",
+            "primary-base",
+            "radius-card",
+            "shadow-sm",
+            "shadow-soft",
+            "surface-background",
+            "surface-border",
+            "surface-text"
+        ]
+    }
+}

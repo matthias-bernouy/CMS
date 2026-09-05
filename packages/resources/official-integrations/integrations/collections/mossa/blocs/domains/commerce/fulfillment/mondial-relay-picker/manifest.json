@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-mondial-relay-picker",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Mondial Relay picker",
+        "description": "Customizable pickup point picker with optional persistence on a Commerce order."
+    }
+}

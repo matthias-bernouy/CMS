@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-menu-item",
+        "name": "Menu item",
+        "group": "Navigation",
+        "description": "Link row with an icon and a label for a user menu, sidenav, or similar grouped navigation surface. Supports a danger variant for destructive actions.",
+        "path": "blocs/foundation/navigation/menus/menu-item",
+        "view": "Bloc.ts"
+    }
+}

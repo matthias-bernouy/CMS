@@ -1,0 +1,20 @@
+{
+    "id": "mossa/blocs/page-header",
+    "type": "bloc",
+    "artifact": "mossa-page-header",
+    "category": "layout",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/button"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

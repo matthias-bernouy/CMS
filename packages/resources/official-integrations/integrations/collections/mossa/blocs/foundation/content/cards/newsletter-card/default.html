@@ -1,0 +1,19 @@
+<mossa-newsletter-card>
+    <h2 slot="title">Stay in the loop</h2>
+    <p slot="description">Get the best new offers each week.</p>
+    <form
+        slot="form"
+        cms-source="/.cms/sources/newsletter/setSubscription as newsletterSubscription"
+        cms-source-id="newsletterSubscription"
+        cms-source-trigger="submit"
+        cms-source-method="POST"
+        cms-source-body='{"subscribed":{"from":"raw","value":true}}'
+    >
+        <mossa-input type="email" placeholder="you@example.com" required name="email"></mossa-input>
+        <mossa-button appearance="filled"><button type="submit">Subscribe</button></mossa-button>
+        <p cms-condition="$sources.newsletterSubscription.loading">Subscribing…</p>
+        <p cms-condition="$sources.newsletterSubscription.error">Subscription failed. Try again.</p>
+        <p cms-condition="$sources.newsletterSubscription.loaded">You are subscribed.</p>
+    </form>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" slot="icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+</mossa-newsletter-card>

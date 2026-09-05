@@ -1,0 +1,26 @@
+{
+    "id": "mossa/blocs/offer-details",
+    "type": "bloc",
+    "artifact": "mossa-offer-details",
+    "category": "commerce",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/badge",
+            "mossa/blocs/button",
+            "mossa/blocs/specification",
+            "mossa/blocs/specifications"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "primary-base",
+            "radius-card",
+            "radius-lg",
+            "secondary-base",
+            "subtle-background",
+            "surface-text"
+        ]
+    }
+}

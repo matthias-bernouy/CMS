@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-stat",
+        "name": "Stat",
+        "group": "Content",
+        "description": "Big number + label tile. Light or dark surface.",
+        "path": "blocs/foundation/content/display/stat",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-user-account-avatar",
+        "name": "User account avatar",
+        "group": "Account",
+        "description": "Profile image picker used by the User Account form.",
+        "path": "blocs/domains/account/profile/user-account-avatar"
+    }
+}

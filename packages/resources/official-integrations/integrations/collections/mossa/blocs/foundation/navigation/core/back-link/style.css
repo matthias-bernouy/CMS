@@ -1,0 +1,30 @@
+:host {
+    display: inline-block;
+    box-sizing: border-box;
+    font-family: var(--ulvia-font-body);
+}
+
+::slotted(a) {
+    --_mossa-link-color: var(--ulvia-surface-muted-text);
+    --_mossa-link-visited-color: var(--ulvia-surface-muted-text);
+    --_mossa-link-hover-color: var(--ulvia-surface-text);
+    --_mossa-link-active-color: var(--ulvia-surface-text);
+    --_mossa-link-focus-ring: currentColor;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--ulvia-surface-muted-text);
+    text-decoration: none !important;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    transition: color var(--ulvia-duration-fast) ease;
+}
+
+::slotted(a:hover) {
+    color: var(--ulvia-surface-text);
+}
+
+::slotted(a:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}

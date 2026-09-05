@@ -1,0 +1,9 @@
+{
+    "default-tag": "mossa-condition",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Condition",
+        "description": "Displays a condition label."
+    }
+}

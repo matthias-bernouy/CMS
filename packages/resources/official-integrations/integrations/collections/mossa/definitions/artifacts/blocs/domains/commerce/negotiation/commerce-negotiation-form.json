@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-negotiation-form",
+        "name": "Commerce negotiation form",
+        "group": "Commerce",
+        "description": "Customizable buyer proposal form composed from Mossa controls.",
+        "path": "blocs/domains/commerce/negotiation/commerce-negotiation-form",
+        "composition": "template.html"
+    }
+}

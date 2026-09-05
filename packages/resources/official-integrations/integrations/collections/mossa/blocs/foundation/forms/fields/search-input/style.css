@@ -1,0 +1,96 @@
+:host {
+    --_mossa-sip-bg:           var(--ulvia-surface-background);
+    --_mossa-sip-fg:           var(--ulvia-surface-text);
+    --_mossa-sip-muted:        var(--ulvia-surface-muted-text);
+    --_mossa-sip-border:       var(--ulvia-surface-border);
+    --_mossa-sip-border-focus: var(--ulvia-secondary-base);
+    --_mossa-sip-radius:       var(--ulvia-radius-card);
+    --_mossa-sip-pad-y:        0.85rem;
+    --_mossa-sip-pad-x:        1rem;
+    --_mossa-sip-icon-color:   var(--ulvia-surface-muted-text);
+
+    display: block;
+    width: 100%;
+}
+
+.accessible-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--_mossa-sip-bg);
+    color: var(--_mossa-sip-fg);
+    border: 1px solid var(--_mossa-sip-border);
+    border-radius: var(--_mossa-sip-radius);
+    padding: var(--_mossa-sip-pad-y) var(--_mossa-sip-pad-x);
+    transition: border-color var(--_mossa-duration, var(--ulvia-duration-slow)) var(--_mossa-ease, ease-out),
+                box-shadow var(--_mossa-duration, var(--ulvia-duration-slow)) var(--_mossa-ease, ease-out);
+}
+
+.wrap:focus-within {
+    border-color: var(--_mossa-sip-border-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--_mossa-sip-border-focus) 15%, transparent);
+}
+
+.lead-icon {
+    display: inline-flex;
+    color: var(--_mossa-sip-icon-color);
+    flex: 0 0 auto;
+}
+
+input {
+    flex: 1 1 auto;
+    border: 0;
+    background: transparent;
+    color: var(--_mossa-sip-fg);
+    font: inherit;
+    font-size: 1rem;
+    outline: none;
+    min-width: 0;
+}
+
+input::placeholder {
+    color: var(--_mossa-sip-muted);
+}
+
+input::-webkit-search-cancel-button { display: none; }
+
+.clear {
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: var(--_mossa-sip-icon-color);
+    cursor: pointer;
+    padding: 0.25rem;
+    display: inline-flex;
+    border-radius: 999px;
+    transition: background var(--_mossa-duration, var(--ulvia-duration-slow)) var(--_mossa-ease, ease-out);
+}
+
+.clear:hover {
+    background: color-mix(in srgb, var(--_mossa-sip-fg) 8%, transparent);
+}
+
+:host([empty]) .clear { display: none; }
+
+/* Size variants */
+:host([size="lg"]) {
+    --_mossa-sip-pad-y: 1.05rem;
+    --_mossa-sip-pad-x: 1.25rem;
+    --_mossa-sip-radius: var(--ulvia-radius-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wrap, .clear { transition: none; }
+}

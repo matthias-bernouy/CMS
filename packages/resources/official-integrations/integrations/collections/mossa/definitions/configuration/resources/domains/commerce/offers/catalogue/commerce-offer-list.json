@@ -1,0 +1,53 @@
+{
+    "id": "mossa/blocs/commerce-offer-list",
+    "type": "bloc",
+    "artifact": "mossa-commerce-offer-list",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:offers",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.q": "state.offers.q",
+                    "params.productId": "state.offers.productId",
+                    "params.variantId": "state.offers.variantId",
+                    "params.sellerId": "state.offers.sellerId",
+                    "params.conditionCode": "state.offers.conditionCode",
+                    "params.category": "state.offers.category",
+                    "params.brand": "state.offers.brand",
+                    "params.filters": "state.offers.filters",
+                    "params.priceMin": "state.offers.priceMin",
+                    "params.priceMax": "state.offers.priceMax",
+                    "params.sort": "state.offers.sort",
+                    "params.limit": "state.offers.limit",
+                    "params.offset": "state.offers.offset"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:publicOfferImage",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.publicOfferImage.id"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/commerce-offer-preview",
+            "mossa/blocs/pagination",
+            "mossa/blocs/responsive-grid",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/surface-card",
+            "mossa/blocs/toast"
+        ]
+    },
+    "defaultActive": false
+}

@@ -1,0 +1,74 @@
+{
+    "id": "mossa/blocs/commerce-negotiation-list-controller",
+    "type": "bloc",
+    "artifact": "mossa-commerce-negotiation-list-controller",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce-negotiation",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce-negotiation:myProposals",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.role": "state.myProposals.role",
+                    "params.status": "state.myProposals.status",
+                    "params.offerId": "state.myProposals.offerId",
+                    "params.limit": "state.myProposals.limit",
+                    "params.offset": "state.myProposals.offset"
+                }
+            }
+        },
+        {
+            "source": "commerce-negotiation",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce-negotiation:respondToProposal",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.id": "state.respondToProposal.id",
+                    "body.action": "state.respondToProposal.action",
+                    "body.expectedVersion": "state.respondToProposal.expectedVersion",
+                    "body.message": "state.respondToProposal.message"
+                }
+            }
+        },
+        {
+            "source": "commerce-negotiation",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce-negotiation:withdrawMyProposal",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.id": "state.withdrawMyProposal.id",
+                    "body.expectedVersion": "state.withdrawMyProposal.expectedVersion"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:publicOfferImage",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.publicOfferImage.id"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/commerce-negotiation-list"
+        ]
+    },
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "radius-card",
+            "subtle-background",
+            "surface-muted-text"
+        ]
+    }
+}

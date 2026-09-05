@@ -1,0 +1,30 @@
+{
+    "id": "mossa/blocs/consent-field",
+    "type": "bloc",
+    "artifact": "mossa-consent-field",
+    "category": "forms",
+    "endpoints": [
+        {
+            "source": "consent",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:consent:getRequirements",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.context": "props.contextKey"
+                }
+            }
+        }
+    ],
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "danger-base",
+            "primary-base",
+            "radius-control",
+            "surface-muted-text"
+        ]
+    }
+}

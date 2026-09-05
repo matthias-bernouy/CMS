@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-consent-field",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Consent field",
+        "description": "Form-associated, binding-aware consent requirements for one context."
+    }
+}

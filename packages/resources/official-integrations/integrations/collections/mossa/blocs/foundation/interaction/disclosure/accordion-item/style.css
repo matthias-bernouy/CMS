@@ -1,0 +1,147 @@
+:host {
+    --_mossa-item-padding-y: var(--_mossa-acc-item-padding-y, var(--ulvia-space-md));
+    --_mossa-item-padding-x: var(
+        --_mossa-acc-item-padding-x,
+        calc(var(--ulvia-space-md) + var(--ulvia-space-xs))
+    );
+    --_mossa-item-font-size: var(--_mossa-acc-item-font-size, 1rem);
+    --_mossa-item-accent:    var(--ulvia-secondary-base);
+    --_mossa-item-fg:        var(--ulvia-surface-text);
+    --_mossa-item-fg-muted:  var(--ulvia-surface-muted-text);
+    --_mossa-item-hover-bg:  color-mix(in srgb, var(--_mossa-item-accent) 6%, transparent);
+
+    display: block;
+    font-family: var(--ulvia-font-body);
+    font-size: var(--_mossa-item-font-size);
+    color: var(--_mossa-item-fg);
+    box-sizing: border-box;
+}
+
+.item {
+    display: block;
+    position: relative;
+}
+
+.header {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: var(--_mossa-item-padding-y) var(--_mossa-item-padding-x);
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    transition: background-color var(--ulvia-duration-normal) ease,
+                color var(--ulvia-duration-normal) ease;
+}
+
+.header:hover {
+    background: var(--_mossa-item-hover-bg);
+}
+
+.header:focus-visible {
+    outline: 2px solid var(--_mossa-item-accent);
+    outline-offset: -2px;
+    border-radius: inherit;
+}
+
+:host([open]) .header {
+    color: var(--_mossa-item-accent);
+}
+
+:host([disabled]) .header {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.title {
+    flex: 1 1 auto;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+}
+
+.title ::slotted(*) {
+    margin: 0 !important;
+    font-family: var(--ulvia-font-body) !important;
+    font-size: inherit !important;
+    font-weight: 600 !important;
+    color: inherit !important;
+    letter-spacing: inherit !important;
+}
+
+.indicator {
+    flex: 0 0 auto;
+    width: 1.15em;
+    height: 1.15em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--_mossa-item-accent);
+    transition: transform var(--ulvia-duration-normal) ease,
+                color var(--ulvia-duration-normal) ease;
+}
+
+.indicator svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+:host([open]) .indicator {
+    transform: rotate(-180deg);
+}
+
+.panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--ulvia-duration-normal) ease;
+}
+
+.content {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 var(--_mossa-item-padding-x);
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity var(--ulvia-duration-normal) ease,
+                transform var(--ulvia-duration-normal) ease,
+                padding var(--ulvia-duration-normal) ease;
+    color: var(--_mossa-item-fg-muted);
+}
+
+:host([open]) .panel {
+    grid-template-rows: 1fr;
+}
+
+:host([open]) .content {
+    overflow: visible;
+    padding: 0.25rem var(--_mossa-item-padding-x) var(--_mossa-item-padding-y);
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.content ::slotted(*) {
+    margin: 0 0 0.6rem;
+}
+.content ::slotted(*:last-child) {
+    margin-bottom: 0;
+}
+
+:host-context(mossa-accordion[icon-position="left"]) .header {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.9rem;
+}
+
+:host-context(mossa-accordion[icon="none"]) .indicator {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .header, .indicator, .panel, .content { transition: none; }
+}

@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-surface-card",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Surface card",
+        "description": "Generic card for grouping media, headings, content, and actions."
+    }
+}

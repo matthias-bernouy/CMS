@@ -1,0 +1,28 @@
+<section>
+    <div data-loading>
+        <mossa-skeleton height="16rem" animation="wave" label="Loading shipment"></mossa-skeleton>
+    </div>
+
+    <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
+        <strong slot="title">Shipment unavailable</strong>
+        <span slot="description" data-error-message></span>
+    </mossa-surface-card>
+
+    <mossa-surface-card data-content hidden appearance="outlined" density="spacious">
+        <strong slot="title" data-title></strong>
+        <span slot="description" data-copy></span>
+        <div class="summary">
+            <div><span>Order</span><strong data-order-number></strong></div>
+            <div><span>Status</span><strong class="status" data-status></strong></div>
+            <div><span>Shipment number</span><strong data-expedition></strong></div>
+            <p data-latest></p>
+        </div>
+        <div slot="actions" class="actions">
+            <mossa-button><button data-create type="button"></button></mossa-button>
+            <mossa-button><button data-handoff type="button" hidden></button></mossa-button>
+            <mossa-button appearance="outlined"><button data-label type="button" hidden></button></mossa-button>
+            <slot name="tracking-action"></slot>
+        </div>
+        <p slot="footer" class="message" data-message aria-live="polite"></p>
+    </mossa-surface-card>
+</section>

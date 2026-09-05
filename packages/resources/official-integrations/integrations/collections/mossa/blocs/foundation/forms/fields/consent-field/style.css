@@ -1,0 +1,122 @@
+mossa-consent-field {
+    display: block;
+    color: var(--ulvia-body-text);
+    font: inherit;
+}
+
+mossa-consent-field .mossa-consent-field__requirements {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+mossa-consent-field .mossa-consent-field__legend {
+    margin-block-end: 0.25rem;
+    font-weight: 700;
+}
+
+mossa-consent-field[appearance="compact"] .mossa-consent-field__legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+mossa-consent-field .mossa-consent-field__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: start;
+    line-height: 1.45;
+    cursor: pointer;
+}
+
+mossa-consent-field [data-consent-copy] {
+    display: inline;
+}
+
+mossa-consent-field .mossa-consent-field__item input {
+    width: 1rem;
+    height: 1rem;
+    margin-block-start: 0.2em;
+    accent-color: var(--ulvia-primary-base);
+}
+
+mossa-consent-field .mossa-consent-field__item a {
+    color: var(--ulvia-primary-base);
+    font-weight: 650;
+    text-underline-offset: 0.15em;
+}
+
+mossa-consent-field .mossa-consent-field__new-tab {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+mossa-consent-field .mossa-consent-field__status,
+mossa-consent-field .mossa-consent-field__error,
+mossa-consent-field .mossa-consent-field__changed,
+mossa-consent-field .mossa-consent-field__required {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+mossa-consent-field .mossa-consent-field__status {
+    color: var(--ulvia-surface-muted-text);
+}
+
+mossa-consent-field .mossa-consent-field__error,
+mossa-consent-field .mossa-consent-field__changed,
+mossa-consent-field .mossa-consent-field__required {
+    color: var(--ulvia-danger-base);
+}
+
+mossa-consent-field .mossa-consent-field__error {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+mossa-consent-field [data-consent-retry] {
+    min-height: 2rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid currentColor;
+    border-radius: var(--ulvia-radius-control);
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+mossa-consent-field [data-consent-editor-preview] {
+    display: none;
+}
+
+cms-binding-core[cms-binding-disabled] mossa-consent-field [data-consent-runtime],
+[cms-bind-stop] mossa-consent-field [data-consent-runtime],
+mossa-consent-field[cms-binding-disabled] [data-consent-runtime],
+mossa-consent-field[cms-bind-stop] [data-consent-runtime] {
+    display: none !important;
+}
+
+cms-binding-core[cms-binding-disabled] mossa-consent-field [data-consent-editor-preview],
+[cms-bind-stop] mossa-consent-field [data-consent-editor-preview],
+mossa-consent-field[cms-binding-disabled] [data-consent-editor-preview],
+mossa-consent-field[cms-bind-stop] [data-consent-editor-preview] {
+    display: block !important;
+}

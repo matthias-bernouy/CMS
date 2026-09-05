@@ -1,0 +1,16 @@
+{
+    "id": "mossa/blocs/meta",
+    "type": "bloc",
+    "artifact": "mossa-meta",
+    "category": "commerce",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "font-body",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

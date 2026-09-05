@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-back-link",
+        "name": "Back link",
+        "group": "Navigation",
+        "description": "Compact back link with an arrow and a text-label slot.",
+        "path": "blocs/foundation/navigation/core/back-link",
+        "view": "Bloc.ts"
+    }
+}

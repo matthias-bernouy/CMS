@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-panel",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Panel",
+        "description": "Generic white card with an optional icon + title and a free body. Used for forms, summaries, detail blocks and any content sitting on a surface.",
+        "categories": [
+            "layout"
+        ]
+    }
+}

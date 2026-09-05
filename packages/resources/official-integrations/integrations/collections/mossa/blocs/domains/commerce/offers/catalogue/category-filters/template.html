@@ -1,0 +1,12 @@
+<div class="filters">
+    <div class="selector">
+        <slot name="selector"></slot>
+    </div>
+    <slot name="common"></slot>
+    <div data-category="first" hidden>
+        <slot name="first-category"></slot>
+    </div>
+    <div data-category="second" hidden>
+        <slot name="second-category"></slot>
+    </div>
+</div>

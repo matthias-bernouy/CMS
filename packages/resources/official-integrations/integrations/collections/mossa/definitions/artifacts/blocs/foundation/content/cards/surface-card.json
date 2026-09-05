@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-surface-card",
+        "name": "Surface card",
+        "group": "Content",
+        "description": "Generic card for grouping media, headings, content, and actions.",
+        "path": "blocs/foundation/content/cards/surface-card"
+    }
+}

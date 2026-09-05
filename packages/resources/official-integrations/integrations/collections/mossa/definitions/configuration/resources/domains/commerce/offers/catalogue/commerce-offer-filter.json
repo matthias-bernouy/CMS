@@ -1,0 +1,32 @@
+{
+    "id": "mossa/blocs/commerce-offer-filter",
+    "type": "bloc",
+    "artifact": "mossa-commerce-offer-filter",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:offerFilterSchema",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.category": "props.category"
+                }
+            }
+        }
+    ],
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "radius-control",
+            "secondary-base",
+            "shadow-sm",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text"
+        ]
+    }
+}

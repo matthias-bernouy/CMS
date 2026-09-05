@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "mossa-user-account-form-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "Mossa user account form controller",
+        "description": "Internal behavior controller for mossa-user-account-form."
+    }
+}

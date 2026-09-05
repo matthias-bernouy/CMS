@@ -1,0 +1,110 @@
+:host {
+    --_mossa-rs-track-bg:   var(--ulvia-surface-border);
+    --_mossa-rs-fill-bg:    var(--ulvia-secondary-base);
+    --_mossa-rs-thumb-bg:   var(--ulvia-secondary-base);
+    --_mossa-rs-thumb-ring: var(--ulvia-surface-background);
+    --_mossa-rs-thumb-size: 18px;
+    --_mossa-rs-track-h:    4px;
+
+    display: block;
+    font-family: var(--ulvia-font-body);
+}
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.label {
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ulvia-surface-muted-text);
+}
+
+.range {
+    position: relative;
+    height: var(--_mossa-rs-thumb-size);
+    --_mossa-lo: 0%;
+    --_mossa-hi: 100%;
+}
+
+.track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: var(--_mossa-rs-track-h);
+    background: var(--_mossa-rs-track-bg);
+    border-radius: 999px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.fill {
+    position: absolute;
+    top: 50%;
+    left: var(--_mossa-lo);
+    right: calc(100% - var(--_mossa-hi));
+    height: var(--_mossa-rs-track-h);
+    background: var(--_mossa-rs-fill-bg);
+    border-radius: 999px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+input[type="range"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    pointer-events: none;
+    margin: 0;
+}
+
+:host([mode="max"]) .input-min {
+    display: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--_mossa-rs-thumb-size);
+    height: var(--_mossa-rs-thumb-size);
+    background: var(--_mossa-rs-thumb-bg);
+    border: 2px solid var(--_mossa-rs-thumb-ring);
+    border-radius: 50%;
+    box-shadow: var(--ulvia-shadow-sm);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform var(--ulvia-duration-fast) ease;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: var(--_mossa-rs-thumb-size);
+    height: var(--_mossa-rs-thumb-size);
+    background: var(--_mossa-rs-thumb-bg);
+    border: 2px solid var(--_mossa-rs-thumb-ring);
+    border-radius: 50%;
+    box-shadow: var(--ulvia-shadow-sm);
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover  { transform: scale(1.1); }
+input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.15); }
+
+input[type="range"]::-webkit-slider-runnable-track,
+input[type="range"]::-moz-range-track {
+    background: transparent;
+    height: var(--_mossa-rs-track-h);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    input[type="range"]::-webkit-slider-thumb { transition: none; }
+}

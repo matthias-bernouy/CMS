@@ -1,0 +1,7 @@
+{
+    "id": "mossa/blocs/account-icon",
+    "type": "bloc",
+    "artifact": "mossa-account-icon",
+    "category": "account",
+    "defaultActive": false
+}

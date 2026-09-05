@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-offer-preview",
+        "name": "Commerce offer preview",
+        "group": "Commerce",
+        "description": "Public offer preview with editable commerce content slots.",
+        "path": "blocs/domains/commerce/offers/catalogue/commerce-offer-preview"
+    }
+}

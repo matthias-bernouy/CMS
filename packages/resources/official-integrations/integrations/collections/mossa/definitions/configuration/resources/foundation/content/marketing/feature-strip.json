@@ -1,0 +1,21 @@
+{
+    "id": "mossa/blocs/feature-strip",
+    "type": "bloc",
+    "artifact": "mossa-feature-strip",
+    "category": "content",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/feature"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "subtle-background",
+            "surface-background",
+            "surface-border",
+            "surface-text"
+        ]
+    }
+}

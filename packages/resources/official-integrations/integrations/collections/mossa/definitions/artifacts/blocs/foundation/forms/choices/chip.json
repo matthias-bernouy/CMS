@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-chip",
+        "name": "Chip",
+        "group": "Forms",
+        "description": "Selectable choice used inside a Mossa chip group.",
+        "path": "blocs/foundation/forms/choices/chip"
+    }
+}

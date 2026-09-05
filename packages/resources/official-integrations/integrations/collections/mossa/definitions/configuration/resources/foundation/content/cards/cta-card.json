@@ -1,0 +1,26 @@
+{
+    "id": "mossa/blocs/cta-card",
+    "type": "bloc",
+    "artifact": "mossa-cta-card",
+    "category": "content",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/button"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "page-background",
+            "radius-lg",
+            "secondary-base",
+            "secondary-foreground",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

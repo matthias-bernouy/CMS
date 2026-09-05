@@ -1,0 +1,41 @@
+{
+    "id": "mossa/blocs/skeleton",
+    "type": "bloc",
+    "artifact": "mossa-skeleton",
+    "category": "feedback",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-base",
+            "danger-contrasted",
+            "danger-foreground",
+            "danger-muted",
+            "info-base",
+            "info-contrasted",
+            "info-foreground",
+            "info-muted",
+            "primary-base",
+            "primary-contrasted",
+            "primary-foreground",
+            "primary-muted",
+            "radius-sm",
+            "secondary-base",
+            "secondary-contrasted",
+            "secondary-foreground",
+            "secondary-muted",
+            "subtle-background",
+            "success-base",
+            "success-contrasted",
+            "success-foreground",
+            "success-muted",
+            "surface-background",
+            "surface-border",
+            "surface-text",
+            "warning-base",
+            "warning-contrasted",
+            "warning-foreground",
+            "warning-muted"
+        ]
+    }
+}

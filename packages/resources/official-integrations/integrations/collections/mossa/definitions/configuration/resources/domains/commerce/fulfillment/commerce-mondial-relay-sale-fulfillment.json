@@ -1,0 +1,68 @@
+{
+    "id": "mossa/blocs/commerce-mondial-relay-sale-fulfillment",
+    "type": "bloc",
+    "artifact": "mossa-commerce-mondial-relay-sale-fulfillment",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce-mondial-relay-fulfillment",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:createShipmentForMySale",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.orderId": "state.createShipmentForMySale.orderId"
+                }
+            }
+        },
+        {
+            "source": "commerce-mondial-relay-fulfillment",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:declareShipmentHandoffForMySale",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.orderId": "state.declareShipmentHandoffForMySale.orderId"
+                }
+            }
+        },
+        {
+            "source": "commerce-mondial-relay-fulfillment",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:getShipmentForMySale",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.orderId": "state.getShipmentForMySale.orderId"
+                }
+            }
+        },
+        {
+            "source": "commerce-mondial-relay-fulfillment",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:requestShipmentLabelForMySale",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.orderId": "state.requestShipmentLabelForMySale.orderId"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button"
+        ]
+    },
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "danger-base",
+            "secondary-base",
+            "surface-border",
+            "surface-muted-text"
+        ]
+    }
+}

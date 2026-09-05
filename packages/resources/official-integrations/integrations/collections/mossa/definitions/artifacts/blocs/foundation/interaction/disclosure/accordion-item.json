@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-accordion-item",
+        "name": "Accordion item",
+        "group": "Interaction",
+        "description": "Single collapsible panel — use inside an Accordion.",
+        "path": "blocs/foundation/interaction/disclosure/accordion-item",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-commerce-sale-detail",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Commerce sale detail",
+        "description": "Authenticated seller order detail with immutable line and financial snapshots, net proceeds, status, and a fulfillment composition slot."
+    }
+}

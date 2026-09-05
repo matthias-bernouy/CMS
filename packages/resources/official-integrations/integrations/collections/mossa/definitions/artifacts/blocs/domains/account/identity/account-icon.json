@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-account-icon",
+        "name": "Account icon",
+        "group": "Account",
+        "description": "Shared icon set for account navigation.",
+        "path": "blocs/domains/account/identity/account-icon",
+        "view": "Bloc.ts"
+    }
+}

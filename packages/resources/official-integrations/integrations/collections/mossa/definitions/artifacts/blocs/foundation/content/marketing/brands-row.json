@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-brands-row",
+        "name": "Brands row",
+        "group": "Content",
+        "description": "Centered list of brand names (or logos) with a small caps caption above.",
+        "path": "blocs/foundation/content/marketing/brands-row",
+        "view": "Bloc.ts"
+    }
+}

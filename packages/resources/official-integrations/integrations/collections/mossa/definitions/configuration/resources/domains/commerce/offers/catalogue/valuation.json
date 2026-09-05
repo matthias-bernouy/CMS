@@ -1,0 +1,45 @@
+{
+    "id": "mossa/blocs/valuation",
+    "type": "bloc",
+    "artifact": "mossa-valuation",
+    "category": "commerce",
+    "defaultActive": false,
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:products",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.q": "state.products.query",
+                    "params.limit": "state.products.limit",
+                    "params.offset": "state.products.offset"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/empty-state",
+            "mossa/blocs/info-row",
+            "mossa/blocs/panel",
+            "mossa/blocs/search-input",
+            "mossa/blocs/section-header"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "primary-contrasted",
+            "primary-muted",
+            "radius-card",
+            "radius-sm",
+            "shadow-lg",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-article",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Item",
+        "description": "Item template — cover image, eyebrow, title, lead, author block and rich body content.",
+        "categories": [
+            "content"
+        ]
+    }
+}

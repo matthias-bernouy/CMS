@@ -1,0 +1,21 @@
+{
+    "id": "mossa/blocs/toolbar",
+    "type": "bloc",
+    "artifact": "mossa-toolbar",
+    "category": "layout",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/option",
+            "mossa/blocs/select"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

@@ -3,13 +3,13 @@
     "type": "collection",
     "kind": "mossa",
     "label": "Mossa",
-    "category": "Block collections",
-    "description": "A reusable block collection built on the Ulvia design system and Source contracts.",
-    "stable": "3.0.0",
-    "latest": "3.0.0",
+    "category": "Official blocks",
+    "description": "The official reusable Mossa block collection, styled through the Ulvia token system.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
     "versions": [
         {
-            "version": "3.0.0",
+            "version": "1.0.0",
             "path": ".",
             "definition": "definition.json"
         }

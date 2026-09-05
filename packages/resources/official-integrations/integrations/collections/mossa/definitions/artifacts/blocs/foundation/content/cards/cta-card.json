@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-cta-card",
+        "name": "CTA card",
+        "group": "Content",
+        "description": "Centered call-to-action card with title, optional description and primary action.",
+        "path": "blocs/foundation/content/cards/cta-card",
+        "view": "Bloc.ts"
+    }
+}

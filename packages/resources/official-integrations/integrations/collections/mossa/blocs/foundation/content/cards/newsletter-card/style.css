@@ -1,0 +1,86 @@
+:host {
+    --_mossa-nl-bg:           var(--ulvia-surface-background);
+    --_mossa-nl-fg:           var(--ulvia-surface-text);
+    --_mossa-nl-fg-muted:     var(--ulvia-surface-muted-text);
+    --_mossa-nl-border:       var(--ulvia-surface-border);
+    --_mossa-nl-icon-color:   var(--ulvia-secondary-base);
+    --_mossa-nl-radius:       var(--ulvia-radius-lg);
+    --_mossa-nl-pad:          2.5rem 1.75rem;
+    --_mossa-nl-max:          36rem;
+
+    display: block;
+}
+
+.card {
+    background: var(--_mossa-nl-bg);
+    color: var(--_mossa-nl-fg);
+    border: 1px solid var(--_mossa-nl-border);
+    border-radius: var(--_mossa-nl-radius);
+    padding: var(--_mossa-nl-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+    max-width: var(--_mossa-nl-max);
+    margin-inline: auto;
+    box-shadow: var(--ulvia-shadow-sm);
+}
+
+.copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: var(--ulvia-primary-muted);
+    color: var(--_mossa-nl-icon-color);
+}
+
+.icon ::slotted([slot="icon"]) {
+    width: 1.4rem;
+    height: 1.4rem;
+    display: block;
+}
+
+:host(:not([has-icon])) .icon { display: none; }
+
+::slotted([slot="title"]) {
+    margin: 0 !important;
+    font-family: var(--ulvia-font-heading) !important;
+    font-size: clamp(1.35rem, 2.5vw, 1.75rem) !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.01em !important;
+    color: var(--_mossa-nl-fg) !important;
+}
+
+::slotted([slot="description"]) {
+    margin: 0 !important;
+    font-size: 0.95rem;
+    color: var(--_mossa-nl-fg-muted);
+    max-width: 32rem;
+}
+
+.form {
+    width: 100%;
+    max-width: 28rem;
+}
+
+.form ::slotted([slot="form"]) {
+    width: 100%;
+}
+
+/* Variant — full-width on wide screens */
+:host([variant="wide"]) {
+    --_mossa-nl-max: 48rem;
+    --_mossa-nl-pad: 3rem 2.5rem;
+}

@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "mossa-commerce-offer-price-form-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "Mossa commerce offer price form controller",
+        "description": "Internal behavior controller for mossa-commerce-offer-price-form."
+    }
+}

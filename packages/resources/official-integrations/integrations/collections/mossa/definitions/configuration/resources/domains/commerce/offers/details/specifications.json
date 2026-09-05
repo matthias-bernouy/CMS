@@ -1,0 +1,20 @@
+{
+    "id": "mossa/blocs/specifications",
+    "type": "bloc",
+    "artifact": "mossa-specifications",
+    "category": "commerce",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/specification"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "radius-card",
+            "surface-background",
+            "surface-border"
+        ]
+    }
+}

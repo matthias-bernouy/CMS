@@ -1,0 +1,22 @@
+{
+    "id": "mossa/blocs/account-shell",
+    "type": "bloc",
+    "artifact": "mossa-account-shell",
+    "category": "account",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/sidenav",
+            "mossa/blocs/sidenav-item",
+            "mossa/blocs/sidenav-section"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "radius-card",
+            "surface-background",
+            "surface-border"
+        ]
+    }
+}

@@ -1,1 +1,1 @@
-Consume Ulvia theme contract 3 through --ulvia-* variables and expose only explicitly named Mossa component hooks.
+Initial Mossa release: publish the reusable block collection with creator-authored copy and opt-in source dependencies.

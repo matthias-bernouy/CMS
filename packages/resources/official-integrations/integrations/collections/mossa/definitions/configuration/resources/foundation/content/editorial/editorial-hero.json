@@ -1,0 +1,25 @@
+{
+    "id": "mossa/blocs/editorial-hero",
+    "type": "bloc",
+    "artifact": "mossa-editorial-hero",
+    "category": "content",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/button"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "page-background",
+            "primary-base",
+            "secondary-base",
+            "secondary-foreground",
+            "surface-background",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

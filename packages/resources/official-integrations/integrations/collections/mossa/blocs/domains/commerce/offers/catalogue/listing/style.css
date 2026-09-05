@@ -1,0 +1,65 @@
+:host {
+    --_mossa-listing-backdrop: color-mix(in srgb, var(--ulvia-surface-text) 48%, transparent);
+
+    display: block;
+}
+::slotted([slot="close-filters-label"]) { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+[hidden] { display: none !important; }
+.layout { display: grid; grid-template-columns: minmax(18rem, 19rem) minmax(0, 1fr); gap: 2rem; align-items: start; }
+.sidebar { position: sticky; top: 1rem; min-width: 0; }
+.drawer-header { display: none; }
+.drawer-scroll { min-width: 0; }
+main { min-width: 0; }
+.mobile-actions, .close, .backdrop { display: none; }
+@media (max-width: 760px) {
+    .layout { display: block; }
+    .mobile-actions { display: flex; margin-bottom: 1rem; }
+    .open { min-height: 2.75rem; padding: .65rem 1rem; border: 1px solid var(--ulvia-surface-border); border-radius: var(--ulvia-radius-card); background: var(--ulvia-surface-background); color: var(--ulvia-surface-text); font: inherit; font-weight: 700; cursor: pointer; }
+    .sidebar {
+        position: fixed;
+        z-index: 30;
+        inset: 0 auto 0 0;
+        display: flex;
+        flex-direction: column;
+        width: min(88vw, var(--ulvia-container-xs));
+        height: 100vh;
+        height: 100dvh;
+        min-width: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+        visibility: hidden;
+        pointer-events: none;
+        background: var(--ulvia-page-background);
+        transform: translateX(-105%);
+        transition:
+            transform var(--ulvia-duration-normal) ease,
+            visibility 0s linear var(--ulvia-duration-normal);
+    }
+    .drawer-header {
+        display: flex;
+        flex: 0 0 auto;
+        justify-content: flex-end;
+        padding: max(.75rem, env(safe-area-inset-top)) 1rem .75rem;
+        background: var(--ulvia-page-background);
+    }
+    .drawer-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        padding: 0 1rem max(1rem, env(safe-area-inset-bottom));
+    }
+    .drawer-scroll ::slotted(mossa-filter-panel) {
+        --_mossa-fp-bg: transparent;
+        --_mossa-fp-border: transparent;
+        --_mossa-fp-radius: 0;
+        --_mossa-fp-pad: 0;
+    }
+    .close { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; margin-left: auto; border: 1px solid var(--ulvia-surface-border); border-radius: 50%; background: var(--ulvia-surface-background); color: var(--ulvia-surface-text); font: inherit; font-size: 1.5rem; cursor: pointer; }
+    .backdrop { position: fixed; z-index: 29; inset: 0; display: block; background: var(--_mossa-listing-backdrop); }
+    :host([filters-open]) .sidebar { visibility: visible; pointer-events: auto; transform: translateX(0); transition-delay: 0s; }
+}
+@media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }

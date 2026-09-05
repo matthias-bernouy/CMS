@@ -1,0 +1,57 @@
+:host {
+    --_mossa-stack-gap: var(--ulvia-space-md);
+    --_mossa-stack-direction: column;
+    --_mossa-stack-justify: flex-start;
+    --_mossa-stack-wrap: nowrap;
+    --_mossa-stack-background: transparent;
+    --_mossa-stack-color: inherit;
+
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    flex-direction: var(--_mossa-stack-direction);
+    flex-wrap: var(--_mossa-stack-wrap);
+    justify-content: var(--_mossa-stack-justify);
+    gap: var(--_mossa-stack-gap);
+    background: var(--_mossa-stack-background, transparent);
+    color: var(--_mossa-stack-color, inherit);
+}
+
+:host([appearance="soft"]) {
+    --_mossa-stack-background: var(--_mossa-tone-muted);
+    --_mossa-stack-color: var(--_mossa-tone-contrasted);
+}
+
+:host([appearance="plain"]) {
+    --_mossa-stack-color: var(--_mossa-tone-contrasted);
+}
+
+:host([appearance="filled"]) {
+    --_mossa-stack-background: var(--_mossa-tone-base);
+    --_mossa-stack-color: var(--_mossa-tone-foreground);
+}
+
+:host([direction="row"]) { --_mossa-stack-direction: row; }
+:host([direction="column"]) { --_mossa-stack-direction: column; }
+
+:host([justify-content="start"]) { --_mossa-stack-justify: flex-start; }
+:host([justify-content="center"]) { --_mossa-stack-justify: center; }
+:host([justify-content="end"]) { --_mossa-stack-justify: flex-end; }
+:host([justify-content="space-between"]) { --_mossa-stack-justify: space-between; }
+:host([justify-content="space-around"]) { --_mossa-stack-justify: space-around; }
+:host([justify-content="space-evenly"]) { --_mossa-stack-justify: space-evenly; }
+
+:host([wrap="true"]) { --_mossa-stack-wrap: wrap; }
+:host([wrap="false"]) { --_mossa-stack-wrap: nowrap; }
+
+:host([align-items="start"]) { align-items: flex-start; }
+:host([align-items="center"]) { align-items: center; }
+:host([align-items="end"]) { align-items: flex-end; }
+:host([align-items="stretch"]) { align-items: stretch; }
+
+:host([gap="none"]) { --_mossa-stack-gap: 0; }
+:host([gap="xs"]) { --_mossa-stack-gap: var(--ulvia-space-xs); }
+:host([gap="sm"]) { --_mossa-stack-gap: var(--ulvia-space-sm); }
+:host([gap="md"]) { --_mossa-stack-gap: var(--ulvia-space-md); }
+:host([gap="lg"]) { --_mossa-stack-gap: var(--ulvia-space-lg); }
+:host([gap="xl"]) { --_mossa-stack-gap: var(--ulvia-space-xl); }

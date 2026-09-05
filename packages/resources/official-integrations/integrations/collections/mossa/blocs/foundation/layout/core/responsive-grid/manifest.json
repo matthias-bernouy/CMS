@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-responsive-grid",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Responsive grid",
+        "description": "Intrinsic responsive grid driven by minimum and maximum item widths."
+    }
+}

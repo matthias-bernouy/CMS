@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-range-filter",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Range filter",
+        "description": "Two-handle range slider for a min/max value pair, with live label.",
+        "categories": [
+            "forms"
+        ]
+    }
+}

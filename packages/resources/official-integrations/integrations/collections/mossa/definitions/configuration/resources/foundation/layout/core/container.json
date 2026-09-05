@@ -1,0 +1,23 @@
+{
+    "id": "mossa/blocs/container",
+    "type": "bloc",
+    "artifact": "mossa-container",
+    "category": "layout",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/content-card",
+            "mossa/blocs/layout-grid"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "container-lg",
+            "container-md",
+            "container-sm",
+            "container-xl",
+            "container-xs"
+        ]
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "id": "mossa/blocs/grade",
+    "type": "bloc",
+    "artifact": "mossa-grade",
+    "category": "commerce",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-fast",
+            "duration-normal",
+            "font-body",
+            "radius-lg",
+            "secondary-base",
+            "secondary-contrasted",
+            "secondary-muted",
+            "shadow-soft",
+            "subtle-background",
+            "success-base",
+            "success-contrasted",
+            "success-muted",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

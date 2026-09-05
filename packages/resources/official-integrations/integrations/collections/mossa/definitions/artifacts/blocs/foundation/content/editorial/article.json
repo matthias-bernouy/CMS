@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-article",
+        "name": "Article",
+        "group": "Content",
+        "description": "Article template — cover image, eyebrow, title, lead, author block and rich body content.",
+        "path": "blocs/foundation/content/editorial/article",
+        "view": "Bloc.ts"
+    }
+}

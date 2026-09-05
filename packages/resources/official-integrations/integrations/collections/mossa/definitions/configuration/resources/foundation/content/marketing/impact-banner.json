@@ -1,0 +1,22 @@
+{
+    "id": "mossa/blocs/impact-banner",
+    "type": "bloc",
+    "artifact": "mossa-impact-banner",
+    "category": "content",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/stat"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "primary-base",
+            "radius-lg",
+            "secondary-base",
+            "secondary-foreground"
+        ]
+    }
+}

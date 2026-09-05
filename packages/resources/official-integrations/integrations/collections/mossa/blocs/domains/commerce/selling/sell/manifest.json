@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-sell",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Sell",
+        "description": "Guides a visitor from product selection and estimation to authenticated offer submission."
+    }
+}

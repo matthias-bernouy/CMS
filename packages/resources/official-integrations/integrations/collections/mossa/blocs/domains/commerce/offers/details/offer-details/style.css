@@ -1,0 +1,84 @@
+:host {
+    --_mossa-detail-gap: 2.5rem;
+    --_mossa-detail-left: 1fr;
+    --_mossa-detail-right: 1fr;
+    --_mossa-detail-media-ratio: 4 / 3;
+
+    display: block;
+    box-sizing: border-box;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--_mossa-detail-left)) minmax(0, var(--_mossa-detail-right));
+    gap: var(--_mossa-detail-gap);
+    align-items: start;
+}
+
+.gallery,
+.information {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.gallery { gap: 0.75rem; }
+
+.main-media {
+    aspect-ratio: var(--_mossa-detail-media-ratio);
+    overflow: hidden;
+    border-radius: var(--ulvia-radius-lg);
+    background: var(--ulvia-subtle-background);
+}
+
+.main-media ::slotted(*),
+.thumbnails ::slotted(*) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumbnails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.thumbnails ::slotted(*) {
+    width: 5.5rem;
+    height: 5.5rem;
+    flex: 0 0 5.5rem;
+    border-radius: var(--ulvia-radius-card);
+    background: var(--ulvia-subtle-background);
+}
+
+.thumbnails ::slotted([data-active]) {
+    outline: 2px solid var(--ulvia-secondary-base);
+    outline-offset: 2px;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+:host([balance="media-heavy"]) {
+    --_mossa-detail-left: 1.2fr;
+    --_mossa-detail-right: 1fr;
+}
+
+:host([balance="information-heavy"]) {
+    --_mossa-detail-left: 1fr;
+    --_mossa-detail-right: 1.2fr;
+}
+
+:host([ratio="square"]) { --_mossa-detail-media-ratio: 1; }
+:host([ratio="wide"]) { --_mossa-detail-media-ratio: 16 / 9; }
+
+@media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; }
+}

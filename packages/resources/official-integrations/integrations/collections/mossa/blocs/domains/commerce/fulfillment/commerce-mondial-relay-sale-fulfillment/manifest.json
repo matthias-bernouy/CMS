@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-commerce-mondial-relay-sale-fulfillment",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Commerce Mondial Relay sale fulfillment",
+        "description": "Seller-only label creation, protected download, handoff declaration, and carrier tracking."
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-sidenav-item",
+        "name": "Sidenav item",
+        "group": "Navigation",
+        "description": "Row inside a lateral navigation: icon, label, optional badge, optional nested submenu.",
+        "path": "blocs/foundation/navigation/sidenav/sidenav-item",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,44 @@
+:host {
+    display: block;
+    min-width: 0;
+    color: var(--ulvia-surface-text);
+}
+
+.table-container {
+    overflow-x: auto;
+    border: 1px solid var(--ulvia-surface-border);
+    border-radius: var(--ulvia-radius-card);
+    background: var(--ulvia-surface-background);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+caption {
+    padding: var(--ulvia-space-sm) var(--ulvia-space-md);
+    font-weight: 700;
+    text-align: left;
+}
+
+th,
+td {
+    padding: var(--ulvia-space-sm) var(--ulvia-space-md);
+    border-bottom: 1px solid var(--ulvia-surface-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    background: var(--ulvia-subtle-background);
+    font-weight: 700;
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+:host([data-invalid]) .table-container {
+    display: none;
+}

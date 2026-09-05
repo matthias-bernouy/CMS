@@ -1,0 +1,61 @@
+{
+    "id": "mossa/blocs/commerce-negotiation-form",
+    "type": "bloc",
+    "artifact": "mossa-commerce-negotiation-form",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce-negotiation",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce-negotiation:myProposals",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.role": "state.myProposals.role",
+                    "params.status": "state.myProposals.status",
+                    "params.offerId": "state.myProposals.offerId",
+                    "params.limit": "state.myProposals.limit",
+                    "params.offset": "state.myProposals.offset"
+                }
+            }
+        },
+        {
+            "source": "commerce-negotiation",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:createMyProposal",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.offerId": "state.createMyProposal.offerId",
+                    "body.amount": "state.createMyProposal.amount",
+                    "body.message": "state.createMyProposal.message"
+                }
+            }
+        },
+        {
+            "source": "commerce-negotiation",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:getProposalPolicy",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.offerId": "state.getProposalPolicy.offerId"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/commerce-negotiation-form-controller",
+            "mossa/blocs/input",
+            "mossa/blocs/responsive-grid",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card",
+            "mossa/blocs/textarea",
+            "mossa/blocs/toast"
+        ]
+    },
+    "defaultActive": false
+}

@@ -1,0 +1,29 @@
+{
+    "id": "mossa/blocs/commerce-offer-preview",
+    "type": "bloc",
+    "artifact": "mossa-commerce-offer-preview",
+    "category": "commerce",
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "primary-base",
+            "radius-lg",
+            "secondary-base",
+            "shadow-soft",
+            "space-md",
+            "space-xs",
+            "subtle-background",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    },
+    "requires": {
+        "resources": [
+            "mossa/blocs/button"
+        ]
+    },
+    "defaultActive": false
+}

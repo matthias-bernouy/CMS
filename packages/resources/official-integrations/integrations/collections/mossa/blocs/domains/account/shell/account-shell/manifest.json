@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-account-shell",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Account shell",
+        "description": "Two-column account layout with a left sidebar slot and a main content slot.",
+        "categories": [
+            "account"
+        ]
+    }
+}

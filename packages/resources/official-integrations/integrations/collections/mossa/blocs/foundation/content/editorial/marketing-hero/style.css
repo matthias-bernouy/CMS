@@ -1,0 +1,115 @@
+:host {
+    --_mossa-hero-marketing-background:        var(--ulvia-secondary-base);
+    --_mossa-hero-marketing-color:        var(--ulvia-secondary-foreground);
+    --_mossa-hero-marketing-muted-color:  color-mix(in srgb, var(--ulvia-secondary-foreground) 75%, transparent);
+    --_mossa-hero-marketing-border-color:    color-mix(in srgb, var(--ulvia-secondary-foreground) 20%, transparent);
+
+    --_mossa-hero-marketing-accent:   var(--ulvia-primary-base);
+
+    --_mossa-hero-marketing-padding-block:    clamp(5rem, 10vw, 9rem);
+    --_mossa-hero-marketing-padding-inline:    clamp(1.5rem, 4vw, 4rem);
+    --_mossa-hero-marketing-max-width:      72rem;
+
+    display: block;
+    background: var(--_mossa-hero-marketing-background);
+    color: var(--_mossa-hero-marketing-color);
+}
+
+:host([variant="primary"]) {
+    --_mossa-hero-marketing-background:        var(--ulvia-primary-base);
+    --_mossa-hero-marketing-color:        var(--ulvia-primary-foreground);
+    --_mossa-hero-marketing-muted-color:  color-mix(in srgb, var(--ulvia-primary-foreground) 75%, transparent);
+    --_mossa-hero-marketing-border-color:    color-mix(in srgb, var(--ulvia-primary-foreground) 20%, transparent);
+    --_mossa-hero-marketing-accent:   var(--ulvia-secondary-base);
+}
+
+:host([variant="default"]) {
+    --_mossa-hero-marketing-background:        var(--ulvia-page-background);
+    --_mossa-hero-marketing-color:        var(--ulvia-surface-text);
+    --_mossa-hero-marketing-muted-color:  var(--ulvia-surface-muted-text);
+    --_mossa-hero-marketing-border-color:    var(--ulvia-surface-border);
+    --_mossa-hero-marketing-accent:   var(--ulvia-primary-contrasted);
+}
+
+.hero {
+    padding: var(--_mossa-hero-marketing-padding-block) var(--_mossa-hero-marketing-padding-inline);
+}
+
+.content {
+    max-width: var(--_mossa-hero-marketing-max-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--_mossa-hero-marketing-accent);
+}
+
+.dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--_mossa-hero-marketing-accent);
+    display: inline-block;
+}
+
+/* Light-DOM h1 styles from theme.css would otherwise win over ::slotted()
+   (light-DOM tree of origin beats shadow). !important is the documented
+   override for this case. */
+::slotted([slot="title"]) {
+    margin: 0 !important;
+    font-family: var(--ulvia-font-heading) !important;
+    font-size: clamp(2.5rem, 7.5vw, 5.5rem) !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: -0.025em !important;
+    color: var(--_mossa-hero-marketing-color) !important;
+    max-width: 16ch;
+}
+
+::slotted([slot="title"]) em,
+::slotted([slot="title"]) i {
+    font-style: italic;
+    color: var(--_mossa-hero-marketing-accent);
+    font-weight: 700;
+}
+
+::slotted([slot="lead"]) {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--_mossa-hero-marketing-muted-color);
+    max-width: 38rem;
+}
+
+::slotted([slot="lead"]) em,
+::slotted([slot="lead"]) i {
+    color: var(--_mossa-hero-marketing-accent);
+    font-style: italic;
+    font-weight: 600;
+}
+
+.actions {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+:host(:not([has-actions])) .actions { display: none; }
+
+:host([align="center"]) .content {
+    align-items: center;
+    text-align: center;
+}
+
+:host([density="compact"])  { --_mossa-hero-marketing-padding-block: 4rem; }
+:host([density="spacious"]) { --_mossa-hero-marketing-padding-block: 8rem; }

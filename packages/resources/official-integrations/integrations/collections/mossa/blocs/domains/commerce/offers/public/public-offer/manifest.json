@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-public-offer",
+    "composition": "./template.html",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Public offer",
+        "description": "Dynamic public offer page with gallery, valuation, seller and actions."
+    }
+}

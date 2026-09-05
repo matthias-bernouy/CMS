@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-marketing-hero",
+        "name": "Marketing hero",
+        "group": "Content",
+        "description": "Bold home hero — eyebrow + display title (with inline emphasis) + lead + CTAs.",
+        "path": "blocs/foundation/content/editorial/marketing-hero",
+        "view": "Bloc.ts"
+    }
+}

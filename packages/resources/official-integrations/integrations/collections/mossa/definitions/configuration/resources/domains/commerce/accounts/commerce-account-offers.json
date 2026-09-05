@@ -1,0 +1,49 @@
+{
+    "id": "mossa/blocs/commerce-account-offers",
+    "type": "bloc",
+    "artifact": "mossa-commerce-account-offers",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:listMyOffers",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.status": "state.listMyOffers.status",
+                    "params.publicationStatus": "state.listMyOffers.publicationStatus",
+                    "params.workflowState": "state.listMyOffers.workflowState",
+                    "params.limit": "state.listMyOffers.limit",
+                    "params.offset": "state.listMyOffers.offset"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:myOfferImage",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.myOfferImage.id"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/commerce-account-offers-controller",
+            "mossa/blocs/option",
+            "mossa/blocs/pagination",
+            "mossa/blocs/responsive-grid",
+            "mossa/blocs/select",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card",
+            "mossa/blocs/toast"
+        ]
+    },
+    "defaultActive": false
+}

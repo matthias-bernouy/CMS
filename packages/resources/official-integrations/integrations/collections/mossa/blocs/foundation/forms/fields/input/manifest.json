@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-input",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Input",
+        "description": "Form-associated input with an encapsulated label, hint, and validation message."
+    }
+}

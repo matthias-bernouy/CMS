@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-feature",
+        "name": "Feature",
+        "group": "Content",
+        "description": "Icon + label pair used inside a feature strip.",
+        "path": "blocs/foundation/content/marketing/feature",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-sell",
+        "name": "Sell",
+        "group": "Commerce",
+        "description": "Guides a visitor from product selection and estimation to authenticated offer submission.",
+        "path": "blocs/domains/commerce/selling/sell",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-textarea",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Textarea",
+        "description": "Form-associated multiline input with an encapsulated label."
+    }
+}

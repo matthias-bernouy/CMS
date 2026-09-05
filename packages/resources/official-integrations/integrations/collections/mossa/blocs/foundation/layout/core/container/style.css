@@ -1,0 +1,21 @@
+:host {
+    --_mossa-max-width: var(--ulvia-container-md);
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--_mossa-max-width);
+    padding-inline: clamp(1rem, 3vw, 3rem);
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+}
+
+:host([size="xs"])   { --_mossa-max-width: var(--ulvia-container-xs); }
+:host([size="sm"])   { --_mossa-max-width: var(--ulvia-container-sm); }
+:host([size="md"])   { --_mossa-max-width: var(--ulvia-container-md); }
+:host([size="lg"])   { --_mossa-max-width: var(--ulvia-container-lg); }
+:host([size="xl"])   { --_mossa-max-width: var(--ulvia-container-xl); }
+:host([size="full"]) { --_mossa-max-width: 100%; }
+
+:host([align-self="start"])  { margin-inline-start: 0;    margin-inline-end: auto; }
+:host([align-self="center"]) { margin-inline-start: auto; margin-inline-end: auto; }
+:host([align-self="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }

@@ -1,0 +1,38 @@
+{
+    "id": "mossa/blocs/commerce-sale-detail",
+    "type": "bloc",
+    "artifact": "mossa-commerce-sale-detail",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:mySale",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.mySale.id",
+                    "params.publicId": "state.mySale.publicId"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button"
+        ]
+    },
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "danger-base",
+            "secondary-base",
+            "secondary-contrasted",
+            "success-base",
+            "surface-border",
+            "surface-muted-text"
+        ]
+    }
+}

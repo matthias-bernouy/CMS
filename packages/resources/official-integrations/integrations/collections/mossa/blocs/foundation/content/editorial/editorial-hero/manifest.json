@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-editorial-hero",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Editorial hero",
+        "description": "Centered or left-aligned hero — eyebrow + title + subtitle + optional bottom slot.",
+        "categories": [
+            "content"
+        ]
+    }
+}

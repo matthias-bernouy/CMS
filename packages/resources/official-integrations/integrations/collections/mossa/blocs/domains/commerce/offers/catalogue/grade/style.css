@@ -1,0 +1,126 @@
+:host {
+    --_mossa-gc-bg:          var(--ulvia-surface-background);
+    --_mossa-gc-fg:          var(--ulvia-surface-text);
+    --_mossa-gc-fg-muted:    var(--ulvia-surface-muted-text);
+    --_mossa-gc-border:      var(--ulvia-surface-border);
+    --_mossa-gc-accent:      var(--ulvia-surface-muted-text);
+    --_mossa-gc-dash:        var(--ulvia-secondary-base);
+    --_mossa-gc-radius:      var(--ulvia-radius-lg);
+    --_mossa-gc-pad:         1.5rem;
+
+    display: block;
+}
+
+.card {
+    background: var(--_mossa-gc-bg);
+    color: var(--_mossa-gc-fg);
+    border: 1px solid var(--_mossa-gc-border);
+    border-radius: var(--_mossa-gc-radius);
+    padding: var(--_mossa-gc-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 100%;
+    box-sizing: border-box;
+    transition: border-color var(--ulvia-duration-normal) ease,
+                box-shadow var(--ulvia-duration-normal) ease,
+                transform var(--ulvia-duration-fast) ease;
+}
+
+.card:hover {
+    border-color: var(--_mossa-gc-accent);
+    box-shadow: var(--ulvia-shadow-soft);
+    transform: translateY(-2px);
+}
+
+.head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--_mossa-gc-border);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    align-self: flex-start;
+    background: var(--ulvia-surface-background);
+    color: var(--_mossa-gc-accent);
+    border: 1px solid var(--_mossa-gc-border);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-family: var(--ulvia-font-body);
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.badge ::slotted(*) {
+    margin: 0 !important;
+    font: inherit !important;
+    color: inherit !important;
+}
+
+.dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--_mossa-gc-accent);
+    flex: 0 0 auto;
+}
+
+::slotted([slot="caption"]) {
+    margin: 0 !important;
+    font-size: 0.85rem;
+    color: var(--_mossa-gc-fg-muted);
+}
+
+.criteria {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+::slotted([slot="criteria"]) {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--_mossa-gc-fg);
+    position: relative;
+    padding-left: 1.25rem;
+}
+
+::slotted([slot="criteria"])::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--_mossa-gc-dash);
+    font-weight: 700;
+}
+
+:host([tone="success"]) {
+    --_mossa-gc-bg:     var(--ulvia-success-muted);
+    --_mossa-gc-border: color-mix(in srgb, var(--ulvia-success-base) 30%, var(--ulvia-surface-border));
+    --_mossa-gc-accent: var(--ulvia-success-contrasted);
+}
+
+:host([tone="accent"]) {
+    --_mossa-gc-bg:     var(--ulvia-secondary-muted);
+    --_mossa-gc-border: color-mix(in srgb, var(--ulvia-secondary-base) 30%, var(--ulvia-surface-border));
+    --_mossa-gc-accent: var(--ulvia-secondary-contrasted);
+}
+
+:host([tone="neutral"]) {
+    --_mossa-gc-bg:     var(--ulvia-subtle-background);
+    --_mossa-gc-border: var(--ulvia-surface-border);
+    --_mossa-gc-accent: var(--ulvia-surface-muted-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+    .card:hover { transform: none; }
+}

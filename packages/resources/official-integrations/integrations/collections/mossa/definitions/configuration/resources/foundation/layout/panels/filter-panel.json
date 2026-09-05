@@ -1,0 +1,26 @@
+{
+    "id": "mossa/blocs/filter-panel",
+    "type": "bloc",
+    "artifact": "mossa-filter-panel",
+    "category": "layout",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/input"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-normal",
+            "font-body",
+            "radius-card",
+            "radius-sm",
+            "secondary-base",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

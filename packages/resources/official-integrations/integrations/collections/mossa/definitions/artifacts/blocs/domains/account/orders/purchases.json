@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-purchases",
+        "name": "Purchases",
+        "group": "Account",
+        "description": "Paginated private list of the current buyer's orders.",
+        "path": "blocs/domains/account/orders/purchases",
+        "view": "Bloc.ts"
+    }
+}

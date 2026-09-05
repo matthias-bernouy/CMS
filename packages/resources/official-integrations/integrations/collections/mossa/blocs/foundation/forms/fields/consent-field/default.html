@@ -1,0 +1,59 @@
+<mossa-consent-field
+    context-key="signup"
+    appearance="detailed"
+    heading="Required terms"
+    loading-label="Loading terms…"
+    load-error-label="Terms could not be loaded."
+    retry-label="Try again"
+    required-message="Accept all terms to continue."
+    changed-label="The terms could not be validated. Review them before trying again."
+    new-tab-label="(opens in a new tab)"
+    cms-source="/.cms/sources/consent/getRequirements?context=signup as consentRequirements"
+    cms-reload-on="consent:reload"
+>
+    <div data-consent-editor-preview aria-label="Consent preview">
+        <fieldset class="mossa-consent-field__requirements">
+            <legend class="mossa-consent-field__legend" data-consent-preview-heading>Required terms</legend>
+            <label class="mossa-consent-field__item">
+                <input type="checkbox" disabled checked>
+                <span>
+                    I accept the
+                    <a href="#" tabindex="-1">
+                        terms and conditions
+                        <span class="mossa-consent-field__new-tab" data-consent-preview-new-tab-label>(opens in a new tab)</span>
+                    </a>.
+                </span>
+            </label>
+        </fieldset>
+    </div>
+
+    <p class="mossa-consent-field__changed" data-consent-changed role="alert" hidden>
+        The terms could not be validated. Review them before trying again.
+    </p>
+
+    <p class="mossa-consent-field__status" data-consent-runtime data-consent-loading cms-condition="$source.loading" role="status">
+        Loading terms…
+    </p>
+
+    <div class="mossa-consent-field__error" data-consent-runtime data-consent-error cms-condition="$source.error" role="alert">
+        <span data-consent-error-copy>Terms could not be loaded.</span>
+        <button data-consent-retry type="button">Try again</button>
+    </div>
+
+    <fieldset class="mossa-consent-field__requirements" data-consent-runtime data-consent-ready cms-condition="$source.loaded">
+        <legend class="mossa-consent-field__legend" data-consent-heading>Required terms</legend>
+        <label class="mossa-consent-field__item" cms-repeat="consentRequirements.documents as document">
+            <input data-consent-version type="checkbox" value="{{ document.versionId }}">
+            <span
+                data-consent-copy
+                data-consent-text="{{ document.consentText }}"
+                data-consent-label="{{ document.label }}"
+            >
+                <span data-consent-prefix>{{ document.consentPrefix }}</span><a href="{{ document.page.path }}" target="_blank" rel="noopener noreferrer"><span>{{ document.label }}</span><span class="mossa-consent-field__new-tab" data-consent-new-tab-label>(opens in a new tab)</span></a><span data-consent-suffix>{{ document.consentSuffix }}</span>
+            </span>
+        </label>
+        <p class="mossa-consent-field__required" data-consent-required-copy aria-live="polite" hidden>
+            Accept all terms to continue.
+        </p>
+    </fieldset>
+</mossa-consent-field>

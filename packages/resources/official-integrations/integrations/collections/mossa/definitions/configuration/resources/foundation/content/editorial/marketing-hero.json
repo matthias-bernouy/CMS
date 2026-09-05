@@ -1,0 +1,27 @@
+{
+    "id": "mossa/blocs/marketing-hero",
+    "type": "bloc",
+    "artifact": "mossa-marketing-hero",
+    "category": "content",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/button"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "font-heading",
+            "page-background",
+            "primary-base",
+            "primary-contrasted",
+            "primary-foreground",
+            "secondary-base",
+            "secondary-foreground",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

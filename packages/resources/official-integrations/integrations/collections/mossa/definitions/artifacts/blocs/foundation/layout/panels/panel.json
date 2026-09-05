@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-panel",
+        "name": "Panel",
+        "group": "Layout",
+        "description": "Generic white card with an optional icon + title and a free body. Used for forms, summaries, detail blocks and any content sitting on a surface.",
+        "path": "blocs/foundation/layout/panels/panel",
+        "view": "Bloc.ts"
+    }
+}

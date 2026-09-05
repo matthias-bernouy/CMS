@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-textarea",
+        "name": "Textarea",
+        "group": "Forms",
+        "description": "Form-associated multiline input with an encapsulated label.",
+        "path": "blocs/foundation/forms/fields/textarea"
+    }
+}

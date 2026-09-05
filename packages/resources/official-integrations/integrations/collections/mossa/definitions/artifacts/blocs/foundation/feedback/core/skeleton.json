@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-skeleton",
+        "name": "Skeleton",
+        "group": "Feedback",
+        "description": "Neutral animated placeholder for content that is still loading.",
+        "path": "blocs/foundation/feedback/core/skeleton"
+    }
+}

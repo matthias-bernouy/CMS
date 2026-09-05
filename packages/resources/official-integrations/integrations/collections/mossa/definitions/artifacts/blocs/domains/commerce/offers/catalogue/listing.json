@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-listing",
+        "name": "Listing",
+        "group": "Commerce",
+        "description": "Responsive listing with a desktop sidebar and mobile filter drawer.",
+        "path": "blocs/domains/commerce/offers/catalogue/listing",
+        "view": "Bloc.ts"
+    }
+}

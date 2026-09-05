@@ -1,0 +1,40 @@
+{
+    "id": "mossa/blocs/commerce-account-offers-controller",
+    "type": "bloc",
+    "artifact": "mossa-commerce-account-offers-controller",
+    "category": "commerce",
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:listMyOffers",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.status": "state.listMyOffers.status",
+                    "params.publicationStatus": "state.listMyOffers.publicationStatus",
+                    "params.workflowState": "state.listMyOffers.workflowState",
+                    "params.limit": "state.listMyOffers.limit",
+                    "params.offset": "state.listMyOffers.offset"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:myOfferImage",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.myOfferImage.id"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/commerce-account-offers"
+        ]
+    },
+    "defaultActive": false
+}

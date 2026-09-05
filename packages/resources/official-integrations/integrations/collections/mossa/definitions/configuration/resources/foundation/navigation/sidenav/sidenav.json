@@ -1,0 +1,34 @@
+{
+    "id": "mossa/blocs/sidenav",
+    "type": "bloc",
+    "artifact": "mossa-sidenav",
+    "category": "navigation",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/sidenav-item",
+            "mossa/blocs/sidenav-section"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-normal",
+            "duration-slow",
+            "font-body",
+            "page-background",
+            "primary-base",
+            "primary-foreground",
+            "radius-card",
+            "radius-lg",
+            "radius-sm",
+            "secondary-base",
+            "secondary-foreground",
+            "shadow-sm",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

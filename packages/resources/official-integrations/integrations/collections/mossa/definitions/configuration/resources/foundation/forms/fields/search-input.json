@@ -1,0 +1,20 @@
+{
+    "id": "mossa/blocs/search-input",
+    "type": "bloc",
+    "artifact": "mossa-search-input",
+    "category": "forms",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "duration-slow",
+            "radius-card",
+            "radius-lg",
+            "secondary-base",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-input",
+        "name": "Input",
+        "group": "Forms",
+        "description": "Form-associated input with an encapsulated label, hint, and validation message.",
+        "path": "blocs/foundation/forms/fields/input"
+    }
+}

@@ -1,0 +1,58 @@
+:host {
+    --_mossa-cta-bg:      var(--ulvia-surface-background);
+    --_mossa-cta-fg:      var(--ulvia-surface-text);
+    --_mossa-cta-muted:   var(--ulvia-surface-muted-text);
+    --_mossa-cta-border:  var(--ulvia-surface-border);
+    --_mossa-cta-radius:  var(--ulvia-radius-lg);
+    --_mossa-cta-pad:     2.5rem 1.5rem;
+
+    display: block;
+}
+
+.cta {
+    background: var(--_mossa-cta-bg);
+    color: var(--_mossa-cta-fg);
+    border: 1px solid var(--_mossa-cta-border);
+    border-radius: var(--_mossa-cta-radius);
+    padding: var(--_mossa-cta-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading);
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--_mossa-cta-fg);
+}
+
+::slotted([slot="description"]) {
+    margin: 0;
+    color: var(--_mossa-cta-muted);
+    font-size: 0.95rem;
+    max-width: 36rem;
+}
+
+.actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Tone */
+:host([tone="primary"]) {
+    --_mossa-cta-bg:     var(--ulvia-secondary-base);
+    --_mossa-cta-fg:     var(--ulvia-secondary-foreground);
+    --_mossa-cta-muted:  color-mix(in srgb, var(--ulvia-secondary-foreground) 82%, transparent);
+    --_mossa-cta-border: transparent;
+}
+:host([tone="muted"]) {
+    --_mossa-cta-bg:     var(--ulvia-page-background);
+}

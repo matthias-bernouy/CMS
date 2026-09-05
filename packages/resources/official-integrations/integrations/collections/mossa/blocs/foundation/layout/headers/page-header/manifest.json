@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-page-header",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Page header",
+        "description": "Page title (and optional subtitle) on the left, primary actions on the right.",
+        "categories": [
+            "layout"
+        ]
+    }
+}

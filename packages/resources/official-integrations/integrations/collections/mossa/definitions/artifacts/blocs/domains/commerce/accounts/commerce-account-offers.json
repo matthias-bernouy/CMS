@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-commerce-account-offers",
+        "name": "Commerce account offers",
+        "group": "Commerce",
+        "description": "Authenticated seller offer listing with status filters and pagination.",
+        "path": "blocs/domains/commerce/accounts/commerce-account-offers",
+        "composition": "template.html"
+    }
+}

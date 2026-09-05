@@ -1,0 +1,123 @@
+{
+    "id": "mossa/blocs/sell",
+    "type": "bloc",
+    "artifact": "mossa-sell",
+    "category": "commerce",
+    "defaultActive": false,
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:products",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.q": "state.products.query",
+                    "params.limit": "state.products.limit"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:offerConditions",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:product",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.product.id"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:mySeller",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:registerMySeller",
+            "contractVersion": "^1.0.0"
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:createMyOffer",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "body.slug": "state.offer.slug",
+                    "body.productId": "state.offer.productId",
+                    "body.conditionCode": "state.offer.conditionCode"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:uploadMyOfferImage",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.offerId": "state.offer.id"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:submitMyOffer",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.offer.id",
+                    "body.expectedVersion": "state.offer.version"
+                }
+            }
+        },
+        {
+            "source": "user-account",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:user-account:getAccount",
+            "contractVersion": "^1.0.0"
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/input",
+            "mossa/blocs/textarea"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-contrasted",
+            "primary-base",
+            "primary-foreground",
+            "primary-muted",
+            "radius-card",
+            "radius-lg",
+            "radius-sm",
+            "secondary-base",
+            "secondary-contrasted",
+            "secondary-foreground",
+            "secondary-muted",
+            "shadow-lg",
+            "shadow-sm",
+            "shadow-soft",
+            "subtle-background",
+            "success-contrasted",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}

@@ -1,0 +1,15 @@
+:host {
+    --_mossa-spacing-size: 1.5rem;
+    display: block;
+    width: 100%;
+}
+
+.spacer {
+    height: var(--_mossa-spacing-size);
+}
+
+:host([size="xs"]) { --_mossa-spacing-size: 0.5rem; }
+:host([size="s"])  { --_mossa-spacing-size: 1rem; }
+:host([size="m"])  { --_mossa-spacing-size: 2rem; }
+:host([size="l"])  { --_mossa-spacing-size: 3.5rem; }
+:host([size="xl"]) { --_mossa-spacing-size: 5.5rem; }

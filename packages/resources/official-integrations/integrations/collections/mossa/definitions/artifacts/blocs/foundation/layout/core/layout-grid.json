@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-layout-grid",
+        "name": "Layout grid",
+        "group": "Layout",
+        "description": "Responsive grid layout — drop cards or any blocs inside.",
+        "path": "blocs/foundation/layout/core/layout-grid",
+        "view": "Bloc.ts"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "mossa-impact-banner",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Impact banner",
+        "description": "Wide semantic-color banner with icon, title, paragraphs, and an optional statistics grid.",
+        "categories": [
+            "content"
+        ]
+    }
+}

@@ -1,0 +1,63 @@
+:host {
+    --_mossa-tile-bg:     var(--ulvia-surface-background);
+    --_mossa-tile-fg:     var(--ulvia-surface-text);
+    --_mossa-tile-muted:  var(--ulvia-surface-muted-text);
+    --_mossa-tile-border: var(--ulvia-surface-border);
+    --_mossa-tile-radius: var(--ulvia-radius-lg);
+    --_mossa-tile-pad:    1.25rem 1rem;
+    --_mossa-tile-value-size:  2.4rem;
+    --_mossa-tile-label-size:  0.85rem;
+
+    display: block;
+}
+
+.tile {
+    background: var(--_mossa-tile-bg);
+    color: var(--_mossa-tile-fg);
+    border: 1px solid var(--_mossa-tile-border);
+    border-radius: var(--_mossa-tile-radius);
+    padding: var(--_mossa-tile-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+}
+
+::slotted([slot="value"]) {
+    margin: 0;
+    font-family: var(--ulvia-font-heading);
+    font-size: var(--_mossa-tile-value-size);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--_mossa-tile-fg);
+}
+
+::slotted([slot="label"]) {
+    margin: 0;
+    font-size: var(--_mossa-tile-label-size);
+    color: var(--_mossa-tile-muted);
+}
+
+/* Tone */
+:host([tone="inverted"]) {
+    --_mossa-tile-bg:     transparent;
+    --_mossa-tile-fg:     var(--ulvia-primary-foreground);
+    --_mossa-tile-muted:  color-mix(in srgb, var(--ulvia-primary-foreground) 78%, transparent);
+    --_mossa-tile-border: transparent;
+}
+
+:host([tone="accent"]) {
+    --_mossa-tile-fg: var(--ulvia-primary-base);
+}
+
+/* Size */
+:host([size="sm"]) { --_mossa-tile-value-size: 1.7rem; --_mossa-tile-pad: 1rem 0.75rem; }
+:host([size="lg"]) { --_mossa-tile-value-size: 3.2rem; --_mossa-tile-pad: 1.75rem 1.25rem; }
+
+/* Alignment */
+:host([align="left"]) .tile {
+    align-items: flex-start;
+    text-align: left;
+}

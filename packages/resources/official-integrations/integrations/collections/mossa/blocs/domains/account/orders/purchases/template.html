@@ -1,0 +1,35 @@
+<section>
+    <div data-loading>
+        <mossa-stack gap="sm">
+            <mossa-skeleton height="6.5rem" animation="wave" label="Loading purchases"></mossa-skeleton>
+            <mossa-skeleton height="6.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+            <mossa-skeleton height="6.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        </mossa-stack>
+    </div>
+
+    <mossa-surface-card data-empty hidden appearance="outlined" density="spacious">
+        <strong slot="title">No purchases yet</strong>
+        <span slot="description">Your orders will appear here after your first purchase.</span>
+        <slot name="empty-action" slot="actions"></slot>
+    </mossa-surface-card>
+
+    <mossa-surface-card data-login hidden appearance="outlined" density="spacious">
+        <strong slot="title">Sign in to view your purchases</strong>
+        <span slot="description">Order history is available only from your account.</span>
+        <slot name="login-action" slot="actions"></slot>
+    </mossa-surface-card>
+
+    <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
+        <strong slot="title">Your purchases could not be loaded</strong>
+        <span slot="description" data-error-message></span>
+    </mossa-surface-card>
+
+    <div data-content hidden>
+        <div class="orders" data-list></div>
+        <nav class="pagination" data-pagination aria-label="Purchase pagination">
+            <mossa-button appearance="outlined"><button data-previous type="button">Previous</button></mossa-button>
+            <span data-page-label aria-live="polite"></span>
+            <mossa-button appearance="outlined"><button data-next type="button">Next</button></mossa-button>
+        </nav>
+    </div>
+</section>

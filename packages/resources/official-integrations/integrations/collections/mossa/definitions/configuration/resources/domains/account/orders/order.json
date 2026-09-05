@@ -1,0 +1,106 @@
+{
+    "id": "mossa/blocs/order",
+    "type": "bloc",
+    "artifact": "mossa-order",
+    "category": "account",
+    "defaultActive": false,
+    "endpoints": [
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:myOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "route.orderId"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:offer",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.offer.id"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:publicOfferImage",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.id": "state.image.id"
+                }
+            }
+        },
+        {
+            "source": "commerce-stripe-payments",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:getPaymentForOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.orderId": "route.orderId"
+                }
+            }
+        },
+        {
+            "source": "commerce-mondial-relay-delivery",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:getRelayPointForOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.orderId": "route.orderId"
+                }
+            }
+        },
+        {
+            "source": "commerce-mondial-relay-fulfillment",
+            "sourceVersion": "^1.0.0",
+            "endpoint": "urn:system-functions:getShipmentForOrder",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.orderId": "route.orderId"
+                }
+            }
+        }
+    ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/button",
+            "mossa/blocs/responsive-grid",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "danger-contrasted",
+            "danger-muted",
+            "font-heading",
+            "radius-control",
+            "secondary-base",
+            "secondary-contrasted",
+            "secondary-foreground",
+            "secondary-muted",
+            "subtle-background",
+            "success-contrasted",
+            "success-muted",
+            "surface-background",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text",
+            "warning-contrasted",
+            "warning-muted"
+        ]
+    }
+}
