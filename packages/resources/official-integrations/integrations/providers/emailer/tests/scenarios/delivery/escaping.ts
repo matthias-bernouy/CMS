@@ -12,14 +12,14 @@ export function registerDeliveryEscapingTest(): void {
         const rendered = await okJson(
             await sourceJson(harness, "renderTemplate", {
                 key: "auth.welcome",
-                data: { user: { name: `<Court & "Serve">'` } },
+                data: { user: { name: `<Example & "Company">'` } },
             }),
         );
 
         expect(rendered).toMatchObject({
-            subject: `Welcome <Court & "Serve">'`,
-            htmlBody: "<p>Hello &lt;Court &amp; &quot;Serve&quot;&gt;&#39;</p>",
-            textBody: `Hello <Court & "Serve">'`,
+            subject: `Welcome <Example & "Company">'`,
+            htmlBody: "<p>Hello &lt;Example &amp; &quot;Company&quot;&gt;&#39;</p>",
+            textBody: `Hello <Example & "Company">'`,
         });
     });
 }
