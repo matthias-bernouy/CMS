@@ -1,1 +1,1 @@
-Accept Mondial Relay Source 4.x while retaining the same delivery endpoint contracts.
+Initial Commerce Mondial Relay delivery release: compose the Commerce, Mondial Relay, and User Account source contracts.

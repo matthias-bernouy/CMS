@@ -12,12 +12,16 @@ describe("Commerce Mondial Relay delivery installation", () => {
         const functions = new InMemoryFunctionRepository();
         const installations = new InMemoryIntegrationInstallationRepository();
         const roles = new InMemoryRolesRepository();
-        for (const id of ["commerce", "mondial-relay", "user-account"]) {
+        for (const [id, definitionVersion] of [
+            ["commerce", "1.0.0"],
+            ["mondial-relay", "1.0.0"],
+            ["user-account", "1.0.0"],
+        ] as const) {
             const sourceId = id === "mondial-relay" ? "delivery" : id === "user-account" ? "accounts" : id;
             await installations.create({
                 id,
                 label: id,
-                definitionVersion: "3.0.0",
+                definitionVersion,
                 status: "success",
                 answersSnapshot: { id: sourceId },
                 secretRefs: {},
