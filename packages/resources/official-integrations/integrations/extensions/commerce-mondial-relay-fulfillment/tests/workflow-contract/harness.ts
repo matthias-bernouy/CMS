@@ -40,14 +40,14 @@ export async function installedFunctions() {
 
 export async function installationsForFulfillment(): Promise<InMemoryIntegrationInstallationRepository> {
     const repository = new InMemoryIntegrationInstallationRepository();
-    for (const [id, sourceId] of [
-        ["commerce", "commerce"],
-        ["mondial-relay", "delivery"],
-    ]) {
+    for (const [id, sourceId, definitionVersion] of [
+        ["commerce", "commerce", "1.0.0"],
+        ["mondial-relay", "delivery", "1.0.0"],
+    ] as const) {
         await repository.create({
             id,
             label: id,
-            definitionVersion: "3.0.0",
+            definitionVersion,
             status: "success",
             answersSnapshot: { id: sourceId },
             secretRefs: {},

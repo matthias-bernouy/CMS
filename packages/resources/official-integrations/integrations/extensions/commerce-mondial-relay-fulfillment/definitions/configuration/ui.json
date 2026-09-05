@@ -15,16 +15,11 @@
         [
             "Functions",
             "Seller shipment, label capability, handoff, cancellation, and reconciliation commands"
-        ],
-        [
-            "Blocs",
-            "Seller-only Mondial Relay sale fulfillment"
         ]
     ],
     "sync": [
         "Validate dependencies",
         "Install fulfillment functions",
-        "Install seller bloc",
-        "Refresh Functions and Blocs"
+        "Refresh Functions"
     ]
 }

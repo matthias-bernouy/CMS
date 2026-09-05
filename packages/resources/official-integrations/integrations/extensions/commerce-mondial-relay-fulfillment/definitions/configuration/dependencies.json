@@ -2,11 +2,11 @@
     {
         "name": "commerce",
         "kind": "commerce",
-        "versionRange": "^3.0.0"
+        "versionRange": "^1.0.0"
     },
     {
         "name": "delivery",
         "kind": "mondial-relay",
-        "versionRange": ">=3.0.0 <5.0.0"
+        "versionRange": "^1.0.0"
     }
 ]
