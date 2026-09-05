@@ -185,6 +185,43 @@ describe("local integration release commands", () => {
         expect(verified).toEqual(["zulu", "alpha"]);
     });
 
+    test("releases a collection theme provider before its lexically earlier consumer", async () => {
+        const root = await temporaryRoot();
+        const source = join(root, "source");
+        const data = join(root, "data");
+        const mossa = await writeIntegrationSource(source, "4.0.0", "mossa");
+        await writeIntegrationSource(source, "5.0.0", "ulvia");
+        await writeFile(
+            mossa,
+            JSON.stringify(
+                integrationDefinition("mossa", "4.0.0", {
+                    schema: "cms.integration.definition.v2",
+                    type: "collection",
+                    theme: {
+                        dependencies: [{ kind: "ulvia", versionRange: "^5.0.0" }],
+                        categories: [],
+                    },
+                    resourceCategories: [],
+                    resources: [],
+                    artifacts: [],
+                }),
+            ),
+        );
+        const verified: string[] = [];
+
+        await runCli(["release", "--all"], {
+            environment: { ULVIA_DATA_DIR: data },
+            cwd: source,
+            repositoryFetch: emptyRemote,
+            releaseVerifier: {
+                verify: async ({ candidate }) => void verified.push(candidate.package.envelope.kind),
+            },
+            log: () => undefined,
+        });
+
+        expect(verified).toEqual(["ulvia", "mossa"]);
+    });
+
     test("rejects local dependency cycles before storing any release", async () => {
         const root = await temporaryRoot();
         const source = join(root, "source");

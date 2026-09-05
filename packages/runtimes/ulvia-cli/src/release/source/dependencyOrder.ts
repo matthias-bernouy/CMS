@@ -21,21 +21,8 @@ export async function orderLocalReleaseKinds(root: string, kinds: readonly strin
         }
         visiting.push(kind);
         const source = sources.get(kind)!;
-        const collectionDependencies =
-            source.definition.schema === "cms.integration.definition.v2" && source.definition.type === "collection"
-                ? source.definition.resources.flatMap((resource) =>
-                      (resource.endpoints ?? []).map((endpoint) => ({
-                          kind: endpoint.source,
-                          versionRange: endpoint.sourceVersion,
-                      })),
-                  )
-                : [];
-        const dependencies = [...(source.definition.dependencies ?? []), ...collectionDependencies]
-            .filter(
-                (dependency) =>
-                    (!("optional" in dependency) || !dependency.optional) &&
-                    sourceSatisfies(dependency, sources.get(dependency.kind)),
-            )
+        const dependencies = authorDependencies(source.definition)
+            .filter((dependency) => sourceSatisfies(dependency, sources.get(dependency.kind)))
             .map((dependency) => dependency.kind)
             .sort((left, right) => left.localeCompare(right));
         for (const dependency of dependencies) {
@@ -50,6 +37,23 @@ export async function orderLocalReleaseKinds(root: string, kinds: readonly strin
         visit(kind);
     }
     return ordered;
+}
+
+function authorDependencies(
+    definition: Awaited<ReturnType<typeof readLocalReleaseSource>>["definition"],
+): Array<{ kind: string; versionRange?: string }> {
+    const declared = (definition.dependencies ?? []).filter((dependency) => !dependency.optional);
+    if (definition.schema !== "cms.integration.definition.v2" || definition.type !== "collection") {
+        return declared;
+    }
+    const resourceDependencies = definition.resources.flatMap((resource) => [
+        ...(resource.endpoints ?? []).map((endpoint) => ({
+            kind: endpoint.source,
+            versionRange: endpoint.sourceVersion,
+        })),
+        ...(resource.requires?.collections ?? []).map(({ kind, versionRange }) => ({ kind, versionRange })),
+    ]);
+    return [...declared, ...(definition.theme?.dependencies ?? []), ...resourceDependencies];
 }
 
 function sourceSatisfies(
