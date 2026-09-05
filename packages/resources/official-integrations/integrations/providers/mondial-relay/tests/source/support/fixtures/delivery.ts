@@ -5,7 +5,7 @@ export function defaultSettingsRow(): JsonRecord {
         id: "default",
         mode_collection: "CCC",
         mode_delivery: "24R",
-        customer_reference: "COURTSIDE",
+        customer_reference: "MERCHANT",
         sender_name: "Sender Shop",
         sender_firstname: "",
         sender_lastname: "",

@@ -3,7 +3,7 @@
         "endpointId": "deliveryQuote",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/system/delivery-quotes/public",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/delivery-quotes/public",
         "params": [
             {
                 "name": "quoteId",

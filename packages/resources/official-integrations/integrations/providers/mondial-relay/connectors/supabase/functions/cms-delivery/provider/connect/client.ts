@@ -1,4 +1,4 @@
-import { requiredEnv } from "../../env.ts";
+import { localProviderSimulationEnabled, requiredEnv } from "../../env.ts";
 import { ProviderStatusError } from "../../http.ts";
 import type { ConnectShipmentResult, ConnectStatus, JsonRecord, ShipmentPayload } from "../../shipment/types.ts";
 import { validatedMondialRelayLabelUrl } from "../label-url.ts";
@@ -9,6 +9,17 @@ import { connectStatuses, connectStatusMessage, relayPointInfo } from "./respons
 
 export async function createConnectShipment(payload: ShipmentPayload): Promise<ConnectShipmentResult> {
     const endpoint = mondialRelayConnectEndpoint();
+    if (localProviderSimulationEnabled()) {
+        const expeditionNumber = localExpeditionNumber(payload.externalOrderId);
+        const statuses = [{ code: "0", level: "Success", message: "Local Ulvia simulation" }];
+        return {
+            expeditionNumber,
+            labelUrl: "",
+            raw: { statuses, modeSandbox: true, relayPointInfo: { ModeSandbox: "True" } },
+            statuses,
+            relayPointInfo: { ModeSandbox: "True" },
+        };
+    }
     const requestXml = connectShipmentXml(payload);
     const response = await fetch(endpoint, {
         method: "POST",
@@ -69,6 +80,14 @@ export async function createConnectShipment(payload: ShipmentPayload): Promise<C
         statuses,
         relayPointInfo: relayPointInfo(text),
     };
+}
+
+function localExpeditionNumber(value: string): string {
+    let hash = 0;
+    for (const code of new TextEncoder().encode(value)) {
+        hash = (Math.imul(hash, 31) + code) >>> 0;
+    }
+    return String(hash % 100_000_000).padStart(8, "0");
 }
 
 function providerContext(payload: ShipmentPayload, statuses: ConnectStatus[], retrySafe: boolean): JsonRecord {

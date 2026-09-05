@@ -3,7 +3,7 @@
         "endpointId": "declareSellerHandoff",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/system/shipments/handoff",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipments/handoff",
         "params": [],
         "headers": [
             {
@@ -70,7 +70,7 @@
         "endpointId": "cancelShipmentReservation",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/system/shipments/cancel",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipments/cancel",
         "params": [],
         "headers": [
             {

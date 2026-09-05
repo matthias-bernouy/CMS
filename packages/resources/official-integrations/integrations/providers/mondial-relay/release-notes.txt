@@ -1,1 +1,1 @@
-Major release: publish the reusable Mondial Relay delivery view while site dashboard composition remains CMS-owned, and move the Function to a versioned slug for a no-downtime CMS binding switch.
+Initial Mondial Relay release: publish the delivery provider contracts and current database installation baseline.

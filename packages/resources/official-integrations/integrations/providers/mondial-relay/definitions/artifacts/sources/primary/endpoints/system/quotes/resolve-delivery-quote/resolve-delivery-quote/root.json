@@ -2,7 +2,7 @@
     "endpointId": "resolveDeliveryQuote",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/system/delivery-quotes/resolve",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/delivery-quotes/resolve",
     "params": [],
     "headers": [
         {

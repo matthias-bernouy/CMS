@@ -1,9 +1,6 @@
 [
     {
         "provider": "supabase",
-        "connectorKey": "primary",
-        "lineageId": "mondial-relay-supabase-v1",
-        "migrationRevision": 1,
         "root": "connectors/supabase",
         "dataApiSchemas": [
             "delivery"
@@ -13,9 +10,6 @@
                 "$include": "compatibility/schema.json"
             }
         },
-        "migration": {
-            "$include": "compatibility/migration.json"
-        },
         "schemas": [
             {
                 "manifest": "install/sql/schema.manifest.json"
@@ -23,7 +17,7 @@
         ],
         "functions": [
             {
-                "name": "cms-delivery-v4",
+                "name": "cms-delivery",
                 "directory": "functions/cms-delivery",
                 "configPath": "supabase.config.toml",
                 "secrets": {

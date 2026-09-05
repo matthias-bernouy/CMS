@@ -7,7 +7,7 @@ create table if not exists delivery.settings (
     id text primary key default 'default',
     mode_collection text not null default 'REL',
     mode_delivery text not null default '24R',
-    customer_reference text not null default 'COURTSIDE',
+    customer_reference text not null default 'MERCHANT',
     sender_name text not null default '',
     sender_firstname text not null default '',
     sender_lastname text not null default '',
@@ -58,10 +58,10 @@ alter table delivery.settings
     add column if not exists default_shipping_amount bigint not null default 450;
 
 alter table delivery.settings
-    add column if not exists customer_reference text not null default 'COURTSIDE';
+    add column if not exists customer_reference text not null default 'MERCHANT';
 
 alter table delivery.settings
-    alter column customer_reference set default 'COURTSIDE';
+    alter column customer_reference set default 'MERCHANT';
 
 alter table delivery.settings
     drop constraint if exists settings_customer_reference_format;

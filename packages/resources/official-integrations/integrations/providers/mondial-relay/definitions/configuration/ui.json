@@ -44,10 +44,6 @@
             "Delivery shipments dashboard"
         ],
         [
-            "Blocs",
-            "Theme-aware French relay point picker"
-        ],
-        [
             "Secrets",
             "Generated private CMS delivery API key"
         ],
@@ -68,7 +64,6 @@
         "Deploy Supabase connector",
         "Install delivery source",
         "Install delivery dashboard",
-        "Install relay point picker",
         "Refresh Sources"
     ],
     "syncNote": "Supabase owns private provider rows and normalized events. Commerce remains the fulfillment, cancellation, claim, and settlement authority."

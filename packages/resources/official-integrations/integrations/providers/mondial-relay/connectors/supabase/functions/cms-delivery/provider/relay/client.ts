@@ -1,4 +1,4 @@
-import { envDefault } from "../../env.ts";
+import { envDefault, localProviderSimulationEnabled } from "../../env.ts";
 import { HttpError, ProviderStatusError } from "../../http.ts";
 import type { JsonRecord } from "../../shipment/types.ts";
 import { lookupParams } from "./query.ts";
@@ -16,6 +16,31 @@ export async function relayPointsFromUrl(url: URL): Promise<JsonRecord[]> {
     const params = lookupParams(url, brand);
     if (!params.get("PostCode") && !params.get("City") && !(params.get("Latitude") && params.get("Longitude"))) {
         return [];
+    }
+    if (localProviderSimulationEnabled()) {
+        const postalCode = params.get("PostCode") ?? "75001";
+        const city = params.get("City") ?? "Paris";
+        return [
+            {
+                location: "FR-ULVIA01",
+                number: "ULVIA01",
+                country: "FR",
+                name: "Ulvia Local Relay",
+                label: `Ulvia Local Relay - ${postalCode} - ${city}`,
+                addressLine1: "1 rue du Test Local",
+                addressLine2: "",
+                postalCode,
+                city,
+                latitude: 48.8566,
+                longitude: 2.3522,
+                nature: "R",
+                pointType: "relay_point",
+                available: true,
+                warning: "",
+                photo: "",
+                openingHoursHtml: "",
+            },
+        ];
     }
 
     const response = await fetch(`${widgetSearchEndpoint}?${params.toString()}`, {

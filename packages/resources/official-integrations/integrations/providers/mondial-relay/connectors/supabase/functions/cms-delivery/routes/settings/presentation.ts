@@ -42,7 +42,7 @@ export function settingsFromRow(row: JsonRecord | null): DeliverySettings {
         id: rowText(row, "id", "default"),
         modeCollection: rowText(row, "mode_collection", "REL").toUpperCase(),
         modeDelivery: rowText(row, "mode_delivery", "24R").toUpperCase(),
-        customerReference: rowText(row, "customer_reference", "COURTSIDE").toUpperCase(),
+        customerReference: rowText(row, "customer_reference", "MERCHANT").toUpperCase(),
         sender: {
             name: rowText(row, "sender_name", ""),
             firstName: rowText(row, "sender_firstname", ""),

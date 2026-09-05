@@ -2,7 +2,7 @@
     "endpointId": "reconcileShipments",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/system/reconcile",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/reconcile",
     "params": [],
     "headers": [
         {

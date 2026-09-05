@@ -1,7 +1,7 @@
 {
     "endpointId": "setSettings",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/settings",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/settings",
     "params": [
         {
             "name": "id",

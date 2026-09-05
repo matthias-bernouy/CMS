@@ -7,7 +7,7 @@ export function fallbackSettings(): DeliverySettings {
         id: "default",
         modeCollection: envDefault("MONDIAL_RELAY_DEFAULT_MODE_COL", "REL"),
         modeDelivery: envDefault("MONDIAL_RELAY_DEFAULT_MODE_LIV", "24R"),
-        customerReference: envDefault("MONDIAL_RELAY_CUSTOMER_REFERENCE", "COURTSIDE").toUpperCase(),
+        customerReference: envDefault("MONDIAL_RELAY_CUSTOMER_REFERENCE", "MERCHANT").toUpperCase(),
         sender: {
             name: envDefault("MONDIAL_RELAY_SENDER_NAME", ""),
             firstName: envDefault("MONDIAL_RELAY_SENDER_FIRSTNAME", ""),

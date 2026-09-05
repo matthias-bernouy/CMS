@@ -2,7 +2,7 @@
     "endpointId": "relayPoints",
     "method": "GET",
     "access": "public",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v4/relay-points",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/relay-points",
     "params": [
         {
             "name": "country",

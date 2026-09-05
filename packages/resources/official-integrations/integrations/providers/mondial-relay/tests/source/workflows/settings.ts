@@ -108,7 +108,7 @@ export function registerSettingsTests(): void {
 
     test("rejects an invalid customer reference through the installed CMS source", async () => {
         const harness = await createHarness();
-        const response = await setSettings(harness, { customerReference: "COURTSIDE-TOO-LONG" });
+        const response = await setSettings(harness, { customerReference: "MERCHANT-TOO-LONG" });
         const body = await jsonBody(response);
 
         expect(response.status).toBe(400);
