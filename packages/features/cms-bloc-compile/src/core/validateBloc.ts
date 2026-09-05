@@ -1,6 +1,6 @@
 import { isValidCustomElementTag } from "@bernouy/cms-content";
 import { RESERVED_PREFIXES } from "@bernouy/cms-content";
-import { isNativeBlocTag, validateNativeBlocTag } from "cms-bloc-compile/core/nativeBlocTags";
+import { isNativeBlocTag, nativeBlocOwnershipError } from "cms-bloc-compile/core/nativeBlocTags";
 
 /**
  * Inputs passed to `validateBloc`. All source fields are optional —
@@ -10,7 +10,7 @@ import { isNativeBlocTag, validateNativeBlocTag } from "cms-bloc-compile/core/na
 export type ValidateBlocInput = {
     /** Manifest tag — required, the only mandatory field. */
     tag: string;
-    /** Native HTML entries register editor metadata only; their tags are not custom elements. */
+    /** Legacy native marker, retained only so validation can reject old packages explicitly. */
     native?: boolean;
     /** User's view source (typically `Bloc.ts`). */
     viewSource?: string;
@@ -48,7 +48,7 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     const errors: string[] = [];
 
     const tagError =
-        input.native || isNativeBlocTag(input.tag) ? validateNativeBlocTag(input.tag) : validateBlocTag(input.tag);
+        input.native || isNativeBlocTag(input.tag) ? nativeBlocOwnershipError(input.tag) : validateBlocTag(input.tag);
     if (tagError) {
         errors.push(tagError);
     }

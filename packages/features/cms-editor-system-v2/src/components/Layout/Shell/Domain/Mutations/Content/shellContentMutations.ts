@@ -1,5 +1,4 @@
 import {
-    applySourceStatusConditions,
     sourceStatusConditionsFromElement,
     type ContentSlot,
     type Editor,
@@ -8,32 +7,50 @@ import {
 
 import type { BlockPickerItem } from "../../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { MutationContext } from "../shellMutations";
-import { applySlot, createInsertion } from "../insertion";
-import {
-    canInsertNodeCount,
-    canReplaceNodeCount,
-    findSlot,
-    isSlotFull,
-    parentEditor,
-    remainingSlotCapacity,
-} from "../slots";
-import { openMediaPicker } from "../media";
+import { createInsertion } from "../insertion";
+import { canInsertNodeCount, canReplaceNodeCount, findSlot, isSlotFull, parentEditor } from "../slots";
 import { reloadFrameDocument } from "./reloadFrameDocument";
+import {
+    acceptsCatalogEntry,
+    acceptsElementForParent,
+    isElementPlacementAllowedAtRoot,
+} from "../../../../../../policy/contentSlotAcceptance";
+import { isEditorPlacementAllowed } from "../../../../../../policy/editorPlacement";
+import {
+    insertChildMedia,
+    insertRootMedia,
+    replaceChildWithMedia,
+    replaceRootWithMedia,
+} from "./mediaContentMutations";
 
 export class ShellContentMutations {
     constructor(private readonly context: MutationContext) {}
 
     addChild(parent: Editor, item: BlockPickerItem, slotName?: string): void {
+        const document = this.context.editorDocument();
+        if (!document?.contentRoot.contains(parent.target)) {
+            return;
+        }
         const slot = findSlot(parent, slotName);
         if (!slot || isSlotFull(parent, slot)) {
             return;
         }
         if (item.kind === "media") {
-            return this.insertMedia(parent, item, slot, slotName);
+            insertChildMedia(this.context, parent, item, slot, slotName);
+            return;
+        }
+        if (!acceptsCatalogEntry(slot, item.entry, parent.target.localName)) {
+            return;
         }
 
         const insertion = this.createInsertion(item, slotName);
-        if (!insertion || !canInsertNodeCount(parent, slot, insertion.slotElements)) {
+        if (
+            !insertion ||
+            insertion.slotElements.some(
+                (element) => !acceptsElementForParent(slot, element, this.context.catalog(), parent.target.localName),
+            ) ||
+            !canInsertNodeCount(parent, slot, insertion.slotElements)
+        ) {
             return;
         }
 
@@ -48,11 +65,21 @@ export class ShellContentMutations {
             return;
         }
         const document = this.context.editorDocument();
-        if (!document || item.kind === "media") {
+        if (!document) {
+            return;
+        }
+        if (item.kind === "media") {
+            insertRootMedia(this.context, item);
+            return;
+        }
+        if (!isEditorPlacementAllowed(item.entry, { kind: "root" })) {
             return;
         }
         const insertion = this.createInsertion(item);
-        if (!insertion) {
+        if (
+            !insertion ||
+            insertion.slotElements.some((element) => !isElementPlacementAllowedAtRoot(element, this.context.catalog()))
+        ) {
             return;
         }
 
@@ -64,6 +91,10 @@ export class ShellContentMutations {
     }
 
     replaceEditor(editor: Editor, item: BlockPickerItem, slotName?: string): void {
+        const document = this.context.editorDocument();
+        if (!document?.contentRoot.contains(editor.target)) {
+            return;
+        }
         const parent = parentEditor(this.context.runtime(), editor);
         if (!parent) {
             return this.replaceRootEditor(editor, item);
@@ -75,11 +106,21 @@ export class ShellContentMutations {
         }
         const sourceStatusConditions = sourceStatusConditionsFromElement(editor.target);
         if (item.kind === "media") {
-            return this.replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions);
+            replaceChildWithMedia(this.context, editor, parent, item, slot, slotName, sourceStatusConditions);
+            return;
+        }
+        if (!acceptsCatalogEntry(slot, item.entry, parent.target.localName)) {
+            return;
         }
 
         const insertion = this.createInsertion(item, slotName, sourceStatusConditions);
-        if (!insertion || !canReplaceNodeCount(parent, editor, slot, insertion.slotElements)) {
+        if (
+            !insertion ||
+            insertion.slotElements.some(
+                (element) => !acceptsElementForParent(slot, element, this.context.catalog(), parent.target.localName),
+            ) ||
+            !canReplaceNodeCount(parent, editor, slot, insertion.slotElements)
+        ) {
             return;
         }
 
@@ -88,11 +129,22 @@ export class ShellContentMutations {
     }
 
     private replaceRootEditor(editor: Editor, item: BlockPickerItem): void {
+        const document = this.context.editorDocument();
+        if (!document?.contentRoot.contains(editor.target)) {
+            return;
+        }
         if (item.kind === "media") {
+            replaceRootWithMedia(this.context, editor, item);
+            return;
+        }
+        if (!isEditorPlacementAllowed(item.entry, { kind: "root" })) {
             return;
         }
         const insertion = this.createInsertion(item);
-        if (!insertion) {
+        if (
+            !insertion ||
+            insertion.slotElements.some((element) => !isElementPlacementAllowedAtRoot(element, this.context.catalog()))
+        ) {
             return;
         }
         editor.target.replaceWith(insertion.fragment);
@@ -105,76 +157,5 @@ export class ShellContentMutations {
         sourceStatusConditions?: CmsSourceStatusCondition[],
     ) {
         return createInsertion(this.context.frameDocument(), item, slotName, sourceStatusConditions);
-    }
-
-    private insertMedia(
-        parent: Editor,
-        item: Extract<BlockPickerItem, { kind: "media" }>,
-        slot: ContentSlot,
-        slotName?: string,
-        sourceStatusConditions?: CmsSourceStatusCondition[],
-    ): void {
-        const remaining = remainingSlotCapacity(parent, slot);
-        if (remaining <= 0) {
-            return;
-        }
-        openMediaPicker(
-            this.context.frameDocument(),
-            item.accept,
-            {
-                multiple: remaining > 1,
-                maxSelection: typeof slot.max === "number" ? remaining : undefined,
-            },
-            (elements) => this.appendMedia(parent, slot, elements, slotName, sourceStatusConditions),
-        );
-    }
-
-    private appendMedia(
-        parent: Editor,
-        slot: ContentSlot,
-        elements: HTMLElement[],
-        slotName?: string,
-        sourceStatusConditions?: CmsSourceStatusCondition[],
-    ): void {
-        if (elements.length === 0 || !canInsertNodeCount(parent, slot, elements)) {
-            return;
-        }
-        for (const element of elements) {
-            applySlot(element, slotName);
-            if (sourceStatusConditions?.length) {
-                applySourceStatusConditions(element, sourceStatusConditions);
-            }
-        }
-        parent.target.append(...elements);
-        reloadFrameDocument(this.context, elements[0] ?? null);
-    }
-
-    private replaceWithMedia(
-        editor: Editor,
-        parent: Editor,
-        item: Extract<BlockPickerItem, { kind: "media" }>,
-        slot: ContentSlot,
-        slotName?: string,
-        sourceStatusConditions?: CmsSourceStatusCondition[],
-    ): void {
-        if (!canReplaceNodeCount(parent, editor, slot, [editor.target])) {
-            return;
-        }
-        const className = editor.target.getAttribute("class");
-        openMediaPicker(this.context.frameDocument(), item.accept, { multiple: false }, (elements) => {
-            const element = elements[0];
-            if (!element) {
-                return;
-            }
-            applySlot(element, slotName);
-            if (className) {
-                element.setAttribute("class", className);
-            }
-            if (sourceStatusConditions?.length) {
-                applySourceStatusConditions(element, sourceStatusConditions);
-            }
-            editor.target.replaceWith(element);
-            reloadFrameDocument(this.context, element);
-        });
     }
 }

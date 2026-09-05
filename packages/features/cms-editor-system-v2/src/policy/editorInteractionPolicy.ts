@@ -1,5 +1,6 @@
 import {
     CMS_BINDING_ATTRIBUTES,
+    type EditorCatalogPlacement,
     type EditorCatalogEntry,
     type Setting,
     type SettingControl,
@@ -7,7 +8,6 @@ import {
 } from "@bernouy/cms-content/editor";
 
 import type { BlockPickerItem } from "../components/Layout/Pickers/BlockPickerModal/BlockPickerModal";
-
 export type EditorInteractionPolicy = {
     bindings?: boolean;
     conditions?: boolean;
@@ -18,6 +18,7 @@ export type EditorInteractionPolicy = {
 
 export type EditorInsertableCatalogEntry = EditorCatalogEntry & {
     insertable?: boolean;
+    placement?: EditorCatalogPlacement;
 };
 
 export type ResolvedEditorInteractionPolicy = Required<Omit<EditorInteractionPolicy, "canInsertTag">> & {

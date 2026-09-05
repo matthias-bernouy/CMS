@@ -1,5 +1,11 @@
 import { randomUUIDv7 } from "bun";
-import { ContentValidationError, hardenStoredHtml, type SiteBlocNode, type SiteBlocSlot } from "@bernouy/cms-content";
+import {
+    ContentValidationError,
+    hardenStoredHtml,
+    isSafeNavigationalUrl,
+    type SiteBlocNode,
+    type SiteBlocSlot,
+} from "@bernouy/cms-content";
 import type { MediaAccept } from "@bernouy/cms-content/editor";
 import { parseHTML } from "linkedom";
 
@@ -9,11 +15,22 @@ const MEDIA_TYPES = new Set(["image", "bitmap", "svg", "video", "audio", "docume
 
 export function parseSiteBlocStructure(html: string): { structure: SiteBlocNode[]; slots: SiteBlocSlot[] } {
     const { document } = parseHTML("<!DOCTYPE html><html><body></body></html>");
-    document.body.innerHTML = hardenStoredHtml(html);
+    document.body.innerHTML = html;
+    assertSafeNativeLinkDestinations(document.body);
+    document.body.innerHTML = hardenStoredHtml(document.body.innerHTML);
     const slots: SiteBlocSlot[] = [];
     const slotIds = new Set<string>();
     const structure = parseChildren(document.body, slots, slotIds, "structure");
     return { structure, slots };
+}
+
+function assertSafeNativeLinkDestinations(root: Element): void {
+    for (const link of Array.from(root.querySelectorAll("a[href]"))) {
+        const href = link.getAttribute("href") ?? "";
+        if (!isSafeNavigationalUrl(href)) {
+            throw new ContentValidationError("structure", "native link destination uses a forbidden URL scheme");
+        }
+    }
 }
 
 export function hardenSiteBlocStructure(

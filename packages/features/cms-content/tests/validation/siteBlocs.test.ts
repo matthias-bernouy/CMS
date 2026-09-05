@@ -21,6 +21,7 @@ describe("site bloc validation", () => {
             ContentValidationError,
         );
         expect(() => validateBlocWrite({ ...artifact, internal: true, viewJS: "" })).toThrow(ContentValidationError);
+        expect(() => validateBlocWrite({ ...artifact, id: "p" })).toThrow(/custom-element tag/);
     });
 
     test("rejects malformed runtime ownership without throwing native type errors", () => {
@@ -150,6 +151,13 @@ describe("site bloc validation", () => {
                 }),
             ),
         ).toThrow(ContentValidationError);
+        expect(() =>
+            validateSiteBlocSnapshot(
+                siteBlocSnapshot({
+                    structure: [{ kind: "bloc", tag: "img", attributes: {}, children: null } as never],
+                }),
+            ),
+        ).toThrow(ContentValidationError);
     });
 
     test("validates slot cardinality and publication metadata", () => {
@@ -171,5 +179,65 @@ describe("site bloc validation", () => {
         expect(() => validateSiteBlocDefinition(siteBlocDefinition({ publishedRevision: 1, published: null }))).toThrow(
             ContentValidationError,
         );
+    });
+
+    test("validates default content recursively in its site-bloc parent context", () => {
+        for (const [defaultContent, message] of [
+            ["<span>Root text</span>", /explicit component text slot/],
+            ["<li>Orphan item</li>", /direct child/],
+            ["<ul><site-card>Not a list item</site-card></ul>", /only direct <li>/],
+            ["<ul>Loose text<li>Item</li></ul>", /only direct <li>/],
+            ['<section><span slot="label">Nested slot bypass</span></section>', /direct custom-element child/],
+            ["<form></form>", /declared CMS source endpoint/],
+            [
+                `<form cms-source="/.cms/sources/forms/contact" cms-source-method="POST"
+                    cms-source-trigger="submit"
+                    cms-source-body='{"safe":{"from":"raw","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
+                /typed parameter map/,
+            ],
+        ] as const) {
+            expect(() => validateSiteBlocSnapshot(siteBlocSnapshot({ defaultContent }), "site-feature-panel")).toThrow(
+                message,
+            );
+        }
+
+        const valid = validateSiteBlocSnapshot(
+            siteBlocSnapshot({
+                defaultContent: `<h2 slot="title">Contact</h2><form
+                    cms-source="/.cms/sources/forms/contact"
+                    cms-source-method="POST"
+                    cms-source-trigger="submit"
+                    cms-source-success-redirect="/thanks"></form>`,
+            }),
+            "site-feature-panel",
+        );
+        expect(valid.defaultContent).toContain('cms-source="/.cms/sources/forms/contact"');
+    });
+
+    test("rejects native forms from binding-free private structure", () => {
+        expect(() =>
+            validateSiteBlocSnapshot(
+                siteBlocSnapshot({
+                    structure: [{ kind: "bloc", tag: "form", attributes: {}, children: [] }],
+                }),
+                "site-feature-panel",
+            ),
+        ).toThrow(/invalid bloc tag "form"/);
+    });
+
+    test("enforces native list children in private structure", () => {
+        for (const child of [
+            { kind: "text", value: "Loose text" },
+            { kind: "bloc", tag: "site-card", attributes: {}, children: [] },
+        ] as const) {
+            expect(() =>
+                validateSiteBlocSnapshot(
+                    siteBlocSnapshot({
+                        structure: [{ kind: "bloc", tag: "ul", attributes: {}, children: [child] }],
+                    }),
+                    "site-feature-panel",
+                ),
+            ).toThrow(/only direct <li>/);
+        }
     });
 });

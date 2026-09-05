@@ -18,6 +18,7 @@ export type MutationContext = {
     editorDocument(): EditorDocument | null;
     runtime(): EditorRuntime | null;
     catalog(): EditorCatalog;
+    dataSources?(): EditorDataSource[];
     rootEditor?(): Editor | null;
     editingPolicy(): ResolvedEditorInteractionPolicy;
     repeatPicker(): RepeatPicker;

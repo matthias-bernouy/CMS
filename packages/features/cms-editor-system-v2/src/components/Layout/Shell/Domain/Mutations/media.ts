@@ -5,6 +5,7 @@ import {
     type FilesCenterSelectDetail,
     type FilesCenterSelectManyDetail,
 } from "../../../../Controls/Pickers/FilesCenter/FilesCenter";
+import { isCmsFileSource, matchesFileAccept } from "../../../../Controls/Pickers/FilesCenter/filesCenterDomain";
 import { parseInlineSvg } from "./Content/inlineSvg";
 
 export function openMediaPicker(
@@ -35,8 +36,10 @@ export function openMediaPicker(
             const resolved = await Promise.all(
                 detail.files.map((file) => createMediaElement(frameDocument, file, accept)),
             );
-            const elements = resolved.filter((element): element is HTMLElement => Boolean(element));
-            onSelect(elements);
+            if (resolved.some((element) => !element)) {
+                return;
+            }
+            onSelect(resolved as HTMLElement[]);
         },
         { once: true },
     );
@@ -55,11 +58,15 @@ async function createMediaElement(
     detail: FilesCenterSelectDetail,
     accept: MediaAccept[] | undefined,
 ): Promise<HTMLElement | null> {
-    if (!document) {
+    if (!document || !isCmsFileSource(detail.src)) {
+        return null;
+    }
+    if (!matchesMediaDetail(detail, accept ?? ["image"])) {
         return null;
     }
 
-    if (accept?.includes("svg") && normalizedMimeType(detail.mimeType) === "image/svg+xml") {
+    const mimeType = normalizedMimeType(detail.mimeType);
+    if (accept?.includes("svg") && mimeType === "image/svg+xml") {
         try {
             const response = await fetch(detail.src);
             if (!response.ok) {
@@ -71,10 +78,15 @@ async function createMediaElement(
         }
     }
 
-    if (detail.mimeType?.startsWith("image/") ?? true) {
+    if (mimeType.startsWith("image/")) {
+        if (!detail.label.trim()) {
+            return null;
+        }
         const image = document.createElement("img");
         image.setAttribute("src", detail.src);
         image.setAttribute("alt", detail.label);
+        image.setAttribute("loading", "lazy");
+        image.setAttribute("fetchpriority", "auto");
         image.addEventListener(
             "load",
             () => {
@@ -90,14 +102,14 @@ async function createMediaElement(
         return image;
     }
 
-    if (detail.mimeType?.startsWith("video/")) {
+    if (mimeType.startsWith("video/")) {
         const video = document.createElement("video");
         video.setAttribute("src", detail.src);
         video.setAttribute("controls", "");
         return video;
     }
 
-    if (detail.mimeType?.startsWith("audio/")) {
+    if (mimeType.startsWith("audio/")) {
         const audio = document.createElement("audio");
         audio.setAttribute("src", detail.src);
         audio.setAttribute("controls", "");
@@ -108,6 +120,19 @@ async function createMediaElement(
     link.setAttribute("href", detail.src);
     link.textContent = detail.label;
     return link;
+}
+
+function matchesMediaDetail(detail: FilesCenterSelectDetail, accept: MediaAccept[]): boolean {
+    return matchesFileAccept(
+        {
+            id: detail.id,
+            name: detail.label,
+            parentId: null,
+            type: "file",
+            mimeType: detail.mimeType,
+        },
+        accept,
+    );
 }
 
 function normalizedMimeType(mimeType: string | undefined): string {

@@ -1,4 +1,9 @@
-import type { SiteBlocDefinition, SiteBlocSlot, SiteBlocSnapshot } from "@bernouy/cms-content";
+import {
+    validateSiteBlocSnapshot,
+    type SiteBlocDefinition,
+    type SiteBlocSlot,
+    type SiteBlocSnapshot,
+} from "@bernouy/cms-content";
 import {
     canonicalJson,
     canonicalSiteBlocDefinition,
@@ -10,7 +15,10 @@ export function generateSiteBlocSourceBundle(
     definition: SiteBlocDefinition,
     snapshot?: SiteBlocSnapshot,
 ): Record<"manifest.json" | "BlocEditor.ts" | "template.html" | "default.html" | "builder.json", string> {
-    const selected = normalizeSiteBlocSnapshot(snapshot ?? publishedSnapshot(definition));
+    const selected = validateSiteBlocSnapshot(
+        normalizeSiteBlocSnapshot(snapshot ?? publishedSnapshot(definition)),
+        definition.tag,
+    );
     return {
         "manifest.json": manifestSource(definition.tag, selected),
         "BlocEditor.ts": editorSource(selected.slots),

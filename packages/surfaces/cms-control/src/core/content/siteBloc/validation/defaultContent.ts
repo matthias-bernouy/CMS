@@ -1,4 +1,9 @@
-import { hardenStoredHtml, ContentValidationError, type SiteBlocSlot } from "@bernouy/cms-content";
+import {
+    ContentValidationError,
+    hardenStoredHtml,
+    isSiteBlocNativeStructureTag,
+    type SiteBlocSlot,
+} from "@bernouy/cms-content";
 import type { MediaAccept } from "@bernouy/cms-content/editor";
 import { parseHTML } from "linkedom";
 
@@ -12,7 +17,11 @@ export function validateSiteBlocSlotAccepts(
             if (accept.kind === "component" && archivedTags.has(accept.tag)) {
                 throw new ContentValidationError(`draft.slots.${slot.id}.accepts`, `bloc "${accept.tag}" is archived`);
             }
-            if (accept.kind === "component" && !registeredTags.has(accept.tag)) {
+            if (
+                accept.kind === "component" &&
+                !registeredTags.has(accept.tag) &&
+                !isSiteBlocNativeStructureTag(accept.tag)
+            ) {
                 throw new ContentValidationError(
                     `draft.slots.${slot.id}.accepts`,
                     `bloc "${accept.tag}" is not published`,
@@ -81,16 +90,26 @@ export function validateSiteBlocDefaultContent(
 
 function acceptsElement(slot: SiteBlocSlot, element: Element, registeredTags: Set<string>): boolean {
     const tag = element.localName.toLowerCase();
+    if (!isContextualNativeSlotItemAllowed(slot, tag)) {
+        return false;
+    }
     return slot.accepts.some((accept) => {
         if (accept.kind === "component") {
-            return accept.tag.toLowerCase() === tag && registeredTags.has(tag);
+            return accept.tag.toLowerCase() === tag && (registeredTags.has(tag) || isSiteBlocNativeStructureTag(tag));
         }
         if (accept.kind === "any-component") {
-            return registeredTags.has(tag);
+            return registeredTags.has(tag) || isSiteBlocNativeStructureTag(tag);
         }
         const types = accept.accept ?? ["image"];
         return types.some((type) => mediaTag(type, tag));
     });
+}
+
+function isContextualNativeSlotItemAllowed(slot: SiteBlocSlot, tag: string): boolean {
+    if (tag === "span") {
+        return slot.accepts.some((accept) => accept.kind === "component" && accept.tag.toLowerCase() === "span");
+    }
+    return tag !== "li" && tag !== "strong" && tag !== "em" && tag !== "code";
 }
 
 function mediaTag(type: MediaAccept, tag: string): boolean {

@@ -72,6 +72,11 @@ describe("Shell", () => {
 
         expect(values.at(-1)).toBe("https://example.com");
         expect(control.getAttribute("value")).toBe("https://example.com");
+
+        external.value = "java\tscript:alert(1)";
+        external.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(values.at(-1)).toBe("https://example.com");
+        expect(control.getAttribute("value")).toBe("https://example.com");
     });
 
     test("files center selects files by opaque id url", async () => {

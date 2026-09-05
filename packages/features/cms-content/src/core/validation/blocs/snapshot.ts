@@ -1,4 +1,8 @@
 import { ContentValidationError } from "cms-content/core/validation/errors";
+import { isValidCustomElementTag } from "cms-content/core/validation/predicates";
+import { validateSiteBlocDefaultContent } from "cms-content/core/validation/documents/nativeContent";
+import { isSiteBlocNativeStructureTag } from "cms-content/core/validation/blocs/nativeHtml";
+import { isSiteBlocStructureTag, validateNativeSiteBlocNode } from "cms-content/core/validation/blocs/nativeStructure";
 import type { SiteBlocNode, SiteBlocSlot, SiteBlocSnapshot } from "cms-content/interfaces/blocs";
 
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
@@ -23,6 +27,7 @@ export function validateSiteBlocSnapshot(value: SiteBlocSnapshot, ownerTag?: str
     const slotIds = validateSlots(value.slots);
     const dependencies = new Set<string>();
     value.structure.forEach((node, index) => validateNode(node, `draft.structure.${index}`, slotIds, dependencies));
+    const defaultContent = validateSiteBlocDefaultContent(value.defaultContent, ownerTag);
     if (ownerTag && dependencies.has(ownerTag)) {
         throw new ContentValidationError("draft.structure", "a site bloc cannot reference itself");
     }
@@ -32,7 +37,7 @@ export function validateSiteBlocSnapshot(value: SiteBlocSnapshot, ownerTag?: str
         description: value.description.trim(),
         structure: structuredClone(value.structure),
         slots: structuredClone(value.slots),
-        defaultContent: value.defaultContent,
+        defaultContent,
         dependencies: [...dependencies].sort(),
     };
 }
@@ -91,13 +96,22 @@ function validateCardinality(slot: SiteBlocSlot): void {
     }
 }
 
-function validateNode(node: SiteBlocNode, field: string, slotIds: Set<string>, dependencies: Set<string>): void {
+function validateNode(
+    node: SiteBlocNode,
+    field: string,
+    slotIds: Set<string>,
+    dependencies: Set<string>,
+    parentTag?: string,
+): void {
     if (!isRecord(node)) {
         throw new ContentValidationError(field, "node object expected");
     }
     if (node.kind === "text") {
         if (typeof node.value !== "string") {
             throw new ContentValidationError(field, "text value must be a string");
+        }
+        if ((parentTag === "ul" || parentTag === "ol") && node.value.trim()) {
+            throw new ContentValidationError(field, `native <${parentTag}> can contain only direct <li> children`);
         }
         if (DYNAMIC_TOKEN.test(node.value) || CONTROL_CHARACTER.test(node.value)) {
             throw new ContentValidationError(field, "text must be static and free of control characters");
@@ -113,8 +127,11 @@ function validateNode(node: SiteBlocNode, field: string, slotIds: Set<string>, d
     if (node.kind !== "bloc") {
         throw new ContentValidationError(field, 'expected node kind "bloc", "slot" or "text"');
     }
-    if (!isRegisteredBlocTag(node.tag)) {
+    if (!isSiteBlocStructureTag(node.tag)) {
         throw new ContentValidationError(field, `invalid bloc tag "${node.tag}"`);
+    }
+    if ((parentTag === "ul" || parentTag === "ol") && node.tag !== "li") {
+        throw new ContentValidationError(field, `native <${parentTag}> can contain only direct <li> children`);
     }
     if (!node.attributes || typeof node.attributes !== "object" || Array.isArray(node.attributes)) {
         throw new ContentValidationError(field, "attributes object expected");
@@ -125,8 +142,15 @@ function validateNode(node: SiteBlocNode, field: string, slotIds: Set<string>, d
     if (!Array.isArray(node.children)) {
         throw new ContentValidationError(field, "children array expected");
     }
-    dependencies.add(node.tag);
-    node.children.forEach((child, index) => validateNode(child, `${field}.children.${index}`, slotIds, dependencies));
+    if (isSiteBlocNativeStructureTag(node.tag)) {
+        validateNativeSiteBlocNode(node, field, parentTag);
+    }
+    if (isValidCustomElementTag(node.tag)) {
+        dependencies.add(node.tag);
+    }
+    node.children.forEach((child, index) =>
+        validateNode(child, `${field}.children.${index}`, slotIds, dependencies, node.tag),
+    );
 }
 
 function validateAccept(slotId: string, accept: SiteBlocSlot["accepts"][number], index: number): void {
@@ -138,7 +162,7 @@ function validateAccept(slotId: string, accept: SiteBlocSlot["accepts"][number],
         return;
     }
     if (accept.kind === "component") {
-        if (typeof accept.tag !== "string" || !isRegisteredBlocTag(accept.tag)) {
+        if (typeof accept.tag !== "string" || !isSiteBlocStructureTag(accept.tag)) {
             throw new ContentValidationError(field, "valid bloc tag expected");
         }
         return;
@@ -153,10 +177,6 @@ function validateAccept(slotId: string, accept: SiteBlocSlot["accepts"][number],
         return;
     }
     throw new ContentValidationError(field, 'expected "component", "any-component" or "media"');
-}
-
-function isRegisteredBlocTag(value: string): boolean {
-    return typeof value === "string" && /^[a-z][a-z0-9-]*$/.test(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

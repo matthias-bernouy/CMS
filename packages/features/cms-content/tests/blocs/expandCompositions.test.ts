@@ -77,6 +77,27 @@ describe("expandCompositions", () => {
             '<account-form-controller source-id="users"><form></form></account-form-controller>',
         );
     });
+
+    test("preserves site host bindings on the generated behavior controller", () => {
+        const document = body(`<site-header cms-source="/.cms/sources/system-auth/me as auth">
+            <a slot="actions" cms-condition="!auth.subject">Log in</a>
+            <user-menu slot="actions" cms-condition="auth.subject">Account</user-menu>
+        </site-header>`);
+
+        expandCompositions(document.body, [
+            {
+                id: "site-header",
+                compositionHTML:
+                    '<site-navbar data-p9r-composition-controller><slot name="actions" slot="actions"></slot></site-navbar>',
+            },
+        ]);
+
+        const navbar = document.querySelector("site-navbar")!;
+        expect(navbar.getAttribute("cms-source")).toBe("/.cms/sources/system-auth/me as auth");
+        expect(navbar.hasAttribute("data-p9r-composition-controller")).toBe(false);
+        expect(navbar.querySelector('a[slot="actions"]')?.getAttribute("cms-condition")).toBe("!auth.subject");
+        expect(navbar.querySelector('user-menu[slot="actions"]')?.getAttribute("cms-condition")).toBe("auth.subject");
+    });
 });
 
 function body(html: string): Document {

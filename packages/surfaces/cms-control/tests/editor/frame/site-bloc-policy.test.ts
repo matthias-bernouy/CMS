@@ -2,7 +2,10 @@ import { describe, expect, test } from "bun:test";
 import type { SiteBlocDefinition } from "@bernouy/cms-content";
 import { Editor, type EditorCatalogEntry } from "@bernouy/cms-content/editor";
 import { applyBlocCatalogueInsertionState } from "cms-control/components/editorSystemV2/catalog";
-import { createSiteBlocCatalogs } from "cms-control/components/editorSystemV2/siteBloc/siteBlocCatalog";
+import {
+    createSiteBlocCatalogs,
+    isTagInsertable,
+} from "cms-control/components/editorSystemV2/siteBloc/siteBlocCatalog";
 import type { BlocCatalogueItem } from "cms-control/components/editorSystemV2/siteBloc/siteBlocApi";
 
 class TestEditor extends Editor {}
@@ -75,7 +78,16 @@ describe("site bloc editor catalog policy", () => {
     });
 
     test("filters structure cycles and unpublished blocs while exposing the slot placeholder", () => {
-        const base = ["site-card", "basic-button", "draft-only", "archived-card", "cycle-card"].map(entry);
+        const base: Array<EditorCatalogEntry & { insertable?: boolean }> = [
+            "site-card",
+            "basic-button",
+            "draft-only",
+            "archived-card",
+            "cycle-card",
+            "h1",
+            "header",
+        ].map(entry);
+        base.at(-1)!.insertable = false;
         base[1]!.defaultContent = "<basic-button>Default page content</basic-button>";
         const catalogs = createSiteBlocCatalogs(
             base,
@@ -91,8 +103,13 @@ describe("site bloc editor catalog policy", () => {
 
         expect(catalogs.structure.map((candidate) => candidate.tag)).toEqual([
             "basic-button",
+            "h1",
+            "header",
             "cms-site-slot-placeholder",
         ]);
         expect(catalogs.structure[0]?.defaultContent).toBeUndefined();
+        expect(catalogs.structureTags.has("h1")).toBe(false);
+        expect(isTagInsertable(catalogs.structureTags, "h1", base.at(-2)!)).toBe(true);
+        expect(isTagInsertable(catalogs.structureTags, "header", base.at(-1)!)).toBe(false);
     });
 });

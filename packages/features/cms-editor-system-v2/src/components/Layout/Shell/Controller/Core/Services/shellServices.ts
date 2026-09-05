@@ -31,6 +31,7 @@ export function createShellControllerServices(
         editorDocument: () => state.editorDocument,
         runtime: () => state.runtime,
         catalog: () => state.catalog,
+        dataSources: () => state.dataSources,
         rootEditor: () => {
             const contentRoot = state.editorDocument?.contentRoot;
             return contentRoot && state.runtime ? (state.runtime.getEditor(contentRoot) ?? null) : null;

@@ -29,6 +29,7 @@ describe("bloc import tag security", () => {
         "bloc with space",
         "bloc;rm -rf /",
         "script", // native HTML tag, but not allowlisted for blocs
+        "a", // platform-owned native editor, never a stored bloc artifact
         "BLOC-UP", // uppercase
         "1-bloc", // starts with digit
     ])("rejects dangerous tag %p with 400", async (tag) => {
@@ -36,7 +37,8 @@ describe("bloc import tag security", () => {
         expect(res.status).toBe(400);
     });
 
-    test.each(["my-card", "a"])("accepts supported bloc tag %p", async (tag) => {
+    test("accepts a supported custom-element bloc tag", async () => {
+        const tag = "my-card";
         const res = await importBloc(makeReq(tag), makeSystem());
         expect(res.status).toBe(200);
     });

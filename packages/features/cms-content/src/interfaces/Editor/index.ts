@@ -109,6 +109,7 @@ export {
 export type {
     EditorCatalog,
     EditorCatalogEntry,
+    EditorCatalogPlacement,
     EditorCatalogRegistration,
     EditorCatalogRegistrationDefaults,
     EditorCatalogRuntime,

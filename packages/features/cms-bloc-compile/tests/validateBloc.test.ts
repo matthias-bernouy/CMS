@@ -143,16 +143,18 @@ describe("validateBloc — graceful degradation", () => {
         expect(r.errors.length).toBeGreaterThan(0);
     });
 
-    test("accepts native content tags without manifest runtime metadata", () => {
-        const tags = ["a", "article", "aside", "footer", "h1", "header", "nav", "p", "section"];
+    test("rejects platform-owned native roots", () => {
+        const tags = ["a", "article", "aside", "div", "footer", "h1", "header", "main", "nav", "p", "section", "svg"];
         for (const tag of tags) {
             expect(isNativeBlocTag(tag)).toBe(true);
-            expect(validateBloc({ tag }).errors).toEqual([]);
+            expect(validateBloc({ tag }).errors).toEqual([
+                expect.stringContaining(`Native HTML tag "${tag}" is platform-owned`),
+            ]);
         }
-        expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("Invalid native tag");
+        expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("platform-owned");
     });
 
-    test("accepts allowed native tags without manifest runtime metadata", () => {
+    test("rejects legacy form-control artifacts now owned by the platform", () => {
         const tags = [
             "form",
             "fieldset",
@@ -167,7 +169,7 @@ describe("validateBloc — graceful degradation", () => {
             "img",
         ];
         for (const tag of tags) {
-            expect(validateBloc({ tag }).errors).toEqual([]);
+            expect(validateBloc({ tag }).errors[0]).toContain("platform-owned");
         }
     });
 });

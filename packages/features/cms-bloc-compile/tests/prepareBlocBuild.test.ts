@@ -6,17 +6,15 @@ import { assertValidJavaScriptArtifact, runBuild } from "../src/core/prepare_blo
 import { prepare_bloc } from "../src/exports";
 
 describe("prepare_bloc build output", () => {
-    test("keeps native source while omitting its browser view script", async () => {
+    test("rejects native artifacts before building browser bundles", async () => {
         const view = new File(["// Native image behavior is provided directly by the browser."], "Bloc.ts", {
             type: "text/typescript",
         });
         const source = { "Bloc.ts": Buffer.from("// Native source retained for authoring.").toString("base64") };
 
-        const bloc = await prepare_bloc(view, null, "Image", "Basic", "", "img", source, undefined, { native: true });
-
-        expect(bloc.viewJS).toBe("");
-        expect(bloc.source).toEqual(source);
-        expect(() => new Function(bloc.editorJS)).not.toThrow();
+        await expect(
+            prepare_bloc(view, null, "Image", "Basic", "", "img", source, undefined, { native: true }),
+        ).rejects.toThrow('Native HTML tag "img" is platform-owned');
     });
 
     test("minifies view and editor browser bundles", async () => {

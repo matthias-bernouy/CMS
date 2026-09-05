@@ -32,6 +32,7 @@ export function createEditorCatalogEntry(
         category: entry.category ?? defaults.category,
         subCategory: entry.subCategory,
         defaultContent: entry.defaultContent ?? defaults.defaultContent,
+        placement: entry.placement ?? defaults.placement,
         bloc: entry.bloc ?? defaults.bloc ?? globalThis.customElements?.get(tag) ?? fallbackElementConstructor(),
         editor,
     };

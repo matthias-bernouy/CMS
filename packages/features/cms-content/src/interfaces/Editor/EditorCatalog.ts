@@ -2,6 +2,11 @@ import type { Editor } from "./Editor";
 
 export type EditorConstructor = new (target: HTMLElement) => Editor;
 
+export type EditorCatalogPlacement =
+    | { kind: "anywhere" }
+    | { kind: "explicit-slot" }
+    | { kind: "parent-tags"; tags: readonly string[] };
+
 export type EditorCatalogEntry = {
     tag: string;
     label: string;
@@ -10,6 +15,7 @@ export type EditorCatalogEntry = {
     category?: string;
     subCategory?: string;
     defaultContent?: string;
+    placement?: EditorCatalogPlacement;
     bloc: CustomElementConstructor;
     editor: EditorConstructor;
 };
@@ -24,6 +30,7 @@ export type EditorCatalogRegistration = {
     category?: string;
     subCategory?: string;
     defaultContent?: string;
+    placement?: EditorCatalogPlacement;
     bloc?: CustomElementConstructor;
     editor?: EditorConstructor;
 };
@@ -34,6 +41,7 @@ export type EditorCatalogRegistrationDefaults = {
     description?: string;
     category?: string;
     defaultContent?: string;
+    placement?: EditorCatalogPlacement;
     bloc?: CustomElementConstructor;
 };
 

@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { p9rExternalsPlugin } from "./p9rExternalsPlugin";
 import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
+import { isNativeBlocTag, nativeBlocOwnershipError } from "./nativeBlocTags";
 
 /** Synthetic editor source for blocs deployed without their own Editor module. */
 const OPAQUE_EDITOR_SRC = `
@@ -34,6 +35,9 @@ export async function prepare_bloc(
     defaultContent: string | undefined = undefined,
     options: { native?: boolean; compositionHTML?: string; viewPath?: string } = {},
 ) {
+    if (options.native || isNativeBlocTag(blocId)) {
+        throw new Error(nativeBlocOwnershipError(blocId));
+    }
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
 
     try {
@@ -65,7 +69,7 @@ export async function prepare_bloc(
         const viewEntryPath = fileView ? await writeViewRegistrationEntry(tempDir, viewPath) : viewPath;
 
         const [viewJSRaw, editorJSRaw] = await Promise.all([
-            options.native || options.compositionHTML !== undefined
+            options.compositionHTML !== undefined
                 ? ""
                 : runBuild(buildOptions(viewEntryPath), `view bundle for ${blocId}`),
             runBuild(buildOptions(editorPath), `editor bundle for ${blocId}`),
@@ -74,9 +78,7 @@ export async function prepare_bloc(
         let viewJS = viewJSRaw;
         let editorJS = editorJSRaw;
 
-        if (!options.native) {
-            viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", blocId);
-        }
+        viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", blocId);
 
         const defaultContentLiteral = JSON.stringify(defaultContent ?? "").replaceAll("$", "$$$$");
 

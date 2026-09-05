@@ -150,6 +150,9 @@ describe("Shell", () => {
         expect(svg.ownerDocument).toBe(frameDocument);
         expect(svg.getAttribute("slot")).toBe("cover");
         expect(svg.getAttribute("viewBox")).toBe("0 0 24 24");
+        expect(svg.getAttribute("role")).toBe("img");
+        expect(svg.getAttribute("aria-label")).toBe("Menu");
+        expect(svg.hasAttribute("aria-hidden")).toBe(false);
         expect(svg.getAttribute("onload")).toBeNull();
         expect(svg.querySelector("path")?.getAttribute("fill")).toBe("currentColor");
         expect(svg.querySelector("path")?.getAttribute("onclick")).toBeNull();
@@ -173,6 +176,6 @@ describe("Shell", () => {
         const replacement = figure.querySelector("svg")!;
         expect(replacement).not.toBe(svg);
         expect(replacement.getAttribute("slot")).toBe("cover");
-        expect(replacement.getAttribute("class")).toBe("button-icon");
+        expect(replacement.hasAttribute("class")).toBe(false);
     });
 });

@@ -15,8 +15,8 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (bloc.catalogue !== undefined && bloc.catalogue !== "active" && bloc.catalogue !== "inactive") {
         throw new ContentValidationError("catalogue", "expected active or inactive");
     }
-    if (!isRegisteredBlocTag(bloc.id)) {
-        throw new ContentValidationError("id", "valid lower-case HTML or custom-element tag expected");
+    if (!isValidCustomElementTag(bloc.id)) {
+        throw new ContentValidationError("id", "valid lower-case custom-element tag expected");
     }
     if (bloc.compositionHTML !== undefined && !bloc.compositionHTML.trim()) {
         throw new ContentValidationError("compositionHTML", "non-empty HTML expected");
@@ -102,10 +102,6 @@ function validateOwnership(value: unknown): asserts value is BlocOwnership {
 
 function validDate(value: Date): boolean {
     return value instanceof Date && !Number.isNaN(value.getTime());
-}
-
-function isRegisteredBlocTag(value: string): boolean {
-    return typeof value === "string" && /^[a-z][a-z0-9-]*$/.test(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

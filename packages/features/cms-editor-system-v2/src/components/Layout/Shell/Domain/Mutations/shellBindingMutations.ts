@@ -1,6 +1,7 @@
 import {
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
+    isNativeHtmlTag,
     type CmsSourceState,
     type Editor,
 } from "@bernouy/cms-content/editor";
@@ -25,7 +26,11 @@ export class ShellBindingMutations {
     constructor(private readonly context: MutationContext) {}
 
     setSource(editor: Editor, source: EditorDataSource, binding: SourceBinding = { url: source.url }): void {
-        setSource(editor, source, binding);
+        const controlled = controlledNativeSourceBinding(editor, source, binding, this.context.dataSources?.() ?? []);
+        if (!controlled) {
+            return;
+        }
+        setSource(editor, source, controlled);
         this.reload(editor.target);
     }
 
@@ -122,4 +127,25 @@ export class ShellBindingMutations {
         this.context.loadDocument({ root, contentRoot }, selectedTarget);
         this.context.syncViewFrameContent();
     }
+}
+
+function controlledNativeSourceBinding(
+    editor: Editor,
+    source: EditorDataSource,
+    binding: SourceBinding,
+    declaredSources: EditorDataSource[],
+): SourceBinding | null {
+    if (!isNativeHtmlTag(editor.target.localName)) {
+        return binding;
+    }
+    const declared = declaredSources.find(
+        (candidate) => candidate.url === source.url && (candidate.method ?? "GET") === (source.method ?? "GET"),
+    );
+    const method = binding.method ?? source.method ?? "GET";
+    if (!declared || binding.url !== declared.url || method !== (declared.method ?? "GET")) {
+        return null;
+    }
+    return editor.target.localName === "form"
+        ? { ...binding, url: declared.url, method, trigger: "submit" }
+        : { ...binding, url: declared.url, method };
 }

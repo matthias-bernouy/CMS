@@ -69,9 +69,23 @@ export function parseInlineSvg(document: Document, source: string): HTMLElement 
 
     sanitizeSvgTree(root);
     removeUnsupportedElements(root);
+    normalizeAccessibility(root);
 
     const imported = document.importNode(root, true);
     return imported as unknown as HTMLElement;
+}
+
+function normalizeAccessibility(root: Element): void {
+    const label = root.getAttribute("aria-label")?.trim() || root.querySelector("title")?.textContent?.trim() || "";
+    if (label) {
+        root.setAttribute("role", "img");
+        root.setAttribute("aria-label", label);
+        root.removeAttribute("aria-hidden");
+        return;
+    }
+    root.removeAttribute("role");
+    root.removeAttribute("aria-label");
+    root.setAttribute("aria-hidden", "true");
 }
 
 function removeUnsupportedElements(root: Element): void {

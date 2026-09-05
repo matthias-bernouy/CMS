@@ -1,5 +1,6 @@
 import {
     applySourceStatusConditions,
+    nativeDomTreeIssue,
     type CmsSourceStatusCondition,
     type EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
@@ -27,15 +28,24 @@ export function createInsertion(
     }
 
     const fragment = createBlockFragment(document, item.entry);
-    prepareNetworkInertBindings(fragment);
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
         applySlot(child, slotName);
         applyCondition(child, sourceStatusConditions);
     }
+    if (
+        nativeDomTreeIssue(fragment, {
+            allowIncompleteMedia: true,
+            skipRootPlacement: true,
+            requireFormSource: false,
+        })
+    ) {
+        return null;
+    }
+    prepareNetworkInertBindings(fragment);
 
     const selectionTarget =
-        slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
+        slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag.toLowerCase()) ?? null;
     if (!selectionTarget) {
         return null;
     }

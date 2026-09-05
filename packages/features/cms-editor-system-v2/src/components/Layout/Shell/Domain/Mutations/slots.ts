@@ -2,7 +2,8 @@ import type { ContentSlot, Editor, EditorCatalog, CmsSourceStatusCondition } fro
 
 import type { EditorRuntime } from "../../../../../runtime";
 import { applySlot } from "./insertion";
-import { acceptsElement } from "../../../../../policy/contentSlotAcceptance";
+import { acceptsElementForParent, isElementPlacementAllowedAtRoot } from "../../../../../policy/contentSlotAcceptance";
+import { isEditorPlacementAllowed } from "../../../../../policy/editorPlacement";
 import { COMPOSITION_AUTHORED_ATTRIBUTE, isCompositionRuntimeElement } from "@bernouy/components/base";
 
 export function canInsertNodeCount(parent: Editor, slot: ContentSlot, insertedElements: HTMLElement[]): boolean {
@@ -32,15 +33,16 @@ export function canReplaceNodeCount(
 export function canDuplicate(runtime: EditorRuntime | null, editor: Editor, catalog: EditorCatalog): boolean {
     const parent = parentEditor(runtime, editor);
     if (!parent) {
-        return true;
+        return isElementPlacementAllowedAtRoot(editor.target, catalog);
     }
 
     const slot = findSlot(parent, authoredSlot(editor.target));
     if (!slot) {
-        return true;
+        const entry = catalog.find((candidate) => candidate.tag.toLowerCase() === editor.target.localName);
+        return entry ? isEditorPlacementAllowed(entry, { kind: "root" }) : true;
     }
 
-    return acceptsElement(slot, editor.target, catalog) && !isSlotFull(parent, slot);
+    return acceptsElementForParent(slot, editor.target, catalog, parent.target.localName) && !isSlotFull(parent, slot);
 }
 
 export function canDelete(runtime: EditorRuntime | null, editor: Editor): boolean {
@@ -67,6 +69,9 @@ export function canInsertSibling(
 ): boolean {
     const parent = parentEditor(runtime, reference);
     if (!parent) {
+        if (!isElementPlacementAllowedAtRoot(insertedElement, catalog)) {
+            return false;
+        }
         applySlot(insertedElement, undefined);
         applySourceConditions(insertedElement, []);
         return true;
@@ -76,7 +81,7 @@ export function canInsertSibling(
     const slot = findSlot(parent, slotName);
     if (
         !slot ||
-        !acceptsElement(slot, insertedElement, catalog) ||
+        !acceptsElementForParent(slot, insertedElement, catalog, parent.target.localName) ||
         !canInsertNodeCount(parent, slot, [insertedElement])
     ) {
         return false;
@@ -102,11 +107,11 @@ export function canMoveEditor(
     }
 
     if (!targetParent) {
-        return true;
+        return isElementPlacementAllowedAtRoot(source.target, catalog);
     }
 
     const targetSlot = findSlot(targetParent, targetSlotName);
-    if (!targetSlot || !acceptsElement(targetSlot, source.target, catalog)) {
+    if (!targetSlot || !acceptsElementForParent(targetSlot, source.target, catalog, targetParent.target.localName)) {
         return false;
     }
 

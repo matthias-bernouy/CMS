@@ -1,5 +1,5 @@
 import { ContentValidationError } from "cms-content/core/validation/errors";
-import { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
+import { validatePageContentMarkup } from "cms-content/core/validation/documents/nativeContent";
 
 /**
  * Field-level validators shared by the content entities. Each one
@@ -51,7 +51,7 @@ export function validateContent(value: string): string {
     if (value.length > MAX_CONTENT) {
         throw new ContentValidationError("content", `too long; max ${MAX_CONTENT} chars`);
     }
-    return hardenStoredHtml(value);
+    return validatePageContentMarkup(value);
 }
 
 const MAX_TAG_LENGTH = 50;

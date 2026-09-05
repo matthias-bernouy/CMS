@@ -79,6 +79,7 @@ export type {
     EndpointPickerSetting,
     EditorCatalog,
     EditorCatalogEntry,
+    EditorCatalogPlacement,
     EditorCatalogRegistration,
     EditorCatalogRegistrationDefaults,
     EditorCatalogRuntime,
@@ -112,3 +113,27 @@ export {
 } from "../core/editor/EditorCatalog";
 
 export { sanitizeSvgTree } from "../core/utils/sanitizeSvgTree";
+export { isSafeNavigationalUrl } from "../core/utils/safeUrl";
+export {
+    isNativeHtmlTag,
+    isPlatformNativeAttributeAllowed,
+    isPlatformNativeContentTag,
+    isPlatformNativeEditorTag,
+    isSiteBlocNativeAttributeAllowed,
+    isSiteBlocNativeStructureTag,
+    PLATFORM_NATIVE_ADDABLE_TAGS,
+    PLATFORM_NATIVE_CONTEXTUAL_TAGS,
+    PLATFORM_NATIVE_RICH_TEXT_TAGS,
+    PLATFORM_NATIVE_SEMANTIC_TAGS,
+} from "../core/validation/blocs/nativeHtml";
+export {
+    isCmsMediaSource,
+    nativeAttributeSetIssue,
+    nativeAttributeValueIssue,
+} from "../core/validation/blocs/nativeAttributeValues";
+export { nativeDomTreeIssue, type NativeDomPolicyOptions } from "../core/validation/blocs/nativeDom";
+export {
+    isCmsBindingAttribute,
+    nativeBindingAttributeIssue,
+    nativeFormBindingIssue,
+} from "../core/validation/blocs/nativeBindings";

@@ -16,3 +16,19 @@ export {
     type ResolvedEditorInteractionPolicy,
     resolveEditorInteractionPolicy,
 } from "../policy/editorInteractionPolicy";
+export {
+    type EditorPlacementContext,
+    isEditorPlacementAllowed,
+} from "../policy/editorPlacement";
+export type { EditorCatalogPlacement } from "@bernouy/cms-content/editor";
+export {
+    applyNativeEditorAttributeEffects,
+    filterNativeEditorSettingSections,
+    isNativeEditorAttributeAllowed,
+    isNativeEditorAttributeMutationAllowed,
+    isNativeEditorAttributeValueAllowed,
+    isNativeEditorSettingAllowed,
+    isNativeEditorSettingValueAllowed,
+    isNativeHtmlEditorTag,
+} from "../native/attributePolicy";
+export { createNativeEditorCatalog, PLATFORM_NATIVE_CATALOG_TAGS } from "../native/catalog";

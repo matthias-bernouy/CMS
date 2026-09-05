@@ -58,6 +58,15 @@ export function fileUrl(basePath: string, id: string): string {
     return `${basePath}/.cms/files/by-id/${encodeURIComponent(id)}`;
 }
 
+export function isCmsFileSource(value: string): boolean {
+    return (
+        value.startsWith("/") &&
+        !value.startsWith("//") &&
+        !/[\u0000-\u0020\u007F]/.test(value) &&
+        /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value)
+    );
+}
+
 export function fileDetail(basePath: string, item: FileItem): FilesCenterSelectDetail {
     return {
         id: item.id,
@@ -82,7 +91,7 @@ export function matchesFileAccept(item: FileItem, accept: FilesCenterFileAccept[
         return true;
     }
 
-    const mimeType = item.mimeType ?? "";
+    const mimeType = item.mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
     if (accept.includes("image") && mimeType.startsWith("image/")) {
         return true;
     }

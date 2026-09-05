@@ -15,6 +15,8 @@
  * markup/structure is preserved, only the script-bearing bits are removed.
  */
 
+import { isSafeStoredResourceUrl } from "./safeUrl";
+
 interface SanitizableElement {
     readonly tagName: string;
     getAttributeNames(): string[];
@@ -43,17 +45,10 @@ export function sanitizeDomTree(root: SanitizableElement): void {
             }
             if (URL_ATTRS.has(lower)) {
                 const value = el.getAttribute(name);
-                if (value && isDangerousUrl(value)) {
+                if (value && !isSafeStoredResourceUrl(value)) {
                     el.removeAttribute(name);
                 }
             }
         }
     }
-}
-
-function isDangerousUrl(value: string): boolean {
-    // Whitespace/control chars are ignored by browsers when resolving a scheme
-    // (`java\tscript:` → `javascript:`); strip them before testing.
-    const v = value.replace(/[\u0000-\u0020]/g, "").toLowerCase();
-    return v.startsWith("javascript:") || v.startsWith("vbscript:") || v.startsWith("data:text/html");
 }

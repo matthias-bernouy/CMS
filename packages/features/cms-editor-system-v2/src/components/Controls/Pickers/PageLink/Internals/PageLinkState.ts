@@ -1,7 +1,8 @@
-import { allowedLinkModes, modeForLinkValue, type LinkMode, type PageRef } from "../pageLinkDomain";
+import { allowedLinkModes, isSafeLinkValue, modeForLinkValue, type LinkMode, type PageRef } from "../pageLinkDomain";
 import { type PageLinkElements, queryPageLinkElements } from "../View/pageLinkElements";
 import { renderPageLinkMedia } from "../View/pageLinkMediaView";
 import { openPageLinkMediaPicker } from "../pageLinkMediaPicker";
+import type { MediaAccept } from "@bernouy/cms-content/editor";
 
 export abstract class PageLinkState extends HTMLElement {
     protected pages: PageRef[] = [];
@@ -22,7 +23,7 @@ export abstract class PageLinkState extends HTMLElement {
     }
 
     static get observedAttributes(): string[] {
-        return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "disabled"];
+        return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
     }
 
     attributeChangedCallback(): void {
@@ -49,6 +50,9 @@ export abstract class PageLinkState extends HTMLElement {
     }
 
     protected setValue(value: string): void {
+        if (!isSafeLinkValue(value)) {
+            return;
+        }
         this.currentValue = value;
         this.reflectValue(value);
         this.renderPages();
@@ -84,7 +88,7 @@ export abstract class PageLinkState extends HTMLElement {
             this.mode = "media";
             this.mediaLabel = label;
             this.setValue(source);
-        });
+        }, this.mediaAccept());
     }
 
     protected renderMediaFile(): void {
@@ -105,6 +109,15 @@ export abstract class PageLinkState extends HTMLElement {
 
     protected allowMedia(): boolean {
         return this.getAttribute("allow-media") !== "false";
+    }
+
+    protected mediaAccept(): MediaAccept[] | undefined {
+        const allowed = new Set<MediaAccept>(["image", "bitmap", "svg", "video", "audio", "document"]);
+        const values = (this.getAttribute("media-accept") ?? "")
+            .split(",")
+            .map((value) => value.trim())
+            .filter((value): value is MediaAccept => allowed.has(value as MediaAccept));
+        return values.length > 0 ? values : undefined;
     }
 
     protected basePath(): string {

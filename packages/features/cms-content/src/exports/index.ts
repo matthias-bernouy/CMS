@@ -103,9 +103,33 @@ export { nextSiteBlocUpdatedAt } from "cms-content/core/blocs/timestamps";
 export { SiteBlocPublicationQueue } from "cms-content/core/blocs/SiteBlocPublicationQueue";
 export {
     validateBlocWrite,
+    validateNativeSiteBlocNode,
     validateSiteBlocDefinition,
     validateSiteBlocSnapshot,
 } from "cms-content/core/validation/blocs";
+export {
+    isNativeHtmlTag,
+    isPlatformNativeAttributeAllowed,
+    isPlatformNativeContentTag,
+    isPlatformNativeEditorTag,
+    isSiteBlocNativeAttributeAllowed,
+    isSiteBlocNativeStructureTag,
+    PLATFORM_NATIVE_ADDABLE_TAGS,
+    PLATFORM_NATIVE_CONTEXTUAL_TAGS,
+    PLATFORM_NATIVE_RICH_TEXT_TAGS,
+    PLATFORM_NATIVE_SEMANTIC_TAGS,
+} from "cms-content/core/validation/blocs/nativeHtml";
+export {
+    isCmsMediaSource,
+    nativeAttributeSetIssue,
+    nativeAttributeValueIssue,
+} from "cms-content/core/validation/blocs/nativeAttributeValues";
+export { validateSiteBlocDefaultContent } from "cms-content/core/validation/documents/nativeContent";
+export {
+    isCmsBindingAttribute,
+    nativeBindingAttributeIssue,
+    nativeFormBindingIssue,
+} from "cms-content/core/validation/blocs/nativeBindings";
 export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/queries/pagesReferencing";
 export { createBlocUsageResolver } from "cms-content/core/blocs/usage/resolveUsedBlocTags";
 export { findUsedBlocTags } from "cms-content/core/blocs/usage/findUsedBlocTags";
@@ -138,6 +162,7 @@ export {
     type ContentRefsReader,
 } from "cms-content/core/validation/documents/assertContentRefsExist";
 export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
+export { isSafeNavigationalUrl } from "cms-content/core/utils/safeUrl";
 export {
     validatePageIndexingConfiguration,
     validatePagePath,

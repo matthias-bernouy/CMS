@@ -3,7 +3,7 @@ import type { BlockPickerItem, BlockPickerOption } from "../../Pickers/BlockPick
 import type { EditorStructureNode } from "../../../../runtime";
 import type { StructurePickerGroupContext } from "./structurePickerGroups";
 import { isCatalogEntryInsertable } from "../../../../policy/editorInteractionPolicy";
-import { acceptsEntry, mediaAcceptForSlot } from "../../../../policy/contentSlotAcceptance";
+import { acceptsCatalogEntry, mediaAcceptForSlot } from "../../../../policy/contentSlotAcceptance";
 
 export function slotOptions(
     context: StructurePickerGroupContext,
@@ -18,7 +18,7 @@ export function slotOptions(
             }
             return (
                 isCatalogEntryInsertable(context.editingPolicy, entry) &&
-                slot.accepts.some((accept) => acceptsEntry(accept, entry))
+                acceptsCatalogEntry(slot, entry, parent.target.localName)
             );
         })
         .map((entry) => ({

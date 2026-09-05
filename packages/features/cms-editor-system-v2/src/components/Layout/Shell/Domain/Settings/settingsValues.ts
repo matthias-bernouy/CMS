@@ -11,6 +11,8 @@ import {
     readNetworkBindingAttribute,
     type NetworkBindingAttribute,
 } from "@bernouy/components/binding-dom";
+import { sanitizeNativeRichTextFragment } from "../../../../../native/richTextPolicy";
+import { nativeMediaAccessibleNameDraft } from "../../../../../native/mediaSettingChanges";
 
 import { isParamSyncSetting } from "./paramSync";
 import { isPageStateSetting } from "./pageState";
@@ -26,6 +28,9 @@ export function getTextValue(editor: Editor, format: "text" | "richtext"): strin
     assertTextSlotCompatibility(editor);
 
     const textFragment = textContentFragment(editor);
+    if (format === "richtext") {
+        sanitizeNativeRichTextFragment(textFragment, editor.target.localName);
+    }
     const value = format === "richtext" ? textFragment.innerHTML : (textFragment.textContent ?? "");
 
     return editor.getContentSlots().length > 0 ? value.trim() : value;
@@ -42,6 +47,7 @@ export function setTextValue(editor: Editor, format: "text" | "richtext", value:
     if (format === "richtext") {
         const template = editor.target.ownerDocument.createElement("template");
         template.innerHTML = value;
+        sanitizeNativeRichTextFragment(template.content, editor.target.localName);
         prepareNetworkInertBindings(template.content);
         fragment.append(template.content.cloneNode(true));
     } else if (value !== "") {
@@ -71,6 +77,13 @@ function resolveSetting(editor: Editor, setting: Setting): Setting {
 function resolveSettingValue(editor: Editor, setting: SettingControl): SettingControl {
     if (isParamSyncSetting(setting) || isPageStateSetting(setting)) {
         return setting;
+    }
+
+    if (setting.type === "text") {
+        const accessibleNameDraft = nativeMediaAccessibleNameDraft(editor, setting);
+        if (accessibleNameDraft !== undefined) {
+            return { ...setting, defaultValue: accessibleNameDraft };
+        }
     }
 
     if (setting.type === "toggle") {

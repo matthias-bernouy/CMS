@@ -1,6 +1,7 @@
 import { CMS_BINDING_CORE_TAG, type EditorCatalog } from "@bernouy/cms-content/editor";
+import { createNativeEditorCatalog } from "@bernouy/cms-editor-system-v2";
 import { BindingCore } from "@bernouy/components";
-import { BindingCoreEditor, SvgEditor } from "cms-control/core/editorSystemV2/builtInEditors";
+import { BindingCoreEditor } from "cms-control/core/editorSystemV2/builtInEditors";
 
 export function createControlEditorCatalog(): EditorCatalog {
     return [
@@ -13,14 +14,6 @@ export function createControlEditorCatalog(): EditorCatalog {
             bloc: BindingCore,
             editor: BindingCoreEditor,
         },
-        {
-            tag: "svg",
-            label: "SVG",
-            description: "Inline SVG selected from the CMS media library.",
-            icon: "image",
-            category: "Runtime",
-            bloc: HTMLElement,
-            editor: SvgEditor,
-        },
+        ...createNativeEditorCatalog(),
     ];
 }

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { ContentValidationError } from "@bernouy/cms-content";
 import { saveSiteBloc } from "cms-control/core/content/siteBloc/service";
+import { validateSiteBlocDefaultContent } from "cms-control/core/content/siteBloc/validation/defaultContent";
 import { seedBloc, seedPublishedSiteBloc, seedSiteBloc, siteBlocHarness, siteSnapshot } from "./fixtures";
 
 function saveInput(snapshot: ReturnType<typeof siteSnapshot>, expectedDraftRevision = 1) {
@@ -84,6 +85,15 @@ describe("site bloc draft validation", () => {
         );
         expect(saved.draft.defaultContent).toBe("<basic-card></basic-card>");
         expect(saved.draftRevision).toBe(2);
+    });
+
+    test("enforces contextual native placement in default slot content", () => {
+        const any = [{ id: "body", label: "Body", accepts: [{ kind: "any-component" as const }] }];
+        for (const html of ["<span>Text</span>", "<li>Item</li>", "<strong>Text</strong>"]) {
+            expect(() => validateSiteBlocDefaultContent(html, any, new Set())).toThrow(/not accepted/);
+        }
+        const exactSpan = [{ id: "label", label: "Label", accepts: [{ kind: "component" as const, tag: "span" }] }];
+        expect(validateSiteBlocDefaultContent("<span>Text</span>", exactSpan, new Set())).toBe("<span>Text</span>");
     });
 
     test("rejects unknown accepted component tags", async () => {

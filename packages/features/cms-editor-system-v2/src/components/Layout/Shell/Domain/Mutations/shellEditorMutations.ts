@@ -10,6 +10,7 @@ import type { MutationContext } from "./shellMutations";
 import { reloadFrameDocument } from "./Content/reloadFrameDocument";
 import { applySlot } from "./insertion";
 import { authoredSlot, canDelete, canDuplicate, canInsertSibling, canMoveEditor } from "./slots";
+import { isElementPlacementAllowedAtRoot } from "../../../../../policy/contentSlotAcceptance";
 
 export class ShellEditorMutations {
     private _clipboardElement: HTMLElement | null = null;
@@ -17,7 +18,11 @@ export class ShellEditorMutations {
     constructor(private readonly context: MutationContext) {}
 
     duplicateEditor(editor: Editor): void {
-        if (!canDuplicate(this.context.runtime(), editor, this.context.catalog())) {
+        const document = this.context.editorDocument();
+        if (
+            !document?.contentRoot.contains(editor.target) ||
+            !canDuplicate(this.context.runtime(), editor, this.context.catalog())
+        ) {
             return;
         }
 
@@ -27,7 +32,8 @@ export class ShellEditorMutations {
     }
 
     deleteEditor(editor: Editor): void {
-        if (!canDelete(this.context.runtime(), editor)) {
+        const document = this.context.editorDocument();
+        if (!document?.contentRoot.contains(editor.target) || !canDelete(this.context.runtime(), editor)) {
             return;
         }
 
@@ -48,8 +54,15 @@ export class ShellEditorMutations {
 
         const clone = this._clipboardElement.cloneNode(true) as HTMLElement;
         if (!editor) {
+            if (!isElementPlacementAllowedAtRoot(clone, this.context.catalog())) {
+                return;
+            }
             document.contentRoot.append(clone);
             reloadFrameDocument(this.context, clone);
+            return;
+        }
+
+        if (!document.contentRoot.contains(editor.target)) {
             return;
         }
 
@@ -75,7 +88,13 @@ export class ShellEditorMutations {
     }
 
     moveEditor(source: Editor, target: Editor, position: "before" | "after"): void {
-        if (source === target || source.target.contains(target.target)) {
+        const document = this.context.editorDocument();
+        if (
+            !document?.contentRoot.contains(source.target) ||
+            !document.contentRoot.contains(target.target) ||
+            source === target ||
+            source.target.contains(target.target)
+        ) {
             return;
         }
         if (!canMoveEditor(this.context.runtime(), source, target, this.context.catalog())) {

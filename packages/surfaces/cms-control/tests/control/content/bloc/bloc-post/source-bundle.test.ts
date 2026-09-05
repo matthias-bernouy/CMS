@@ -127,7 +127,7 @@ describe("bloc.post", () => {
         );
     });
 
-    test("allows native text bloc tags without manifest runtime metadata", async () => {
+    test("rejects native bloc artifacts owned by the platform", async () => {
         const { cms, createBlocCalls } = makeSystem();
         const res = await importBloc(
             makeRequest({
@@ -143,10 +143,8 @@ describe("bloc.post", () => {
             cms,
         );
 
-        expect(res.status).toBe(200);
-        expect(createBlocCalls).toHaveLength(1);
-        expect(createBlocCalls[0]?.bloc.id).toBe("p");
-        expect(createBlocCalls[0]?.bloc.viewJS).toBe("");
-        expect(createBlocCalls[0]?.bloc.editorJS).toContain(`<p>Text</p>`);
+        expect(res.status).toBe(400);
+        expect(await res.text()).toContain('Native HTML tag "p" is platform-owned');
+        expect(createBlocCalls).toHaveLength(0);
     });
 });

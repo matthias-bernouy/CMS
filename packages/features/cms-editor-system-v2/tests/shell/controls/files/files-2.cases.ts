@@ -104,4 +104,44 @@ describe("Shell", () => {
         );
         expect(control.shadowRoot!.querySelector<HTMLElement>(".target")!.hidden).toBe(true);
     });
+
+    test("page link media picker revalidates a forged selection against its typed accept", async () => {
+        installDom();
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            if (String(url).includes("/api/page/links")) {
+                return Response.json([]);
+            }
+            return Response.json({ items: [] });
+        }) as typeof fetch;
+
+        const { PageLink } = await import("../../../../src/components/Controls/Pickers/PageLink/PageLink");
+        const control = new PageLink();
+        control.setAttribute("allow-page", "false");
+        control.setAttribute("allow-external", "false");
+        control.setAttribute("allow-media", "true");
+        control.setAttribute("media-accept", "image");
+        const values: string[] = [];
+        control.addEventListener("input", (event) => {
+            values.push((event as CustomEvent<{ value: string }>).detail.value);
+        });
+        document.body.append(control);
+        control.connectedCallback();
+        control.shadowRoot!.querySelector<HTMLButtonElement>(".file-button")!.click();
+
+        const center = document.body.querySelector("cms-editor-v2-files-center")!;
+        center.dispatchEvent(
+            new CustomEvent("select-file", {
+                detail: {
+                    id: "document",
+                    label: "Document.pdf",
+                    src: "/cms/.cms/files/by-id/document",
+                    mimeType: "application/pdf",
+                },
+            }),
+        );
+
+        expect(values).toEqual([]);
+        expect(control.getAttribute("value")).toBeNull();
+    });
 });

@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { isNativeBlocTag, prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
+import { prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
 import {
     type BlocOwnership,
     ContentConflictError,
@@ -70,11 +70,8 @@ export async function importBlocArtifact(
     if (sourceManifest.error) {
         throw new BlocImportError(sourceManifest.error, 400);
     }
-    const native = isNativeBlocTag(input.tag);
-
     const validation = validateBloc({
         tag: input.tag,
-        native,
         ...(viewSource !== undefined ? { viewSource } : {}),
         ...(editorSource !== undefined ? { editorSource } : {}),
     });
@@ -103,7 +100,6 @@ export async function importBlocArtifact(
         input.source,
         defaultContentResult.content,
         {
-            native,
             ...(input.compositionHTML !== undefined ? { compositionHTML: input.compositionHTML } : {}),
             ...(input.viewPath ? { viewPath: input.viewPath } : {}),
         },

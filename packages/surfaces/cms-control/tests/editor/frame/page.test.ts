@@ -40,7 +40,7 @@ describe("editor frame endpoint - pages", () => {
         expect(html).not.toContain("w13c-reserved-example:not(:defined)");
     });
 
-    test("keeps known Blocs layout-neutral until direct and composed custom elements are defined", async () => {
+    test("keeps the editor page hidden until direct and composed custom elements are defined", async () => {
         const { cms } = cmsWithPage(pricingPage(`<root-card></root-card><unknown-card></unknown-card>`), [
             { id: "root-card", viewJS: "const template = `<child-card></child-card>`;" },
             { id: "child-card", viewJS: "const template = `<span>Ready</span>`;" },
@@ -52,7 +52,10 @@ describe("editor frame endpoint - pages", () => {
         const html = await response.text();
 
         expect(html).toContain('id="cms-bloc-fouc-shell"');
-        expect(html).toContain("child-card:not(:defined),root-card:not(:defined){display:contents}");
+        expect(html).toContain("html:has(child-card:not(:defined)),html:has(root-card:not(:defined)){background:#fff}");
+        expect(html).toContain(
+            "html:has(child-card:not(:defined)) body,html:has(root-card:not(:defined)) body{visibility:hidden}",
+        );
         expect(html).not.toContain("unknown-card:not(:defined)");
         expect(html.indexOf('id="cms-bloc-fouc-shell"')).toBeLessThan(html.indexOf("/cms/api/editor/view-script.js"));
     });

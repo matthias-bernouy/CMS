@@ -1,6 +1,7 @@
 import {
     Editor,
     createEditorCatalogEntry,
+    isNativeHtmlTag,
     mergeEditorCatalogs,
     type EditorCatalog,
     type EditorCatalogRegistration,
@@ -32,7 +33,7 @@ async function loadEditorCatalogOnce(): Promise<InsertableCatalogEntry[]> {
     } catch (error) {
         console.error("[editor] editor catalog script failed", error);
     }
-    const catalog = mergeEditorCatalogs(createControlEditorCatalog(), runtime.getCatalog());
+    const catalog = mergeEditorCatalogs(runtime.getCatalog(), createControlEditorCatalog());
     return applyBlocCatalogueInsertionState(catalog, await loadBlocLifecycle());
 }
 
@@ -58,12 +59,17 @@ async function loadBlocLifecycle(): Promise<BlocCatalogueLifecycle[]> {
     }
 }
 
-function installEditorCatalogRuntime(): EditorCatalogRuntime {
+export function installEditorCatalogRuntime(): EditorCatalogRuntime {
     const entries: EditorCatalog = [];
     const runtime: EditorCatalogRuntime = {
         Editor,
         registerEditor(entry: EditorCatalogRegistration): void {
             try {
+                if (entry.tag && isNativeHtmlTag(entry.tag)) {
+                    throw new Error(
+                        `Native HTML tag "${entry.tag}" is platform-owned and cannot be registered by an integration.`,
+                    );
+                }
                 entries.push(
                     createEditorCatalogEntry(entry, {
                         tag: entry.tag ?? "unknown-bloc",

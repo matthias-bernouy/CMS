@@ -3,7 +3,17 @@ import {
     CMS_BINDING_CORE_TAG,
     CMS_BINDING_RUNTIME_ATTRIBUTES,
 } from "@bernouy/cms-content/editor";
-import type { SiteBlocNode, SiteBlocSlot, SiteBlocSnapshot } from "@bernouy/cms-content";
+import {
+    COMPOSITION_CONTROLLER_ATTRIBUTE,
+    isSiteBlocNativeAttributeAllowed,
+    isSiteBlocNativeStructureTag,
+    isValidCustomElementTag,
+    validateNativeSiteBlocNode,
+    validateSiteBlocDefaultContent,
+    type SiteBlocNode,
+    type SiteBlocSlot,
+    type SiteBlocSnapshot,
+} from "@bernouy/cms-content";
 
 const TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const ATTRIBUTE = /^[A-Za-z_:][A-Za-z0-9_.:-]*$/;
@@ -33,7 +43,10 @@ const VOID_TAGS = new Set([
 export function serializeSiteBlocTemplate(snapshot: SiteBlocSnapshot): string {
     const slots = slotMap(snapshot.slots);
     const usedSlots = new Set<string>();
-    const html = snapshot.structure.map((node) => serializeNode(node, slots, usedSlots, false)).join("");
+    const controller = snapshot.structure.find((node) => node.kind === "bloc");
+    const html = snapshot.structure
+        .map((node) => serializeNode(node, slots, usedSlots, false, undefined, node === controller))
+        .join("");
     for (const slot of snapshot.slots) {
         if (!usedSlots.has(slot.id)) {
             throw new Error(`Site bloc slot "${slot.id}" has no placeholder`);
@@ -44,7 +57,8 @@ export function serializeSiteBlocTemplate(snapshot: SiteBlocSnapshot): string {
 
 export function serializeSiteBlocDefault(tag: string, content: string): string {
     assertTag(tag);
-    return `<${tag}>${normalizeFragment(content)}</${tag}>\n`;
+    const validated = validateSiteBlocDefaultContent(normalizeFragment(content), tag);
+    return `<${tag}>${validated}</${tag}>\n`;
 }
 
 function serializeNode(
@@ -52,6 +66,8 @@ function serializeNode(
     slots: Map<string, SiteBlocSlot>,
     usedSlots: Set<string>,
     nestedInBloc: boolean,
+    parentTag?: string,
+    behaviorController = false,
 ): string {
     if (node.kind === "text") {
         assertStaticValue(node.value, "text");
@@ -83,25 +99,35 @@ function serializeNode(
     if (VOID_TAGS.has(node.tag) && node.children.length > 0) {
         throw new Error(`Void element "${node.tag}" cannot contain site bloc children`);
     }
+    if (isSiteBlocNativeStructureTag(node.tag)) {
+        validateNativeSiteBlocNode(node, "site bloc structure", parentTag);
+    }
     const attributes = Object.entries(node.attributes)
         .sort(([left], [right]) => compareText(left, right))
-        .map(([name, value]) => serializeAttribute(name, value))
+        .map(([name, value]) => serializeAttribute(node.tag, name, value))
         .join("");
-    const opening = `<${node.tag}${attributes}>`;
+    const controllerAttribute = behaviorController ? ` ${COMPOSITION_CONTROLLER_ATTRIBUTE}` : "";
+    const opening = `<${node.tag}${attributes}${controllerAttribute}>`;
     if (VOID_TAGS.has(node.tag)) {
         return opening;
     }
-    const children = node.children.map((child) => serializeNode(child, slots, usedSlots, true)).join("");
+    const children = node.children.map((child) => serializeNode(child, slots, usedSlots, true, node.tag)).join("");
     return `${opening}${children}</${node.tag}>`;
 }
 
-function serializeAttribute(name: string, value: string): string {
+function serializeAttribute(tag: string, name: string, value: string): string {
     if (!ATTRIBUTE.test(name)) {
         throw new Error(`Invalid site bloc attribute name "${name}"`);
     }
     const normalized = name.toLowerCase();
     if (normalized === "style" || normalized.startsWith("on") || BINDING_ATTRIBUTES.has(normalized)) {
         throw new Error(`Site bloc attribute "${name}" is forbidden in the private structure`);
+    }
+    if (
+        isSiteBlocNativeStructureTag(tag) &&
+        (name !== normalized || !isSiteBlocNativeAttributeAllowed(tag, normalized))
+    ) {
+        throw new Error(`Site bloc attribute "${name}" is not allowed on native <${tag}>`);
     }
     assertStaticValue(value, `attribute "${name}"`);
     return ` ${name}="${escapeAttribute(value)}"`;
@@ -119,7 +145,7 @@ function slotMap(slots: SiteBlocSlot[]): Map<string, SiteBlocSlot> {
 }
 
 function assertTag(tag: string): void {
-    if (!TAG.test(tag)) {
+    if (!TAG.test(tag) || (!isValidCustomElementTag(tag) && !isSiteBlocNativeStructureTag(tag))) {
         throw new Error(`Invalid site bloc HTML tag "${tag}"`);
     }
 }

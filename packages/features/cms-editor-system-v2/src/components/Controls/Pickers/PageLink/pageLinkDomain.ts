@@ -1,3 +1,5 @@
+export { isSafeNavigationalUrl as isSafeLinkValue } from "@bernouy/cms-content/editor";
+
 export type LinkMode = "page" | "external" | "media";
 
 export type PageRef = {

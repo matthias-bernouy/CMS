@@ -1,5 +1,6 @@
 import type { SiteBlocDefinition } from "@bernouy/cms-content";
 import type { EditorCatalogEntry } from "@bernouy/cms-content/editor";
+import { isPlatformNativeEditorTag, isSiteBlocNativeStructureTag } from "@bernouy/cms-content/editor";
 import { siteSlotPlaceholderCatalogEntry } from "cms-control/core/editorSystemV2/builtInEditors";
 import type { BlocCatalogueItem } from "./siteBlocApi";
 
@@ -16,7 +17,9 @@ export function createSiteBlocCatalogs(
     definition: SiteBlocDefinition,
 ): SiteBlocCatalogs {
     const structureTags = eligibleStructureTags(catalogue, definition.tag);
-    const structure = baseCatalog.filter((entry) => structureTags.has(entry.tag.toLowerCase())).map(structureEntry);
+    const structure = baseCatalog
+        .filter((entry) => structureTags.has(entry.tag.toLowerCase()) || isSiteBlocNativeStructureTag(entry.tag))
+        .map(structureEntry);
     structure.push(siteSlotPlaceholderCatalogEntry());
 
     return { structure, structureTags };
@@ -41,5 +44,5 @@ export function eligibleStructureTags(catalogue: BlocCatalogueItem[], ownerTag: 
 }
 
 export function isTagInsertable(tags: ReadonlySet<string>, tag: string, _entry: EditorCatalogEntry): boolean {
-    return tags.has(tag.toLowerCase());
+    return tags.has(tag.toLowerCase()) || isPlatformNativeEditorTag(tag);
 }

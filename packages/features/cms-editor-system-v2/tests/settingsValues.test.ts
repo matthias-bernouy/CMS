@@ -65,6 +65,34 @@ describe("settings text values", () => {
         expect(el.innerHTML).toBe(`About <em>Us</em><base-nav-item slot="items">Child</base-nav-item>`);
     });
 
+    test("sanitizes native rich text to controlled inline semantics", () => {
+        const el = target(`<p>Original</p>`);
+        const editor = new Editor(el);
+
+        setTextValue(
+            editor,
+            "richtext",
+            `Hello <strong class="loud" onclick="attack()">Bold <em style="color:red">text</em></strong>
+            <div id="layout">Block <code data-secret="value">code</code></div>
+            <a href="java\nscript:alert(1)"><em>unsafe link</em></a>
+            <a href=" /pages/about " target="_blank" rel="opener">safe link</a>
+            <img src="/track" onerror="attack()"><script>attack()</script><!-- marker -->`,
+        );
+
+        expect(el.innerHTML.replace(/\s+/g, " ").trim()).toBe(
+            `Hello <strong>Bold <em>text</em></strong> Block <code>code</code> <em>unsafe link</em> <a href="/pages/about">safe link</a>`,
+        );
+    });
+
+    test("sanitizes native rich text when it is read without mutating the editor target", () => {
+        const el = target(`<p><strong style="color:red">Safe</strong><iframe src="/tracker">Hidden</iframe></p>`);
+        const editor = new Editor(el);
+
+        expect(getTextValue(editor, "richtext")).toBe(`<strong>Safe</strong>`);
+        expect(el.querySelector("strong")?.hasAttribute("style")).toBeTrue();
+        expect(el.querySelector("iframe")).not.toBeNull();
+    });
+
     test("rejects unnamed content slots for text-capable editors", () => {
         const editor = new DefaultSlotEditor(target(`<demo-card>Content</demo-card>`));
 
@@ -120,8 +148,8 @@ describe("settings control values", () => {
         });
     });
 
-    test("reads and writes inert image source settings", () => {
-        const image = target(`<img data-cms-src="/media/{{ product.image }}.jpg">`);
+    test("reads inert image source settings and rejects an uncontrolled native text field", () => {
+        const image = target(`<img data-cms-src="/media/{{ product.image }}.jpg" alt="Product">`);
         const editor = new Editor(image);
         const setting = {
             type: "text",
@@ -144,14 +172,30 @@ describe("settings control values", () => {
         const selection = new ShellSelection({} as never);
         selection.applySetting(editor, setting, "/media/{{ alternate.image }}.jpg");
         expect(image.getAttribute("src")).toBeNull();
-        expect(image.getAttribute("data-cms-src")).toBe("/media/{{ alternate.image }}.jpg");
+        expect(image.getAttribute("data-cms-src")).toBe("/media/{{ product.image }}.jpg");
 
         selection.applySetting(editor, setting, "/media/static.jpg");
         expect(image.getAttribute("src")).toBeNull();
-        expect(image.getAttribute("data-cms-src")).toBe("/media/static.jpg");
+        expect(image.getAttribute("data-cms-src")).toBe("/media/{{ product.image }}.jpg");
 
         selection.applySetting(editor, setting, "");
         expect(image.getAttribute("src")).toBeNull();
-        expect(image.getAttribute("data-cms-src")).toBeNull();
+        expect(image.getAttribute("data-cms-src")).toBe("/media/{{ product.image }}.jpg");
+
+        selection.applySetting(
+            editor,
+            {
+                type: "page-link",
+                label: "Image",
+                attribute: "src",
+                required: true,
+                allowPage: false,
+                allowExternal: false,
+                allowMedia: true,
+                mediaAccept: ["image"],
+            },
+            "/.cms/files/by-id/photo",
+        );
+        expect(image.getAttribute("data-cms-src")).toBe("/.cms/files/by-id/photo");
     });
 });

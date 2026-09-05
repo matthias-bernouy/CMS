@@ -83,6 +83,9 @@ export class SettingControlRenderer {
             control.setAttribute("allow-page", String(setting.allowPage !== false));
             control.setAttribute("allow-external", String(setting.allowExternal !== false));
             control.setAttribute("allow-media", String(setting.allowMedia !== false));
+            if (setting.mediaAccept) {
+                control.setAttribute("media-accept", setting.mediaAccept.join(","));
+            }
             wirePageLinkControl(control, setting, emit);
             return control;
         }

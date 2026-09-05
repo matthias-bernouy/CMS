@@ -1,4 +1,4 @@
-import type { TextCapability } from "@bernouy/cms-content/editor";
+import { isSafeNavigationalUrl, type TextCapability } from "@bernouy/cms-content/editor";
 import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { DynamicDataPickerController } from "../../DynamicData/DynamicDataPickerController";
 import { parseTextCapability } from "./richTextAttributes";
@@ -92,8 +92,8 @@ export class RichTextEditor extends HTMLElement {
                 this.finishAction();
                 return;
             }
-            const href = window.prompt("Link URL");
-            if (href) {
+            const href = window.prompt("Link URL")?.trim();
+            if (href && isSafeNavigationalUrl(href)) {
                 this._range.wrapRange("a", { href });
             }
         } else {

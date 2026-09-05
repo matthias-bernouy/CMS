@@ -54,13 +54,15 @@ describe("Shell", () => {
         const insertion = createInsertion(document, {
             kind: "block",
             entry: {
-                tag: "img",
+                tag: "demo-image-card",
                 label: "Image card",
                 bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: ImageEditor,
                 defaultContent: `
-                    <img data-kind="dynamic" src="/media/{{ product.image }}.jpg">
-                    <img data-kind="static" src="/media/static.jpg">
+                    <demo-image-card>
+                        <img data-kind="dynamic" src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product">
+                        <img data-kind="static" src="/.cms/files/by-id/static" alt="Product">
+                    </demo-image-card>
                 `,
             },
         });
@@ -69,8 +71,8 @@ describe("Shell", () => {
         const dynamicImage = document.querySelector('[data-kind="dynamic"]');
         const staticImage = document.querySelector('[data-kind="static"]');
         expect(dynamicImage?.getAttribute("src")).toBeNull();
-        expect(dynamicImage?.getAttribute("data-cms-src")).toBe("/media/{{ product.image }}.jpg");
-        expect(staticImage?.getAttribute("src")).toBe("/media/static.jpg");
+        expect(dynamicImage?.getAttribute("data-cms-src")).toBe("/.cms/sources/catalog/image?id={{ product.image }}");
+        expect(staticImage?.getAttribute("src")).toBe("/.cms/files/by-id/static");
         expect(staticImage?.getAttribute("data-cms-src")).toBeNull();
     });
 

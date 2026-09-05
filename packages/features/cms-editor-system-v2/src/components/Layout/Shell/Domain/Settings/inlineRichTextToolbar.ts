@@ -1,4 +1,4 @@
-import type { DataScope, Editor } from "@bernouy/cms-content/editor";
+import { isSafeNavigationalUrl, type DataScope, type Editor } from "@bernouy/cms-content/editor";
 
 import { DynamicDataPickerController } from "../../../../Controls/DynamicData/DynamicDataPickerController";
 import type { RichTextAction } from "../../../../Controls/RichText/RichTextEditor/richTextActions";
@@ -110,8 +110,8 @@ export class InlineRichTextToolbar {
             this.finishAction();
             return;
         } else {
-            const href = this.refs.chrome.ownerDocument.defaultView?.prompt("Link URL");
-            if (href) {
+            const href = this.refs.chrome.ownerDocument.defaultView?.prompt("Link URL")?.trim();
+            if (href && isSafeNavigationalUrl(href)) {
                 this.commands.wrapRange("a", { href });
             }
         }

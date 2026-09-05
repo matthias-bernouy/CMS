@@ -5,6 +5,7 @@ import type { ShellCommands } from "../Core/shellCommands";
 import type { ShellState } from "../Core/Services/shellState";
 import { eventElement } from "../shellFrames";
 import type { InlineTextEditing } from "../../Domain/Settings/inlineTextEditing";
+import { sanitizeNativeRichTextEditor } from "../../../../../native/richTextPolicy";
 
 type InlineTextEventsContext = {
     state: ShellState;
@@ -49,6 +50,7 @@ export class ShellInlineTextEvents {
         if (!editor) {
             return;
         }
+        sanitizeNativeRichTextEditor(editor);
         this.context.commands.renderSettings();
         this.context.commands.syncViewFrameContent();
         this.context.highlight.show(editor);
