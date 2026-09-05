@@ -55,7 +55,15 @@ describe("non-PostgreSQL generated platform contracts", () => {
         const suite = result.results.find((entry) => entry.suiteId === "platform-declared-http-contracts");
 
         expect(suite?.outcome).toBe("passed");
-        expect(suite?.platformEvidence?.checks.map((check) => check.subjectCount)).toEqual([1, 1]);
+        expect(
+            Object.fromEntries(
+                suite?.platformEvidence?.checks.map((check) => [check.checkId, check.subjectCount]) ?? [],
+            ),
+        ).toEqual({
+            "function-contract-declarations": 1,
+            "provision-function-coverage": 0,
+            "source-endpoint-coverage": 1,
+        });
         await expect(
             validateVerificationJobResultForAdmission(
                 result,
@@ -64,6 +72,18 @@ describe("non-PostgreSQL generated platform contracts", () => {
                 input.workload.attempt,
             ),
         ).resolves.toBeDefined();
+    });
+
+    test("rejects an internal provision URL whose Function is not declared", async () => {
+        const input = await postgresPlatformInputFixture(functionPackage(true, "missing-callback"));
+        const result = await execute(input);
+        const suite = result.results.find((entry) => entry.suiteId === "platform-declared-http-contracts");
+
+        expect(suite?.outcome).toBe("failed");
+        expect(suite?.platformEvidence?.checks.flatMap((check) => check.findings)).toContainEqual({
+            code: "provision-function-missing",
+            path: "provisions.0.configuration.callback.url",
+        });
     });
 
     test("requires exact minimum and stable dependency resolution points", async () => {
@@ -173,7 +193,7 @@ function dependencyPackage(): IntegrationPackageEnvelopeV1 {
     });
 }
 
-function functionPackage(withContract: boolean): IntegrationPackageEnvelopeV1 {
+function functionPackage(withContract: boolean, provisionFunction?: string): IntegrationPackageEnvelopeV1 {
     const compatibility = withContract
         ? {
               compatibility: {
@@ -203,6 +223,21 @@ function functionPackage(withContract: boolean): IntegrationPackageEnvelopeV1 {
                 functions: [{ name: "probe", directory: "functions/probe", ...compatibility }],
             },
         ],
+        ...(provisionFunction
+            ? {
+                  provisions: [
+                      {
+                          provider: "callback-provider",
+                          configuration: {
+                              callback: {
+                                  url: `{{connectors.supabase.functionsBaseUrl}}/${provisionFunction}/events`,
+                              },
+                          },
+                          outputs: [{ name: "callbackSecret", key: "CALLBACK_SECRET" }],
+                      },
+                  ],
+              }
+            : {}),
         artifacts: [
             {
                 type: "source",

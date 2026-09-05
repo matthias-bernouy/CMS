@@ -3,6 +3,7 @@ import { integrationVersionSatisfies, type IntegrationDefinition } from "@bernou
 import type { AdmissionDependencyReferenceV1 } from "@bernouy/cms-integration-verification";
 import type { DependencyMatrixExecution } from "../suites/dependencies";
 import { checkEvidence, finding } from "../evidence";
+import { connectorFunctionTarget, provisionFunctionCoverage } from "./functionReferences";
 
 export async function httpContractChecks(definition: IntegrationDefinition) {
     const subjects = await Promise.all(
@@ -24,6 +25,7 @@ export async function httpContractChecks(definition: IntegrationDefinition) {
     return await Promise.all([
         checkEvidence("function-contract-declarations", subjects.toSorted(comparePath), findings),
         sourceEndpointCoverage(definition),
+        provisionFunctionCoverage(definition),
     ]);
 }
 
@@ -168,9 +170,4 @@ async function sourceEndpointCoverage(definition: IntegrationDefinition) {
         return subject.contractMatched ? [] : [finding("source-endpoint-http-contract-missing", subject.path)];
     });
     return await checkEvidence("source-endpoint-coverage", subjects.toSorted(comparePath), findings);
-}
-
-function connectorFunctionTarget(targetUrl: string): Readonly<{ functionName: string; route: string }> | null {
-    const match = /^\{\{connectors\.[^.}]+\.functionsBaseUrl\}\}\/([^/?#]+)(\/[^?#]*)?(?:[?#].*)?$/u.exec(targetUrl);
-    return match ? { functionName: match[1]!, route: match[2] || "/" } : null;
 }

@@ -15,10 +15,11 @@ export const POSTGRES_PLATFORM_VERIFICATION_SUITES_V1 = Object.freeze([
     suite(
         "platform-declared-http-contracts",
         "always",
-        ["function-contract-declarations", "source-endpoint-coverage"],
+        ["function-contract-declarations", "source-endpoint-coverage", "provision-function-coverage"],
         [
             "Every declared connector function carries a bounded, parsed HTTP contract when functions are present.",
             "Every CMS Source endpoint targeting a connector function is covered by an exact declared method and route.",
+            "Every declarative provision targeting an integration-owned Function resolves to exactly one declared Function.",
         ],
         ["Edge Function execution", "runtime HTTP behavior", "PostgREST behavior"],
     ),
