@@ -47,9 +47,9 @@ describe("official integration package protocol", () => {
             }
         }
 
-        expect(indexPaths).toHaveLength(17);
-        expect(versions).toBe(17);
-        expect(digests.size).toBe(17);
+        expect(indexPaths).toHaveLength(14);
+        expect(versions).toBe(14);
+        expect(digests.size).toBe(14);
     });
 });
 

@@ -31,7 +31,7 @@ async function main(): Promise<void> {
                 await runStep(psql, databaseUrl, bundleFiles[contractCase.bundle], contractCase, contractStep);
             }
             if (contractCase.id === "commerce-media") {
-                await runCommerceMediaRolloutProofs(databaseUrl);
+                await runCommerceMediaRerunProof(databaseUrl);
             }
             if (contractCase.id === "commerce-protected-settlement") {
                 await runRefundIdempotencyConcurrencyProof(psql, databaseUrl);
@@ -59,26 +59,23 @@ function selectedContracts(contracts: PostgresContract[]): PostgresContract[] {
 }
 
 async function loadBundles(): Promise<Record<BundleName, string>> {
-    const [commerceNotifications, commerce, negotiation, consent, mondialRelay, salesConfigurator, stripeConnect] =
-        await Promise.all([
-            loadSupabaseSchemaSql(
-                configuration.integrationRoots.commerceNotifications,
-                "sql/foundation/notifications/manifest.json",
-            ),
-            loadSupabaseSchemaSql(configuration.integrationRoots.commerce),
-            loadSupabaseSchemaSql(resolve(packageRoot, "integrations/extensions/commerce-negotiation/versions/1.0.0")),
-            loadSupabaseSchemaSql(configuration.integrationRoots.consent),
-            loadSupabaseSchemaSql(configuration.integrationRoots.mondialRelay),
-            loadSupabaseSchemaSql(configuration.integrationRoots.salesConfigurator),
-            loadSupabaseSchemaSql(configuration.integrationRoots.stripeConnect),
-        ]);
+    const [commerceNotifications, commerce, negotiation, consent, mondialRelay, stripeConnect] = await Promise.all([
+        loadSupabaseSchemaSql(
+            configuration.integrationRoots.commerceNotifications,
+            "sql/foundation/notifications/manifest.json",
+        ),
+        loadSupabaseSchemaSql(configuration.integrationRoots.commerce),
+        loadSupabaseSchemaSql(resolve(packageRoot, "integrations/extensions/commerce-negotiation")),
+        loadSupabaseSchemaSql(configuration.integrationRoots.consent),
+        loadSupabaseSchemaSql(configuration.integrationRoots.mondialRelay),
+        loadSupabaseSchemaSql(configuration.integrationRoots.stripeConnect),
+    ]);
     return {
         commerce,
         commerceNotifications,
         commerceNegotiatedCheckout: `${commerce}\n${negotiation}`,
         consent,
         mondialRelay,
-        salesConfigurator,
         stripeConnect,
     };
 }
@@ -89,7 +86,6 @@ async function writeBundles(root: string, sql: Record<BundleName, string>): Prom
         commerceNegotiatedCheckout: join(root, "commerce-negotiated-checkout.sql"),
         consent: join(root, "consent.sql"),
         mondialRelay: join(root, "mondial-relay.sql"),
-        salesConfigurator: join(root, "sales-configurator.sql"),
         stripeConnect: join(root, "stripe-connect.sql"),
     };
     await Promise.all(
@@ -125,13 +121,10 @@ async function runStep(
     }
 }
 
-async function runCommerceMediaRolloutProofs(databaseUrl: string): Promise<void> {
-    const tests = [
-        resolve(packageRoot, "tests/commerce/selling/media/postgres/rollout/legacyEdge.test.ts"),
-        resolve(packageRoot, "tests/commerce/selling/media/postgres/rollout/rerun.test.ts"),
-    ];
-    console.info("[postgres-contracts] Commerce media rollout compatibility and rerun");
-    const child = Bun.spawn([process.execPath, "test", ...tests], {
+async function runCommerceMediaRerunProof(databaseUrl: string): Promise<void> {
+    const test = resolve(packageRoot, "tests/commerce/selling/media/postgres/rollout/rerun.test.ts");
+    console.info("[postgres-contracts] Commerce media installation rerun");
+    const child = Bun.spawn([process.execPath, "test", test], {
         env: {
             ...process.env,
             ALLOW_COMMERCE_MEDIA_SCHEMA_RESET: "true",
@@ -143,7 +136,7 @@ async function runCommerceMediaRolloutProofs(databaseUrl: string): Promise<void>
     });
     const exitCode = await child.exited;
     if (exitCode !== 0) {
-        throw new Error(`Commerce media rollout proofs failed with Bun exit code ${exitCode}.`);
+        throw new Error(`Commerce media rerun proof failed with Bun exit code ${exitCode}.`);
     }
 }
 

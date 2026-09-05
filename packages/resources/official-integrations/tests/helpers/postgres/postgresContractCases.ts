@@ -6,7 +6,6 @@ export type BundleName =
     | "commerceNegotiatedCheckout"
     | "consent"
     | "mondialRelay"
-    | "salesConfigurator"
     | "stripeConnect";
 
 export type ContractStep = { file: string; variables?: string[] };
@@ -21,17 +20,15 @@ export function postgresContractConfiguration(packageRoot: string): {
     contracts: PostgresContract[];
     integrationRoots: Record<BundleName, string>;
 } {
-    const commerce = resolve(packageRoot, "integrations/domains/commerce/versions/1.0.0");
-    const salesConfigurator = resolve(packageRoot, "integrations/domains/sales-configurator/versions/1.0.0");
+    const commerce = resolve(packageRoot, "integrations/domains/commerce");
     return {
         integrationRoots: {
             commerce,
             commerceNotifications: commerce,
             commerceNegotiatedCheckout: commerce,
-            consent: resolve(packageRoot, "integrations/domains/consent/versions/1.0.0"),
-            mondialRelay: resolve(packageRoot, "integrations/providers/mondial-relay/versions/1.0.0"),
-            salesConfigurator,
-            stripeConnect: resolve(packageRoot, "integrations/providers/stripe-connect/versions/1.0.0"),
+            consent: resolve(packageRoot, "integrations/domains/consent"),
+            mondialRelay: resolve(packageRoot, "integrations/providers/mondial-relay"),
+            stripeConnect: resolve(packageRoot, "integrations/providers/stripe-connect"),
         },
         contracts: [
             contract(
@@ -143,19 +140,6 @@ export function postgresContractConfiguration(packageRoot: string): {
                 "mondial-relay/tracking-summary",
                 ["run_tracking_summary_install_contract=true", "allow_tracking_summary_schema_reset=true"],
             ),
-            {
-                bundle: "salesConfigurator",
-                id: "sales-configurator",
-                label: "Sales Configurator domain and authorization",
-                steps: [
-                    step("core-integrations/sales-configurator", "contracts.pg.sql", [
-                        "allow_sales_configurator_schema_reset=true",
-                    ]),
-                    step("core-integrations/sales-configurator", "legacy-ownership-migration.pg.sql", [
-                        "allow_sales_configurator_schema_reset=true",
-                    ]),
-                ],
-            },
             contract(
                 "stripe-connect-payout-schedule",
                 "Stripe Connect payout schedule",

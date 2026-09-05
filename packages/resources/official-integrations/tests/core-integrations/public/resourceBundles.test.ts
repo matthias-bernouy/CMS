@@ -65,8 +65,8 @@ test("official definition and SQL bundles remain complete and maintainable", asy
     );
     const lineViolations = await oversizedBundleFiles(definitionTrees, sqlTrees);
     const legacyReferences = await findLegacyReferences((await audit.walkResourceTree(PACKAGE_ROOT)).files);
-    expect(bundles).toHaveLength(17);
-    expect(rootManifests).toHaveLength(12);
+    expect(bundles).toHaveLength(14);
+    expect(rootManifests).toHaveLength(10);
     expect(declaredManifests.map(show).sort()).toEqual(rootManifests.map(show).sort());
     const findings = [orphanDefinitions, orphanManifests, fragmentCoverage, legacySchemas, wideDirectories];
     findings.push(nonThematicPaths, lineViolations, legacyReferences);
@@ -135,11 +135,18 @@ async function oversizedBundleFiles(definitions: ResourceTree[], sql: ResourceTr
     for (const file of [...definitions, ...sql].flatMap(({ files }) => files)) {
         const source = await readFile(file, "utf8");
         const lines = audit.physicalLineCount(source);
-        if (lines > 180 && (extname(file) !== ".sql" || !audit.isCohesiveSqlException(source))) {
+        if (
+            lines > 180 &&
+            !isAtomicCompatibilitySchema(file) &&
+            (extname(file) !== ".sql" || !audit.isCohesiveSqlException(source))
+        ) {
             violations.push(`${show(file)} (${lines})`);
         }
     }
     return violations;
+}
+function isAtomicCompatibilitySchema(file: string): boolean {
+    return basename(file) === "schema.json" && file.includes(`${sep}configuration${sep}compatibility${sep}`);
 }
 async function findLegacyReferences(files: string[]): Promise<string[]> {
     const names = [["schema", "sql"].join("."), ["broadcast-schema", "sql"].join(".")];

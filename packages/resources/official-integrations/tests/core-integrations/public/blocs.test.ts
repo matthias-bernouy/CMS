@@ -4,10 +4,10 @@ import { prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
-describe("Ulvia public blocs", () => {
+describe("Mossa public blocs", () => {
     test("hydrates and builds every public collection bloc", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-        const definition = await repo.get("ulvia");
+        const definition = await repo.get("mossa");
         const blocs = definition?.artifacts?.filter((artifact) => artifact.type === "bloc") ?? [];
 
         expect(blocs.length).toBeGreaterThan(0);

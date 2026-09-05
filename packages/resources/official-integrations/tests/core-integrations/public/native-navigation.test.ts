@@ -12,17 +12,17 @@ describe("native light-DOM navigation", () => {
         const findings: string[] = [];
         for (const file of htmlFiles()) {
             const root = fragment(readFileSync(file, "utf8"));
-            for (const host of root.querySelectorAll("basic-button")) {
+            for (const host of root.querySelectorAll("mossa-button")) {
                 if (host.closest("[data-forms-runtime-dependencies]")) {
                     continue;
                 }
                 const attributes = BUTTON_SEMANTIC_ATTRIBUTES.filter((name) => host.hasAttribute(name));
                 if (attributes.length > 0) {
-                    findings.push(`${show(file)}: basic-button owns ${attributes.join(", ")}`);
+                    findings.push(`${show(file)}: mossa-button owns ${attributes.join(", ")}`);
                 }
                 const controls = Array.from(host.children).filter((child) => child.matches("a, button"));
                 if (controls.length !== 1 || host.children.length !== 1) {
-                    findings.push(`${show(file)}: basic-button must contain exactly one direct native control`);
+                    findings.push(`${show(file)}: mossa-button must contain exactly one direct native control`);
                 }
             }
             for (const host of root.querySelectorAll("[href]")) {
@@ -64,30 +64,15 @@ describe("native light-DOM navigation", () => {
             readFileSync(file, "utf8").includes('createElement("a")'),
         );
         expect(sources.map(show).sort()).toEqual([
-            "official-integrations/integrations/collections/mossa/blocs/courtside/account/orders/cs-purchase-list/Bloc.ts",
-            "official-integrations/integrations/collections/mossa/blocs/courtside/commerce/checkout/cs-service-withdrawal-form/Bloc.ts",
-            "official-integrations/integrations/collections/mossa/blocs/foundation/forms/workflows/base-form/Bloc.ts",
-            "official-integrations/integrations/collections/ulvia/blocs/domains/commerce/commerce-offer-price-form/controller/Bloc.ts",
-            "official-integrations/integrations/collections/ulvia/blocs/extensions/commerce-mondial-relay-fulfillment/commerce-mondial-relay-sale-fulfillment/Bloc.ts",
-            "official-integrations/integrations/collections/ulvia/blocs/extensions/commerce-stripe-payments/commerce-stripe-payment/legal-consent.ts",
-            "official-integrations/integrations/collections/ulvia/blocs/foundation/documentation-blocs/navigation/core/doc-layout/discovery.ts",
-            "official-integrations/integrations/collections/ulvia/blocs/foundation/documentation-blocs/navigation/core/doc-toc/Bloc.ts",
-            "official-integrations/integrations/collections/ulvia/blocs/foundation/documentation-blocs/page/doc-search/Bloc.ts",
+            "official-integrations/integrations/collections/mossa/blocs/domains/account/orders/purchases/Bloc.ts",
+            "official-integrations/integrations/collections/mossa/blocs/domains/commerce/checkout/commerce-stripe-payment/legal-consent.ts",
+            "official-integrations/integrations/collections/mossa/blocs/domains/commerce/checkout/service-withdrawal/Bloc.ts",
+            "official-integrations/integrations/collections/mossa/blocs/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment/Bloc.ts",
+            "official-integrations/integrations/collections/mossa/blocs/domains/commerce/offers/pricing/commerce-offer-price-form/controller/Bloc.ts",
         ]);
-
-        const redirect = resolve(
-            OFFICIAL_INTEGRATIONS_ROOT,
-            "collections/ulvia/blocs/foundation/basic-blocs/basic/basic-redirect/Bloc.ts",
-        );
-        const headerCell = resolve(
-            OFFICIAL_INTEGRATIONS_ROOT,
-            "collections/ulvia/blocs/foundation/basic-blocs/data-display/table/basic-table-header-cell/template.html",
-        );
-        expect(readFileSync(redirect, "utf8")).toContain("<a hidden></a>");
-        expect(readFileSync(headerCell, "utf8")).toContain("<a data-navigation hidden></a>");
     });
 
-    test("does not recreate the removed basic-button link API at runtime", () => {
+    test("does not recreate a custom button link API at runtime", () => {
         const findings = integrationFiles("**/*.ts")
             .filter((file) => /setAttribute\(\s*["']action["']\s*,\s*["']link["']/u.test(readFileSync(file, "utf8")))
             .map(show)
@@ -98,7 +83,7 @@ describe("native light-DOM navigation", () => {
     test("updates offer-price retry labels on the native button", () => {
         const controller = resolve(
             OFFICIAL_INTEGRATIONS_ROOT,
-            "collections/ulvia/blocs/domains/commerce/commerce-offer-price-form/controller/Bloc.ts",
+            "collections/mossa/blocs/domains/commerce/offers/pricing/commerce-offer-price-form/controller/Bloc.ts",
         );
         const source = readFileSync(controller, "utf8");
         expect(source).toContain('return this.querySelector("[data-retry]");');
@@ -112,23 +97,35 @@ describe("native light-DOM navigation", () => {
 
         const list = resolve(
             OFFICIAL_INTEGRATIONS_ROOT,
-            "collections/ulvia/blocs/domains/commerce/commerce-offer-list/default.html",
+            "collections/mossa/blocs/domains/commerce/offers/catalogue/commerce-offer-list/default.html",
         );
         const anchor = fragment(readFileSync(list, "utf8")).querySelector<HTMLAnchorElement>(
-            'commerce-offer-preview > a[slot="navigation"]',
+            'mossa-commerce-offer-preview > a[slot="navigation"]',
         );
-        expect(anchor?.getAttribute("href")).toBe("/offer?slug={{ offer.slug }}");
+        expect(anchor?.hasAttribute("href")).toBe(false);
         expect(anchor?.getAttribute("aria-label")).toContain("{{ offer.title }}");
+
+        const controller = readFileSync(
+            resolve(
+                OFFICIAL_INTEGRATIONS_ROOT,
+                "collections/mossa/blocs/domains/commerce/offers/catalogue/commerce-offer-list/presentation.ts",
+            ),
+            "utf8",
+        );
+        expect(controller).toContain('host.getAttribute("offer-url")');
+        expect(controller).toContain('setAttributeIfChanged(link, "href"');
     });
 
     test("keeps offer-card navigation above passive content and below sibling actions", () => {
         const root = resolve(
             OFFICIAL_INTEGRATIONS_ROOT,
-            "collections/ulvia/blocs/domains/commerce/commerce-offer-preview",
+            "collections/mossa/blocs/domains/commerce/offers/catalogue/commerce-offer-preview",
         );
         const card = fragment(readFileSync(resolve(root, "default.html"), "utf8"));
-        expect(card.querySelector('commerce-offer-preview > a[slot="navigation"][href]')).not.toBeNull();
-        expect(card.querySelector('commerce-offer-preview > basic-button[slot="action"] > a[href]')).not.toBeNull();
+        expect(card.querySelector('mossa-commerce-offer-preview > a[slot="navigation"][href]')).not.toBeNull();
+        expect(
+            card.querySelector('mossa-commerce-offer-preview > mossa-button[slot="action"] > a[href]'),
+        ).not.toBeNull();
 
         const style = readFileSync(resolve(root, "style.css"), "utf8");
         const contentRule = style.match(/\[part="content"\]\s*\{([^}]*)\}/u)?.[1] ?? "";
