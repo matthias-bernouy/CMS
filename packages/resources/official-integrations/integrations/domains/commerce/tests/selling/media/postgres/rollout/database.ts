@@ -42,7 +42,7 @@ export async function installCurrentCommerceSchema(): Promise<SQL> {
         $roles$;
     `);
     const commerceRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "domains/commerce");
-    await database.unsafe(await loadSupabaseSchemaSql(commerceRoot));
+    await database.unsafe(await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json"));
     return database;
 }
 

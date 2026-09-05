@@ -1,6 +1,7 @@
 {
     "endpointId": "entityCustomFields",
     "method": "GET",
+    "access": "auth",
     "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/configuration/custom-fields",
     "params": [
         {

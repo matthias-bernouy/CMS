@@ -9,7 +9,7 @@ const commerceRoot = new URL("../../..", import.meta.url);
 const definitionPath = resolve(import.meta.dir, "../../../definition.json");
 describe("Commerce retained original contract", () => {
     test("installs additive intrinsic metadata and immutable retained originals", async () => {
-        const schema = await loadSupabaseSchemaSql(commerceRoot);
+        const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
         expect(schema).toContain("add column if not exists width integer");
         expect(schema).toContain("add column if not exists height integer");
@@ -24,7 +24,7 @@ describe("Commerce retained original contract", () => {
     });
 
     test("keeps legacy attach signatures while moving new uploads to dimension-aware v2 RPCs", async () => {
-        const schema = await loadSupabaseSchemaSql(commerceRoot);
+        const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
         expect(schema).toContain("function commerce.attach_product_media_v2(");
         expect(schema).toContain("function commerce.attach_offer_media_v2(");
@@ -37,7 +37,7 @@ describe("Commerce retained original contract", () => {
     });
 
     test("makes remove and replacement non-destructive and detached downloads fail closed", async () => {
-        const schema = await loadSupabaseSchemaSql(commerceRoot);
+        const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
         expect(schema).not.toMatch(/delete from commerce\.media/i);
         expect(schema).toContain("set detached_at = coalesce(detached_at, now())");

@@ -1,9 +1,0 @@
-import "./behavior/offer-filter-contract.cases";
-import "./behavior/offer-filter-lifecycle.cases";
-import "./behavior/offer-filter-panel.cases";
-import "./behavior/offer-filter-source-change.cases";
-import "./integration/offer-filter-brand.integration.cases";
-import "./integration/offer-filter-editor-runtime.integration.cases";
-import "./integration/offer-filter-list.integration.cases";
-import "./integration/offer-filter-pagination.integration.cases";
-import "./integration/offer-filter-range-bookmark.integration.cases";

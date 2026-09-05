@@ -160,6 +160,7 @@ begin
                 'title', offer.title,
                 'description', offer.description,
                 'condition_code', offer.condition_code,
+                'condition_label', condition.label,
                 'publication_status', offer.publication_status,
                 'workflow_state', offer.workflow_state,
                 'publicly_visible',
@@ -175,6 +176,7 @@ begin
             ) order by page.updated_at desc, page.id desc)
             from page_ids page
             join commerce.offers offer on offer.id = page.id
+            left join commerce.offer_conditions condition on condition.code = offer.condition_code
         ), '[]'::jsonb),
         'total', (select count(*) from filtered),
         'workflow_states', v_workflow_states,

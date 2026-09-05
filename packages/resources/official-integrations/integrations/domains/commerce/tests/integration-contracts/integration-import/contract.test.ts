@@ -28,7 +28,7 @@ import { expectedEndpointUrns } from "./expectations";
 import { connectorDeployer } from "./setup";
 import { installCommerceTestEnvironment, supabaseUrl } from "../../harness";
 installCommerceTestEnvironment();
-describe("commerce 3.1.0 contract", () => {
+describe("commerce 1.0.0 contract", () => {
     test("loads and imports the official Commerce contract", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const catalog = await repository.list();
@@ -59,6 +59,7 @@ describe("commerce 3.1.0 contract", () => {
                 installations,
                 triggers,
                 connectorDeployers: [deployer],
+                connectorInstanceIds: { primary: "commerce-test-primary" },
             },
             { kind: "commerce", answers: { id: "commerce" }, options: {} },
             [definition],
@@ -85,9 +86,9 @@ describe("commerce 3.1.0 contract", () => {
         const functionSecrets = deployment?.functions[0]?.secrets ?? {};
 
         expect(catalog.map((entry) => entry.kind)).toContain("commerce");
-        expect(definition).toMatchObject({ kind: "commerce", version: "3.1.0", type: "source" });
+        expect(definition).toMatchObject({ kind: "commerce", version: "1.0.0", type: "source" });
         expect(definition.dependencies).toEqual([
-            { name: "emailer", kind: "emailer", optional: true, versionRange: "^3.0.0" },
+            { name: "emailer", kind: "emailer", optional: true, versionRange: "^1.0.0" },
         ]);
         expect(JSON.stringify(definition).match(/\$selection\.(?!id)/g) ?? []).toEqual([]);
         expect(result.artifacts).toEqual(
@@ -146,6 +147,9 @@ describe("commerce 3.1.0 contract", () => {
             "urn:commerce:marketplaceServiceWithdrawalRequests": `${supabaseUrl}/functions/v1/cms-commerce/admin/service-withdrawal-requests`,
             "urn:commerce:reviewMarketplaceServiceWithdrawalRequest": `${supabaseUrl}/functions/v1/cms-commerce/admin/service-withdrawal-request/review`,
         });
+        expect(
+            source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:entityCustomFields")?.access,
+        ).toEqual({ mode: "auth" });
         expect(
             source?.endpoints.find((endpoint) => endpoint.urn === "urn:commerce:upsertCustomField")?.effects,
         ).toEqual({ invalidatesSchema: true });

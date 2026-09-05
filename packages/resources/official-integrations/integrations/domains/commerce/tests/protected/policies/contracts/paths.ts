@@ -4,7 +4,7 @@ import { loadSupabaseSchemaSql } from "../../../../../../../tests/helpers/supaba
 export const integrationRoot = resolve(import.meta.dir, "../../../..");
 
 export async function loadCommerceSchemaSql(): Promise<string> {
-    return await loadSupabaseSchemaSql(integrationRoot);
+    return await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
 }
 
 export function functionSql(schema: string, start: string, end: string): string {

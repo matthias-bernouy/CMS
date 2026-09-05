@@ -5,7 +5,10 @@ const integrationRoot = new URL("../../..", import.meta.url);
 
 describe("native Commerce notification schema", () => {
     test("assembles the dedicated queue and its private worker contract", async () => {
-        const schema = await loadSupabaseSchemaSql(integrationRoot, "sql/foundation/notifications/manifest.json");
+        const schema = await loadSupabaseSchemaSql(
+            integrationRoot,
+            "install/sql/foundation/notifications/manifest.json",
+        );
 
         expect(schema).toContain("create table if not exists commerce.notification_events");
         expect(schema).toContain("create table if not exists commerce.notification_deliveries");

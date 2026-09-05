@@ -98,7 +98,7 @@ export function notificationTemplates(): Response {
                     {
                         name: "offer.title",
                         description: "Accepted offer title",
-                        sample: "Racket",
+                        sample: "Sample product",
                     },
                     {
                         name: "agreement.subtotalAmountFormatted",
@@ -121,7 +121,7 @@ export function notificationTemplates(): Response {
                         subtotalAmountFormatted: "120.00 EUR",
                         currency: "EUR",
                     },
-                    offer: { id: 91, slug: "racket", title: "Racket" },
+                    offer: { id: 91, slug: "sample-product", title: "Sample product" },
                     order: {
                         id: "00000000-0000-0000-0000-000000000001",
                         number: "NEGOTIATED-ORDER-PENDING",

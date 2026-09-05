@@ -29,7 +29,7 @@ describe("commerce 1.0.0 protected workers", () => {
     });
 
     test("uses database-clock row locks and fails closed on ambiguous deadlines", async () => {
-        const schema = await loadSupabaseSchemaSql(integrationRoot);
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
 
         expect(schema).toContain("create or replace function commerce.process_due_order_deadlines");
         expect(schema).toContain("payment_confirmed_at timestamptz");

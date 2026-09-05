@@ -7,6 +7,7 @@ const offer = {
     title: "Camera offer",
     description: null,
     conditionCode: "good",
+    conditionLabel: "Break",
     publicationStatus: "draft",
     workflowState: "pending_review",
     acceptedPriceAmount: 12500,

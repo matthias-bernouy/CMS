@@ -38,7 +38,7 @@ describe("commerce optimized offer filter schema budget", () => {
         const sql = await readFile(
             resolve(
                 import.meta.dir,
-                "../../../../connectors/supabase/sql/catalog/taxonomy/offer-filter-schema-read-model.sql",
+                "../../../../connectors/supabase/install/sql/catalog/taxonomy/offer-filter-schema-read-model.sql",
             ),
             "utf8",
         );
@@ -56,7 +56,7 @@ describe("commerce optimized offer filter schema budget", () => {
         const sql = await readFile(
             resolve(
                 import.meta.dir,
-                "../../../../connectors/supabase/sql/catalog/taxonomy/offer-filter-schema-read-model.sql",
+                "../../../../connectors/supabase/install/sql/catalog/taxonomy/offer-filter-schema-read-model.sql",
             ),
             "utf8",
         );

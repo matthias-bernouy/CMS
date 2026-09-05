@@ -93,6 +93,7 @@ as $$
                    then to_jsonb(page) - 'read_ordinal' - 'seller_id'
                    else to_jsonb(page) - 'read_ordinal' - 'seller_id' - 'inventory_revision'
                end) || jsonb_build_object(
+                   'condition_label', condition.label,
                    'metadata', commerce.public_metadata_subset(page.metadata, offer_keys.keys),
                    'product', case when product.id is null then null else jsonb_build_object(
                        'id', product.id,
@@ -141,6 +142,7 @@ as $$
         left join commerce.product_variants variant
           on variant.product_id = page.product_id
          and variant.id = page.variant_id
+        left join commerce.offer_conditions condition on condition.code = page.condition_code
         left join axis_metadata on axis_metadata.variant_id = variant.id
         left join commerce.brands brand on brand.id = product.brand_id
         left join commerce.product_categories primary_link

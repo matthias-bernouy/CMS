@@ -75,6 +75,7 @@ as $$
     ), item as (
         select (to_jsonb(offer) - 'seller_id' - 'inventory_revision')
                || jsonb_build_object(
+                   'condition_label', condition.label,
                    'metadata', commerce.public_metadata_subset(offer.metadata, offer_keys.keys),
                    'product', case when product.id is null then null else jsonb_build_object(
                        'id', product.id,
@@ -119,6 +120,7 @@ as $$
         left join commerce.product_variants variant
           on variant.product_id = offer.product_id
          and variant.id = offer.variant_id
+        left join commerce.offer_conditions condition on condition.code = offer.condition_code
         left join commerce.brands brand on brand.id = product.brand_id
         left join commerce.product_categories primary_link
           on primary_link.product_id = product.id

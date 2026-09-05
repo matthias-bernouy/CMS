@@ -62,6 +62,7 @@ describe("Commerce media connector rerun", () => {
             secrets,
             installations,
             connectorDeployers: [deployer],
+            connectorInstanceIds: { primary: "commerce-test-primary" },
             sourceExecutorDeps: {
                 fetchImpl: async (input) => {
                     const request = new Request(input);

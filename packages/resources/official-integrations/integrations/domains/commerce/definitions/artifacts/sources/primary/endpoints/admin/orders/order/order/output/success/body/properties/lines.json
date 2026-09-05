@@ -108,6 +108,9 @@
                     "conditionCode": {
                         "type": "string"
                     },
+                    "conditionLabel": {
+                        "type": "string"
+                    },
                     "acceptedPriceAmount": {
                         "type": "number"
                     },

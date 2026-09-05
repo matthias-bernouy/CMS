@@ -80,7 +80,8 @@ begin
         ),
         'offer_snapshot', jsonb_build_object(
             'id', v_offer.id, 'slug', v_offer.slug, 'title', v_offer.title,
-            'conditionCode', 'very_good', 'acceptedPriceAmount', 12345,
+            'conditionCode', 'very_good', 'conditionLabel', 'Very good',
+            'acceptedPriceAmount', 12345,
             'currency', 'eur'
         ),
         'seller_snapshot', jsonb_build_object(
@@ -148,6 +149,8 @@ begin
                or line.offer_snapshot <> jsonb_build_object(
                    'id', offer.id, 'slug', offer.slug, 'title', offer.title,
                    'conditionCode', offer.condition_code,
+                   'conditionLabel', (select condition.label from commerce.offer_conditions condition
+                                      where condition.code = offer.condition_code),
                    'acceptedPriceAmount', offer.accepted_price_amount,
                    'currency', offer.currency)
                or line.seller_snapshot <> jsonb_build_object(

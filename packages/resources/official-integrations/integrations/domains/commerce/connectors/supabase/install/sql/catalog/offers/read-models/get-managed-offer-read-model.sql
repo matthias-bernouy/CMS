@@ -60,6 +60,7 @@ as $$
             'title', offer.title,
             'description', offer.description,
             'condition_code', offer.condition_code,
+            'condition_label', condition.label,
             'publication_status', offer.publication_status,
             'workflow_state', offer.workflow_state,
             'accepted_price_amount', offer.accepted_price_amount,
@@ -121,6 +122,7 @@ as $$
         cross join product_keys
         cross join commerce.settings settings
         left join commerce.products product on product.id = offer.product_id
+        left join commerce.offer_conditions condition on condition.code = offer.condition_code
         left join commerce.product_variants variant
           on variant.id = offer.variant_id
          and offer.variant_id <> 0

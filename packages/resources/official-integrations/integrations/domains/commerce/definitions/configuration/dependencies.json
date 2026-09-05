@@ -3,6 +3,6 @@
         "name": "emailer",
         "kind": "emailer",
         "optional": true,
-        "versionRange": "^3.0.0"
+        "versionRange": "^1.0.0"
     }
 ]

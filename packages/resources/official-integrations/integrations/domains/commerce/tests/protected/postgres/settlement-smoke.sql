@@ -781,7 +781,7 @@ $$;
 
 -- A buyer claim may consume the bounded commission and platform-funded shipping
 -- in addition to seller recovery and the protection fee. This reproduces the
--- empty-package allocation used by the protected Courtside flow exactly.
+-- empty-package allocation used by the protected marketplace flow exactly.
 select commerce.create_c2c_policy_revision(
     jsonb_build_object(
         'name', 'Protected full buyer claim smoke policy',
@@ -850,7 +850,7 @@ begin
         or v_terms.seller_proceeds_amount <> 13230
         or v_terms.platform_retained_amount <> 1465
         or v_terms.platform_retained_amount - v_terms.buyer_protection_fee_amount <> 720 then
-        raise exception 'smoke: full buyer claim fixture no longer matches immutable Courtside terms';
+        raise exception 'smoke: full buyer claim fixture no longer matches immutable marketplace terms';
     end if;
 end;
 $$;

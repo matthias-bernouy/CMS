@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 const variantsSectionPath = resolve(
     import.meta.dir,
-    "../../../../resources/official-integrations/integrations/domains/commerce/versions/1.0.0/definitions/artifacts/dashboards/products/views/product-detail/sections/product-variants.json",
+    "../../../../resources/official-integrations/integrations/domains/commerce/definitions/artifacts/dashboards/products/views/product-detail/sections/product-variants.json",
 );
 
 export async function variantsWidgetFixture(): Promise<Extract<DashboardWidget, { widget: "w-detail" }>> {

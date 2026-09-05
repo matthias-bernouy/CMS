@@ -1,1 +1,1 @@
-Minor release: publish reusable Commerce dashboard views while site dashboard composition remains CMS-owned.
+Initial Commerce release: publish the source-only commerce contracts, authenticated custom-field reads, and current offer and order read models.

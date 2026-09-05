@@ -261,9 +261,9 @@ Category and brand are first-class filters. `offerFilterSchema` resolves the
 selected category's inherited, public-readable Product fields and allowed
 operators. An authored `commerce-offer-filter` maps any URL-synchronized Basic
 control to one of those fields, so Commerce remains independent from a site's
-tennis, padel, clothing, or other catalogue vocabulary. PostgreSQL validates
-the schema and applies category, brand, price, condition, and metadata filters
-before counting and paginating public offers.
+vertical-specific catalogue vocabulary. PostgreSQL validates the schema and
+applies category, brand, price, condition, and metadata filters before counting
+and paginating public offers.
 
 In schema-driven mode, the same bloc renders brand, enum, and boolean facets
 with the shared Basic Select. Filterable numeric fields use a two-handle range
@@ -376,7 +376,7 @@ retain the complete metadata object.
 - `blocs/commerce-offer-list/`: transparent public offer source controller.
 - `blocs/commerce-offer-preview/`: editable public offer presentation.
 - `blocs/commerce-account-offers/`: authenticated seller offer listing.
-- `connectors/supabase/sql/schema.manifest.json`: ordered private schema and
+- `connectors/supabase/install/sql/schema.manifest.json`: ordered private schema and
   transactional command bundle.
 - `connectors/supabase/functions/cms-commerce/`: modular CMS-facing API.
 - `connectors/supabase/supabase.config.toml`: function deployment fragment.

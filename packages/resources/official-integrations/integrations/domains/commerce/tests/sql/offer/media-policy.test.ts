@@ -5,7 +5,7 @@ const commerceRoot = new URL("../../..", import.meta.url);
 
 describe("Commerce media count policy", () => {
     test("installs backward-compatible product and offer bounds", async () => {
-        const schema = await loadSupabaseSchemaSql(commerceRoot);
+        const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
         expect(schema).toContain("product_image_min_count integer not null default 0");
         expect(schema).toContain("product_image_max_count integer not null default 20");
@@ -15,7 +15,7 @@ describe("Commerce media count policy", () => {
     });
 
     test("guards uploads, removals, activation, and seller submission", async () => {
-        const schema = await loadSupabaseSchemaSql(commerceRoot);
+        const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
         expect(schema).toContain("an offer cannot have more than % images");
         expect(schema).toContain("a product cannot have more than % images");

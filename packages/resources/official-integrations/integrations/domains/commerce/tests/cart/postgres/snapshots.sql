@@ -72,6 +72,7 @@ begin
        or v_single.offer_snapshot <> jsonb_build_object(
            'id', v_single_offer.id, 'slug', v_single_offer.slug,
            'title', v_single_offer.title, 'conditionCode', 'very_good',
+           'conditionLabel', 'Very good',
            'acceptedPriceAmount', 12345, 'currency', 'eur')
        or v_single.seller_snapshot <> jsonb_build_object(
            'id', v_single_offer.seller_id, 'kind', 'user',

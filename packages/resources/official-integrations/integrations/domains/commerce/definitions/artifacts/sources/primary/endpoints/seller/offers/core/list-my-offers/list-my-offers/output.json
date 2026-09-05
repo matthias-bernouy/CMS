@@ -35,6 +35,9 @@
                             "conditionCode": {
                                 "type": "string"
                             },
+                            "conditionLabel": {
+                                "type": "string"
+                            },
                             "publicationStatus": {
                                 "type": "string"
                             },

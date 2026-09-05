@@ -4,10 +4,6 @@
     "emit": "source:updated",
     "instructions": [
         [
-            "Install Basic Blocs",
-            "Install the Basic Blocs integration used by the account offers composition."
-        ],
-        [
             "Deploy connector resources",
             "Apply the bundled private Commerce schema and deploy the cms-commerce Edge Function."
         ],
@@ -30,7 +26,6 @@
         "Built-in buyer notifications with optional Emailer delivery",
         "External or disabled notification delivery modes",
         "Commerce settings, workflows, conditions, and metadata",
-        "Public offer list and preview blocs plus authenticated seller offer listing",
         "Backoffice Commerce dashboards"
     ],
     "checks": [
@@ -43,16 +38,8 @@
     ],
     "resources": [
         [
-            "Dependencies",
-            "Basic Blocs layout, form, media, feedback, and pagination controls"
-        ],
-        [
             "Sources",
             "Commerce source contract"
-        ],
-        [
-            "Blocs",
-            "Public offer browsing, authenticated seller offers, and buyer notification preferences"
         ],
         [
             "Dashboards",
@@ -77,7 +64,6 @@
     ],
     "sync": [
         "Validate answers",
-        "Validate Basic Blocs dependency",
         "Generate private API key",
         "Deploy Supabase connector",
         "Materialize configured published legal pages",

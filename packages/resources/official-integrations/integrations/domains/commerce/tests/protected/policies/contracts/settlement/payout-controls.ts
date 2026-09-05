@@ -51,7 +51,7 @@ export function registerPayoutControlsTest(): void {
                 payoutDelayDays: { type: "number" },
             });
         }
-        const schema = await loadSupabaseSchemaSql(integrationRoot);
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
         expect(schema).toContain("authorize_platform_payout_liability_decrease");
         expect(schema).toContain("conflict: stale platform payout liability revision");
         expect(schema).toContain("provider applied amount is below the Commerce aggregate");

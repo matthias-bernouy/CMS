@@ -12,7 +12,7 @@
         },
         "schemas": [
             {
-                "manifest": "sql/schema.manifest.json"
+                "manifest": "install/sql/schema.manifest.json"
             }
         ],
         "functions": [

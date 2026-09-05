@@ -6,7 +6,7 @@ const negotiationRoot = new URL("../../../../../extensions/commerce-negotiation"
 
 describe("Commerce whole-unit price SQL contracts", () => {
     test("installs an opt-in setting and one authoritative assertion", async () => {
-        const schema = await loadSupabaseSchemaSql(commerceRoot);
+        const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
         expect(schema).toContain("whole_unit_prices boolean not null default false");
         expect(schema).toContain("create or replace function commerce.assert_offer_price_increment");
@@ -15,7 +15,7 @@ describe("Commerce whole-unit price SQL contracts", () => {
     });
 
     test("guards every mutable offer-price boundary", async () => {
-        const schema = await loadSupabaseSchemaSql(commerceRoot);
+        const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
         for (const field of ["accepted price", "minimum price", "maximum price", "price"]) {
             expect(schema).toContain(`assert_offer_price_increment`);

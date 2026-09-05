@@ -26,9 +26,10 @@ begin
     self_offer := self_result->'offer';
     admin_offer := admin_result->'offer';
 
-    if (select count(*) from jsonb_object_keys(self_offer)) <> 25
+    if (select count(*) from jsonb_object_keys(self_offer)) <> 26
        or self_offer ? 'inventory_revision'
        or self_offer->>'slug' <> 'managed-offer-full'
+       or self_offer->>'condition_label' <> 'Good'
        or self_offer->'description' is distinct from 'null'::jsonb
        or self_offer->'quantity_available' is distinct from 'null'::jsonb
        or self_offer->'metadata' is distinct from

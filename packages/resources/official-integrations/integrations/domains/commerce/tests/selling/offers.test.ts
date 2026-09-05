@@ -27,6 +27,8 @@ describe("commerce offer requests", () => {
             productId: 42,
             variantId: null,
             slug: "camera-offer",
+            conditionCode: "good",
+            conditionLabel: "Break",
             publicationStatus: "active",
             metadata: {},
             product: {

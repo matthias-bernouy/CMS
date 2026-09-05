@@ -6,7 +6,7 @@ const integrationRoot = resolve(import.meta.dir, "../..");
 
 describe("protected C2C claim window", () => {
     test("starts at first observation and serializes claim versus release", async () => {
-        const schema = await loadSupabaseSchemaSql(integrationRoot);
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
         const projection = functionSql(
             schema,
             "record_order_fulfillment_projection",

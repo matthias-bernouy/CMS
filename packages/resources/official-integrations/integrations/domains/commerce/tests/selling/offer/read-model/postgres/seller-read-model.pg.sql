@@ -74,8 +74,9 @@ begin
     perform pg_temp.assert_seller_page(
         result, array['seller-read-review-new', 'seller-read-review-old'], 2, 'page contract'
     );
-    if (select count(*) from jsonb_object_keys(result->'rows'->0)) <> 18
+    if (select count(*) from jsonb_object_keys(result->'rows'->0)) <> 19
        or (result->'rows'->0) ? 'inventory_revision'
+       or result #>> '{rows,0,condition_label}' <> 'Good'
        or result #> '{rows,0,variant_id}' is distinct from 'null'::jsonb
        or result #> '{rows,0,description}' is distinct from 'null'::jsonb
        or result #> '{rows,0,metadata}' is distinct from '{"privateNote":"kept"}'::jsonb then

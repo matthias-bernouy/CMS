@@ -42,7 +42,10 @@ describe("protected C2C financial policy contract", () => {
     registerProviderAbsentCancellationTest();
     registerLatePaymentRefundTerminalizationTest();
     test("keeps claim evidence private and requires carrier proof before resolving a required return", async () => {
-        const schema = await loadSupabaseSchemaSql(new URL("../../..", import.meta.url));
+        const schema = await loadSupabaseSchemaSql(
+            new URL("../../..", import.meta.url),
+            "install/sql/schema.manifest.json",
+        );
         const definition = await loadIntegrationDefinition<Record<string, unknown>>(
             new URL("../../../definition.json", import.meta.url),
         );

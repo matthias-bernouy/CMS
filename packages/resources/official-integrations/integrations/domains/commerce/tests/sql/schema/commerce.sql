@@ -165,6 +165,7 @@ begin
         or v_list->>'whole_unit_prices' <> 'false'
         or (v_list->>'total')::integer <> 1
         or v_list->'items'->0->>'slug' <> 'smoke-offer'
+        or v_list->'items'->0->>'condition_label' <> 'Good'
         or v_list->'items'->0 ? 'seller_id'
         or v_list->'items'->0->'metadata'->>'racketCondition' <> 'used' then
         raise exception 'smoke: public offer list read model changed its contract';
@@ -174,6 +175,7 @@ begin
     if v_detail->>'candidate_exists' <> 'true'
         or v_detail->>'settings_available' <> 'true'
         or v_detail->'offer'->>'slug' <> 'smoke-offer'
+        or v_detail->'offer'->>'condition_label' <> 'Good'
         or v_detail->'offer' ? 'seller_id'
         or v_detail->'offer'->'metadata'->>'racketCondition' <> 'used' then
         raise exception 'smoke: public offer detail read model changed its contract';

@@ -91,6 +91,7 @@ begin
             'slug', offer.slug,
             'title', offer.title,
             'conditionCode', offer.condition_code,
+            'conditionLabel', condition.label,
             'acceptedPriceAmount', offer.accepted_price_amount,
             'currency', offer.currency
         ),
@@ -105,6 +106,7 @@ begin
     join order_input on order_input.seller_id = offer.seller_id
     join commerce.products product on product.id = offer.product_id
     join commerce.sellers seller on seller.id = offer.seller_id
+    left join commerce.offer_conditions condition on condition.code = offer.condition_code
     left join commerce.product_variants variant on variant.id = offer.variant_id
     left join variant_options options
       on options.product_id = offer.product_id and options.variant_id = offer.variant_id
