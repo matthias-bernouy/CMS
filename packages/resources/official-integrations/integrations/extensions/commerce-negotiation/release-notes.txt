@@ -1,1 +1,1 @@
-Minor release: publish reusable Commerce Negotiation dashboard views while site dashboard composition remains CMS-owned.
+Initial Commerce Negotiation release: publish the negotiation contracts and reusable operator views on top of Commerce.

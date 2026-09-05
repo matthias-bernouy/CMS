@@ -2,6 +2,6 @@
     {
         "name": "commerce",
         "kind": "commerce",
-        "versionRange": "^3.0.0"
+        "versionRange": "^1.0.0"
     }
 ]

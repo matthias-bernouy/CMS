@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "commerce-negotiation",
     "label": "Commerce negotiation",
-    "version": "3.1.0",
+    "version": "1.0.0",
     "category": "Commerce",
     "description": "Let authenticated marketplace buyers propose bounded prices to Commerce sellers.",
     "inputs": {

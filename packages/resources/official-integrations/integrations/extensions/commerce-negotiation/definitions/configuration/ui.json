@@ -4,10 +4,6 @@
     "emit": "source:updated",
     "instructions": [
         [
-            "Install Basic Blocs",
-            "Install the Basic Blocs integration used by the negotiation form and account list compositions."
-        ],
-        [
             "Install Commerce",
             "Commerce must already be installed successfully in the same Supabase project."
         ],
@@ -25,7 +21,6 @@
         "Seller accept and reject decisions",
         "Bounded proposal policy snapshots",
         "Negotiation audit events",
-        "Composable buyer form and authenticated proposal list",
         "Administrator proposal and policy dashboards"
     ],
     "checks": [
@@ -39,10 +34,6 @@
         [
             "Sources",
             "Negotiation source contract"
-        ],
-        [
-            "Blocs",
-            "Buyer proposal form and received/sent proposal list"
         ],
         [
             "Dashboards",
@@ -67,7 +58,6 @@
         "Generate private API key",
         "Deploy Supabase connector",
         "Install Negotiation source",
-        "Install Negotiation form and list blocs",
         "Install Proposals dashboard",
         "Install Negotiation settings dashboard",
         "Refresh Sources"
