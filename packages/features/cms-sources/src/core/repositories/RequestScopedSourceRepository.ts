@@ -1,6 +1,7 @@
 import type { Source, SourceEndpoint } from "../../interfaces/Source";
 import type { SourceRepository, SourceSchemaInvalidationScope } from "../../interfaces/SourceRepository";
 import { memoizeRequestPromise } from "./requestScopeCache";
+import { readPersistedSource } from "./persistedSource";
 
 /**
  * Shares identical source reads for one execution only. Construct a fresh
@@ -8,6 +9,7 @@ import { memoizeRequestPromise } from "./requestScopeCache";
  */
 export class RequestScopedSourceRepository implements SourceRepository {
     private readonly sources = new Map<string, Promise<Source | null>>();
+    private readonly persistedSources = new Map<string, Promise<Source | null>>();
     private readonly endpoints = new Map<string, Promise<SourceEndpoint | null>>();
     private readonly authorizationEndpoints = new Map<string, Promise<SourceEndpoint | null>>();
     private allSources: Promise<Source[]> | undefined;
@@ -50,6 +52,13 @@ export class RequestScopedSourceRepository implements SourceRepository {
         return cloneNullable(source);
     }
 
+    async getPersistedSource(urn: string): Promise<Source | null> {
+        const source = await memoizeRequestPromise(this.persistedSources, urn, async () =>
+            cloneNullable(await readPersistedSource(this.inner, urn)),
+        );
+        return cloneNullable(source);
+    }
+
     async getAllSources(): Promise<Source[]> {
         if (!this.allSources) {
             const pending = Promise.resolve()
@@ -86,6 +95,7 @@ export class RequestScopedSourceRepository implements SourceRepository {
 
     private clear(): void {
         this.sources.clear();
+        this.persistedSources.clear();
         this.endpoints.clear();
         this.authorizationEndpoints.clear();
         this.allSources = undefined;

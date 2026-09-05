@@ -1,6 +1,12 @@
 import type { IdentityResolver } from "@bernouy/cms-identities";
 import type { FunctionRepository } from "@bernouy/cms-functions";
-import type { ExecutorDeps, Source, SourceEndpoint, SourceRepository } from "@bernouy/cms-sources";
+import {
+    readPersistedSource,
+    type ExecutorDeps,
+    type Source,
+    type SourceEndpoint,
+    type SourceRepository,
+} from "@bernouy/cms-sources";
 
 export type FunctionExecutionProbeEvent =
     | { kind: "endpoint-lookup"; urn: string }
@@ -140,6 +146,9 @@ class ProbedSourceRepository implements SourceRepository {
     }
     getSource(urn: string): Promise<Source | null> {
         return this.inner.getSource(urn);
+    }
+    getPersistedSource(urn: string): Promise<Source | null> {
+        return readPersistedSource(this.inner, urn);
     }
     getAllSources(): Promise<Source[]> {
         return this.inner.getAllSources();

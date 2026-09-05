@@ -27,6 +27,14 @@ describe("InMemorySourceRepository", () => {
         expect(p?.endpoints).toHaveLength(1);
     });
 
+    test("persisted reads bypass an overridden effective projection", async () => {
+        const repository = new ProjectedInMemorySourceRepository();
+        await repository.createSource(source());
+
+        expect((await repository.getSource("urn:shop"))?.meta?.name).toBe("Projected shop");
+        expect((await repository.getPersistedSource("urn:shop"))?.meta?.name).toBe("Shop");
+    });
+
     test("rejects a duplicate urn", async () => {
         const r = new InMemorySourceRepository();
         await r.createSource(source());
@@ -133,3 +141,10 @@ describe("InMemorySourceRepository", () => {
         expect((await r.getSource("urn:shop"))?.endpoints).toHaveLength(1);
     });
 });
+
+class ProjectedInMemorySourceRepository extends InMemorySourceRepository {
+    override async getSource(urn: string): Promise<Source | null> {
+        const stored = await super.getSource(urn);
+        return stored ? { ...stored, meta: { ...stored.meta, name: "Projected shop" } } : null;
+    }
+}

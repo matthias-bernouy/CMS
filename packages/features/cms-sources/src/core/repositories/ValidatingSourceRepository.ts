@@ -3,6 +3,7 @@ import type { Source, SourceEndpoint } from "cms-sources/interfaces/Source";
 import { validateSource } from "cms-sources/core/validation/validateSource";
 import { SourceValidationError } from "cms-sources/core/model/errors";
 import type { SourceTargetUrlValidationOptions } from "cms-sources/core/upstream/sourceTargetUrl";
+import { readPersistedSource } from "cms-sources/core/repositories/persistedSource";
 
 /**
  * Decorator that runs `validateSource` on every write before delegating — the
@@ -49,6 +50,9 @@ export class ValidatingSourceRepository implements SourceRepository {
     }
     getSource(urn: string) {
         return this.inner.getSource(urn);
+    }
+    getPersistedSource(urn: string) {
+        return readPersistedSource(this.inner, urn);
     }
     getAllSources() {
         return this.inner.getAllSources();

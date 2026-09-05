@@ -30,6 +30,10 @@ export class FunctionSourceRepository implements SourceRepository {
         return functionsAsSource(await this.functions.getAllFunctions());
     }
 
+    async getPersistedSource(_urn: string): Promise<Source | null> {
+        return null;
+    }
+
     async getAllSources(): Promise<Source[]> {
         return [functionsAsSource(await this.functions.getAllFunctions())];
     }

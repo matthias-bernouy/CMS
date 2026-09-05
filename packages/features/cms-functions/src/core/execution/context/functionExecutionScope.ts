@@ -13,6 +13,7 @@ import type {
     SourceRepository,
     SourceSchemaInvalidationScope,
 } from "@bernouy/cms-sources";
+import { readPersistedSource } from "@bernouy/cms-sources";
 import type { ExecuteFunctionOptions, FunctionUserContext } from "cms-functions/core/execution/executeFunction";
 import { memoizePromise } from "cms-functions/core/execution/support/promiseMemoization";
 
@@ -90,6 +91,9 @@ class ExecutionSourceRepository implements SourceRepository {
     }
     getSource(urn: string): Promise<Source | null> {
         return this.inner.getSource(urn);
+    }
+    getPersistedSource(urn: string): Promise<Source | null> {
+        return readPersistedSource(this.inner, urn);
     }
     getAllSources(): Promise<Source[]> {
         return this.inner.getAllSources();

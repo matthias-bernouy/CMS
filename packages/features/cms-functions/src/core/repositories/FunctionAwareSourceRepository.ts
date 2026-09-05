@@ -1,5 +1,6 @@
 import {
     systemSourceUrnOf,
+    readPersistedSource,
     type Source,
     type SourceEndpoint,
     type SourceRepository,
@@ -49,6 +50,10 @@ export class FunctionAwareSourceRepository implements SourceRepository {
             return this.functionSources.getSource(urn);
         }
         return this.inner.getSource(urn);
+    }
+
+    async getPersistedSource(urn: string): Promise<Source | null> {
+        return readPersistedSource(this.inner, urn);
     }
 
     async getAllSources(): Promise<Source[]> {

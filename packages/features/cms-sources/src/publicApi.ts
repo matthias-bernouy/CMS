@@ -108,3 +108,4 @@ export { InMemorySourceRepository } from "./default-implementation/InMemorySourc
 export { InMemorySourceOverlayRepository } from "./default-implementation/InMemorySourceOverlayRepository";
 export { ValidatingSourceRepository } from "./core/repositories/ValidatingSourceRepository";
 export { CompositeSourceRepository } from "./core/repositories/CompositeSourceRepository";
+export { readPersistedSource } from "./core/repositories/persistedSource";

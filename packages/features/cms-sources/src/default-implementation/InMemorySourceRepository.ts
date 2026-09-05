@@ -35,6 +35,11 @@ export class InMemorySourceRepository implements SourceRepository {
         return found ? structuredClone(found) : null;
     }
 
+    async getPersistedSource(urn: string): Promise<Source | null> {
+        const found = this._sources.get(urn);
+        return found ? structuredClone(found) : null;
+    }
+
     async getAllSources(): Promise<Source[]> {
         return Array.from(this._sources.values(), (p) => structuredClone(p));
     }

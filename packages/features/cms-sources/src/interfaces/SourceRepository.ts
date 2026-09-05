@@ -23,6 +23,12 @@ export interface SourceRepository {
     /** A source by its urn, e.g. "urn:shop". `null` if not found. */
     getSource(urn: string): Promise<Source | null>;
 
+    /**
+     * The stored aggregate before decorators add projections such as Source overlays.
+     * Every repository must choose and expose its storage-authoritative read explicitly.
+     */
+    getPersistedSource(urn: string): Promise<Source | null>;
+
     /** All sources. */
     getAllSources(): Promise<Source[]>;
 

@@ -25,6 +25,18 @@ describe("request-scoped source repositories", () => {
         expect(inner.sourceReads).toBe(3);
     });
 
+    test("single-flights persisted reads separately from effective reads", async () => {
+        const inner = new CountingSourceRepository();
+        await inner.createSource(source());
+        const scoped = new RequestScopedSourceRepository(inner);
+
+        await Promise.all(Array.from({ length: 5 }, () => scoped.getPersistedSource("urn:shop")));
+        await scoped.getSource("urn:shop");
+
+        expect(inner.persistedSourceReads).toBe(1);
+        expect(inner.sourceReads).toBe(1);
+    });
+
     test("evicts rejected reads and preserves repositories without an authorization lookup", async () => {
         const inner = new CountingSourceRepository();
         await inner.createSource(source());
@@ -81,6 +93,7 @@ describe("request-scoped source repositories", () => {
 
 class CountingSourceRepository extends InMemorySourceRepository {
     sourceReads = 0;
+    persistedSourceReads = 0;
     endpointReads = 0;
     rejectSourceOnce = false;
 
@@ -91,6 +104,11 @@ class CountingSourceRepository extends InMemorySourceRepository {
             throw new Error("transient");
         }
         return super.getSource(urn);
+    }
+
+    override async getPersistedSource(urn: string) {
+        this.persistedSourceReads++;
+        return super.getPersistedSource(urn);
     }
 
     override async getEndpoint(urn: string) {

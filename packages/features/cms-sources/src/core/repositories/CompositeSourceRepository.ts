@@ -2,6 +2,7 @@ import type { Source, SourceEndpoint } from "cms-sources/interfaces/Source";
 import type { SourceRepository, SourceSchemaInvalidationScope } from "cms-sources/interfaces/SourceRepository";
 import { SourceValidationError } from "cms-sources/core/model/errors";
 import { systemSourceUrnOf } from "cms-sources/core/system/systemSources";
+import { readPersistedSource } from "cms-sources/core/repositories/persistedSource";
 
 /**
  * Readonly system sources + a writable user source store behind one
@@ -57,6 +58,10 @@ export class CompositeSourceRepository implements SourceRepository {
             return structuredClone(system);
         }
         return this.inner.getSource(urn);
+    }
+
+    async getPersistedSource(urn: string): Promise<Source | null> {
+        return readPersistedSource(this.inner, urn);
     }
 
     async getAllSources(): Promise<Source[]> {

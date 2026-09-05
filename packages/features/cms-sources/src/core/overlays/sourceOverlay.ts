@@ -10,6 +10,7 @@ import {
 import { materializeSourceOverlays } from "./sourceOverlayDynamicFields";
 import { applySourceOverlays, overlaysFor, sourceOverlayFieldPath } from "./sourceOverlayProjection";
 import { parseUrn, sourceUrnOf } from "cms-sources/core/system/urn";
+import { readPersistedSource } from "cms-sources/core/repositories/persistedSource";
 
 export type SourceOverlaySourceRepositoryOptions = {
     deps?: ExecutorDeps;
@@ -76,6 +77,10 @@ export class SourceOverlaySourceRepository implements SourceRepository {
                 await materializeSourceOverlays(source, overlays, this.options.deps, this.schemaCache),
             );
         });
+    }
+
+    async getPersistedSource(urn: string): Promise<Source | null> {
+        return this.measure("cms_source", () => readPersistedSource(this.inner, urn));
     }
 
     async getAllSources(): Promise<Source[]> {
