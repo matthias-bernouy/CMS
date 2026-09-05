@@ -3,7 +3,6 @@ import { defaultSystem, generateStyleEntry, type ContentReader } from "@bernouy/
 describe("Theme style entry", () => {
     test("composes integration defaults without mutating persisted settings", async () => {
         const system = defaultSystem();
-        system.site.theme = ".site { display: block; }";
         const reader = { getSystem: async () => system } as ContentReader;
 
         const entry = await generateStyleEntry(reader, [
@@ -28,17 +27,20 @@ describe("Theme style entry", () => {
         ]);
         const css = new TextDecoder().decode(entry.raw);
 
-        expect(css).toContain("@layer cms-theme-base");
-        expect(css).toContain("font-family: var(--ulvia-font-body, system-ui, sans-serif)");
-        expect(css).toContain(":where(a) {\n    color: inherit;");
-        expect(css).toContain(":where(img:not([slot]), video:not([slot])) {\n    block-size: auto;");
-        expect(css).not.toContain("--cms-link-color");
-        expect(css).not.toContain("LinkText");
-        expect(css).not.toContain("var(--font-body");
-        expect(css.indexOf("@layer cms-theme-base")).toBeLessThan(css.indexOf(".site { display: block; }"));
-        expect(css).toContain(".site { display: block; }");
+        expect(css).toContain("@layer cms-foundation");
+        expect(css).toContain(":where(body) {\n    margin: 0;\n    min-block-size: 100%;");
+        expect(css).toContain(":where([hidden]) {\n    display: none !important;");
+        expect(css).not.toContain(":where(h1, h2, h3, h4, h5, h6)");
+        expect(css).not.toContain(":where(a:any-link)");
+        expect(css).not.toContain(":where(button, input, select, textarea)");
+        expect(css).not.toContain(":where(img, picture, video, canvas, svg, iframe)");
+        expect(css).not.toContain(":where(:focus-visible)");
+        expect(css).not.toContain("min-block-size: 100dvh");
+        expect(css).not.toContain("font-family: var(--ulvia-font-body");
+        expect(css).not.toContain("background: var(--ulvia-page-background");
         expect(css).toContain("--brand-kit-accent: var(--primary-base);");
         expect(css).toContain("--brand-kit-accent: #ffffff;");
+        expect(css.indexOf("@layer cms-foundation")).toBeLessThan(css.indexOf(":root {"));
         expect(system.theme.sources.some((source) => source.id === "integration-brand-kit")).toBeFalse();
     });
 });

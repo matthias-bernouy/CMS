@@ -14,9 +14,9 @@ Retained declarative site snapshots used as migration and visual references.
 - Prefer CMS bindings (`cms-source`, `cms-repeat`, `cms-condition`, and
   `cms-param-sync`) over authored JavaScript. Do not issue ad-hoc `fetch()`
   calls from site content.
-- Do not place site- or component-specific CSS in the legacy `theme.css`
-  resource. Keep it in a local Bloc's scoped `style.css`; use structured CMS
-  theme tokens for global design values.
+- Keep presentation in a collection Bloc's scoped `style.css`; use structured
+  CMS theme tokens for site-specific design values. Free-form site CSS is not
+  part of the CMS settings contract.
 - Do not add new deployable site projects or repository templates here. New
   sites are initialized in the CMS and consume released collection and source
   integrations.

@@ -10,7 +10,6 @@ export function defaultSystem(): TSystem {
             visible: true,
             host: "",
             language: "",
-            theme: "",
             organization: emptySiteOrganization(),
             notFound: null,
             forbidden: null,
@@ -69,7 +68,9 @@ export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): T
         if (section === "initializationStep") {
             merged.initializationStep = value as number;
         } else if (section === "site" && typeof value === "object" && value !== null) {
-            const site = value as Partial<TSystem["site"]>;
+            const { theme: _removedFreeformTheme, ...site } = value as Partial<TSystem["site"]> & {
+                theme?: unknown;
+            };
             const currentOrganization = current.site.organization ?? emptySiteOrganization();
             const organization = site.organization;
             merged.site = {

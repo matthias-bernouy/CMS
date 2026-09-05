@@ -2,8 +2,8 @@
 
 CmsCore separates site-wide theme decisions from per-Bloc presentation:
 
-1. the active structured theme supplies stable global design tokens;
-2. `site/theme.css` supplies free-form site CSS;
+1. a non-visual document foundation establishes sizing and page geometry;
+2. the active structured theme supplies stable global design tokens;
 3. a Bloc maps global tokens to its own public custom properties;
 4. semantic attributes select finite variants;
 5. `::part` and Light DOM slots provide deliberate override points.
@@ -31,9 +31,12 @@ documented Ulvia vocabulary or a documented hook from the collection that owns
 the component. The complete ownership and naming rules live in
 [Integration theme contracts](../integrations/themes.md).
 
-Control edits structured theme values. Delivery serves free-form site CSS and
-the active structured values through `/.cms/style`; structured values follow
-and are authoritative when both layers assign the same managed variable.
+Control edits structured theme values. Delivery serves the document foundation
+and the active structured values through `/.cms/style`. The foundation does not
+restyle headings, links, controls, lists, media, or focus states: a collection
+that manages a native element owns its complete presentation. Arbitrary site CSS
+is not part of the settings contract; site-specific values are created as
+`--site-variable-*` tokens by the theme editor.
 
 When an active theme defines dark values, they apply through
 `prefers-color-scheme: dark` and may be forced with
@@ -121,7 +124,8 @@ Expose `part="..."` only on structural nodes a site may reasonably target.
 Shadow DOM. `::slotted(...)` styles only the first distributed Light DOM
 level—all elements directly assigned to the slot—not their descendants. Theme
 rich authored content through
-inherited properties and normal site CSS rather than fragile deep selectors.
+inherited properties and collection-owned composition Blocs rather than
+fragile deep selectors.
 Treat published custom-property, part, and slot names as public contracts:
 renaming one can break site themes or already-authored content.
 

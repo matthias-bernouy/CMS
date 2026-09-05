@@ -20,6 +20,9 @@ export type SettingsUpdateDto = Partial<TSystem>;
  * `TPageRef` (`""` → `null`, `"/path"` → `{ path }`).
  */
 export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsUpdateDto {
+    if ("site.theme" in body) {
+        throw new InvalidParam("site.theme", "free-form CSS is not supported; use the theme editor.");
+    }
     const dto: SettingsUpdateDto = {};
 
     if (hasSectionKey(body, "site")) {
@@ -90,7 +93,7 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
 
 function parseSiteSettings(body: Record<string, unknown>): TSystem["site"] {
     const site: Partial<TSystem["site"]> = {};
-    for (const field of ["name", "favicon", "host", "language", "theme"] as const) {
+    for (const field of ["name", "favicon", "host", "language"] as const) {
         const key = `site.${field}`;
         if (key in body) {
             site[field] = asString(body[key], key);

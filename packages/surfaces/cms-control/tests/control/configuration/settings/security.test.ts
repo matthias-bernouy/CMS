@@ -38,6 +38,10 @@ describe("parseSettingsUpdateDto — theme", () => {
         const theme = defaultSystem().theme;
         expect(parseSettingsUpdateDto({ theme })).toEqual({ theme });
     });
+
+    test("rejects the removed free-form site CSS field", () => {
+        expect(() => parseSettingsUpdateDto({ "site.theme": "body {}" })).toThrow(InvalidParam);
+    });
 });
 
 // Parsing/coercion only: split the multiline textarea into trimmed lines.

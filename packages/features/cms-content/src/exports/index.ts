@@ -59,11 +59,9 @@ export {
     integrationThemeSourceId,
     integrationThemeTokenId,
     integrationThemeVariable,
-    organizeThemeSettings,
     reconcileIntegrationTheme,
     reconcileSubmittedThemeSettings,
     removeIntegrationTheme,
-    themeSettingsFromCss,
     validateThemeSettings,
 } from "cms-content/core/theme";
 export { countValues, normalizeTags } from "cms-content/core/queries/counts";

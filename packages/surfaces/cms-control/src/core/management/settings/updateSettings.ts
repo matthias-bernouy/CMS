@@ -5,8 +5,8 @@ import { getInstalledIntegrationThemeContributions } from "cms-control/core/mana
 import type { SettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
 
 /**
- * Persist a settings update. Theme CSS is served at `/style` keyed by
- * its content hash, and that hash is baked into every cached page's
+ * Persist a settings update. Generated theme variables are served at `/style`
+ * with a content hash, and that hash is baked into every cached page's
  * `<link rel="stylesheet">`, so any system change has to invalidate
  * the style entry AND every cached page.
  */

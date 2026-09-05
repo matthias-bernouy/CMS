@@ -1,6 +1,5 @@
 import type { CmsRepository, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
 import type { TSystem } from "cms-content/interfaces/settings";
-import { organizeThemeSettings, themeSettingsFromCss } from "cms-content/core/theme";
 import { escapeRegex } from "cms-content/core/utils/escapeRegex";
 import { defaultSystem, mergeSystemUpdate } from "cms-content/core/lifecycle/system";
 import { countValues, normalizeTags } from "cms-content/core/queries/counts";
@@ -56,11 +55,7 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
             const { _id, ...stored } = document;
             const rest = stored as Partial<TSystem> & { editor?: unknown };
             delete rest.editor;
-            const legacy = rest as Partial<TSystem>;
-            legacy.theme = legacy.theme
-                ? organizeThemeSettings(legacy.theme)
-                : themeSettingsFromCss(legacy.site?.theme ?? "");
-            return mergeSystemUpdate(defaultSystem(), legacy);
+            return mergeSystemUpdate(defaultSystem(), rest as Partial<TSystem>);
         }
         const fresh = defaultSystem();
         await this.system.insertOne({ _id: SYSTEM_ID, ...fresh });

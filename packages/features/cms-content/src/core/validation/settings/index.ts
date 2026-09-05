@@ -22,6 +22,12 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
     const normalized = { ...patch } as Partial<TSystem>;
 
     if (patch.site) {
+        if (Object.hasOwn(patch.site, "theme")) {
+            throw new ContentValidationError(
+                "site.theme",
+                "free-form CSS is not supported; use structured theme settings",
+            );
+        }
         const site = { ...patch.site };
         if (site.host !== undefined) {
             if (typeof site.host !== "string") {

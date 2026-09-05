@@ -102,13 +102,6 @@ describe("restaurant demo site", () => {
             }
         }
     });
-
-    test("keeps full-screen demos flush with the viewport", async () => {
-        const theme = await readFile(join(SITE, "theme.css"), "utf8");
-
-        expect(theme).toContain("margin: 0");
-        expect(theme).toContain("overflow-x: hidden");
-    });
 });
 
 async function json(path: string): Promise<unknown> {

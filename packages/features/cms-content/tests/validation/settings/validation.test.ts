@@ -44,6 +44,10 @@ describe("validateSettingsPatch — CSP origins", () => {
 });
 
 describe("validateSettingsPatch — canonical site host", () => {
+    test("rejects the removed free-form site CSS field", () => {
+        expect(() => validateSettingsPatch({ site: { theme: "body {}" } } as never)).toThrow(ContentValidationError);
+    });
+
     test("normalizes an HTTP base URL while preserving its public path", () => {
         const out = validateSettingsPatch({ site: { host: " https://EXAMPLE.com:443/shop/ " } } as never);
 

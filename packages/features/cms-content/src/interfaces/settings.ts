@@ -45,8 +45,6 @@ export type TSystem = {
          * means "do not set a lang attribute".
          */
         language: string;
-        /** Raw CSS served at `/style` and linked by every rendered public page. */
-        theme: string;
         /** Organization that owns or publishes this site. */
         organization: SiteOrganizationSettings;
         /** Page rendered when a dynamic route matches but the page is missing. */
@@ -59,7 +57,7 @@ export type TSystem = {
         login: TPageRef;
     };
 
-    /** Structured design tokens. `site.theme` remains the free-form CSS layer. */
+    /** Structured design tokens emitted as CSS custom properties. */
     theme: ThemeSettings;
 
     /**

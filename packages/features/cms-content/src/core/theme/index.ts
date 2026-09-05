@@ -10,9 +10,5 @@ export {
     reconcileSubmittedThemeSettings,
     removeIntegrationTheme,
 } from "cms-content/core/theme/integration";
-export {
-    organizeThemeSettings,
-    themeSettingsFromCss,
-} from "cms-content/core/theme/migration";
 export { allTokens } from "cms-content/core/theme/tokens";
 export { validateThemeSettings } from "cms-content/core/theme/validation";
