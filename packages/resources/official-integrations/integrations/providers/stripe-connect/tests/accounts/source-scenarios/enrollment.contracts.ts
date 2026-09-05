@@ -7,7 +7,7 @@ import type { CreateAccountSourceScenarioHarness } from "./harness";
 export function registerAccountEnrollmentSourceScenario(createHarness: CreateAccountSourceScenarioHarness): void {
     test("enrolls a French seller without a bank account and keeps marketplace consent immutable and replayable", async () => {
         const harness = await createHarness();
-        const version = "courtside-seller-2026-07";
+        const version = "marketplace-seller-2026-07";
 
         const missingConsent = await sourceJson(harness, "enrollConnectSeller", {
             accountToken: "accttok_test_identity_123",
@@ -74,7 +74,7 @@ export function registerAccountEnrollmentSourceScenario(createHarness: CreateAcc
         );
         const futureStatus = await okJson(
             await sourceRequest(harness, "getConnectStatus", {
-                marketplaceTermsVersion: "courtside-seller-2026-08",
+                marketplaceTermsVersion: "marketplace-seller-2026-08",
                 marketplaceTermsHash: "d".repeat(64),
             }),
         );
@@ -82,7 +82,7 @@ export function registerAccountEnrollmentSourceScenario(createHarness: CreateAcc
         expect(futureStatus.marketplaceTermsCurrentVersionAccepted).toBeFalse();
 
         const unacceptedUpdate = await sourceJson(harness, "enrollConnectSeller", {
-            marketplaceTermsVersion: "courtside-seller-2026-08",
+            marketplaceTermsVersion: "marketplace-seller-2026-08",
             marketplaceTermsHash: "d".repeat(64),
         });
         expect(unacceptedUpdate.status).toBe(409);
@@ -90,7 +90,7 @@ export function registerAccountEnrollmentSourceScenario(createHarness: CreateAcc
         const acceptedUpdate = await okJson(
             await sourceJson(harness, "enrollConnectSeller", {
                 marketplaceTermsAccepted: true,
-                marketplaceTermsVersion: "courtside-seller-2026-08",
+                marketplaceTermsVersion: "marketplace-seller-2026-08",
                 marketplaceTermsHash: "d".repeat(64),
             }),
         );
@@ -103,7 +103,7 @@ export function registerAccountEnrollmentSourceScenario(createHarness: CreateAcc
 
         const conflictingHash = await sourceJson(harness, "enrollConnectSeller", {
             marketplaceTermsAccepted: true,
-            marketplaceTermsVersion: "courtside-seller-2026-08",
+            marketplaceTermsVersion: "marketplace-seller-2026-08",
             marketplaceTermsHash: "e".repeat(64),
         });
         expect(conflictingHash.status).toBe(409);

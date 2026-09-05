@@ -8,7 +8,10 @@ import {
     type PublishedPage,
 } from "../../connectors/supabase/functions/cms-stripe-connect/routes/accounts/marketplace-terms/canonical-page";
 import { materializePublishedMarketplaceTerms } from "../../connectors/supabase/functions/cms-stripe-connect/routes/accounts/marketplace-terms/snapshot";
-import { fetchPublishedMarketplaceTermsPage } from "../../connectors/supabase/functions/cms-stripe-connect-management/core/snapshot-fetch";
+import {
+    fetchPublishedMarketplaceTermsPage,
+    localSnapshotFetchUrl,
+} from "../../connectors/supabase/functions/cms-stripe-connect-management/core/snapshot-fetch";
 import {
     effectiveMarketplaceTermsExpectation,
     type MarketplaceTermsConfiguration,
@@ -110,22 +113,36 @@ describe("Stripe Connect marketplace terms published-page evidence", () => {
         }
     });
 
+    test("bridges loopback snapshots only inside the marker-protected local Supabase runtime", async () => {
+        const snapshotUrl = "http://127.0.0.1:5101/.cms/content/published-page-snapshot?id=seller-terms-page";
+        const environment = (supabaseUrl: string) => (name: string) =>
+            name === "ULVIA_LOCAL_PROVIDER_SIMULATION" ? "v1" : supabaseUrl;
+
+        expect(localSnapshotFetchUrl(snapshotUrl, environment("http://kong:8000"))).toBe(
+            "http://host.docker.internal:5101/.cms/content/published-page-snapshot?id=seller-terms-page",
+        );
+        expect(localSnapshotFetchUrl(snapshotUrl, environment("https://project.supabase.co"))).toBe(snapshotUrl);
+        await expect(fetchPublishedMarketplaceTermsPage(snapshotUrl)).rejects.toThrow(
+            "MARKETPLACE_TERMS_DOCUMENT_NOT_AVAILABLE",
+        );
+    });
+
     test("keeps immutable seller evidence while moving publication out of installation answers", async () => {
         const inputs = await artifact("extensions/commerce-stripe-payments/definitions/configuration/inputs.json");
         const afterInstallation = await artifact(
             "extensions/commerce-stripe-payments/definitions/configuration/after-installation.json",
         );
         const schema = await artifact(
-            "providers/stripe-connect/connectors/supabase/sql/accounts-and-controls/marketplace-terms-acceptances.sql",
+            "providers/stripe-connect/connectors/supabase/install/sql/accounts-and-controls/marketplace-terms-acceptances.sql",
         );
         const acceptance = await artifact(
-            "providers/stripe-connect/connectors/supabase/sql/commands/marketplace-terms/record-current-acceptance.sql",
+            "providers/stripe-connect/connectors/supabase/install/sql/commands/marketplace-terms/record-current-acceptance.sql",
         );
         const immutableEvidence = await artifact(
-            "providers/stripe-connect/connectors/supabase/sql/commands/marketplace-terms/immutable-acceptance-trigger.sql",
+            "providers/stripe-connect/connectors/supabase/install/sql/commands/marketplace-terms/immutable-acceptance-trigger.sql",
         );
         const sync = await artifact(
-            "providers/stripe-connect/connectors/supabase/sql/commands/marketplace-terms/sync-configuration.sql",
+            "providers/stripe-connect/connectors/supabase/install/sql/commands/marketplace-terms/sync-configuration.sql",
         );
         const enrollment = await artifact(
             "providers/stripe-connect/connectors/supabase/functions/cms-stripe-connect/routes/accounts/enrollment.ts",
@@ -142,14 +159,6 @@ describe("Stripe Connect marketplace terms published-page evidence", () => {
         expect(afterInstallation).not.toContain("syncMarketplaceTermsConfiguration");
         expect(afterInstallation).toContain('"id": "providerSnapshot"');
         expect(providerDefinition).toContain('"artifacts/dashboards/marketplace-terms/root.json"');
-        expect(
-            await Bun.file(
-                resolve(
-                    integrationRoot,
-                    "providers/stripe-connect/definitions/artifacts/dashboards/marketplace-terms.json",
-                ),
-            ).exists(),
-        ).toBe(true);
         expect(providerEndpoints).toContain('"endpoints/admin/configuration/marketplace-terms.json"');
         expect(schema).toContain("page_snapshot jsonb not null");
         expect(schema).toContain("terms_version_id uuid");

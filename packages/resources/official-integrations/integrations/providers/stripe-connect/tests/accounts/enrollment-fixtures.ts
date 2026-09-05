@@ -1,7 +1,7 @@
 import { accountQuery, accountSelect, type JsonRecord } from "./harness";
 
-export const termsVersion = "courtside-seller-2026-07";
-export const nextTermsVersion = "courtside-seller-2026-08";
+export const termsVersion = "marketplace-seller-2026-07";
+export const nextTermsVersion = "marketplace-seller-2026-08";
 export const nextTermsHash = "d".repeat(64);
 
 export function expectedReloadRequests() {

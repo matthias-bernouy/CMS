@@ -1,1 +1,1 @@
-Minor release: publish the reusable Stripe Connect marketplace terms view while site dashboard composition remains CMS-owned.
+Initial Stripe Connect release: publish the source-only provider contracts, hardened synchronization, local simulator, and current database installation baseline.

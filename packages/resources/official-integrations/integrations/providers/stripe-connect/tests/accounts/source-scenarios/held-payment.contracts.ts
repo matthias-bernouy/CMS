@@ -11,7 +11,7 @@ export function registerHeldPaymentSourceScenario(createHarness: CreateAccountSo
             await sourceJsonWithUser(harness, "seller-1", "enrollConnectSeller", {
                 accountToken: "accttok_test_identity_123",
                 marketplaceTermsAccepted: true,
-                marketplaceTermsVersion: "courtside-seller-2026-07",
+                marketplaceTermsVersion: "marketplace-seller-2026-07",
                 marketplaceTermsHash,
             }),
         );
@@ -42,7 +42,7 @@ export function registerHeldPaymentSourceScenario(createHarness: CreateAccountSo
 
         const status = await okJson(
             await sourceRequestWithUser(harness, "seller-1", "getConnectStatus", {
-                marketplaceTermsVersion: "courtside-seller-2026-07",
+                marketplaceTermsVersion: "marketplace-seller-2026-07",
                 marketplaceTermsHash,
             }),
         );

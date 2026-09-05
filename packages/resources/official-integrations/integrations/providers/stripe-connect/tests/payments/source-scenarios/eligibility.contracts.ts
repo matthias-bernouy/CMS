@@ -56,7 +56,7 @@ export function registerProtectedPaymentEligibilitySourceScenarios(createHarness
 
     test("preflights the exact current seller terms without creating a payment", async () => {
         const harness = await createHarness();
-        const version = "courtside-seller-2026-07";
+        const version = "marketplace-seller-2026-07";
         const requestEligibility = async (
             sellerUserId: string,
             buyerUserId = "buyer-1",
@@ -93,7 +93,12 @@ export function registerProtectedPaymentEligibilitySourceScenarios(createHarness
         );
 
         const eligible = await requestEligibility("seller-1");
-        const staleTerms = await requestEligibility("seller-1", "buyer-1", "courtside-seller-2026-08", "d".repeat(64));
+        const staleTerms = await requestEligibility(
+            "seller-1",
+            "buyer-1",
+            "marketplace-seller-2026-08",
+            "d".repeat(64),
+        );
         const selfPurchase = await requestEligibility("seller-1", "seller-1");
 
         expect(await jsonBody(eligible)).toEqual({ eligible: true, reasonCode: "eligible" });

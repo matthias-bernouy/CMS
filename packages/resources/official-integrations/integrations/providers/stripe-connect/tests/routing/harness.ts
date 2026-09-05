@@ -41,7 +41,7 @@ export type CreateRoutingHarness = () => Promise<RoutingHarness>;
 export const functionsBaseUrl = "https://project.supabase.co/functions/v1";
 export const financialTermsHash = "a".repeat(64);
 export const marketplaceTermsHash = "c".repeat(64);
-export const marketplaceTermsVersion = "courtside-seller-2026-07";
+export const marketplaceTermsVersion = "marketplace-seller-2026-07";
 
 export function cmsHeaders(harness: RoutingHarness, userId: string): Record<string, string> {
     return {

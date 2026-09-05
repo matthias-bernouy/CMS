@@ -86,7 +86,7 @@ export type ProviderBoundaryHarness = {
 export type CreateProviderBoundaryHarness = () => Promise<ProviderBoundaryHarness>;
 export const financialTermsHash = "a".repeat(64);
 export const marketplaceTermsHash = "c".repeat(64);
-export const marketplaceTermsVersion = "courtside-seller-2026-07";
+export const marketplaceTermsVersion = "marketplace-seller-2026-07";
 
 export async function responseBody(response: Response): Promise<JsonRecord> {
     return (await response.json()) as JsonRecord;

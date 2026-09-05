@@ -8,7 +8,7 @@ export function registerStaticRecoverySourceScenario(): void {
     test("persists seller recovery exposure and blocks payments, releases, and unsafe payouts", async () => {
         const root = resolve(import.meta.dir, "../../../..");
         const [schema, edge, paymentProjection, definition] = await Promise.all([
-            loadSupabaseSchemaSql(root),
+            loadSupabaseSchemaSql(root, "install/sql/schema.manifest.json"),
             Promise.all([
                 readFile(resolve(root, "connectors/supabase/functions/cms-stripe-connect/index.ts"), "utf8"),
                 readFile(

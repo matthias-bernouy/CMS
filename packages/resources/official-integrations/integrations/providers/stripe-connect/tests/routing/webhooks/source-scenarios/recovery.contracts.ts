@@ -28,7 +28,7 @@ export function registerWebhookRecoverySourceScenario(createHarness: CreateHarne
             attempt_count: 2,
         });
 
-        const schema = await loadSupabaseSchemaSql(integrationRoot);
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
         expect(schema).toContain("event.processing_status = 'processing'");
         expect(schema).toContain("event.processing_started_at <= now() - interval '5 minutes'");
         expect(schema).toContain("processing_started_at = now()");

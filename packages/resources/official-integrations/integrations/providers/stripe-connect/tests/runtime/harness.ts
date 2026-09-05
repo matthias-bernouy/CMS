@@ -43,7 +43,8 @@ export async function createStripeConnectHarness() {
                 provider: "supabase",
                 outputs: { functionsBaseUrl },
                 resources: [
-                    { type: "schema", id: "sql/schema.manifest.json", action: "applied" },
+                    { type: "schema", id: "install/sql/schema.manifest.json", action: "applied" },
+                    { type: "function", id: "cms-stripe-connect", action: "deployed" },
                     { type: "function", id: "cms-stripe-connect", action: "deployed" },
                     { type: "function", id: "cms-stripe-connect-management", action: "deployed" },
                 ],
@@ -59,6 +60,7 @@ export async function createStripeConnectHarness() {
             dashboards,
             dashboardViews,
             connectorDeployers: [deployer],
+            connectorInstanceIds: { primary: "stripe-connect-test-primary" },
             provisioners: [stripeWebhookProvisioner()],
             blocs: {
                 async importBloc(artifact) {

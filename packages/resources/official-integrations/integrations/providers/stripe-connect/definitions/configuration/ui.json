@@ -9,7 +9,7 @@
         ],
         [
             "Deploy provider ledger",
-            "Apply the private Supabase schema and deploy the cms-stripe-connect Edge Function."
+            "Apply the private Supabase schema and deploy the versioned CMS Function alongside the stable Stripe webhook ingress."
         ],
         [
             "Provision Stripe event destinations",
@@ -50,7 +50,7 @@
         "Provision Stripe event destinations and store signing secrets",
         "Deploy Supabase connector",
         "Install protected provider source",
-        "Install seller onboarding bloc and Seller terms dashboard",
+        "Install Seller terms dashboard",
         "Refresh Sources and Dashboards"
     ]
 }

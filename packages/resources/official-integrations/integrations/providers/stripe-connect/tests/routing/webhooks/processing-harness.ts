@@ -38,7 +38,7 @@ export async function createSucceededPayment(harness: RoutingHarness, clientRefe
     const enrolled = await harness.submit("seller-1", "admin", "enrollConnectSeller", {
         accountToken: "accttok_test_identity_123",
         marketplaceTermsAccepted: true,
-        marketplaceTermsVersion: "courtside-seller-2026-07",
+        marketplaceTermsVersion: "marketplace-seller-2026-07",
         marketplaceTermsHash: "c".repeat(64),
     });
     if (!enrolled.ok) {

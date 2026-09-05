@@ -8,7 +8,7 @@ export async function fetchPublishedMarketplaceTermsPage(value: unknown): Promis
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4_000);
     try {
-        const response = await fetch(reference.url, {
+        const response = await fetch(localSnapshotFetchUrl(reference.url), {
             headers: { accept: "application/json" },
             redirect: "error",
             signal: controller.signal,
@@ -154,10 +154,47 @@ function isLocalHost(hostname: string): boolean {
 
 function localRuntime(): boolean {
     try {
-        return isLocalHost(new URL(Deno.env.get("SUPABASE_URL") ?? "").hostname.toLowerCase());
+        const url = new URL(readEnvironment("SUPABASE_URL") ?? "");
+        return (
+            (url.protocol === "http:" && isLocalHost(url.hostname.toLowerCase())) ||
+            (localProviderMarker() && url.protocol === "http:" && url.hostname.toLowerCase() === "kong")
+        );
     } catch {
         return false;
     }
+}
+
+export function localSnapshotFetchUrl(
+    value: string,
+    readEnv: (name: string) => string | undefined = readEnvironment,
+): string {
+    if (!localProviderMarker(readEnv)) {
+        return value;
+    }
+    try {
+        const supabaseUrl = new URL(readEnv("SUPABASE_URL") ?? "");
+        const snapshotUrl = new URL(value);
+        if (
+            supabaseUrl.protocol === "http:" &&
+            supabaseUrl.hostname.toLowerCase() === "kong" &&
+            snapshotUrl.protocol === "http:" &&
+            isLocalHost(snapshotUrl.hostname.toLowerCase())
+        ) {
+            snapshotUrl.hostname = "host.docker.internal";
+            return snapshotUrl.toString();
+        }
+    } catch {
+        return value;
+    }
+    return value;
+}
+
+function localProviderMarker(readEnv: (name: string) => string | undefined = readEnvironment): boolean {
+    return readEnv("ULVIA_LOCAL_PROVIDER_SIMULATION") === "v1";
+}
+
+function readEnvironment(name: string): string | undefined {
+    return (globalThis as { Deno?: { env?: { get?: (key: string) => string | undefined } } }).Deno?.env?.get?.(name);
 }
 
 function unavailable(): never {
