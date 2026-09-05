@@ -1,7 +1,6 @@
 # Creating an integration release
 
-This workflow applies to new integrations and every subsequent version. Run
-commands from the workspace root.
+Use this workflow for every integration version, from the workspace root.
 
 ## 1. Synchronize known history
 
@@ -13,15 +12,12 @@ bun run ulvia -- pull <kind> --all-versions
 bun run ulvia -- status
 ```
 
-For a new integration, the pull may report that the kind does not exist. That
-is expected. For an existing integration, do not audit against an incomplete
-local history: upgrade coverage is only meaningful for the baselines the CLI
-knows.
+For a new kind, a missing pull is expected. For an existing kind, do not audit
+against incomplete local history: the CLI can verify only known baselines.
 
-Pulling synchronizes both immutable package bytes and the repository's current
-reviewed connector-schema evidence. Repeating the command refreshes that
-evidence even when the package coordinate is already present. The evidence is
-private local repository data and never belongs beside integration sources.
+Pulling synchronizes immutable bytes and reviewed connector-schema evidence.
+Repeating it refreshes evidence for existing coordinates. This private local
+repository data never belongs beside integration sources.
 
 ## 2. Change the current source tree
 
@@ -32,21 +28,19 @@ in both:
 - `integration.json` (`stable`, `latest`, and its current version entry);
 - the resolved definition, normally `definitions/root.json`.
 
-Use `path: "."` for the current source entry. Runtime package construction
-excludes author tests and source-only metadata. The transitive source closure for
-`tests/integration-contracts/upgrade-fixtures.ts` is stored separately in a
-digest-bound verification bundle, so it can be executed again without placing
-test code in the installed runtime package.
+Use `path: "."` for current source. Runtime packages exclude author tests and
+source-only metadata. The transitive closure of
+`tests/integration-contracts/upgrade-fixtures.ts` becomes a separate,
+digest-bound verification bundle rather than installed runtime code.
 
-Keep mutable business policy in runtime persistence, managed through an
-authenticated view or API. Installation inputs are for stable deployment
-settings, secret references, and bootstrap identity. An `afterInstallation`
-hook must be idempotent and preserve existing runtime values.
+Keep mutable business policy in runtime persistence behind an authenticated
+view or API. Installation inputs cover stable deployment settings, secret
+references, and bootstrap identity; hooks remain idempotent and preserve state.
 
-Keep package responsibilities strict. A `source` contains backend/data
-artifacts, operator `dashboard-view` artifacts, and their tests. A `collection`
-contains blocs, resource metadata, endpoint bindings, and theme contracts. See
-the [source and collection model](./model.md).
+Keep package responsibilities strict: a `source` owns backend/data artifacts
+and operator views, while a collection owns blocs, bindings, and theme
+requirements. Ulvia is theme-only and has zero bloc resources, artifacts, or
+categories. See the [source and collection model](../model.md).
 
 ## 3. Choose the version
 
@@ -63,9 +57,10 @@ If an old test was wrong, first decide which behavior is the intended contract.
 Correcting the test alone does not force a major release. Changing behavior
 that consumers could validly rely on does.
 
-The compatibility evaluator calculates the minimum required level. A larger
-version number does not make an unsafe migration safe: stateful connector
-changes must still satisfy the migration policy.
+The current Ulvia and Mossa packages are a clean rebuild with no production site to upgrade, so
+they have no old-tag alias or content migration. Future deployed consumers and
+persistent state still require normal migration guarantees. A larger version
+number never makes an unsafe stateful change safe.
 
 ## 4. Design stateful changes for live traffic
 
@@ -83,17 +78,14 @@ and new callers can overlap. Prefer one of these strategies:
 - use a migration-aware connector when an in-place replacement needs explicit
   activation, recovery, and drain evidence.
 
-Keep database migrations idempotent. Preserve append-only evidence, use
-optimistic concurrency for operator edits, and serialize singleton publication
-when concurrent writes would otherwise lose state.
+Keep migrations idempotent, evidence append-only, operator edits optimistic,
+and singleton publication serialized when concurrent writes could lose state.
 
-When a linking integration starts using a newer dependency contract, declare a
-`versionRange`. Never let repository resolution silently select an older
-provider that lacks the endpoint or schema being called.
+Declare a `versionRange` when a linking integration adopts a newer dependency
+contract; resolution must not choose a provider missing the called capability.
 
-Plan dependency-major transitions explicitly. The sandbox retains an installed
-dependency while it satisfies the target range. If a dependent cannot run
-against both majors, publish a bridge or design an atomic upgrade plan.
+Plan dependency-major transitions. The sandbox retains a dependency while it
+satisfies the target range; otherwise publish a bridge or use an atomic plan.
 
 ## 5. Add tests and upgrade fixtures
 
@@ -131,10 +123,10 @@ credentials. Service-role keys stay inside its disposable runtime.
 bun run ulvia -- release <kind>
 ```
 
-For a new local coordinate that is not already published remotely, `release`
-runs the same audit and stores the exact canonical package and verification
-bundle only after all scenarios pass. An already published identical package
-is pulled as-is. The coordinate is immutable:
+`release` never contacts the remote repository. For a coordinate not already
+stored with identical bytes, it runs the same audit and stores the exact
+canonical package and verification bundle only after every scenario passes.
+The local coordinate is immutable:
 
 - identical `kind@version` and digest is a no-op;
 - identical coordinate with different bytes is rejected and suggests the
@@ -156,18 +148,16 @@ no-ops; failures are reported per integration and make the batch fail.
 bun run ulvia -- dev
 ```
 
-Install the locally released integration into the persistent development CMS,
-exercise its Source endpoints, Storage, Auth, Edge Functions, and collection
-blocs, then stop the stack with `bun run ulvia -- dev stop`.
+Install the release in the persistent CMS; exercise Source endpoints, Storage,
+Auth, Edge Functions, and blocs, then run `bun run ulvia -- dev stop`.
 
-For collections, begin with a source-free selection, then add one source-backed
-resource and verify its dependency closure. Publish a page, write data through
-a Source, restart, and perform a representative upgrade. Follow
-[Local integration development](./local-development.md).
+For collections, test a Source-free selection, then a Source-backed resource
+and its closure. Publish, write through a Source, restart, and upgrade. Follow
+[Local integration development](../local-development.md).
 
 When reproducing a customer site, keep branding and pages out of the
 collection, use fictional local business data, and document any simulated
-third-party callback. Follow [Site acceptance with local data](./site-acceptance.md).
+third-party callback. Follow [Site acceptance with local data](../site-acceptance.md).
 
 ## Release checklist
 
@@ -176,8 +166,9 @@ third-party callback. Follow [Site acceptance with local data](./site-acceptance
 - The package declares exactly one current type: `source` or `collection`.
 - Sources contain no blocs, dashboard shells, pages, or theme declarations;
   their operator UI is published as `dashboard-view` artifacts.
-- Collection resources use stable namespaced IDs and explicit endpoint,
+- Bloc collection resources use stable namespaced IDs and explicit endpoint,
   contract, binding, theme, and transitive resource requirements.
+- A theme-only collection has no bloc resource, artifact, or category.
 - Collection category labels do not repeat old package or collection names.
 - Mutable business state is runtime-owned and survives reinstall/reload.
 - Tests cover authorization, malformed input, retries, and concurrency.

@@ -10,17 +10,17 @@ This section documents the supported workflow:
   selection, endpoint bindings, contracts, themes, and dependency closure.
 - [Integration theme contracts](./themes.md) defines shared Ulvia tokens,
   collection hooks, private variables, and site-owned overrides.
-- [Creating a release](./releases.md) covers source layout, SemVer, audits,
+- [Creating a release](./releases/README.md) covers source layout, SemVer, audits,
   local releases, dependencies, and operational practices.
 - [Local integration development](./local-development.md) covers the persistent
   CMS, MongoDB, Supabase, selective installation, and end-to-end acceptance.
 - [Site acceptance with local data](./site-acceptance.md) explains how to
   reproduce a real site safely with public configuration, fictional business
   data, provider simulations, and visual checks.
-- [Business upgrade fixtures](./upgrade-fixtures.md) explains how an
+- [Business upgrade fixtures](./releases/upgrade-fixtures.md) explains how an
   integration creates realistic old-version state and verifies it after an
   upgrade.
-- [Remote publication](./remote-publication.md) explains the `ulvia push`
+- [Remote publication](./releases/remote-publication.md) explains the `ulvia push`
   trust boundary, configuration, immutability, and recovery behavior.
 - [Stripe Connect seller terms](./stripe-connect-seller-terms-published-page.md)
   documents the runtime publication and immutable acceptance model used by
@@ -36,7 +36,8 @@ An official source or collection normally lives below
 ├── integration.json
 ├── definition.json
 ├── definitions/
-├── connectors/
+├── blocs/             collection view and editor sources, when applicable
+├── connectors/        Source infrastructure, when applicable
 ├── tests/
 └── release-notes.txt
 ```
@@ -58,6 +59,14 @@ blocs, logos, favicons, public organization settings, and `--site-*` variables
 belong to CMS site data. A reusable collection must not become coupled to the
 first site that used it.
 
+The official author tree currently has one theme-only collection and one bloc
+collection: `ulvia@1.0.0` publishes `ulvia-theme@3` with no blocs, while
+`mossa@1.0.0` publishes the `mossa-*` bloc catalogue and consumes Ulvia's
+tokens. Sources remain data and runtime capabilities; notably, `forms` remains
+a source while its former rendering blocs do not. See the
+[source and collection model](./model.md#current-source-inventory) for the
+complete supported source inventory.
+
 ## Command summary
 
 Commands below use the workspace script. An installed CLI can use the same
@@ -66,6 +75,7 @@ arguments directly as `ulvia ...`.
 ```bash
 bun run ulvia -- pull commerce --all-versions
 bun run ulvia -- audit commerce
+bun run ulvia -- audit --all
 bun run ulvia -- release commerce
 bun run ulvia -- release --all
 bun run ulvia -- push commerce
@@ -84,6 +94,6 @@ The persistent local repository is application data under
 absolute path when an isolated repository is required. Do not commit that
 directory.
 
-`ulvia push` promotes only immutable local releases. Remote admission reruns the
-shared verification plan in server-owned disposable infrastructure, and the CLI
-then verifies that the public repository returns the exact local digest.
+`ulvia push` promotes only immutable local releases. Remote admission must rerun
+the shared verification plan and return the exact public digest. That remote
+gate is separate from local package verification and downstream site acceptance.

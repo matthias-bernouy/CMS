@@ -1,90 +1,119 @@
 # Site acceptance with local data
 
-A persistent `ulvia dev` site complements release audits. It proves that a
-useful composition of sources, collections, CMS content, and site-owned assets
-works as a product. It must remain isolated from production data and secrets.
+A persistent `ulvia dev` environment complements integration release audits. It
+lets a site repository exercise its real pages, assets, selected collections,
+Sources, and workflows without production data or credentials.
+
+## Keep the site outside CmsCore
+
+CmsCore owns the reusable platform and its integration packages. A downstream
+site repository owns all customer-specific material:
+
+- pages, routes, copy, navigation, and site blocs;
+- logos, favicons, media, organization details, and SEO configuration;
+- locale, currency, country, business policy, and `--site-*` overrides;
+- deterministic seed data and browser acceptance scenarios;
+- screenshots and other visual-regression artifacts.
+
+Do not copy a downstream site fixture into `ulvia-cli`, an official collection,
+or another CmsCore package. The site should invoke `ulvia dev` as an external
+development tool and populate the resulting CMS through supported APIs.
 
 ## Separate package data from site data
 
 Install reusable capabilities before recreating the site:
 
-- sources own schemas, business rules, endpoints, Storage, functions, and
+- Sources own schemas, business rules, endpoints, Storage, functions, and
   operator dashboard views;
 - collections own reusable blocs, endpoint requirements, and theme contracts;
-- the site owns pages, site blocs, logo, favicon, organization settings,
-  navigation, SEO values, and `--site-*` overrides.
+- the site owns authored content, identity, configuration, and resource
+  selection.
 
-Do not add customer identity to a collection to make one acceptance site look
-correct. A site header composed from collection blocs becomes a site bloc once
-it contains the site's logo or navigation.
+In the current official stack, Ulvia contributes the shared theme contract and
+Mossa contributes reusable `mossa-*` blocs. The `forms` integration remains a
+data Source; visual form controls belong to a collection or to native CMS
+editing, not to a Source-owned renderer.
 
-## Copy only public reference material
+## Create an isolated environment
 
-When an existing site is the visual reference, access it read-only and copy
-only information already publicly delivered to visitors. Typical safe inputs
-are the favicon, logo, page copy, public organization metadata, routes, and
-theme values.
+Use a dedicated persistent directory for each downstream project or test run:
 
-Keep the local host and local service URLs. Never copy production API keys,
-cookies, provider credentials, webhook secrets, database dumps, private files,
-or personal customer records. Remap legacy theme variable names to the current
-contracts before saving copied CSS.
+```bash
+export ULVIA_DATA_DIR=/tmp/my-site-acceptance
+bun run ulvia -- release --all
+bun run ulvia -- dev
+```
 
-## Build fictional business state
+An installed CLI can use `ulvia ...` directly. The site repository may then run
+its own seed and browser-test commands against the Control and Delivery URLs
+reported by `ulvia dev`.
 
-Use reserved domains such as `.test`, clearly fictional names, and non-routable
-contact details. Prefer real CMS Source calls over direct database inserts so
-the fixture exercises validation, authorization, media handling, and business
-transitions.
+Do not commit `ULVIA_DATA_DIR`, a MongoDB dump, a local repository, provider
+credentials, or raw site snapshots. A deterministic seed should be source code
+in the downstream repository and should rebuild state through CMS and Source
+APIs.
 
-A marketplace acceptance dataset should normally include:
+## Use safe reference material
 
-1. an administrator and several users with different roles;
-2. configured taxonomies, brands, products, and local media;
-3. verified and unverified sellers where both states matter;
-4. draft, moderated, active, reserved, and unavailable offers;
-5. at least one order visible to both its buyer and seller;
-6. mutable runtime policy, legal, or consent data when the flow uses it.
+When an existing deployment is the visual reference, access it read-only and
+copy only information already public to visitors. Never copy production API
+keys, cookies, webhook secrets, database dumps, private files, or personal
+customer records.
 
-Keep generated images in the selected `ULVIA_DATA_DIR`, not in Git and not in a
-shared cache. The CMS should ingest them through the same local upload endpoint
-used by normal authoring.
+Use reserved domains such as `.test`, fictional identities, non-routable contact
+details, and unmistakably local provider credentials. Prefer real Source calls
+over direct database inserts so validation, authorization, media handling, and
+business transitions remain exercised.
 
-## Simulate external providers at their boundary
+## Simulate providers at their boundary
 
 Local Auth, PostgreSQL, Storage, Edge Functions, MongoDB, and CMS endpoints are
-real services. Third-party providers such as Stripe or a carrier may still be
-stubs. Do not use production keys merely to make the fixture look complete.
+real services. External payment, shipping, email, or similar providers may use
+integration-owned local simulators.
 
-If a provider callback is unavailable locally, simulate the smallest trusted
-result at that boundary, then continue through the real domain command and
-read models. Record which transition was simulated. This validates the CMS and
-source behavior but is not evidence that provider onboarding, payment,
-shipping, refunds, or webhooks work end to end.
+Simulate the smallest trusted provider result, then continue through the real
+domain command and read models. A simulator validates local application
+behavior; it is not proof that a production provider account, webhook, refund,
+or payout works end to end.
 
-## Acceptance matrix
+## Downstream acceptance matrix
 
-Test public and authenticated behavior separately:
+A site repository should test public and authenticated behavior separately:
 
-- public pages load with expected status, metadata, favicon, responsive layout,
-  source data, empty states, filters, and navigation;
-- a seller sees their own offers and sales but not another seller's private
-  data;
-- a buyer sees their orders and can reach the next valid action;
-- operator dashboard views expose the same state through authorized endpoints;
-- desktop and mobile captures have no blank page, overlapping content,
-  undefined custom element, or browser exception;
-- a restart preserves CMS content, selected resources, files, identities, and
-  business records.
+1. install the exact collection resources and Sources the site declares;
+2. create site content, configuration, users, media, and business data;
+3. visit every public route and relevant empty, loading, success, and error
+   state;
+4. exercise representative authorized workflows through real Source endpoints;
+5. check desktop and mobile layouts, browser errors, undefined custom elements,
+   and local 404/5xx responses;
+6. restart `ulvia dev` against the same data directory and prove that content,
+   resource selections, files, identities, and business records survive;
+7. audit and install candidate upgrades before repeating the same acceptance
+   suite.
 
-For a reference reconstruction, capture the same route and viewport matrix on
-the reference and local sites. Compare structure and flows, not accidental
-production data. Keep the screenshots outside Git unless they are intentional
-test fixtures.
+Keep screenshots in the downstream project only when they are intentional test
+fixtures; otherwise write them to a temporary or ignored artifact directory.
+
+## CmsCore smoke test
+
+CmsCore retains one deliberately neutral system test:
+
+```bash
+ULVIA_RUN_LOCAL_E2E=1 \
+bun test packages/runtimes/ulvia-cli/tests/cli/dev-local.e2e.test.ts
+```
+
+It verifies the local repository, one Supabase-backed Source, one generic CMS
+page, Delivery rendering, and restart persistence. It is not a bundled example
+site and does not replace acceptance in a downstream site repository.
 
 ## What this does not replace
 
-Local site acceptance does not replace `ulvia audit`. The audit verifies fresh
-installation and every known upgrade in disposable environments. The
-persistent site verifies one realistic composition and catches visual,
-cross-source, and workflow problems that isolated conformance tests cannot.
+Site acceptance does not replace `ulvia audit`. The audit verifies fresh
+installation and known upgrades in disposable environments. A downstream site
+suite verifies one real composition and catches visual, cross-Source, and
+workflow problems that isolated conformance tests cannot.
+
+Both checks remain local. Remote admission and deployment require their own
+server-side verification and staging gates.

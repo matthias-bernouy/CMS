@@ -1,4 +1,4 @@
-# Business upgrade fixtures
+# Stateful upgrade fixtures
 
 Generic schema comparison cannot prove that a real order, consent, document,
 shipment, or acceptance remains usable. An integration-owned upgrade fixture

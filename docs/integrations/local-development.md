@@ -31,12 +31,21 @@ source deliberately.
 
 ## Workflow
 
-Release current packages into the local repository, then start the stack:
+Audit from a fresh isolated data directory, store the verified packages in its
+local repository, then start the persistent stack:
 
 ```bash
+export ULVIA_DATA_DIR=/tmp/ulvia-my-change
+bun run ulvia -- audit --all
 bun run ulvia -- release --all
 bun run ulvia -- dev
 ```
+
+`audit --all` proves the candidates without storing them. For each coordinate
+not already stored with identical bytes, `release --all` runs the same gate and
+writes it in dependency order. Identical local coordinates are no-ops. `dev`
+consumes those exact local packages; it does not need a repository server or
+fetch a missing coordinate remotely.
 
 Use another terminal to inspect it:
 
@@ -46,10 +55,19 @@ bun run ulvia -- dev credentials
 ```
 
 Control is served at `http://127.0.0.1:5100` and Delivery at
-`http://127.0.0.1:5101`. Install the Ulvia collection with the smallest useful
-resource selection. Confirm that a source-free selection installs no source,
-then activate a source-backed resource and confirm that only its dependency
-closure is added.
+`http://127.0.0.1:5101`. Install `ulvia@1.0.0` as the theme-only contract, then
+install `mossa@1.0.0` with the smallest useful resource selection. Ulvia has no
+resource selection or bloc catalogue. Confirm that a source-free Mossa
+selection installs no source, then activate a source-backed Mossa resource and
+confirm that only its transitive resource and source dependency closure is
+added.
+
+The complete current source set is `commerce`, `user-account`, `consent`,
+`forms`, `newsletter`, `emailer`, `stripe-connect`, `mondial-relay`,
+`commerce-negotiation`, `commerce-stripe-payments`,
+`commerce-mondial-relay-delivery`, and
+`commerce-mondial-relay-fulfillment`. `forms` is exercised as a data source;
+there is no `forms-renderer` bloc.
 
 For concurrent worktrees, override the five listeners independently with
 `ULVIA_DEV_CONTROL_PORT`, `ULVIA_DEV_DELIVERY_PORT`,
@@ -69,9 +87,9 @@ A meaningful local acceptance pass should:
    resources remain inactive.
 
 For a complete site reconstruction, also use the
-[site acceptance guide](./site-acceptance.md). It covers the boundary between a
-collection and site-owned branding, fictional marketplace data, safe provider
-simulation, and desktop/mobile screenshot comparisons.
+[site acceptance guide](./site-acceptance.md). The downstream site repository
+owns its seed, branding, pages, business scenarios, and desktop/mobile visual
+checks. CmsCore intentionally contains no customer-site fixture.
 
 Stop the persistent infrastructure explicitly when it is no longer needed:
 
@@ -99,3 +117,7 @@ history is required.
 Neither command needs production Supabase credentials. The local runtime
 creates its own keys and keeps service credentials inside its composition
 boundary. Docker and the Supabase CLI runtime must be available.
+
+This local-first loop intentionally stops before `ulvia push`. It is not
+evidence that a remote verifier, remote repository deployment, or production
+consumer has been exercised.

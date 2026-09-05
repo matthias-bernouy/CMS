@@ -1,8 +1,12 @@
-# Remote integration publication
+# Remote release publication
 
 Remote publication promotes an audited local release through the repository's
 authenticated candidate protocol. The server, rather than the workstation,
 makes the final admission decision.
+
+This page defines the remote contract. Local package and downstream site
+acceptance do not provide evidence that a real remote worker or deployment has
+passed this gate.
 
 The remote repository must preserve the same package model as the local
 repository. Push is promotion of an already built local artifact, not another

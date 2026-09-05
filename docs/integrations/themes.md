@@ -1,9 +1,10 @@
 # Integration theme contracts
 
-Ulvia owns the shared design-system vocabulary. Collections consume that
-vocabulary and publish only the additional concepts that are genuinely theirs.
-Sites choose values and may add local overrides without becoming dependencies
-of reusable packages.
+`ulvia@1.0.0` is the theme-only owner of the shared design-system vocabulary.
+It publishes `ulvia-theme@3` and no bloc resource, bloc artifact, or bloc
+category. Collections consume that vocabulary and publish only the additional
+concepts that are genuinely theirs. Sites choose values and may add local
+overrides without becoming dependencies of reusable packages.
 
 ## Contract layers
 
@@ -55,6 +56,25 @@ tokens must remain usable with their declared fallback. A breaking vocabulary
 change creates a new contract major; it does not silently change an existing
 token's meaning.
 
+The collection definition also declares its Ulvia package dependency. Mossa's
+current declaration is:
+
+```json
+{
+    "dependencies": [
+        {
+            "kind": "ulvia",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "categories": []
+}
+```
+
+This is a theme dependency, not a request for Ulvia resources: Ulvia has
+none. A future collection can declare the same dependency without installing
+or depending on Mossa.
+
 The CMS derives a collection token's CSS name as
 `--<collection-kind>-<token-id>`. The theme editor can change values while the
 contract name stays stable. New site-created variables are normalized into the
@@ -68,12 +88,13 @@ Ulvia provides the concepts that several collections are expected to share:
 - info, success, warning, and danger feedback roles;
 - page, surface, subtle, text, and border roles;
 - body, heading, and monospace typography;
-- spacing, widths, radii, shadows, and motion durations;
-- common code and navigation roles.
+- spacing, widths, radii, shadows, and motion durations.
 
 A collection must use these tokens before adding equivalents. Mossa therefore
-inherits the Ulvia palette and typography. It publishes a Mossa variable only
-for a specialized component decision that Ulvia cannot name usefully.
+inherits the Ulvia palette, feedback roles, surfaces, typography, spacing,
+shape, elevation, and motion. Its current structured theme adds no token
+category. A Mossa bloc publishes a documented Mossa variable only for a
+specialized component decision that Ulvia cannot name usefully.
 
 ## Site overrides
 
@@ -94,5 +115,6 @@ to inventing an unstable cross-collection context API.
 
 Free-form site CSS is emitted before active structured theme values. Managed
 structured values are therefore authoritative if both layers assign the same
-managed variable. Legacy site CSS must be migrated from old names such as
-`--bg-base` and `--primary-base` before relying on `ulvia-theme@3`.
+managed variable. New sites must write current `--ulvia-*`, documented
+collection hooks, and `--site-*` names directly. The current Ulvia/Mossa clean
+break does not provide aliases for legacy variable names.

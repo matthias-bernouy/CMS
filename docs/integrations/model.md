@@ -6,14 +6,16 @@ different contracts.
 
 ## Sources own data and behavior
 
-A source is a backend capability. It may own:
+A source is a backend capability, presentation-free for public pages. It may
+own:
 
 - database schemas and migrations;
 - Storage buckets and object policies;
 - Auth-dependent business rules;
 - Edge Functions and other runtime functions;
 - CMS Source endpoints, triggers, and source overlays;
-- secrets and stable deployment configuration.
+- connectors and stable deployment configuration;
+- operator `dashboard-view` artifacts and their tests.
 
 A source must not publish blocs, dashboard shells, theme tokens, pages, or
 visual defaults. Operator-owned business values also do not belong in
@@ -22,113 +24,108 @@ mutable state are stored at runtime and changed through authenticated APIs or
 dashboard views.
 
 The CMS owns the dashboard shell. A source may publish `dashboard-view`
-artifacts that operate its data, endpoints, and source overlays, but it cannot
-publish a legacy dashboard container or relation projection. This keeps the
-business administration surface beside its source contract without coupling
-the source to CMS navigation chrome.
+artifacts that operate its own data, endpoints, and overlays. This bounded
+operator declaration is not public-site rendering: the Source cannot publish a
+legacy dashboard container, relation projection, or CMS navigation chrome.
 
 Every public endpoint declares a `contractVersion`. Changing implementation
 without changing that observable contract is compatible. A breaking request or
 response change requires a new endpoint contract major, even when the source
 package itself also receives a major version.
 
+### Current source inventory
+
+The author repository currently supports exactly these source integrations:
+
+- domain sources: `commerce`, `user-account`, `consent`, `forms`, and
+  `newsletter`;
+- providers: `emailer`, `stripe-connect`, and `mondial-relay`;
+- extensions: `commerce-negotiation`, `commerce-stripe-payments`,
+  `commerce-mondial-relay-delivery`, and
+  `commerce-mondial-relay-fulfillment`.
+
+`emailer` remains part of the transitive closure for Commerce `builtin`
+notifications even when no page calls it directly.
+
+`forms` remains a source and owns its data, schema, endpoints, persistence,
+connectors, functions, optional operator views, and conformance tests. It does
+not own rendering. The removed `forms-renderer` is not a compatibility alias;
+form fields and controls needed by a site are presentation resources in Mossa.
+
+`sales-configurator`, `photo-albums`, and `ban` are not supported source kinds.
+Do not restore their exports, fixtures, release scenarios, or implicit
+dependencies.
+
 ## Collections own presentation resources
 
 A collection is a declarative set of blocs and theme requirements. It does not
-mount HTTP routes, connect to a database, or deploy backend infrastructure.
-It also does not publish dashboard views: operator views follow the source that
-owns the managed business data.
+mount HTTP routes, connect to a database, deploy backend infrastructure, or
+publish dashboard views. Operator views follow the source that owns the
+managed business data.
 
-Ulvia is the official monolithic collection. It physically contains every
-official bloc, including the default presentation for every official source.
-Monolithic packaging does not mean monolithic installation: each site stores
-an exact list of active resource IDs and the authoring catalogue exposes only
-that selection.
+There are two official collection packages with deliberately different roles:
 
-Category labels are local to their collection and should stay concise: use
-`Actions`, `Brand`, or `API reference`, not historical package prefixes such as
-`Basic Blocs · Actions` or `Documentation Blocs · API reference`. Resource IDs
-remain namespaced and stable regardless of their catalogue label.
+- `ulvia@1.0.0` is a theme-only collection. It publishes the
+  `ulvia-theme@3` contract and public `--ulvia-*` tokens, with no bloc resource,
+  bloc artifact, or bloc category.
+- `mossa@1.0.0` is the only current bloc collection. Every owned custom element
+  and resource uses the `mossa-*` and `mossa/blocs/*` namespaces. It depends on
+  `ulvia@^1.0.0` for the shared theme contract.
 
-A collection resource has a stable namespaced ID, for example:
+A future collection may depend on Ulvia's theme contract without depending on
+Mossa. It must not assume that Mossa is installed.
 
-```json
-{
-    "id": "ulvia/blocs/newsletter-subscription",
-    "type": "bloc",
-    "artifact": "newsletter-subscription",
-    "category": "newsletter",
-    "requires": {
-        "resources": ["ulvia/blocs/basic-button"]
-    },
-    "endpoints": [
-        {
-            "source": "newsletter",
-            "sourceVersion": "^3.0.0",
-            "endpoint": "urn:newsletter:setSubscription",
-            "contractVersion": "^1.0.0",
-            "bindings": {
-                "input": {
-                    "body.email": "state.setSubscription.email"
-                }
-            }
-        }
-    ],
-    "theme": {
-        "contract": "ulvia-theme@3",
-        "required": ["primary-base"]
-    }
-}
-```
+Mossa contains no Documentation, Restaurant, Workspace, Sales Configurator,
+Photo Albums, or Forms renderer family. It keeps only the reusable visual and
+interactive catalogue retained by the official collection, including generic
+form controls and a structured table bloc.
 
-Endpoint requirements are exact capabilities, not informal dependencies. The
-collection names the source package range, endpoint URN, endpoint contract
-range, and the bloc values bound to request, response, or error paths.
-Conformance rejects a missing source, incompatible version, unknown endpoint,
-contract mismatch, invalid binding path, or unknown theme token.
+Category labels are local to Mossa and stay concise: `Actions`, `Account`,
+`Commerce`, `Content`, `Feedback`, `Forms`, `Interaction`, `Layout`, and
+`Navigation`. Historical package prefixes do not belong in labels.
 
-The provider identity is intentionally exact today. A bloc requiring an
-endpoint from `commerce` cannot silently bind to a different source merely
-because that source advertises a similar shape. Provider substitution needs a
-separate typed capability-resolution contract and is outside v2.
+A source-backed Mossa resource declares its Source package range, endpoint URN,
+contract range, and the Bloc values bound to request, response, or error paths.
+For example, `mossa/blocs/consent-field` requires `consent@^1.0.0`, endpoint
+`urn:consent:getRequirements@^1.0.0`, and binds its `params.context` input to
+`props.contextKey`.
 
-Theme variables are contracts too. Resources name the `ulvia-theme@3` tokens
-they require and optional tokens with fallbacks. Collections consume shared
-`--ulvia-*` values, publish deliberate `--<kind>-*` hooks, keep
-`--_<kind>-*` details private, and never require site-owned `--site-*` values.
-See [Integration theme contracts](./themes.md).
+Conformance rejects a missing Source, incompatible version, unknown endpoint,
+contract mismatch, or invalid binding path. Mossa's static audit also
+correlates every assembled artifact's fixed binding or imperative CMS Source
+access with one declaration, and forbids configurable Source prefixes,
+endpoint names, and function IDs. Its one retained installation alias is a
+validated single segment. This extra audit currently covers Mossa, not every
+third-party or legacy collection.
+
+Provider identity is intentionally exact today. A bloc requiring an endpoint
+from `commerce` cannot silently bind to another source merely because it
+advertises a similar shape. Provider substitution needs a separate typed
+capability-resolution contract.
+
+Endpoint declarations drive resolution and conformance, not authorization.
+The Source endpoint's access mode still checks each runtime request. Installing
+a Source never grants a Bloc implicit access to all of its endpoints.
+
+Theme requirements follow the same explicit model. See
+[Integration theme contracts](./themes.md).
 
 ## Selection and dependency closure
 
-The CMS persists `activeResources` on the collection installation. Users may
+The CMS persists `activeResources` on a collection installation. Users may
 select exact resource IDs or use categories as an authoring shortcut; category
 names are never the stored authority.
 
-Only sources referenced by active resources are installed. Dependencies are
+Only Sources referenced by active resources are installed. Dependencies are
 resolved transitively. A resource uses `requires.resources` for blocs in its
-own collection. It can request a deliberately small part of another collection
-with an explicit version range:
+own collection and may request a small part of another collection with an
+explicit version range. Ulvia has no bloc resources, so Mossa declares
+`{ "kind": "ulvia", "versionRange": "^1.0.0" }` in
+`theme.dependencies`, with no theme categories of its own.
 
-```json
-{
-    "requires": {
-        "collections": [
-            {
-                "kind": "ulvia",
-                "versionRange": "^4.0.0",
-                "resources": ["ulvia/blocs/basic-button"]
-            }
-        ]
-    }
-}
-```
-
-Required sources and collections are installed before the selected collection
-and must satisfy every declared version and endpoint contract. A dependency
-resource is installed and renderable but does not become user-selected:
-`activeResources` remains the exact catalogue selection. Inactive blocs remain
-available to validate and render existing page content while staying hidden
-from the authoring catalogue.
+Requirements are installed before the selected collection and must satisfy all
+declared versions and contracts. A transitively required resource is renderable
+but does not become user-selected: `activeResources` remains exact.
 
 On rerun or upgrade:
 
@@ -139,9 +136,17 @@ On rerun or upgrade:
 - removing a source that an active resource uses is rejected with the blocking
   collection and resource IDs.
 
-Source removal is currently not exposed as a CMS action. Any future uninstall
-or removal-plan endpoint must call `assertSourceCanBeRemoved` before changing
-an installation.
+Source removal is not currently a CMS action. A future removal plan must call
+`assertSourceCanBeRemoved` before changing an installation.
+
+## Native HTML belongs to the CMS
+
+Collection artifacts may use semantic native HTML inside their private
+templates, but they cannot publish or replace an artifact whose root tag is a
+native HTML element. The compiler and integration validation enforce this for
+all native tags. The CMS editor owns the supported native catalogue, placement
+rules, media pickers, rich-text operations, and deny-by-default attribute
+policy. See [Create A Bloc](../blocs/authoring.md#native-elements).
 
 ## Versioning consequences
 
@@ -151,23 +156,23 @@ Source and collection SemVer answer different questions:
 - collection SemVer describes resource IDs, endpoint bindings, authored markup,
   and theme compatibility.
 
-Moving a bloc between packages is an ownership migration, not a data migration.
-Page HTML remains site data. Obsolete integration-owned bloc artifacts are
-removed through an ownership-checked transactional operation and restored if
-the installation commit fails.
+The current Ulvia and Mossa restructuring is an intentional clean break. There is
+no alias for old `basic-*`, `base-*`, `cs-*`, source-owned rendering tags, or
+old resource IDs, and no content migration for them. New local sites author
+directly with `mossa-*` tags. General future releases still follow the normal
+SemVer and upgrade rules.
 
 ## Collection and site boundaries
 
-Mossa is a reusable collection even though some historical tags still use the
-`cs-*` prefix. It may provide specialized marketplace layouts and consume the
-Ulvia design system, but it must not contain the Courtside logo, favicon,
-organization data, pages, or customer-specific theme values.
+Mossa is reusable presentation. It contains no customer logo, favicon,
+organization data, copy, routes, pages, legal mentions, navigation composition,
+or `--site-*` values.
 
-Site identity is CMS data. A site composes installed collection blocs into
-pages and site blocs, owns its public configuration and assets, and may provide
-a small number of `--site-*` overrides. This lets several collections coexist
-without forcing each one to recreate primary, feedback, surface, typography,
-spacing, and shape variables.
+Site identity and policy are CMS data owned by the downstream site repository.
+That repository owns headers, footers, account navigation, assets, routes,
+copy, pages, locale, currency, country, public configuration, and `--site-*`
+overrides. Business classifications, checkout policy, and offer state come from
+Source data or site configuration; Mossa only presents them.
 
 Templates and onboarding are intentionally deferred. When introduced, they
 should create site-owned content from versioned input without becoming the
