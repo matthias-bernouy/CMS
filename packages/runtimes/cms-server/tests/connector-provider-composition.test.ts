@@ -19,7 +19,7 @@ describe("production connector provider composition", () => {
         expect(integrations).toMatch(/new\s+ConfiguredSupabaseConnectorBaselineAdopter\s*\(/);
         expect(integrations).toMatch(/providerRepository\s*:\s*options\.providerRepository\s*,/);
         expect(integrations).toMatch(
-            /functionSecrets\s*:\s*readSupabaseFunctionSecrets\s*\(\s*options\.environment\s*\)\s*,/,
+            /functionSecrets\s*:\s*readSupabaseFunctionSecrets\s*\(\s*options\.environment\s*,\s*options\.supabase\s*\)\s*,/,
         );
         expect(entrypoint).toMatch(/providerRepository\s*:\s*features\.integrationConnectorProviders\s*,/);
         expect(entrypoint).toMatch(/secrets\s*:\s*core\.secrets\s*,/);

@@ -86,6 +86,7 @@ export async function mountProductionSurfaces(
             ? { sourceTargetValidation: { allowBlockedTargetUrlPrefixes: [env.localSupabase.functionsBaseUrl] } }
             : {}),
     };
+    const cmsSmokeDeps = { ...cmsBindingDeps, sources: features.deliverySources };
     const cmsBindingMigration = new CmsSourceBindingMigrationHandler(cmsBindingDeps);
     const integrationMigrationRuntime = injectLocalMigrationAuditFault(
         new ProductionIntegrationMigrationRuntime({
@@ -93,7 +94,7 @@ export async function mountProductionSurfaces(
             functionDeployment: integrations.integrationFunctionMigrationHandler,
             targetSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "target"),
             cmsBinding: cmsBindingMigration,
-            cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "stable"),
+            cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsSmokeDeps, "stable"),
         }),
         env.localMigrationAuditFault,
     );

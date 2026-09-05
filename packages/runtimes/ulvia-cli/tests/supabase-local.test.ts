@@ -10,6 +10,8 @@ import {
 import { createLocalSupabaseManagementHandler } from "../src/runtime/supabase-local";
 import {
     ensureLocalSupabaseProjectIdentity,
+    ensureLocalSupabaseSmtpExposure,
+    LOCAL_SUPABASE_SMTP_PORT,
     localSupabaseProjectId,
     parseLocalSupabaseEnvironment,
 } from "../src/runtime/supabase";
@@ -38,6 +40,23 @@ describe("local Supabase management bridge", () => {
         expect(await readFile(join(second, "supabase", "config.toml"), "utf8")).toBe(
             'project_id = "release-sandbox"\n',
         );
+    });
+
+    test("exposes the local-only Mailpit SMTP listener for application email flows", async () => {
+        const root = await projectRoot();
+        const path = join(root, "supabase", "config.toml");
+        await writeFile(path, "[local_smtp]\nenabled = true\n# smtp_port = 54325\n");
+
+        await ensureLocalSupabaseSmtpExposure(root);
+        await ensureLocalSupabaseSmtpExposure(root);
+
+        expect(await readFile(path, "utf8")).toBe(
+            `[local_smtp]\nenabled = true\nsmtp_port = ${LOCAL_SUPABASE_SMTP_PORT}\n`,
+        );
+
+        await writeFile(path, "[local_smtp]\nenabled = true\nsmtp_port = 59999\n");
+        await ensureLocalSupabaseSmtpExposure(root);
+        expect(await readFile(path, "utf8")).toContain(`smtp_port = ${LOCAL_SUPABASE_SMTP_PORT}`);
     });
 
     test("detects readiness before retaining only the bounded output tail", () => {

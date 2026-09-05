@@ -157,4 +157,33 @@ describe("production runtime services", () => {
             functionsBaseUrl: "http://127.0.0.1:54321/functions/v1",
         });
     });
+
+    test("injects the provider simulator marker only for a fully loopback DEV runtime", () => {
+        const create = (environment: Record<string, string | undefined>, stripeApiUrl?: string) =>
+            createProductionIntegrationServices({
+                providerRepository: {} as never,
+                secrets: {} as never,
+                repository: { url: "https://integrations.example.test/catalog" },
+                packageCacheDir: "/tmp/cms-integration-cache",
+                environment,
+                supabase: {
+                    apiBaseUrl: "http://127.0.0.1:5103",
+                    functionsBaseUrl: "http://127.0.0.1:54321/functions/v1",
+                    ...(stripeApiUrl ? { stripeApiUrl } : {}),
+                },
+            });
+        const secrets = (services: ReturnType<typeof create>) =>
+            (
+                services.integrationConnectorDeployers[0] as unknown as {
+                    config: { functionSecrets: Record<string, string> };
+                }
+            ).config.functionSecrets;
+
+        expect(secrets(create({ MODE: "DEV" }, "http://127.0.0.1:5103/_stripe"))).toEqual({
+            ULVIA_LOCAL_PROVIDER_SIMULATION: "v1",
+        });
+        expect(secrets(create({ MODE: "PROD" }, "http://127.0.0.1:5103/_stripe"))).toEqual({});
+        expect(secrets(create({ MODE: "DEV" }))).toEqual({});
+        expect(secrets(create({ MODE: "DEV" }, "https://stripe.example.test"))).toEqual({});
+    });
 });

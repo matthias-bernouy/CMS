@@ -60,7 +60,7 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
         new ConfiguredSupabaseConnectorDeployer({
             providerRepository: options.providerRepository,
             secrets: options.secrets,
-            functionSecrets: readSupabaseFunctionSecrets(options.environment),
+            functionSecrets: readSupabaseFunctionSecrets(options.environment, options.supabase),
             ...(options.supabase
                 ? {
                       apiBaseUrl: options.supabase.apiBaseUrl,
@@ -134,7 +134,10 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
 
 export type ProductionIntegrationServices = ReturnType<typeof createProductionIntegrationServices>;
 
-function readSupabaseFunctionSecrets(source: Record<string, string | undefined>): Record<string, string> {
+function readSupabaseFunctionSecrets(
+    source: Record<string, string | undefined>,
+    supabase: IntegrationServiceOptions["supabase"],
+): Record<string, string> {
     const keys = ["SMTP_HOST", "SMTP_PORT", "SMTP_SECURE", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM", "SMTP_REPLY_TO"];
     const secrets: Record<string, string> = {};
     for (const key of keys) {
@@ -143,5 +146,31 @@ function readSupabaseFunctionSecrets(source: Record<string, string | undefined>)
             secrets[key] = value;
         }
     }
+    if (localProviderSimulationAllowed(source, supabase)) {
+        secrets.ULVIA_LOCAL_PROVIDER_SIMULATION = "v1";
+    }
     return secrets;
+}
+
+function localProviderSimulationAllowed(
+    source: Record<string, string | undefined>,
+    supabase: IntegrationServiceOptions["supabase"],
+): boolean {
+    return (
+        source.MODE?.trim() === "DEV" &&
+        Boolean(supabase?.stripeApiUrl) &&
+        [supabase?.apiBaseUrl, supabase?.functionsBaseUrl, supabase?.stripeApiUrl].every(loopbackUrl)
+    );
+}
+
+function loopbackUrl(value: string | undefined): boolean {
+    if (!value) {
+        return false;
+    }
+    try {
+        const hostname = new URL(value).hostname.toLowerCase();
+        return hostname === "127.0.0.1" || hostname === "localhost" || hostname === "[::1]";
+    } catch {
+        return false;
+    }
 }
