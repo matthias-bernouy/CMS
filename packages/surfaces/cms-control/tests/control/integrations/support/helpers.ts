@@ -1,5 +1,5 @@
 import { InMemoryIntegrationInstallationRepository } from "@bernouy/cms-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
@@ -23,6 +23,7 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
     const dashboards = new InMemoryDashboardRepository();
+    const dashboardViews = new InMemoryDashboardViewRepository();
     const relations = new InMemoryRelationRepository();
     const functions = new InMemoryFunctionRepository();
     const integrationInstallations = new InMemoryIntegrationInstallationRepository();
@@ -36,6 +37,7 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
         sources,
         secrets,
         dashboards,
+        dashboardViews,
         relations,
         functions,
         integrationCatalog,
@@ -48,6 +50,7 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
         sources,
         secrets,
         dashboards,
+        dashboardViews,
         relations,
         functions,
         integrationInstallations,
