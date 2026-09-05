@@ -9,7 +9,7 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { resolveDependencyContext } from "cms-integrations/core/import/dependencies";
 import { resolveTemplate, type TemplateContext } from "cms-integrations/core/definitions/templating/templates";
-import { BAN_DEFINITION, BAN_SOURCE, sourceArtifact } from "../helpers";
+import { PLACES_DEFINITION, PLACES_SOURCE, sourceArtifact } from "../helpers";
 import { installLegacySecretDependency, installProductsDependency } from "./dependencyFixtures";
 
 describe("@bernouy/cms-integrations dependencies", () => {
@@ -115,36 +115,36 @@ describe("@bernouy/cms-integrations dependencies", () => {
         const dashboards = new InMemoryDashboardRepository();
         const dashboardViews = new InMemoryDashboardViewRepository();
         const installations = new InMemoryIntegrationInstallationRepository();
-        await sources.createSource(BAN_SOURCE);
+        await sources.createSource(PLACES_SOURCE);
         await installations.create({
-            id: "ban",
-            label: "BAN",
+            id: "places",
+            label: "Places Directory",
             definitionVersion: "1.0.0",
             status: "success",
             answersSnapshot: {},
             secretRefs: {},
             secretInputs: [],
-            artifacts: [{ type: "source", id: "urn:ban", action: "created" }],
+            artifacts: [{ type: "source", id: "urn:places", action: "created" }],
             runs: [],
         });
         const definition: IntegrationDefinition = {
-            ...structuredClone(BAN_DEFINITION),
-            kind: "ban-dashboard",
-            label: "BAN dashboard",
-            dependencies: [{ name: "ban", kind: "ban" }],
-            artifacts: BAN_DEFINITION.artifacts?.filter((artifact) => artifact.type === "dashboard-view"),
+            ...structuredClone(PLACES_DEFINITION),
+            kind: "places-dashboard",
+            label: "Places dashboard",
+            dependencies: [{ name: "places", kind: "places" }],
+            artifacts: PLACES_DEFINITION.artifacts?.filter((artifact) => artifact.type === "dashboard-view"),
         };
 
         const result = await importIntegration(
             { sources, secrets, dashboards, dashboardViews, installations },
-            { kind: "ban-dashboard", answers: {}, options: {} },
+            { kind: "places-dashboard", answers: {}, options: {} },
             [definition],
         );
 
         expect(result.artifacts).toEqual([
-            { type: "dashboard-view", id: "ban-addresses", action: "created" },
-            { type: "dashboard", id: "ban-addresses", action: "created" },
+            { type: "dashboard-view", id: "places-directory", action: "created" },
+            { type: "dashboard", id: "places-directory", action: "created" },
         ]);
-        expect(await dashboards.getDashboard("ban-addresses")).not.toBeNull();
+        expect(await dashboards.getDashboard("places-directory")).not.toBeNull();
     });
 });

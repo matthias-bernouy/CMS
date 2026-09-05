@@ -1,6 +1,6 @@
 import type { DataShape } from "@bernouy/cms-sources";
 
-export const FEATURE_COLLECTION: DataShape = {
+export const PLACE_SEARCH_RESPONSE: DataShape = {
     type: "object",
     properties: {
         type: { type: "string" },

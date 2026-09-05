@@ -1,19 +1,19 @@
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import { sourceDtoToSource, type SourceDto } from "@bernouy/cms-sources";
-import { FEATURE_COLLECTION } from "./banShape";
+import { PLACE_SEARCH_RESPONSE } from "./placeShape";
 
-const BAN_SOURCE_DTO: SourceDto = {
-    id: "ban",
+const PLACES_SOURCE_DTO: SourceDto = {
+    id: "places",
     meta: {
-        name: "Base Adresse Nationale",
-        description: "French national address geocoding API",
+        name: "Places Directory",
+        description: "Example address lookup API",
         icon: "map-pin",
     },
     endpoints: [
         {
             endpointId: "search",
             method: "GET",
-            targetUrl: "https://api-adresse.data.gouv.fr/search/",
+            targetUrl: "https://places.example.test/search/",
             meta: {
                 name: "Address search",
                 description: "Address to coordinates (GeoJSON)",
@@ -31,12 +31,12 @@ const BAN_SOURCE_DTO: SourceDto = {
                 { name: "postcode", in: "query", type: "string" },
                 { name: "citycode", in: "query", type: "string" },
             ],
-            output: [{ status: "200", body: FEATURE_COLLECTION }],
+            output: [{ status: "200", body: PLACE_SEARCH_RESPONSE }],
         },
         {
             endpointId: "reverse",
             method: "GET",
-            targetUrl: "https://api-adresse.data.gouv.fr/reverse/",
+            targetUrl: "https://places.example.test/reverse/",
             meta: {
                 name: "Reverse geocoding",
                 description: "Coordinates to address",
@@ -46,26 +46,26 @@ const BAN_SOURCE_DTO: SourceDto = {
                 { name: "lon", in: "query", required: true, description: "Longitude", type: "number" },
                 { name: "type", in: "query", type: "string" },
             ],
-            output: [{ status: "200", body: FEATURE_COLLECTION }],
+            output: [{ status: "200", body: PLACE_SEARCH_RESPONSE }],
         },
     ],
 };
 
-export const BAN_DEFINITION: IntegrationDefinition = {
-    kind: "ban",
-    label: "Base Adresse Nationale",
+export const PLACES_DEFINITION: IntegrationDefinition = {
+    kind: "places",
+    label: "Places Directory",
     version: "1.0.0",
     category: "Data",
     inputs: [],
     artifacts: [
-        { type: "source", source: BAN_SOURCE_DTO },
+        { type: "source", source: PLACES_SOURCE_DTO },
         {
             type: "dashboard-view",
             view: {
                 schemaVersion: 2,
-                id: "ban-addresses",
+                id: "places-directory",
                 meta: { name: "Address search", icon: "map-pin" },
-                source: "ban",
+                source: "places",
                 view: {
                     id: "addresses",
                     label: "Address search",
@@ -99,15 +99,15 @@ export const BAN_DEFINITION: IntegrationDefinition = {
                 },
                 availability: {
                     catalog: true,
-                    defaultPlacement: { dashboardId: "ban-addresses" },
+                    defaultPlacement: { dashboardId: "places-directory" },
                 },
             },
         },
     ],
 };
 
-export const BAN_SOURCE = sourceDtoToSource(BAN_SOURCE_DTO);
+export const PLACES_SOURCE = sourceDtoToSource(PLACES_SOURCE_DTO);
 
 export const searchParams = (value: string) => new URL(`http://local/?${value}`).searchParams;
 
-export const banEndpoint = (urn: string) => BAN_SOURCE.endpoints.find((endpoint) => endpoint.urn === urn)!;
+export const placesEndpoint = (urn: string) => PLACES_SOURCE.endpoints.find((endpoint) => endpoint.urn === urn)!;
