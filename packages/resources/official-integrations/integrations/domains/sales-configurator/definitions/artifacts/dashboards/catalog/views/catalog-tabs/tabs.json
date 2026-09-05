@@ -1,9 +1,0 @@
-{
-  "$files": [
-    "tabs/modules.json",
-    "tabs/variants.json",
-    "tabs/features.json",
-    "tabs/variant-features.json",
-    "tabs/requirements.json"
-  ]
-}

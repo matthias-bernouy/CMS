@@ -26,7 +26,6 @@
             "bun": "./publication/index.ts",
             "default": "./publication/index.ts"
         },
-        "./integrations/ban/*": "./integrations/providers/ban/*",
         "./integrations/mossa/*": "./integrations/collections/mossa/*",
         "./integrations/ulvia/*": "./integrations/collections/ulvia/*",
         "./integrations/commerce/*": "./integrations/domains/commerce/*",
@@ -39,8 +38,6 @@
         "./integrations/forms/*": "./integrations/domains/forms/*",
         "./integrations/mondial-relay/*": "./integrations/providers/mondial-relay/*",
         "./integrations/newsletter/*": "./integrations/domains/newsletter/*",
-        "./integrations/photo-albums/*": "./integrations/domains/photo-albums/*",
-        "./integrations/sales-configurator/*": "./integrations/domains/sales-configurator/*",
         "./integrations/stripe-connect/*": "./integrations/providers/stripe-connect/*",
         "./integrations/user-account/*": "./integrations/domains/user-account/*"
     },

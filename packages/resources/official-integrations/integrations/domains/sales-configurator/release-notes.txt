@@ -1,1 +1,0 @@
-Minor release: publish reusable Sales Configurator dashboard views while site dashboard composition remains CMS-owned.

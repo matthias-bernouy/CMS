@@ -1,7 +1,0 @@
-{
-    "route": "/health",
-    "method": "GET",
-    "requiredInputs": [],
-    "requiredHeaders": ["authorization"],
-    "responses": [{ "status": "200" }]
-}

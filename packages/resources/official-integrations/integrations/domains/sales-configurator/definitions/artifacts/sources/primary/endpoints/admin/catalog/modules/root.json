@@ -1,7 +1,0 @@
-{
-  "$files": [
-    "manage-modules.json",
-    "manage-module.json",
-    "upsert-module.json"
-  ]
-}

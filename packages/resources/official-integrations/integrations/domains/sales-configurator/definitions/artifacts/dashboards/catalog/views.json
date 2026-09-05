@@ -1,5 +1,0 @@
-[
-  {
-    "$include": "views/catalog-tabs/root.json"
-  }
-]

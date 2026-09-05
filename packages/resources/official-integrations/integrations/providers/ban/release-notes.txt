@@ -1,1 +1,0 @@
-Minor release: publish the reusable BAN addresses dashboard view while site dashboard composition remains CMS-owned.
