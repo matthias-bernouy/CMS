@@ -3,6 +3,7 @@ import {
     clearResponsiveSourceImageElement,
     syncResponsiveSourceImageElement,
 } from "@bernouy/cms-source-images/browser";
+import { orderCopy, readOrderCopy } from "./copy";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
@@ -25,20 +26,57 @@ class PublicMessageError extends Error {}
 class RemoteRequestError extends Error {}
 
 export class OrderDetail extends Component {
-    static observedAttributes = ["checkout-url", "delivery-estimate-label", "locale"];
+    static observedAttributes = [
+        ...Object.keys(orderCopy),
+        "checkout-url",
+        "delivery-estimate-label",
+        "locale",
+        "error-title",
+        "error-message",
+        "missing-order-message",
+    ];
+
+    private renderedOrder:
+        | [RecordValue, RecordValue | null, RecordValue | null, RecordValue | null, RecordValue | null]
+        | null = null;
 
     constructor() {
         super({ css, template: template as unknown as string });
     }
 
     override connectedCallback(): void {
+        this.syncPresentation();
         this.load().catch((error) => this.fail(error));
+    }
+
+    attributeChangedCallback(): void {
+        if (this.isConnected) {
+            this.syncPresentation();
+        }
+    }
+
+    private syncPresentation(): void {
+        this.set('[data-error] [slot="title"]', this.text("error-title", "Order not found"));
+        for (const element of this.shadowRoot!.querySelectorAll<HTMLElement>("[data-order-copy]")) {
+            element.textContent = this.copy(element.dataset.orderCopy!);
+        }
+        this.shadowRoot!.querySelector("mossa-skeleton[label]")!.setAttribute("label", this.copy("loading-label"));
+        this.shadowRoot!.querySelector(".progress")!.setAttribute("aria-label", this.copy("progress-label"));
+        if (this.renderedOrder) {
+            this.render(...this.renderedOrder);
+        }
+    }
+
+    private copy = (name: string, values: Record<string, string> = {}): string => readOrderCopy(this, name, values);
+
+    private text(name: string, fallback: string): string {
+        return this.getAttribute(name)?.trim() || fallback;
     }
 
     private async load(): Promise<void> {
         this.show("loading");
         if (!this.orderId) {
-            throw new PublicMessageError("The order identifier is missing.");
+            throw new PublicMessageError(this.text("missing-order-message", "The order identifier is missing."));
         }
         const order = await this.request(`/.cms/sources/commerce/myOrder?id=${encodeURIComponent(this.orderId)}`);
         const [paymentResult, relay, offer] = await Promise.all([
@@ -52,7 +90,8 @@ export class OrderDetail extends Component {
         ]);
         const payment = paymentResult?.payment || null;
         const shipment = await this.loadShipment().catch(() => null);
-        this.render(order, payment, relay, offer, shipment);
+        this.renderedOrder = [order, payment, relay, offer, shipment];
+        this.render(...this.renderedOrder);
         this.show("content");
     }
 
@@ -77,33 +116,48 @@ export class OrderDetail extends Component {
     ): void {
         const line = order.lines?.[0] || {};
         const paymentState = normalizedPaymentState(payment, order);
-        const status = orderPresentation(order.status, paymentState, shipment?.status);
-        this.set("[data-order-number]", order.orderNumber || `Order ${order.publicId || order.id}`);
-        this.set("[data-order-date]", `Placed on ${date(order.createdAt, this.locale)}`);
+        const status = orderPresentation(order.status, paymentState, shipment?.status, this.copy);
+        this.set(
+            "[data-order-number]",
+            order.orderNumber || this.copy("order-reference-label", { reference: String(order.publicId || order.id) }),
+        );
+        this.set("[data-order-date]", this.copy("order-date-label", { date: date(order.createdAt, this.locale) }));
         this.set("[data-order-status]", status.label);
         this.orderStatus.dataset.tone = status.tone;
 
-        this.set("[data-line-title]", line.title || line.offerSnapshot?.title || "Item");
+        this.set("[data-line-title]", line.title || line.offerSnapshot?.title || this.copy("item-label"));
         const variant = variantLabel(line.variantSnapshot);
         this.set("[data-line-variant]", variant, !variant);
         const condition =
             String(line.offerSnapshot?.conditionLabel || "").trim() ||
-            conditionLabel(line.offerSnapshot?.conditionCode);
-        this.set("[data-line-condition]", condition ? `Condition: ${condition}` : "", !condition);
+            this.text(
+                `condition-${String(line.offerSnapshot?.conditionCode || "").replaceAll("_", "-")}-label`,
+                conditionLabel(line.offerSnapshot?.conditionCode),
+            );
+        this.set("[data-line-condition]", condition ? this.copy("condition-label", { condition }) : "", !condition);
         this.set(
             "[data-line-price]",
             price(Number(line.totalAmount ?? order.subtotalAmount), order.currency, this.locale),
         );
 
         const breakdown = financialBreakdown(order);
-        this.set("[data-subtotal]", priceOrPending(breakdown.subtotalAmount, breakdown.currency, this.locale));
-        this.set("[data-shipping]", amountOrPending(breakdown.shippingAmount, breakdown.currency, this.locale));
+        this.set(
+            "[data-subtotal]",
+            priceOrPending(breakdown.subtotalAmount, breakdown.currency, this.locale, this.copy),
+        );
+        this.set(
+            "[data-shipping]",
+            amountOrPending(breakdown.shippingAmount, breakdown.currency, this.locale, this.copy),
+        );
         this.set(
             "[data-protection]",
-            amountOrPending(breakdown.buyerProtectionFeeAmount, breakdown.currency, this.locale),
+            amountOrPending(breakdown.buyerProtectionFeeAmount, breakdown.currency, this.locale, this.copy),
         );
-        this.set("[data-total]", amountOrPending(breakdown.buyerTotalAmount, breakdown.currency, this.locale));
-        const paymentStatus = paymentPresentation(paymentState);
+        this.set(
+            "[data-total]",
+            amountOrPending(breakdown.buyerTotalAmount, breakdown.currency, this.locale, this.copy),
+        );
+        const paymentStatus = paymentPresentation(paymentState, this.copy);
         this.set("[data-payment-confirmation]", paymentStatus.label);
         this.paymentConfirmation.dataset.state = paymentStatus.tone;
         this.renderResumePayment(order, line, paymentState);
@@ -122,7 +176,7 @@ export class OrderDetail extends Component {
                 main.media.width,
                 main.media.height,
             );
-            this.image.alt = line.title || "Ordered item";
+            this.image.alt = line.title || this.copy("item-heading");
             this.image.hidden = false;
         } else {
             clearPublicSourceImage(this.image);
@@ -132,13 +186,13 @@ export class OrderDetail extends Component {
     }
 
     private renderShipment(paymentState: PaymentState, shipment: RecordValue | null): void {
-        const presentation = shipmentPresentation(paymentState, shipment?.status);
+        const presentation = shipmentPresentation(paymentState, shipment?.status, this.copy);
         this.set("[data-delivery-title]", presentation.title);
         this.set("[data-delivery-description]", presentation.description);
         this.set(
             "[data-delivery-estimate]",
             shipment?.status === "delivered"
-                ? "Delivery completed"
+                ? this.copy("delivery-completed-label")
                 : this.getAttribute("delivery-estimate-label")?.trim() ||
                       "Typical delivery time: 3 to 5 business days after shipment.",
         );
@@ -160,7 +214,7 @@ export class OrderDetail extends Component {
         const trackingNumber = String(shipment?.expeditionNumber || "").trim();
         this.trackingNumber.hidden = !trackingNumber;
         if (trackingNumber) {
-            this.trackingNumber.textContent = `Parcel number ${trackingNumber}`;
+            this.trackingNumber.textContent = this.copy("tracking-number-label", { number: trackingNumber });
         }
     }
 
@@ -178,23 +232,23 @@ export class OrderDetail extends Component {
     }
 
     private renderRelay(relay: RecordValue | null, shipment: RecordValue | null): void {
-        this.set("[data-relay-name]", relay?.name || "Pickup point to be confirmed");
-        this.set("[data-relay-address]", relayAddress(relay));
+        this.set("[data-relay-name]", relay?.name || this.copy("relay-pending-label"));
+        this.set("[data-relay-address]", relayAddress(relay, this.copy));
         const selectedLocation = String(relay?.relayLocation || relay?.location || "").trim();
         const shipmentLocation = String(shipment?.deliveryRelayLocation || "").trim();
         const shipmentConfirmed =
             Boolean(shipmentLocation) &&
             !["creating", "failed", "unknown", "cancelled"].includes(String(shipment?.status));
-        let label = "Pickup point selected for the order";
+        let label = this.copy("relay-selected-label");
         let state = "neutral";
         if (selectedLocation && shipmentLocation && selectedLocation !== shipmentLocation) {
-            label = "The parcel destination does not match the selected pickup point";
+            label = this.copy("relay-mismatch-label");
             state = "danger";
         } else if (shipmentConfirmed && selectedLocation === shipmentLocation) {
-            label = "Destination recorded for the shipment";
+            label = this.copy("relay-confirmed-label");
             state = "success";
         } else if (shipmentLocation) {
-            label = "Pickup-point confirmation pending";
+            label = this.copy("relay-confirmation-pending-label");
             state = "pending";
         }
         this.set("[data-relay-confirmation]", label);
@@ -241,7 +295,10 @@ export class OrderDetail extends Component {
     }
 
     private fail(error: unknown): void {
-        this.errorMessage.textContent = publicErrorMessage(error, "The order could not be loaded. Try again shortly.");
+        this.errorMessage.textContent = publicErrorMessage(
+            error,
+            this.text("error-message", "The order could not be loaded. Try again shortly."),
+        );
         this.show("error");
     }
 
@@ -364,11 +421,21 @@ function financialBreakdown(order: RecordValue): FinancialBreakdown {
     };
 }
 
-function amountOrPending(amount: number | null, currency: unknown, locale: string): string {
-    return amount === null ? "To calculate" : money(amount, currency, locale);
+function amountOrPending(
+    amount: number | null,
+    currency: unknown,
+    locale: string,
+    copy: (name: string) => string,
+): string {
+    return amount === null ? copy("amount-pending-label") : money(amount, currency, locale);
 }
-function priceOrPending(amount: number | null, currency: unknown, locale: string): string {
-    return amount === null ? "To calculate" : price(amount, currency, locale);
+function priceOrPending(
+    amount: number | null,
+    currency: unknown,
+    locale: string,
+    copy: (name: string) => string,
+): string {
+    return amount === null ? copy("amount-pending-label") : price(amount, currency, locale);
 }
 
 function recordValue(value: unknown): RecordValue | null {
@@ -460,21 +527,21 @@ function normalizedPaymentState(payment: RecordValue | null, order: RecordValue)
     return "unknown";
 }
 
-function paymentPresentation(state: PaymentState): { label: string; tone: string } {
+function paymentPresentation(state: PaymentState, copy: (name: string) => string): { label: string; tone: string } {
     return (
         {
-            missing: { label: "Payment not started", tone: "pending" },
-            created: { label: "Payment pending", tone: "pending" },
-            requires_action: { label: "Payment to complete", tone: "pending" },
-            processing: { label: "Payment confirmation in progress", tone: "pending" },
-            succeeded: { label: "Payment confirmed", tone: "success" },
-            failed: { label: "Payment failed", tone: "danger" },
-            cancelled: { label: "Payment cancelled", tone: "danger" },
-            manual_review: { label: "Payment under review", tone: "neutral" },
-            refunded: { label: "Payment refunded", tone: "neutral" },
-            partially_refunded: { label: "Payment partially refunded", tone: "neutral" },
-            disputed: { label: "Payment disputed", tone: "neutral" },
-            unknown: { label: "Payment status unavailable", tone: "neutral" },
+            missing: { label: copy("state-payment-not-started"), tone: "pending" },
+            created: { label: copy("state-payment-pending"), tone: "pending" },
+            requires_action: { label: copy("state-payment-to-complete"), tone: "pending" },
+            processing: { label: copy("state-payment-confirmation-in-progress"), tone: "pending" },
+            succeeded: { label: copy("state-payment-confirmed"), tone: "success" },
+            failed: { label: copy("state-payment-failed"), tone: "danger" },
+            cancelled: { label: copy("state-payment-cancelled"), tone: "danger" },
+            manual_review: { label: copy("state-payment-under-review"), tone: "neutral" },
+            refunded: { label: copy("state-payment-refunded"), tone: "neutral" },
+            partially_refunded: { label: copy("state-payment-partially-refunded"), tone: "neutral" },
+            disputed: { label: copy("state-payment-disputed"), tone: "neutral" },
+            unknown: { label: copy("state-payment-status-unavailable"), tone: "neutral" },
         } as Record<PaymentState, { label: string; tone: string }>
     )[state];
 }
@@ -486,150 +553,168 @@ function isPayableOrder(order: unknown, payment: PaymentState): boolean {
     return order === "awaiting_payment" && ["missing", "created", "requires_action"].includes(payment);
 }
 
-function orderPresentation(order: unknown, payment: PaymentState, shipment: unknown): { label: string; tone: string } {
+function orderPresentation(
+    order: unknown,
+    payment: PaymentState,
+    shipment: unknown,
+    copy: (name: string) => string,
+): { label: string; tone: string } {
     if (order === "cancelled") {
-        return { label: "Cancelled", tone: "danger" };
+        return { label: copy("state-cancelled"), tone: "danger" };
     }
     if (order === "cancellation_pending") {
-        return { label: "Cancellation in progress", tone: "progress" };
+        return { label: copy("state-cancellation-in-progress"), tone: "progress" };
     }
     if (order === "expired") {
-        return { label: "Expired", tone: "neutral" };
+        return { label: copy("state-expired"), tone: "neutral" };
     }
     if (order === "completed") {
-        return { label: "Completed", tone: "success" };
+        return { label: copy("state-completed"), tone: "success" };
     }
     if (order === "awaiting_quote") {
-        return { label: "Delivery to complete", tone: "progress" };
+        return { label: copy("state-delivery-to-complete"), tone: "progress" };
     }
     if (order === "awaiting_payment") {
         if (payment === "processing") {
-            return { label: "Payment in progress", tone: "progress" };
+            return { label: copy("state-payment-in-progress"), tone: "progress" };
         }
         if (payment === "manual_review" || payment === "disputed") {
-            return { label: "Payment under review", tone: "progress" };
+            return { label: copy("state-payment-under-review"), tone: "progress" };
         }
         if (payment === "failed") {
-            return { label: "Payment failed", tone: "danger" };
+            return { label: copy("state-payment-failed"), tone: "danger" };
         }
         if (payment === "cancelled") {
-            return { label: "Payment cancelled", tone: "danger" };
+            return { label: copy("state-payment-cancelled"), tone: "danger" };
         }
         if (["missing", "created", "requires_action"].includes(payment)) {
-            return { label: "Payment pending", tone: "progress" };
+            return { label: copy("state-payment-pending"), tone: "progress" };
         }
-        return { label: "Status unavailable", tone: "neutral" };
+        return { label: copy("state-status-unavailable"), tone: "neutral" };
     }
     if (order !== "active") {
-        return { label: "Status unavailable", tone: "neutral" };
+        return { label: copy("state-status-unavailable"), tone: "neutral" };
     }
     if (shipment === "delivered") {
-        return { label: "Delivered", tone: "success" };
+        return { label: copy("state-delivered"), tone: "success" };
     }
     if (shipment === "in_transit") {
-        return { label: "In delivery", tone: "progress" };
+        return { label: copy("state-in-delivery"), tone: "progress" };
     }
     if (shipment === "incident") {
-        return { label: "Delivery incident", tone: "danger" };
+        return { label: copy("state-delivery-incident"), tone: "danger" };
     }
     if (shipment === "failed") {
-        return { label: "Shipment to complete", tone: "danger" };
+        return { label: copy("state-shipment-to-complete"), tone: "danger" };
     }
     if (shipment === "unknown") {
-        return { label: "Tracking to be confirmed", tone: "progress" };
+        return { label: copy("state-tracking-to-be-confirmed"), tone: "progress" };
     }
     return payment === "succeeded"
-        ? { label: "Order confirmed", tone: "success" }
+        ? { label: copy("state-order-confirmed"), tone: "success" }
         : payment === "unknown"
-          ? { label: "Status unavailable", tone: "neutral" }
-          : { label: "Order under review", tone: "progress" };
+          ? { label: copy("state-status-unavailable"), tone: "neutral" }
+          : { label: copy("state-order-under-review"), tone: "progress" };
 }
 function shipmentPresentation(
     payment: PaymentState,
     shipment: unknown,
+    copy: (name: string) => string,
 ): { title: string; description: string; stage: number } {
     if (payment === "processing") {
         return {
-            title: "Payment confirmation in progress",
-            description: "Preparation will begin once payment is confirmed.",
+            title: copy("state-payment-confirmation-in-progress"),
+            description: copy("shipment-payment-pending-description"),
             stage: 0,
         };
     }
     if (payment === "manual_review" || payment === "disputed" || payment === "failed") {
         return {
-            title: "Payment under review",
-            description: "Preparation is paused while payment is reviewed.",
+            title: copy("state-payment-under-review"),
+            description: copy("shipment-payment-review-description"),
             stage: 0,
         };
     }
     if (payment === "cancelled") {
-        return { title: "Payment cancelled", description: "This order cannot be prepared.", stage: 0 };
+        return {
+            title: copy("state-payment-cancelled"),
+            description: copy("shipment-payment-cancelled-description"),
+            stage: 0,
+        };
     }
     if (payment === "refunded" || payment === "partially_refunded") {
         return {
-            title: "Order refunded",
-            description: "No new shipment will be prepared for this order.",
+            title: copy("state-order-refunded"),
+            description: copy("shipment-refunded-description"),
             stage: 0,
         };
     }
     if (payment === "unknown") {
         return {
-            title: "Suivi unavailable",
-            description: "Payment status does not yet allow delivery details to be shown.",
+            title: copy("shipment-unavailable-title"),
+            description: copy("shipment-unavailable-description"),
             stage: 0,
         };
     }
     if (payment !== "succeeded") {
         return {
-            title: "Waiting for payment",
-            description: "Preparation will begin once payment is confirmed.",
+            title: copy("state-waiting-for-payment"),
+            description: copy("shipment-payment-pending-description"),
             stage: 0,
         };
     }
     if (shipment === "delivered") {
         return {
-            title: "Parcel delivered",
-            description: "Your parcel was delivered to the selected pickup point.",
+            title: copy("state-parcel-delivered"),
+            description: copy("shipment-delivered-description"),
             stage: 3,
         };
     }
     if (shipment === "in_transit") {
         return {
-            title: "Parcel in transit",
-            description: "Your parcel is being handled by the carrier.",
+            title: copy("state-parcel-in-transit"),
+            description: copy("shipment-in-transit-description"),
             stage: 2,
         };
     }
     if (shipment === "incident") {
         return {
-            title: "Delivery incident reported",
-            description: "The latest known event is shown below.",
+            title: copy("state-delivery-incident-reported"),
+            description: copy("shipment-incident-description"),
             stage: 2,
         };
     }
     if (shipment === "failed") {
         return {
-            title: "Shipment to complete",
-            description: "The parcel is not yet confirmed as shipped.",
+            title: copy("state-shipment-to-complete"),
+            description: copy("shipment-failed-description"),
             stage: 1,
         };
     }
     if (shipment === "unknown") {
         return {
-            title: "Shipment status to be confirmed",
-            description: "Waiting for carrier confirmation.",
+            title: copy("state-shipment-status-to-be-confirmed"),
+            description: copy("shipment-unknown-description"),
             stage: 1,
         };
     }
     if (shipment === "cancelled") {
-        return { title: "Shipment cancelled", description: "The parcel is not in transit.", stage: 1 };
+        return {
+            title: copy("state-shipment-cancelled"),
+            description: copy("shipment-cancelled-description"),
+            stage: 1,
+        };
     }
     if (shipment === "created" || shipment === "label_ready" || shipment === "creating") {
-        return { title: "Shipment being prepared", description: "The parcel will be handed to the carrier.", stage: 1 };
+        return {
+            title: copy("state-shipment-being-prepared"),
+            description: copy("shipment-created-description"),
+            stage: 1,
+        };
     }
     return {
-        title: "Order being prepared",
-        description: "Tracking will appear here once the shipment is created.",
+        title: copy("state-order-being-prepared"),
+        description: copy("shipment-preparing-description"),
         stage: 1,
     };
 }
@@ -637,9 +722,9 @@ function positiveIdentifier(value: unknown): string | null {
     const identifier = String(value ?? "").trim();
     return /^\d+$/.test(identifier) && BigInt(identifier) > 0n ? identifier : null;
 }
-function relayAddress(relay: RecordValue | null): string {
+function relayAddress(relay: RecordValue | null, copy: (name: string) => string): string {
     if (!relay) {
-        return "Pickup-point address unavailable";
+        return copy("relay-address-unavailable-label");
     }
     return [relay.addressLine1, relay.addressLine2, [relay.postalCode, relay.city].filter(Boolean).join(" ")]
         .filter(Boolean)

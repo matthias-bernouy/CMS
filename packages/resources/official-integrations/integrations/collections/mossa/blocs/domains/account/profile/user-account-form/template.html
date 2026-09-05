@@ -6,13 +6,13 @@
                 <mossa-stack gap="sm" align-items="start">
                     <mossa-user-account-avatar data-avatar-input name="file" accept="image/jpeg,image/png,image/webp,image/gif"></mossa-user-account-avatar>
                     <span data-avatar-file-id hidden>{{ avatarFileId }}</span>
-                    <p cms-condition="$source.loading">Uploading image…</p>
-                    <mossa-toast data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">The profile picture could not be updated.</mossa-toast>
+                    <p data-account-copy="avatar-uploading-label" cms-condition="$source.loading">Uploading image…</p>
+                    <mossa-toast data-account-copy="avatar-error-message" data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">The profile picture could not be updated.</mossa-toast>
                 </mossa-stack>
             </form>
 
             <mossa-stack gap="lg" cms-condition="$source.loading">
-                <mossa-skeleton shape="circle" width="7rem" height="7rem" animation="wave" label="Loading your information"></mossa-skeleton>
+                <mossa-skeleton data-account-loading shape="circle" width="7rem" height="7rem" animation="wave" label="Loading your information"></mossa-skeleton>
                 <mossa-responsive-grid min="lg" max="none" gap="sm">
                     <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
                     <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
@@ -29,7 +29,7 @@
                     <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
                 </mossa-responsive-grid>
             </mossa-stack>
-            <mossa-toast data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Your personal information could not be loaded.</mossa-toast>
+            <mossa-toast data-account-copy="load-error-message" data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Your personal information could not be loaded.</mossa-toast>
 
             <form data-account-form cms-source-id="save" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-condition="$source.loaded">
                 <mossa-stack gap="lg">
@@ -58,8 +58,8 @@
                     </mossa-stack>
 
                     <mossa-button><button type="submit" data-account-button>Save</button></mossa-button>
-                    <mossa-toast data-toast-kind="success" tone="success" appearance="filled" role="status" aria-live="polite" aria-atomic="true" position="top-right" duration="4500" cms-condition="$source.loaded">Information saved.</mossa-toast>
-                    <mossa-toast data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Your information could not be saved.</mossa-toast>
+                    <mossa-toast data-account-copy="success-message" data-toast-kind="success" tone="success" appearance="filled" role="status" aria-live="polite" aria-atomic="true" position="top-right" duration="4500" cms-condition="$source.loaded">Information saved.</mossa-toast>
+                    <mossa-toast data-account-copy="save-error-message" data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Your information could not be saved.</mossa-toast>
                 </mossa-stack>
             </form>
         </mossa-stack>

@@ -1,0 +1,17 @@
+export const relayCopy: Record<string, string> = {
+    "postal-code-label": "Postal code",
+    "city-label": "City",
+    "postal-code-required-message": "Postal code is required.",
+    "country-required-message": "Configure a country code before searching pickup points.",
+    "searching-message": "Searching pickup points…",
+    "results-one-message": "{count} pickup point available.",
+    "results-many-message": "{count} pickup points available.",
+    "empty-message": "No pickup point found.",
+    "saving-message": "Saving pickup point…",
+    "selected-message": "Pickup point selected.",
+    "restored-message": "Pickup point saved for this order.",
+    "change-message": "Search for another pickup point.",
+    "login-message": "Sign in to choose a pickup point.",
+    "forbidden-message": "You are not allowed to change this pickup point.",
+    "error-message": "Pickup points cannot be searched right now. Try again shortly.",
+};

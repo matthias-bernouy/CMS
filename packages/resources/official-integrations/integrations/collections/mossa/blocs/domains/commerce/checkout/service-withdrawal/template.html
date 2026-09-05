@@ -4,15 +4,15 @@
     </div>
 
     <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
-        <strong slot="title">Demande unavailable</strong>
+        <strong slot="title">Request unavailable</strong>
         <span slot="description" data-error-message></span>
         <mossa-button slot="actions" data-retry appearance="outlined"><button type="button">Try again</button></mossa-button>
     </mossa-surface-card>
 
     <form data-form hidden novalidate>
         <mossa-surface-card appearance="outlined" density="spacious">
-            <strong slot="title">Exercise my right of withdrawal</strong>
-            <span slot="description">
+            <strong slot="title" data-withdrawal-copy="form-title">Exercise my right of withdrawal</strong>
+            <span slot="description" data-withdrawal-copy="form-description">
                 This request concerns the platform service associated with an order.
                 It does not automatically cancel the product sale or issue a refund:
                 the request is recorded, timestamped, and reviewed under the applicable contract.
@@ -20,12 +20,12 @@
 
             <div class="fields">
                 <label>
-                    <span>Related order</span>
+                    <span data-withdrawal-copy="order-label">Related order</span>
                     <select data-order required></select>
                 </label>
 
                 <label>
-                    <span>Optional details</span>
+                    <span data-withdrawal-copy="reason-label">Optional details</span>
                     <textarea
                         data-reason
                         maxlength="4000"
@@ -36,15 +36,15 @@
 
                 <label class="confirmation">
                     <input data-confirmed type="checkbox" required>
-                    <span>
+                    <span data-withdrawal-copy="confirmation-label">
                         I clearly confirm that I want to withdraw from the platform service
                         associated with the selected order.
                     </span>
                 </label>
 
                 <p class="notice">
-                    Read the <slot name="terms-link"></slot>
-                    to understand the service scope and applicable rules.
+                    <span data-withdrawal-copy="terms-before-label">Read the</span> <slot name="terms-link"></slot>
+                    <span data-withdrawal-copy="terms-after-label">to understand the service scope and applicable rules.</span>
                 </p>
                 <p class="validation" data-validation role="alert" aria-live="polite"></p>
             </div>
@@ -53,24 +53,25 @@
                 slot="actions"
                 class="submit"
                 data-submit
+                data-withdrawal-copy="submit-label"
                 type="submit"
             >Confirm my request</button>
         </mossa-surface-card>
     </form>
 
     <mossa-surface-card data-success hidden appearance="outlined" density="spacious">
-        <strong slot="title">Your request was recorded</strong>
-        <span slot="description">
+        <strong slot="title" data-withdrawal-copy="success-title">Your request was recorded</strong>
+        <span slot="description" data-withdrawal-copy="success-description">
             Keep this receipt. The platform will separately review any contractual,
             logistical, and financial consequences.
         </span>
         <dl class="receipt">
-            <div><dt>Request reference</dt><dd data-request-reference></dd></div>
-            <div><dt>Order</dt><dd data-order-reference></dd></div>
-            <div><dt>Date and time</dt><dd data-confirmed-at></dd></div>
-            <div><dt>Status</dt><dd data-status></dd></div>
+            <div><dt data-withdrawal-copy="reference-label">Request reference</dt><dd data-request-reference></dd></div>
+            <div><dt data-withdrawal-copy="receipt-order-label">Order</dt><dd data-order-reference></dd></div>
+            <div><dt data-withdrawal-copy="date-label">Date and time</dt><dd data-confirmed-at></dd></div>
+            <div><dt data-withdrawal-copy="status-label">Status</dt><dd data-status></dd></div>
         </dl>
-        <mossa-button slot="actions" data-download appearance="outlined"><button type="button">
+        <mossa-button slot="actions" data-download appearance="outlined"><button type="button" data-withdrawal-copy="download-label">
             Download receipt
         </button></mossa-button>
         <slot name="back-action" slot="actions"></slot>

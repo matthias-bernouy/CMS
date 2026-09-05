@@ -19,7 +19,7 @@
     <div data-content hidden class="content">
         <header class="order-header">
             <div class="order-identity">
-                <span class="eyebrow">ORDER</span>
+                <span class="eyebrow" data-order-copy="order-eyebrow">ORDER</span>
                 <h1 data-order-number></h1>
                 <p data-order-date></p>
             </div>
@@ -33,10 +33,10 @@
                     <span slot="description" data-delivery-description></span>
 
                     <ol class="progress" aria-label="Delivery progress">
-                        <li data-progress-step><span class="dot">1</span><span>Confirmed</span></li>
-                        <li data-progress-step><span class="dot">2</span><span>Prepared</span></li>
-                        <li data-progress-step><span class="dot">3</span><span>Shipped</span></li>
-                        <li data-progress-step><span class="dot">4</span><span>At pickup point</span></li>
+                        <li data-progress-step><span class="dot">1</span><span data-order-copy="progress-confirmed-label">Confirmed</span></li>
+                        <li data-progress-step><span class="dot">2</span><span data-order-copy="progress-prepared-label">Prepared</span></li>
+                        <li data-progress-step><span class="dot">3</span><span data-order-copy="progress-shipped-label">Shipped</span></li>
+                        <li data-progress-step><span class="dot">4</span><span data-order-copy="progress-pickup-label">At pickup point</span></li>
                     </ol>
 
                     <div class="shipment-meta">
@@ -55,7 +55,7 @@
                 </mossa-surface-card>
 
                 <mossa-surface-card appearance="outlined" density="compact">
-                    <strong slot="title">Ordered item</strong>
+                    <strong slot="title" data-order-copy="item-heading">Ordered item</strong>
                     <div class="line">
                         <img data-image data-source-image-access="public" alt="" hidden>
                         <div class="line-copy">
@@ -70,17 +70,17 @@
 
             <aside>
                 <mossa-surface-card appearance="outlined" density="compact">
-                    <strong slot="title">Summary</strong>
-                    <div class="row"><span>Item</span><strong data-subtotal></strong></div>
-                    <div class="row"><span>Delivery</span><strong data-shipping></strong></div>
-                    <div class="row"><span>Buyer protection</span><strong data-protection></strong></div>
-                    <div class="row total"><span>Total</span><strong data-total></strong></div>
+                    <strong slot="title" data-order-copy="summary-heading">Summary</strong>
+                    <div class="row"><span data-order-copy="item-label">Item</span><strong data-subtotal></strong></div>
+                    <div class="row"><span data-order-copy="delivery-label">Delivery</span><strong data-shipping></strong></div>
+                    <div class="row"><span data-order-copy="protection-label">Buyer protection</span><strong data-protection></strong></div>
+                    <div class="row total"><span data-order-copy="total-label">Total</span><strong data-total></strong></div>
                     <div class="payment-confirmation" data-payment-confirmation></div>
                     <slot name="resume-action"></slot>
                 </mossa-surface-card>
 
                 <mossa-surface-card appearance="outlined" density="compact">
-                    <strong slot="title">Selected pickup point</strong>
+                    <strong slot="title" data-order-copy="relay-heading">Selected pickup point</strong>
                     <div class="relay">
                         <span class="provider">Mondial Relay</span>
                         <strong data-relay-name></strong>

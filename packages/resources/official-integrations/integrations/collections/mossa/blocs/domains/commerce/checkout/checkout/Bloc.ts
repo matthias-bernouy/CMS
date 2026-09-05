@@ -13,6 +13,8 @@ import {
     type CheckoutReference,
 } from "./checkout-contract";
 
+import { checkoutCopy, checkoutText, syncCheckoutCopy } from "./copy";
+
 type RecordValue = Record<string, any>;
 type Step = "information" | "delivery" | "payment";
 type MetadataControl = HTMLElement & { value: string | number | boolean };
@@ -34,7 +36,15 @@ class RemoteRequestError extends Error {
 
 export class CheckoutFlow extends Component {
     static observedAttributes = [
+        ...checkoutCopy.map(([attribute]) => attribute),
         "country-code",
+        "account-email",
+        "login-title",
+        "login-description",
+        "error-title",
+        "error-message",
+        "missing-offer-message",
+        "missing-agreement-message",
         "delivery-label",
         "information-label",
         "login-url",
@@ -97,8 +107,8 @@ export class CheckoutFlow extends Component {
         if (!reference.id) {
             throw new PublicMessageError(
                 reference.kind === "agreement"
-                    ? "The accepted proposal to pay is missing."
-                    : "The offer to purchase is missing.",
+                    ? this.text("missing-agreement-message", "The accepted proposal to pay is missing.")
+                    : this.text("missing-offer-message", "The offer to purchase is missing."),
             );
         }
         try {
@@ -138,7 +148,7 @@ export class CheckoutFlow extends Component {
         } else {
             this.offer = checkoutItem;
         }
-        this.fillAccount(this.account, String(this.account.email || ""));
+        this.fillAccount(this.account, String(this.account.email || this.getAttribute("account-email") || ""));
         if (this.priceAgreement) {
             this.renderPriceAgreement(this.priceAgreement);
         } else {
@@ -156,12 +166,12 @@ export class CheckoutFlow extends Component {
                 this.setStep("payment");
                 this.configurePayment(this.order);
             } else {
-                this.setStatus(this.deliveryStatus, "Select the pickup point again to resume this order.", false);
+                this.setStatus(this.deliveryStatus, this.copy("resume-delivery-message"), false);
                 this.setStep("delivery");
             }
         } else {
             if (reference.kind === "agreement" && this.priceAgreement?.status !== "active") {
-                throw new PublicMessageError(priceAgreementUnavailableMessage(this.priceAgreement?.status));
+                throw new PublicMessageError(priceAgreementUnavailableMessage(this.priceAgreement?.status, this));
             }
             this.setStep("information");
         }
@@ -171,7 +181,7 @@ export class CheckoutFlow extends Component {
         this.saveInformation().catch((error) =>
             this.setStatus(
                 this.informationStatus,
-                publicErrorMessage(error, "Your information could not be saved. Try again shortly."),
+                publicErrorMessage(error, this.copy("information-error-message"), this),
                 true,
             ),
         );
@@ -182,14 +192,14 @@ export class CheckoutFlow extends Component {
     private onInformationInput = (event: Event): void => {
         const control = event.composedPath().find((node) => node instanceof HTMLInputElement);
         if (control instanceof HTMLInputElement) {
-            setValidationMessage(control);
+            setValidationMessage(control, (key, parameters) => this.copy(key, parameters));
         }
     };
     private onCreateOrder = (): void => {
         this.createOrder().catch((error) =>
             this.setStatus(
                 this.deliveryStatus,
-                publicErrorMessage(error, "The order could not be prepared. Try again shortly."),
+                publicErrorMessage(error, this.copy("order-error-message"), this),
                 true,
             ),
         );
@@ -203,16 +213,16 @@ export class CheckoutFlow extends Component {
             const currency = this.relay?.currency || this.offer?.currency;
             this.shippingElement.textContent = money(shippingAmount, currency, this.locale);
         } else {
-            this.shippingElement.textContent = "To calculate";
+            this.shippingElement.textContent = this.copy("pending-amount-label");
         }
-        this.protectionElement.textContent = "To calculate";
-        this.totalElement.textContent = "To calculate";
+        this.protectionElement.textContent = this.copy("pending-amount-label");
+        this.totalElement.textContent = this.copy("pending-amount-label");
     };
     private onPaymentSuccess = (): void => {
         void this.finalizePaidOrder();
     };
     private onPaymentProcessing = (): void => {
-        this.setStatus(this.paymentStatus, "Payment is being processed. You can view your order.", false);
+        this.setStatus(this.paymentStatus, this.copy("processing-message"), false);
         this.goToOrder(900);
     };
 
@@ -221,24 +231,24 @@ export class CheckoutFlow extends Component {
         this.syncMetadataValidation();
         const payload = this.accountPayload();
         const missing = [
-            ["givenName", "first name"],
-            ["surname", "last name"],
-            ["phone", "phone"],
-            ["addressLine1", "address"],
-            ["postalCode", "postal code"],
-            ["city", "city"],
+            ["givenName", this.copy("first-name-label")],
+            ["surname", this.copy("last-name-label")],
+            ["phone", this.copy("phone-label")],
+            ["addressLine1", this.copy("address-label")],
+            ["postalCode", this.copy("postal-code-label")],
+            ["city", this.copy("city-label")],
         ]
             .filter(([key]) => !String(payload[key] || "").trim())
             .map(([, label]) => label);
         if (missing.length) {
             this.informationForm.reportValidity();
-            throw new PublicMessageError(`Enter the following information: ${missing.join(", ")}.`);
+            throw new PublicMessageError(this.copy("missing-information-message", { fields: missing.join(", ") }));
         }
         if (!this.informationForm.reportValidity()) {
-            throw new PublicMessageError("Check the information in the form.");
+            throw new PublicMessageError(this.copy("invalid-information-message"));
         }
         this.setButtonBusy(this.saveInformationButton, true);
-        this.setStatus(this.informationStatus, "Saving…", false);
+        this.setStatus(this.informationStatus, this.copy("saving-message"), false);
         try {
             this.account = await this.request("/.cms/sources/user-account/updateAccount", {
                 method: "POST",
@@ -255,10 +265,10 @@ export class CheckoutFlow extends Component {
 
     private async createOrder(): Promise<void> {
         if (!this.relay || !this.account || !this.offer) {
-            throw new PublicMessageError("Choose a pickup point before continuing.");
+            throw new PublicMessageError(this.copy("missing-relay-message"));
         }
         this.setButtonBusy(this.createOrderButton, true);
-        this.setStatus(this.deliveryStatus, "Creating the order and checking delivery…", false);
+        this.setStatus(this.deliveryStatus, this.copy("creating-order-message"), false);
         try {
             const address = this.addressSnapshot();
             const idempotencyKey = this.idempotencyKey();
@@ -308,7 +318,7 @@ export class CheckoutFlow extends Component {
     }
 
     private async finalizePaidOrder(): Promise<void> {
-        this.setStatus(this.paymentStatus, "Payment confirmed. The seller can now prepare the shipment.", false);
+        this.setStatus(this.paymentStatus, this.copy("paid-message"), false);
         this.goToOrder();
     }
 
@@ -357,7 +367,7 @@ export class CheckoutFlow extends Component {
             if (!control) {
                 continue;
             }
-            setValidationMessage(control);
+            setValidationMessage(control, (key, parameters) => this.copy(key, parameters));
             input.value = input.value;
         }
     }
@@ -374,7 +384,7 @@ export class CheckoutFlow extends Component {
             const hasUnselectedQuery = Boolean(String(control.value || "").trim()) && !readValue();
             input.setCustomValidity(
                 (control.hasAttribute("required") && !readValue()) || hasUnselectedQuery
-                    ? "Select an option from the list."
+                    ? this.copy("select-option-message")
                     : "",
             );
             control.value = control.value;
@@ -465,7 +475,7 @@ export class CheckoutFlow extends Component {
         input.setAttribute("type", "search");
         input.setAttribute("autocomplete", "off");
         input.setAttribute("label", String(field.label || field.id));
-        input.setAttribute("placeholder", "Search options…");
+        input.setAttribute("placeholder", this.copy("search-options-placeholder"));
         if (field.required === true) {
             input.setAttribute("required", "");
         }
@@ -524,7 +534,7 @@ export class CheckoutFlow extends Component {
             if (visibleOptions.length === 0) {
                 const empty = document.createElement("p");
                 empty.className = "metadata-lookup-empty";
-                empty.textContent = "No option found.";
+                empty.textContent = this.copy("empty-options-message");
                 results.replaceChildren(empty);
             } else {
                 results.replaceChildren(
@@ -606,18 +616,18 @@ export class CheckoutFlow extends Component {
     private metadataSelect(field: RecordValue, options: unknown[]): MetadataControl {
         const select = document.createElement("mossa-select") as MetadataControl;
         select.setAttribute("label", String(field.label || field.id));
-        select.setAttribute("placeholder", "Select an option");
+        select.setAttribute("placeholder", this.copy("select-option-placeholder"));
         if (field.required === true) {
             select.setAttribute("required", "");
         }
         const empty = document.createElement("mossa-option");
         empty.setAttribute("value", "");
-        empty.textContent = "No selection";
+        empty.textContent = this.copy("no-selection-label");
         const normalizedOptions =
             field.type === "boolean" && options.length === 0
                 ? [
-                      { value: "true", label: "Oui" },
-                      { value: "false", label: "Non" },
+                      { value: "true", label: this.copy("yes-label") },
+                      { value: "false", label: this.copy("no-label") },
                   ]
                 : options;
         select.append(
@@ -647,14 +657,14 @@ export class CheckoutFlow extends Component {
     }
 
     private renderOffer(offer: RecordValue): void {
-        this.offerTitle.textContent = offer.title || offer.product?.title || "Offer";
+        this.offerTitle.textContent = offer.title || offer.product?.title || this.copy("fallback-offer-label");
         this.offerVariant.textContent = String(offer.variant?.title || "");
         this.offerVariant.hidden = !this.offerVariant.textContent;
         const amount = Number(offer.acceptedPriceAmount);
         this.subtotalElement.textContent = price(amount, offer.currency, this.locale);
-        this.shippingElement.textContent = "To calculate";
-        this.protectionElement.textContent = "To calculate";
-        this.totalElement.textContent = "To calculate";
+        this.shippingElement.textContent = this.copy("pending-amount-label");
+        this.protectionElement.textContent = this.copy("pending-amount-label");
+        this.totalElement.textContent = this.copy("pending-amount-label");
         const media = [...(Array.isArray(offer.media) ? offer.media : [])].sort(
             (a, b) => Number(a.sortOrder) - Number(b.sortOrder),
         );
@@ -666,7 +676,7 @@ export class CheckoutFlow extends Component {
                 main.media.width,
                 main.media.height,
             );
-            this.offerImage.alt = offer.title || "Item";
+            this.offerImage.alt = offer.title || this.copy("fallback-item-label");
             this.offerImage.hidden = false;
         } else {
             clearPublicSourceImage(this.offerImage);
@@ -678,20 +688,20 @@ export class CheckoutFlow extends Component {
     private renderPriceAgreement(agreement: RecordValue): void {
         const offer = recordValue(agreement.offer) || {};
         const seller = recordValue(agreement.seller);
-        this.offerTitle.textContent = String(offer.title || "Offer");
+        this.offerTitle.textContent = String(offer.title || this.copy("fallback-offer-label"));
         const sellerName = String(seller?.displayName || "").trim();
         const quantity = minorAmount(agreement.quantity) || 1;
         this.offerVariant.textContent = [
-            quantity > 1 ? `Quantity : ${quantity}` : "",
-            sellerName ? `Sold by ${sellerName}` : "",
+            quantity > 1 ? this.copy("quantity-label", { count: quantity }) : "",
+            sellerName ? this.copy("seller-label", { seller: sellerName }) : "",
         ]
             .filter(Boolean)
             .join(" · ");
         this.offerVariant.hidden = !this.offerVariant.textContent;
         this.subtotalElement.textContent = price(Number(agreement.subtotalAmount), agreement.currency, this.locale);
-        this.shippingElement.textContent = "To calculate";
-        this.protectionElement.textContent = "To calculate";
-        this.totalElement.textContent = "To calculate";
+        this.shippingElement.textContent = this.copy("pending-amount-label");
+        this.protectionElement.textContent = this.copy("pending-amount-label");
+        this.totalElement.textContent = this.copy("pending-amount-label");
         if (offer.mainImageMediaId) {
             bindPublicSourceImage(
                 this.offerImage,
@@ -699,7 +709,7 @@ export class CheckoutFlow extends Component {
                 offer.mainImageWidth ?? agreement.offerMainImageWidth,
                 offer.mainImageHeight ?? agreement.offerMainImageHeight,
             );
-            this.offerImage.alt = String(offer.title || "Item");
+            this.offerImage.alt = String(offer.title || this.copy("fallback-item-label"));
             this.offerImage.hidden = false;
         } else {
             clearPublicSourceImage(this.offerImage);
@@ -722,7 +732,7 @@ export class CheckoutFlow extends Component {
             return agreement;
         }
         if (status !== "active") {
-            throw new PublicMessageError(priceAgreementUnavailableMessage(status));
+            throw new PublicMessageError(priceAgreementUnavailableMessage(status, this));
         }
         return agreement;
     }
@@ -731,19 +741,19 @@ export class CheckoutFlow extends Component {
         const breakdown = financialBreakdown(order);
         this.subtotalElement.textContent =
             breakdown.subtotalAmount === null
-                ? "To calculate"
+                ? this.copy("pending-amount-label")
                 : price(breakdown.subtotalAmount, breakdown.currency, this.locale);
         this.shippingElement.textContent =
             breakdown.shippingAmount === null
-                ? "To calculate"
+                ? this.copy("pending-amount-label")
                 : money(breakdown.shippingAmount, breakdown.currency, this.locale);
         this.protectionElement.textContent =
             breakdown.buyerProtectionFeeAmount === null
-                ? "To calculate"
+                ? this.copy("pending-amount-label")
                 : money(breakdown.buyerProtectionFeeAmount, breakdown.currency, this.locale);
         this.totalElement.textContent =
             breakdown.buyerTotalAmount === null
-                ? "To calculate"
+                ? this.copy("pending-amount-label")
                 : money(breakdown.buyerTotalAmount, breakdown.currency, this.locale);
     }
 
@@ -762,6 +772,23 @@ export class CheckoutFlow extends Component {
     }
 
     private syncPresentation(): void {
+        syncCheckoutCopy(this);
+        this.input("email").setAttribute(
+            "value",
+            String(this.account?.email || this.getAttribute("account-email") || ""),
+        );
+        this.login.querySelector<HTMLElement>('[slot="title"]')!.textContent = this.text(
+            "login-title",
+            "Sign in to continue",
+        );
+        this.login.querySelector<HTMLElement>('[slot="description"]')!.textContent = this.text(
+            "login-description",
+            "An account is required to secure the order and track delivery.",
+        );
+        this.error.querySelector<HTMLElement>('[slot="title"]')!.textContent = this.text(
+            "error-title",
+            "Unable to continue",
+        );
         this.titleElement.textContent = this.text("title", "Complete my order");
         this.informationLabel.textContent = this.text("information-label", "Information");
         this.deliveryLabel.textContent = this.text("delivery-label", "Delivery");
@@ -777,7 +804,8 @@ export class CheckoutFlow extends Component {
     private fail(error: unknown): void {
         this.errorMessage.textContent = publicErrorMessage(
             error,
-            "The checkout flow could not be loaded. Try again shortly.",
+            this.text("error-message", "The checkout flow could not be loaded. Try again shortly."),
+            this,
         );
         this.show("error");
     }
@@ -847,6 +875,9 @@ export class CheckoutFlow extends Component {
     }
     private value(name: string): string {
         return String(this.input(name).value || "").trim();
+    }
+    private copy(name: string, parameters: Record<string, unknown> = {}): string {
+        return checkoutText(this, name, parameters);
     }
     private text(name: string, fallback: string): string {
         return this.getAttribute(name)?.trim() || fallback;
@@ -1048,30 +1079,33 @@ function minorAmount(value: unknown): number | null {
     return Number.isSafeInteger(amount) && amount >= 0 ? amount : null;
 }
 
-function setValidationMessage(input: HTMLInputElement): void {
+function setValidationMessage(
+    input: HTMLInputElement,
+    copy: (key: string, parameters?: Record<string, unknown>) => string,
+): void {
     input.setCustomValidity("");
     const validity = input.validity;
     let message = "";
     if (validity.valueMissing) {
-        message = "This field is required.";
+        message = copy("required-message");
     } else if (validity.typeMismatch && input.type === "email") {
-        message = "Enter a valid email address.";
+        message = copy("invalid-email-message");
     } else if (validity.typeMismatch && input.type === "url") {
-        message = "Enter a valid web address.";
+        message = copy("invalid-url-message");
     } else if (validity.tooShort) {
-        message = `Enter at least ${input.minLength} characters.`;
+        message = copy("too-short-message", { minimum: input.minLength });
     } else if (validity.tooLong) {
-        message = `Enter at most ${input.maxLength} characters.`;
+        message = copy("too-long-message", { maximum: input.maxLength });
     } else if (validity.rangeUnderflow) {
-        message = `Enter a value greater than or equal to ${input.min}.`;
+        message = copy("minimum-value-message", { minimum: input.min });
     } else if (validity.rangeOverflow) {
-        message = `Enter a value less than or equal to ${input.max}.`;
+        message = copy("maximum-value-message", { maximum: input.max });
     } else if (validity.patternMismatch) {
-        message = "Use the requested format.";
+        message = copy("invalid-format-message");
     } else if (validity.stepMismatch || validity.badInput) {
-        message = "Enter a valid value.";
+        message = copy("invalid-value-message");
     } else if (!validity.valid) {
-        message = "Check the entered value.";
+        message = copy("check-value-message");
     }
     input.setCustomValidity(message);
 }
@@ -1106,12 +1140,12 @@ function price(amount: number, currency: unknown, locale: string): string {
         return `${rounded} ${String(currency || "USD").toUpperCase()}`;
     }
 }
-function publicErrorMessage(error: unknown, fallback: string): string {
+function publicErrorMessage(error: unknown, fallback: string, host: HTMLElement): string {
     if (error instanceof PublicMessageError) {
         return error.message;
     }
     if (error instanceof RemoteRequestError && error.message === "SELLER_PROTECTED_PAYMENT_NOT_READY") {
-        return "This offer is not currently available for purchase. The seller must complete payment activation.";
+        return checkoutText(host, "seller-not-ready-message");
     }
     return fallback;
 }
@@ -1126,15 +1160,15 @@ function headers(value: HeadersInit | undefined): Record<string, string> {
     return value ? Object.fromEntries(new Headers(value).entries()) : {};
 }
 
-function priceAgreementUnavailableMessage(status: unknown): string {
+function priceAgreementUnavailableMessage(status: unknown, host: HTMLElement): string {
     if (status === "expired") {
-        return "This accepted proposal expired and can no longer be paid.";
+        return checkoutText(host, "agreement-expired-message");
     }
     if (status === "canceled") {
-        return "This accepted proposal was cancelled.";
+        return checkoutText(host, "agreement-canceled-message");
     }
     if (status === "consumed") {
-        return "This accepted proposal was already used for an order.";
+        return checkoutText(host, "agreement-consumed-message");
     }
-    return "This accepted proposal is no longer available for payment.";
+    return checkoutText(host, "agreement-unavailable-message");
 }

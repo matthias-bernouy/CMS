@@ -1,8 +1,20 @@
 import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
 
+import { relayCopy } from "./runtime/copy";
+
 export class MondialRelayPickerEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
+            {
+                kind: "self",
+                label: "Search copy",
+                settings: Object.entries(relayCopy).map(([attribute, defaultValue]) => ({
+                    type: "text" as const,
+                    attribute,
+                    label: attribute.replaceAll("-", " "),
+                    defaultValue,
+                })),
+            },
             {
                 kind: "self",
                 label: "Checkout data",

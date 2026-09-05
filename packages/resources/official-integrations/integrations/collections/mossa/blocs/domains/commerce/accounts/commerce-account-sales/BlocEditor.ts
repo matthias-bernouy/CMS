@@ -7,6 +7,12 @@ export class CommerceAccountSalesEditor extends Editor {
                 kind: "self",
                 label: "Navigation",
                 settings: [
+                    {
+                        type: "text",
+                        label: "Error message",
+                        attribute: "error-message",
+                        defaultValue: "Sales could not be loaded. Try again shortly.",
+                    },
                     { type: "text", label: "Sale URL pattern", attribute: "sale-url" },
                     {
                         type: "text",

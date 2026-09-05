@@ -104,7 +104,7 @@ describe("Mossa Source endpoint isolation", () => {
         expect(picker.resource.endpoints).toContainEqual(
             expect.objectContaining({
                 source: "mondial-relay",
-                sourceVersion: "^1.0.0",
+                sourceVersion: ">=1.0.0 <3.0.0",
                 endpoint: "urn:delivery:relayPoints",
                 contractVersion: "^1.0.0",
             }),

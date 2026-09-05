@@ -147,11 +147,11 @@ export class RenderedPicker extends HTMLElement {
                 </div>
                 <form novalidate>
                     <label>
-                        <span>Postal code</span>
+                        <span data-postal-code-label>Postal code</span>
                         <input name="postalCode" inputmode="numeric" autocomplete="postal-code" required>
                     </label>
                     <label>
-                        <span>City</span>
+                        <span data-city-label>City</span>
                         <input name="city" autocomplete="address-level2">
                     </label>
                     <button type="submit" data-search></button>

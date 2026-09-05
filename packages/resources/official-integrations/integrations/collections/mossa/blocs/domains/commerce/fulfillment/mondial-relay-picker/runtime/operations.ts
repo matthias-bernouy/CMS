@@ -14,11 +14,11 @@ export class OperationalPicker extends PresentedPicker {
         }
         const country = this.country();
         if (!country) {
-            this.setStatus("Configure a country code before searching pickup points.", "error");
+            this.setCopyStatus("country-required-message", "error");
             return;
         }
         this.setBusy(true);
-        this.setStatus("Searching pickup points…", "idle");
+        this.setCopyStatus("searching-message", "idle");
         try {
             const url = new URL(this.relayPointsPath(), window.location.origin);
             url.searchParams.set("postalCode", this.postalCodeInput.value.trim());
@@ -35,11 +35,14 @@ export class OperationalPicker extends PresentedPicker {
             const data = await this.requestJson(url);
             this.items = Array.isArray(data.items) ? data.items.map(relayItem).filter(Boolean) : [];
             this.renderList();
-            this.setStatus(
+            this.setCopyStatus(
                 this.items.length
-                    ? `${this.items.length} pickup point${this.items.length === 1 ? "" : "s"} available.`
-                    : "No pickup point found.",
+                    ? this.items.length === 1
+                        ? "results-one-message"
+                        : "results-many-message"
+                    : "empty-message",
                 "idle",
+                { count: this.items.length },
             );
         } finally {
             this.setBusy(false);
@@ -47,7 +50,11 @@ export class OperationalPicker extends PresentedPicker {
     }
     async selectRelay(item) {
         this.setBusy(true);
-        this.setStatus(this.orderId() ? "Saving pickup point…" : "", "idle");
+        if (this.orderId()) {
+            this.setCopyStatus("saving-message", "idle");
+        } else {
+            this.setStatus("", "idle");
+        }
         try {
             let selected = item;
             if (this.orderId()) {
@@ -64,7 +71,7 @@ export class OperationalPicker extends PresentedPicker {
                 selected = relayItem(result?.selection || result) || item;
             }
             this.applySelection(selected, true);
-            this.setStatus("Pickup point selected.", "success");
+            this.setCopyStatus("selected-message", "success");
         } finally {
             this.setBusy(false);
         }
@@ -80,7 +87,7 @@ export class OperationalPicker extends PresentedPicker {
         );
         if (selection) {
             this.applySelection(selection, false);
-            this.setStatus("Pickup point saved for this order.", "success");
+            this.setCopyStatus("restored-message", "success");
         }
     }
     async requestFunction(id, options = {}) {

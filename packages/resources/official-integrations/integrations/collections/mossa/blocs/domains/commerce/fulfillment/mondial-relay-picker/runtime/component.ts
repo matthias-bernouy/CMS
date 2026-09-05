@@ -1,3 +1,4 @@
+import { relayCopy } from "./copy";
 import { isFramed, isNotFound } from "./helpers";
 import { OperationalPicker } from "./operations";
 
@@ -6,6 +7,8 @@ export class MondialRelayPicker extends OperationalPicker {
 
     static get observedAttributes() {
         return [
+            ...Object.keys(relayCopy),
+            "preview-label",
             "value",
             "disabled",
             "order-id",

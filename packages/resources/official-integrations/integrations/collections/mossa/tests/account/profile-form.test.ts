@@ -44,6 +44,8 @@ describe("Mossa user-account form", () => {
             controllerArtifact.bloc.description ?? "",
             controllerArtifact.bloc.tag,
             controllerArtifact.bloc.source,
+            undefined,
+            { viewPath: controllerArtifact.bloc.view },
         );
         const avatar = await prepare_bloc(
             new File([avatarArtifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
@@ -83,7 +85,7 @@ describe("Mossa user-account form", () => {
         expect(compositionHTML).toContain("<mossa-user-account-form-controller");
         expect(compositionHTML).toContain("<mossa-user-account-avatar");
         expect(compositionHTML).toContain('<mossa-responsive-grid min="lg" max="none"');
-        expect(compositionHTML).toContain('<mossa-skeleton shape="circle"');
+        expect(compositionHTML).toContain('<mossa-skeleton data-account-loading shape="circle"');
         expect(compositionHTML).toContain('cms-condition="$source.loading"');
         expect(compositionHTML).toContain('cms-source-trigger="submit"');
         expect(compositionHTML).toContain('data-avatar-form cms-source-id="avatar"');
@@ -140,6 +142,20 @@ describe("Mossa user-account form", () => {
             expect(birthDate?.getAttribute("type")).toBe("date");
             expect(birthDate?.getAttribute("max")).toBe(expectedMaximum);
             expect(birthDate?.hasAttribute("date-format")).toBe(false);
+            form?.setAttribute("given-name-label", "Preferred given name");
+            form?.setAttribute("success-message", "Profile updated");
+            form?.setAttribute("avatar-error-message", "Please retry the image upload");
+            await Promise.resolve();
+            expect(form?.querySelector('[data-account-field="given-name"]')?.getAttribute("label")).toBe(
+                "Preferred given name",
+            );
+            expect(form?.querySelector('[data-account-copy="success-message"]')?.textContent).toBe("Profile updated");
+            expect(form?.querySelector('[data-account-copy="avatar-error-message"]')?.textContent).toBe(
+                "Please retry the image upload",
+            );
+            form?.removeAttribute("given-name-label");
+            await Promise.resolve();
+            expect(form?.querySelector('[data-account-field="given-name"]')?.getAttribute("label")).toBe("First name");
         } finally {
             document.body.replaceChildren();
             (window as typeof window & { p9r?: unknown }).p9r = previousP9r;

@@ -1,4 +1,5 @@
 import { Editor, registerEditor, type SegmentedSetting, type SettingSection } from "@bernouy/cms-content/editor";
+import { accountFieldLabels, accountMessages } from "./copy";
 
 const visibility = (label: string, attribute: string): SegmentedSetting => ({
     type: "segmented",
@@ -27,6 +28,28 @@ export class UserAccountFormEditor extends Editor {
                     visibility("Surname", "show-surname"),
                     visibility("Birth date", "show-birth-date"),
                 ],
+            },
+            {
+                kind: "self",
+                label: "Field labels",
+                settings: Object.entries(accountFieldLabels).map(([field, label]) => ({
+                    type: "text",
+                    label,
+                    attribute: `${field}-label`,
+                    defaultValue: label,
+                })),
+            },
+            {
+                kind: "self",
+                label: "Status messages",
+                settings: Object.entries({ ...accountMessages, "loading-label": "Loading your information" }).map(
+                    ([attribute, defaultValue]) => ({
+                        type: "text",
+                        label: attribute.replaceAll("-", " "),
+                        attribute,
+                        defaultValue,
+                    }),
+                ),
             },
             {
                 kind: "self",

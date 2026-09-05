@@ -1,4 +1,5 @@
 import { Component } from "@bernouy/components/base";
+import { withdrawalCopy, readWithdrawalCopy } from "./copy";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
@@ -11,8 +12,18 @@ type OrderSummary = {
 };
 
 export class ServiceWithdrawalForm extends Component {
-    static observedAttributes = ["locale", "order-param", "service-scope"];
+    static observedAttributes = [
+        ...Object.keys(withdrawalCopy),
+        "locale",
+        "order-param",
+        "service-scope",
+        "error-title",
+        "error-message",
+        "empty-message",
+        "retry-label",
+    ];
 
+    private orders: OrderSummary[] = [];
     private receipt: JsonRecord | null = null;
     private idempotencyKey = newIdempotencyKey();
 
@@ -21,6 +32,7 @@ export class ServiceWithdrawalForm extends Component {
     }
 
     override connectedCallback(): void {
+        this.syncPresentation();
         this.form.addEventListener("submit", this.onSubmit);
         this.retry.addEventListener("click", this.onRetry);
         this.download.addEventListener("click", this.onDownload);
@@ -33,13 +45,48 @@ export class ServiceWithdrawalForm extends Component {
         this.download.removeEventListener("click", this.onDownload);
     }
 
+    attributeChangedCallback(): void {
+        if (this.isConnected) {
+            this.syncPresentation();
+        }
+    }
+
+    private syncPresentation(): void {
+        this.error.querySelector<HTMLElement>('[slot="title"]')!.textContent = this.text(
+            "error-title",
+            "Request unavailable",
+        );
+        this.retry.querySelector("button")!.textContent = this.text("retry-label", "Try again");
+        for (const element of this.shadowRoot!.querySelectorAll<HTMLElement>("[data-withdrawal-copy]")) {
+            element.textContent = this.copy(element.dataset.withdrawalCopy!);
+        }
+        this.loading.querySelector("mossa-skeleton")!.setAttribute("label", this.copy("loading-label"));
+        this.reason.placeholder = this.copy("reason-placeholder");
+        if (this.orders.length) {
+            const selected = this.order.value;
+            this.renderOrders(this.orders);
+            this.order.value = selected;
+        }
+        if (this.receipt) {
+            this.renderReceipt(this.receipt);
+        }
+    }
+
+    private copy = (name: string, values: Record<string, string> = {}): string =>
+        readWithdrawalCopy(this, name, values);
+
+    private text(name: string, fallback: string): string {
+        return this.getAttribute(name)?.trim() || fallback;
+    }
+
     private async load(): Promise<void> {
         this.show("loading");
         const result = await this.request("/.cms/sources/commerce/myOrders?limit=100&offset=0");
         const items = Array.isArray(result.items) ? result.items.filter(isOrderSummary) : [];
         if (!items.length) {
-            throw new UserFacingError("No order is available on this account.");
+            throw new UserFacingError(this.text("empty-message", "No order is available on this account."));
         }
+        this.orders = items;
         this.renderOrders(items);
         this.show("form");
     }
@@ -49,7 +96,10 @@ export class ServiceWithdrawalForm extends Component {
         for (const order of orders) {
             const option = document.createElement("option");
             option.value = String(order.id);
-            const reference = order.orderNumber || order.publicId || `Order ${order.id}`;
+            const reference =
+                order.orderNumber ||
+                order.publicId ||
+                this.copy("order-reference-label", { reference: String(order.id) });
             const title = String(order.lineSummary?.firstTitle || "").trim();
             option.textContent = title ? `${reference} — ${title}` : reference;
             this.order.append(option);
@@ -70,12 +120,12 @@ export class ServiceWithdrawalForm extends Component {
         event.preventDefault();
         this.validation.textContent = "";
         if (!this.order.value) {
-            this.validation.textContent = "Select the related order.";
+            this.validation.textContent = this.copy("select-order-message");
             this.order.focus();
             return;
         }
         if (!this.confirmed.checked) {
-            this.validation.textContent = "Explicitly confirm your request to continue.";
+            this.validation.textContent = this.copy("confirmation-required-message");
             this.confirmed.focus();
             return;
         }
@@ -98,7 +148,7 @@ export class ServiceWithdrawalForm extends Component {
             this.idempotencyKey = newIdempotencyKey();
             this.show("success");
         } catch (error) {
-            this.validation.textContent = publicError(error);
+            this.validation.textContent = publicError(error, this.copy);
         } finally {
             this.submit.removeAttribute("disabled");
             this.submit.removeAttribute("aria-busy");
@@ -109,7 +159,7 @@ export class ServiceWithdrawalForm extends Component {
         this.setText(this.requestReference, receipt.publicId);
         this.setText(this.orderReference, receipt.orderNumber || receipt.orderPublicId || receipt.orderId);
         this.setText(this.confirmedAt, formatDateTime(receipt.confirmedAt || receipt.submittedAt, this.locale));
-        this.setText(this.status, statusLabel(receipt.status));
+        this.setText(this.status, statusLabel(receipt.status, this.copy));
     }
 
     private onDownload = (): void => {
@@ -118,15 +168,14 @@ export class ServiceWithdrawalForm extends Component {
         }
         const reference = String(this.receipt.publicId || "").trim();
         const content = [
-            "Receipt — platform service withdrawal request",
-            `Reference: ${reference || "unavailable"}`,
-            `Order : ${String(this.receipt.orderNumber || this.receipt.orderPublicId || this.receipt.orderId || "unavailable")}`,
-            `Date and time : ${formatDateTime(this.receipt.confirmedAt || this.receipt.submittedAt, this.locale)}`,
-            `Status: ${statusLabel(this.receipt.status)}`,
-            `Scope: ${String(this.receipt.serviceScope || "")}`,
+            this.copy("receipt-title"),
+            `${this.copy("receipt-reference-label")}: ${reference || this.copy("receipt-unavailable-label")}`,
+            `${this.copy("receipt-order-label")}: ${String(this.receipt.orderNumber || this.receipt.orderPublicId || this.receipt.orderId || this.copy("receipt-unavailable-label"))}`,
+            `${this.copy("date-label")}: ${formatDateTime(this.receipt.confirmedAt || this.receipt.submittedAt, this.locale)}`,
+            `${this.copy("status-label")}: ${statusLabel(this.receipt.status, this.copy)}`,
+            `${this.copy("receipt-scope-label")}: ${String(this.receipt.serviceScope || "")}`,
             "",
-            "This request is recorded for review. By itself, it does not prove",
-            "that a cancellation, refund, or payment operation was completed.",
+            this.copy("receipt-notice"),
         ].join("\n");
         const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
         const link = document.createElement("a");
@@ -167,7 +216,7 @@ export class ServiceWithdrawalForm extends Component {
         this.errorMessage.textContent =
             error instanceof UserFacingError
                 ? error.message
-                : "Your orders could not be loaded. Sign in and try again.";
+                : this.text("error-message", "Your orders could not be loaded. Sign in and try again.");
         this.show("error");
     }
 
@@ -258,16 +307,16 @@ function formatDateTime(value: unknown, locale: string): string {
         : new Intl.DateTimeFormat(locale, { dateStyle: "long", timeStyle: "short" }).format(date);
 }
 
-function statusLabel(value: unknown): string {
+function statusLabel(value: unknown, copy: (name: string) => string): string {
     return (
         (
             {
-                submitted: "Received",
-                under_review: "Under review",
-                information_requested: "Information requested",
-                resolved: "Resolved",
+                submitted: copy("status-submitted-label"),
+                under_review: copy("status-under-review-label"),
+                information_requested: copy("status-information-requested-label"),
+                resolved: copy("status-resolved-label"),
             } as Record<string, string>
-        )[String(value)] || "Received"
+        )[String(value)] || copy("status-submitted-label")
     );
 }
 
@@ -279,17 +328,17 @@ function responseError(body: unknown): string {
     return typeof record.error === "string" ? record.error : typeof record.message === "string" ? record.message : "";
 }
 
-function publicError(error: unknown): string {
+function publicError(error: unknown, copy: (name: string) => string): string {
     if (!(error instanceof RemoteError)) {
-        return "The request could not be recorded. Try again shortly.";
+        return copy("submit-error-message");
     }
     if (error.message.includes("already exists")) {
-        return "A request already exists for this order. Find it in your account or contact the platform team.";
+        return copy("duplicate-request-message");
     }
     if (error.message.includes("not_found")) {
-        return "This order could not be found or does not belong to your account.";
+        return copy("order-unavailable-message");
     }
-    return "The request could not be recorded. Try again shortly.";
+    return copy("submit-error-message");
 }
 
 function safeFilePart(value: string): string {

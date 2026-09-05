@@ -1,3 +1,5 @@
+import { paymentText } from "./copy";
+
 export const LEGAL_ACCEPTANCE_REQUIRED = "BUYER_LEGAL_ACCEPTANCE_REQUIRED";
 export const LEGAL_DOCUMENT_VERSION_CHANGED = "LEGAL_DOCUMENT_VERSION_CHANGED";
 export const LEGAL_DOCUMENT_NOT_AVAILABLE = "LEGAL_DOCUMENT_NOT_AVAILABLE";
@@ -85,10 +87,12 @@ export function renderLegalRequirements(
             content.append(label);
         } else {
             label.textContent = documentRequirement.consentText;
-            link.textContent = `Read ${documentRequirement.label}`;
+            link.textContent = paymentText(host, "legal-read-label", { document: documentRequirement.label });
             const version = document.createElement("span");
             version.className = "legal-document-version";
-            version.textContent = `Version dated ${formatVersionDate(documentRequirement.versionDate)}`;
+            version.textContent = paymentText(host, "legal-version-label", {
+                date: formatVersionDate(documentRequirement.versionDate),
+            });
             content.append(label, linkSlot, version);
         }
         row.append(checkbox, content);

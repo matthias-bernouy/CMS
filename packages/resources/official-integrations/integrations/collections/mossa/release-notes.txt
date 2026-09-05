@@ -1,1 +1,1 @@
-Initial Mossa release: publish the reusable block collection with creator-authored copy and opt-in source dependencies.
+Accept Mondial Relay provider versions 1 and 2 under the unchanged relay-points endpoint contract. Initialize optional checkout account email through its value attribute before the native input component is registered, preserving asynchronous binding and browser form state.

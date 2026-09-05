@@ -1,21 +1,5 @@
 import { Component } from "@bernouy/components/base";
-
-const fields = [
-    "given-name",
-    "surname",
-    "birth-date",
-    "phone",
-    "address-line-1",
-    "address-line-2",
-    "address-line-3",
-    "postal-code",
-    "city",
-    "region",
-    "country-code",
-    "locale",
-    "timezone",
-    "avatar",
-];
+import { accountCopyAttributes, accountFields as fields, syncAccountCopy } from "../copy";
 
 export class UserAccountForm extends Component {
     static observedAttributes = [
@@ -27,6 +11,7 @@ export class UserAccountForm extends Component {
         "toast-shadow",
         "success-toast-duration",
         "error-toast-duration",
+        ...accountCopyAttributes,
         ...fields.map((field) => `show-${field}`),
     ];
 
@@ -102,6 +87,7 @@ export class UserAccountForm extends Component {
     }
 
     syncPresentation() {
+        syncAccountCopy(this);
         for (const toast of this.querySelectorAll("mossa-toast")) {
             const kind = toast.getAttribute("data-toast-kind") === "success" ? "success" : "error";
             this.setAttributeIfChanged(toast, "position", this.getAttribute("toast-position") || "top-right");

@@ -1,8 +1,20 @@
 import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
 
+import { paymentCopy } from "./copy";
+
 export class CommerceStripePaymentEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
+            {
+                kind: "self",
+                label: "Payment copy",
+                settings: Object.entries(paymentCopy).map(([attribute, defaultValue]) => ({
+                    type: "text" as const,
+                    label: attribute.replaceAll("-", " "),
+                    attribute,
+                    defaultValue,
+                })),
+            },
             {
                 kind: "self",
                 label: "Payment bindings",

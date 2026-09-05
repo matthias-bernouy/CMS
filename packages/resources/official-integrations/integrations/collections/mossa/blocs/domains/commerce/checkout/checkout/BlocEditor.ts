@@ -1,8 +1,62 @@
 import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
 
+import { checkoutCopy } from "./copy";
+
 export class CheckoutFlowEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
+            {
+                kind: "self",
+                label: "Checkout copy",
+                settings: checkoutCopy.map(([attribute, defaultValue]) => ({
+                    type: "text" as const,
+                    label: attribute.replaceAll("-", " "),
+                    attribute,
+                    defaultValue,
+                })),
+            },
+            {
+                kind: "self",
+                label: "State copy",
+                settings: [
+                    {
+                        type: "text",
+                        label: "Sign-in title",
+                        attribute: "login-title",
+                        defaultValue: "Sign in to continue",
+                    },
+                    {
+                        type: "text",
+                        label: "Sign-in description",
+                        attribute: "login-description",
+                        defaultValue: "An account is required to secure the order and track delivery.",
+                    },
+                    {
+                        type: "text",
+                        label: "Error title",
+                        attribute: "error-title",
+                        defaultValue: "Unable to continue",
+                    },
+                    {
+                        type: "text",
+                        label: "Error message",
+                        attribute: "error-message",
+                        defaultValue: "The checkout flow could not be loaded. Try again shortly.",
+                    },
+                    {
+                        type: "text",
+                        label: "Missing offer",
+                        attribute: "missing-offer-message",
+                        defaultValue: "The offer to purchase is missing.",
+                    },
+                    {
+                        type: "text",
+                        label: "Missing accepted proposal",
+                        attribute: "missing-agreement-message",
+                        defaultValue: "The accepted proposal to pay is missing.",
+                    },
+                ],
+            },
             {
                 kind: "self",
                 label: "Navigation",
@@ -15,6 +69,12 @@ export class CheckoutFlowEditor extends Editor {
                 kind: "self",
                 label: "Regional settings",
                 settings: [
+                    {
+                        type: "text",
+                        label: "Authenticated account email",
+                        attribute: "account-email",
+                        help: "Bind the authenticated email when the account profile does not expose it.",
+                    },
                     { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
                     { type: "text", label: "Country code", attribute: "country-code" },
                 ],

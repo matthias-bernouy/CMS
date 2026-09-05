@@ -1,4 +1,5 @@
 import { Component } from "@bernouy/components/base";
+import { purchaseCopy, syncPurchaseCopy } from "./copy";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
@@ -23,6 +24,7 @@ export class PurchaseList extends Component {
         "page-param",
         "page-size",
         "previous-label",
+        ...Object.keys(purchaseCopy),
     ];
 
     private requestVersion = 0;
@@ -206,6 +208,7 @@ export class PurchaseList extends Component {
     }
 
     private syncPresentation(): void {
+        syncPurchaseCopy(this);
         this.previousButton.textContent = this.getAttribute("previous-label")?.trim() || "Previous";
         this.nextButton.textContent = this.getAttribute("next-label")?.trim() || "Next";
     }
@@ -227,7 +230,6 @@ export class PurchaseList extends Component {
             this.show("login");
             return;
         }
-        this.errorMessage.textContent = "Your purchases could not be loaded. Try again shortly.";
         this.show("error");
     }
 
@@ -270,9 +272,6 @@ export class PurchaseList extends Component {
     }
     private get error() {
         return this.shadowRoot!.querySelector<HTMLElement>("[data-error]")!;
-    }
-    private get errorMessage() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-error-message]")!;
     }
     private get list() {
         return this.shadowRoot!.querySelector<HTMLElement>("[data-list]")!;

@@ -1,7 +1,7 @@
 import { Component } from "@bernouy/components/base";
 
 export class CommerceAccountSalesController extends Component {
-    static observedAttributes = ["sale-action-label", "sale-url"];
+    static observedAttributes = ["sale-action-label", "sale-url", "error-message"];
 
     constructor() {
         super({ css: ":host { display: contents; }", template: "<slot></slot>" });
@@ -17,11 +17,13 @@ export class CommerceAccountSalesController extends Component {
             queueMicrotask(() => {
                 this.syncPagination();
                 this.syncLinks();
+                this.syncError();
             }),
         );
         this.observer.observe(this, { childList: true, subtree: true });
         this.syncPagination();
         this.syncLinks();
+        this.syncError();
     }
 
     disconnectedCallback() {
@@ -34,6 +36,7 @@ export class CommerceAccountSalesController extends Component {
     attributeChangedCallback() {
         if (this.isConnected) {
             this.syncLinks();
+            this.syncError();
         }
     }
 
@@ -59,6 +62,14 @@ export class CommerceAccountSalesController extends Component {
             } else {
                 link.removeAttribute("href");
             }
+        }
+    }
+
+    syncError() {
+        const element = this.querySelector("[data-sales-error]");
+        const message = this.getAttribute("error-message")?.trim() || "Sales could not be loaded. Try again shortly.";
+        if (element && element.textContent !== message) {
+            element.textContent = message;
         }
     }
 

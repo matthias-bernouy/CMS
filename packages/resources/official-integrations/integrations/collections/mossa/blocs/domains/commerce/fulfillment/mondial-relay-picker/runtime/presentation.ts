@@ -1,3 +1,4 @@
+import { relayCopy } from "./copy";
 import { errorMessage, relayAddress, relayItem } from "./helpers";
 import { RenderedPicker } from "./rendered-picker";
 
@@ -14,14 +15,39 @@ export class PresentedPicker extends RenderedPicker {
         if (!changedAttribute || changedAttribute === "city") {
             this.cityInput.value = this.getAttribute("city")?.trim() ?? "";
         }
+        this.root.querySelector("[data-postal-code-label]").textContent = this.copy("postal-code-label");
+        this.root.querySelector("[data-city-label]").textContent = this.copy("city-label");
+        if (changedAttribute === "postal-code-required-message") {
+            this.syncPostalCodeValidity();
+        }
+        if (changedAttribute === "selection-label" && !this.selectedItem) {
+            this.renderList();
+        }
+        if (this.statusCopy) {
+            const { name, state, values } = this.statusCopy;
+            this.setCopyStatus(name, state, values);
+        }
         this.syncDisabled();
+    }
+
+    copy = (name, values = {}) => {
+        const content = this.getAttribute(name)?.trim() || relayCopy[name] || "";
+        return Object.entries(values).reduce(
+            (result, [key, value]) => result.replaceAll(`{${key}}`, String(value)),
+            content,
+        );
+    };
+
+    setCopyStatus(name, state, values = {}) {
+        this.setStatus(this.copy(name, values), state);
+        this.statusCopy = { name, state, values };
     }
 
     syncPostalCodeValidity() {
         const input = this.postalCodeInput;
         input.setCustomValidity("");
         if (!input.value.trim()) {
-            input.setCustomValidity("Postal code is required.");
+            input.setCustomValidity(this.copy("postal-code-required-message"));
         }
         return input.validity.valid;
     }
@@ -83,7 +109,7 @@ export class PresentedPicker extends RenderedPicker {
         this.internalsRef.setFormValue("");
         this.selectedBox.hidden = true;
         this.renderList();
-        this.setStatus("Search for another pickup point.", "idle");
+        this.setCopyStatus("change-message", "idle");
     }
     renderPreview() {
         const country = this.country() || "US";
@@ -113,12 +139,13 @@ export class PresentedPicker extends RenderedPicker {
     }
 
     setStatus(message, state) {
+        this.statusCopy = null;
         this.status.textContent = message;
         this.status.dataset.state = state;
     }
 
     fail(error) {
-        this.setStatus(errorMessage(error), "error");
+        this.setStatus(errorMessage(error, this.copy), "error");
         this.setBusy(false);
     }
 

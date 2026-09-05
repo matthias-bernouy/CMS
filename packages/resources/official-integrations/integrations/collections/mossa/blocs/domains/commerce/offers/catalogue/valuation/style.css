@@ -64,3 +64,34 @@ mossa-info-row svg { width: 1.2rem; height: 1.2rem; }
     .valuation-shell { gap: 1.5rem; }
     .results { max-height: 18rem; }
 }
+
+/* Authored nodes projected through nested slots need their own typography. */
+::slotted([slot="heading-title"]) {
+    margin: 0;
+    color: var(--ulvia-surface-text);
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+}
+::slotted([slot="heading-eyebrow"]) {
+    color: var(--ulvia-primary-contrasted);
+}
+::slotted([slot="heading-subtitle"]) {
+    margin: 0;
+    color: var(--ulvia-surface-muted-text);
+    font-size: 1rem;
+}
+::slotted([slot="initial-title"]) {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+::slotted([slot="initial-description"]) {
+    max-width: 40ch;
+    margin: 0 auto;
+    color: var(--ulvia-surface-muted-text);
+    font-size: 1rem;
+    line-height: 1.55;
+}

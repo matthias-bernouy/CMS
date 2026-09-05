@@ -4,7 +4,7 @@
     </div>
 
     <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
-        <strong slot="title">Shipment unavailable</strong>
+        <strong slot="title" data-error-title>Shipment unavailable</strong>
         <span slot="description" data-error-message></span>
     </mossa-surface-card>
 
@@ -12,9 +12,9 @@
         <strong slot="title" data-title></strong>
         <span slot="description" data-copy></span>
         <div class="summary">
-            <div><span>Order</span><strong data-order-number></strong></div>
-            <div><span>Status</span><strong class="status" data-status></strong></div>
-            <div><span>Shipment number</span><strong data-expedition></strong></div>
+            <div><span data-fulfillment-copy="order-label">Order</span><strong data-order-number></strong></div>
+            <div><span data-fulfillment-copy="status-label">Status</span><strong class="status" data-status></strong></div>
+            <div><span data-fulfillment-copy="expedition-label">Shipment number</span><strong data-expedition></strong></div>
             <p data-latest></p>
         </div>
         <div slot="actions" class="actions">

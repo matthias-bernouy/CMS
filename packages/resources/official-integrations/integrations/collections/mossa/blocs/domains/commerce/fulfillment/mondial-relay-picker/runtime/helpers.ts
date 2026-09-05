@@ -1,3 +1,5 @@
+import { relayCopy } from "./copy";
+
 export class HttpResponseError extends Error {
     constructor(status, message) {
         super(message);
@@ -54,14 +56,14 @@ export function headersObject(headers) {
     return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
 }
 
-export function errorMessage(error) {
+export function errorMessage(error, copy = (name) => relayCopy[name]) {
     if (error instanceof HttpResponseError && error.status === 401) {
-        return "Sign in to choose a pickup point.";
+        return copy("login-message");
     }
     if (error instanceof HttpResponseError && error.status === 403) {
-        return "You are not allowed to change this pickup point.";
+        return copy("forbidden-message");
     }
-    return "Pickup points cannot be searched right now. Try again shortly.";
+    return copy("error-message");
 }
 
 export function errorMessageFromBody(body, response) {

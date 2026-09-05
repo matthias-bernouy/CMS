@@ -1,8 +1,20 @@
 import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
+import { fulfillmentCopy } from "./helpers";
+
 export class CommerceMondialRelaySaleFulfillmentEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
+            {
+                kind: "self",
+                label: "Shipment copy",
+                settings: Object.entries(fulfillmentCopy).map(([attribute, defaultValue]) => ({
+                    type: "text" as const,
+                    attribute,
+                    label: attribute.replaceAll("-", " "),
+                    defaultValue,
+                })),
+            },
             {
                 kind: "self",
                 label: "Sale",
@@ -23,6 +35,19 @@ export class CommerceMondialRelaySaleFulfillmentEditor extends Editor {
                     { type: "text", label: "Redownload label", attribute: "redownload-label" },
                     { type: "text", label: "Declare carrier handoff", attribute: "handoff-label" },
                     { type: "text", label: "Track parcel", attribute: "tracking-label" },
+                    {
+                        type: "text",
+                        label: "Error title",
+                        attribute: "error-title",
+                        defaultValue: "Shipment unavailable",
+                    },
+                    { type: "text", label: "Error message override", attribute: "error-message" },
+                    {
+                        type: "text",
+                        label: "Missing sale message",
+                        attribute: "missing-order-message",
+                        defaultValue: "The sale identifier is missing.",
+                    },
                 ],
             },
         ];

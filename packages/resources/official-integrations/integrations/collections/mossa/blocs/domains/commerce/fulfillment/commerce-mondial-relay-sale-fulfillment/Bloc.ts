@@ -1,11 +1,12 @@
 import { Component } from "@bernouy/components/base";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
-import { errorMessage, headers, isRecord, safeCmsLabelUrl } from "./helpers";
+import { fulfillmentCopy, errorMessage, headers, isRecord, safeCmsLabelUrl } from "./helpers";
 import { renderFulfillment, syncFulfillmentPresentation } from "./presentation";
 
 export class CommerceMondialRelaySaleFulfillment extends Component {
     static observedAttributes = [
+        ...Object.keys(fulfillmentCopy),
         "order-id",
         "order-param",
         "title",
@@ -16,11 +17,15 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
         "label-label",
         "redownload-label",
         "handoff-label",
+        "error-title",
+        "error-message",
+        "missing-order-message",
     ];
 
     constructor() {
         super({ css, template });
         this.projection = null;
+        this.lastErrorMessage = "";
     }
 
     connectedCallback() {
@@ -48,21 +53,27 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     }
 
     onCreate = () => {
-        this.createShipment().catch((error) => this.setStatus(errorMessage(error), true));
+        this.createShipment().catch((error) =>
+            this.setStatus(this.text("action-error-message", errorMessage(error)), true),
+        );
     };
 
     onLabel = () => {
-        this.requestLabel().catch((error) => this.setStatus(errorMessage(error), true));
+        this.requestLabel().catch((error) =>
+            this.setStatus(this.text("action-error-message", errorMessage(error)), true),
+        );
     };
 
     onHandoff = () => {
-        this.declareHandoff().catch((error) => this.setStatus(errorMessage(error), true));
+        this.declareHandoff().catch((error) =>
+            this.setStatus(this.text("action-error-message", errorMessage(error)), true),
+        );
     };
 
     async load() {
         this.show("loading");
         if (!this.orderId) {
-            throw new Error("The sale identifier is missing.");
+            throw new Error(this.text("missing-order-message", "The sale identifier is missing."));
         }
         const result = await this.request(
             `/.cms/sources/system-functions/getShipmentForMySale?orderId=${encodeURIComponent(this.orderId)}`,
@@ -73,11 +84,11 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
 
     async createShipment() {
         if (!this.orderId) {
-            throw new Error("The sale identifier is missing.");
+            throw new Error(this.text("missing-order-message", "The sale identifier is missing."));
         }
         this.createButton.setAttribute("loading", "");
         this.createButton.setAttribute("disabled", "");
-        this.setStatus("Creating the shipping label…", false);
+        this.setStatus(this.text("creating-message", "Creating the shipping label…"), false);
         try {
             const result = await this.request("/.cms/sources/system-functions/createShipmentForMySale", {
                 method: "POST",
@@ -92,7 +103,7 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
 
     async requestLabel() {
         if (!this.orderId) {
-            throw new Error("The sale identifier is missing.");
+            throw new Error(this.text("missing-order-message", "The sale identifier is missing."));
         }
         this.labelButton.setAttribute("loading", "");
         this.labelButton.setAttribute("disabled", "");
@@ -121,7 +132,7 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
 
     async declareHandoff() {
         if (!this.orderId) {
-            throw new Error("The sale identifier is missing.");
+            throw new Error(this.text("missing-order-message", "The sale identifier is missing."));
         }
         this.handoffButton.setAttribute("loading", "");
         this.handoffButton.setAttribute("disabled", "");
@@ -201,7 +212,9 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     }
 
     fail(error) {
-        this.errorMessage.textContent = errorMessage(error);
+        const missingOrderMessage = !this.orderId && this.getAttribute("missing-order-message")?.trim();
+        this.lastErrorMessage = missingOrderMessage || errorMessage(error);
+        this.syncPresentation();
         this.show("error");
     }
 

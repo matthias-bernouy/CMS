@@ -1,3 +1,4 @@
+import { paymentCopy, paymentText } from "./copy";
 import {
     acceptedLegalDocumentVersionIds,
     errorCode,
@@ -26,6 +27,7 @@ let stripeJsLoader = null;
 class CommerceStripePayment extends HTMLElement {
     static get observedAttributes() {
         return [
+            ...Object.keys(paymentCopy),
             "order-id",
             "return-url",
             "layout",
@@ -96,7 +98,7 @@ class CommerceStripePayment extends HTMLElement {
             this.paymentElement?.update({ layout: { type: this.paymentLayout() } });
             return;
         }
-        if (name === "legal-appearance") {
+        if (["legal-appearance", "legal-read-label", "legal-version-label"].includes(name)) {
             this.renderLegalRequirements();
             return;
         }
@@ -301,6 +303,8 @@ class CommerceStripePayment extends HTMLElement {
     }
 
     syncPresentation() {
+        this.root.querySelector("[data-legal-region] > legend").textContent = paymentText(this, "legal-title");
+        this.root.querySelector(".security > span").textContent = paymentText(this, "security-label");
         const amount = trustedPaymentAmount(this.payment);
         this.title.textContent = this.getAttribute("title") || "Secure payment";
         this.copy.textContent = this.getAttribute("copy") || "Choose a payment method and confirm the order.";
@@ -318,12 +322,14 @@ class CommerceStripePayment extends HTMLElement {
 
     syncSubmitLabel(amount = trustedPaymentAmount(this.payment)) {
         if (this.legalRequirements?.enabled && !this.elements && !this.paymentSubmissionLocked) {
-            this.submitButton.textContent = "Continue to payment";
+            this.submitButton.textContent = paymentText(this, "continue-label");
             return;
         }
         this.submitButton.textContent =
             this.getAttribute("button-label") ||
-            (amount ? `Payer ${formatAmount(amount.amountTotal, amount.currency)}` : "Payer");
+            (amount
+                ? paymentText(this, "pay-amount-label", { amount: formatAmount(amount.amountTotal, amount.currency) })
+                : paymentText(this, "pay-label"));
     }
 
     renderLegalRequirements() {
@@ -372,7 +378,7 @@ class CommerceStripePayment extends HTMLElement {
         }
 
         this.submitButton.disabled = true;
-        this.setStatus("Checking contractual terms…", "idle");
+        this.setStatus(paymentText(this, "checking-terms-message"), "idle");
         const requirements = normalizeLegalRequirements(
             await this.requestFunction("getPaymentLegalRequirements", {
                 query: { orderId: input.orderId },
@@ -397,7 +403,7 @@ class CommerceStripePayment extends HTMLElement {
 
     async initializePayment(input, signature, acceptedVersionIds) {
         this.submitButton.disabled = true;
-        this.setStatus("Preparing secure payment…", "idle");
+        this.setStatus(paymentText(this, "preparing-message"), "idle");
         const payment = await this.requestFunction("createPaymentForOrder", {
             method: "POST",
             body: JSON.stringify({
@@ -438,7 +444,7 @@ class CommerceStripePayment extends HTMLElement {
         const ready = paymentElementReady(this.paymentElement);
         this.paymentMount.replaceChildren();
         this.paymentElement.mount(this.paymentMount);
-        this.setStatus("Loading payment form…", "idle");
+        this.setStatus(paymentText(this, "loading-message"), "idle");
         await ready;
         this.initializedSignature = signature;
         this.submitButton.disabled = false;
@@ -471,7 +477,7 @@ class CommerceStripePayment extends HTMLElement {
         this.resetLegalRequirements();
         try {
             await this.initialize();
-            this.setStatus("Contractual terms changed. Review and accept the new version.", "error");
+            this.setStatus(paymentText(this, "terms-changed-message"), "error");
         } catch (refreshError) {
             this.fail(refreshError);
         }
@@ -482,7 +488,7 @@ class CommerceStripePayment extends HTMLElement {
             throw new Error("Payment is not ready yet.");
         }
         this.submitButton.disabled = true;
-        this.setStatus("Confirming payment…", "idle");
+        this.setStatus(paymentText(this, "confirming-message"), "idle");
         const result = await this.stripe.confirmPayment({
             elements: this.elements,
             confirmParams: { return_url: this.returnUrl(this.payment.paymentId) },
@@ -512,7 +518,7 @@ class CommerceStripePayment extends HTMLElement {
             throw new Error("Payment could not be confirmed.");
         }
         this.paymentSubmissionLocked = true;
-        this.setStatus("Verifying payment securely…", "idle");
+        this.setStatus(paymentText(this, "verifying-message"), "idle");
         const payment = await this.refreshPaymentUntilSettled();
         this.payment = payment;
         this.syncPresentation();
@@ -558,19 +564,24 @@ class CommerceStripePayment extends HTMLElement {
             return true;
         }
         if (state === "processing") {
-            this.setStatus("Payment received and under review.", "idle");
+            this.setStatus(paymentText(this, "processing-message"), "idle");
             this.lockPaymentSubmission();
             this.dispatch("processing", payment);
             return true;
         }
         if (state === "refunded" || state === "partially_refunded") {
-            this.setStatus(state === "refunded" ? "Payment refunded." : "Payment partially refunded.", "idle");
+            this.setStatus(
+                state === "refunded"
+                    ? paymentText(this, "refunded-message")
+                    : paymentText(this, "partially-refunded-message"),
+                "idle",
+            );
             this.lockPaymentSubmission();
             this.dispatch("refund", payment);
             return true;
         }
         if (state === "disputed" || state === "manual_review") {
-            this.setStatus("Payment temporarily held for review.", "idle");
+            this.setStatus(paymentText(this, "review-message"), "idle");
             this.lockPaymentSubmission();
             this.dispatch("blocked", payment);
             return true;
@@ -719,8 +730,8 @@ class CommerceStripePayment extends HTMLElement {
         this.submitButton.disabled = this.paymentSubmissionLocked || (!currentFormIsUsable && !legalAcceptanceCanRetry);
         this.syncSubmitLabel();
         this.status.dataset.errorCode = errorCode(error);
-        this.setStatus(errorMessage(error), "error");
-        this.dispatch("error", { message: errorMessage(error) });
+        this.setStatus(errorMessage(error, this), "error");
+        this.dispatch("error", { message: errorMessage(error, this) });
     }
 
     dispatch(name, detail) {
@@ -956,33 +967,33 @@ class CmsFunctionRequestError extends Error {
     }
 }
 
-function errorMessage(error) {
+function errorMessage(error, host) {
     const message = errorCode(error);
     if (message === LEGAL_ACCEPTANCE_REQUIRED) {
-        return "Accept all contractual terms to continue.";
+        return paymentText(host, "legal-required-message");
     }
     if (message === LEGAL_DOCUMENT_VERSION_CHANGED) {
-        return "Contractual terms changed. Review them before continuing.";
+        return paymentText(host, "legal-version-changed-message");
     }
     if (message === LEGAL_DOCUMENT_NOT_AVAILABLE) {
-        return "Contractual terms are temporarily unavailable. Payment cannot start.";
+        return paymentText(host, "legal-unavailable-message");
     }
     if (message === "SELLER_PROTECTED_PAYMENT_NOT_READY") {
-        return "This offer is not currently available for purchase. The seller must complete payment activation.";
+        return paymentText(host, "seller-not-ready-message");
     }
     if (/insufficient funds/i.test(message)) {
-        return "The card has insufficient funds. Try another payment method.";
+        return paymentText(host, "insufficient-funds-message");
     }
     if (/card.*(?:declined|refused)|(?:declined|refused).*card/i.test(message)) {
-        return "The card was declined. Try another payment method.";
+        return paymentText(host, "card-declined-message");
     }
     if (/expired card|card.*expired/i.test(message)) {
-        return "The card expired. Use another card.";
+        return paymentText(host, "card-expired-message");
     }
     if (/authentication|3d secure/i.test(message)) {
-        return "Payment authentication failed. Try again or use another card.";
+        return paymentText(host, "authentication-error-message");
     }
-    return "Payment could not be processed. Try again or use another payment method.";
+    return paymentText(host, "error-message");
 }
 
 function wait(duration) {

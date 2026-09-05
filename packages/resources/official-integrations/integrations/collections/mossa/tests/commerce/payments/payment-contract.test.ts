@@ -37,7 +37,9 @@ describe("Mossa Stripe payment block", () => {
         expect(transientReconciliationBranch).toBeGreaterThan(disputeBranch);
         expect(manualReviewBranch).toBeGreaterThan(transientReconciliationBranch);
         expect(artifact.bloc?.viewJS).toContain("SELLER_PROTECTED_PAYMENT_NOT_READY");
-        expect(artifact.bloc?.viewJS).toContain("This offer is not currently available for purchase");
+        expect(atob(artifact.bloc?.source?.["copy.ts"] ?? "")).toContain(
+            "This offer is not currently available for purchase",
+        );
         expect(artifact.bloc?.viewJS).toContain("protectedPaymentState");
         expect(artifact.bloc?.viewJS).toContain("payment?.settlementStatus");
         expect(artifact.bloc?.viewJS).toContain("payment?.disputeStatus");
