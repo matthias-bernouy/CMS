@@ -7,5 +7,6 @@ export type {
     FormSubmitResult,
     SerializedForm,
     SerializedFormData,
+    SerializedFormValue,
     SubmitFormOptions,
 } from "./types";

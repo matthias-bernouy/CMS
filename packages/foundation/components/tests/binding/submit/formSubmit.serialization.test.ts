@@ -22,6 +22,66 @@ describe("formSubmit serialization", () => {
         }
     });
 
+    test("nests bracket-named controls for structured Source bodies", () => {
+        const target = form(`
+            <form>
+                <input name="answers[name]" value="Ada">
+                <input name="answers[email]" value="ada@example.com">
+                <input name="answers[interests]" value="tennis">
+                <input name="answers[interests]" value="design">
+            </form>
+        `);
+        const serialized = serializeForm(target, { url: "/api/forms", method: "POST" });
+        expect(serialized.data).toEqual({
+            answers: { name: "Ada", email: "ada@example.com", interests: ["tennis", "design"] },
+        });
+    });
+
+    test("does not mistake nested name and size fields for a file", () => {
+        const target = form(`
+            <form>
+                <input name="product[name]" value="Example">
+                <input name="product[size]" value="medium">
+                <input name="product[sku]" value="example-medium">
+            </form>
+        `);
+        const serialized = serializeForm(target, { url: "/api/products", method: "POST" });
+        expect(serialized.data).toEqual({
+            product: { name: "Example", size: "medium", sku: "example-medium" },
+        });
+    });
+
+    test("preserves a nested file alongside sibling fields", () => {
+        const target = form("<form></form>");
+        const formData = new FormData();
+        const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+        formData.append("attachment[file]", file);
+        formData.append("attachment[caption]", "Profile picture");
+
+        const serialized = serializeForm(target, { url: "/api/upload", method: "POST", formData });
+        expect(serialized.kind).toBe("formData");
+        expect(serialized.data).toEqual({
+            attachment: { file, caption: "Profile picture" },
+        });
+    });
+
+    test("keeps unsafe and conflicting bracket names flat", () => {
+        const target = form(`
+            <form>
+                <input name="answers" value="plain">
+                <input name="answers[email]" value="ada@example.com">
+                <input name="payload[__proto__][polluted]" value="yes">
+            </form>
+        `);
+        const serialized = serializeForm(target, { url: "/api/forms", method: "POST" });
+        expect(serialized.data).toEqual({
+            answers: "plain",
+            "answers[email]": "ada@example.com",
+            "payload[__proto__][polluted]": "yes",
+        });
+        expect(({} as { polluted?: string }).polluted).toBeUndefined();
+    });
+
     test("adds body fields to non-GET JSON without replacing real controls", () => {
         const target = form(`<form><input name="email" value="ada@example.com"></form>`);
         const serialized = serializeForm(target, {

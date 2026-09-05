@@ -1,4 +1,5 @@
 import { collectFormData } from "./formControls";
+import { appendSerializedValue } from "./nestedFormData";
 import type { AdditionalFormFields, FormSubmitMethod, SerializedForm, SerializedFormData } from "./types";
 
 const BODY_METHODS = new Set<FormSubmitMethod>(["POST", "PUT", "PATCH", "DELETE"]);
@@ -39,20 +40,13 @@ export function serializeForm(
     return { kind: "json", url: options.url, formData, data, body: JSON.stringify(data) };
 }
 
-export function serializeFormData(formData: FormData): Record<string, FormDataEntryValue | FormDataEntryValue[]> {
-    const data: Record<string, FormDataEntryValue | FormDataEntryValue[]> = {};
+export function serializeFormData(formData: FormData): SerializedFormData {
+    const data: SerializedFormData = {};
     for (const [key, value] of formData.entries()) {
         if (isEmptyFile(value)) {
             continue;
         }
-        const current = data[key];
-        if (current === undefined) {
-            data[key] = value;
-        } else if (Array.isArray(current)) {
-            current.push(value);
-        } else {
-            data[key] = [current, value];
-        }
+        appendSerializedValue(data, key, value);
     }
     return data;
 }

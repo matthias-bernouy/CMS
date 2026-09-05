@@ -1,6 +1,13 @@
 export type FormSubmitMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
 
-export type SerializedFormData = Record<string, FormDataEntryValue | FormDataEntryValue[] | string | number | boolean>;
+export type SerializedFormValue =
+    | FormDataEntryValue
+    | number
+    | boolean
+    | SerializedFormValue[]
+    | { [key: string]: SerializedFormValue };
+
+export type SerializedFormData = Record<string, SerializedFormValue>;
 
 export type SerializedForm =
     | { kind: "query"; url: string; formData: FormData; data: SerializedFormData }
