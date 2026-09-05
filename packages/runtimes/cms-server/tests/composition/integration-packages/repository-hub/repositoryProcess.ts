@@ -1,6 +1,7 @@
 import { chmod, lstat, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { seedRepositoryFixture } from "./repositoryFixture";
 
 const workspaceRoot = resolve(import.meta.dir, "../../../../../../..");
 const repositoryEntrypoint = join(workspaceRoot, "packages/runtimes/cms-repository-server/src/index.ts");
@@ -22,6 +23,7 @@ export async function startRepositoryProcess(): Promise<RepositoryProcess> {
     const workerCapabilityKeyFile = join(root, "worker-capability-key");
     const token = `acceptance-token-${crypto.randomUUID()}`;
     await mkdir(registryRoot);
+    await seedRepositoryFixture(registryRoot);
     await Promise.all([
         writeFile(tokenFile, token, { mode: 0o600 }),
         writeFile(maintenanceTokenFile, `acceptance-maintenance-${crypto.randomUUID()}`, { mode: 0o600 }),
