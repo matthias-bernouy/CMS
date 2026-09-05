@@ -8,5 +8,5 @@
         "noEmit": true,
         "sourceMap": false
     },
-    "include": ["./**/*.ts"]
+    "include": ["./**/*.ts", "../integration-ownership/**/*.ts"]
 }
