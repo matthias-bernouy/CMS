@@ -6,8 +6,8 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 describe("Mossa public blocs", () => {
     test("hydrates and builds every public collection bloc", async () => {
-        const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-        const definition = await repo.get("mossa");
+        const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+        const definition = await repository.get("mossa");
         const blocs = definition?.artifacts?.filter((artifact) => artifact.type === "bloc") ?? [];
 
         expect(blocs.length).toBeGreaterThan(0);
@@ -60,18 +60,14 @@ describe("Mossa public blocs", () => {
 });
 
 function decodeDefaultContent(source: Record<string, string> | undefined): string | undefined {
-    if (!source) {
-        return undefined;
-    }
-    const manifestRaw = source["manifest.json"];
+    const manifestRaw = source?.["manifest.json"];
     if (!manifestRaw) {
         return undefined;
     }
-    const manifest = JSON.parse(Buffer.from(manifestRaw, "base64").toString("utf-8")) as { defaultContent?: string };
-    if (!manifest.defaultContent) {
-        return undefined;
-    }
-    const path = manifest.defaultContent.replace(/^\.\//, "");
-    const encoded = source[path];
-    return encoded ? Buffer.from(encoded, "base64").toString("utf-8") : undefined;
+    const manifest = JSON.parse(Buffer.from(manifestRaw, "base64").toString("utf8")) as {
+        defaultContent?: string;
+    };
+    const path = manifest.defaultContent?.replace(/^\.\//, "");
+    const encoded = path ? source?.[path] : undefined;
+    return encoded ? Buffer.from(encoded, "base64").toString("utf8") : undefined;
 }

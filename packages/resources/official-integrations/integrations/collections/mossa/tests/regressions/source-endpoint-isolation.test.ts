@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { CollectionIntegrationDefinition, DeclarativeBlocArtifactTemplate } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { completeArtifactSource, decodeDefaultContent, executableSource } from "./source";
+import { completeArtifactSource, decodeDefaultContent, executableSource } from "../source";
 
 describe("Mossa Source endpoint isolation", () => {
     test("declares every statically accessed CMS Source endpoint", async () => {

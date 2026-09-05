@@ -5,8 +5,8 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 describe("Mossa bloc hydration regressions", () => {
     test("defers offer-price attribute reactions until its composition template exists", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
-        const artifact = definition?.artifacts?.find(
+        const definition = await mossa();
+        const artifact = definition.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "mossa-commerce-offer-price-form-controller",
         );
         const viewJS = artifact?.type === "bloc" ? (artifact.bloc.viewJS ?? "") : "";
@@ -23,30 +23,34 @@ describe("Mossa bloc hydration regressions", () => {
         for (const reaction of ["this.syncPresentation();", "this.renderOffer();", "this.load();"]) {
             expect(callbackSource.indexOf(reaction)).toBeGreaterThan(templateGuard);
         }
-
         expect(compactViewJS).toContain(
             "gettemplateReady(){returnBoolean(this.loading&&this.card&&this.unavailable&&this.technical&&this.success&&this.form);}",
         );
     });
 
-    test("keeps a hidden toast out of layout even when its host styles set display", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
-        const artifact = definition?.artifacts?.find((item) => item.type === "bloc" && item.bloc.tag === "mossa-toast");
-        const encoded = artifact?.type === "bloc" ? artifact.bloc.source?.["style.css"] : undefined;
-        const css = encoded ? Buffer.from(encoded, "base64").toString("utf-8") : "";
-
-        expect(css).toContain(":host([hidden])");
-        expect(css).toContain("display: none !important;");
-    });
-
-    test("keeps a hidden card out of layout even when its host styles set display", async () => {
-        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
-        const artifact = definition?.artifacts?.find(
+    test("keeps hidden hosts out of layout when their regular styles set display", async () => {
+        const definition = await mossa();
+        const toast = definition.artifacts?.find((item) => item.type === "bloc" && item.bloc.tag === "mossa-toast");
+        const card = definition.artifacts?.find(
             (item) => item.type === "bloc" && item.bloc.tag === "mossa-surface-card",
         );
-        const viewJS = artifact?.type === "bloc" ? (artifact.bloc.viewJS ?? "") : "";
+        const toastCss =
+            toast?.type === "bloc" && toast.bloc.source?.["style.css"]
+                ? Buffer.from(toast.bloc.source["style.css"], "base64").toString("utf8")
+                : "";
+        const cardSource = card?.type === "bloc" ? (card.bloc.viewJS ?? "") : "";
 
-        expect(viewJS).toContain(":host([hidden])");
-        expect(viewJS).toContain("display: none !important;");
+        for (const source of [toastCss, cardSource]) {
+            expect(source).toContain(":host([hidden])");
+            expect(source).toContain("display: none !important;");
+        }
     });
 });
+
+async function mossa() {
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
+    if (!definition) {
+        throw new Error("Mossa definition not found");
+    }
+    return definition;
+}
