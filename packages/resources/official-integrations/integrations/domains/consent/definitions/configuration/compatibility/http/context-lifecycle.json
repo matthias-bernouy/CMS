@@ -1,0 +1,16 @@
+[
+    {
+        "route": "/context/bootstrap",
+        "method": "POST",
+        "requiredInputs": ["contextKey"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/context/sync",
+        "method": "POST",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    }
+]

@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "consent",
     "label": "Consent",
-    "version": "4.1.0",
+    "version": "1.0.0",
     "category": "Identity & Legal",
     "description": "Collect immutable, versioned consent evidence without coupling business policy to CMS Auth.",
     "icon": {

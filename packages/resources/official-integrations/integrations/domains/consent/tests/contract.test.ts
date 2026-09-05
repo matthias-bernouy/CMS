@@ -9,7 +9,7 @@ describe("Consent integration contract", () => {
     test("keeps consent policy in integration artifacts, not an auth-specific bloc", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repository.get("consent");
-        expect(definition).toMatchObject({ kind: "consent", version: "4.1.0", type: "source" });
+        expect(definition).toMatchObject({ kind: "consent", version: "1.0.0", type: "source" });
         expect(definition?.artifacts.map((artifact) => artifact.type).sort()).toEqual([
             "dashboard-view",
             "dashboard-view",
@@ -142,9 +142,9 @@ describe("Consent integration contract", () => {
     test("keeps mutable legal policy out of installation answers", async () => {
         const inputs = await json("definitions/configuration/inputs.json");
         const afterInstallation = await json("definitions/configuration/after-installation.json");
-        const dashboard = await json("definitions/artifacts/dashboards/contexts.json");
+        const dashboard = await json("definitions/artifacts/dashboards/contexts/root.json");
         const detail = await json("definitions/artifacts/dashboards/contexts/views/context-detail.json");
-        const bootstrap = await text("connectors/supabase/sql/commands/context/management.sql");
+        const bootstrap = await text("connectors/supabase/install/sql/commands/context/management.sql");
 
         expect(Array.from(inputs as unknown as Array<{ name: string }>, ({ name }) => name)).toEqual([
             "id",
@@ -166,7 +166,7 @@ describe("Consent integration contract", () => {
             },
         ]);
         expect(JSON.stringify(afterInstallation)).not.toContain("documents");
-        expect(dashboard).toEqual({ $include: "contexts/root.json" });
+        expect(dashboard).toMatchObject({ type: "dashboard-view" });
         expect(detail[0]).toMatchObject({ widget: "w-detail", id: "consentContext" });
         expect(JSON.stringify(detail)).toContain("publishConsentContext");
         expect(JSON.stringify(detail)).toContain("reorderable-list");
@@ -176,9 +176,9 @@ describe("Consent integration contract", () => {
 
     test("stores keyed subject claims and versioned evidence without raw credentials", async () => {
         const auth = await text("connectors/supabase/functions/cms-consent/core/auth.ts");
-        const evidence = await text("connectors/supabase/sql/model/evidence.sql");
-        const stage = await text("connectors/supabase/sql/commands/stage-acceptance.sql");
-        const commit = await text("connectors/supabase/sql/commands/commit-acceptance.sql");
+        const evidence = await text("connectors/supabase/install/sql/model/evidence.sql");
+        const stage = await text("connectors/supabase/install/sql/commands/stage-acceptance.sql");
+        const commit = await text("connectors/supabase/install/sql/commands/commit-acceptance.sql");
         const stageRoute = await text("connectors/supabase/functions/cms-consent/routes/acceptances.ts");
         const combined = `${evidence}\n${stage}\n${commit}`;
 
@@ -190,11 +190,15 @@ describe("Consent integration contract", () => {
         expect(evidence).toContain("committed_at desc, id desc");
         expect(evidence).toContain("consent_intent_documents_version_idx");
         expect(evidence).toContain("consent_acceptance_documents_version_idx");
-        expect(await text("connectors/supabase/sql/model/configuration.sql")).toContain("published_snapshot_url");
-        expect(await text("connectors/supabase/sql/commands/hashing.sql")).toContain(
+        expect(await text("connectors/supabase/install/sql/model/configuration.sql")).toContain(
+            "published_snapshot_url",
+        );
+        expect(await text("connectors/supabase/install/sql/commands/hashing.sql")).toContain(
             "'publishedSnapshotUrl', p_published_snapshot_url",
         );
-        expect(await text("connectors/supabase/sql/commands/context/projections.sql")).toContain("'consentPrefix'");
+        expect(await text("connectors/supabase/install/sql/commands/context/projections.sql")).toContain(
+            "'consentPrefix'",
+        );
         expect(stage).toContain("consent.consent_requirements_projection(p_context_key)");
         expect(stage).not.toContain("p_verified_documents");
         expect(stageRoute).not.toContain("publishedPages");

@@ -1,0 +1,6 @@
+{
+    "endpoints": {
+        "$files": ["admin-contexts.json", "acceptances.json", "context-lifecycle.json", "runtime.json"]
+    },
+    "requiredSecrets": ["CMS_CONSENT_API_KEY"]
+}

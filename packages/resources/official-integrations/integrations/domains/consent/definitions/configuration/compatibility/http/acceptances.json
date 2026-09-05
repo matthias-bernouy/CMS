@@ -1,0 +1,23 @@
+[
+    {
+        "route": "/acceptances",
+        "method": "GET",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/acceptances/commit",
+        "method": "POST",
+        "requiredInputs": ["cmsUserId", "contextKey"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/acceptances/stage",
+        "method": "POST",
+        "requiredInputs": ["contextKey"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    }
+]

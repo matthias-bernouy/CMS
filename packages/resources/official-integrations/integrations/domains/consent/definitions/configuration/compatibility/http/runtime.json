@@ -1,0 +1,16 @@
+[
+    {
+        "route": "/health",
+        "method": "GET",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/requirements",
+        "method": "GET",
+        "requiredInputs": ["context"],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    }
+]

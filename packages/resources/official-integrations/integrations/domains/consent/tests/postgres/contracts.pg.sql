@@ -44,7 +44,7 @@ begin
         'key', 'terms',
         'enabled', true,
         'label', 'Conditions générales',
-        'consentText', 'J’accepte les Conditions générales de Courtside.',
+        'consentText', 'J’accepte les Conditions générales du service.',
         'publishedSnapshotUrl',
             'https://cms.example.test/.cms/content/published-page-snapshot?id=page-cgu',
         'page', v_page,
@@ -55,7 +55,7 @@ begin
     );
     v_requirements := consent.consent_requirements_projection('signup');
     if v_requirements->'documents'->0->>'consentPrefix' <> 'J’accepte les '
-       or v_requirements->'documents'->0->>'consentSuffix' <> ' de Courtside.'
+       or v_requirements->'documents'->0->>'consentSuffix' <> ' du service.'
        or concat(
             v_requirements->'documents'->0->>'consentPrefix',
             v_requirements->'documents'->0->>'label',
@@ -217,7 +217,7 @@ begin
     v_documents := jsonb_build_array(jsonb_build_object(
         'key', 'terms',
         'label', 'Conditions générales',
-        'consentText', 'J’accepte les Conditions générales de Courtside.',
+        'consentText', 'J’accepte les Conditions générales du service.',
         'publishedSnapshotUrl',
             'https://cms.example.test/.cms/content/published-page-snapshot?id=page-cgu',
         'page', v_page,
@@ -279,7 +279,7 @@ begin
     v_documents := jsonb_build_array(jsonb_build_object(
         'key', 'terms',
         'label', 'Conditions générales',
-        'consentText', 'J’accepte les Conditions générales de Courtside.',
+        'consentText', 'J’accepte les Conditions générales du service.',
         'publishedSnapshotUrl',
             'https://legal.example.test/.cms/content/published-page-snapshot?id=page-cgu',
         'page', v_page,
@@ -380,7 +380,7 @@ begin
         'key', 'terms',
         'enabled', true,
         'label', 'Conditions générales',
-        'consentText', 'J’accepte les Conditions générales de Courtside.',
+        'consentText', 'J’accepte les Conditions générales du service.',
         'publishedSnapshotUrl',
             'https://legal.example.test/.cms/content/published-page-snapshot?id=page-cgu',
         'page', v_page,

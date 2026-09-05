@@ -2,6 +2,8 @@ import { HttpError } from "../errors.ts";
 
 const snapshotRoute = "/.cms/content/published-page-snapshot";
 
+type EnvironmentReader = (name: string) => string | undefined;
+
 export function pageIdFromSnapshotUrl(value: string): string {
     try {
         const url = new URL(value);
@@ -40,6 +42,28 @@ function isAllowedOrigin(url: URL): boolean {
     return url.protocol === "https:" && !isBlockedHttpsHost(hostname);
 }
 
+export function localSnapshotFetchUrl(value: string, readEnv: EnvironmentReader = readEnvironment): string {
+    if (readEnv("ULVIA_LOCAL_PROVIDER_SIMULATION") !== "v1") {
+        return value;
+    }
+    try {
+        const supabaseUrl = new URL(readEnv("SUPABASE_URL") ?? "");
+        const snapshotUrl = new URL(value);
+        if (
+            supabaseUrl.protocol === "http:" &&
+            supabaseUrl.hostname.toLowerCase() === "kong" &&
+            snapshotUrl.protocol === "http:" &&
+            isLocalDevelopmentHost(snapshotUrl.hostname.toLowerCase())
+        ) {
+            snapshotUrl.hostname = "host.docker.internal";
+            return snapshotUrl.toString();
+        }
+    } catch {
+        return value;
+    }
+    return value;
+}
+
 function isBlockedHttpsHost(hostname: string): boolean {
     if (
         isLocalDevelopmentHost(hostname) ||
@@ -76,8 +100,22 @@ function isLocalDevelopmentHost(hostname: string): boolean {
 
 function isLocalSupabaseRuntime(): boolean {
     try {
-        return isLocalDevelopmentHost(new URL(Deno.env.get("SUPABASE_URL") ?? "").hostname.toLowerCase());
+        const url = new URL(readEnvironment("SUPABASE_URL") ?? "");
+        const hostname = url.hostname.toLowerCase();
+        return (
+            url.protocol === "http:" &&
+            (isLocalDevelopmentHost(hostname) ||
+                (hostname === "kong" && readEnvironment("ULVIA_LOCAL_PROVIDER_SIMULATION") === "v1"))
+        );
     } catch {
         return false;
+    }
+}
+
+function readEnvironment(name: string): string | undefined {
+    try {
+        return Deno.env.get(name);
+    } catch {
+        return undefined;
     }
 }

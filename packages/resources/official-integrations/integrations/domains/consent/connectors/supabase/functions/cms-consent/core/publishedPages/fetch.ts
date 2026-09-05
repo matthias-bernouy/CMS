@@ -1,6 +1,7 @@
 import { HttpError } from "../errors.ts";
 import type { ConsentDocumentReference, VerifiedConsentDocument } from "../types.ts";
 import { publishedPageContentHash } from "./hashing.ts";
+import { localSnapshotFetchUrl } from "./url.ts";
 import { materializeDocumentReferences, parsePublishedPageSnapshot, unavailable } from "./validation.ts";
 
 const maximumResponseBytes = 2_100_000;
@@ -36,7 +37,7 @@ async function fetchSnapshot(reference: ConsentDocumentReference) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), fetchTimeoutMilliseconds);
     try {
-        const response = await fetch(reference.publishedSnapshotUrl, {
+        const response = await fetch(localSnapshotFetchUrl(reference.publishedSnapshotUrl), {
             headers: { accept: "application/json" },
             redirect: "error",
             signal: controller.signal,

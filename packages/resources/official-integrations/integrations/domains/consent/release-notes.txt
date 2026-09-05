@@ -1,1 +1,1 @@
-Minor release: publish reusable Consent dashboard views while site dashboard composition remains CMS-owned.
+Initial Consent release: publish the source-only consent configuration and acceptance lifecycle.

@@ -5,7 +5,7 @@
         "dataApiSchemas": ["consent"],
         "schemas": [
             {
-                "manifest": "sql/schema.manifest.json"
+                "manifest": "install/sql/schema.manifest.json"
             }
         ],
         "compatibility": {
@@ -13,20 +13,20 @@
                 "$include": "compatibility/schema.json"
             }
         },
-            "functions": [
-                {
-                    "name": "cms-consent",
-                    "directory": "functions/cms-consent",
-                    "configPath": "supabase.config.toml",
-                    "secrets": {
-                        "CMS_CONSENT_API_KEY": "{{generated.cmsApiKey}}"
-                    },
-                    "compatibility": {
-                        "http": {
-                            "$include": "compatibility/http.json"
-                        }
+        "functions": [
+            {
+                "name": "cms-consent",
+                "directory": "functions/cms-consent",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_CONSENT_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/http.json"
                     }
                 }
-            ]
-        }
+            }
+        ]
+    }
 ]

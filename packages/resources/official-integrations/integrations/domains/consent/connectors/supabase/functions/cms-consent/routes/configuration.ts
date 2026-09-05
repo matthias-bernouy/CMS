@@ -125,7 +125,7 @@ function adminActor(request: Request): string {
 }
 
 function revision(value: unknown): string {
-    if (typeof value !== "string" || !/^(new|[1-9][0-9]{0,19})$/.test(value)) {
+    if (typeof value !== "string" || !/^(?:new|[1-9][0-9]{0,19}(?::\([0-9]{1,10},[1-9][0-9]{0,9}\))?)$/.test(value)) {
         throw new HttpError(400, "expectedRevision is invalid");
     }
     return value;

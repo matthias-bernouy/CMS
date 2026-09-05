@@ -160,7 +160,7 @@ describe("Consent Edge Function", () => {
             expect(await upstream.json()).toMatchObject({
                 p_context_key: "signup",
                 p_enabled: true,
-                p_expected_revision: "14",
+                p_expected_revision: "741:(0,1)",
                 p_actor_id: "admin-42",
                 p_snapshot_origin: "https://delivery.example",
                 p_documents: [
@@ -183,7 +183,7 @@ describe("Consent Edge Function", () => {
             adminJsonRequest("/admin/context/publish", {
                 contextKey: "signup",
                 enabled: true,
-                expectedRevision: "14",
+                expectedRevision: "741:(0,1)",
                 documents: [
                     {
                         key: "terms",
@@ -199,6 +199,43 @@ describe("Consent Edge Function", () => {
         expect(response.status).toBe(200);
         expect(await response.json()).toMatchObject({ enabled: true, revision: "15" });
         expect(paths).toEqual(["/.cms/content/published-page-snapshot", "/rest/v1/rpc/publish_consent_context"]);
+    });
+
+    test("bridges loopback snapshots only in the marker-protected local Supabase runtime", async () => {
+        environment.set("SUPABASE_URL", "http://kong:8000");
+        environment.set("ULVIA_LOCAL_PROVIDER_SIMULATION", "v1");
+        const page = publishedPage("Local runtime policy");
+        const contentHash = await publishedPageContentHash(page);
+        const urls: string[] = [];
+        globalThis.fetch = async (input, init) => {
+            const upstream = new Request(input, init);
+            urls.push(upstream.url);
+            if (new URL(upstream.url).hostname === "host.docker.internal") {
+                return Response.json({ schema: "cms-published-page-snapshot-v1", page, contentHash });
+            }
+            return Response.json(contextProjection({ enabled: true, revision: "1" }));
+        };
+
+        const response = await handleConsentRequest(
+            adminJsonRequest("/admin/context/publish", {
+                contextKey: "signup",
+                enabled: true,
+                expectedRevision: "new",
+                documents: [
+                    {
+                        key: "terms",
+                        enabled: true,
+                        label: "Conditions",
+                        consentText: "I accept the Conditions",
+                        publishedSnapshotUrl: "http://127.0.0.1:5101/.cms/content/published-page-snapshot?id=page-cgu",
+                    },
+                ],
+            }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(urls[0]).toBe("http://host.docker.internal:5101/.cms/content/published-page-snapshot?id=page-cgu");
+        expect(new URL(urls[1]!).hostname).toBe("kong");
     });
 
     test("disables a runtime context without depending on CMS Delivery", async () => {
@@ -441,6 +478,22 @@ describe("Consent Edge Function", () => {
 
         expect(response.status).toBe(200);
         expect(paths).toEqual(["/rest/v1/rpc/sync_consent_context"]);
+    });
+
+    test("does not trust an internal Supabase hostname without the local runtime marker", async () => {
+        environment.set("SUPABASE_URL", "http://kong:8000");
+        let calls = 0;
+        globalThis.fetch = async () => {
+            calls += 1;
+            return Response.json({});
+        };
+
+        const response = await handleConsentRequest(
+            jsonRequest("/context/sync", syncBody("http://127.0.0.1:8787", publishedPage("Unmarked runtime"))),
+        );
+
+        expect(response.status).toBe(422);
+        expect(calls).toBe(0);
     });
 
     test("bounds a stalled PostgREST response body", async () => {

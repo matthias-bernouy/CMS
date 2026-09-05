@@ -1,0 +1,23 @@
+[
+    {
+        "route": "/admin/context",
+        "method": "GET",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/context/publish",
+        "method": "POST",
+        "requiredInputs": ["contextKey", "documents", "enabled", "expectedRevision"],
+        "requiredHeaders": ["authorization", "x-cms-user-id"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    },
+    {
+        "route": "/admin/contexts",
+        "method": "GET",
+        "requiredInputs": [],
+        "requiredHeaders": ["authorization"],
+        "responses": [{ "status": "200" }, { "status": "default" }]
+    }
+]
