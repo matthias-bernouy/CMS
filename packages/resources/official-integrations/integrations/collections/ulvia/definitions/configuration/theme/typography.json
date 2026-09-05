@@ -1,0 +1,25 @@
+{
+    "id": "typography",
+    "label": "Typography",
+    "description": "Shared font families, sizes and line heights.",
+    "tokens": [
+        {
+            "id": "font-body",
+            "label": "Body font",
+            "description": "Paragraphs, controls and regular interface text.",
+            "type": "font-family",
+            "defaults": {
+                "light": "Inter, system-ui, sans-serif"
+            }
+        },
+        {
+            "id": "font-heading",
+            "label": "Heading font",
+            "description": "Titles and prominent headings.",
+            "type": "font-family",
+            "defaults": {
+                "light": "Georgia, serif"
+            }
+        }
+    ]
+}

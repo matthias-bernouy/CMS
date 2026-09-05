@@ -1,0 +1,167 @@
+{
+    "id": "feedback",
+    "label": "Feedback",
+    "description": "Semantic colors for informational, successful, warning and dangerous states.",
+    "tokens": [
+        {
+            "id": "info-base",
+            "label": "Information",
+            "description": "Strong informational accent.",
+            "type": "color",
+            "defaults": {
+                "light": "#2f6f98",
+                "dark": "#73b5dc"
+            }
+        },
+        {
+            "id": "info-muted",
+            "label": "Information muted",
+            "description": "Soft informational background.",
+            "type": "color",
+            "defaults": {
+                "light": "#edf6fb",
+                "dark": "#173647"
+            }
+        },
+        {
+            "id": "info-contrasted",
+            "label": "Information contrasted",
+            "description": "Readable information color used on muted backgrounds.",
+            "type": "color",
+            "defaults": {
+                "light": "#17324d",
+                "dark": "#bfe8ff"
+            }
+        },
+        {
+            "id": "info-foreground",
+            "label": "Information foreground",
+            "description": "Text and icons placed on the information color.",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#0f2530"
+            }
+        },
+        {
+            "id": "success-base",
+            "label": "Success",
+            "description": "Strong successful-state accent.",
+            "type": "color",
+            "defaults": {
+                "light": "#21865f",
+                "dark": "#58c998"
+            }
+        },
+        {
+            "id": "success-muted",
+            "label": "Success muted",
+            "description": "Soft successful-state background.",
+            "type": "color",
+            "defaults": {
+                "light": "#e8f4ef",
+                "dark": "#173b2d"
+            }
+        },
+        {
+            "id": "success-contrasted",
+            "label": "Success contrasted",
+            "description": "Readable success color used on muted backgrounds.",
+            "type": "color",
+            "defaults": {
+                "light": "#185b43",
+                "dark": "#baf2d7"
+            }
+        },
+        {
+            "id": "success-foreground",
+            "label": "Success foreground",
+            "description": "Text and icons placed on the success color.",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#10281e"
+            }
+        },
+        {
+            "id": "warning-base",
+            "label": "Warning",
+            "description": "Strong warning-state accent.",
+            "type": "color",
+            "defaults": {
+                "light": "#b7791f",
+                "dark": "#e0ab55"
+            }
+        },
+        {
+            "id": "warning-muted",
+            "label": "Warning muted",
+            "description": "Soft warning-state background.",
+            "type": "color",
+            "defaults": {
+                "light": "#f8f0df",
+                "dark": "#443117"
+            }
+        },
+        {
+            "id": "warning-contrasted",
+            "label": "Warning contrasted",
+            "description": "Readable warning color used on muted backgrounds.",
+            "type": "color",
+            "defaults": {
+                "light": "#6b470c",
+                "dark": "#f8ddb0"
+            }
+        },
+        {
+            "id": "warning-foreground",
+            "label": "Warning foreground",
+            "description": "Text and icons placed on the warning color.",
+            "type": "color",
+            "defaults": {
+                "light": "#1f1f1b",
+                "dark": "#2d1d07"
+            }
+        },
+        {
+            "id": "danger-base",
+            "label": "Danger",
+            "description": "Strong destructive and error-state accent.",
+            "type": "color",
+            "defaults": {
+                "light": "#c4473d",
+                "dark": "#e77b70"
+            }
+        },
+        {
+            "id": "danger-muted",
+            "label": "Danger muted",
+            "description": "Soft destructive and error-state background.",
+            "type": "color",
+            "defaults": {
+                "light": "#f9e9e7",
+                "dark": "#4a211e"
+            }
+        },
+        {
+            "id": "danger-contrasted",
+            "label": "Danger contrasted",
+            "description": "Readable danger color used on muted backgrounds.",
+            "type": "color",
+            "defaults": {
+                "light": "#7b2923",
+                "dark": "#ffd0cb"
+            }
+        },
+        {
+            "id": "danger-foreground",
+            "label": "Danger foreground",
+            "description": "Text and icons placed on the danger color.",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#33100d"
+            }
+        }
+    ]
+}

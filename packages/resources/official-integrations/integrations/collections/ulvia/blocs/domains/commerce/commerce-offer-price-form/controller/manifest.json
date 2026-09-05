@@ -1,9 +1,0 @@
-{
-    "internal": true,
-    "default-tag": "commerce-offer-price-form-controller",
-    "bloc": "./Bloc.ts",
-    "meta": {
-        "title": "commerce-offer-price-form controller",
-        "description": "Internal behavior controller for commerce-offer-price-form."
-    }
-}

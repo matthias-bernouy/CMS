@@ -1,0 +1,106 @@
+{
+    "id": "spacing-and-width",
+    "label": "Spacing and width",
+    "description": "Spacing scales and shared responsive widths.",
+    "tokens": [
+        {
+            "id": "space-xs",
+            "label": "Extra-small spacing",
+            "description": "Tight spacing between closely related elements.",
+            "type": "length",
+            "defaults": {
+                "light": ".25rem"
+            }
+        },
+        {
+            "id": "space-sm",
+            "label": "Small spacing",
+            "description": "Compact inline and control spacing.",
+            "type": "length",
+            "defaults": {
+                "light": ".5rem"
+            }
+        },
+        {
+            "id": "space-md",
+            "label": "Medium spacing",
+            "description": "Default component and content spacing.",
+            "type": "length",
+            "defaults": {
+                "light": "1rem"
+            }
+        },
+        {
+            "id": "space-lg",
+            "label": "Large spacing",
+            "description": "Separation between content groups.",
+            "type": "length",
+            "defaults": {
+                "light": "1.5rem"
+            }
+        },
+        {
+            "id": "space-2xl",
+            "label": "Spacing 2XL",
+            "description": "Extra-large layout spacing.",
+            "type": "length",
+            "defaults": {
+                "light": "2rem"
+            }
+        },
+        {
+            "id": "space-xl",
+            "label": "Extra-large spacing",
+            "description": "Generous section and page spacing.",
+            "type": "length",
+            "defaults": {
+                "light": "3rem"
+            }
+        },
+        {
+            "id": "container-xs",
+            "label": "Container XS",
+            "description": "Extra-small responsive container width.",
+            "type": "length",
+            "defaults": {
+                "light": "30rem"
+            }
+        },
+        {
+            "id": "container-sm",
+            "label": "Container SM",
+            "description": "Small responsive container width.",
+            "type": "length",
+            "defaults": {
+                "light": "45rem"
+            }
+        },
+        {
+            "id": "container-md",
+            "label": "Container MD",
+            "description": "Medium responsive container width.",
+            "type": "length",
+            "defaults": {
+                "light": "60rem"
+            }
+        },
+        {
+            "id": "container-lg",
+            "label": "Container LG",
+            "description": "Large responsive container width.",
+            "type": "length",
+            "defaults": {
+                "light": "75rem"
+            }
+        },
+        {
+            "id": "container-xl",
+            "label": "Container XL",
+            "description": "Extra-large responsive container width.",
+            "type": "length",
+            "defaults": {
+                "light": "90rem"
+            }
+        }
+    ]
+}

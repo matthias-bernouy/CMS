@@ -1,1 +1,1 @@
-Publish Ulvia theme contract 3 with concise --ulvia-* variables, named component internals, no generic cross-collection context API, and non-overlapping offer badges.
+Initial Ulvia release: publish the shared theme-token foundation independently from block collections.

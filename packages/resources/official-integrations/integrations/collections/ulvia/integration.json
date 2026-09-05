@@ -3,13 +3,13 @@
     "type": "collection",
     "kind": "ulvia",
     "label": "Ulvia",
-    "category": "Official blocks",
-    "description": "The complete official Ulvia block collection with per-site resource activation.",
-    "stable": "4.0.1",
-    "latest": "4.0.1",
+    "category": "Design systems",
+    "description": "The official shared design-token contract for Ulvia-compatible collections.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
     "versions": [
         {
-            "version": "4.0.1",
+            "version": "1.0.0",
             "path": ".",
             "definition": "definition.json"
         }

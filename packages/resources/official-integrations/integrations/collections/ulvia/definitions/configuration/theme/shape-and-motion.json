@@ -1,0 +1,100 @@
+{
+    "id": "shape-and-motion",
+    "label": "Shape, elevation and motion",
+    "description": "Shared radii, shadows and motion durations.",
+    "tokens": [
+        {
+            "id": "radius-sm",
+            "label": "Small radius",
+            "description": "Subtle rounding for compact elements.",
+            "type": "length",
+            "defaults": {
+                "light": ".25rem"
+            }
+        },
+        {
+            "id": "radius-control",
+            "label": "Control radius",
+            "description": "Default rounding for buttons and form controls.",
+            "type": "length",
+            "defaults": {
+                "light": ".375rem"
+            }
+        },
+        {
+            "id": "radius-card",
+            "label": "Card radius",
+            "description": "Default rounding for cards and panels.",
+            "type": "length",
+            "defaults": {
+                "light": ".5rem"
+            }
+        },
+        {
+            "id": "radius-lg",
+            "label": "Large radius",
+            "description": "Prominent rounding for large surfaces.",
+            "type": "length",
+            "defaults": {
+                "light": "1rem"
+            }
+        },
+        {
+            "id": "shadow-sm",
+            "label": "Small shadow",
+            "description": "Subtle separation for compact floating elements.",
+            "type": "shadow",
+            "defaults": {
+                "light": "0 .25rem .75rem rgb(18 30 24 / 10%)",
+                "dark": "0 .25rem .75rem rgb(0 0 0 / 28%)"
+            }
+        },
+        {
+            "id": "shadow-soft",
+            "label": "Soft shadow",
+            "description": "Default elevation for cards and overlays.",
+            "type": "shadow",
+            "defaults": {
+                "light": "0 .5rem 1.5rem rgb(18 30 24 / 12%)",
+                "dark": "0 .5rem 1.5rem rgb(0 0 0 / 36%)"
+            }
+        },
+        {
+            "id": "shadow-lg",
+            "label": "Large shadow",
+            "description": "Strong elevation for prominent overlays.",
+            "type": "shadow",
+            "defaults": {
+                "light": "0 .75rem 2rem rgb(18 30 24 / 18%)",
+                "dark": "0 .75rem 2rem rgb(0 0 0 / 44%)"
+            }
+        },
+        {
+            "id": "duration-fast",
+            "label": "Fast duration",
+            "description": "Fast interaction duration.",
+            "type": "value",
+            "defaults": {
+                "light": "120ms"
+            }
+        },
+        {
+            "id": "duration-normal",
+            "label": "Normal duration",
+            "description": "Default interaction duration.",
+            "type": "value",
+            "defaults": {
+                "light": "180ms"
+            }
+        },
+        {
+            "id": "duration-slow",
+            "label": "Slow duration",
+            "description": "Deliberate interaction duration.",
+            "type": "value",
+            "defaults": {
+                "light": "240ms"
+            }
+        }
+    ]
+}
