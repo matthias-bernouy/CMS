@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runCli } from "../../src/cli";
 import { resolveDevPorts } from "../../src/commands/dev";
 import { localMongoUrl } from "../../src/runtime/mongo";
 import { RemoteIntegrationRepository } from "../../src/repository/remote";
 import { LocalIntegrationRepository } from "../../src/repository/local";
-import { integrationPackage, removeReadonlyTree, writeIntegrationSource } from "../fixtures";
+import { integrationDefinition, integrationPackage, removeReadonlyTree, writeIntegrationSource } from "../fixtures";
 import { emptyRemote, remoteFixture, temporaryRoot } from "./support";
 
 const roots: string[] = [];
@@ -56,6 +57,44 @@ describe("Ulvia CLI", () => {
             connector: { provider: "supabase" },
             packageDigest: resolved.digest,
         });
+    });
+
+    test("reports status from a legacy manifest containing historical native blocs", async () => {
+        const root = await temporaryRoot(roots);
+        const repositoryRoot = join(root, "repository");
+        await mkdir(repositoryRoot, { recursive: true });
+        await writeFile(
+            join(repositoryRoot, "catalog.json"),
+            JSON.stringify({
+                schema: "ulvia.local-repository.v1",
+                packages: [
+                    {
+                        kind: "basic-blocs",
+                        version: "1.0.0",
+                        digest: "a".repeat(64),
+                        source: "https://repository.example.test",
+                        pulledAt: "2026-09-04T12:00:00.000Z",
+                        definition: integrationDefinition("basic-blocs", "1.0.0", {
+                            artifacts: [
+                                {
+                                    type: "bloc",
+                                    bloc: { tag: "h1", name: "Heading", compositionHTML: "<h1>Heading</h1>" },
+                                },
+                            ],
+                        }),
+                    },
+                ],
+            }),
+        );
+        const output: string[] = [];
+
+        await runCli(["status"], {
+            environment: { ULVIA_DATA_DIR: root },
+            log: (line) => output.push(line),
+        });
+
+        expect(output).toContain("Local repository: 1 package");
+        expect(output.at(-1)).toContain("basic-blocs@1.0.0");
     });
 
     test("push requires a locally released integration", async () => {
