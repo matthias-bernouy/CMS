@@ -23,6 +23,14 @@ export type SitemapMaterializationResult = {
     snapshot: SitemapSnapshotDescriptor;
 };
 
+export class CanonicalSiteHostNotConfiguredError extends TypeError {
+    override name = "CanonicalSiteHostNotConfiguredError";
+
+    constructor() {
+        super("canonical site host is not configured");
+    }
+}
+
 export async function materializeSitemapSnapshot(
     delivery: DeliveryCms,
     signal?: AbortSignal,
@@ -31,7 +39,10 @@ export async function materializeSitemapSnapshot(
     const settings = await delivery.repository.getSystem();
     const baseUrl = canonicalSiteBaseUrl(settings.site.host);
     if (!baseUrl) {
-        throw new TypeError("canonical site host is not configured");
+        if (typeof settings.site.host === "string" && settings.site.host.trim()) {
+            throw new TypeError("canonical site host is invalid");
+        }
+        throw new CanonicalSiteHostNotConfiguredError();
     }
     const request = new Request(`${baseUrl}/sitemap.xml`, {
         headers: { accept: "application/json" },

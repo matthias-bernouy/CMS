@@ -1,5 +1,9 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { materializeSitemapSnapshot, type SitemapMaterializationResult } from "./materialize";
+import {
+    CanonicalSiteHostNotConfiguredError,
+    materializeSitemapSnapshot,
+    type SitemapMaterializationResult,
+} from "./materialize";
 
 export const DEFAULT_SITEMAP_REFRESH_INTERVAL_MS = 60 * 60 * 1_000;
 export const DEFAULT_SITEMAP_RETRY_INTERVAL_MS = 5 * 60 * 1_000;
@@ -51,7 +55,7 @@ export function startSitemapSnapshotRefresh(
         controller = new AbortController();
         running = materializeSitemapSnapshot(delivery, controller.signal)
             .catch((error) => {
-                if (!controller?.signal.aborted) {
+                if (!(error instanceof CanonicalSiteHostNotConfiguredError) && !controller?.signal.aborted) {
                     options.reportError?.(error);
                 }
                 return null;

@@ -22,6 +22,7 @@ export {
     type SitemapRefreshRunner,
 } from "cms-delivery/core/seo/sitemap/refresh";
 export {
+    CanonicalSiteHostNotConfiguredError,
     materializeSitemapSnapshot,
     type SitemapMaterializationResult,
 } from "cms-delivery/core/seo/sitemap/materialize";
