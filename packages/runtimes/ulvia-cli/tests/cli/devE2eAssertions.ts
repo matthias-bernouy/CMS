@@ -1,6 +1,6 @@
 import { expect } from "bun:test";
-import type { DevRuntimeConfig } from "../../src/runtime/config";
 import type { DevPorts } from "../../src/runtime/cms";
+import type { DevRuntimeConfig } from "../../src/runtime/config";
 import { DevClient } from "./devE2eRuntime";
 
 export async function authenticatedClient(config: DevRuntimeConfig, ports: DevPorts): Promise<DevClient> {
@@ -9,29 +9,8 @@ export async function authenticatedClient(config: DevRuntimeConfig, ports: DevPo
     return client;
 }
 
-export async function verifySelectiveSourceResolution(client: DevClient): Promise<void> {
-    const sourceFree = ["ulvia/blocs/h1", "ulvia/blocs/p"];
-    await client.post("/api/integrations/import", {
-        kind: "ulvia",
-        version: "1.0.0",
-        answers: {},
-        options: {},
-        resources: sourceFree,
-    });
-    expect(await installationIds(client)).toEqual(["ulvia"]);
-
-    await client.post("/api/integrations/installations/rerun?id=ulvia", {
-        resources: [...sourceFree, "ulvia/blocs/commerce-account-sales"],
-    });
-    expect(await installationIds(client)).toEqual(["commerce", "ulvia"]);
-}
-
 export async function installationIds(client: DevClient): Promise<string[]> {
     return (await client.json<Array<{ id: string }>>("/api/integrations/installations")).map(({ id }) => id).sort();
-}
-
-export async function catalogueIds(client: DevClient): Promise<string[]> {
-    return (await client.json<Array<{ tag: string }>>("/api/bloc/catalogue")).map(({ tag }) => tag);
 }
 
 export async function dashboardIds(client: DevClient, sourceId: string): Promise<string[]> {
@@ -52,7 +31,7 @@ export async function setSubscription(client: DevClient, email: string): Promise
         body: JSON.stringify({ email, subscribed: true }),
     });
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ email: "persist@example.com", subscribed: true });
+    expect(await response.json()).toMatchObject({ email: email.trim().toLowerCase(), subscribed: true });
 }
 
 export async function expectSubscription(client: DevClient, email: string): Promise<void> {
@@ -63,9 +42,9 @@ export async function expectSubscription(client: DevClient, email: string): Prom
 }
 
 export async function expectRenderedPage(client: DevClient): Promise<void> {
-    const response = await fetch(`${client.deliveryUrl}/ulvia-e2e`);
+    const response = await fetch(`${client.deliveryUrl}/local-e2e`);
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain("Persistent local site");
-    expect(html).toContain("newsletter-subscription");
+    expect(html).toContain("Rendered by the local CMS.");
 }
