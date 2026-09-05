@@ -1,0 +1,10 @@
+{
+    "widget": "w-detail",
+    "id": "questionDetail",
+    "source": { "endpoint": "manageQuestion", "params": { "ref": "$selection.id" } },
+    "title": { "path": "label", "fallback": "Question" },
+    "status": { "path": "type" },
+    "actions": { "$include": "actions.json" },
+    "main": { "$files": ["question-fields.json", "choices.json"] },
+    "aside": { "$files": ["metadata.json"] }
+}

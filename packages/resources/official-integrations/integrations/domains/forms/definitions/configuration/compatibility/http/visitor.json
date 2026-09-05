@@ -9,7 +9,7 @@
     {
         "route": "/authenticated/submission",
         "method": "POST",
-        "requiredInputs": ["answers", "idempotencyKey", "key", "sessionId", "version"],
+        "requiredInputs": ["answers", "key"],
         "requiredHeaders": ["authorization", "x-cms-user-id"],
         "responses": [{ "status": "202" }, { "status": "default" }]
     },
@@ -30,7 +30,7 @@
     {
         "route": "/public/submission",
         "method": "POST",
-        "requiredInputs": ["answers", "idempotencyKey", "key", "sessionId", "version"],
+        "requiredInputs": ["answers", "key"],
         "requiredHeaders": ["authorization"],
         "responses": [{ "status": "202" }, { "status": "default" }]
     },

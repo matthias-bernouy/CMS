@@ -1,0 +1,8 @@
+{
+    "id": "questionMetadata",
+    "title": "Location",
+    "fields": [
+        { "id": "sectionTitle", "label": "Section", "path": "sectionTitle", "type": "readonly" },
+        { "id": "formKey", "label": "Form", "path": "formKey", "type": "readonly" }
+    ]
+}

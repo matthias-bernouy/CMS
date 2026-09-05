@@ -1,10 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { restaurantPreview } from "../../../collections/ulvia/blocs/domains/forms/form-renderer/preview";
 import { handleFormsRequest } from "../connectors/supabase/functions/cms-forms/handler";
 import { formDefinition, submissionAnswers } from "../connectors/supabase/functions/cms-forms/validation";
+import { registrationForm } from "./fixtures/registration";
 
 const versionRoot = new URL("../", import.meta.url);
-const ulviaRoot = new URL("../../../collections/ulvia/", import.meta.url);
 const originalFetch = globalThis.fetch;
 
 async function json(path: string): Promise<unknown> {
@@ -37,11 +36,8 @@ afterEach(() => {
     Reflect.deleteProperty(globalThis, "Deno");
 });
 
-describe("Forms 3.1.0 contracts", () => {
-    test("declares no UI dependency and keeps paired visitor endpoints", async () => {
-        const dependencies = (await json("definitions/configuration/dependencies.json")) as Array<
-            Record<string, string>
-        >;
+describe("Forms 1.0.0 contracts", () => {
+    test("keeps paired visitor endpoints independent from a collection UI", async () => {
         const publicEndpoints = (await json("definitions/artifacts/sources/primary/endpoints/public.json")) as Array<
             Record<string, unknown>
         >;
@@ -49,7 +45,6 @@ describe("Forms 3.1.0 contracts", () => {
             "definitions/artifacts/sources/primary/endpoints/authenticated.json",
         )) as Array<Record<string, unknown>>;
 
-        expect(dependencies).toEqual([]);
         expect(publicEndpoints.map((endpoint) => endpoint.endpointId)).toEqual([
             "formPublic",
             "submitPublic",
@@ -80,67 +75,48 @@ describe("Forms 3.1.0 contracts", () => {
         expect(managedFormSql).not.toContain("definitionJson");
     });
 
-    test("declares dynamically created Ulvia blocks for Delivery asset discovery", async () => {
-        const defaultContent = await Bun.file(
-            new URL("blocs/domains/forms/form-renderer/default.html", ulviaRoot),
-        ).text();
-
-        for (const tag of [
-            "basic-input",
-            "basic-textarea",
-            "basic-select",
-            "basic-option",
-            "basic-chip-group",
-            "basic-chip",
-            "basic-checkbox",
-            "basic-button",
-        ]) {
-            expect(defaultContent).toContain(`<${tag}`);
-        }
-    });
-
     test("validates definitions and required answers before storage", () => {
-        const definition = formDefinition(restaurantPreview.definition);
+        const definition = formDefinition(registrationForm.definition);
         expect(() => submissionAnswers(definition, {})).toThrow("some answers are invalid");
         expect(
             submissionAnswers(definition, {
-                ownerName: "Alex Morgan",
+                attendeeName: "Alex Morgan",
                 email: "alex@example.test",
-                restaurantName: "Maison Sépia",
-                mood: "warm",
-                cuisine: "french",
+                organization: "Example Organization",
+                session: "morning",
+                attendanceType: "in-person",
                 city: "Bordeaux",
-                introduction: "Seasonal cooking in a warm room.",
+                notes: "Please reserve an accessible seat.",
                 consent: "true",
             }),
-        ).toMatchObject({ restaurantName: "Maison Sépia", consent: "true" });
+        ).toMatchObject({ organization: "Example Organization", consent: "true" });
     });
 
     test("validates stable image-choice keys and private Forms media identifiers", () => {
-        const definition = structuredClone(restaurantPreview.definition) as any;
-        const mood = definition.steps[1].fields[1];
-        mood.presentation = "image-grid";
-        mood.options = [
-            { key: "warm", label: "Warm", image: { mediaId: "17", alt: "Warm room" } },
-            { key: "bright", label: "Bright", image: { mediaId: "18" } },
+        const definition = structuredClone(registrationForm.definition) as any;
+        const session = definition.steps[1].fields[1];
+        session.presentation = "image-grid";
+        session.options = [
+            { key: "morning", label: "Morning", image: { mediaId: "17", alt: "Morning session" } },
+            { key: "afternoon", label: "Afternoon", image: { mediaId: "18" } },
         ];
 
         expect(formDefinition(definition)).toBe(definition);
         expect(
             submissionAnswers(definition, {
-                ownerName: "Alex Morgan",
+                attendeeName: "Alex Morgan",
                 email: "alex@example.test",
-                restaurantName: "Maison Sépia",
-                mood: "bright",
-                cuisine: "french",
+                organization: "Example Organization",
+                session: "afternoon",
+                attendanceType: "remote",
                 city: "Bordeaux",
                 consent: "true",
             }),
-        ).toMatchObject({ mood: "bright" });
-        mood.options[1].key = "warm";
+        ).toMatchObject({ session: "afternoon" });
+        session.options[1].key = "morning";
         expect(() => formDefinition(definition)).toThrow("duplicate option keys");
-        mood.options[1].key = "bright";
-        mood.options[1].image.mediaId = "not-an-id";
+        session.options[1].key = "afternoon";
+        session.options[1].image.mediaId = "not-an-id";
         expect(() => formDefinition(definition)).toThrow("image choices need a Forms image");
     });
 
@@ -150,7 +126,7 @@ describe("Forms 3.1.0 contracts", () => {
             const url = String(input);
             calls.push(url);
             if (url.endsWith("/rpc/get_published_form")) {
-                return response(restaurantPreview);
+                return response(registrationForm);
             }
             if (url.endsWith("/rpc/submit_form")) {
                 return response({ ok: true, receiptId: "26db71b6-1f70-4fa4-8e68-d08822f70425" });
@@ -159,13 +135,13 @@ describe("Forms 3.1.0 contracts", () => {
         };
         const headers = { authorization: "Bearer cms_forms_test", "content-type": "application/json" };
         const read = await handleFormsRequest(
-            new Request("https://cms.example.test/cms-forms/public/form?key=restaurant-onboarding", { headers }),
+            new Request("https://cms.example.test/cms-forms/public/form?key=event-registration", { headers }),
         );
         expect(read.status).toBe(200);
         expect((await read.json()).version).toBe(1);
 
         const submit = await handleFormsRequest(
-            new Request("https://cms.example.test/cms-forms/public/submission?key=restaurant-onboarding", {
+            new Request("https://cms.example.test/cms-forms/public/submission?key=event-registration", {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
@@ -174,11 +150,11 @@ describe("Forms 3.1.0 contracts", () => {
                     sessionId: "74924e5f-9664-44ab-8eb0-2ed8144b90fb",
                     startedAt: new Date(Date.now() - 5000).toISOString(),
                     answers: {
-                        ownerName: "Alex Morgan",
+                        attendeeName: "Alex Morgan",
                         email: "alex@example.test",
-                        restaurantName: "Maison Sépia",
-                        mood: "warm",
-                        cuisine: "french",
+                        organization: "Example Organization",
+                        session: "morning",
+                        attendanceType: "in-person",
                         city: "Bordeaux",
                         consent: "true",
                     },

@@ -1,0 +1,47 @@
+{
+    "id": "questionContent",
+    "title": "Question",
+    "fields": [
+        { "id": "label", "label": "Label", "path": "label", "type": "text", "required": true },
+        {
+            "id": "key",
+            "label": "Stable key",
+            "path": "key",
+            "type": "text",
+            "required": true,
+            "placeholder": "customerIntent"
+        },
+        {
+            "id": "type",
+            "label": "Answer type",
+            "path": "type",
+            "type": "select",
+            "required": true,
+            "options": [
+                { "value": "text", "label": "Short text" },
+                { "value": "textarea", "label": "Long text" },
+                { "value": "email", "label": "Email" },
+                { "value": "tel", "label": "Phone" },
+                { "value": "number", "label": "Number" },
+                { "value": "date", "label": "Date" },
+                { "value": "select", "label": "Dropdown" },
+                { "value": "choice", "label": "Choice chips" },
+                { "value": "checkbox", "label": "Confirmation checkbox" }
+            ]
+        },
+        { "id": "required", "label": "Required answer", "path": "required", "type": "checkbox" },
+        { "id": "hint", "label": "Help text", "path": "hint", "type": "text" },
+        { "id": "placeholder", "label": "Placeholder", "path": "placeholder", "type": "text" },
+        {
+            "id": "presentation",
+            "label": "Choice layout",
+            "path": "presentation",
+            "type": "select",
+            "options": [
+                { "value": "chips", "label": "Choice chips" },
+                { "value": "image-grid", "label": "Image grid" }
+            ],
+            "visibleWhen": { "value": "$field.type", "equals": "choice" }
+        }
+    ]
+}

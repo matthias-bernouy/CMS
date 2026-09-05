@@ -4,11 +4,11 @@
     "label": "Forms",
     "category": "Content",
     "description": "Build versioned multi-step forms, publish them through CMS Sources, and review their submissions.",
-    "stable": "3.1.0",
-    "latest": "3.1.0",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
     "versions": [
         {
-            "version": "3.1.0",
+            "version": "1.0.0",
             "path": ".",
             "definition": "definition.json"
         }

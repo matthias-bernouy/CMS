@@ -8,5 +8,5 @@
         "website": { "type": "string" },
         "answers": { "type": "object" }
     },
-    "required": ["version", "idempotencyKey", "sessionId", "startedAt", "answers"]
+    "required": ["answers"]
 }

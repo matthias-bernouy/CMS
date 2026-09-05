@@ -4,42 +4,28 @@
     "emit": "source:updated",
     "instructions": [
         [
-            "Install Basic Blocs",
-            "Install the form-associated controls used by the public renderer."
-        ],
-        [
             "Deploy connector resources",
             "Apply the private forms schema and deploy the cms-forms Edge Function."
         ],
         [
             "Create and publish a form",
-            "Save a validated draft, publish an immutable version, then set its key on the renderer Bloc."
+            "Save a validated draft and publish an immutable version for collection bindings to consume."
         ]
     ],
     "scopes": [
         "Public and authenticated versioned form delivery",
         "Idempotent submission capture and session recovery",
-        "Form lifecycle and submission review dashboards",
-        "Responsive multi-step renderer Bloc"
+        "Form lifecycle and submission review dashboards"
     ],
     "checks": [
         "Browser clients only call the CMS Source proxy.",
         "Every submission references an immutable published version.",
-        "The connector schema is denied to anon and authenticated roles.",
-        "Draft answers remain in sessionStorage until submission succeeds."
+        "The connector schema is denied to anon and authenticated roles."
     ],
     "resources": [
         [
-            "Dependencies",
-            "Basic Blocs form controls and buttons"
-        ],
-        [
             "Sources",
             "Paired public, authenticated, administrator, and system endpoints"
-        ],
-        [
-            "Blocs",
-            "Published multi-step form renderer"
         ],
         [
             "Dashboards",
@@ -52,16 +38,15 @@
     ],
     "review": [
         "Publish a new immutable version instead of changing an existing version.",
-        "Use authenticated renderer endpoints for forms that require a signed-in visitor.",
+        "Use authenticated endpoints for forms that require a signed-in visitor.",
         "Keep service-role and CMS connector secrets outside browser bundles.",
         "Choose a submission retention period appropriate for the collected data."
     ],
     "sync": [
         "Validate answers",
-        "Validate Basic Blocs dependency",
         "Generate private API key",
         "Deploy Supabase connector",
-        "Install Forms source, dashboards, and renderer Bloc",
+        "Install Forms source and dashboards",
         "Refresh Sources"
     ],
     "syncNote": "The CMS serves static Source contracts; Supabase owns immutable form versions and submission state."

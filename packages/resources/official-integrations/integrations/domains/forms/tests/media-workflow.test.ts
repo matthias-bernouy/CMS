@@ -44,7 +44,7 @@ beforeEach(() => {
             return json({
                 mediaId: 101,
                 storageBucket: "forms-media",
-                storagePath: "forms/restaurant-onboarding/2026-09-01/image.png",
+                storagePath: "forms/event-registration/2026-09-01/image.png",
                 mimeType: "image/png",
             });
         }
@@ -62,7 +62,7 @@ describe("Forms private media workflow", () => {
         const data = new FormData();
         data.set("file", new File([formImageBytes()], "inside.png", { type: "image/png" }));
         const upload = await handleFormsRequest(
-            new Request("https://cms.example.test/cms-forms/admin/form/image?ref=restaurant-onboarding", {
+            new Request("https://cms.example.test/cms-forms/admin/form/image?ref=event-registration", {
                 method: "POST",
                 headers: adminHeaders,
                 body: data,
@@ -77,7 +77,7 @@ describe("Forms private media workflow", () => {
         expect(new Uint8Array(await managed.arrayBuffer())).toEqual(formImageBytes());
 
         const published = await handleFormsRequest(
-            request("/public/form/image?key=restaurant-onboarding&version=1&id=101"),
+            request("/public/form/image?key=event-registration&version=1&id=101"),
         );
         expect(published.status).toBe(200);
         expect(published.headers.get("cache-control")).toBe("private, no-store");

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { restaurantPreview } from "../../../collections/ulvia/blocs/domains/forms/form-renderer/preview";
 import { handleFormsRequest } from "../connectors/supabase/functions/cms-forms/handler";
+import { registrationForm } from "./fixtures/registration";
 
 const originalFetch = globalThis.fetch;
 const adminHeaders = {
@@ -42,25 +42,25 @@ beforeEach(() => {
     });
     managed = {
         id: 1,
-        key: "restaurant-onboarding",
-        title: restaurantPreview.definition.title,
-        description: restaurantPreview.definition.description,
-        accessMode: restaurantPreview.accessMode,
+        key: "event-registration",
+        title: registrationForm.definition.title,
+        description: registrationForm.definition.description,
+        accessMode: registrationForm.accessMode,
         status: "draft",
         version: 1,
-        draftDefinition: structuredClone(restaurantPreview.definition),
+        draftDefinition: structuredClone(registrationForm.definition),
     };
     submission = {
         id: 42,
         receiptId: "9bd17b52-69dc-45da-9c4a-d0e947ba5a44",
-        formKey: "restaurant-onboarding",
+        formKey: "event-registration",
         formVersion: 1,
         status: "received",
         submittedBy: null,
         createdAt: "2026-09-01T08:00:00Z",
         updatedAt: "2026-09-01T08:00:00Z",
-        definition: structuredClone(restaurantPreview.definition),
-        answers: { ownerName: "Alex Morgan", mood: "bright", consent: "true" },
+        definition: structuredClone(registrationForm.definition),
+        answers: { attendeeName: "Alex Morgan", session: "afternoon", consent: "true" },
     };
     globalThis.fetch = async (_input, init) => {
         const url = String(_input);
@@ -96,13 +96,13 @@ describe("Forms admin workflows", () => {
         const forms = await handleFormsRequest(adminRequest("/admin/forms?limit=50"));
         expect(forms.status).toBe(200);
 
-        const sections = await handleFormsRequest(adminRequest("/admin/form/sections?context=restaurant-onboarding"));
+        const sections = await handleFormsRequest(adminRequest("/admin/form/sections?context=event-registration"));
         expect(sections.status).toBe(200);
         const sectionList = (await sections.json()) as { items: Array<{ id: string }> };
         expect(sectionList.items.length).toBe(4);
 
         const createdSection = await handleFormsRequest(
-            adminRequest("/admin/form/sections/create", { context: "restaurant-onboarding" }),
+            adminRequest("/admin/form/sections/create", { context: "event-registration" }),
         );
         const section = (await createdSection.json()) as { ref: string };
         expect(createdSection.status).toBe(200);
@@ -114,8 +114,8 @@ describe("Forms admin workflows", () => {
         const savedQuestion = await handleFormsRequest(
             adminRequest("/admin/form/question", {
                 ref: question.ref,
-                key: "preferredTable",
-                label: "Preferred atmosphere",
+                key: "preferredFormat",
+                label: "Preferred format",
                 type: "choice",
                 required: true,
                 multiple: false,
@@ -124,18 +124,18 @@ describe("Forms admin workflows", () => {
                     {
                         id: "inside",
                         key: "inside",
-                        label: "Inside",
+                        label: "In person",
                         image: {
                             id: "101",
                             url: "/.cms/sources/forms/choiceImage?id=101",
-                            alt: "Dining room",
+                            alt: "In-person session",
                         },
                         position: 0,
                     },
                     {
                         id: "terrace",
-                        key: "terrace",
-                        label: "Terrace",
+                        key: "remote",
+                        label: "Remote",
                         image: { id: "102", url: "/.cms/sources/forms/choiceImage?id=102" },
                         position: 1,
                     },
@@ -145,20 +145,20 @@ describe("Forms admin workflows", () => {
         expect(savedQuestion.status).toBe(200);
         const savedQuestionBody = (await savedQuestion.json()) as Record<string, unknown>;
         expect(savedQuestionBody).toMatchObject({
-            key: "preferredTable",
-            label: "Preferred atmosphere",
+            key: "preferredFormat",
+            label: "Preferred format",
             type: "choice",
             presentation: "image-grid",
             options: [
-                { key: "inside", label: "Inside", image: { mediaId: "101", alt: "Dining room" } },
-                { key: "terrace", label: "Terrace", image: { mediaId: "102" } },
+                { key: "inside", label: "In person", image: { mediaId: "101", alt: "In-person session" } },
+                { key: "remote", label: "Remote", image: { mediaId: "102" } },
             ],
         });
         const duplicateKey = await handleFormsRequest(
             adminRequest("/admin/form/question", {
                 ref: savedQuestionBody.ref,
-                key: "mood",
-                label: "Preferred atmosphere",
+                key: "session",
+                label: "Preferred format",
                 type: "choice",
                 presentation: "image-grid",
                 imageOptions: [{ key: "inside", label: "Inside", image: { id: "101" } }],
@@ -174,22 +174,22 @@ describe("Forms admin workflows", () => {
         const resource = (await detail.json()) as Record<string, unknown>;
         expect(resource).not.toHaveProperty("definition");
         expect(resource.answers).toContainEqual({
-            key: "ownerName",
-            section: "Who should we keep in the loop?",
+            key: "attendeeName",
+            section: "Contact details",
             question: "Your name",
             answer: "Alex Morgan",
         });
         expect(resource.answers).toContainEqual({
             key: "consent",
-            section: "One last look.",
-            question: "I confirm that these details are accurate and may be published.",
+            section: "Review your registration",
+            question: "I confirm that these registration details are accurate.",
             answer: "Yes",
         });
         expect(resource.answers).toContainEqual({
-            key: "mood",
-            section: "Give your place a personality.",
-            question: "What should it feel like?",
-            answer: "Bright and fresh",
+            key: "session",
+            section: "Event preferences",
+            question: "Preferred session",
+            answer: "Afternoon",
         });
 
         const updated = await handleFormsRequest(

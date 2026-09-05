@@ -21,7 +21,7 @@
                 "label": "Form key",
                 "param": "key",
                 "type": "text",
-                "placeholder": "restaurant-onboarding"
+                "placeholder": "event-registration"
             },
             {
                 "id": "status",

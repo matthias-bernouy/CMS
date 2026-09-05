@@ -1,5 +1,5 @@
 import { cmsUserId } from "../auth.ts";
-import { boundedInteger, HttpError, json, methodNotAllowed, queryText, requestBody } from "../http.ts";
+import { boundedInteger, HttpError, isRecord, json, methodNotAllowed, queryText, requestBody } from "../http.ts";
 import { rpcRecord } from "../rest.ts";
 import { formDefinition, submissionAnswers } from "../validation.ts";
 
@@ -40,12 +40,12 @@ async function submit(request: Request, actor: string | null): Promise<Response>
     const published = await publishedForm(request, actor);
     const definition = formDefinition(published.definition);
     const website = typeof body.website === "string" ? body.website.trim() : "";
-    if (website || completedTooQuickly(body.startedAt, definition.minCompletionMs)) {
+    if (website || (body.startedAt !== undefined && completedTooQuickly(body.startedAt, definition.minCompletionMs))) {
         return json({ ok: true, receiptId: crypto.randomUUID() }, 202);
     }
-    const idempotencyKey = identifier(body.idempotencyKey, "idempotencyKey", 16, 200);
-    const sessionId = identifier(body.sessionId, "sessionId", 36, 36);
-    const version = boundedInteger(body.version, "version", 0, 1, 2147483647);
+    const idempotencyKey = identifier(body.idempotencyKey ?? crypto.randomUUID(), "idempotencyKey", 16, 200);
+    const sessionId = identifier(body.sessionId ?? crypto.randomUUID(), "sessionId", 36, 36);
+    const version = boundedInteger(body.version, "version", Number(published.version), 1, 2147483647);
     if (version !== published.version) {
         throw new HttpError(409, "the form version changed; reload before submitting");
     }
@@ -54,7 +54,7 @@ async function submit(request: Request, actor: string | null): Promise<Response>
         p_version: version,
         p_idempotency_key: idempotencyKey,
         p_session_id: sessionId,
-        p_answers: submissionAnswers(definition, body.answers),
+        p_answers: submissionAnswers(definition, isRecord(body.answers) ? body.answers : null),
         p_actor_id: actor,
         p_metadata: { locale: request.headers.get("accept-language")?.slice(0, 64) || null },
     });
