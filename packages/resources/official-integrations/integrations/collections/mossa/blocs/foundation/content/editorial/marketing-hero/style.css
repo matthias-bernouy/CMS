@@ -62,17 +62,14 @@
     display: inline-block;
 }
 
-/* Light-DOM h1 styles from theme.css would otherwise win over ::slotted()
-   (light-DOM tree of origin beats shadow). !important is the documented
-   override for this case. */
 ::slotted([slot="title"]) {
-    margin: 0 !important;
-    font-family: var(--ulvia-font-heading) !important;
-    font-size: clamp(2.5rem, 7.5vw, 5.5rem) !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-    letter-spacing: -0.025em !important;
-    color: var(--_mossa-hero-marketing-color) !important;
+    margin: 0;
+    font-family: var(--ulvia-font-heading);
+    font-size: clamp(2.5rem, 7.5vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--_mossa-hero-marketing-color);
     max-width: 16ch;
 }
 

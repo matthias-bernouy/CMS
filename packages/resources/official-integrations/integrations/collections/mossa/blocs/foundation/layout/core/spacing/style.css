@@ -1,5 +1,5 @@
 :host {
-    --_mossa-spacing-size: 1.5rem;
+    --_mossa-spacing-size: 2rem;
     display: block;
     width: 100%;
 }
@@ -9,7 +9,7 @@
 }
 
 :host([size="xs"]) { --_mossa-spacing-size: 0.5rem; }
-:host([size="s"])  { --_mossa-spacing-size: 1rem; }
-:host([size="m"])  { --_mossa-spacing-size: 2rem; }
-:host([size="l"])  { --_mossa-spacing-size: 3.5rem; }
+:host([size="sm"]) { --_mossa-spacing-size: 1rem; }
+:host([size="md"]) { --_mossa-spacing-size: 2rem; }
+:host([size="lg"]) { --_mossa-spacing-size: 3.5rem; }
 :host([size="xl"]) { --_mossa-spacing-size: 5.5rem; }

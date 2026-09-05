@@ -69,9 +69,9 @@ class MossaInput extends HTMLElement {
                     --_mossa-field-color: var(--_mossa-tone-contrasted);
                 }
                 :host([hidden]) { display: none !important; }
-                .field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0; gap: var(--_mossa-field-gap, var(--ulvia-space-sm)); }
+                .field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0; gap: var(--_mossa-field-gap, var(--ulvia-space-xs)); }
                 label { font: inherit; font-weight: var(--_mossa-label-weight, 650); }
-                input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch; min-height: var(--_mossa-input-height, 2.75rem); padding: var(--_mossa-input-padding, var(--ulvia-space-sm) calc(var(--ulvia-space-sm) + var(--ulvia-space-xs))); border: var(--_mossa-input-border, 1px solid var(--_mossa-input-border-color, var(--_mossa-field-border))); border-radius: var(--_mossa-input-radius, var(--ulvia-radius-card)); background: var(--_mossa-input-background, var(--_mossa-field-background)); color: var(--_mossa-input-color, var(--_mossa-field-color)); font: inherit; }
+                input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch; min-height: var(--_mossa-input-height, 2.75rem); padding: var(--_mossa-input-padding, 0.625rem 0.8rem); border: var(--_mossa-input-border, 1px solid var(--_mossa-input-border-color, var(--_mossa-field-border))); border-radius: var(--_mossa-input-radius, var(--ulvia-radius-card)); background: var(--_mossa-input-background, var(--_mossa-field-background)); color: var(--_mossa-input-color, var(--_mossa-field-color)); font: inherit; }
                 input:focus-visible { outline: 2px solid var(--_mossa-focus-color, var(--_mossa-tone-focus)); outline-offset: 2px; }
                 :host([disabled]) { opacity: .6; }
                 .hint { color: var(--_mossa-muted-color, var(--ulvia-surface-muted-text)); }

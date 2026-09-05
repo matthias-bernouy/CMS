@@ -1,10 +1,12 @@
 :host {
     --_mossa-header-eyebrow:  var(--ulvia-secondary-base);
+    --_mossa-header-title: var(--ulvia-surface-text);
+    --_mossa-header-subtitle: var(--ulvia-surface-muted-text);
     --_mossa-header-gap:      0.75rem;
     --_mossa-header-max:      56rem;
 
     display: block;
-    color: var(--ulvia-surface-text);
+    color: var(--_mossa-header-title);
 }
 
 .header {
@@ -43,18 +45,18 @@
 :host(:not([has-eyebrow])) .eyebrow { display: none; }
 
 ::slotted([slot="title"]) {
-    margin: 0 !important;
-    color: var(--ulvia-surface-text) !important;
-    font-family: var(--ulvia-font-heading) !important;
-    font-weight: 700 !important;
-    line-height: 1.1 !important;
-    letter-spacing: -0.02em !important;
-    font-size: clamp(1.6rem, 4vw, 2.4rem) !important;
+    margin: 0;
+    color: var(--_mossa-header-title);
+    font-family: var(--ulvia-font-heading);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
 }
 
 ::slotted([slot="subtitle"]) {
     margin: 0;
-    color: var(--ulvia-surface-muted-text);
+    color: var(--_mossa-header-subtitle);
     font-size: 1rem;
     max-width: 38rem;
 }
@@ -78,9 +80,20 @@
 :host([eyebrow="muted"])   { --_mossa-header-eyebrow: var(--ulvia-surface-muted-text); }
 
 /* Size variants — drive the title only */
+:host([size="xs"]) ::slotted([slot="title"]) {
+    font-size: 0.93rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
 :host([size="sm"]) ::slotted([slot="title"]) {
-    font-size: clamp(1.25rem, 2.5vw, 1.75rem) !important;
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
 }
 :host([size="lg"]) ::slotted([slot="title"]) {
-    font-size: clamp(2rem, 5vw, 3.4rem) !important;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+}
+
+:host([tone="inherit"]) {
+    --_mossa-header-title: currentColor;
+    --_mossa-header-subtitle: color-mix(in srgb, currentColor 75%, transparent);
+    --_mossa-header-eyebrow: currentColor;
 }

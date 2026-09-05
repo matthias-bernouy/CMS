@@ -1,0 +1,51 @@
+:host {
+    --_mossa-link-color: var(--ulvia-primary-contrasted);
+    --_mossa-link-hover-color: var(--ulvia-primary-base);
+
+    display: inline-block;
+    color: inherit;
+    font-family: var(--ulvia-font-body);
+}
+
+::slotted(a) {
+    color: var(--_mossa-link-color);
+    text-decoration: none;
+    text-underline-offset: 0.2em;
+    transition: color var(--ulvia-duration-fast) ease;
+}
+
+::slotted(a:hover) {
+    color: var(--_mossa-link-hover-color);
+    text-decoration: underline;
+}
+
+::slotted(a:focus-visible) {
+    border-radius: var(--ulvia-radius-sm);
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+:host([tone="muted"]) {
+    --_mossa-link-color: var(--ulvia-surface-muted-text);
+    --_mossa-link-hover-color: var(--ulvia-surface-text);
+}
+
+:host([tone="inherit"]) {
+    --_mossa-link-color: currentColor;
+    --_mossa-link-hover-color: currentColor;
+}
+
+:host([decoration="always"]) ::slotted(a) {
+    text-decoration: underline;
+}
+
+:host([decoration="none"]) ::slotted(a),
+:host([decoration="none"]) ::slotted(a:hover) {
+    text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::slotted(a) {
+        transition: none;
+    }
+}

@@ -18,8 +18,8 @@ describe("Mossa collection 1.0.0", () => {
         const tags = artifacts.map(({ bloc }) => bloc.tag);
 
         expect(mossa.version).toBe("1.0.0");
-        expect(mossa.resources).toHaveLength(92);
-        expect(artifacts).toHaveLength(92);
+        expect(mossa.resources).toHaveLength(95);
+        expect(artifacts).toHaveLength(95);
         expect(new Set(tags).size).toBe(tags.length);
         expect(tags.every((tag) => tag.startsWith("mossa-"))).toBe(true);
         expect(mossa.resources.every(({ id }) => id.startsWith("mossa/blocs/"))).toBe(true);
@@ -37,6 +37,7 @@ describe("Mossa collection 1.0.0", () => {
         expect(sources).toContain('attribute: "country-code"');
         expect(tags).not.toContain("site-header");
         expect(tags).not.toContain("site-footer");
+        expect(artifacts.find(({ bloc }) => bloc.tag === "mossa-link")?.bloc.nativeElement).toBe("a");
     });
 
     test("contains no retired collection implementation naming", async () => {

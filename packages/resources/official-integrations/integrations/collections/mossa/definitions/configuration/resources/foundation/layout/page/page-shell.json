@@ -1,0 +1,15 @@
+{
+    "id": "mossa/blocs/page-shell",
+    "type": "bloc",
+    "artifact": "mossa-page-shell",
+    "category": "layout",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "font-body",
+            "page-background"
+        ]
+    }
+}

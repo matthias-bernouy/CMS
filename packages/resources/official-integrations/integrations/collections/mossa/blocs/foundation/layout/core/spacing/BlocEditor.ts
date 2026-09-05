@@ -13,23 +13,23 @@ export class BlocEditor extends Editor {
                         "type": "segmented",
                         "label": "Height",
                         "attribute": "size",
-                        "defaultValue": "m",
+                        "defaultValue": "md",
                         "options": [
                             {
                                 "label": "XS",
                                 "value": "xs",
                             },
                             {
-                                "label": "S",
-                                "value": "s",
+                                "label": "SM",
+                                "value": "sm",
                             },
                             {
-                                "label": "M",
-                                "value": "m",
+                                "label": "MD",
+                                "value": "md",
                             },
                             {
-                                "label": "L",
-                                "value": "l",
+                                "label": "LG",
+                                "value": "lg",
                             },
                             {
                                 "label": "XL",

@@ -16,7 +16,7 @@ export class Bloc extends Component {
 
     updateCSS() {
         this.registerCSSVariables({
-            "navbar-breakpoint": this.getAttribute("navbar-breakpoint") || "500px",
+            "_mossa-navbar-breakpoint": this.getAttribute("navbar-breakpoint") || "500px",
         });
     }
 

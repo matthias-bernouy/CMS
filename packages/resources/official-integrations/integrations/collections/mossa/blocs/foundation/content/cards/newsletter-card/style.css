@@ -54,17 +54,17 @@
 :host(:not([has-icon])) .icon { display: none; }
 
 ::slotted([slot="title"]) {
-    margin: 0 !important;
-    font-family: var(--ulvia-font-heading) !important;
-    font-size: clamp(1.35rem, 2.5vw, 1.75rem) !important;
-    font-weight: 700 !important;
-    line-height: 1.2 !important;
-    letter-spacing: -0.01em !important;
-    color: var(--_mossa-nl-fg) !important;
+    margin: 0;
+    font-family: var(--ulvia-font-heading);
+    font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--_mossa-nl-fg);
 }
 
 ::slotted([slot="description"]) {
-    margin: 0 !important;
+    margin: 0;
     font-size: 0.95rem;
     color: var(--_mossa-nl-fg-muted);
     max-width: 32rem;

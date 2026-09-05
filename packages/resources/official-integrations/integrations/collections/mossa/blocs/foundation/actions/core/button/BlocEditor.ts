@@ -13,7 +13,7 @@ export class MossaButtonEditor extends Editor {
                         label: "Tone",
                         attribute: "tone",
                         defaultValue: "primary",
-                        options: MOSSA_COLOR_SCHEME_OPTIONS,
+                        options: [...MOSSA_COLOR_SCHEME_OPTIONS, { label: "Inherit", value: "inherit" }],
                     },
                     {
                         type: "select",

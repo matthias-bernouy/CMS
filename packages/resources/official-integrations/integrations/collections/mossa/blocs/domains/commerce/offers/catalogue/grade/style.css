@@ -58,9 +58,9 @@
 }
 
 .badge ::slotted(*) {
-    margin: 0 !important;
-    font: inherit !important;
-    color: inherit !important;
+    margin: 0;
+    font: inherit;
+    color: inherit;
 }
 
 .dot {
@@ -72,7 +72,7 @@
 }
 
 ::slotted([slot="caption"]) {
-    margin: 0 !important;
+    margin: 0;
     font-size: 0.85rem;
     color: var(--_mossa-gc-fg-muted);
 }

@@ -1,0 +1,30 @@
+{
+    "id": "mossa/blocs/section",
+    "type": "bloc",
+    "artifact": "mossa-section",
+    "category": "layout",
+    "defaultActive": false,
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "body-text",
+            "container-lg",
+            "container-md",
+            "container-sm",
+            "container-xl",
+            "container-xs",
+            "page-background",
+            "primary-base",
+            "primary-foreground",
+            "secondary-base",
+            "secondary-foreground",
+            "space-lg",
+            "space-md",
+            "space-sm",
+            "space-xl",
+            "subtle-background",
+            "surface-background",
+            "surface-text"
+        ]
+    }
+}

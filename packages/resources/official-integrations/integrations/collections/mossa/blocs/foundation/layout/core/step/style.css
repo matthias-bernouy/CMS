@@ -93,12 +93,12 @@
 :host(:not([has-icon])) .icon-badge { display: none; }
 
 ::slotted([slot="title"]) {
-    margin: 0 !important;
-    font-family: var(--ulvia-font-heading) !important;
-    font-size: 1.25rem !important;
-    font-weight: 700 !important;
-    line-height: 1.3 !important;
-    color: var(--_mossa-sc-fg) !important;
+    margin: 0;
+    font-family: var(--ulvia-font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--_mossa-sc-fg);
 }
 
 ::slotted([slot="description"]) {

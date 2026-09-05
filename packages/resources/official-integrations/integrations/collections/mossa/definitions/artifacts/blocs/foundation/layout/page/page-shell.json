@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-page-shell",
+        "name": "Page shell",
+        "group": "Layout",
+        "description": "Document-level layout for semantic header, main, and footer content.",
+        "path": "blocs/foundation/layout/page/page-shell",
+        "view": "Bloc.ts"
+    }
+}

@@ -55,6 +55,7 @@ export async function buildBloc(artifact: DeclarativeBlocArtifactTemplate): Prom
             native,
             ...(bloc.compositionHTML !== undefined ? { compositionHTML: bloc.compositionHTML } : {}),
             ...(bloc.view ? { viewPath: bloc.view } : {}),
+            ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
         },
     );
     if (built.id !== bloc.tag || !built.editorJS.includes("registerEditor")) {

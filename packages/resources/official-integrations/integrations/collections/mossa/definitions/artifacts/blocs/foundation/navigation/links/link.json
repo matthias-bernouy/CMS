@@ -1,0 +1,12 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-link",
+        "name": "Link",
+        "group": "Navigation",
+        "description": "Styled link whose native anchor is managed by the CMS editor.",
+        "nativeElement": "a",
+        "path": "blocs/foundation/navigation/links/link",
+        "view": "Bloc.ts"
+    }
+}

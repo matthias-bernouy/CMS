@@ -134,7 +134,7 @@
     border-radius: 2px;
 }
 
-@container (max-width: 768px) {
+@container (max-width: var(--_mossa-navbar-breakpoint)) {
     .links {
         flex-direction: column;
         gap: 0.5rem;

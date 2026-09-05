@@ -66,12 +66,12 @@
 }
 
 .title ::slotted(*) {
-    margin: 0 !important;
-    font-family: var(--ulvia-font-body) !important;
-    font-size: inherit !important;
-    font-weight: 600 !important;
-    color: inherit !important;
-    letter-spacing: inherit !important;
+    margin: 0;
+    font-family: var(--ulvia-font-body);
+    font-size: inherit;
+    font-weight: 600;
+    color: inherit;
+    letter-spacing: inherit;
 }
 
 .indicator {

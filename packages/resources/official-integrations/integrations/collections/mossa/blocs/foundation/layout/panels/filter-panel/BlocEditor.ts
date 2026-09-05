@@ -1,13 +1,12 @@
 import { Editor, registerEditor, type ContentSlot, type EditableState } from "@bernouy/cms-content/editor";
 
 /* Editor-only override: when the user pins the panel via an editor state,
-   `.panel.is-pinned-open` is set on the shadow wrapper. The runtime rule
-   `:host([collapsed]) .body { display: none }` would still hide the body
-   (host attribute, shadow class — independent), so we force-show with
-   !important. Mirror chevron rotation too so the indicator stays sensible. */
+   `.panel.is-pinned-open` is set on the shadow wrapper. The explicit host
+   state gives these rules enough specificity to beat the runtime collapsed
+   state without changing authored data. */
 const editorCSS = `
-.panel.is-pinned-open .body    { display: flex !important; }
-.panel.is-pinned-open .chevron { transform: rotate(-180deg) !important; }
+:host([collapsed]) .panel.is-pinned-open .body    { display: flex; }
+:host([collapsed]) .panel.is-pinned-open .chevron { transform: rotate(-180deg); }
 `;
 
 export class BlocEditor extends Editor {

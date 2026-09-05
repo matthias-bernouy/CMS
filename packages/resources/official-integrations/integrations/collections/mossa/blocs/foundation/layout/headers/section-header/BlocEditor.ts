@@ -15,6 +15,10 @@ export class BlocEditor extends Editor {
                         "attribute": "size",
                         "options": [
                             {
+                                "label": "Extra small",
+                                "value": "xs",
+                            },
+                            {
                                 "label": "Small",
                                 "value": "sm",
                             },
@@ -66,6 +70,22 @@ export class BlocEditor extends Editor {
                             {
                                 "label": "Muted",
                                 "value": "muted",
+                            },
+                        ],
+                    },
+                    {
+                        "type": "segmented",
+                        "label": "Text tone",
+                        "attribute": "tone",
+                        "defaultValue": "surface",
+                        "options": [
+                            {
+                                "label": "Surface",
+                                "value": "surface",
+                            },
+                            {
+                                "label": "Inherit",
+                                "value": "inherit",
                             },
                         ],
                     },

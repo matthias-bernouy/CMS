@@ -60,9 +60,9 @@
 }
 
 .title-wrap ::slotted([slot="title"]) {
-    margin: 0 !important;
-    font: inherit !important;
-    color: inherit !important;
+    margin: 0;
+    font: inherit;
+    color: inherit;
 }
 
 .chevron {

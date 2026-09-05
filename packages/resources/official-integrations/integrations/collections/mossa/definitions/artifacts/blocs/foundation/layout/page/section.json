@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-section",
+        "name": "Section",
+        "group": "Layout",
+        "description": "Full-width semantic surface with configurable width and spacing.",
+        "path": "blocs/foundation/layout/page/section",
+        "view": "Bloc.ts"
+    }
+}

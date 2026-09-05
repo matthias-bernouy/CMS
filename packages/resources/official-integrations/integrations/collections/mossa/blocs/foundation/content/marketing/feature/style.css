@@ -32,7 +32,7 @@
 }
 
 ::slotted([slot="label"]) {
-    margin: 0 !important;
+    margin: 0;
     font-size: 0.95rem;
     color: var(--ulvia-surface-text);
 }

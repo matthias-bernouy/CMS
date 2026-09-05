@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-section",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Section",
+        "description": "Full-width semantic surface with token-based colour, content width, and vertical spacing."
+    }
+}

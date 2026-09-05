@@ -92,6 +92,30 @@ describe("Mossa theme hygiene", () => {
         expect(placeholders).toEqual([]);
     });
 
+    test("honours the public navbar breakpoint setting", async () => {
+        const { mossa } = await collections();
+        const navbar = sourceEntries(mossa).filter(({ tag }) => tag === "mossa-navbar");
+        const implementation = navbar.find(({ path }) => path === "Bloc.ts")?.source ?? "";
+        const style = navbar.find(({ path }) => path === "style.css")?.source ?? "";
+
+        expect(implementation).toContain('"_mossa-navbar-breakpoint": this.getAttribute("navbar-breakpoint")');
+        expect(style).toContain("@container (max-width: var(--_mossa-navbar-breakpoint))");
+        expect(style).not.toContain("@container (max-width: 768px)");
+    });
+
+    test("uses the shared size vocabulary for vertical spacing", async () => {
+        const { mossa } = await collections();
+        const spacing = sourceEntries(mossa).filter(({ tag }) => tag === "mossa-spacing");
+        const editor = spacing.find(({ path }) => path === "BlocEditor.ts")?.source ?? "";
+        const style = spacing.find(({ path }) => path === "style.css")?.source ?? "";
+
+        for (const size of ["xs", "sm", "md", "lg", "xl"]) {
+            expect(editor).toContain(`"value": "${size}"`);
+            expect(style).toContain(`:host([size="${size}"])`);
+        }
+        expect(editor).not.toMatch(/"value": "(?:s|m|l)"/);
+    });
+
     test("keeps raw colors only at the Stripe Elements serialization boundary", async () => {
         const { mossa } = await collections();
         const rawColors = sourceEntries(mossa).flatMap(({ tag, path, source }) =>
@@ -111,6 +135,39 @@ describe("Mossa theme hygiene", () => {
             "mossa-commerce-stripe-payment/Bloc.ts:#21865f",
             "mossa-commerce-stripe-payment/Bloc.ts:#dfddd4",
         ]);
+    });
+
+    test("does not use important declarations for presentation", async () => {
+        const { mossa } = await collections();
+        const presentationImportant = sourceEntries(mossa).flatMap(({ tag, path, source }) =>
+            [...source.matchAll(/([a-z-]+)\s*:[^;{}]+!important/gi)]
+                .filter(([, property]) => property !== "display")
+                .map(([declaration]) => `${tag}/${path}:${declaration}`),
+        );
+
+        expect(presentationImportant).toEqual([]);
+    });
+
+    test("keeps section padding inside its public width", async () => {
+        const { mossa } = await collections();
+        const sectionStyle = sourceEntries(mossa).find(
+            ({ tag, path }) => tag === "mossa-section" && path === "style.css",
+        )?.source;
+
+        expect(sectionStyle).toContain('[part="content"]');
+        expect(sectionStyle).toContain("box-sizing: border-box");
+    });
+
+    test("lets buttons explicitly inherit their surrounding colour", async () => {
+        const { mossa } = await collections();
+        const buttonEntries = sourceEntries(mossa).filter(({ tag }) => tag === "mossa-button");
+        const editor = buttonEntries.find(({ path }) => path === "BlocEditor.ts")?.source ?? "";
+        const style = buttonEntries.find(({ path }) => path === "style.css")?.source ?? "";
+
+        expect(editor).toContain('{ label: "Inherit", value: "inherit" }');
+        expect(style).toContain(':host([tone="inherit"])');
+        expect(style).toContain("--_mossa-tone-contrasted: currentColor");
+        expect(style).toContain("--_mossa-tone-border: currentColor");
     });
 });
 

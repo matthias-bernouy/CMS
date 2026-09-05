@@ -60,7 +60,7 @@ class MossaTextarea extends HTMLElement {
 
                 .field {
                     display: grid;
-                    gap: var(--_mossa-field-gap, var(--ulvia-space-sm));
+                    gap: var(--_mossa-field-gap, var(--ulvia-space-xs));
                 }
 
                 label {
@@ -70,7 +70,7 @@ class MossaTextarea extends HTMLElement {
                 textarea {
                     box-sizing: border-box;
                     width: 100%;
-                    padding: var(--_mossa-input-padding, var(--ulvia-space-sm) calc(var(--ulvia-space-sm) + var(--ulvia-space-xs)));
+                    padding: var(--_mossa-input-padding, 0.625rem 0.8rem);
                     border: var(--_mossa-input-border, 1px solid var(--_mossa-input-border-color, var(--_mossa-field-border)));
                     border-radius: var(--_mossa-input-radius, var(--ulvia-radius-card));
                     background: var(--_mossa-input-background, var(--_mossa-field-background));
