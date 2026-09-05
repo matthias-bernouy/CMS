@@ -24,21 +24,21 @@ export async function dashboardIds(client: DevClient, sourceId: string): Promise
     );
 }
 
-export async function setSubscription(client: DevClient, email: string): Promise<void> {
-    const response = await fetch(`${client.deliveryUrl}/.cms/sources/newsletter/setSubscription`, {
+export async function setRecord(client: DevClient, key: string, value: string): Promise<void> {
+    const response = await fetch(`${client.deliveryUrl}/.cms/sources/dev-store/upsertRecord`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, subscribed: true }),
+        body: JSON.stringify({ key, value }),
     });
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ email: email.trim().toLowerCase(), subscribed: true });
+    expect(await response.json()).toEqual({ key, value });
 }
 
-export async function expectSubscription(client: DevClient, email: string): Promise<void> {
-    const result = await client.json<{ subscriptions: Array<{ email: string; subscribed: boolean }> }>(
-        `/.cms/sources/newsletter/listSubscriptions?q=${encodeURIComponent(email)}`,
+export async function expectRecord(client: DevClient, key: string, value: string): Promise<void> {
+    const result = await client.json<{ records: Array<{ key: string; value: string }> }>(
+        "/.cms/sources/dev-store/listRecords",
     );
-    expect(result.subscriptions).toEqual([expect.objectContaining({ email, subscribed: true })]);
+    expect(result.records).toContainEqual({ key, value });
 }
 
 export async function expectRenderedPage(client: DevClient): Promise<void> {
