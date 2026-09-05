@@ -19,6 +19,8 @@ export type TBloc = {
     catalogue?: "active" | "inactive";
     /** Internal behavior component omitted from the authoring catalogue. */
     internal?: boolean;
+    /** Single required native Light DOM child managed as part of this bloc. */
+    nativeElement?: string;
     viewJS: string;
     /**
      * Server-rendered light-DOM template. A bloc carrying this field is a

@@ -147,6 +147,7 @@ export class InMemoryBlocRepository {
                           description: bloc.description || "",
                           ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
                           ...(bloc.internal ? { internal: true } : {}),
+                          ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
                           ownership: structuredClone(record.ownership),
                       },
                   ]

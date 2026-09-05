@@ -54,6 +54,8 @@ export class EditorRuntime {
             this._entriesByEditor.set(editor, entry);
         }
 
+        this._connectManagedNativeEditors();
+
         for (const editor of this._editors) {
             editor.mount();
             declareBindingDataScopes(editor, this.registry, this._dataSources);
@@ -89,7 +91,8 @@ export class EditorRuntime {
         }
 
         const editor = targetOrEditor instanceof Editor ? targetOrEditor : this.registry.getEditor(targetOrEditor);
-        this._selectedEditor = editor ? (findRichTextOwner(this._structureContext(), editor.target) ?? editor) : null;
+        const selected = editor ? (findRichTextOwner(this._structureContext(), editor.target) ?? editor) : null;
+        this._selectedEditor = selected ? this.registry.getLogicalEditor(selected) : null;
 
         return this.getSelection();
     }
@@ -129,6 +132,34 @@ export class EditorRuntime {
             editors: this._editors,
             entriesByEditor: this._entriesByEditor,
         };
+    }
+
+    private _connectManagedNativeEditors(): void {
+        for (const owner of this._editors) {
+            const nativeElement = this._entriesByEditor.get(owner)?.nativeElement;
+            if (!nativeElement) {
+                continue;
+            }
+            const children = Array.from(owner.target.children);
+            const managedElement = children[0] as HTMLElement | undefined;
+            const hasAuthoredSiblingText = Array.from(owner.target.childNodes).some(
+                (node) => node.nodeType === 3 && Boolean(node.textContent?.trim()),
+            );
+            if (
+                children.length !== 1 ||
+                managedElement?.localName !== nativeElement ||
+                managedElement.hasAttribute("slot") ||
+                hasAuthoredSiblingText
+            ) {
+                continue;
+            }
+            const managed = this.registry.getEditor(managedElement);
+            if (!managed) {
+                continue;
+            }
+            owner.setManagedNativeEditor(managed);
+            this.registry.registerManagedNative(owner, managed);
+        }
     }
 
     private _assertDocument(document: EditorDocument): void {

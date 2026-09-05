@@ -77,6 +77,7 @@ export function installEditorCatalogRuntime(): EditorCatalogRuntime {
                         description: entry.description,
                         category: entry.category,
                         defaultContent: entry.defaultContent,
+                        nativeElement: entry.nativeElement,
                         bloc: entry.bloc,
                     }),
                 );

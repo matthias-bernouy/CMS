@@ -98,6 +98,7 @@ export const p9rExternalsPlugin: BunPlugin = {
                     `    description: props?.description ?? "BE5_DESCRIPTION_TO_BE_REPLACED",\n` +
                     `    category:    props?.category ?? "BE5_GROUP_TO_BE_REPLACED",\n` +
                     `    defaultContent: props?.defaultContent ?? BE5_DEFAULT_CONTENT_TO_BE_REPLACED,\n` +
+                    `    nativeElement: BE5_NATIVE_ELEMENT_TO_BE_REPLACED,\n` +
                     `    editor:      props?.editor ?? props?.cl,\n` +
                     `});\n` +
                     `export const registerEditor_opaque = (props = {}) => {\n` +

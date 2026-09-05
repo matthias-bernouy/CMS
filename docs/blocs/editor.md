@@ -67,6 +67,12 @@ metadata cannot make `class`, `style`, `slot`, `id`, arbitrary `aria-*` or
 placement, media behavior, and exact authoring rules are listed in
 [Native Elements](./authoring.md#native-elements).
 
+For a custom Bloc declaring `nativeElement`, Control automatically merges the
+platform native editor into its owning Bloc. Do not recreate the native
+element's settings or expose it through `contentSlots()`. The wrapper remains
+the target for collection presentation settings, bindings, conditions, and
+repeats; native settings and text are routed to the required child.
+
 ## Settings
 
 A setting edits an attribute on `Editor.target`. The view and CSS then interpret

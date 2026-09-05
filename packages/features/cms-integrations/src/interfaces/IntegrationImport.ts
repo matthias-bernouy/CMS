@@ -157,6 +157,7 @@ export type IntegrationBlocArtifact = {
     description?: string;
     catalogue?: "active" | "inactive";
     internal?: boolean;
+    nativeElement?: string;
     viewPath?: string;
     viewJS?: string;
     compositionHTML?: string;

@@ -2,6 +2,7 @@ import type { DataScope, Editor } from "@bernouy/cms-content/editor";
 
 export class EditorRegistry {
     private readonly _editorsByTarget = new Map<HTMLElement, Editor>();
+    private readonly _managedNativeOwners = new Map<Editor, Editor>();
 
     register(editor: Editor): void {
         const current = this._editorsByTarget.get(editor.target);
@@ -15,10 +16,28 @@ export class EditorRegistry {
         if (this._editorsByTarget.get(editor.target) === editor) {
             this._editorsByTarget.delete(editor.target);
         }
+        this._managedNativeOwners.delete(editor);
+        for (const [managed, owner] of this._managedNativeOwners) {
+            if (owner === editor) {
+                this._managedNativeOwners.delete(managed);
+            }
+        }
     }
 
     getEditor(target: HTMLElement): Editor | undefined {
         return this._editorsByTarget.get(target);
+    }
+
+    registerManagedNative(owner: Editor, managed: Editor): void {
+        this._managedNativeOwners.set(managed, owner);
+    }
+
+    getManagedNativeOwner(editor: Editor): Editor | undefined {
+        return this._managedNativeOwners.get(editor);
+    }
+
+    getLogicalEditor(editor: Editor): Editor {
+        return this.getManagedNativeOwner(editor) ?? editor;
     }
 
     getClosestEditor(target: Element | null, stopAt?: HTMLElement): Editor | undefined {
@@ -57,6 +76,9 @@ export class EditorRegistry {
 
         for (const editor of this._editorsByTarget.values()) {
             if (editor.target === parent) {
+                continue;
+            }
+            if (this._managedNativeOwners.has(editor)) {
                 continue;
             }
             if (this.getRichTextOwner(editor.target)) {

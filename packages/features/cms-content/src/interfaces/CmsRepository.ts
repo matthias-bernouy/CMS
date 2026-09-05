@@ -18,6 +18,7 @@ export type BlocListItemResponse = {
     description: string;
     compositionHTML?: string;
     internal?: boolean;
+    nativeElement?: string;
     ownership: TBloc["ownership"];
 };
 

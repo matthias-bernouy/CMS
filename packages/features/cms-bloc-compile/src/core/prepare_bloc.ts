@@ -33,12 +33,13 @@ export async function prepare_bloc(
     blocId: string,
     source: Record<string, string> | undefined = undefined,
     defaultContent: string | undefined = undefined,
-    options: { native?: boolean; compositionHTML?: string; viewPath?: string } = {},
+    options: { native?: boolean; nativeElement?: string; compositionHTML?: string; viewPath?: string } = {},
 ) {
     if (options.native || isNativeBlocTag(blocId)) {
         throw new Error(nativeBlocOwnershipError(blocId));
     }
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
+    const nativeElement = options.nativeElement?.toLowerCase();
 
     try {
         await materializeSourceBundle(tempDir, source);
@@ -87,7 +88,11 @@ export async function prepare_bloc(
             .replaceAll("BE5_LABEL_TO_BE_REPLACED", jsStringLiteralContent(label))
             .replaceAll("BE5_GROUP_TO_BE_REPLACED", jsStringLiteralContent(group))
             .replaceAll("BE5_DESCRIPTION_TO_BE_REPLACED", jsStringLiteralContent(description))
-            .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", defaultContentLiteral);
+            .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", defaultContentLiteral)
+            .replaceAll(
+                "BE5_NATIVE_ELEMENT_TO_BE_REPLACED",
+                nativeElement ? JSON.stringify(nativeElement) : "undefined",
+            );
 
         assertValidJavaScriptArtifact(viewJS, `view bundle for ${blocId}`);
         assertValidJavaScriptArtifact(editorJS, `editor bundle for ${blocId}`);
@@ -100,6 +105,7 @@ export async function prepare_bloc(
             name: label,
             group: group,
             description: description,
+            ...(nativeElement ? { nativeElement } : {}),
             ...(source ? { source } : {}),
         };
     } finally {

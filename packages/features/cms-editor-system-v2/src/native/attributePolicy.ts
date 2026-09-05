@@ -229,12 +229,15 @@ export function canonicalizeNativeEditorAttributeChanges(
     );
 }
 
-export function filterNativeEditorSettingSections(target: Element, sections: SettingSection[]): SettingSection[] {
-    if (!isNativeHtmlEditorTag(target.localName)) {
-        return sections;
-    }
+export function filterNativeEditorSettingSections(
+    target: Element,
+    sections: SettingSection[],
+    managedNativeTarget?: Element,
+): SettingSection[] {
     return sections.flatMap((section): SettingSection[] => {
-        const settings = section.settings.flatMap((setting): Setting[] => filterSetting(target, setting));
+        const settings = section.settings.flatMap((setting): Setting[] =>
+            filterSetting(target, setting, managedNativeTarget),
+        );
         return settings.length > 0 ? [{ ...section, settings }] : [];
     });
 }
@@ -260,11 +263,15 @@ export function applyNativeEditorAttributeEffects(target: HTMLElement, attribute
     }
 }
 
-function filterSetting(target: Element, setting: Setting): Setting[] {
+function filterSetting(target: Element, setting: Setting, managedNativeTarget?: Element): Setting[] {
     if (setting.type !== "row") {
-        return isNativeEditorSettingAllowed(target, setting) ? [setting] : [];
+        const settingTarget = setting.target === "managed-native" ? managedNativeTarget : target;
+        return settingTarget && isNativeEditorSettingAllowed(settingTarget, setting) ? [setting] : [];
     }
-    const settings = setting.settings.filter((child) => isNativeEditorSettingAllowed(target, child));
+    const settings = setting.settings.filter((child) => {
+        const settingTarget = child.target === "managed-native" ? managedNativeTarget : target;
+        return settingTarget && isNativeEditorSettingAllowed(settingTarget, child);
+    });
     return settings.length > 0 ? [{ ...setting, settings }] : [];
 }
 

@@ -13,6 +13,7 @@ export type RuntimeManagedEditor = Editor & {
     mount(): void;
     unmount(): void;
     dispose(): void;
+    setManagedNativeEditor(editor: Editor | null): void;
 };
 
 export type EditorStructureNode = {

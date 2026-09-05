@@ -1908,6 +1908,9 @@
     getChildren() {
       return [];
     }
+    getManagedNativeEditor() {
+      return null;
+    }
     getStructureMode() {
       return this.structureMode();
     }
@@ -2262,6 +2265,7 @@
       category: entry.category ?? defaults.category,
       subCategory: entry.subCategory,
       defaultContent: entry.defaultContent ?? defaults.defaultContent,
+      nativeElement: entry.nativeElement ?? defaults.nativeElement,
       placement: entry.placement ?? defaults.placement,
       bloc: entry.bloc ?? defaults.bloc ?? globalThis.customElements?.get(tag) ?? fallbackElementConstructor(),
       editor
@@ -2469,6 +2473,20 @@
   var PLATFORM_NATIVE_CONTEXTUAL_TAGS = ["span", "li"];
   var PLATFORM_NATIVE_SEMANTIC_TAGS = ["article", "nav", "header", "footer", "main", "aside"];
   var PLATFORM_NATIVE_RICH_TEXT_TAGS = ["strong", "em", "code"];
+  var PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS = [
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "a",
+    "button",
+    "img",
+    "svg",
+    "span"
+  ];
   var PLATFORM_NATIVE_EDITOR_TAG_SET = new Set([
     ...PLATFORM_NATIVE_ADDABLE_TAGS,
     ...PLATFORM_NATIVE_CONTEXTUAL_TAGS
@@ -2479,6 +2497,7 @@
     ...PLATFORM_NATIVE_SEMANTIC_TAGS,
     ...PLATFORM_NATIVE_RICH_TEXT_TAGS
   ]);
+  var PLATFORM_MANAGED_NATIVE_ELEMENT_TAG_SET = new Set(PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS);
   var SITE_BLOC_NATIVE_STRUCTURE_TAG_SET = new Set([
     ...PLATFORM_NATIVE_ADDABLE_TAGS.filter((tag) => tag !== "form"),
     ...PLATFORM_NATIVE_CONTEXTUAL_TAGS,
@@ -54278,6 +54297,483 @@ label {
     return new DOMRect(left, top, right - left, bottom - top);
   }
 
+  // ../../features/cms-editor-system-v2/src/native/richTextPolicy.ts
+  var NATIVE_RICH_TEXT_TARGETS = new Set(["h1", "h2", "h3", "h4", "h5", "h6", "p", "a", "span", "li"]);
+  var ALLOWED_INLINE_TAGS = new Set(["strong", "em", "code"]);
+  var DANGEROUS_TAGS = new Set([
+    "script",
+    "style",
+    "noscript",
+    "template",
+    "iframe",
+    "object",
+    "embed",
+    "svg",
+    "math",
+    "img",
+    "video",
+    "audio",
+    "source",
+    "track"
+  ]);
+  function sanitizeNativeRichTextFragment(root, targetTag) {
+    const normalizedTarget = targetTag.toLowerCase();
+    if (!NATIVE_RICH_TEXT_TARGETS.has(normalizedTarget)) {
+      return;
+    }
+    sanitizeChildren(root, normalizedTarget !== "a");
+  }
+  function sanitizeNativeRichTextEditor(editor) {
+    const targetTag = editor.target.localName;
+    if (!isPlatformNativeEditorTag(targetTag) || editor.getTextCapability()?.format !== "richtext") {
+      return;
+    }
+    const reserved = reservedSlotNames(editor.getContentSlots());
+    for (const node of Array.from(editor.target.childNodes)) {
+      if (!isReservedSlotNode(node, reserved)) {
+        sanitizeNode(node, targetTag !== "a");
+      }
+    }
+  }
+  function sanitizeChildren(parent, allowLinks) {
+    for (const node of Array.from(parent.childNodes)) {
+      sanitizeNode(node, allowLinks);
+    }
+  }
+  function sanitizeNode(node, allowLinks) {
+    if (node.nodeType === 3) {
+      return;
+    }
+    if (node.nodeType !== 1) {
+      node.remove();
+      return;
+    }
+    const element = node;
+    const tag = element.localName;
+    if (DANGEROUS_TAGS.has(tag)) {
+      element.remove();
+      return;
+    }
+    sanitizeChildren(element, allowLinks);
+    if (ALLOWED_INLINE_TAGS.has(tag)) {
+      removeAttributes(element);
+      return;
+    }
+    if (tag === "a" && allowLinks) {
+      const href = element.getAttribute("href")?.trim() ?? "";
+      if (href && isSafeNavigationalUrl(href)) {
+        removeAttributes(element);
+        element.setAttribute("href", href);
+        return;
+      }
+    }
+    element.replaceWith(...Array.from(element.childNodes));
+  }
+  function removeAttributes(element) {
+    for (const attribute of Array.from(element.attributes)) {
+      element.removeAttribute(attribute.name);
+    }
+  }
+  function reservedSlotNames(slots) {
+    return new Set(slots.flatMap((slot) => slot.slot ? [slot.slot] : []));
+  }
+  function isReservedSlotNode(node, reserved) {
+    return node.nodeType === 1 && reserved.has(node.getAttribute("slot") ?? "");
+  }
+
+  // ../../features/cms-editor-system-v2/src/native/mediaSettingChanges.ts
+  var accessibleNameDrafts = new WeakMap;
+  function prepareNativeMediaSettingChange(editor, setting, value3, attributes) {
+    if (typeof value3 !== "string") {
+      return null;
+    }
+    const media2 = mediaAccessibility(editor.target);
+    if (!media2) {
+      return null;
+    }
+    if (setting.type === "text" && setting.attribute === media2.accessibleName && media2.isDecorative) {
+      accessibleNameDrafts.set(editor.target, value3);
+      return { kind: "accessible-name-draft" };
+    }
+    if (setting.type !== "segmented" || setting.attribute !== "role") {
+      return null;
+    }
+    if (value3 === media2.decorativeRole) {
+      rememberCurrentAccessibleName(editor, media2.accessibleName);
+      return {
+        kind: "attributes",
+        attributes: decorativeAttributes(editor.target.localName, attributes)
+      };
+    }
+    if (value3 !== media2.informativeRole) {
+      return null;
+    }
+    const changes = informativeAttributes(editor.target.localName, attributes);
+    const draft = accessibleNameDrafts.get(editor.target);
+    if (draft !== undefined) {
+      changes[media2.accessibleName] = draft;
+    }
+    return { kind: "attributes", attributes: changes };
+  }
+  function nativeMediaAccessibleNameDraft(editor, setting) {
+    const media2 = mediaAccessibility(editor.target);
+    if (!media2?.isDecorative || setting.type !== "text" || setting.attribute !== media2.accessibleName) {
+      return;
+    }
+    return accessibleNameDrafts.get(editor.target);
+  }
+  function mediaAccessibility(target2) {
+    if (target2.localName === "img") {
+      return {
+        accessibleName: "alt",
+        decorativeRole: "presentation",
+        informativeRole: "",
+        isDecorative: target2.getAttribute("role") === "presentation"
+      };
+    }
+    if (target2.localName === "svg") {
+      return {
+        accessibleName: "aria-label",
+        decorativeRole: "",
+        informativeRole: "img",
+        isDecorative: !target2.hasAttribute("role")
+      };
+    }
+    return null;
+  }
+  function rememberCurrentAccessibleName(editor, attribute) {
+    const current = editor.target.getAttribute(attribute);
+    if (current?.trim()) {
+      accessibleNameDrafts.set(editor.target, current);
+    }
+  }
+  function decorativeAttributes(tag, attributes) {
+    if (tag === "img") {
+      return { ...attributes, role: "presentation", "aria-hidden": "true", alt: "" };
+    }
+    return { ...attributes, role: null, "aria-hidden": "true", "aria-label": null };
+  }
+  function informativeAttributes(tag, attributes) {
+    if (tag === "img") {
+      return { ...attributes, role: null, "aria-hidden": null };
+    }
+    return { ...attributes, role: "img", "aria-hidden": null };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/valueSurface.ts
+  var VALUE_KEY_PATTERN = /^[A-Za-z0-9_.-]+$/;
+  function hasStandardValueSurface(target2) {
+    if (!("value" in target2)) {
+      return false;
+    }
+    try {
+      const value3 = target2.value;
+      target2.value = value3;
+      return typeof value3 === "string";
+    } catch {
+      return false;
+    }
+  }
+  function valueSurfaceName(target2) {
+    const propertyName = "name" in target2 ? target2.name : undefined;
+    return String(typeof propertyName === "string" ? propertyName : target2.getAttribute("name") ?? target2.id ?? "").trim();
+  }
+  function isValidValueKey(value3) {
+    return VALUE_KEY_PATTERN.test(value3.trim());
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/paramSync.ts
+  var PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
+  var PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
+  var PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
+  function applyParamSyncSetting(editor, setting, value3) {
+    if (!isParamSyncSetting(setting)) {
+      return false;
+    }
+    const target2 = editor.target;
+    const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target2);
+    if (setting.attribute === PARAM_SYNC_ENABLE_SETTING) {
+      if (value3 !== true) {
+        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
+        return true;
+      }
+      const next = current || fieldName;
+      if (isCmsQueryParamName(next)) {
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
+      }
+      return true;
+    }
+    if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
+      if (value3 === true && isCmsQueryParamName(fieldName)) {
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
+      } else if (current === fieldName) {
+        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
+      }
+      return true;
+    }
+    if (typeof value3 === "string") {
+      const next = value3.trim();
+      if (isCmsQueryParamName(next)) {
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
+      }
+    }
+    return true;
+  }
+  function settingsWithParamSync(editor, sections2) {
+    const section2 = paramSyncSettings(editor);
+    return section2 ? [...sections2, section2] : sections2;
+  }
+  function paramSyncSettings(editor) {
+    const target2 = editor.target;
+    if (!hasStandardValueSurface(target2)) {
+      return null;
+    }
+    const syncValue = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target2);
+    const hasFieldName = isCmsQueryParamName(fieldName);
+    const isEnabled = syncValue !== "";
+    const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
+    const settings = [
+      {
+        type: "toggle",
+        label: "Sync with query params",
+        attribute: PARAM_SYNC_ENABLE_SETTING,
+        defaultValue: isEnabled
+      }
+    ];
+    if (isEnabled && hasFieldName) {
+      settings.push({
+        type: "toggle",
+        label: "Use field name",
+        attribute: PARAM_SYNC_USE_NAME_SETTING,
+        defaultValue: usesFieldName,
+        help: `Uses "${fieldName}" as the query parameter name.`
+      });
+    }
+    if (isEnabled && !usesFieldName) {
+      settings.push({
+        type: "text",
+        label: "Param name",
+        attribute: PARAM_SYNC_NAME_SETTING,
+        defaultValue: syncValue,
+        placeholder: hasFieldName ? fieldName : "search",
+        help: "Letters, numbers, underscores, dashes, dots and colons only.",
+        required: true
+      });
+    }
+    return {
+      kind: "surcharge",
+      label: "Query params",
+      settings
+    };
+  }
+  function isParamSyncSetting(setting) {
+    return setting.attribute === PARAM_SYNC_ENABLE_SETTING || setting.attribute === PARAM_SYNC_USE_NAME_SETTING || setting.attribute === PARAM_SYNC_NAME_SETTING;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/pageState.ts
+  var PAGE_STATE_ENABLE_SETTING = "__cms-page-state-enabled";
+  var PAGE_STATE_USE_NAME_SETTING = "__cms-page-state-use-name";
+  var PAGE_STATE_NAME_SETTING = "__cms-page-state-name";
+  function applyPageStateSetting(editor, setting, value3) {
+    if (!isPageStateSetting(setting)) {
+      return false;
+    }
+    const target2 = editor.target;
+    const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target2);
+    if (setting.attribute === PAGE_STATE_ENABLE_SETTING) {
+      if (value3 !== true) {
+        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.pageState);
+        return true;
+      }
+      const next = current || fieldName;
+      if (isValidValueKey(next)) {
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
+      }
+      return true;
+    }
+    if (setting.attribute === PAGE_STATE_USE_NAME_SETTING) {
+      if (value3 === true && isValidValueKey(fieldName)) {
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, fieldName);
+      } else if (current === fieldName) {
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, "");
+      }
+      return true;
+    }
+    if (typeof value3 === "string") {
+      const next = value3.trim();
+      if (isValidValueKey(next)) {
+        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
+      }
+    }
+    return true;
+  }
+  function settingsWithPageState(editor, sections2) {
+    const section2 = pageStateSettings(editor);
+    return section2 ? [...sections2, section2] : sections2;
+  }
+  function pageStateSettings(editor) {
+    const target2 = editor.target;
+    if (!hasStandardValueSurface(target2)) {
+      return null;
+    }
+    const hasSyncAttribute = target2.hasAttribute(CMS_BINDING_ATTRIBUTES.pageState);
+    const syncValue = target2.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target2);
+    const hasFieldName = isValidValueKey(fieldName);
+    const isEnabled = hasSyncAttribute;
+    const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
+    const settings = [
+      {
+        type: "toggle",
+        label: "Sync with page state",
+        attribute: PAGE_STATE_ENABLE_SETTING,
+        defaultValue: isEnabled
+      }
+    ];
+    if (isEnabled && hasFieldName) {
+      settings.push({
+        type: "toggle",
+        label: "Use field name",
+        attribute: PAGE_STATE_USE_NAME_SETTING,
+        defaultValue: usesFieldName,
+        help: `Uses "${fieldName}" as the page state key.`
+      });
+    }
+    if (isEnabled && !usesFieldName) {
+      settings.push({
+        type: "text",
+        label: "State key",
+        attribute: PAGE_STATE_NAME_SETTING,
+        defaultValue: syncValue,
+        placeholder: hasFieldName ? fieldName : "deliveryAddress",
+        help: "Letters, numbers, underscores, dashes and dots only.",
+        required: true
+      });
+    }
+    return { kind: "surcharge", label: "Page state", settings };
+  }
+  function isPageStateSetting(setting) {
+    return setting.attribute === PAGE_STATE_ENABLE_SETTING || setting.attribute === PAGE_STATE_USE_NAME_SETTING || setting.attribute === PAGE_STATE_NAME_SETTING;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingsValues.ts
+  function resolveSettingsValues(editor, sections2) {
+    return sections2.map((section2) => ({
+      ...section2,
+      settings: section2.settings.map((setting) => resolveSetting(editor, setting))
+    }));
+  }
+  function getTextValue(editor, format) {
+    editor = textTargetEditor(editor);
+    assertTextSlotCompatibility(editor);
+    const textFragment = textContentFragment(editor);
+    if (format === "richtext") {
+      sanitizeNativeRichTextFragment(textFragment, editor.target.localName);
+    }
+    const value3 = format === "richtext" ? textFragment.innerHTML : textFragment.textContent ?? "";
+    return editor.getContentSlots().length > 0 ? value3.trim() : value3;
+  }
+  function setTextValue(editor, format, value3) {
+    editor = textTargetEditor(editor);
+    assertTextSlotCompatibility(editor);
+    const reserved = reservedSlotNames2(editor.getContentSlots());
+    const currentNodes = Array.from(editor.target.childNodes);
+    const referenceNode = currentNodes.find((node) => !isReservedSlotNode2(node, reserved)) ?? editor.target.firstChild;
+    const fragment = editor.target.ownerDocument.createDocumentFragment();
+    if (format === "richtext") {
+      const template22 = editor.target.ownerDocument.createElement("template");
+      template22.innerHTML = value3;
+      sanitizeNativeRichTextFragment(template22.content, editor.target.localName);
+      L3(template22.content);
+      fragment.append(template22.content.cloneNode(true));
+    } else if (value3 !== "") {
+      fragment.append(editor.target.ownerDocument.createTextNode(value3));
+    }
+    editor.target.insertBefore(fragment, referenceNode);
+    for (const node of currentNodes) {
+      if (!isReservedSlotNode2(node, reserved)) {
+        node.remove();
+      }
+    }
+  }
+  function resolveSetting(editor, setting) {
+    if (setting.type === "row") {
+      return {
+        ...setting,
+        settings: setting.settings.map((child) => resolveSettingValue(editor, child))
+      };
+    }
+    return resolveSettingValue(editor, setting);
+  }
+  function resolveSettingValue(editor, setting) {
+    if (isParamSyncSetting(setting) || isPageStateSetting(setting)) {
+      return setting;
+    }
+    const targetEditor = settingTargetEditor(editor, setting);
+    if (setting.type === "text") {
+      const accessibleNameDraft = nativeMediaAccessibleNameDraft(targetEditor, setting);
+      if (accessibleNameDraft !== undefined) {
+        return { ...setting, defaultValue: accessibleNameDraft };
+      }
+    }
+    if (setting.type === "toggle") {
+      return {
+        ...setting,
+        defaultValue: targetEditor.target.hasAttribute(setting.attribute)
+      };
+    }
+    const resolved = {
+      ...setting,
+      defaultValue: readSettingAttribute(targetEditor.target, setting.attribute) ?? setting.defaultValue
+    };
+    if (resolved.type === "color" && resolved.customAttribute) {
+      return {
+        ...resolved,
+        customDefaultValue: targetEditor.target.getAttribute(resolved.customAttribute) ?? resolved.customDefaultValue
+      };
+    }
+    return resolved;
+  }
+  function settingTargetEditor(editor, setting) {
+    return setting.target === "managed-native" ? editor.getManagedNativeEditor() ?? editor : editor;
+  }
+  function textTargetEditor(editor) {
+    return editor.getManagedNativeEditor() ?? editor;
+  }
+  function readSettingAttribute(element, name) {
+    return isNetworkBindingAttribute(name) ? $3(element, name) : element.getAttribute(name);
+  }
+  function isNetworkBindingAttribute(name) {
+    return Y3.includes(name);
+  }
+  function assertTextSlotCompatibility(editor) {
+    const hasDefaultSlot = editor.getContentSlots().some((slot) => !slot.slot);
+    if (!hasDefaultSlot) {
+      return;
+    }
+    throw new Error("Editors cannot combine textCapability() with an unnamed content slot.");
+  }
+  function textContentFragment(editor) {
+    const reserved = reservedSlotNames2(editor.getContentSlots());
+    const container = editor.target.ownerDocument.createElement("div");
+    for (const node of Array.from(editor.target.childNodes)) {
+      if (isReservedSlotNode2(node, reserved)) {
+        continue;
+      }
+      container.append(node.cloneNode(true));
+    }
+    return container;
+  }
+  function reservedSlotNames2(slots) {
+    return new Set(slots.map((slot) => slot.slot).filter((slot) => Boolean(slot)));
+  }
+  function isReservedSlotNode2(node, reserved) {
+    return node.nodeType === 1 && reserved.has(node.getAttribute("slot") ?? "");
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/inlineTextEditing.ts
   var INLINE_TEXT_EDITABLE_ATTRIBUTE = "data-cms-editor-v2-inline-text-editable";
   var INLINE_TEXT_ACTIVE_ATTRIBUTE = "data-cms-editor-v2-inline-text-active";
@@ -54299,7 +54795,7 @@ label {
     start(editor, focus = false) {
       if (this.activeEditor === editor) {
         if (focus) {
-          editor.target.focus({ preventScroll: true });
+          textTargetEditor(editor).target.focus({ preventScroll: true });
         }
         return true;
       }
@@ -54310,12 +54806,13 @@ label {
       }
       this.stop();
       this.activeEditor = editor;
-      editor.target.setAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE, "");
-      editor.target.setAttribute("contenteditable", format === "richtext" ? "true" : "plaintext-only");
-      this.protectContentSlots(editor);
+      const textEditor2 = textTargetEditor(editor);
+      textEditor2.target.setAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE, "");
+      textEditor2.target.setAttribute("contenteditable", format === "richtext" ? "true" : "plaintext-only");
+      this.protectContentSlots(textEditor2);
       this.richTextToolbar?.activate(editor);
       if (focus) {
-        editor.target.focus({ preventScroll: true });
+        textEditor2.target.focus({ preventScroll: true });
       }
       return true;
     }
@@ -54325,7 +54822,7 @@ label {
     activeEditorFor(event) {
       const editor = this.activeEditor;
       const target2 = eventNode(event.target);
-      return editor && target2 && editor.target.contains(target2) ? editor : null;
+      return editor && target2 && textTargetEditor(editor).target.contains(target2) ? editor : null;
     }
     activeFormatFor(event) {
       const editor = this.activeEditorFor(event);
@@ -54349,15 +54846,16 @@ label {
       }
       this.activeEditor = null;
       this.richTextToolbar?.deactivate();
-      editor.target.removeAttribute("contenteditable");
-      editor.target.removeAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE);
+      const textTarget = textTargetEditor(editor).target;
+      textTarget.removeAttribute("contenteditable");
+      textTarget.removeAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE);
       for (const target2 of this.protectedTargets) {
         target2.removeAttribute("contenteditable");
         target2.removeAttribute(INLINE_TEXT_PROTECTED_ATTRIBUTE);
       }
       this.protectedTargets.clear();
-      if (blur && editor.target.ownerDocument.activeElement === editor.target) {
-        editor.target.blur();
+      if (blur && textTarget.ownerDocument.activeElement === textTarget) {
+        textTarget.blur();
       }
     }
     reset() {
@@ -54371,14 +54869,15 @@ label {
       for (const node of nodes) {
         const format = inlineTextFormat(node.editor);
         if (format) {
-          node.target.setAttribute(INLINE_TEXT_EDITABLE_ATTRIBUTE, format);
-          this.markedTargets.add(node.target);
+          const target2 = textTargetEditor(node.editor).target;
+          target2.setAttribute(INLINE_TEXT_EDITABLE_ATTRIBUTE, format);
+          this.markedTargets.add(target2);
         }
         this.markStructure(node.children);
       }
     }
     protectContentSlots(editor) {
-      const reserved = reservedSlotNames(editor);
+      const reserved = reservedSlotNames3(editor);
       for (const child of Array.from(editor.target.children)) {
         if (!reserved.has(child.getAttribute("slot") ?? "")) {
           continue;
@@ -54423,12 +54922,13 @@ label {
     }
   }
   function inlineTextFormat(editor) {
+    editor = textTargetEditor(editor);
     const format = editor.getTextCapability()?.format;
     const slots = editor.getContentSlots();
     if (format !== "text" && format !== "richtext" || slots.some((slot) => !slot.slot) || editor.getStructureMode() === "opaque" || editor.target.hasAttribute("contenteditable")) {
       return null;
     }
-    const reserved = reservedSlotNames(editor);
+    const reserved = reservedSlotNames3(editor);
     const reservedChildren = Array.from(editor.target.children).filter((child) => reserved.has(child.getAttribute("slot") ?? ""));
     if (reservedChildren.some((child) => child.hasAttribute("contenteditable"))) {
       return null;
@@ -54441,7 +54941,7 @@ label {
     }
     return format;
   }
-  function reservedSlotNames(editor) {
+  function reservedSlotNames3(editor) {
     return new Set(editor.getContentSlots().flatMap((slot) => slot.slot ? [slot.slot] : []));
   }
   function eventNode(target2) {
@@ -54760,7 +55260,7 @@ label {
     }
     L3(fragment);
     const selectionTarget = slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag.toLowerCase()) ?? null;
-    if (!selectionTarget) {
+    if (!selectionTarget || !hasManagedNativeContract(selectionTarget, item.entry.nativeElement)) {
       return null;
     }
     return {
@@ -54784,12 +55284,24 @@ label {
   function createBlockFragment(document2, entry) {
     if (!entry.defaultContent) {
       const fragment = document2.createDocumentFragment();
-      fragment.append(document2.createElement(entry.tag));
+      const host = document2.createElement(entry.tag);
+      if (entry.nativeElement) {
+        host.append(document2.createElement(entry.nativeElement));
+      }
+      fragment.append(host);
       return fragment;
     }
     const template22 = document2.createElement("template");
     template22.innerHTML = entry.defaultContent;
     return template22.content.cloneNode(true);
+  }
+  function hasManagedNativeContract(host, nativeElement) {
+    if (!nativeElement) {
+      return true;
+    }
+    const children = Array.from(host.children);
+    const hasAuthoredSiblingText = Array.from(host.childNodes).some((node) => node.nodeType === Node.TEXT_NODE && Boolean(node.textContent?.trim()));
+    return children.length === 1 && children[0]?.localName === nativeElement.toLowerCase() && !children[0].hasAttribute("slot") && !hasAuthoredSiblingText;
   }
   function slotElementChildren(fragment) {
     return Array.from(fragment.children).filter(isElementNode);
@@ -55973,7 +56485,11 @@ label {
         saveSelection: () => this.commands?.saveSelection(),
         restoreSelection: () => this.commands?.restoreSelection(),
         insertText: (text5) => this.commands?.insertText(text5),
-        focusControl: () => this.editor?.target.focus({ preventScroll: true }),
+        focusControl: () => {
+          if (this.editor) {
+            textTargetEditor(this.editor).target.focus({ preventScroll: true });
+          }
+        },
         finish: () => this.finishAction()
       });
     }
@@ -55984,7 +56500,8 @@ label {
         return;
       }
       this.editor = editor;
-      this.commands = new RichTextRangeCommands(() => editor.target, () => editor.target.ownerDocument.getSelection?.() ?? null);
+      const textEditor2 = textTargetEditor(editor);
+      this.commands = new RichTextRangeCommands(() => textEditor2.target, () => textEditor2.target.ownerDocument.getSelection?.() ?? null);
       renderRichTextToolbar(this.refs.toolbar, capability, {
         action: (action) => this.runAction(action),
         textSize: (direction) => this.runTextSize(direction)
@@ -56058,7 +56575,7 @@ label {
       if (!editor || !this.commands) {
         return;
       }
-      editor.target.focus({ preventScroll: true });
+      textTargetEditor(editor).target.focus({ preventScroll: true });
       this.commands.restoreSelection();
       this.context.changed(editor);
       this.position();
@@ -56072,8 +56589,9 @@ label {
       if (!editor || this.refs.chrome.hidden) {
         return;
       }
-      const anchor = selectionRect(editor) ?? editor.target.getBoundingClientRect();
-      const frame = editor.target.ownerDocument.defaultView?.frameElement;
+      const textTarget = textTargetEditor(editor).target;
+      const anchor = selectionRect(editor) ?? textTarget.getBoundingClientRect();
+      const frame = textTarget.ownerDocument.defaultView?.frameElement;
       const frameRect = frame?.getBoundingClientRect();
       const toolbarRect = this.refs.chrome.getBoundingClientRect();
       const outerView = this.refs.chrome.ownerDocument.defaultView;
@@ -56086,7 +56604,7 @@ label {
       this.refs.chrome.style.top = `${above >= 8 ? above : frameTop + anchor.bottom + 8}px`;
     };
     updateListeners(method) {
-      const frameDocument = this.editor.target.ownerDocument;
+      const frameDocument = textTargetEditor(this.editor).target.ownerDocument;
       const frameView = frameDocument.defaultView;
       const outerView = this.refs.chrome.ownerDocument.defaultView;
       frameDocument[method]("selectionchange", this.updateSelection);
@@ -56097,486 +56615,19 @@ label {
     }
   }
   function selectionRect(editor) {
-    const selection = editor.target.ownerDocument.getSelection?.();
+    const target2 = textTargetEditor(editor).target;
+    const selection = target2.ownerDocument.getSelection?.();
     if (!selection || selection.rangeCount === 0) {
       return null;
     }
     const range = selection.getRangeAt(0);
-    if (!editor.target.contains(range.commonAncestorContainer)) {
+    if (!target2.contains(range.commonAncestorContainer)) {
       return null;
     }
     return range.getBoundingClientRect?.() ?? null;
   }
   function clamp(value3, min, max) {
     return Math.max(min, Math.min(Math.max(min, max), value3));
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/valueSurface.ts
-  var VALUE_KEY_PATTERN = /^[A-Za-z0-9_.-]+$/;
-  function hasStandardValueSurface(target2) {
-    if (!("value" in target2)) {
-      return false;
-    }
-    try {
-      const value3 = target2.value;
-      target2.value = value3;
-      return typeof value3 === "string";
-    } catch {
-      return false;
-    }
-  }
-  function valueSurfaceName(target2) {
-    const propertyName = "name" in target2 ? target2.name : undefined;
-    return String(typeof propertyName === "string" ? propertyName : target2.getAttribute("name") ?? target2.id ?? "").trim();
-  }
-  function isValidValueKey(value3) {
-    return VALUE_KEY_PATTERN.test(value3.trim());
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/paramSync.ts
-  var PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
-  var PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
-  var PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
-  function applyParamSyncSetting(editor, setting, value3) {
-    if (!isParamSyncSetting(setting)) {
-      return false;
-    }
-    const target2 = editor.target;
-    const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
-    const fieldName = valueSurfaceName(target2);
-    if (setting.attribute === PARAM_SYNC_ENABLE_SETTING) {
-      if (value3 !== true) {
-        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
-        return true;
-      }
-      const next = current || fieldName;
-      if (isCmsQueryParamName(next)) {
-        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
-      }
-      return true;
-    }
-    if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
-      if (value3 === true && isCmsQueryParamName(fieldName)) {
-        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
-      } else if (current === fieldName) {
-        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
-      }
-      return true;
-    }
-    if (typeof value3 === "string") {
-      const next = value3.trim();
-      if (isCmsQueryParamName(next)) {
-        target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
-      }
-    }
-    return true;
-  }
-  function settingsWithParamSync(editor, sections2) {
-    const section2 = paramSyncSettings(editor);
-    return section2 ? [...sections2, section2] : sections2;
-  }
-  function paramSyncSettings(editor) {
-    const target2 = editor.target;
-    if (!hasStandardValueSurface(target2)) {
-      return null;
-    }
-    const syncValue = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
-    const fieldName = valueSurfaceName(target2);
-    const hasFieldName = isCmsQueryParamName(fieldName);
-    const isEnabled = syncValue !== "";
-    const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
-    const settings = [
-      {
-        type: "toggle",
-        label: "Sync with query params",
-        attribute: PARAM_SYNC_ENABLE_SETTING,
-        defaultValue: isEnabled
-      }
-    ];
-    if (isEnabled && hasFieldName) {
-      settings.push({
-        type: "toggle",
-        label: "Use field name",
-        attribute: PARAM_SYNC_USE_NAME_SETTING,
-        defaultValue: usesFieldName,
-        help: `Uses "${fieldName}" as the query parameter name.`
-      });
-    }
-    if (isEnabled && !usesFieldName) {
-      settings.push({
-        type: "text",
-        label: "Param name",
-        attribute: PARAM_SYNC_NAME_SETTING,
-        defaultValue: syncValue,
-        placeholder: hasFieldName ? fieldName : "search",
-        help: "Letters, numbers, underscores, dashes, dots and colons only.",
-        required: true
-      });
-    }
-    return {
-      kind: "surcharge",
-      label: "Query params",
-      settings
-    };
-  }
-  function isParamSyncSetting(setting) {
-    return setting.attribute === PARAM_SYNC_ENABLE_SETTING || setting.attribute === PARAM_SYNC_USE_NAME_SETTING || setting.attribute === PARAM_SYNC_NAME_SETTING;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/pageState.ts
-  var PAGE_STATE_ENABLE_SETTING = "__cms-page-state-enabled";
-  var PAGE_STATE_USE_NAME_SETTING = "__cms-page-state-use-name";
-  var PAGE_STATE_NAME_SETTING = "__cms-page-state-name";
-  function applyPageStateSetting(editor, setting, value3) {
-    if (!isPageStateSetting(setting)) {
-      return false;
-    }
-    const target2 = editor.target;
-    const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
-    const fieldName = valueSurfaceName(target2);
-    if (setting.attribute === PAGE_STATE_ENABLE_SETTING) {
-      if (value3 !== true) {
-        target2.removeAttribute(CMS_BINDING_ATTRIBUTES.pageState);
-        return true;
-      }
-      const next = current || fieldName;
-      if (isValidValueKey(next)) {
-        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
-      }
-      return true;
-    }
-    if (setting.attribute === PAGE_STATE_USE_NAME_SETTING) {
-      if (value3 === true && isValidValueKey(fieldName)) {
-        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, fieldName);
-      } else if (current === fieldName) {
-        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, "");
-      }
-      return true;
-    }
-    if (typeof value3 === "string") {
-      const next = value3.trim();
-      if (isValidValueKey(next)) {
-        target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
-      }
-    }
-    return true;
-  }
-  function settingsWithPageState(editor, sections2) {
-    const section2 = pageStateSettings(editor);
-    return section2 ? [...sections2, section2] : sections2;
-  }
-  function pageStateSettings(editor) {
-    const target2 = editor.target;
-    if (!hasStandardValueSurface(target2)) {
-      return null;
-    }
-    const hasSyncAttribute = target2.hasAttribute(CMS_BINDING_ATTRIBUTES.pageState);
-    const syncValue = target2.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
-    const fieldName = valueSurfaceName(target2);
-    const hasFieldName = isValidValueKey(fieldName);
-    const isEnabled = hasSyncAttribute;
-    const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
-    const settings = [
-      {
-        type: "toggle",
-        label: "Sync with page state",
-        attribute: PAGE_STATE_ENABLE_SETTING,
-        defaultValue: isEnabled
-      }
-    ];
-    if (isEnabled && hasFieldName) {
-      settings.push({
-        type: "toggle",
-        label: "Use field name",
-        attribute: PAGE_STATE_USE_NAME_SETTING,
-        defaultValue: usesFieldName,
-        help: `Uses "${fieldName}" as the page state key.`
-      });
-    }
-    if (isEnabled && !usesFieldName) {
-      settings.push({
-        type: "text",
-        label: "State key",
-        attribute: PAGE_STATE_NAME_SETTING,
-        defaultValue: syncValue,
-        placeholder: hasFieldName ? fieldName : "deliveryAddress",
-        help: "Letters, numbers, underscores, dashes and dots only.",
-        required: true
-      });
-    }
-    return { kind: "surcharge", label: "Page state", settings };
-  }
-  function isPageStateSetting(setting) {
-    return setting.attribute === PAGE_STATE_ENABLE_SETTING || setting.attribute === PAGE_STATE_USE_NAME_SETTING || setting.attribute === PAGE_STATE_NAME_SETTING;
-  }
-
-  // ../../features/cms-editor-system-v2/src/native/richTextPolicy.ts
-  var NATIVE_RICH_TEXT_TARGETS = new Set(["h1", "h2", "h3", "h4", "h5", "h6", "p", "a", "span", "li"]);
-  var ALLOWED_INLINE_TAGS = new Set(["strong", "em", "code"]);
-  var DANGEROUS_TAGS = new Set([
-    "script",
-    "style",
-    "noscript",
-    "template",
-    "iframe",
-    "object",
-    "embed",
-    "svg",
-    "math",
-    "img",
-    "video",
-    "audio",
-    "source",
-    "track"
-  ]);
-  function sanitizeNativeRichTextFragment(root, targetTag) {
-    const normalizedTarget = targetTag.toLowerCase();
-    if (!NATIVE_RICH_TEXT_TARGETS.has(normalizedTarget)) {
-      return;
-    }
-    sanitizeChildren(root, normalizedTarget !== "a");
-  }
-  function sanitizeNativeRichTextEditor(editor) {
-    const targetTag = editor.target.localName;
-    if (!isPlatformNativeEditorTag(targetTag) || editor.getTextCapability()?.format !== "richtext") {
-      return;
-    }
-    const reserved = reservedSlotNames2(editor.getContentSlots());
-    for (const node of Array.from(editor.target.childNodes)) {
-      if (!isReservedSlotNode(node, reserved)) {
-        sanitizeNode(node, targetTag !== "a");
-      }
-    }
-  }
-  function sanitizeChildren(parent, allowLinks) {
-    for (const node of Array.from(parent.childNodes)) {
-      sanitizeNode(node, allowLinks);
-    }
-  }
-  function sanitizeNode(node, allowLinks) {
-    if (node.nodeType === 3) {
-      return;
-    }
-    if (node.nodeType !== 1) {
-      node.remove();
-      return;
-    }
-    const element = node;
-    const tag = element.localName;
-    if (DANGEROUS_TAGS.has(tag)) {
-      element.remove();
-      return;
-    }
-    sanitizeChildren(element, allowLinks);
-    if (ALLOWED_INLINE_TAGS.has(tag)) {
-      removeAttributes(element);
-      return;
-    }
-    if (tag === "a" && allowLinks) {
-      const href = element.getAttribute("href")?.trim() ?? "";
-      if (href && isSafeNavigationalUrl(href)) {
-        removeAttributes(element);
-        element.setAttribute("href", href);
-        return;
-      }
-    }
-    element.replaceWith(...Array.from(element.childNodes));
-  }
-  function removeAttributes(element) {
-    for (const attribute of Array.from(element.attributes)) {
-      element.removeAttribute(attribute.name);
-    }
-  }
-  function reservedSlotNames2(slots) {
-    return new Set(slots.flatMap((slot) => slot.slot ? [slot.slot] : []));
-  }
-  function isReservedSlotNode(node, reserved) {
-    return node.nodeType === 1 && reserved.has(node.getAttribute("slot") ?? "");
-  }
-
-  // ../../features/cms-editor-system-v2/src/native/mediaSettingChanges.ts
-  var accessibleNameDrafts = new WeakMap;
-  function prepareNativeMediaSettingChange(editor, setting, value3, attributes) {
-    if (typeof value3 !== "string") {
-      return null;
-    }
-    const media2 = mediaAccessibility(editor.target);
-    if (!media2) {
-      return null;
-    }
-    if (setting.type === "text" && setting.attribute === media2.accessibleName && media2.isDecorative) {
-      accessibleNameDrafts.set(editor.target, value3);
-      return { kind: "accessible-name-draft" };
-    }
-    if (setting.type !== "segmented" || setting.attribute !== "role") {
-      return null;
-    }
-    if (value3 === media2.decorativeRole) {
-      rememberCurrentAccessibleName(editor, media2.accessibleName);
-      return {
-        kind: "attributes",
-        attributes: decorativeAttributes(editor.target.localName, attributes)
-      };
-    }
-    if (value3 !== media2.informativeRole) {
-      return null;
-    }
-    const changes = informativeAttributes(editor.target.localName, attributes);
-    const draft = accessibleNameDrafts.get(editor.target);
-    if (draft !== undefined) {
-      changes[media2.accessibleName] = draft;
-    }
-    return { kind: "attributes", attributes: changes };
-  }
-  function nativeMediaAccessibleNameDraft(editor, setting) {
-    const media2 = mediaAccessibility(editor.target);
-    if (!media2?.isDecorative || setting.type !== "text" || setting.attribute !== media2.accessibleName) {
-      return;
-    }
-    return accessibleNameDrafts.get(editor.target);
-  }
-  function mediaAccessibility(target2) {
-    if (target2.localName === "img") {
-      return {
-        accessibleName: "alt",
-        decorativeRole: "presentation",
-        informativeRole: "",
-        isDecorative: target2.getAttribute("role") === "presentation"
-      };
-    }
-    if (target2.localName === "svg") {
-      return {
-        accessibleName: "aria-label",
-        decorativeRole: "",
-        informativeRole: "img",
-        isDecorative: !target2.hasAttribute("role")
-      };
-    }
-    return null;
-  }
-  function rememberCurrentAccessibleName(editor, attribute) {
-    const current = editor.target.getAttribute(attribute);
-    if (current?.trim()) {
-      accessibleNameDrafts.set(editor.target, current);
-    }
-  }
-  function decorativeAttributes(tag, attributes) {
-    if (tag === "img") {
-      return { ...attributes, role: "presentation", "aria-hidden": "true", alt: "" };
-    }
-    return { ...attributes, role: null, "aria-hidden": "true", "aria-label": null };
-  }
-  function informativeAttributes(tag, attributes) {
-    if (tag === "img") {
-      return { ...attributes, role: null, "aria-hidden": null };
-    }
-    return { ...attributes, role: "img", "aria-hidden": null };
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingsValues.ts
-  function resolveSettingsValues(editor, sections2) {
-    return sections2.map((section2) => ({
-      ...section2,
-      settings: section2.settings.map((setting) => resolveSetting(editor, setting))
-    }));
-  }
-  function getTextValue(editor, format) {
-    assertTextSlotCompatibility(editor);
-    const textFragment = textContentFragment(editor);
-    if (format === "richtext") {
-      sanitizeNativeRichTextFragment(textFragment, editor.target.localName);
-    }
-    const value3 = format === "richtext" ? textFragment.innerHTML : textFragment.textContent ?? "";
-    return editor.getContentSlots().length > 0 ? value3.trim() : value3;
-  }
-  function setTextValue(editor, format, value3) {
-    assertTextSlotCompatibility(editor);
-    const reserved = reservedSlotNames3(editor.getContentSlots());
-    const currentNodes = Array.from(editor.target.childNodes);
-    const referenceNode = currentNodes.find((node) => !isReservedSlotNode2(node, reserved)) ?? editor.target.firstChild;
-    const fragment = editor.target.ownerDocument.createDocumentFragment();
-    if (format === "richtext") {
-      const template22 = editor.target.ownerDocument.createElement("template");
-      template22.innerHTML = value3;
-      sanitizeNativeRichTextFragment(template22.content, editor.target.localName);
-      L3(template22.content);
-      fragment.append(template22.content.cloneNode(true));
-    } else if (value3 !== "") {
-      fragment.append(editor.target.ownerDocument.createTextNode(value3));
-    }
-    editor.target.insertBefore(fragment, referenceNode);
-    for (const node of currentNodes) {
-      if (!isReservedSlotNode2(node, reserved)) {
-        node.remove();
-      }
-    }
-  }
-  function resolveSetting(editor, setting) {
-    if (setting.type === "row") {
-      return {
-        ...setting,
-        settings: setting.settings.map((child) => resolveSettingValue(editor, child))
-      };
-    }
-    return resolveSettingValue(editor, setting);
-  }
-  function resolveSettingValue(editor, setting) {
-    if (isParamSyncSetting(setting) || isPageStateSetting(setting)) {
-      return setting;
-    }
-    if (setting.type === "text") {
-      const accessibleNameDraft = nativeMediaAccessibleNameDraft(editor, setting);
-      if (accessibleNameDraft !== undefined) {
-        return { ...setting, defaultValue: accessibleNameDraft };
-      }
-    }
-    if (setting.type === "toggle") {
-      return {
-        ...setting,
-        defaultValue: editor.target.hasAttribute(setting.attribute)
-      };
-    }
-    const resolved = {
-      ...setting,
-      defaultValue: readSettingAttribute(editor.target, setting.attribute) ?? setting.defaultValue
-    };
-    if (resolved.type === "color" && resolved.customAttribute) {
-      return {
-        ...resolved,
-        customDefaultValue: editor.target.getAttribute(resolved.customAttribute) ?? resolved.customDefaultValue
-      };
-    }
-    return resolved;
-  }
-  function readSettingAttribute(element, name) {
-    return isNetworkBindingAttribute(name) ? $3(element, name) : element.getAttribute(name);
-  }
-  function isNetworkBindingAttribute(name) {
-    return Y3.includes(name);
-  }
-  function assertTextSlotCompatibility(editor) {
-    const hasDefaultSlot = editor.getContentSlots().some((slot) => !slot.slot);
-    if (!hasDefaultSlot) {
-      return;
-    }
-    throw new Error("Editors cannot combine textCapability() with an unnamed content slot.");
-  }
-  function textContentFragment(editor) {
-    const reserved = reservedSlotNames3(editor.getContentSlots());
-    const container = editor.target.ownerDocument.createElement("div");
-    for (const node of Array.from(editor.target.childNodes)) {
-      if (isReservedSlotNode2(node, reserved)) {
-        continue;
-      }
-      container.append(node.cloneNode(true));
-    }
-    return container;
-  }
-  function reservedSlotNames3(slots) {
-    return new Set(slots.map((slot) => slot.slot).filter((slot) => Boolean(slot)));
-  }
-  function isReservedSlotNode2(node, reserved) {
-    return node.nodeType === 1 && reserved.has(node.getAttribute("slot") ?? "");
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/stateSessions.ts
@@ -56814,12 +56865,9 @@ label {
       return [attribute, removesAttribute ? null : value3];
     }));
   }
-  function filterNativeEditorSettingSections(target2, sections2) {
-    if (!isNativeHtmlEditorTag(target2.localName)) {
-      return sections2;
-    }
+  function filterNativeEditorSettingSections(target2, sections2, managedNativeTarget) {
     return sections2.flatMap((section2) => {
-      const settings = section2.settings.flatMap((setting) => filterSetting2(target2, setting));
+      const settings = section2.settings.flatMap((setting) => filterSetting2(target2, setting, managedNativeTarget));
       return settings.length > 0 ? [{ ...section2, settings }] : [];
     });
   }
@@ -56843,11 +56891,15 @@ label {
       applyDimensions();
     }
   }
-  function filterSetting2(target2, setting) {
+  function filterSetting2(target2, setting, managedNativeTarget) {
     if (setting.type !== "row") {
-      return isNativeEditorSettingAllowed(target2, setting) ? [setting] : [];
+      const settingTarget = setting.target === "managed-native" ? managedNativeTarget : target2;
+      return settingTarget && isNativeEditorSettingAllowed(settingTarget, setting) ? [setting] : [];
     }
-    const settings = setting.settings.filter((child) => isNativeEditorSettingAllowed(target2, child));
+    const settings = setting.settings.filter((child) => {
+      const settingTarget = child.target === "managed-native" ? managedNativeTarget : target2;
+      return settingTarget && isNativeEditorSettingAllowed(settingTarget, child);
+    });
     return settings.length > 0 ? [{ ...setting, settings }] : [];
   }
   function pageLinkValueAllowed(tag, attribute, value3) {
@@ -56933,24 +56985,25 @@ label {
         return;
       }
       const policy = this.editingPolicy();
-      const settings = filterSettingSections(policy, filterNativeEditorSettingSections(selection.editor.target, resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings)))));
+      const settings = filterSettingSections(policy, filterNativeEditorSettingSections(selection.editor.target, resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings))), selection.editor.getManagedNativeEditor()?.target));
       this.context.settings().setSettings(settings, selection.textCapability, selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "", this.context.settingsMode(), selection.states, policy.bindings ? runtime2.getSelectedDataScopes() : [], policy.bindings ? this.context.dataSources() : []);
     }
     applySetting(editor, setting, value3, attributes) {
       const policy = this.editingPolicy();
-      if (!isSettingAllowed(policy, setting) || !isNativeEditorSettingAllowed(editor.target, setting) || !isNativeEditorSettingValueAllowed(editor.target, setting, value3) || !isDeclaredNativeEndpoint(this.context.dataSources?.() ?? [], editor.target, setting, value3, attributes)) {
+      const targetEditor = settingTargetEditor(editor, setting);
+      if (!isSettingAllowed(policy, setting) || !isNativeEditorSettingAllowed(targetEditor.target, setting) || !isNativeEditorSettingValueAllowed(targetEditor.target, setting, value3) || !isDeclaredNativeEndpoint(this.context.dataSources?.() ?? [], targetEditor.target, setting, value3, attributes)) {
         return;
       }
-      const mediaChange = prepareNativeMediaSettingChange(editor, setting, value3, attributes);
+      const mediaChange = prepareNativeMediaSettingChange(targetEditor, setting, value3, attributes);
       if (mediaChange?.kind === "accessible-name-draft") {
         return;
       }
       const attributeChanges = mediaChange?.attributes ?? attributes;
       if (attributeChanges) {
-        this.applyAttributes(editor, normalizeNativeAttributeChanges(editor.target, setting, attributeChanges), policy);
+        this.applyAttributes(targetEditor, normalizeNativeAttributeChanges(targetEditor.target, setting, attributeChanges), policy);
         return;
       }
-      if (applyParamSyncSetting(editor, setting, value3) || applyPageStateSetting(editor, setting, value3)) {
+      if (applyParamSyncSetting(targetEditor, setting, value3) || applyPageStateSetting(targetEditor, setting, value3)) {
         this.renderSettings();
         this.context.syncViewFrameContent();
         this.context.highlight().show(editor);
@@ -56958,15 +57011,15 @@ label {
       }
       const attribute = setting.attribute;
       const mutationValue = typeof value3 === "boolean" ? value3 : value3 || null;
-      if (!isNativeEditorAttributeMutationAllowed(editor.target, { [attribute]: mutationValue })) {
+      if (!isNativeEditorAttributeMutationAllowed(targetEditor.target, { [attribute]: mutationValue })) {
         return;
       }
       if (typeof value3 === "boolean") {
-        editor.target.toggleAttribute(attribute, value3);
+        targetEditor.target.toggleAttribute(attribute, value3);
       } else {
-        writeSettingAttribute(editor.target, attribute, value3 || null);
+        writeSettingAttribute(targetEditor.target, attribute, value3 || null);
       }
-      applyNativeEditorAttributeEffects(editor.target, attribute);
+      applyNativeEditorAttributeEffects(targetEditor.target, attribute);
       if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
         this.renderSettings();
       }
@@ -57496,6 +57549,7 @@ label {
   // ../../features/cms-editor-system-v2/src/runtime/EditorRegistry/EditorRegistry.ts
   class EditorRegistry {
     _editorsByTarget = new Map;
+    _managedNativeOwners = new Map;
     register(editor) {
       const current = this._editorsByTarget.get(editor.target);
       if (current && current !== editor) {
@@ -57507,9 +57561,24 @@ label {
       if (this._editorsByTarget.get(editor.target) === editor) {
         this._editorsByTarget.delete(editor.target);
       }
+      this._managedNativeOwners.delete(editor);
+      for (const [managed, owner] of this._managedNativeOwners) {
+        if (owner === editor) {
+          this._managedNativeOwners.delete(managed);
+        }
+      }
     }
     getEditor(target2) {
       return this._editorsByTarget.get(target2);
+    }
+    registerManagedNative(owner, managed) {
+      this._managedNativeOwners.set(managed, owner);
+    }
+    getManagedNativeOwner(editor) {
+      return this._managedNativeOwners.get(editor);
+    }
+    getLogicalEditor(editor) {
+      return this.getManagedNativeOwner(editor) ?? editor;
     }
     getClosestEditor(target2, stopAt) {
       let current = target2;
@@ -57540,6 +57609,9 @@ label {
       const children = [];
       for (const editor of this._editorsByTarget.values()) {
         if (editor.target === parent) {
+          continue;
+        }
+        if (this._managedNativeOwners.has(editor)) {
           continue;
         }
         if (this.getRichTextOwner(editor.target)) {
@@ -57604,6 +57676,23 @@ label {
       return false;
     }
   }
+  // ../../features/cms-editor-system-v2/src/runtime/RuntimeEditor/managedNativeSettings.ts
+  function markManagedNativeSection(section2) {
+    return {
+      ...section2,
+      settings: section2.settings.map(markManagedNativeSetting)
+    };
+  }
+  function markManagedNativeSetting(setting) {
+    if (setting.type === "row") {
+      return {
+        ...setting,
+        settings: setting.settings.map((child) => ({ ...child, target: "managed-native" }))
+      };
+    }
+    return { ...setting, target: "managed-native" };
+  }
+
   // ../../features/cms-editor-system-v2/src/runtime/events.ts
   var CMS_EDITOR_SETTINGS_CHANGE_EVENT = "cms-editor-settings-change";
   var CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT = "cms-editor-data-scopes-change";
@@ -57620,6 +57709,7 @@ label {
       _addedContentSlots = [];
       _addedStates = [];
       _textCapabilityOverride;
+      _managedNativeEditor = null;
       _isMounted = false;
       constructor(target2, _registry) {
         super(target2);
@@ -57640,7 +57730,9 @@ label {
         this.unmountEditor();
       }
       getSettings() {
-        return [...super.getSettings(), ...this._addedSettings];
+        const own = [...super.getSettings(), ...this._addedSettings];
+        const managed = this._managedNativeEditor?.getSettings().map(markManagedNativeSection) ?? [];
+        return [...own, ...managed];
       }
       addSettings(settings) {
         this._addedSettings.push(...toList(settings));
@@ -57673,7 +57765,7 @@ label {
         if (I2(this.target)) {
           return null;
         }
-        return this._textCapabilityOverride !== undefined ? this._textCapabilityOverride : super.getTextCapability();
+        return this._managedNativeEditor?.getTextCapability() ?? (this._textCapabilityOverride !== undefined ? this._textCapabilityOverride : super.getTextCapability());
       }
       setTextCapability(capability) {
         if (I2(this.target)) {
@@ -57697,6 +57789,12 @@ label {
       }
       getChildren() {
         return this._registry.getDirectChildren(this.target);
+      }
+      getManagedNativeEditor() {
+        return this._managedNativeEditor;
+      }
+      setManagedNativeEditor(editor) {
+        this._managedNativeEditor = editor;
       }
       dispose() {
         this.unmount();
@@ -57817,7 +57915,7 @@ label {
       }
       current = current.parentElement;
     }
-    return findRichTextOwner(context, closest.target) ?? closest;
+    return context.registry.getLogicalEditor(findRichTextOwner(context, closest.target) ?? closest);
   }
   function buildRuntimeStructure(context) {
     return structureChildren(context, context.document.contentRoot);
@@ -57833,6 +57931,9 @@ label {
         continue;
       }
       if (editor.target === parent) {
+        continue;
+      }
+      if (context.registry.getManagedNativeOwner(editor)) {
         continue;
       }
       if (findRichTextOwner(context, editor.target)) {
@@ -57936,6 +58037,7 @@ label {
         this._editors.push(editor);
         this._entriesByEditor.set(editor, entry);
       }
+      this._connectManagedNativeEditors();
       for (const editor of this._editors) {
         editor.mount();
         declareBindingDataScopes(editor, this.registry, this._dataSources);
@@ -57965,7 +58067,8 @@ label {
         return null;
       }
       const editor = targetOrEditor instanceof Editor ? targetOrEditor : this.registry.getEditor(targetOrEditor);
-      this._selectedEditor = editor ? findRichTextOwner(this._structureContext(), editor.target) ?? editor : null;
+      const selected2 = editor ? findRichTextOwner(this._structureContext(), editor.target) ?? editor : null;
+      this._selectedEditor = selected2 ? this.registry.getLogicalEditor(selected2) : null;
       return this.getSelection();
     }
     getSelection() {
@@ -57998,6 +58101,26 @@ label {
         editors: this._editors,
         entriesByEditor: this._entriesByEditor
       };
+    }
+    _connectManagedNativeEditors() {
+      for (const owner of this._editors) {
+        const nativeElement = this._entriesByEditor.get(owner)?.nativeElement;
+        if (!nativeElement) {
+          continue;
+        }
+        const children = Array.from(owner.target.children);
+        const managedElement = children[0];
+        const hasAuthoredSiblingText = Array.from(owner.target.childNodes).some((node) => node.nodeType === 3 && Boolean(node.textContent?.trim()));
+        if (children.length !== 1 || managedElement?.localName !== nativeElement || managedElement.hasAttribute("slot") || hasAuthoredSiblingText) {
+          continue;
+        }
+        const managed = this.registry.getEditor(managedElement);
+        if (!managed) {
+          continue;
+        }
+        owner.setManagedNativeEditor(managed);
+        this.registry.registerManagedNative(owner, managed);
+      }
     }
     _assertDocument(document2) {
       if (document2.root !== document2.contentRoot && !document2.root.contains(document2.contentRoot)) {
@@ -59713,6 +59836,7 @@ label {
             description: entry2.description,
             category: entry2.category,
             defaultContent: entry2.defaultContent,
+            nativeElement: entry2.nativeElement,
             bloc: entry2.bloc
           }));
         } catch (error) {

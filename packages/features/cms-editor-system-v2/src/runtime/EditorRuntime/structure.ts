@@ -48,7 +48,7 @@ export function findClosestRuntimeEditor(
         current = current.parentElement;
     }
 
-    return findRichTextOwner(context, closest.target) ?? closest;
+    return context.registry.getLogicalEditor(findRichTextOwner(context, closest.target) ?? closest);
 }
 
 export function buildRuntimeStructure(context: EditorRuntimeStructureContext): StructureNode[] {
@@ -68,6 +68,9 @@ function structureChildren(context: EditorRuntimeStructureContext, parent: HTMLE
             continue;
         }
         if (editor.target === parent) {
+            continue;
+        }
+        if (context.registry.getManagedNativeOwner(editor)) {
             continue;
         }
         if (findRichTextOwner(context, editor.target)) {

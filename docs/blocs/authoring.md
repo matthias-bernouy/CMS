@@ -140,6 +140,35 @@ whose root tag is native HTML, including a legacy artifact marked `native`.
 Collections may still use semantic native elements inside a custom element's
 template.
 
+A custom Bloc may instead own one editable native Light DOM child through the
+artifact-level `nativeElement` contract:
+
+```json
+{
+  "type": "bloc",
+  "bloc": {
+    "tag": "example-link",
+    "name": "Link",
+    "nativeElement": "a",
+    "path": "blocs/navigation/link",
+    "view": "Bloc.ts"
+  }
+}
+```
+
+The default content must then contain exactly one direct, un-slotted child of
+that type, for example
+`<example-link><a href="/">Link</a></example-link>`. When no default content is
+declared, insertion creates the required child. Control presents the wrapper
+and native child as one logical tree node: collection settings remain on the
+wrapper, while native attributes and direct text editing target the child.
+Page writes and direct API calls validate the same structure server-side.
+
+This V1 supports `h1` through `h6`, `p`, `a`, `button`, `img`, `svg`, and
+`span`. Container elements with their own content-slot semantics are excluded.
+Do not also declare an unnamed content slot or a wrapper text capability: the
+managed native editor owns the child text contract.
+
 The platform authoring set is intentionally narrow:
 
 - `h1` through `h6`, `p`, `a`, `button`, `form`, `img`, `svg`, `section`, `ul`,

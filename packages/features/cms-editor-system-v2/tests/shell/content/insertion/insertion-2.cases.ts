@@ -27,6 +27,30 @@ import {
 } from "../../support/shellTestSupport";
 
 describe("Shell", () => {
+    test("creates and validates the required managed native child during insertion", async () => {
+        installDom();
+
+        const { createInsertion } = await import("../../../../src/components/Layout/Shell/Domain/Mutations/insertion");
+        class LinkEditor extends Editor {}
+        const entry = {
+            tag: "demo-link",
+            label: "Link",
+            nativeElement: "a",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: LinkEditor,
+        };
+
+        const generated = createInsertion(document, { kind: "block", entry });
+        const host = generated?.fragment.firstElementChild;
+        expect(host?.outerHTML).toBe("<demo-link><a></a></demo-link>");
+
+        const invalid = createInsertion(document, {
+            kind: "block",
+            entry: { ...entry, defaultContent: "<demo-link><span>Wrong</span></demo-link>" },
+        });
+        expect(invalid).toBeNull();
+    });
+
     test("inserts catalog block default content", async () => {
         installDom();
 

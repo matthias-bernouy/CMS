@@ -2,6 +2,7 @@ import { isBlocOwnership, normalizeBlocWrite } from "cms-content/core/blocs/reco
 import { ContentValidationError } from "cms-content/core/validation/errors";
 import { validateSiteBlocSnapshot } from "cms-content/core/validation/blocs/snapshot";
 import { isValidCustomElementTag } from "cms-content/core/validation/predicates";
+import { isPlatformManagedNativeElementTag } from "cms-content/core/validation/blocs/nativeHtml";
 import type { BlocOwnership, SiteBlocDefinition, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
 
 export function validateBlocWrite(value: TBlocWrite): TBloc {
@@ -26,6 +27,15 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     }
     if (bloc.internal && (bloc.compositionHTML !== undefined || !bloc.viewJS.trim())) {
         throw new ContentValidationError("internal", "internal blocs must provide a component view");
+    }
+    if (bloc.nativeElement !== undefined && !isPlatformManagedNativeElementTag(bloc.nativeElement)) {
+        throw new ContentValidationError("nativeElement", "unsupported managed native element tag");
+    }
+    if (bloc.nativeElement !== undefined && bloc.nativeElement !== bloc.nativeElement.toLowerCase()) {
+        throw new ContentValidationError("nativeElement", "lower-case native element tag expected");
+    }
+    if (bloc.nativeElement !== undefined && (bloc.internal || bloc.compositionHTML !== undefined)) {
+        throw new ContentValidationError("nativeElement", "managed native elements require an editable component view");
     }
     return bloc;
 }

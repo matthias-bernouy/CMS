@@ -110,9 +110,11 @@ export {
     isPlatformNativeAttributeAllowed,
     isPlatformNativeContentTag,
     isPlatformNativeEditorTag,
+    isPlatformManagedNativeElementTag,
     isSiteBlocNativeAttributeAllowed,
     isSiteBlocNativeStructureTag,
     PLATFORM_NATIVE_ADDABLE_TAGS,
+    PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS,
     PLATFORM_NATIVE_CONTEXTUAL_TAGS,
     PLATFORM_NATIVE_RICH_TEXT_TAGS,
     PLATFORM_NATIVE_SEMANTIC_TAGS,
@@ -159,6 +161,10 @@ export {
     assertContentRefsExist,
     type ContentRefsReader,
 } from "cms-content/core/validation/documents/assertContentRefsExist";
+export {
+    managedNativeElementIssue,
+    type ManagedNativeElementContract,
+} from "cms-content/core/validation/documents/managedNativeElements";
 export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
 export { isSafeNavigationalUrl } from "cms-content/core/utils/safeUrl";
 export {

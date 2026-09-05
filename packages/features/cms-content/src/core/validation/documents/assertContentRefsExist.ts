@@ -1,9 +1,10 @@
 import { extractRefs } from "cms-content/core/utils/contentRefs";
 import { ContentValidationError } from "cms-content/core/validation/errors";
+import { managedNativeElementIssue } from "cms-content/core/validation/documents/managedNativeElements";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
-    getBlocsList(options?: { includeInactive?: boolean }): Promise<Array<{ id: string }>>;
+    getBlocsList(options?: { includeInactive?: boolean }): Promise<Array<{ id: string; nativeElement?: string }>>;
 };
 
 /**
@@ -20,15 +21,16 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
         return;
     }
 
-    const { blocs } = extractRefs(content);
-    if (blocs.size === 0) {
+    const { blocs: referencedBlocs } = extractRefs(content);
+    if (referencedBlocs.size === 0) {
         return;
     }
 
     const missing: string[] = [];
 
-    const known = new Set((await repository.getBlocsList({ includeInactive: true })).map((b) => b.id));
-    for (const tag of blocs) {
+    const registeredBlocs = await repository.getBlocsList({ includeInactive: true });
+    const known = new Set(registeredBlocs.map((bloc) => bloc.id));
+    for (const tag of referencedBlocs) {
         if (!known.has(tag)) {
             missing.push(`bloc "${tag}"`);
         }
@@ -36,5 +38,15 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
 
     if (missing.length > 0) {
         throw new ContentValidationError("content", `unknown reference(s): ${missing.join(", ")}`);
+    }
+
+    const managedIssue = managedNativeElementIssue(
+        content,
+        registeredBlocs.flatMap((bloc) =>
+            bloc.nativeElement ? [{ tag: bloc.id, nativeElement: bloc.nativeElement }] : [],
+        ),
+    );
+    if (managedIssue) {
+        throw new ContentValidationError("content", managedIssue);
     }
 }

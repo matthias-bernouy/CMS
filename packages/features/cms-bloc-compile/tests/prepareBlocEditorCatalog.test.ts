@@ -88,6 +88,26 @@ describe("prepare_bloc editor catalog output", () => {
         );
     });
 
+    test("embeds the managed native element contract into editor registrations", async () => {
+        const view = new File(["customElements.define('demo-link', class extends HTMLElement {});"], "DemoLink.ts", {
+            type: "text/typescript",
+        });
+        const bloc = await prepare_bloc(
+            view,
+            null,
+            "Demo link",
+            "Navigation",
+            "",
+            "demo-link",
+            undefined,
+            `<demo-link><a href="/">Link</a></demo-link>`,
+            { nativeElement: "a" },
+        );
+
+        expect(bloc.nativeElement).toBe("a");
+        expect(bloc.editorJS).toMatch(/nativeElement:"a"/);
+    });
+
     test("escapes metadata in editor catalog registrations", async () => {
         const view = new File(["customElements.define('demo-grid', class extends HTMLElement {});"], "DemoGrid.ts", {
             type: "text/typescript",

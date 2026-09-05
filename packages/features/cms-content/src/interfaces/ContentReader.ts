@@ -28,9 +28,16 @@ export interface ContentReader {
     getPublishedPages(): Promise<TPage[]>;
 
     // BLOC (view only — editor bundles live in the admin)
-    getBlocsList(
-        options?: BlocListOptions,
-    ): Promise<{ id: string; name: string; group: string; description: string; compositionHTML?: string }[]>;
+    getBlocsList(options?: BlocListOptions): Promise<
+        {
+            id: string;
+            name: string;
+            group: string;
+            description: string;
+            compositionHTML?: string;
+            nativeElement?: string;
+        }[]
+    >;
     getBlocViewJS(tag: string): Promise<string | null>;
 
     // SYSTEM (theme, favicon, host, language, system page refs)

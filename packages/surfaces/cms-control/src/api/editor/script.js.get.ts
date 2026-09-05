@@ -24,5 +24,7 @@ export default async function editorScriptGet(req: Request, cms: ControlCms) {
 }
 
 function normalizeEditorScript(script: string): string {
-    return script.replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", `""`);
+    return script
+        .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", `""`)
+        .replaceAll("BE5_NATIVE_ELEMENT_TO_BE_REPLACED", "undefined");
 }

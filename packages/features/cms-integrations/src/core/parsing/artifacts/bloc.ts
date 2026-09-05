@@ -1,4 +1,4 @@
-import { isNativeHtmlTag } from "@bernouy/cms-content";
+import { isNativeHtmlTag, isPlatformManagedNativeElementTag } from "@bernouy/cms-content";
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import type { DeclarativeArtifactTemplate } from "../../../interfaces/Integration";
 import { isRecord, text } from "../definition/values";
@@ -13,6 +13,7 @@ export function parseBlocTemplate(
     const viewJS = executableSource(value.viewJS);
     const compositionHTML = executableSource(value.compositionHTML);
     const editorJS = executableSource(value.editorJS);
+    const nativeElement = text(value.nativeElement);
     if (!tag) {
         throw new MissingIntegrationParam(`${name}.tag`);
     }
@@ -22,12 +23,19 @@ export function parseBlocTemplate(
     if (!allowLegacyNativeTag) {
         assertIntegrationBlocTagPublishable(tag, `${name}.tag`);
     }
+    if (nativeElement && !isPlatformManagedNativeElementTag(nativeElement)) {
+        throw new IntegrationInputError(
+            `${name}.nativeElement`,
+            `unsupported managed native element "${nativeElement}"`,
+        );
+    }
     return {
         tag,
         name: blocName,
         ...(text(value.group) ? { group: text(value.group)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
         ...(value.internal === true ? { internal: true } : {}),
+        ...(nativeElement ? { nativeElement: nativeElement.toLowerCase() } : {}),
         ...(text(value.path) ? { path: text(value.path)! } : {}),
         ...(text(value.view) ? { view: text(value.view)! } : {}),
         ...(text(value.composition) ? { composition: text(value.composition)! } : {}),

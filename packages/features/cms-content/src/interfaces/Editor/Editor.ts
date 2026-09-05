@@ -83,6 +83,11 @@ export class Editor {
         return [];
     }
 
+    getManagedNativeEditor(): Editor | null {
+        // Runtime may override for custom blocs declaring nativeElement.
+        return null;
+    }
+
     getStructureMode(): EditorStructureMode {
         return this.structureMode();
     }

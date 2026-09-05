@@ -5,6 +5,7 @@ import type { RichTextAction } from "../../../../Controls/RichText/RichTextEdito
 import { RichTextRangeCommands } from "../../../../Controls/RichText/RichTextEditor/richTextRangeCommands";
 import { renderRichTextToolbar } from "../../../../Controls/RichText/RichTextEditor/richTextToolbar";
 import type { InlineRichTextRefs } from "../shellDomRefs";
+import { textTargetEditor } from "./settingsValues";
 
 type InlineRichTextToolbarContext = {
     dataScopes(editor: Editor): DataScope[];
@@ -32,7 +33,11 @@ export class InlineRichTextToolbar {
                 saveSelection: () => this.commands?.saveSelection(),
                 restoreSelection: () => this.commands?.restoreSelection(),
                 insertText: (text) => this.commands?.insertText(text),
-                focusControl: () => this.editor?.target.focus({ preventScroll: true }),
+                focusControl: () => {
+                    if (this.editor) {
+                        textTargetEditor(this.editor).target.focus({ preventScroll: true });
+                    }
+                },
                 finish: () => this.finishAction(),
             },
         );
@@ -45,9 +50,10 @@ export class InlineRichTextToolbar {
             return;
         }
         this.editor = editor;
+        const textEditor = textTargetEditor(editor);
         this.commands = new RichTextRangeCommands(
-            () => editor.target,
-            () => editor.target.ownerDocument.getSelection?.() ?? null,
+            () => textEditor.target,
+            () => textEditor.target.ownerDocument.getSelection?.() ?? null,
         );
         renderRichTextToolbar(this.refs.toolbar, capability, {
             action: (action) => this.runAction(action),
@@ -129,7 +135,7 @@ export class InlineRichTextToolbar {
         if (!editor || !this.commands) {
             return;
         }
-        editor.target.focus({ preventScroll: true });
+        textTargetEditor(editor).target.focus({ preventScroll: true });
         this.commands.restoreSelection();
         this.context.changed(editor);
         this.position();
@@ -145,8 +151,9 @@ export class InlineRichTextToolbar {
         if (!editor || this.refs.chrome.hidden) {
             return;
         }
-        const anchor = selectionRect(editor) ?? editor.target.getBoundingClientRect();
-        const frame = editor.target.ownerDocument.defaultView?.frameElement;
+        const textTarget = textTargetEditor(editor).target;
+        const anchor = selectionRect(editor) ?? textTarget.getBoundingClientRect();
+        const frame = textTarget.ownerDocument.defaultView?.frameElement;
         const frameRect = frame?.getBoundingClientRect();
         const toolbarRect = this.refs.chrome.getBoundingClientRect();
         const outerView = this.refs.chrome.ownerDocument.defaultView;
@@ -164,7 +171,7 @@ export class InlineRichTextToolbar {
     };
 
     private updateListeners(method: "addEventListener" | "removeEventListener"): void {
-        const frameDocument = this.editor!.target.ownerDocument;
+        const frameDocument = textTargetEditor(this.editor!).target.ownerDocument;
         const frameView = frameDocument.defaultView;
         const outerView = this.refs.chrome.ownerDocument.defaultView;
         frameDocument[method]("selectionchange", this.updateSelection);
@@ -176,12 +183,13 @@ export class InlineRichTextToolbar {
 }
 
 function selectionRect(editor: Editor): DOMRect | null {
-    const selection = editor.target.ownerDocument.getSelection?.();
+    const target = textTargetEditor(editor).target;
+    const selection = target.ownerDocument.getSelection?.();
     if (!selection || selection.rangeCount === 0) {
         return null;
     }
     const range = selection.getRangeAt(0);
-    if (!editor.target.contains(range.commonAncestorContainer)) {
+    if (!target.contains(range.commonAncestorContainer)) {
         return null;
     }
     return (range as Range & { getBoundingClientRect?: () => DOMRect }).getBoundingClientRect?.() ?? null;

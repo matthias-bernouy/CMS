@@ -3,6 +3,7 @@ import type { Editor } from "@bernouy/cms-content/editor";
 import type { StructureNode } from "../../../../../runtime";
 
 import type { InlineRichTextToolbar } from "./inlineRichTextToolbar";
+import { textTargetEditor } from "./settingsValues";
 
 export const INLINE_TEXT_EDITABLE_ATTRIBUTE = "data-cms-editor-v2-inline-text-editable";
 export const INLINE_TEXT_ACTIVE_ATTRIBUTE = "data-cms-editor-v2-inline-text-active";
@@ -25,7 +26,7 @@ export class InlineTextEditing {
     start(editor: Editor, focus = false): boolean {
         if (this.activeEditor === editor) {
             if (focus) {
-                editor.target.focus({ preventScroll: true });
+                textTargetEditor(editor).target.focus({ preventScroll: true });
             }
             return true;
         }
@@ -36,12 +37,13 @@ export class InlineTextEditing {
         }
         this.stop();
         this.activeEditor = editor;
-        editor.target.setAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE, "");
-        editor.target.setAttribute("contenteditable", format === "richtext" ? "true" : "plaintext-only");
-        this.protectContentSlots(editor);
+        const textEditor = textTargetEditor(editor);
+        textEditor.target.setAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE, "");
+        textEditor.target.setAttribute("contenteditable", format === "richtext" ? "true" : "plaintext-only");
+        this.protectContentSlots(textEditor);
         this.richTextToolbar?.activate(editor);
         if (focus) {
-            editor.target.focus({ preventScroll: true });
+            textEditor.target.focus({ preventScroll: true });
         }
         return true;
     }
@@ -53,7 +55,7 @@ export class InlineTextEditing {
     activeEditorFor(event: Event): Editor | null {
         const editor = this.activeEditor;
         const target = eventNode(event.target);
-        return editor && target && editor.target.contains(target) ? editor : null;
+        return editor && target && textTargetEditor(editor).target.contains(target) ? editor : null;
     }
 
     activeFormatFor(event: Event): "text" | "richtext" | null {
@@ -82,15 +84,16 @@ export class InlineTextEditing {
         }
         this.activeEditor = null;
         this.richTextToolbar?.deactivate();
-        editor.target.removeAttribute("contenteditable");
-        editor.target.removeAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE);
+        const textTarget = textTargetEditor(editor).target;
+        textTarget.removeAttribute("contenteditable");
+        textTarget.removeAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE);
         for (const target of this.protectedTargets) {
             target.removeAttribute("contenteditable");
             target.removeAttribute(INLINE_TEXT_PROTECTED_ATTRIBUTE);
         }
         this.protectedTargets.clear();
-        if (blur && editor.target.ownerDocument.activeElement === editor.target) {
-            editor.target.blur();
+        if (blur && textTarget.ownerDocument.activeElement === textTarget) {
+            textTarget.blur();
         }
     }
 
@@ -106,8 +109,9 @@ export class InlineTextEditing {
         for (const node of nodes) {
             const format = inlineTextFormat(node.editor);
             if (format) {
-                node.target.setAttribute(INLINE_TEXT_EDITABLE_ATTRIBUTE, format);
-                this.markedTargets.add(node.target);
+                const target = textTargetEditor(node.editor).target;
+                target.setAttribute(INLINE_TEXT_EDITABLE_ATTRIBUTE, format);
+                this.markedTargets.add(target);
             }
             this.markStructure(node.children);
         }
@@ -162,6 +166,7 @@ export function stripInlineTextEditingState(root: HTMLElement): void {
 }
 
 function inlineTextFormat(editor: Editor): "text" | "richtext" | null {
+    editor = textTargetEditor(editor);
     const format = editor.getTextCapability()?.format;
     const slots = editor.getContentSlots();
     if (

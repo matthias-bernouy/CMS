@@ -25,6 +25,7 @@ export function resolveSettingsValues(editor: Editor, sections: SettingSection[]
 }
 
 export function getTextValue(editor: Editor, format: "text" | "richtext"): string {
+    editor = textTargetEditor(editor);
     assertTextSlotCompatibility(editor);
 
     const textFragment = textContentFragment(editor);
@@ -37,6 +38,7 @@ export function getTextValue(editor: Editor, format: "text" | "richtext"): strin
 }
 
 export function setTextValue(editor: Editor, format: "text" | "richtext", value: string): void {
+    editor = textTargetEditor(editor);
     assertTextSlotCompatibility(editor);
 
     const reserved = reservedSlotNames(editor.getContentSlots());
@@ -79,8 +81,10 @@ function resolveSettingValue(editor: Editor, setting: SettingControl): SettingCo
         return setting;
     }
 
+    const targetEditor = settingTargetEditor(editor, setting);
+
     if (setting.type === "text") {
-        const accessibleNameDraft = nativeMediaAccessibleNameDraft(editor, setting);
+        const accessibleNameDraft = nativeMediaAccessibleNameDraft(targetEditor, setting);
         if (accessibleNameDraft !== undefined) {
             return { ...setting, defaultValue: accessibleNameDraft };
         }
@@ -89,23 +93,32 @@ function resolveSettingValue(editor: Editor, setting: SettingControl): SettingCo
     if (setting.type === "toggle") {
         return {
             ...setting,
-            defaultValue: editor.target.hasAttribute(setting.attribute),
+            defaultValue: targetEditor.target.hasAttribute(setting.attribute),
         };
     }
 
     const resolved = {
         ...setting,
-        defaultValue: readSettingAttribute(editor.target, setting.attribute) ?? setting.defaultValue,
+        defaultValue: readSettingAttribute(targetEditor.target, setting.attribute) ?? setting.defaultValue,
     } as SettingControl;
 
     if (resolved.type === "color" && resolved.customAttribute) {
         return {
             ...resolved,
-            customDefaultValue: editor.target.getAttribute(resolved.customAttribute) ?? resolved.customDefaultValue,
+            customDefaultValue:
+                targetEditor.target.getAttribute(resolved.customAttribute) ?? resolved.customDefaultValue,
         };
     }
 
     return resolved;
+}
+
+export function settingTargetEditor(editor: Editor, setting: SettingControl): Editor {
+    return setting.target === "managed-native" ? (editor.getManagedNativeEditor() ?? editor) : editor;
+}
+
+export function textTargetEditor(editor: Editor): Editor {
+    return editor.getManagedNativeEditor() ?? editor;
 }
 
 function readSettingAttribute(element: Element, name: string): string | null {

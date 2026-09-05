@@ -35,6 +35,48 @@ describe("@bernouy/cms-integrations bloc artifact parsing", () => {
         });
     });
 
+    test("parses a supported managed native element", () => {
+        const definition = parseIntegrationDefinition({
+            kind: "link-pack",
+            label: "Link pack",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: {
+                        tag: "demo-link",
+                        name: "Demo link",
+                        nativeElement: "A",
+                        viewJS: "customElements.define('demo-link', class extends HTMLElement {});",
+                    },
+                },
+            ],
+        });
+
+        expect(definition.artifacts?.[0]).toHaveProperty("bloc.nativeElement", "a");
+    });
+
+    test("rejects native containers that require their own slot contract", () => {
+        expect(() =>
+            parseIntegrationDefinition({
+                kind: "form-pack",
+                label: "Form pack",
+                inputs: [],
+                artifacts: [
+                    {
+                        type: "bloc",
+                        bloc: {
+                            tag: "demo-form",
+                            name: "Demo form",
+                            nativeElement: "form",
+                            viewJS: "customElements.define('demo-form', class extends HTMLElement {});",
+                        },
+                    },
+                ],
+            }),
+        ).toThrow(/unsupported managed native element "form"/);
+    });
+
     test("omits a whitespace-only view source while preserving a null editor source", () => {
         const definition = parseIntegrationDefinition({
             kind: "native-bloc-pack",

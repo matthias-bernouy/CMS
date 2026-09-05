@@ -67,6 +67,8 @@ export type SettingMetadata<TType extends SettingType, TValue> = {
     type: TType;
     label: string;
     attribute: string;
+    /** Runtime routing metadata for a bloc-owned native child. */
+    target?: "managed-native";
     icon?: SettingIconName;
     ariaLabel?: string;
     display?: SettingDisplay;

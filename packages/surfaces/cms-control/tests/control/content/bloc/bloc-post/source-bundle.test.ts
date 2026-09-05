@@ -127,6 +127,45 @@ describe("bloc.post", () => {
         );
     });
 
+    test("persists a valid managed native contract and rejects an invalid default", async () => {
+        const valid = makeSystem();
+        const validResponse = await importBloc(
+            makeRequest({
+                name: "Link",
+                tag: "my-link",
+                group: "Navigation",
+                nativeElement: "a",
+                viewJS: viewFile(),
+                source: sourceField({
+                    "manifest.json": JSON.stringify({ defaultContent: "./default.html" }),
+                    "default.html": `<my-link><a href="/">Link</a></my-link>`,
+                }),
+            }),
+            valid.cms,
+        );
+        expect(validResponse.status).toBe(200);
+        expect(valid.createBlocCalls[0]?.bloc.nativeElement).toBe("a");
+
+        const invalid = makeSystem();
+        const invalidResponse = await importBloc(
+            makeRequest({
+                name: "Link",
+                tag: "my-link",
+                group: "Navigation",
+                nativeElement: "a",
+                viewJS: viewFile(),
+                source: sourceField({
+                    "manifest.json": JSON.stringify({ defaultContent: "./default.html" }),
+                    "default.html": `<my-link><span>Wrong</span></my-link>`,
+                }),
+            }),
+            invalid.cms,
+        );
+        expect(invalidResponse.status).toBe(400);
+        expect(await invalidResponse.text()).toMatch(/exactly one direct, un-slotted <a> child/);
+        expect(invalid.createBlocCalls).toHaveLength(0);
+    });
+
     test("rejects native bloc artifacts owned by the platform", async () => {
         const { cms, createBlocCalls } = makeSystem();
         const res = await importBloc(

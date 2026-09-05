@@ -137,6 +137,27 @@ export const PLATFORM_NATIVE_CONTEXTUAL_TAGS = ["span", "li"] as const;
 export const PLATFORM_NATIVE_SEMANTIC_TAGS = ["article", "nav", "header", "footer", "main", "aside"] as const;
 export const PLATFORM_NATIVE_RICH_TEXT_TAGS = ["strong", "em", "code"] as const;
 
+/**
+ * Native elements that a custom bloc may own as its single, managed Light DOM
+ * child. Containers with content-slot semantics are intentionally excluded.
+ */
+export const PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS = [
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "a",
+    "button",
+    "img",
+    "svg",
+    "span",
+] as const;
+
+export type PlatformManagedNativeElementTag = (typeof PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS)[number];
+
 const PLATFORM_NATIVE_EDITOR_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_ADDABLE_TAGS,
     ...PLATFORM_NATIVE_CONTEXTUAL_TAGS,
@@ -147,6 +168,7 @@ const PLATFORM_NATIVE_CONTENT_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_SEMANTIC_TAGS,
     ...PLATFORM_NATIVE_RICH_TEXT_TAGS,
 ]);
+const PLATFORM_MANAGED_NATIVE_ELEMENT_TAG_SET = new Set<string>(PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS);
 const SITE_BLOC_NATIVE_STRUCTURE_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_ADDABLE_TAGS.filter((tag) => tag !== "form"),
     ...PLATFORM_NATIVE_CONTEXTUAL_TAGS,
@@ -179,6 +201,10 @@ export function isPlatformNativeEditorTag(tag: string): boolean {
 
 export function isPlatformNativeContentTag(tag: string): boolean {
     return PLATFORM_NATIVE_CONTENT_TAG_SET.has(tag.toLowerCase());
+}
+
+export function isPlatformManagedNativeElementTag(tag: string): tag is PlatformManagedNativeElementTag {
+    return PLATFORM_MANAGED_NATIVE_ELEMENT_TAG_SET.has(tag.toLowerCase());
 }
 
 export function isSiteBlocNativeStructureTag(tag: string): boolean {

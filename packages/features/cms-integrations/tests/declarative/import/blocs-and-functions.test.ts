@@ -22,6 +22,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                         tag: "demo-card",
                         name: "Demo card",
                         group: "Content",
+                        nativeElement: "a",
                         viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
                         source: {
                             "Bloc.ts": Buffer.from(
@@ -55,6 +56,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                     tag: "demo-card",
                     name: "Demo card",
                     group: "Content",
+                    nativeElement: "a",
                     viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
                     source: {
                         "Bloc.ts": Buffer.from(

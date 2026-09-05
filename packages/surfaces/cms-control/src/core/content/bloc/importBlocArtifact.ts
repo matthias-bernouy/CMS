@@ -6,6 +6,8 @@ import {
     DuplicateBlocTagError,
     type CmsRepository,
     type TBloc,
+    isPlatformManagedNativeElementTag,
+    managedNativeElementIssue,
 } from "@bernouy/cms-content";
 import { invalidateBlocAssets, invalidatePagesReferencingBloc } from "cms-control/core/admin/server/cache/invalidation";
 import { parseSourceManifest, resolveDefaultContent } from "./sourceBundle";
@@ -29,6 +31,7 @@ export type BlocImportInput = {
     description?: string;
     catalogue?: "active" | "inactive";
     internal?: boolean;
+    nativeElement?: string;
     viewPath?: string;
     viewJS?: string | File | null;
     compositionHTML?: string;
@@ -54,11 +57,18 @@ export async function importBlocArtifact(
     input: BlocImportInput,
     runtime: BlocImportRuntime = {},
 ): Promise<BlocImportResult> {
+    const nativeElement = input.nativeElement?.trim().toLowerCase();
     if (!input.name || !input.tag || (!input.viewJS && input.compositionHTML === undefined)) {
         throw new BlocImportError("Missing argument (name, tag and viewJS or compositionHTML required)", 400);
     }
     if (input.viewJS && input.compositionHTML !== undefined) {
         throw new BlocImportError("A bloc cannot define both viewJS and compositionHTML", 400);
+    }
+    if (nativeElement && !isPlatformManagedNativeElementTag(nativeElement)) {
+        throw new BlocImportError(`Unsupported managed native element "${nativeElement}"`, 400);
+    }
+    if (nativeElement && (input.internal || input.compositionHTML !== undefined)) {
+        throw new BlocImportError("Managed native elements require an editable component view", 400);
     }
     const repository = runtime.repository ?? cms.repository;
 
@@ -89,6 +99,15 @@ export async function importBlocArtifact(
     if (defaultContentResult.error) {
         throw new BlocImportError(defaultContentResult.error, 400);
     }
+    const managedNativeIssue =
+        nativeElement && defaultContentResult.content !== undefined
+            ? managedNativeElementIssue(defaultContentResult.content, [{ tag: input.tag, nativeElement }], {
+                  requireExactlyOneHost: true,
+              })
+            : null;
+    if (managedNativeIssue) {
+        throw new BlocImportError(managedNativeIssue, 400);
+    }
 
     const prepared = await prepare_bloc(
         viewFile,
@@ -102,6 +121,7 @@ export async function importBlocArtifact(
         {
             ...(input.compositionHTML !== undefined ? { compositionHTML: input.compositionHTML } : {}),
             ...(input.viewPath ? { viewPath: input.viewPath } : {}),
+            ...(nativeElement ? { nativeElement } : {}),
         },
     );
     const bloc: TBloc = {

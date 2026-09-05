@@ -17,7 +17,7 @@ import type { FrameHighlight } from "./Core/FrameHighlight";
 import type { SelectOptions } from "./shellTypes";
 import { applyParamSyncSetting, settingsWithParamSync } from "../Domain/Settings/paramSync";
 import { applyPageStateSetting, settingsWithPageState } from "../Domain/Settings/pageState";
-import { getTextValue, resolveSettingsValues } from "../Domain/Settings/settingsValues";
+import { getTextValue, resolveSettingsValues, settingTargetEditor } from "../Domain/Settings/settingsValues";
 import { exitAllStateSessions, toggleStateSession } from "../Domain/Settings/stateSessions";
 import { writeSettingAttribute } from "../Domain/Settings/settingAttributes";
 import {
@@ -98,6 +98,7 @@ export class ShellSelection {
                         settingsWithParamSync(selection.editor, selection.settings),
                     ),
                 ),
+                selection.editor.getManagedNativeEditor()?.target,
             ),
         );
         this.context
@@ -120,29 +121,39 @@ export class ShellSelection {
         attributes?: SettingsViewAttributeChanges,
     ): void {
         const policy = this.editingPolicy();
+        const targetEditor = settingTargetEditor(editor, setting);
         if (
             !isSettingAllowed(policy, setting) ||
-            !isNativeEditorSettingAllowed(editor.target, setting) ||
-            !isNativeEditorSettingValueAllowed(editor.target, setting, value) ||
-            !isDeclaredNativeEndpoint(this.context.dataSources?.() ?? [], editor.target, setting, value, attributes)
+            !isNativeEditorSettingAllowed(targetEditor.target, setting) ||
+            !isNativeEditorSettingValueAllowed(targetEditor.target, setting, value) ||
+            !isDeclaredNativeEndpoint(
+                this.context.dataSources?.() ?? [],
+                targetEditor.target,
+                setting,
+                value,
+                attributes,
+            )
         ) {
             return;
         }
-        const mediaChange = prepareNativeMediaSettingChange(editor, setting, value, attributes);
+        const mediaChange = prepareNativeMediaSettingChange(targetEditor, setting, value, attributes);
         if (mediaChange?.kind === "accessible-name-draft") {
             return;
         }
         const attributeChanges = mediaChange?.attributes ?? attributes;
         if (attributeChanges) {
             this.applyAttributes(
-                editor,
-                normalizeNativeAttributeChanges(editor.target, setting, attributeChanges),
+                targetEditor,
+                normalizeNativeAttributeChanges(targetEditor.target, setting, attributeChanges),
                 policy,
             );
             return;
         }
 
-        if (applyParamSyncSetting(editor, setting, value) || applyPageStateSetting(editor, setting, value)) {
+        if (
+            applyParamSyncSetting(targetEditor, setting, value) ||
+            applyPageStateSetting(targetEditor, setting, value)
+        ) {
             this.renderSettings();
             this.context.syncViewFrameContent();
             this.context.highlight().show(editor);
@@ -151,15 +162,15 @@ export class ShellSelection {
 
         const attribute = setting.attribute;
         const mutationValue = typeof value === "boolean" ? value : value || null;
-        if (!isNativeEditorAttributeMutationAllowed(editor.target, { [attribute]: mutationValue })) {
+        if (!isNativeEditorAttributeMutationAllowed(targetEditor.target, { [attribute]: mutationValue })) {
             return;
         }
         if (typeof value === "boolean") {
-            editor.target.toggleAttribute(attribute, value);
+            targetEditor.target.toggleAttribute(attribute, value);
         } else {
-            writeSettingAttribute(editor.target, attribute, value || null);
+            writeSettingAttribute(targetEditor.target, attribute, value || null);
         }
-        applyNativeEditorAttributeEffects(editor.target, attribute);
+        applyNativeEditorAttributeEffects(targetEditor.target, attribute);
         if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
             this.renderSettings();
         }

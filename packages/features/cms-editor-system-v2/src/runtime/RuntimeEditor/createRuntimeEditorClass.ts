@@ -9,6 +9,7 @@ import {
 } from "@bernouy/cms-content/editor";
 import { isCompositionRuntimeElement } from "@bernouy/components/base";
 import type { EditorRegistry } from "../EditorRegistry/EditorRegistry";
+import { markManagedNativeSection } from "./managedNativeSettings";
 import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
@@ -21,6 +22,7 @@ export type RuntimeEditorLifecycle = Editor & {
     mount(): void;
     unmount(): void;
     dispose(): void;
+    setManagedNativeEditor(editor: Editor | null): void;
 };
 
 type RuntimeEditorConstructor = new (target: HTMLElement, registry: EditorRegistry) => RuntimeEditorLifecycle;
@@ -32,6 +34,7 @@ export function createRuntimeEditorClass(EditorClass: EditorConstructor): Runtim
         private readonly _addedContentSlots: ContentSlot[] = [];
         private readonly _addedStates: EditableState[] = [];
         private _textCapabilityOverride: TextCapability | null | undefined;
+        private _managedNativeEditor: Editor | null = null;
         private _isMounted = false;
 
         constructor(
@@ -58,7 +61,9 @@ export function createRuntimeEditorClass(EditorClass: EditorConstructor): Runtim
         }
 
         override getSettings(): SettingSection[] {
-            return [...super.getSettings(), ...this._addedSettings];
+            const own = [...super.getSettings(), ...this._addedSettings];
+            const managed = this._managedNativeEditor?.getSettings().map(markManagedNativeSection) ?? [];
+            return [...own, ...managed];
         }
 
         override addSettings(settings: SettingSection | SettingSection[]): void {
@@ -97,9 +102,10 @@ export function createRuntimeEditorClass(EditorClass: EditorConstructor): Runtim
             if (isCompositionRuntimeElement(this.target)) {
                 return null;
             }
-            return this._textCapabilityOverride !== undefined
-                ? this._textCapabilityOverride
-                : super.getTextCapability();
+            return (
+                this._managedNativeEditor?.getTextCapability() ??
+                (this._textCapabilityOverride !== undefined ? this._textCapabilityOverride : super.getTextCapability())
+            );
         }
 
         override setTextCapability(capability: TextCapability | null): void {
@@ -127,6 +133,14 @@ export function createRuntimeEditorClass(EditorClass: EditorConstructor): Runtim
 
         override getChildren(): Editor[] {
             return this._registry.getDirectChildren(this.target);
+        }
+
+        override getManagedNativeEditor(): Editor | null {
+            return this._managedNativeEditor;
+        }
+
+        setManagedNativeEditor(editor: Editor | null): void {
+            this._managedNativeEditor = editor;
         }
 
         dispose(): void {

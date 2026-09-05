@@ -15,6 +15,7 @@ export type EditorCatalogEntry = {
     category?: string;
     subCategory?: string;
     defaultContent?: string;
+    nativeElement?: string;
     placement?: EditorCatalogPlacement;
     bloc: CustomElementConstructor;
     editor: EditorConstructor;
@@ -30,6 +31,7 @@ export type EditorCatalogRegistration = {
     category?: string;
     subCategory?: string;
     defaultContent?: string;
+    nativeElement?: string;
     placement?: EditorCatalogPlacement;
     bloc?: CustomElementConstructor;
     editor?: EditorConstructor;
@@ -41,6 +43,7 @@ export type EditorCatalogRegistrationDefaults = {
     description?: string;
     category?: string;
     defaultContent?: string;
+    nativeElement?: string;
     placement?: EditorCatalogPlacement;
     bloc?: CustomElementConstructor;
 };

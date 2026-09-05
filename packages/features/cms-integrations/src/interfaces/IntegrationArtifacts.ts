@@ -56,6 +56,7 @@ export type DeclarativeBlocArtifactTemplate = {
         group?: string;
         description?: string;
         internal?: boolean;
+        nativeElement?: string;
         path?: string;
         view?: string;
         composition?: string;

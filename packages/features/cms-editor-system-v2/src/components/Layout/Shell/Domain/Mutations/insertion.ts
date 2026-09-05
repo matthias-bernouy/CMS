@@ -46,7 +46,7 @@ export function createInsertion(
 
     const selectionTarget =
         slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag.toLowerCase()) ?? null;
-    if (!selectionTarget) {
+    if (!selectionTarget || !hasManagedNativeContract(selectionTarget, item.entry.nativeElement)) {
         return null;
     }
 
@@ -77,13 +77,33 @@ export function applyCondition(
 function createBlockFragment(document: Document, entry: EditorCatalogEntry): DocumentFragment {
     if (!entry.defaultContent) {
         const fragment = document.createDocumentFragment();
-        fragment.append(document.createElement(entry.tag));
+        const host = document.createElement(entry.tag);
+        if (entry.nativeElement) {
+            host.append(document.createElement(entry.nativeElement));
+        }
+        fragment.append(host);
         return fragment;
     }
 
     const template = document.createElement("template");
     template.innerHTML = entry.defaultContent;
     return template.content.cloneNode(true) as DocumentFragment;
+}
+
+function hasManagedNativeContract(host: HTMLElement, nativeElement: string | undefined): boolean {
+    if (!nativeElement) {
+        return true;
+    }
+    const children = Array.from(host.children);
+    const hasAuthoredSiblingText = Array.from(host.childNodes).some(
+        (node) => node.nodeType === Node.TEXT_NODE && Boolean(node.textContent?.trim()),
+    );
+    return (
+        children.length === 1 &&
+        children[0]?.localName === nativeElement.toLowerCase() &&
+        !children[0].hasAttribute("slot") &&
+        !hasAuthoredSiblingText
+    );
 }
 
 function slotElementChildren(fragment: DocumentFragment): HTMLElement[] {

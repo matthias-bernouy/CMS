@@ -22,6 +22,11 @@ describe("site bloc validation", () => {
         );
         expect(() => validateBlocWrite({ ...artifact, internal: true, viewJS: "" })).toThrow(ContentValidationError);
         expect(() => validateBlocWrite({ ...artifact, id: "p" })).toThrow(/custom-element tag/);
+        expect(validateBlocWrite({ ...artifact, nativeElement: "a" }).nativeElement).toBe("a");
+        expect(() => validateBlocWrite({ ...artifact, nativeElement: "form" })).toThrow(/nativeElement/);
+        expect(() =>
+            validateBlocWrite({ ...artifact, viewJS: "", compositionHTML: "<slot></slot>", nativeElement: "a" }),
+        ).toThrow(/nativeElement/);
     });
 
     test("rejects malformed runtime ownership without throwing native type errors", () => {

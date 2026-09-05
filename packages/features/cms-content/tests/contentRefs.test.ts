@@ -1,9 +1,16 @@
 import { describe, test, expect } from "bun:test";
 import { assertContentRefsExist } from "@bernouy/cms-content";
 
-function makeSystem(opts: { blocs?: string[] } = {}) {
+function makeSystem(opts: { blocs?: string[]; managed?: Record<string, string> } = {}) {
     const cms: any = {
-        getBlocsList: async () => (opts.blocs ?? []).map((id) => ({ id, name: id, group: "", description: "" })),
+        getBlocsList: async () =>
+            [...(opts.blocs ?? []), ...Object.keys(opts.managed ?? {})].map((id) => ({
+                id,
+                name: id,
+                group: "",
+                description: "",
+                ...(opts.managed?.[id] ? { nativeElement: opts.managed[id] } : {}),
+            })),
     };
     return cms;
 }
@@ -43,6 +50,25 @@ describe("assertContentRefsExist", () => {
         await expect(assertContentRefsExist(cms, `<fixture-mystery></fixture-mystery>`)).rejects.toThrow(
             /unknown reference\(s\): bloc "fixture-mystery"/,
         );
+    });
+
+    test("accepts exactly one direct managed native child", async () => {
+        const cms = makeSystem({ managed: { "fixture-link": "a" } });
+        await assertContentRefsExist(cms, `<fixture-link><a href="/about">About</a></fixture-link>`);
+    });
+
+    test("rejects missing, duplicated, slotted, or indirect managed native children", async () => {
+        const cms = makeSystem({ managed: { "fixture-link": "a" } });
+        for (const content of [
+            `<fixture-link></fixture-link>`,
+            `<fixture-link><a href="/one">One</a><a href="/two">Two</a></fixture-link>`,
+            `<fixture-link><a slot="link" href="/">Link</a></fixture-link>`,
+            `<fixture-link><span><a href="/">Link</a></span></fixture-link>`,
+        ]) {
+            await expect(assertContentRefsExist(cms, content)).rejects.toThrow(
+                /requires exactly one direct, un-slotted <a> child/,
+            );
+        }
     });
 
     test("aggregates multiple missing refs in one error", async () => {
