@@ -6,7 +6,7 @@ CmsCore blocs are reusable HTML elements with four separate contracts:
 | --- | --- | --- |
 | Authored content | Site author | The Light DOM saved in pages. |
 | View | Bloc author | Browser behavior and optional Shadow DOM structure. |
-| Editor | Bloc author | Settings, content slots, text editing, data scopes, and preview states. |
+| Editor | Bloc author or CMS platform | Settings, content slots, text editing, data scopes, and preview states. The CMS owns native HTML editors. |
 | Theme | Site and Bloc authors | Site-wide design tokens plus deliberate Bloc-level extension points. |
 
 Keeping these contracts separate is the central design rule. The editor
@@ -53,7 +53,9 @@ view wait for authoring controls.
 These pages document Blocs owned by collection integrations. Collections keep
 their source under their integration directory, declare selectable resources,
 and are audited and released with the `ulvia` CLI. Site-specific composition
-lives as CMS data rather than as a copied repository template.
+lives as CMS data rather than as a copied repository template. Native HTML is
+the exception to collection ownership: the CMS supplies its constrained native
+catalogue, and integrations cannot publish native-root artifacts.
 
 Responsive image behavior is documented separately in
 [Responsive Images](../images/README.md).

@@ -11,13 +11,9 @@ content. Those DOM changes become the page content that is saved. The Bloc's
 Shadow DOM remains owned by `Bloc.ts` and is not persisted as authored content.
 
 ```ts
-import {
-    Editor,
-    type ContentSlot,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
-export class SiteCardEditor extends Editor {
+export class ExampleCardEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
             {
@@ -32,14 +28,7 @@ export class SiteCardEditor extends Editor {
                         options: [
                             { label: "Plain", value: "plain" },
                             { label: "Outlined", value: "outlined" },
-                            { label: "Elevated", value: "elevated" },
                         ],
-                    },
-                    {
-                        type: "toggle",
-                        label: "Stretch to available height",
-                        attribute: "stretch",
-                        defaultValue: false,
                     },
                 ],
             },
@@ -54,22 +43,29 @@ export class SiteCardEditor extends Editor {
                 max: 1,
                 accepts: [{ kind: "any-component" }],
             },
-            {
-                label: "Content",
-                accepts: [{ kind: "any-component" }],
-            },
-            {
-                label: "Actions",
-                slot: "actions",
-                accepts: [{ kind: "component", tag: "basic-button" }],
-            },
+            { label: "Content", accepts: [{ kind: "any-component" }] },
+            { label: "Actions", slot: "actions", accepts: [{ kind: "component", tag: "a" }] },
         ];
     }
 }
 ```
 
-The site CLI discovers the exported class and registers it. Do not call
-`registerEditor()` in a collection-owned editor.
+The integration compiler discovers the exported class and registers it. Do not
+call `registerEditor()` in a collection-owned editor.
+
+## Platform-owned native editors
+
+Collection editors apply only to their custom elements. The CMS creates and
+merges its native editor catalogue independently, and an integration artifact
+with any native HTML root is rejected. Do not ship a collection editor for
+`p`, `a`, `img`, `form`, or another native tag.
+
+Native editors also filter settings through a deny-by-default attribute policy.
+Only typed, tag-specific controls can reach allowed attributes; collection
+metadata cannot make `class`, `style`, `slot`, `id`, arbitrary `aria-*` or
+`data-*`, or an event attribute editable. The supported elements, contextual
+placement, media behavior, and exact authoring rules are listed in
+[Native Elements](./authoring.md#native-elements).
 
 ## Settings
 
@@ -102,7 +98,7 @@ make the absent-attribute case match the advertised default:
 ```css
 :host,
 :host([appearance="outlined"]) {
-  border: 1px solid var(--site-card-border-color, currentColor);
+  border: 1px solid var(--_example-card-border-color, currentColor);
 }
 
 :host([appearance="plain"]) {
@@ -131,10 +127,12 @@ DOM slots at runtime:
   document media;
 - use `min` and `max` to express cardinality.
 
-These declarations guide the picker and basic insertion/removal controls; they
-are not a complete DOM validator for existing content, paste, or every move.
-The saved output is ordinary HTML, so the view must still render defensively if
-old or externally edited content is incomplete.
+These declarations feed the shared placement policy used by the picker and by
+insertion, replacement, move, and paste mutations. Contextual native entries
+add their own catalogue placement constraint: `span` requires an explicit slot
+and `li` requires a `ul` or `ol` parent. The saved output is still ordinary
+HTML, so the view must render defensively if externally edited content is
+incomplete.
 
 For a text leaf, declare inline editing instead of an unnamed content slot:
 
@@ -155,9 +153,9 @@ An editor cannot combine `textCapability()` with an unnamed content slot.
 Named slot children are excluded from direct text editing. Keep editable text
 in a semantic leaf rather than mixing raw text with arbitrary child elements.
 Use `format: "richtext"` only when the saved element deliberately accepts HTML.
-The current rich-text controls implement bold, italic, underline, code, link,
-dynamic expressions, and size; `color` and `align` are typed but not currently
-applied by the editor.
+The platform native rich-text contract exposes strong emphasis, emphasis,
+inline code, links, and dynamic expressions. It does not expose arbitrary
+visual attributes.
 
 ## Optional Advanced Contracts
 

@@ -22,8 +22,8 @@ value sets, and one active theme. The default catalogue includes:
 | Surfaces | `--ulvia-page-background`, `--ulvia-surface-background`, `--ulvia-surface-border` |
 | Text | `--ulvia-body-text`, `--ulvia-surface-text`, `--ulvia-surface-muted-text` |
 | Feedback | `--ulvia-success-base`, `--ulvia-warning-base`, `--ulvia-danger-base` |
-| Typography | `--ulvia-font-heading`, `--ulvia-font-body`, `--ulvia-font-size-display` |
-| Spacing and widths | `--ulvia-space-sm`, `--ulvia-space-md`, `--ulvia-content-width` |
+| Typography | `--ulvia-font-heading`, `--ulvia-font-body` |
+| Spacing and widths | `--ulvia-space-sm`, `--ulvia-space-md`, `--ulvia-container-xl` |
 | Shape and elevation | `--ulvia-radius-control`, `--ulvia-radius-card`, `--ulvia-shadow-soft` |
 
 Generic `--ctx-*` aliases are not a public cross-collection API. Consume the
@@ -37,8 +37,8 @@ and are authoritative when both layers assign the same managed variable.
 
 When an active theme defines dark values, they apply through
 `prefers-color-scheme: dark` and may be forced with
-`data-theme-mode="dark"` on the root element. The default theme currently has
-no dark overrides.
+`data-theme-mode="dark"` on the root element. The active Ulvia contract may
+provide both light and dark defaults for the same semantic token.
 
 ## Bloc-Level Contract
 
@@ -47,36 +47,36 @@ fallback:
 
 ```css
 :host {
-  --acme-card-background: var(--ulvia-surface-background, Canvas);
-  --acme-card-color: var(--ulvia-surface-text, CanvasText);
-  --_acme-card-muted-color: var(--ulvia-surface-muted-text, currentColor);
-  --_acme-card-border-color: var(--ulvia-surface-border, currentColor);
-  --_acme-card-radius: var(--ulvia-radius-card, 0.5rem);
-  --_acme-card-padding: var(--ulvia-space-md, 1rem);
+  --example-card-background: var(--ulvia-surface-background, Canvas);
+  --example-card-color: var(--ulvia-surface-text, CanvasText);
+  --_example-card-muted-color: var(--ulvia-surface-muted-text, currentColor);
+  --_example-card-border-color: var(--ulvia-surface-border, currentColor);
+  --_example-card-radius: var(--ulvia-radius-card, 0.5rem);
+  --_example-card-padding: var(--ulvia-space-md, 1rem);
 
   display: block;
-  color: var(--acme-card-color);
+  color: var(--example-card-color);
   font: inherit;
 }
 
 [part="card"] {
   display: grid;
-  padding: var(--_acme-card-padding);
-  border: 1px solid var(--_acme-card-border-color);
-  border-radius: var(--_acme-card-radius);
-  background: var(--acme-card-background);
+  padding: var(--_example-card-padding);
+  border: 1px solid var(--_example-card-border-color);
+  border-radius: var(--_example-card-radius);
+  background: var(--example-card-background);
 }
 
 [part="description"] {
-  color: var(--_acme-card-muted-color);
+  color: var(--_example-card-muted-color);
 }
 ```
 
 A site may now tune the component without reaching into its Shadow DOM:
 
 ```css
-acme-card {
-  --acme-card-background: var(--ulvia-subtle-background);
+example-card {
+  --example-card-background: var(--ulvia-subtle-background);
 }
 ```
 
@@ -96,7 +96,7 @@ Use attributes for finite semantic choices:
 }
 
 :host([appearance="elevated"]) [part="card"] {
-  box-shadow: var(--acme-card-shadow, var(--ulvia-shadow-soft, 0 0.5rem 1.5rem rgb(0 0 0 / 12%)));
+  box-shadow: var(--example-card-shadow, var(--ulvia-shadow-soft, 0 0.5rem 1.5rem rgb(0 0 0 / 12%)));
 }
 ```
 
@@ -109,15 +109,15 @@ static observedAttributes = ["background-color"];
 attributeChangedCallback(): void {
     const value = this.getAttribute("background-color")?.trim();
     if (value) {
-        this.style.setProperty("--acme-card-background", value);
+        this.style.setProperty("--example-card-background", value);
     } else {
-        this.style.removeProperty("--acme-card-background");
+        this.style.removeProperty("--example-card-background");
     }
 }
 ```
 
 Expose `part="..."` only on structural nodes a site may reasonably target.
-`site-card::part(card)` can then override that node, but cannot pierce deeper
+`example-card::part(card)` can then override that node, but cannot pierce deeper
 Shadow DOM. `::slotted(...)` styles only the first distributed Light DOM
 level—all elements directly assigned to the slot—not their descendants. Theme
 rich authored content through

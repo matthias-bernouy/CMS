@@ -41,13 +41,17 @@ disposable services. It does not write a release.
 A custom tag must be lowercase, contain a hyphen, and avoid the reserved
 `p9r-`, `w13c-`, `be5-`, and `cms-` prefixes. The validator also rejects
 malformed names, conflicting registrations, duplicate registration, and direct
-`location` navigation mutations.
+`location` navigation mutations. Every native HTML root is platform-owned and
+is rejected as an integration artifact, whether or not a legacy manifest marks
+it as native.
 
 Before handoff, verify that:
 
 - the immediate parent directory is the intended catalogue group;
 - every manifest path exists and remains inside the Bloc directory;
 - `default-tag` matches the root tag in `default.html`;
+- the resource ID and tag use the collection kind namespaces
+  (`<kind>/blocs/*` and `<kind>-*`) and the tag is not native HTML;
 - `Bloc.ts` exports one browser-safe runtime class and does not self-register;
 - `BlocEditor.ts`, when present, imports from `@bernouy/cms-content/editor`,
   exports one editor class, and does not self-register;

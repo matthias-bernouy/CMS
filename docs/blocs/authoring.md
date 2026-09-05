@@ -1,6 +1,6 @@
 # Create A Bloc
 
-This guide uses a small `site-card` custom element owned by a collection
+This guide uses a small `example-card` custom element owned by a collection
 integration.
 
 ## Folder And Manifest
@@ -11,7 +11,7 @@ Put every Bloc below a group directory:
 integrations/collections/example/
 └── blocs/
     └── content/
-        └── site-card/
+        └── example-card/
             ├── manifest.json
             ├── Bloc.ts
             ├── BlocEditor.ts
@@ -25,7 +25,7 @@ the source hierarchy descriptive and declare its category metadata explicitly.
 
 ```json
 {
-  "default-tag": "site-card",
+  "default-tag": "example-card",
   "bloc": "./Bloc.ts",
   "editor": "./BlocEditor.ts",
   "defaultContent": "./default.html",
@@ -36,12 +36,14 @@ the source hierarchy descriptive and declare its category metadata explicitly.
 }
 ```
 
-`default-tag` is the persisted identity. It must be a valid custom-element name
-for a custom Bloc; supported native entries such as `img` and `p` are the
-exception. `bloc` defaults to `./Bloc.ts`; `editor` is optional for a custom
-Bloc and produces an opaque editor when omitted. `defaultContent` is optional
-and must remain inside the Bloc directory. `meta.title` and
-`meta.description` label the catalogue entry.
+`default-tag` is the persisted identity and must be a valid custom-element
+name. An integration cannot publish or replace a native HTML root. A collection
+with kind `<kind>` owns both `<kind>/blocs/*` resource IDs and `<kind>-*` custom
+elements; definitions outside either namespace are rejected. For example,
+Mossa uses `mossa/blocs/*` and `mossa-*`. `bloc` defaults to `./Bloc.ts`;
+`editor` is optional for a custom Bloc and produces an opaque editor when
+omitted. `defaultContent` is optional and must remain inside the Bloc directory.
+`meta.title` and `meta.description` label the catalogue entry.
 
 Do not add inactive metadata merely for display: the site scanner currently
 does not consume `runtime`, icon, author, image, or category metadata. The
@@ -62,11 +64,11 @@ folder owns the group.
 Slots stay empty. Initial authored children belong in `default.html`:
 
 ```html
-<site-card appearance="outlined">
+<example-card appearance="outlined">
   <h2 slot="title">Card title</h2>
   <p>Replace this text with the card content.</p>
   <a slot="actions" href="/contact">Contact us</a>
-</site-card>
+</example-card>
 ```
 
 `default.html` is inserted when an author adds a new Bloc. Changing it does not
@@ -80,7 +82,7 @@ import { Component } from "@bernouy/components/base";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
-export class SiteCard extends Component {
+export class ExampleCard extends Component {
     constructor() {
         super({ css, template });
     }
@@ -102,7 +104,7 @@ Keep behavior independent from the editor and clean up listeners when an
 element disconnects:
 
 ```ts
-export class SiteDisclosure extends HTMLElement {
+export class ExampleDisclosure extends HTMLElement {
     #listeners: AbortController | undefined;
 
     connectedCallback(): void {
@@ -131,11 +133,49 @@ database adapters, secrets, or server-only feature modules.
 
 ## Native Elements
 
-The catalogue can also provide editor behavior for supported native tags such
-as `img`, `p`, `form`, and form controls. A native entry has no view bundle and
-must provide an editor entry. Use this only when the saved element should
-remain native HTML; use a hyphenated custom tag when the Bloc owns runtime
-structure or behavior.
+Native HTML is a platform capability, not a collection resource. The CMS editor
+owns its constructors, editor definitions, catalogue placement rules, media
+pickers, and attribute policy. The compiler rejects every integration artifact
+whose root tag is native HTML, including a legacy artifact marked `native`.
+Collections may still use semantic native elements inside a custom element's
+template.
 
-Next, describe authoring controls in
-[Expose Editing Capabilities](./editor.md).
+The platform authoring set is intentionally narrow:
+
+- `h1` through `h6`, `p`, `a`, `button`, `form`, `img`, `svg`, `section`, `ul`,
+  and `ol` are authorable; media enters through the CMS picker, not a manifest;
+- `span` is contextual and can only fill an explicit component slot;
+- `li` is contextual and can only be placed directly in `ul` or `ol`;
+- `strong`, `em`, and `code` are rich-text operations, not catalogue blocs;
+- `article`, `nav`, `header`, `footer`, `main`, and `aside` are available for
+  semantic template structure but are not global catalogue entries;
+- `div`, `small`, `blockquote`, and `pre` have no native catalogue entry;
+- legal tables use the structured `mossa-table` bloc instead of exposing
+  `table`, `thead`, `tbody`, `tr`, `th`, and `td` separately.
+
+Placement is catalogued data. It applies consistently when the editor offers,
+inserts, replaces, moves, or pastes content; do not reproduce parent-tag or
+slot checks ad hoc in UI components.
+
+Native settings follow a deny-by-default policy. They never expose arbitrary
+`class`, `style`, `slot`, `id`, `data-*`, `aria-*`, event (`on*`), or other
+attributes. Required CMS binding and accessibility attributes may be generated
+through typed controls:
+
+- links use a CMS page, media, or external-URL picker, a controlled target, and
+  derived safe `rel` values;
+- `img` elements use same-site URLs ending in
+  `/.cms/files/by-id/<opaque-id>`, require alternative text unless decorative,
+  derive dimensions after loading, and expose only controlled loading behavior;
+- SVGs must come from that CMS media namespace with matching MIME metadata;
+  their fetched markup is sanitized before insertion, and the result requires
+  either a decorative state or an accessible label;
+- buttons expose static or dynamic text, `button`/`submit`, and `disabled`;
+- forms bind to a declared endpoint and use the shared success redirect/reset
+  controls; authors cannot enter a free `action` or `onsubmit`;
+- headings and paragraphs expose static or dynamic rich text with links,
+  strong emphasis, emphasis, and inline code, without visual attributes.
+
+Visual form controls such as Mossa inputs, selectors, checkboxes, and filters
+remain custom collection blocs, distinct from the data-only `forms` Source.
+See [Expose Editing Capabilities](./editor.md) for the editor API.
