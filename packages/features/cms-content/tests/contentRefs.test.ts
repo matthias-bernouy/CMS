@@ -18,10 +18,10 @@ describe("assertContentRefsExist", () => {
     });
 
     test("passes when every bloc ref is registered", async () => {
-        const cms = makeSystem({ blocs: ["cs-card"] });
+        const cms = makeSystem({ blocs: ["fixture-card"] });
         await assertContentRefsExist(
             cms,
-            `<cs-card></cs-card><w13c-reserved-example data-id="header"></w13c-reserved-example>`,
+            `<fixture-card></fixture-card><w13c-reserved-example data-id="header"></w13c-reserved-example>`,
         );
     });
 
@@ -39,9 +39,9 @@ describe("assertContentRefsExist", () => {
     });
 
     test("rejects unknown bloc tag", async () => {
-        const cms = makeSystem({ blocs: ["cs-card"] });
-        await expect(assertContentRefsExist(cms, `<cs-mystery></cs-mystery>`)).rejects.toThrow(
-            /unknown reference\(s\): bloc "cs-mystery"/,
+        const cms = makeSystem({ blocs: ["fixture-card"] });
+        await expect(assertContentRefsExist(cms, `<fixture-mystery></fixture-mystery>`)).rejects.toThrow(
+            /unknown reference\(s\): bloc "fixture-mystery"/,
         );
     });
 
@@ -50,9 +50,9 @@ describe("assertContentRefsExist", () => {
         await expect(
             assertContentRefsExist(
                 cms,
-                `<cs-a></cs-a><cs-b></cs-b><w13c-reserved-example data-id="hdr"></w13c-reserved-example>`,
+                `<fixture-a></fixture-a><fixture-b></fixture-b><w13c-reserved-example data-id="hdr"></w13c-reserved-example>`,
             ),
-        ).rejects.toThrow(/bloc "cs-a".*bloc "cs-b"/);
+        ).rejects.toThrow(/bloc "fixture-a".*bloc "fixture-b"/);
     });
 
     test("ignores reserved system prefixes (w13c-*, cms-*)", async () => {

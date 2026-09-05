@@ -45,7 +45,7 @@ describe("POST /api/page (create)", () => {
     });
 
     test("copies content from the selected existing page", async () => {
-        const sourceContent = "<main><cs-hero></cs-hero></main>";
+        const sourceContent = "<main><fixture-hero></fixture-hero></main>";
         const { cms, getPageCalls, insertCalls } = makeSystem({ "/source": { content: sourceContent } });
 
         const res = await postPage(makeRequest({ title: "Copy", path: "/copy", sourcePath: "/source" }), cms);

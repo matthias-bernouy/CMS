@@ -12,36 +12,36 @@ import {
 
 describe("integration theme contributions", () => {
     test("derives an owned namespace and emits calculated and font-family defaults", () => {
-        const source = createIntegrationThemeSource(photoTheme());
-        const settings = composeThemeSettings(defaultThemeSettings(), [photoTheme()]);
+        const source = createIntegrationThemeSource(brandTheme());
+        const settings = composeThemeSettings(defaultThemeSettings(), [brandTheme()]);
         const css = generateThemeCss(settings);
 
         expect(source).toMatchObject({
-            id: "integration-photo-albums",
-            owner: { kind: "integration", integrationId: "photo-albums" },
+            id: "integration-brand-kit",
+            owner: { kind: "integration", integrationId: "brand-kit" },
             supportsModes: true,
         });
         expect(source.categories[0]?.tokens).toEqual([
             expect.objectContaining({
-                id: "photo-albums-accent",
-                variable: "photo-albums-accent",
+                id: "brand-kit-accent",
+                variable: "brand-kit-accent",
                 defaults: { light: "var(--primary-base)", dark: "var(--secondary-base)" },
             }),
             expect.objectContaining({
-                id: "photo-albums-title-font",
+                id: "brand-kit-title-font",
                 type: "font-family",
             }),
         ]);
-        expect(css).toContain("--photo-albums-accent: var(--primary-base);");
-        expect(css).toContain('--photo-albums-title-font: "Fraunces", Georgia, serif;');
-        expect(css).toContain("--photo-albums-accent: var(--secondary-base);");
+        expect(css).toContain("--brand-kit-accent: var(--primary-base);");
+        expect(css).toContain('--brand-kit-title-font: "Fraunces", Georgia, serif;');
+        expect(css).toContain("--brand-kit-accent: var(--secondary-base);");
     });
 
     test("keeps configured overrides while provider defaults evolve", () => {
-        const initial = composeThemeSettings(defaultThemeSettings(), [photoTheme()]);
-        const tokenId = integrationThemeTokenId("photo-albums", "accent");
+        const initial = composeThemeSettings(defaultThemeSettings(), [brandTheme()]);
+        const tokenId = integrationThemeTokenId("brand-kit", "accent");
         initial.themes[0]!.values.light[tokenId] = "#f0a000";
-        const changed = photoTheme();
+        const changed = brandTheme();
         changed.categories[0]!.tokens[0]!.defaults.light = "var(--danger-base)";
 
         const rerun = composeThemeSettings(initial, [changed]);
@@ -53,17 +53,17 @@ describe("integration theme contributions", () => {
     });
 
     test("replaces the complete contributed catalog and removes only retired overrides", () => {
-        const persisted = composeThemeSettings(defaultThemeSettings(), [photoTheme(), commerceTheme()]);
-        const photoAccent = integrationThemeTokenId("photo-albums", "accent");
+        const persisted = composeThemeSettings(defaultThemeSettings(), [brandTheme(), commerceTheme()]);
+        const brandAccent = integrationThemeTokenId("brand-kit", "accent");
         const commerceAccent = integrationThemeTokenId("commerce", "accent");
-        persisted.themes[0]!.values.light[photoAccent] = "#123456";
+        persisted.themes[0]!.values.light[brandAccent] = "#123456";
         persisted.themes[0]!.values.light[commerceAccent] = "#abcdef";
         persisted.themes[0]!.values.light["integration-orphan-accent"] = "#000000";
 
-        const composed = composeThemeSettings(persisted, [photoTheme()]);
+        const composed = composeThemeSettings(persisted, [brandTheme()]);
 
         expect(composed.sources.some((source) => source.id === "integration-commerce")).toBeFalse();
-        expect(composed.themes[0]!.values.light[photoAccent]).toBe("#123456");
+        expect(composed.themes[0]!.values.light[brandAccent]).toBe("#123456");
         expect(composed.themes[0]!.values.light[commerceAccent]).toBeUndefined();
         expect(composed.themes[0]!.values.light["integration-orphan-accent"]).toBeUndefined();
         expect(persisted.sources.some((source) => source.id === "integration-commerce")).toBeTrue();
@@ -71,55 +71,53 @@ describe("integration theme contributions", () => {
     });
 
     test("can reconcile or remove one owner without touching another", () => {
-        const base = composeThemeSettings(defaultThemeSettings(), [photoTheme(), commerceTheme()]);
-        const reconciled = reconcileIntegrationTheme(base, photoTheme("Photo galleries"));
-        const removed = removeIntegrationTheme(reconciled, "photo-albums");
+        const base = composeThemeSettings(defaultThemeSettings(), [brandTheme(), commerceTheme()]);
+        const reconciled = reconcileIntegrationTheme(base, brandTheme("Brand system"));
+        const removed = removeIntegrationTheme(reconciled, "brand-kit");
 
-        expect(reconciled.sources.find((source) => source.id === "integration-photo-albums")?.label).toBe(
-            "Photo galleries",
-        );
+        expect(reconciled.sources.find((source) => source.id === "integration-brand-kit")?.label).toBe("Brand system");
         expect(reconciled.sources.some((source) => source.id === "integration-commerce")).toBeTrue();
-        expect(removed.sources.some((source) => source.id === "integration-photo-albums")).toBeFalse();
+        expect(removed.sources.some((source) => source.id === "integration-brand-kit")).toBeFalse();
         expect(removed.sources.some((source) => source.id === "integration-commerce")).toBeTrue();
     });
 
     test("replaces a legacy reserved source even when its owner metadata is missing", () => {
         const base = defaultThemeSettings();
-        const legacy = createIntegrationThemeSource(photoTheme());
+        const legacy = createIntegrationThemeSource(brandTheme());
         delete legacy.owner;
         base.sources.push(legacy);
-        const tokenId = integrationThemeTokenId("photo-albums", "accent");
+        const tokenId = integrationThemeTokenId("brand-kit", "accent");
         base.themes[0]!.values.light[tokenId] = "#123456";
 
-        const composed = composeThemeSettings(base, [photoTheme()]);
+        const composed = composeThemeSettings(base, [brandTheme()]);
 
-        expect(composed.sources.filter((source) => source.id === "integration-photo-albums")).toHaveLength(1);
-        expect(composed.sources.at(-1)?.owner).toEqual({ kind: "integration", integrationId: "photo-albums" });
+        expect(composed.sources.filter((source) => source.id === "integration-brand-kit")).toHaveLength(1);
+        expect(composed.sources.at(-1)?.owner).toEqual({ kind: "integration", integrationId: "brand-kit" });
         expect(composed.themes[0]!.values.light[tokenId]).toBe("#123456");
     });
 
     test("migrates configured values from the former integration-prefixed token names", () => {
         const base = defaultThemeSettings();
-        const legacy = createIntegrationThemeSource(photoTheme());
+        const legacy = createIntegrationThemeSource(brandTheme());
         const token = legacy.categories[0]!.tokens[0]!;
-        token.id = "integration-photo-albums-accent";
+        token.id = "integration-brand-kit-accent";
         token.variable = token.id;
         base.sources.push(legacy);
         base.themes[0]!.values.light[token.id] = "#123456";
 
-        const composed = composeThemeSettings(base, [photoTheme()]);
+        const composed = composeThemeSettings(base, [brandTheme()]);
 
-        expect(composed.themes[0]!.values.light["photo-albums-accent"]).toBe("#123456");
-        expect(composed.themes[0]!.values.light["integration-photo-albums-accent"]).toBeUndefined();
+        expect(composed.themes[0]!.values.light["brand-kit-accent"]).toBe("#123456");
+        expect(composed.themes[0]!.values.light["integration-brand-kit-accent"]).toBeUndefined();
     });
 
     test("rejects duplicate owners, foreign names and malformed var references", () => {
-        expect(() => composeThemeSettings(defaultThemeSettings(), [photoTheme(), photoTheme()])).toThrow(
+        expect(() => composeThemeSettings(defaultThemeSettings(), [brandTheme(), brandTheme()])).toThrow(
             "duplicate integration theme owner",
         );
 
         const forged = defaultThemeSettings();
-        const source = createIntegrationThemeSource(photoTheme());
+        const source = createIntegrationThemeSource(brandTheme());
         source.categories[0]!.tokens[0]!.variable = "primary-base";
         forged.sources.push(source);
         expect(() => validateThemeSettings(forged)).toThrow("token name is not derived");
@@ -129,30 +127,30 @@ describe("integration theme contributions", () => {
             "reserved integration source id",
         );
 
-        const malformed = photoTheme();
+        const malformed = brandTheme();
         malformed.categories[0]!.tokens[0]!.defaults.light = "var(primary-base)";
         expect(() => createIntegrationThemeSource(malformed)).toThrow("invalid CSS variable reference");
     });
 
     test("carries declared dependencies into owned theme sources", () => {
-        const dependent = photoTheme();
+        const dependent = brandTheme();
         dependent.dependencies = ["commerce"];
         dependent.categories[0]!.tokens[0]!.defaults.light = "var(--commerce-accent)";
 
         const settings = composeThemeSettings(defaultThemeSettings(), [dependent, commerceTheme()]);
 
-        expect(settings.sources.find((source) => source.id === "integration-photo-albums")?.owner).toEqual({
+        expect(settings.sources.find((source) => source.id === "integration-brand-kit")?.owner).toEqual({
             kind: "integration",
-            integrationId: "photo-albums",
+            integrationId: "brand-kit",
             dependencies: ["commerce"],
         });
         expect(validateThemeSettings(settings)).toEqual(settings);
     });
 });
 
-function photoTheme(label = "Photo Albums"): IntegrationThemeContribution {
+function brandTheme(label = "Brand Kit"): IntegrationThemeContribution {
     return {
-        integrationId: "photo-albums",
+        integrationId: "brand-kit",
         label,
         categories: [
             {

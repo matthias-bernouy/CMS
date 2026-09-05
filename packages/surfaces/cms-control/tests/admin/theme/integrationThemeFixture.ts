@@ -20,10 +20,10 @@ export function integrationThemeFixture(): ThemeSettings {
         activeThemeId: "default",
         sources: [
             {
-                id: "integration-photo-albums",
-                label: "Photo Albums",
+                id: "integration-sample-brand",
+                label: "Sample Brand",
                 supportsModes: true,
-                owner: { kind: "integration", integrationId: "photo-albums" },
+                owner: { kind: "integration", integrationId: "sample-brand" },
                 categories: [
                     {
                         id: "gallery",
@@ -31,16 +31,16 @@ export function integrationThemeFixture(): ThemeSettings {
                         description: "Gallery presentation.",
                         tokens: [
                             {
-                                id: "photo-albums-font",
-                                variable: "photo-albums-font",
+                                id: "sample-brand-font",
+                                variable: "sample-brand-font",
                                 label: "Gallery font",
                                 description: "Titles and captions",
                                 type: "font-family",
                                 defaults: { light: "Inter, system-ui, sans-serif", dark: "system-ui, sans-serif" },
                             },
                             {
-                                id: "photo-albums-accent",
-                                variable: "photo-albums-accent",
+                                id: "sample-brand-accent",
+                                variable: "sample-brand-accent",
                                 label: "Gallery accent",
                                 description: "Selected media",
                                 type: "color",
@@ -54,8 +54,8 @@ export function integrationThemeFixture(): ThemeSettings {
                         description: "Viewer presentation.",
                         tokens: [
                             {
-                                id: "photo-albums-shadow",
-                                variable: "photo-albums-shadow",
+                                id: "sample-brand-shadow",
+                                variable: "sample-brand-shadow",
                                 label: "Viewer shadow",
                                 description: "Full-screen viewer depth",
                                 type: "shadow",
@@ -71,7 +71,7 @@ export function integrationThemeFixture(): ThemeSettings {
                 id: "default",
                 name: "Default",
                 values: {
-                    light: { "photo-albums-font": "var(--font-body)" },
+                    light: { "sample-brand-font": "var(--font-body)" },
                     dark: {},
                 },
             },

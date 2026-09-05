@@ -207,7 +207,7 @@ describe("dashboard CMS user fields", () => {
         );
         detail.setAttribute("data-source-json", JSON.stringify({ id: 42, cmsUserId: "local:immutable:opaque" }));
         detail.setAttribute("data-row-key", "42");
-        detail.setAttribute("data-source-id", "sales-configurator");
+        detail.setAttribute("data-source-id", "example-source");
         document.body.append(detail);
         await new Promise((resolve) => setTimeout(resolve, 20));
 
@@ -246,7 +246,7 @@ function cmsUserDetail(cmsUserId: string): HTMLElement {
     );
     detail.setAttribute("data-source-json", JSON.stringify({ id: null, cmsUserId }));
     detail.setAttribute("data-row-key", "__new__");
-    detail.setAttribute("data-source-id", "sales-configurator");
+    detail.setAttribute("data-source-id", "example-source");
     return detail;
 }
 
@@ -287,7 +287,7 @@ function conditionalCmsUserDetail(): HTMLElement {
     );
     detail.setAttribute("data-source-json", JSON.stringify({ id: null, mode: "off", cmsUserId: "" }));
     detail.setAttribute("data-row-key", "__new__");
-    detail.setAttribute("data-source-id", "sales-configurator");
+    detail.setAttribute("data-source-id", "example-source");
     return detail;
 }
 

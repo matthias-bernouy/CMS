@@ -27,7 +27,7 @@ describe("integration Theme delivery assets", () => {
         const entry = cache.get(P9R_CACHE.STYLE);
         const css = new TextDecoder().decode(entry!.raw);
 
-        expect(css).toContain("--photo-albums-accent: var(--primary-base);");
+        expect(css).toContain("--brand-kit-accent: var(--primary-base);");
         expect(assets.styleUrl).toBe(`/.cms/style?v=${entry!.hash}`);
     });
 });
@@ -44,13 +44,13 @@ function repository(): ContentReader {
 
 function successfulThemeInstallation(): IntegrationInstallation {
     return {
-        id: "photo-albums",
-        label: "Photo Albums",
+        id: "brand-kit",
+        label: "Brand Kit",
         definitionVersion: "1.0.0",
         status: "success",
         definitionSnapshot: {
-            kind: "photo-albums",
-            label: "Photo Albums",
+            kind: "brand-kit",
+            label: "Brand Kit",
             inputs: [],
             theme: {
                 categories: [

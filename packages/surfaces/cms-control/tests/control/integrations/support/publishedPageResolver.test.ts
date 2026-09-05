@@ -14,7 +14,7 @@ const page: TPage = {
 
 describe("publishedPageResolver", () => {
     test("derives the immutable snapshot URL from the configured Delivery base path", async () => {
-        const resolve = publishedPageResolver(repository(), "https://site.example.test/cms/courtside/");
+        const resolve = publishedPageResolver(repository(), "https://site.example.test/cms/tenant/");
 
         expect(await resolve("/terms")).toEqual({
             id: page.id,
@@ -23,7 +23,7 @@ describe("publishedPageResolver", () => {
             description: page.description,
             content: page.content,
             publishedSnapshotUrl:
-                "https://site.example.test/cms/courtside/.cms/content/published-page-snapshot?id=legal-page",
+                "https://site.example.test/cms/tenant/.cms/content/published-page-snapshot?id=legal-page",
         });
     });
 

@@ -52,20 +52,20 @@ describe("theme navigation interaction", () => {
 
         try {
             expect(nav.shadowRoot.querySelector("[data-source]:not([data-category])")).toBeNull();
-            click(nav, "[data-source='integration-photo-albums'][data-category='gallery']");
+            click(nav, "[data-source='integration-sample-brand'][data-category='gallery']");
             expect(selections.at(-1)).toEqual({
-                sourceId: "integration-photo-albums",
+                sourceId: "integration-sample-brand",
                 categoryId: "gallery",
             });
 
-            click(nav, "[data-source='integration-photo-albums'][data-category='viewer']");
+            click(nav, "[data-source='integration-sample-brand'][data-category='viewer']");
             expect(selections.at(-1)).toEqual({
-                sourceId: "integration-photo-albums",
+                sourceId: "integration-sample-brand",
                 categoryId: "viewer",
             });
             expect(
                 nav.shadowRoot.querySelector(
-                    "[data-source='integration-photo-albums'][data-category='viewer'][active]",
+                    "[data-source='integration-sample-brand'][data-category='viewer'][active]",
                 ),
             ).not.toBeNull();
         } finally {
@@ -78,7 +78,7 @@ describe("theme navigation interaction", () => {
     test("targets the site group before requesting its contextual action", () => {
         const nav = new CmsThemeNav() as unknown as ThemeNavHarness;
         nav.sources = sources();
-        nav.selection = { sourceId: "integration-photo-albums", categoryId: "viewer" };
+        nav.selection = { sourceId: "integration-sample-brand", categoryId: "viewer" };
         nav.render();
         const initialUrl = window.location.href;
         const selections: ThemeSelection[] = [];
@@ -122,7 +122,7 @@ describe("theme navigation interaction", () => {
             expect(calls).toBe(3);
             expect(first.shadowRoot.querySelector("[data-source='colors'][data-category='brand']")).not.toBeNull();
             expect(
-                second.shadowRoot.querySelector("[data-source='integration-photo-albums'][data-category='gallery']"),
+                second.shadowRoot.querySelector("[data-source='integration-sample-brand'][data-category='gallery']"),
             ).not.toBeNull();
         } finally {
             adminSystemSettingsStore.invalidate();
@@ -151,7 +151,7 @@ describe("theme navigation interaction", () => {
         try {
             const refreshing = editor.refreshAfterSave();
             const url = new URL(window.location.href);
-            url.searchParams.set("type", "integration-photo-albums");
+            url.searchParams.set("type", "integration-sample-brand");
             url.searchParams.set("category", "viewer");
             window.history.replaceState(null, "", url);
             release?.(settingsResponse("Portfolio"));
@@ -162,7 +162,7 @@ describe("theme navigation interaction", () => {
             expect(editor.shadowRoot.querySelector("[data-category-section]")?.getAttribute("heading")).toBe("Viewer");
             expect(
                 nav.shadowRoot.querySelector(
-                    "[data-source='integration-photo-albums'][data-category='viewer'][active]",
+                    "[data-source='integration-sample-brand'][data-category='viewer'][active]",
                 ),
             ).not.toBeNull();
         } finally {
@@ -203,10 +203,10 @@ function sources(): ThemeSource[] {
             categories: [category("brand", "Brand")],
         },
         {
-            id: "integration-photo-albums",
-            label: "Photo Albums",
+            id: "integration-sample-brand",
+            label: "Sample Brand",
             supportsModes: true,
-            owner: { kind: "integration", integrationId: "photo-albums" },
+            owner: { kind: "integration", integrationId: "sample-brand" },
             categories: [category("gallery", "Gallery"), category("viewer", "Viewer")],
         },
     ];

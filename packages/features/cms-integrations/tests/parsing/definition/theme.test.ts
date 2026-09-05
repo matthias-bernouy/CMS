@@ -134,7 +134,7 @@ describe("integration theme definitions", () => {
     });
 
     test.each([
-        [[{ kind: "photo-albums", versionRange: "^1.0.0" }], "must not reference the integration itself"],
+        [[{ kind: "brand-kit", versionRange: "^1.0.0" }], "must not reference the integration itself"],
         [
             [
                 { kind: "ulvia", versionRange: "^1.0.0" },
@@ -189,7 +189,7 @@ describe("integration theme definitions", () => {
 });
 
 function themedDefinition(theme: unknown): Record<string, unknown> {
-    return { kind: "photo-albums", label: "Photo Albums", inputs: [], theme };
+    return { kind: "brand-kit", label: "Brand Kit", inputs: [], theme };
 }
 
 function oneToken(token: Record<string, unknown>, category: Record<string, unknown> = {}): Record<string, unknown> {

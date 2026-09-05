@@ -38,12 +38,12 @@ describe("integration theme catalogue", () => {
 
         renderThemeEditor(root, viewState(integrationTheme(), "gallery"));
 
-        expect(root.querySelector("[data-source-title]")?.textContent).toBe("Photo Albums");
+        expect(root.querySelector("[data-source-title]")?.textContent).toBe("Sample Brand");
         expect(root.querySelector("[data-token-label]")).toBeNull();
         expect(root.querySelector("[data-edit-token]")).toBeNull();
         expect(root.querySelector("[data-delete-token]")).toBeNull();
         expect(root.querySelector(".token-label-text")?.textContent).toBe("Gallery font");
-        expect(root.querySelector("[data-token-id='photo-albums-shadow']")).toBeNull();
+        expect(root.querySelector("[data-token-id='sample-brand-shadow']")).toBeNull();
         expect(root.querySelector("[data-category-section]")?.getAttribute("heading")).toBe("Gallery");
         expect(root.querySelector("[data-category-section]")?.getAttribute("description")).toBe(
             "Gallery presentation.",
@@ -58,13 +58,13 @@ describe("integration theme catalogue", () => {
         expect(font.querySelector("option")?.textContent).toBe("Unavailable reference");
         expect(font.textContent).not.toContain("--font-body");
         expect(font.hasAttribute("invalid")).toBeTrue();
-        expect(root.querySelector("[data-reset-token='photo-albums-font']")).not.toBeNull();
+        expect(root.querySelector("[data-reset-token='sample-brand-font']")).not.toBeNull();
 
-        const accent = root.querySelector<HTMLElement>("[data-token-id='photo-albums-accent']")!;
+        const accent = root.querySelector<HTMLElement>("[data-token-id='sample-brand-accent']")!;
         expect(valueControl(accent).value).toBe("#336699");
         expect(accent.querySelector("[data-reset-token]")).toBeNull();
         expect(accent.querySelector("[data-edit-token]")).toBeNull();
-        expect(accent.textContent).not.toContain("photo-albums-accent");
+        expect(accent.textContent).not.toContain("sample-brand-accent");
     });
 
     test("switches groups and modes without rendering unrelated tokens", () => {
@@ -74,15 +74,15 @@ describe("integration theme catalogue", () => {
         renderThemeEditor(root, viewState(settings, "viewer"));
 
         expect(root.querySelector("[data-category-section]")?.getAttribute("heading")).toBe("Viewer");
-        expect(root.querySelector("[data-token-id='photo-albums-shadow']")).not.toBeNull();
-        expect(root.querySelector("[data-token-id='photo-albums-font']")).toBeNull();
+        expect(root.querySelector("[data-token-id='sample-brand-shadow']")).not.toBeNull();
+        expect(root.querySelector("[data-token-id='sample-brand-font']")).toBeNull();
         expect(root.querySelectorAll("[data-groups] > .group")).toHaveLength(1);
 
         renderThemeEditor(root, viewState(settings, "gallery", "dark"));
         const darkFont = valueControl(root, "[data-token-type='font-family']");
         expect(darkFont.value).toBe("system-ui, sans-serif");
         expect(darkFont.getAttribute("placeholder")).toBe("Choose or enter a font stack");
-        expect(valueControl(root, "[data-token-id='photo-albums-accent']").value).toBe("#336699");
+        expect(valueControl(root, "[data-token-id='sample-brand-accent']").value).toBe("#336699");
     });
 
     test("keeps the global dark context while editing a mode-independent source", () => {
@@ -174,7 +174,7 @@ function viewState(
     settings: ThemeSettings,
     categoryId: string,
     mode: "light" | "dark" = "light",
-    sourceId = "integration-photo-albums",
+    sourceId = "integration-sample-brand",
 ) {
     return {
         settings,

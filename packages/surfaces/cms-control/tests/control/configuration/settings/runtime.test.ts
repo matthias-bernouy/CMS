@@ -42,14 +42,14 @@ describe("settings runtime", () => {
         } as unknown as ControlCms;
 
         const settings = await getSettings(cms);
-        const source = settings.theme.sources.find((item) => item.id === "integration-photo-albums");
+        const source = settings.theme.sources.find((item) => item.id === "integration-sample-brand");
 
         expect(source).toMatchObject({
-            label: "Photo Albums",
-            owner: { kind: "integration", integrationId: "photo-albums" },
-            categories: [{ tokens: [{ id: "photo-albums-accent" }] }],
+            label: "Sample Brand",
+            owner: { kind: "integration", integrationId: "sample-brand" },
+            categories: [{ tokens: [{ id: "sample-brand-accent" }] }],
         });
-        expect(system.theme.sources.some((item) => item.id === "integration-photo-albums")).toBeFalse();
+        expect(system.theme.sources.some((item) => item.id === "integration-sample-brand")).toBeFalse();
     });
 
     test("persists updates and invalidates style and rendered page caches", async () => {
@@ -76,15 +76,15 @@ describe("settings runtime", () => {
         const system = defaultSystem();
         const installation = successfulThemeInstallation();
         const contribution = {
-            integrationId: "photo-albums",
-            label: "Photo Albums",
+            integrationId: "sample-brand",
+            label: "Sample Brand",
             categories: installation.definitionSnapshot!.theme!.categories,
         };
         const submitted = composeThemeSettings(system.theme, [contribution]);
-        const tokenId = integrationThemeTokenId("photo-albums", "accent");
+        const tokenId = integrationThemeTokenId("sample-brand", "accent");
         submitted.themes[0]!.values.light[tokenId] = "var(--danger-base)";
-        submitted.themes[0]!.values.light["photo-albums-retired"] = "red";
-        const submittedSource = submitted.sources.find((source) => source.id === "integration-photo-albums")!;
+        submitted.themes[0]!.values.light["sample-brand-retired"] = "red";
+        const submittedSource = submitted.sources.find((source) => source.id === "integration-sample-brand")!;
         submittedSource.label = "Forged";
         delete submittedSource.owner;
         const updateSystem = mock(async (_update: Partial<TSystem>) => system);
@@ -97,23 +97,23 @@ describe("settings runtime", () => {
         await updateSettings(cms, { theme: submitted });
 
         const persisted = updateSystem.mock.calls[0]![0]!.theme!;
-        const source = persisted.sources.find((item) => item.id === "integration-photo-albums")!;
-        expect(source.label).toBe("Photo Albums");
-        expect(source.owner).toEqual({ kind: "integration", integrationId: "photo-albums" });
+        const source = persisted.sources.find((item) => item.id === "integration-sample-brand")!;
+        expect(source.label).toBe("Sample Brand");
+        expect(source.owner).toEqual({ kind: "integration", integrationId: "sample-brand" });
         expect(persisted.themes[0]!.values.light[tokenId]).toBe("var(--danger-base)");
-        expect(persisted.themes[0]!.values.light["photo-albums-retired"]).toBeUndefined();
+        expect(persisted.themes[0]!.values.light["sample-brand-retired"]).toBeUndefined();
     });
 });
 
 function successfulThemeInstallation(): IntegrationInstallation {
     return {
-        id: "photo-albums",
-        label: "Photo Albums",
+        id: "sample-brand",
+        label: "Sample Brand",
         definitionVersion: "1.0.0",
         status: "success",
         definitionSnapshot: {
-            kind: "photo-albums",
-            label: "Photo Albums",
+            kind: "sample-brand",
+            label: "Sample Brand",
             inputs: [],
             theme: {
                 categories: [

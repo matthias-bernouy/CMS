@@ -31,7 +31,7 @@ describe("theme token references", () => {
                 value: "var(--brand-color)",
             },
             {
-                label: "Photo Albums · General · Album border",
+                label: "Sample Brand · General · Album border",
                 value: "var(--album-border)",
             },
         ]);
@@ -165,11 +165,11 @@ function fixture(): ThemeSettings {
             source("colors", "Colors", [token("brand-color", "Brand", "color", "#336699")]),
             source("spacing", "Spacing & layout", [token("space-md", "Medium spacing", "length", "1rem")]),
             {
-                ...source("integration-photo-albums", "Photo Albums", [
+                ...source("integration-sample-brand", "Sample Brand", [
                     token("album-accent", "Album accent", "color", "var(--brand-color)"),
                     token("album-border", "Album border", "color", "#cccccc"),
                 ]),
-                owner: { kind: "integration", integrationId: "photo-albums" },
+                owner: { kind: "integration", integrationId: "sample-brand" },
             },
             {
                 ...source("integration-commerce", "Commerce", [

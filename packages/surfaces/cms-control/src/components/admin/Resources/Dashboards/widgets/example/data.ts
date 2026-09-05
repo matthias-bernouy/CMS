@@ -16,10 +16,10 @@ export type ExampleProduct = {
 };
 
 export const PRODUCTS: ExampleProduct[] = [
-    product("prod_1001", "Racket Pro 300", "Active", "Babolat", "Tennis rackets", "Online store", "Today"),
-    product("prod_1002", "Court Shoes Clay", "Draft", "Adidas", "Shoes", "Hidden", "Yesterday"),
-    product("prod_1003", "Training Grip Pack", "Active", "Wilson", "Accessories", "Online store", "Jul 1"),
-    product("prod_1004", "Junior Ball Basket", "Archived", "Head", "Training", "Hidden", "Jun 28"),
+    product("prod_1001", "Desk Lamp", "Active", "Northwind", "Home", "Online store", "Today"),
+    product("prod_1002", "Canvas Backpack", "Draft", "Acme", "Travel", "Hidden", "Yesterday"),
+    product("prod_1003", "Ceramic Mug", "Active", "Example Supply", "Kitchen", "Online store", "Jul 1"),
+    product("prod_1004", "Notebook Set", "Archived", "Paper & Co.", "Stationery", "Hidden", "Jun 28"),
 ];
 
 export function tableData(): WTableData {
@@ -91,7 +91,7 @@ export function detailData(product: ExampleProduct): WDetailData {
                         label: "Vendor",
                         input: "combobox",
                         value: product.vendor,
-                        options: options("Adidas", "Nike", "Section Making"),
+                        options: options("Acme", "Example Supply", "Northwind", "Paper & Co."),
                         placeholder: "Search or add a vendor",
                         creatable: true,
                     },
@@ -100,7 +100,7 @@ export function detailData(product: ExampleProduct): WDetailData {
                         label: "Tags",
                         input: "tokens",
                         value: product.tags,
-                        options: options("Sport", "Featured", "Training"),
+                        options: options("Featured", "New", "Seasonal"),
                         placeholder: "Search or add tags",
                         creatable: true,
                     },
@@ -152,7 +152,7 @@ function product(
         updated,
         description: "Editable sandbox content before any data source is wired.",
         media: media(id, title),
-        tags: ["Sport", "Featured"],
+        tags: ["Featured", "New"],
     };
 }
 
@@ -164,7 +164,7 @@ function media(id: string, title: string): DashboardMediaItem[] {
     return [
         {
             id: `${id}_media_1`,
-            url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=420&q=80",
+            url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=420&q=80",
             alt: `${title} media`,
         },
     ];

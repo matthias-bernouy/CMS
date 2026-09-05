@@ -8,8 +8,8 @@ describe("Theme style entry", () => {
 
         const entry = await generateStyleEntry(reader, [
             {
-                integrationId: "photo-albums",
-                label: "Photo Albums",
+                integrationId: "brand-kit",
+                label: "Brand Kit",
                 categories: [
                     {
                         id: "gallery",
@@ -37,8 +37,8 @@ describe("Theme style entry", () => {
         expect(css).not.toContain("var(--font-body");
         expect(css.indexOf("@layer cms-theme-base")).toBeLessThan(css.indexOf(".site { display: block; }"));
         expect(css).toContain(".site { display: block; }");
-        expect(css).toContain("--photo-albums-accent: var(--primary-base);");
-        expect(css).toContain("--photo-albums-accent: #ffffff;");
-        expect(system.theme.sources.some((source) => source.id === "integration-photo-albums")).toBeFalse();
+        expect(css).toContain("--brand-kit-accent: var(--primary-base);");
+        expect(css).toContain("--brand-kit-accent: #ffffff;");
+        expect(system.theme.sources.some((source) => source.id === "integration-brand-kit")).toBeFalse();
     });
 });

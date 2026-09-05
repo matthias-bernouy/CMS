@@ -54,10 +54,10 @@ function fixture(): ThemeSettings {
         activeThemeId: "default",
         sources: [
             {
-                id: "integration-photo-albums",
-                label: "Photo Albums",
+                id: "integration-sample-brand",
+                label: "Sample Brand",
                 supportsModes: true,
-                owner: { kind: "integration", integrationId: "photo-albums" },
+                owner: { kind: "integration", integrationId: "sample-brand" },
                 categories: [
                     {
                         id: "gallery",

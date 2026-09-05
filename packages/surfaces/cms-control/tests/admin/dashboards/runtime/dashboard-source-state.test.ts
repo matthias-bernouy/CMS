@@ -134,8 +134,8 @@ describe("dashboard runtime source states", () => {
             return Response.json({});
         }) as unknown as typeof fetch;
         const dashboard: DashboardDto = {
-            id: "photo-albums",
-            source: "photoAlbums",
+            id: "sample-brand",
+            source: "sampleBrand",
             views: [],
         };
         const widget = {
@@ -146,9 +146,9 @@ describe("dashboard runtime source states", () => {
         } satisfies Extract<DashboardWidget, { widget: "w-detail" }>;
         const group: DashboardSourceGroup = {
             source: {
-                urn: "urn:photo-albums",
-                id: "photoAlbums",
-                name: "Photo albums",
+                urn: "urn:sample-brand",
+                id: "sampleBrand",
+                name: "Sample Brand",
                 endpointCount: 1,
                 dashboardCount: 1,
                 readonly: false,

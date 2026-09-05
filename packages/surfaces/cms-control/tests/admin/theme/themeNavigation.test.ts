@@ -17,13 +17,13 @@ describe("theme navigation", () => {
         expect(categoryLabel(root, "spacing", "scale")).toBe("Scale");
         expect(categoryLabel(root, "site-brand", "general")).toBe("General");
         expect(
-            root.querySelector("[data-source='integration-photo-albums'][data-category='gallery']")?.textContent,
+            root.querySelector("[data-source='integration-sample-brand'][data-category='gallery']")?.textContent,
         ).toBe("Gallery");
         expect(root.querySelector("w13c-lateral-menu-item")?.getAttribute("data-source")).toBe("colors");
-        const group = root.querySelector<HTMLElement>("[data-theme-group='integration-photo-albums']")!;
+        const group = root.querySelector<HTMLElement>("[data-theme-group='integration-sample-brand']")!;
         expect(group.tagName).toBe("DIV");
         expect(group.classList.contains("menu-section")).toBeTrue();
-        expect(group.textContent).toBe("Photo Albums");
+        expect(group.textContent).toBe("Sample Brand");
         expect(group.querySelector(".integration-icon svg")).not.toBeNull();
         expect(group.hasAttribute("role")).toBeFalse();
         const siteCategory = root.querySelector("[data-source='site-brand'][data-category='general']")!;
@@ -39,7 +39,7 @@ describe("theme navigation", () => {
         expect(siteCategory.querySelector("[data-theme-nav-action='delete-group']")?.textContent).toBe("Delete group");
         expect(
             root
-                .querySelector("[data-source='integration-photo-albums'][data-category='gallery']")
+                .querySelector("[data-source='integration-sample-brand'][data-category='gallery']")
                 ?.querySelector("[data-theme-nav-action]"),
         ).toBeNull();
         const newGroup = root.querySelector<HTMLElement>("[data-theme-nav-action='create-group']")!;
@@ -59,12 +59,12 @@ describe("theme navigation", () => {
         const root = navigationRoot();
 
         renderThemeNav(root, sources(), {
-            sourceId: "integration-photo-albums",
+            sourceId: "integration-sample-brand",
             categoryId: "viewer",
         });
 
         const children = Array.from(
-            root.querySelectorAll<HTMLElement>("[data-source='integration-photo-albums'][data-category]"),
+            root.querySelectorAll<HTMLElement>("[data-source='integration-sample-brand'][data-category]"),
         );
         expect(children.map((item) => item.dataset.category)).toEqual(["gallery", "viewer"]);
         expect(children.map((item) => item.ariaLabel)).toEqual(["Gallery", "Viewer"]);
@@ -84,7 +84,7 @@ describe("theme navigation", () => {
             root.querySelector("[data-source='integration-commerce'][data-category='catalogue'][active]"),
         ).not.toBeNull();
         expect(
-            root.querySelector("[data-source='integration-photo-albums'][data-category='viewer'][active]"),
+            root.querySelector("[data-source='integration-sample-brand'][data-category='viewer'][active]"),
         ).toBeNull();
     });
 
@@ -131,10 +131,10 @@ function sources(): ThemeSource[] {
         ordinarySource("site-brand", "Brand additions"),
         ordinarySource("other", "Other"),
         {
-            id: "integration-photo-albums",
-            label: "Photo Albums",
+            id: "integration-sample-brand",
+            label: "Sample Brand",
             supportsModes: true,
-            owner: { kind: "integration", integrationId: "photo-albums" },
+            owner: { kind: "integration", integrationId: "sample-brand" },
             categories: [category("gallery", "Gallery"), category("viewer", "Viewer")],
         },
         {
