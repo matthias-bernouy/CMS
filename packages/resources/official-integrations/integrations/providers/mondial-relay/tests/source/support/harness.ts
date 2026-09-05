@@ -33,7 +33,7 @@ export async function createHarness(options: HarnessOptions = {}) {
                 outputs: { functionsBaseUrl },
                 resources: [
                     { type: "schema", id: "install/sql/schema.manifest.json", action: "applied" },
-                    { type: "function", id: "cms-delivery", action: "deployed" },
+                    { type: "function", id: "cms-delivery-v2", action: "deployed" },
                 ],
             };
         },
@@ -53,7 +53,7 @@ export async function createHarness(options: HarnessOptions = {}) {
             dashboards,
             dashboardViews,
             connectorDeployers: [deployer],
-            connectorInstanceIds: { primary: "mondial-relay-test-primary" },
+            connectorInstanceIds: { delivery: "mondial-relay-test-delivery" },
             blocs: {
                 async importBloc(artifact) {
                     importedBlocs.push(artifact);
@@ -117,7 +117,7 @@ export async function createHarness(options: HarnessOptions = {}) {
         async sourceFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
             try {
                 const request = requestFromFetchInput(input, init);
-                if (!request.url.startsWith(`${functionsBaseUrl}/cms-delivery/`)) {
+                if (!request.url.startsWith(`${functionsBaseUrl}/cms-delivery-v2/`)) {
                     throw new Error(`unexpected source proxy fetch: ${request.method} ${request.url}`);
                 }
                 return await handler(request);

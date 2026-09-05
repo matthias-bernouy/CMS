@@ -1,1 +1,1 @@
-Initial Mondial Relay release: publish the delivery provider contracts and current database installation baseline.
+Generate usable PDF labels for local simulated shipments while preserving seller-bound access and the existing local simulation gate. The major version is required because the previous package lacks comparable Edge Function HTTP metadata; carrier HTTP contracts and database schemas are unchanged.

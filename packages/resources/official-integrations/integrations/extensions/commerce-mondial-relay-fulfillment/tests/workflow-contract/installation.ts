@@ -8,11 +8,11 @@ import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { installationsForFulfillment, sourcesForFulfillment } from "./harness";
 
 export function registerInstallationTests(): void {
-    test("installs seller-only fulfillment, protected labels, and system reconciliation", async () => {
+    test.each(["1.0.0", "2.0.0"])("installs seller-only fulfillment with provider %s", async (providerVersion) => {
         const sources = await sourcesForFulfillment();
         const functions = new InMemoryFunctionRepository();
         const roles = new InMemoryRolesRepository();
-        const installations = await installationsForFulfillment();
+        const installations = await installationsForFulfillment(providerVersion);
         const triggers = new InMemoryTriggerRepository();
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
             "commerce-mondial-relay-fulfillment",

@@ -1,1 +1,1 @@
-Initial Commerce Mondial Relay delivery release: compose the Commerce, Mondial Relay, and User Account source contracts.
+Accept Mondial Relay provider versions 1 and 2 while preserving the existing delivery workflow contracts and resource ownership.

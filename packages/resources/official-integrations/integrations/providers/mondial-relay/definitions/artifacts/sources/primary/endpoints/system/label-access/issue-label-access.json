@@ -3,7 +3,7 @@
         "endpointId": "issueLabelAccess",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/label-access",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/system/label-access",
         "params": [],
         "headers": [
             {

@@ -4,6 +4,7 @@ import type { ConnectShipmentResult, ConnectStatus, JsonRecord, ShipmentPayload 
 import { validatedMondialRelayLabelUrl } from "../label-url.ts";
 import { mondialRelayConnectEndpoint } from "../provider-endpoints.ts";
 import { xmlAttr, xmlTag } from "../xml.ts";
+import { localSimulationLabelUrl } from "./local-label.ts";
 import { connectShipmentXml } from "./request.ts";
 import { connectStatuses, connectStatusMessage, relayPointInfo } from "./response.ts";
 
@@ -14,7 +15,7 @@ export async function createConnectShipment(payload: ShipmentPayload): Promise<C
         const statuses = [{ code: "0", level: "Success", message: "Local Ulvia simulation" }];
         return {
             expeditionNumber,
-            labelUrl: "",
+            labelUrl: localSimulationLabelUrl(expeditionNumber),
             raw: { statuses, modeSandbox: true, relayPointInfo: { ModeSandbox: "True" } },
             statuses,
             relayPointInfo: { ModeSandbox: "True" },

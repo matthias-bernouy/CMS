@@ -6,6 +6,7 @@ export { observedAt, providerUrl, rawToken, shipmentRow, tokenHash } from "./fix
 export type JsonRecord = Record<string, unknown>;
 
 export type LabelScenario = {
+    localSimulation?: boolean;
     token?: "valid" | "missing" | "revoked" | "expired";
     tokenExpiresAt?: string;
     databaseClockAt?: string;
@@ -45,7 +46,8 @@ afterAll(() => {
 
 export async function useLabelScenario(scenario: LabelScenario = {}) {
     setSystemTime(new Date(observedAt));
-    installGlobals();
+    installGlobals(scenario.localSimulation);
+    const databaseUrl = scenario.localSimulation ? "http://kong:8000" : supabaseUrl;
     const calls: ObservedCall[] = [];
     const tokenState = scenario.token ?? "valid";
     const shipment = scenario.shipment === undefined ? shipmentRow() : scenario.shipment;
@@ -53,8 +55,8 @@ export async function useLabelScenario(scenario: LabelScenario = {}) {
         const request = input instanceof Request && !init ? input : new Request(input, init);
         const url = new URL(request.url);
         const text = request.method === "GET" ? "" : await request.clone().text();
-        calls.push(observe(request, url, text, url.origin === supabaseUrl ? "database" : "provider"));
-        if (url.origin === supabaseUrl) {
+        calls.push(observe(request, url, text, url.origin === databaseUrl ? "database" : "provider"));
+        if (url.origin === databaseUrl) {
             if (scenario.databaseClockAt) {
                 setSystemTime(new Date(scenario.databaseClockAt));
             }
@@ -107,14 +109,18 @@ async function loadEdgeHandler(): Promise<EdgeHandler> {
     return edgeHandler;
 }
 
-function installGlobals(): void {
+function installGlobals(localSimulation = false): void {
     (globalThis as { Deno?: unknown }).Deno = {
         env: {
             get: (key: string) =>
                 ({
                     CMS_DELIVERY_API_KEY: apiKey,
-                    SUPABASE_URL: supabaseUrl,
+                    SUPABASE_URL: localSimulation ? "http://kong:8000" : supabaseUrl,
                     SUPABASE_SECRET_KEY: "sb_secret_label_test",
+                    ULVIA_LOCAL_PROVIDER_SIMULATION: localSimulation ? "v1" : "",
+                    MONDIAL_RELAY_CONNECT_LOGIN: "local-login",
+                    MONDIAL_RELAY_CONNECT_PASSWORD: "local-password",
+                    MONDIAL_RELAY_CONNECT_CUSTOMER_ID: "local-customer",
                 })[key],
         },
         serve(handler: EdgeHandler) {

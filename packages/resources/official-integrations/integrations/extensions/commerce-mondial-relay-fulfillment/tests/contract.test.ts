@@ -5,7 +5,7 @@ import { registerReconciliationTests } from "./workflow-contract/reconciliation"
 import { registerClaimReturnTests } from "./workflow-contract/returns";
 import { registerShipmentTests } from "./workflow-contract/shipments";
 
-describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
+describe("commerce-mondial-relay-fulfillment 1.1.0", () => {
     registerInstallationTests();
     registerShipmentTests();
     registerOperationTests();

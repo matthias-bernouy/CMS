@@ -2,7 +2,7 @@
     "endpointId": "shipment",
     "method": "GET",
     "access": "admin",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipment",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/shipment",
     "params": [
         {
             "name": "id",

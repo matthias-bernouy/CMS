@@ -4,11 +4,11 @@
     "label": "Commerce Mondial Relay delivery",
     "category": "Delivery",
     "description": "Validate and persist Mondial Relay pickup points for authenticated Commerce orders.",
-    "stable": "1.0.0",
-    "latest": "1.0.0",
+    "stable": "1.1.0",
+    "latest": "1.1.0",
     "versions": [
         {
-            "version": "1.0.0",
+            "version": "1.1.0",
             "path": ".",
             "definition": "definition.json"
         }

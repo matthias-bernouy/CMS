@@ -7,6 +7,7 @@ import {
     requiredQuery,
 } from "../../http.ts";
 import { validatedMondialRelayLabelUrl } from "../../provider/label-url.ts";
+import { localSimulationLabelPdf } from "../../provider/connect/local-label.ts";
 import { issueLabelCapability, shipmentForLabelCapability } from "../../shipment/label-access.ts";
 import { requiredBodyText } from "../body.ts";
 
@@ -20,6 +21,11 @@ export async function label(request: Request): Promise<Response> {
     if (!labelUrl) {
         throw new HttpError(404, "label not found");
     }
+    const expeditionNumber = String(row.expedition_number);
+    const localPdf = localSimulationLabelPdf(labelUrl, expeditionNumber);
+    if (localPdf) {
+        return labelResponse(localPdf, expeditionNumber);
+    }
     const providerUrl = validatedMondialRelayLabelUrl(labelUrl);
     const upstream = await fetch(providerUrl, { redirect: "manual" });
     if (upstream.status >= 300 && upstream.status < 400) {
@@ -32,13 +38,17 @@ export async function label(request: Request): Promise<Response> {
     if (!contentType.startsWith("application/pdf")) {
         throw new HttpError(502, "Mondial Relay label response is not a PDF");
     }
-    return new Response(upstream.body, {
+    return labelResponse(upstream.body, expeditionNumber);
+}
+
+function labelResponse(body: BodyInit, expeditionNumber: string): Response {
+    return new Response(body, {
         status: 200,
         headers: {
             "content-type": "application/pdf",
             "cache-control": "private, no-store",
             "x-content-type-options": "nosniff",
-            "content-disposition": `attachment; filename="mondial-relay-${String(row.expedition_number)}.pdf"`,
+            "content-disposition": `attachment; filename="mondial-relay-${expeditionNumber}.pdf"`,
         },
     });
 }

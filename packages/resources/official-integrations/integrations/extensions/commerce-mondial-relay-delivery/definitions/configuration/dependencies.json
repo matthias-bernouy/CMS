@@ -7,7 +7,7 @@
     {
         "name": "delivery",
         "kind": "mondial-relay",
-        "versionRange": "^1.0.0"
+        "versionRange": ">=1.0.0 <3.0.0"
     },
     {
         "name": "accounts",

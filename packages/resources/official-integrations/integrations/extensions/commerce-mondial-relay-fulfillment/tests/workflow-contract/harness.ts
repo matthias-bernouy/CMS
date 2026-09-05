@@ -38,11 +38,13 @@ export async function installedFunctions() {
     return { sources, functions };
 }
 
-export async function installationsForFulfillment(): Promise<InMemoryIntegrationInstallationRepository> {
+export async function installationsForFulfillment(
+    providerVersion = "2.0.0",
+): Promise<InMemoryIntegrationInstallationRepository> {
     const repository = new InMemoryIntegrationInstallationRepository();
     for (const [id, sourceId, definitionVersion] of [
         ["commerce", "commerce", "1.0.0"],
-        ["mondial-relay", "delivery", "1.0.0"],
+        ["mondial-relay", "delivery", providerVersion],
     ] as const) {
         await repository.create({
             id,

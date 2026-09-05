@@ -6,7 +6,7 @@
         "endpointId": "relaySelection",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/relay-selection",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/relay-selection",
         "params": [
             {
                 "name": "externalOrderId",

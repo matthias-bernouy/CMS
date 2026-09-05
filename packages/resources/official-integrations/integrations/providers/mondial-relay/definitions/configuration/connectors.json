@@ -17,7 +17,7 @@
         ],
         "functions": [
             {
-                "name": "cms-delivery",
+                "name": "cms-delivery-v2",
                 "directory": "functions/cms-delivery",
                 "configPath": "supabase.config.toml",
                 "secrets": {
@@ -32,6 +32,38 @@
                     "MONDIAL_RELAY_TRACKING_PRIVATE_KEY": "{{connectorSecrets.mondialRelayTrackingPrivateKey}}"
                 }
             }
-        ]
+        ],
+        "connectorKey": "delivery",
+        "lineageId": "mondial-relay-supabase-v1",
+        "migrationRevision": 0,
+        "migration": {
+            "install": {
+                "revision": 0,
+                "digest": "sha256:4c9e5e6fe54214e23aac5ce9e23dbba1706f50dba9c25850e53f788362906992",
+                "coveredMigrations": []
+            },
+            "migrations": [],
+            "supportedSources": [
+                {
+                    "range": "1.0.0",
+                    "migrationRevision": 0,
+                    "legacyAdoption": {
+                        "$include": "compatibility/legacy-1.0.0.json"
+                    }
+                }
+            ],
+            "cmsMediated": {
+                "strategy": "binding-switch",
+                "drainSeconds": 1,
+                "smoke": {
+                    "endpointId": "migration-health",
+                    "expectedStatus": 200,
+                    "expectedBody": {
+                        "ok": true
+                    }
+                }
+            },
+            "pointOfNoReturn": "before-contract"
+        }
     }
 ]

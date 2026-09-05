@@ -10,7 +10,7 @@ describe("Mondial Relay seller handoff Source contract", () => {
         expect(endpoint).toMatchObject({
             method: "POST",
             access: "system",
-            targetUrl: expect.stringContaining("/cms-delivery/system/shipments/handoff"),
+            targetUrl: expect.stringContaining("/cms-delivery-v2/system/shipments/handoff"),
             headers: [
                 {
                     name: "authorization",
