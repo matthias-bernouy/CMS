@@ -345,12 +345,11 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "semver": "^7.8.2",
       },
       "devDependencies": {
+        "@bernouy/cms-integration-verification": "workspace:*",
         "@types/semver": "^7.7.1",
       },
     },
@@ -364,13 +363,6 @@
         "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
       },
-      "devDependencies": {
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-official-integrations": "workspace:*",
-        "@bernouy/cms-repository-server": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/rate-limiter": "workspace:*",
-      },
       "peerDependencies": {
         "typescript": "^5.9.3",
       },
@@ -382,7 +374,6 @@
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-official-integrations": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -438,6 +429,7 @@
       },
       "dependencies": {
         "@bernouy/cms-bloc-compile": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-registry": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",

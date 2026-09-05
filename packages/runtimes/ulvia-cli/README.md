@@ -138,9 +138,10 @@ Data API schema configuration, Storage bucket migrations, function secrets, and
 Edge Function bundles are applied to that local project. The local management
 bridge exists only while `ulvia dev` is running and never accepts remote hosts.
 
-The official `ulvia` collection contains every official bloc but persists an
-exact per-site active resource list. Activating a source-backed resource installs
-only its required source closure. Inactive resources stay renderable for
-existing content and are omitted from the authoring catalogue. See
+The official `mossa` collection contains the current official bloc catalogue
+and persists an exact per-site active resource list. The `ulvia` collection is
+theme-only. Activating a source-backed Mossa resource installs only its required
+source closure. Inactive resources stay renderable for existing content and are
+omitted from the authoring catalogue. See
 [Local integration development](../../../docs/integrations/local-development.md)
 for the restart and upgrade acceptance sequence.

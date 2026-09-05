@@ -1,9 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { Buffer } from "node:buffer";
 import { assertLocalCompatibility, evaluateLocalCompatibility } from "../../src/release/compatibility";
 import { installRequiredDependencies } from "../../src/release/sandbox/dependencies";
 import type { ReleaseSandboxClient } from "../../src/release/sandbox/client";
 import { verifyCollectionRelease } from "../../src/release/verification/collection";
 import { releasePackage } from "./support";
+
+const encoded = (value: string) => Buffer.from(value).toString("base64");
 
 describe("local release compatibility", () => {
     test("rejects a breaking patch before runtime verification", async () => {
@@ -110,5 +113,36 @@ describe("local release compatibility", () => {
                 () => undefined,
             ),
         ).toThrow(/Native HTML tag "p" is platform-owned/);
+    });
+
+    test("rejects an invalid managed native child before release", async () => {
+        const candidate = await releasePackage("1.0.0", {
+            schema: "cms.integration.definition.v2",
+            type: "collection",
+            resourceCategories: [{ id: "navigation", label: "Navigation" }],
+            resources: [{ id: "demo/blocs/link", type: "bloc", artifact: "demo-link", category: "navigation" }],
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: {
+                        tag: "demo-link",
+                        name: "Link",
+                        nativeElement: "a",
+                        viewJS: "export class DemoLink extends HTMLElement {}",
+                        source: {
+                            "manifest.json": encoded(JSON.stringify({ defaultContent: "./default.html" })),
+                            "default.html": encoded("<demo-link><span>Wrong</span></demo-link>"),
+                        },
+                    },
+                },
+            ],
+        });
+
+        expect(() =>
+            verifyCollectionRelease(
+                { candidate, sourceRoot: ".", baselines: [], availablePackages: [] },
+                () => undefined,
+            ),
+        ).toThrow(/requires exactly one direct, un-slotted <a> child/);
     });
 });
