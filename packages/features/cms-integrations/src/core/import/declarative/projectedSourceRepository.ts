@@ -1,4 +1,4 @@
-import type { Source, SourceEndpoint, SourceRepository } from "@bernouy/cms-sources";
+import { readPersistedSource, type Source, type SourceEndpoint, type SourceRepository } from "@bernouy/cms-sources";
 
 export function projectTargetSources(
     repository: SourceRepository,
@@ -22,6 +22,7 @@ export function projectTargetSources(
         deleteSource: (urn) => repository.deleteSource(urn),
         getSource: async (urn) =>
             clone(byUrn.get(urn)) ?? (hiddenSourceIds.has(urn) ? null : await repository.getSource(urn)),
+        getPersistedSource: async (urn) => await readPersistedSource(repository, urn),
         getAllSources: async () => mergeSources(await repository.getAllSources(), byUrn, hiddenSourceIds),
         getEndpoint: async (urn) =>
             clone(endpoints.get(urn)) ??

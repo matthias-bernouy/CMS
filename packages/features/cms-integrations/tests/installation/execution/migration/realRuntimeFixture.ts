@@ -14,20 +14,25 @@ import {
     SupabaseFunctionMigrationHandler,
 } from "@bernouy/cms-integrations/supabase";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import { InMemorySourceRepository, sourceDtoToSource } from "@bernouy/cms-sources";
+import { InMemorySourceRepository, sourceDtoToSource, type SourceRepository } from "@bernouy/cms-sources";
 import { rm } from "node:fs/promises";
 import { FakeSupabaseManagementApi } from "./fakeSupabaseManagementApi";
 import { createRealMigrationPackageFixture } from "./realRuntimePackageFixture";
 
 export class RealMigrationFixture {
     readonly installations = new InMemoryIntegrationInstallationRepository();
-    readonly sources = new InMemorySourceRepository();
+    readonly storedSources = new InMemorySourceRepository();
+    readonly sources: SourceRepository;
     readonly secrets = new InMemorySecretStore();
     readonly supabase = new FakeSupabaseManagementApi();
     readonly clock = new TestClock();
     root = "";
     target!: IntegrationDefinition;
     runtime!: IntegrationMigrationRuntime;
+
+    constructor(decorateSources: (stored: InMemorySourceRepository) => SourceRepository = (stored) => stored) {
+        this.sources = decorateSources(this.storedSources);
+    }
 
     async initialize(): Promise<this> {
         const packageFixture = await createRealMigrationPackageFixture();

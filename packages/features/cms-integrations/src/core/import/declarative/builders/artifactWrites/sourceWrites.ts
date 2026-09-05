@@ -1,4 +1,4 @@
-import { DuplicateSourceError, type Source, validateSource } from "@bernouy/cms-sources";
+import { DuplicateSourceError, readPersistedSource, type Source, validateSource } from "@bernouy/cms-sources";
 import type { IntegrationImportDeps, IntegrationImportOptions } from "../../../../../interfaces/IntegrationImport";
 import { IntegrationInputError } from "../../../../errors";
 import type { IntegrationSourceWrite } from "../../../writes/sourceWrites";
@@ -20,7 +20,7 @@ export async function buildSourceWrites(
         if (errors.length) {
             throw new IntegrationInputError("artifacts", errors.join("; "));
         }
-        const previous = await deps.sources.getSource(source.urn);
+        const previous = await readPersistedSource(deps.sources, source.urn);
         if (!options.force && previous) {
             throw new DuplicateSourceError(source.urn);
         }

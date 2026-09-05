@@ -53,7 +53,11 @@ export async function runDurableMigrationUpgrade(
     if (!request.installation.definitionSnapshot) {
         throw new IntegrationInputError("version", "migration requires the exact installed definition snapshot");
     }
-    await validateMigrationTargetHooks(request.targetDefinition, request.installations);
+    await validateMigrationTargetHooks(
+        request.installation.migrationOperation?.sourceDefinition ?? request.installation.definitionSnapshot,
+        request.targetDefinition,
+        request.installations,
+    );
     const connectors = planConnectorTransitions(
         request.installation,
         request.targetDefinition,

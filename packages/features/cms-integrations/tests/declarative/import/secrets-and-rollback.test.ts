@@ -1,7 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { importIntegration, type IntegrationDefinition } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import { InMemorySourceRepository } from "@bernouy/cms-sources";
+import {
+    InMemorySourceOverlayRepository,
+    InMemorySourceRepository,
+    SourceOverlaySourceRepository,
+    type Source,
+} from "@bernouy/cms-sources";
+import { buildSourceWrites } from "cms-integrations/core/import/declarative/builders/artifactWrites/sourceWrites";
+import { writeSourcesWithRollback } from "cms-integrations/core/import/writes/sourceWrites";
 import { writeSecretsWithRollback } from "cms-integrations/core/import/writes/secretWrites";
 import { DeleteFailingSecretStore, FailingCreateSourceRepository, sourceArtifact } from "../../helpers";
 
@@ -96,6 +103,37 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         expect(await secrets.listKeys()).toEqual([]);
         expect(await sources.getSource("urn:bad-key")).toBeNull();
     });
+
+    test("restores the persisted Source without materializing overlay fields on rollback", async () => {
+        const stored = new InMemorySourceRepository();
+        const original = sourceWithTarget("https://commerce.example.test/v1/products");
+        await stored.createSource(original);
+        const overlays = new InMemorySourceOverlayRepository();
+        await overlays.upsertOverlay({
+            id: "commerce-brand",
+            sourceId: "commerce",
+            output: [{ endpointId: "products" }],
+            fields: [{ id: "brand", label: "Brand", type: "string", path: "brand" }],
+        });
+        const sources = new SourceOverlaySourceRepository(stored, overlays);
+        const secrets = new InMemorySecretStore();
+        const writes = await buildSourceWrites(
+            { sources, secrets },
+            [sourceWithTarget("https://commerce.example.test/v2/products")],
+            { force: true },
+        );
+
+        await expect(
+            writeSourcesWithRollback(sources, writes, async () => {
+                throw new Error("later artifact failed");
+            }),
+        ).rejects.toThrow("later artifact failed");
+
+        expect(await stored.getSource(original.urn)).toEqual(original);
+        expect(
+            (await stored.getSource(original.urn))?.endpoints[0]?.output?.[0]?.body?.properties?.brand,
+        ).toBeUndefined();
+    });
 });
 
 describe("@bernouy/cms-integrations secret rollback", () => {
@@ -120,3 +158,18 @@ describe("@bernouy/cms-integrations secret rollback", () => {
         expect(await secrets.get("B")).toBe("new");
     });
 });
+
+function sourceWithTarget(targetUrl: string): Source {
+    return {
+        urn: "urn:commerce",
+        identityAuthority: "commerce",
+        endpoints: [
+            {
+                urn: "urn:commerce:products",
+                method: "GET",
+                targetUrl,
+                output: [{ status: "200", body: { type: "object", properties: { id: { type: "string" } } } }],
+            },
+        ],
+    };
+}

@@ -1,6 +1,6 @@
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import { secretKeyToRef } from "@bernouy/cms-secrets";
-import type { Source } from "@bernouy/cms-sources";
+import { readPersistedSource, type Source } from "@bernouy/cms-sources";
 import { IntegrationRuntimeError } from "../../../errors";
 import { connectorOutputsWithProviderAliases, previewConnectorOutputs } from "../../../import/connectorDeployments";
 import { resolveDependencyContext } from "../../../import/dependencies";
@@ -95,7 +95,7 @@ async function assertOwnedSource(
     const installedSourceIds = new Set(
         context.installation.artifacts.filter((artifact) => artifact.type === "source").map((artifact) => artifact.id),
     );
-    const current = await deps.sources.getSource(source.urn);
+    const current = await readPersistedSource(deps.sources, source.urn);
     if (!current || !installedSourceIds.has(source.urn) || current.identityAuthority !== identityAuthority) {
         throw new IntegrationRuntimeError(`CMS binding Source "${source.urn}" is not owned by this installation`, 409);
     }

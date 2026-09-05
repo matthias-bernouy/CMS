@@ -1,3 +1,4 @@
+import { readPersistedSource } from "@bernouy/cms-sources";
 import type { IntegrationArtifactResult, IntegrationImportDeps } from "../../../interfaces/IntegrationImport";
 import { IntegrationRuntimeError } from "../../errors";
 
@@ -12,7 +13,7 @@ export async function deleteArtifact(
     switch (artifact.type) {
         case "source":
             return deleteAndRestore(
-                () => deps.sources.getSource(id),
+                () => readPersistedSource(deps.sources, id),
                 () => deps.sources.deleteSource(id),
                 (previous) => deps.sources.createSource(previous),
             );

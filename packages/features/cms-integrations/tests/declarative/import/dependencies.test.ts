@@ -6,8 +6,14 @@ import {
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import { InMemorySourceRepository } from "@bernouy/cms-sources";
+import { InMemorySourceRepository, readPersistedSource, type Source } from "@bernouy/cms-sources";
+import { projectTargetSources } from "cms-integrations/core/import/declarative/projectedSourceRepository";
 import { sourceArtifact } from "../../helpers";
+
+const source = (urn: string, targetUrl: string): Source => ({
+    urn,
+    endpoints: [{ urn: `${urn}:read`, method: "GET", targetUrl }],
+});
 
 describe("@bernouy/cms-integrations declarative imports", () => {
     test("rejects missing required dependencies before writing secrets", async () => {
@@ -108,5 +114,23 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                 dependencies: [{ name: "self", kind: "link" }],
             }),
         ).toThrow(/must not reference the integration itself/);
+    });
+});
+
+describe("projected target Sources", () => {
+    test("keeps persisted reads storage-authoritative beside the hypothetical effective view", async () => {
+        const repository = new InMemorySourceRepository();
+        const previous = source("urn:commerce", "https://commerce.example.test/v1");
+        const removed = source("urn:obsolete", "https://obsolete.example.test");
+        const target = source("urn:commerce", "https://commerce.example.test/v2");
+        await repository.createSource(previous);
+        await repository.createSource(removed);
+
+        const projected = projectTargetSources(repository, [target], new Set([removed.urn]));
+
+        expect(await projected.getSource(target.urn)).toEqual(target);
+        expect(await readPersistedSource(projected, target.urn)).toEqual(previous);
+        expect(await projected.getSource(removed.urn)).toBeNull();
+        expect(await readPersistedSource(projected, removed.urn)).toEqual(removed);
     });
 });

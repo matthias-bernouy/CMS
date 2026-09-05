@@ -1,6 +1,6 @@
 import { canonicalJsonBytes, sha256Hex } from "@bernouy/cms-integration-packages";
 import { createSecretResolver } from "@bernouy/cms-secrets";
-import { executeEndpoint, type Source, type SourceEndpoint } from "@bernouy/cms-sources";
+import { executeEndpoint, readPersistedSource, type Source, type SourceEndpoint } from "@bernouy/cms-sources";
 import { IntegrationRuntimeError } from "../../../errors";
 import type { IntegrationImportDeps } from "../../../../interfaces/IntegrationImport";
 import type {
@@ -46,12 +46,16 @@ export class CmsSourceFunctionalMigrationProbe implements IntegrationMigrationPr
         if (this.mode === "target") {
             return target;
         }
-        const installed = await this.deps.sources.getSource(target.urn);
-        if (!installed || (await cmsSourceDigest(installed)) !== targetDigest) {
+        const persisted = await readPersistedSource(this.deps.sources, target.urn);
+        if (!persisted || (await cmsSourceDigest(persisted)) !== targetDigest) {
             throw new IntegrationRuntimeError(
                 `stable CMS smoke requires the exact target Source binding "${target.urn}"`,
                 409,
             );
+        }
+        const installed = await this.deps.sources.getSource(target.urn);
+        if (!installed) {
+            throw new IntegrationRuntimeError(`stable CMS smoke Source "${target.urn}" disappeared`, 409);
         }
         return installed;
     }

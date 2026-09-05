@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { runIntegrationInstallation, type IntegrationDefinition } from "@bernouy/cms-integrations";
+import {
+    runIntegrationInstallation,
+    type DeclarativeAfterInstallationTemplate,
+    type DeclarativeSourceArtifactTemplate,
+    type IntegrationDefinition,
+} from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository, sourceDtoToSource, type Source } from "@bernouy/cms-sources";
 import { fakeMigrationTargetWithSource } from "../fakeRuntimeDefinition";
@@ -41,6 +46,112 @@ describe("migration target Source reconciliation", () => {
         );
     });
 
+    test("allows an unchanged deferred hook when its owned endpoint only switches targetUrl", async () => {
+        const fixture = await migrationFixture();
+        const sources = new TrackingSourceRepository();
+        await seedSourceInstallation(fixture, sources);
+        const dependencies = optionalDependencies();
+        const hook: DeclarativeAfterInstallationTemplate = {
+            id: "safe-deferred-hook",
+            requires: ["optionalDep"],
+            steps: [
+                { id: "call-owned", call: { source: "{{answers.id}}", endpoint: "setup" } },
+                {
+                    id: "call-dependency",
+                    call: { source: "{{dependencies.optionalDep.sourceId}}", endpoint: "refresh" },
+                },
+            ],
+        };
+        const target: IntegrationDefinition = {
+            ...fakeMigrationTargetWithSource({
+                providerDirectOnly: true,
+                targetUrl: "{{connectors.supabase.functionsBaseUrl}}/setup",
+            }),
+            dependencies,
+            afterInstallation: [hook],
+        };
+        await seedDeferredHookDefinition(fixture, dependencies, hook);
+
+        await upgrade(fixture, target, sources);
+
+        expect((await sources.getSource("urn:commerce-api"))?.endpoints[0]?.targetUrl).toBe(
+            "https://target.example/functions/v1/setup",
+        );
+    });
+
+    test("rejects a deferred hook when its optional requirement contract changes", async () => {
+        const fixture = await migrationFixture();
+        const sources = new TrackingSourceRepository();
+        await seedSourceInstallation(fixture, sources);
+        const hook: DeclarativeAfterInstallationTemplate = {
+            id: "changed-requirement-hook",
+            requires: ["optionalDep"],
+            steps: [{ id: "call-owned", call: { source: "{{answers.id}}", endpoint: "setup" } }],
+        };
+        const sourceDependencies = [
+            { name: "optionalDep", kind: "optional-dependency", versionRange: "^1.0.0", optional: true },
+        ];
+        const target: IntegrationDefinition = {
+            ...fakeMigrationTargetWithSource({ providerDirectOnly: true }),
+            dependencies: [{ ...sourceDependencies[0]!, versionRange: "^2.0.0" }],
+            afterInstallation: [hook],
+        };
+        await seedDeferredHookDefinition(fixture, sourceDependencies, hook);
+
+        await expect(upgrade(fixture, target, sources)).rejects.toThrow(/cannot prove deferred migration hooks safe/);
+        expect(fixture.runtime.executions.size).toBe(0);
+    });
+
+    test("rejects a dependency call that the deferred hook does not require", async () => {
+        const fixture = await migrationFixture();
+        const sources = new TrackingSourceRepository();
+        await seedSourceInstallation(fixture, sources);
+        const dependencies = [
+            ...optionalDependencies(),
+            { name: "undeclaredCallDep", kind: "another-optional-dependency", optional: true },
+        ];
+        const hook: DeclarativeAfterInstallationTemplate = {
+            id: "undeclared-dependency-call-hook",
+            requires: ["optionalDep"],
+            steps: [
+                {
+                    id: "call-dependency",
+                    call: { source: "{{dependencies.undeclaredCallDep.sourceId}}", endpoint: "refresh" },
+                },
+            ],
+        };
+        const target: IntegrationDefinition = {
+            ...fakeMigrationTargetWithSource({ providerDirectOnly: true }),
+            dependencies,
+            afterInstallation: [hook],
+        };
+        await seedDeferredHookDefinition(fixture, dependencies, hook);
+
+        await expect(upgrade(fixture, target, sources)).rejects.toThrow(/cannot prove deferred migration hooks safe/);
+        expect(fixture.runtime.executions.size).toBe(0);
+    });
+
+    test("rejects a missing hook requirement changed from optional to required", async () => {
+        const fixture = await migrationFixture();
+        const sources = new TrackingSourceRepository();
+        await seedSourceInstallation(fixture, sources);
+        const hook: DeclarativeAfterInstallationTemplate = {
+            id: "required-dependency-hook",
+            requires: ["optionalDep"],
+            steps: [{ id: "call-owned", call: { source: "{{answers.id}}", endpoint: "setup" } }],
+        };
+        const sourceDependencies = optionalDependencies();
+        const target: IntegrationDefinition = {
+            ...fakeMigrationTargetWithSource({ providerDirectOnly: true }),
+            dependencies: [{ name: "optionalDep", kind: "optional-dependency" }],
+            afterInstallation: [hook],
+        };
+        await seedDeferredHookDefinition(fixture, sourceDependencies, hook);
+
+        await expect(upgrade(fixture, target, sources)).rejects.toThrow(/requires integration/);
+        expect(fixture.runtime.executions.size).toBe(0);
+    });
+
     test("deletes a Source removed by the target definition", async () => {
         const fixture = await migrationFixture();
         const sources = new TrackingSourceRepository();
@@ -58,7 +169,7 @@ describe("migration target Source reconciliation", () => {
         await seedSourceInstallation(fixture, sources);
         const target: IntegrationDefinition = {
             ...fixture.target,
-            dependencies: [{ name: "optionalDep", kind: "optional-dependency", optional: true }],
+            dependencies: optionalDependencies(),
             afterInstallation: [
                 {
                     id: "removed-source-hook",
@@ -67,18 +178,7 @@ describe("migration target Source reconciliation", () => {
                 },
             ],
         };
-        const installed = await fixture.installations.get("commerce");
-        if (!installed?.definitionSnapshot) {
-            throw new Error("missing installed definition fixture");
-        }
-        await fixture.installations.replace({
-            ...installed,
-            definitionSnapshot: {
-                ...installed.definitionSnapshot,
-                dependencies: target.dependencies,
-                afterInstallation: target.afterInstallation,
-            },
-        });
+        await seedDeferredHookDefinition(fixture, target.dependencies ?? [], target.afterInstallation![0]!);
 
         await expect(upgrade(fixture, target, sources)).rejects.toThrow(/cannot prove deferred migration hooks safe/);
 
@@ -108,7 +208,7 @@ describe("migration target Source reconciliation", () => {
         };
         const target: IntegrationDefinition = {
             ...baseTarget,
-            dependencies: [{ name: "optionalDep", kind: "optional-dependency", optional: true }],
+            dependencies: optionalDependencies(),
             afterInstallation: [hook],
             artifacts: [
                 {
@@ -125,18 +225,7 @@ describe("migration target Source reconciliation", () => {
                 },
             ],
         };
-        const installed = await fixture.installations.get("commerce");
-        if (!installed?.definitionSnapshot) {
-            throw new Error("missing installed definition fixture");
-        }
-        await fixture.installations.replace({
-            ...installed,
-            definitionSnapshot: {
-                ...installed.definitionSnapshot,
-                dependencies: target.dependencies,
-                afterInstallation: target.afterInstallation,
-            },
-        });
+        await seedDeferredHookDefinition(fixture, target.dependencies ?? [], hook);
 
         await expect(upgrade(fixture, target, sources)).rejects.toThrow(/cannot prove deferred migration hooks safe/);
 
@@ -147,6 +236,54 @@ describe("migration target Source reconciliation", () => {
             "https://connector.example/v1/setup",
         );
     });
+
+    for (const branch of ["steps", "onError"] as const) {
+        test(`rejects a changed endpoint contract called from forEach.${branch}`, async () => {
+            const fixture = await migrationFixture();
+            const sources = new TrackingSourceRepository();
+            await seedSourceInstallation(fixture, sources);
+            const dependencies = optionalDependencies();
+            const call = { id: "nested-call", call: { source: "{{answers.id}}", endpoint: "setup" } };
+            const hook: DeclarativeAfterInstallationTemplate = {
+                id: `nested-${branch}-hook`,
+                requires: ["optionalDep"],
+                steps: [
+                    {
+                        id: "items",
+                        forEach: {
+                            items: [],
+                            max: 1,
+                            steps: branch === "steps" ? [call] : [{ assert: { condition: { exists: "$item" } } }],
+                            ...(branch === "onError" ? { continueOnError: true, onError: [call] } : {}),
+                        },
+                    },
+                ],
+            };
+            const baseTarget = fakeMigrationTargetWithSource();
+            const sourceArtifact = requiredSourceArtifact(baseTarget);
+            const endpoint = sourceArtifact.source.endpoints[0]!;
+            const target: IntegrationDefinition = {
+                ...baseTarget,
+                dependencies,
+                afterInstallation: [hook],
+                artifacts: [
+                    {
+                        ...sourceArtifact,
+                        source: {
+                            ...sourceArtifact.source,
+                            endpoints: [{ ...endpoint, method: "PUT" }],
+                        },
+                    },
+                ],
+            };
+            await seedDeferredHookDefinition(fixture, dependencies, hook);
+
+            await expect(upgrade(fixture, target, sources)).rejects.toThrow(
+                /cannot prove deferred migration hooks safe/,
+            );
+            expect(fixture.runtime.executions.size).toBe(0);
+        });
+    }
 });
 
 class TrackingSourceRepository extends InMemorySourceRepository {
@@ -188,6 +325,42 @@ async function seedSourceInstallation(
         answersSnapshot: { id: "commerce-api" },
         artifacts: [{ type: "source", id: "urn:commerce-api", action: "created" }],
     });
+}
+
+async function seedDeferredHookDefinition(
+    fixture: Awaited<ReturnType<typeof migrationFixture>>,
+    dependencies: NonNullable<IntegrationDefinition["dependencies"]>,
+    hook: DeclarativeAfterInstallationTemplate,
+): Promise<void> {
+    const installed = await fixture.installations.get("commerce");
+    if (!installed?.definitionSnapshot) {
+        throw new Error("missing installed definition fixture");
+    }
+    const source = fakeMigrationTargetWithSource({ targetUrl: "https://connector.example/v1/setup" });
+    await fixture.installations.replace({
+        ...installed,
+        definitionSnapshot: {
+            ...installed.definitionSnapshot,
+            inputs: source.inputs,
+            dependencies,
+            afterInstallation: [structuredClone(hook)],
+            artifacts: source.artifacts,
+        },
+    });
+}
+
+function optionalDependencies(): NonNullable<IntegrationDefinition["dependencies"]> {
+    return [{ name: "optionalDep", kind: "optional-dependency", optional: true }];
+}
+
+function requiredSourceArtifact(definition: IntegrationDefinition): DeclarativeSourceArtifactTemplate {
+    const artifact = definition.artifacts?.find(
+        (candidate): candidate is DeclarativeSourceArtifactTemplate => candidate.type === "source",
+    );
+    if (!artifact) {
+        throw new Error("missing Source artifact fixture");
+    }
+    return artifact;
 }
 
 async function upgrade(

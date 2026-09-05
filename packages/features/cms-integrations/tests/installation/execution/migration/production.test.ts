@@ -4,6 +4,12 @@ import {
     runDurableMigrationUpgrade,
     type IntegrationMigrationPhase,
 } from "@bernouy/cms-integrations";
+import {
+    InMemorySourceOverlayRepository,
+    readPersistedSource,
+    SourceOverlaySourceRepository,
+    type SourceRepository,
+} from "@bernouy/cms-sources";
 import { FailAfterCompensationRuntime, FailAfterRemoteRuntime, RealMigrationFixture } from "./realRuntimeFixture";
 
 const fixtures: RealMigrationFixture[] = [];
@@ -90,6 +96,29 @@ describe("production integration migration runtime", () => {
         );
     });
 
+    test("reconciles an overlaid Source from its persisted binding while smoking the effective view", async () => {
+        const overlays = new CountingSourceOverlayRepository();
+        await overlays.upsertOverlay({
+            id: "commerce-health-detail",
+            sourceId: "commerce",
+            output: [{ endpointId: "health" }],
+            fields: [{ id: "detail", label: "Detail", type: "string", path: "detail" }],
+        });
+        const fixture = await initializedFixture((stored) => new SourceOverlaySourceRepository(stored, overlays));
+
+        const completed = await run(fixture, fixture.runtime);
+
+        expect(completed.installation.migrationOperation?.status).toBe("completed");
+        expect(overlays.sourceReads).toBeGreaterThan(0);
+        expect(
+            (await fixture.sources.getSource("urn:commerce"))?.endpoints[0]?.output?.[0]?.body?.properties?.detail,
+        ).toEqual({ type: "string", title: "Detail" });
+        expect(
+            (await readPersistedSource(fixture.sources, "urn:commerce"))?.endpoints[0]?.output?.[0]?.body?.properties
+                ?.detail,
+        ).toBeUndefined();
+    });
+
     test("fails target smoke closed before changing the stable CMS binding and resumes safely", async () => {
         const fixture = await initializedFixture();
         fixture.supabase.smokeBody = { ok: false };
@@ -144,6 +173,37 @@ describe("production integration migration runtime", () => {
         expect((await fixture.sources.getSource("urn:commerce"))?.endpoints[0]?.targetUrl).toEndWith(
             "/cms-commerce/health",
         );
+    });
+
+    test("compensates an overlaid CMS binding without materializing the overlay", async () => {
+        const overlays = new CountingSourceOverlayRepository();
+        await overlays.upsertOverlay({
+            id: "commerce-health-detail",
+            sourceId: "commerce",
+            output: [{ endpointId: "health" }],
+            fields: [{ id: "detail", label: "Detail", type: "string", path: "detail" }],
+        });
+        const fixture = await initializedFixture((stored) => new SourceOverlaySourceRepository(stored, overlays));
+        const seededLegacy = await readPersistedSource(fixture.sources, "urn:commerce");
+        if (!seededLegacy?.endpoints[0]) {
+            throw new Error("missing legacy Source fixture");
+        }
+        seededLegacy.endpoints[0].targetUrl = "https://project.supabase.co/functions/v1/cms-commerce/health";
+        await fixture.sources.updateSource(seededLegacy);
+        const legacy = await readPersistedSource(fixture.sources, "urn:commerce");
+        fixture.supabase.queueSmokeResponse(200, { ok: true });
+        fixture.supabase.queueSmokeResponse(200, { ok: true });
+        fixture.supabase.queueSmokeResponse(200, { ok: false });
+        await expect(run(fixture, fixture.runtime)).rejects.toThrow("returned an unexpected body");
+
+        const aborted = await abort(fixture, fixture.runtime);
+
+        expect(aborted.migrationOperation?.status).toBe("aborted");
+        expect(await readPersistedSource(fixture.sources, "urn:commerce")).toEqual(legacy);
+        expect(
+            (await fixture.sources.getSource("urn:commerce"))?.endpoints[0]?.output?.[0]?.body?.properties?.detail,
+        ).toEqual({ type: "string", title: "Detail" });
+        expect(legacy?.endpoints[0]?.output?.[0]?.body?.properties?.detail).toBeUndefined();
     });
 
     test("retries compensation idempotently after a crash following the remote rollback", async () => {
@@ -219,8 +279,10 @@ describe("production integration migration runtime", () => {
     });
 });
 
-async function initializedFixture(): Promise<RealMigrationFixture> {
-    const fixture = await new RealMigrationFixture().initialize();
+async function initializedFixture(
+    decorateSources?: (stored: RealMigrationFixture["storedSources"]) => SourceRepository,
+): Promise<RealMigrationFixture> {
+    const fixture = await new RealMigrationFixture(decorateSources).initialize();
     fixtures.push(fixture);
     return fixture;
 }
@@ -246,6 +308,15 @@ async function abort(fixture: RealMigrationFixture, runtime: RealMigrationFixtur
     });
 }
 
+class CountingSourceOverlayRepository extends InMemorySourceOverlayRepository {
+    sourceReads = 0;
+
+    override async getOverlaysForSource(sourceId: string) {
+        this.sourceReads += 1;
+        return await super.getOverlaysForSource(sourceId);
+    }
+}
+
 async function run(fixture: RealMigrationFixture, runtime: RealMigrationFixture["runtime"]) {
     return await runDurableMigrationUpgrade({
         installations: fixture.installations,
@@ -260,5 +331,10 @@ async function run(fixture: RealMigrationFixture, runtime: RealMigrationFixture[
         },
         runtime,
         clock: fixture.clock,
+        declarativeDeps: {
+            sources: fixture.sources,
+            secrets: fixture.secrets,
+            installations: fixture.installations,
+        },
     });
 }

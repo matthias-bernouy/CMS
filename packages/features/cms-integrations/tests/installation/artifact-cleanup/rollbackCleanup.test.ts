@@ -2,14 +2,26 @@ import { describe, expect, test } from "bun:test";
 import { InMemoryIntegrationInstallationRepository, runIntegrationInstallation } from "@bernouy/cms-integrations";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import { InMemorySourceRepository } from "@bernouy/cms-sources";
+import {
+    InMemorySourceOverlayRepository,
+    InMemorySourceRepository,
+    SourceOverlaySourceRepository,
+} from "@bernouy/cms-sources";
 import { SuccessReplaceFailingIntegrationInstallationRepository } from "../../helpers";
 import { blocDefinition, definition, hookCleanupDefinition } from "./cleanupDefinitions";
 import { install, upgrade } from "./cleanupSupport";
 
 describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
     test("restores deleted artifacts when successful installation persistence fails", async () => {
-        const sources = new InMemorySourceRepository();
+        const storedSources = new InMemorySourceRepository();
+        const overlays = new InMemorySourceOverlayRepository();
+        await overlays.upsertOverlay({
+            id: "legacy-detail",
+            sourceId: "legacy-source",
+            output: [{ endpointId: "read" }],
+            fields: [{ id: "detail", label: "Detail", type: "string", path: "detail" }],
+        });
+        const sources = new SourceOverlaySourceRepository(storedSources, overlays);
         const functions = new InMemoryFunctionRepository();
         const secrets = new InMemorySecretStore();
         const installations = new SuccessReplaceFailingIntegrationInstallationRepository();
@@ -21,7 +33,12 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
             /installation replace failed/,
         );
 
-        expect(await sources.getSource("urn:legacy-source")).not.toBeNull();
+        expect(
+            (await sources.getSource("urn:legacy-source"))?.endpoints[0]?.output?.[0]?.body?.properties?.detail,
+        ).toEqual({ type: "string", title: "Detail" });
+        expect(
+            (await storedSources.getSource("urn:legacy-source"))?.endpoints[0]?.output?.[0]?.body?.properties?.detail,
+        ).toBeUndefined();
         expect(await functions.getFunction("legacyFunction")).not.toBeNull();
         const installation = await installations.get("cleanup");
         expect(installation?.status).toBe("failed");

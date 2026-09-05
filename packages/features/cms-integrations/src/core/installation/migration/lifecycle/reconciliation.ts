@@ -1,4 +1,6 @@
 import { secretKeyToRef } from "@bernouy/cms-secrets";
+import { readPersistedSource } from "@bernouy/cms-sources";
+import type { FunctionCall, FunctionStep } from "@bernouy/cms-functions";
 import type { DependencyTemplateContext, TemplateContext } from "../../../definitions/templating/templates";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../../errors";
 import { resolveIntegrationInputs } from "../../../definitions/resolvedInputs";
@@ -12,6 +14,7 @@ import { buildSourceArtifacts } from "../../../import/declarative/builders/artif
 import { projectTargetSources } from "../../../import/declarative/projectedSourceRepository";
 import { withObsoleteArtifactCleanup } from "../../artifactCleanup";
 import { validateChangedInstallation } from "../../execution/afterInstallation";
+import { declarativeValuesEqual } from "../../snapshots";
 import type { IntegrationDefinition } from "../../../../interfaces/Integration";
 import type {
     IntegrationArtifactResult,
@@ -78,25 +81,109 @@ export async function validateMigrationTargetReconciliation(
 }
 
 export async function validateMigrationTargetHooks(
-    definition: IntegrationDefinition,
+    sourceDefinition: IntegrationDefinition,
+    targetDefinition: IntegrationDefinition,
     installations: IntegrationInstallationRepository,
 ): Promise<void> {
-    assertNoDeferredMigrationHooks(definition, await resolveDependencyContext(definition, installations));
+    assertDeferredMigrationHooksSafe(
+        sourceDefinition,
+        targetDefinition,
+        await resolveDependencyContext(targetDefinition, installations),
+    );
 }
 
-function assertNoDeferredMigrationHooks(
-    definition: IntegrationDefinition,
+function assertDeferredMigrationHooksSafe(
+    sourceDefinition: IntegrationDefinition,
+    targetDefinition: IntegrationDefinition,
     dependencies: DependencyTemplateContext,
 ): void {
-    const deferred = (definition.afterInstallation ?? []).filter((action) =>
+    const deferred = (targetDefinition.afterInstallation ?? []).filter((action) =>
         (action.requires ?? []).some((name) => !dependencies[name]),
     );
-    if (deferred.length) {
+    const unsafe = deferred.filter(
+        (action) =>
+            !deferredHookIsUnchanged(sourceDefinition, targetDefinition, action, dependencies) ||
+            !callsRetainTargetContracts(sourceDefinition, targetDefinition, action),
+    );
+    if (unsafe.length) {
         throw new IntegrationInputError(
             "afterInstallation",
-            `cannot prove deferred migration hooks safe against the target artifacts: ${deferred.map((action) => action.id).join(", ")}`,
+            `cannot prove deferred migration hooks safe against the target artifacts: ${unsafe.map((action) => action.id).join(", ")}`,
         );
     }
+}
+
+function deferredHookIsUnchanged(
+    sourceDefinition: IntegrationDefinition,
+    targetDefinition: IntegrationDefinition,
+    targetAction: NonNullable<IntegrationDefinition["afterInstallation"]>[number],
+    dependencies: DependencyTemplateContext,
+): boolean {
+    const sourceAction = sourceDefinition.afterInstallation?.find((action) => action.id === targetAction.id);
+    if (!sourceAction || !declarativeValuesEqual(sourceAction, targetAction)) {
+        return false;
+    }
+    const sourceDependencies = new Map((sourceDefinition.dependencies ?? []).map((entry) => [entry.name, entry]));
+    const targetDependencies = new Map((targetDefinition.dependencies ?? []).map((entry) => [entry.name, entry]));
+    return (targetAction.requires ?? []).every((name) => {
+        const sourceDependency = sourceDependencies.get(name);
+        const targetDependency = targetDependencies.get(name);
+        return (
+            sourceDependency !== undefined &&
+            targetDependency !== undefined &&
+            declarativeValuesEqual(sourceDependency, targetDependency) &&
+            (dependencies[name] !== undefined || targetDependency.optional === true)
+        );
+    });
+}
+
+function callsRetainTargetContracts(
+    sourceDefinition: IntegrationDefinition,
+    targetDefinition: IntegrationDefinition,
+    action: NonNullable<IntegrationDefinition["afterInstallation"]>[number],
+): boolean {
+    const requiredDependencies = new Set(action.requires ?? []);
+    return collectCalls(action.steps).every((call) => {
+        if (requiredDependencyCall(call, requiredDependencies)) {
+            return true;
+        }
+        const sourceEndpoint = uniqueEndpoint(sourceDefinition, call.source, call.endpoint);
+        const targetEndpoint = uniqueEndpoint(targetDefinition, call.source, call.endpoint);
+        if (!sourceEndpoint || !targetEndpoint) {
+            return false;
+        }
+        const { targetUrl: _sourceTargetUrl, ...sourceContract } = sourceEndpoint;
+        const { targetUrl: _targetTargetUrl, ...targetContract } = targetEndpoint;
+        return declarativeValuesEqual(sourceContract, targetContract);
+    });
+}
+
+function collectCalls(steps: FunctionStep[]): FunctionCall[] {
+    return steps.flatMap((step) => {
+        if ("call" in step) {
+            return [step.call];
+        }
+        if ("forEach" in step) {
+            return [...collectCalls(step.forEach.steps), ...collectCalls(step.forEach.onError ?? [])];
+        }
+        return [];
+    });
+}
+
+function requiredDependencyCall(call: FunctionCall, dependencies: ReadonlySet<string>): boolean {
+    const match = call.source.match(
+        /^\s*\{\{\s*dependencies\.([A-Za-z0-9_-]+)\.(?:id|sourceId|answers\.[A-Za-z0-9_-]+)\s*\}\}\s*$/,
+    );
+    return match?.[1] !== undefined && dependencies.has(match[1]);
+}
+
+function uniqueEndpoint(definition: IntegrationDefinition, sourceId: string, endpointId: string) {
+    const matches = (definition.artifacts ?? []).flatMap((artifact) =>
+        artifact.type === "source" && artifact.source.id === sourceId
+            ? artifact.source.endpoints.filter((endpoint) => endpoint.endpointId === endpointId)
+            : [],
+    );
+    return matches.length === 1 ? matches[0] : undefined;
 }
 
 export async function runMigrationTargetReconciliation(
@@ -230,7 +317,7 @@ async function prepareTargetReconciliation(
             ),
         ),
     };
-    assertNoDeferredMigrationHooks(definition, dependencies);
+    assertDeferredMigrationHooksSafe(operation.sourceDefinition, definition, dependencies);
     const confirmedSourceResults = await confirmedTargetSources(request.deps, operation.journal, definition, context);
     return { definition, context, confirmedSourceResults };
 }
@@ -246,7 +333,7 @@ async function confirmedTargetSources(
     const targets = new Map(buildSourceArtifacts(definition, context).map((source) => [source.urn, source]));
     for (const artifact of confirmed) {
         const target = targets.get(artifact.id);
-        const current = await deps.sources.getSource(artifact.id);
+        const current = await readPersistedSource(deps.sources, artifact.id);
         if (!target || !current || (await cmsSourceDigest(current)) !== (await cmsSourceDigest(target))) {
             throw new IntegrationRuntimeError(`confirmed migration Source "${artifact.id}" no longer matches target`);
         }

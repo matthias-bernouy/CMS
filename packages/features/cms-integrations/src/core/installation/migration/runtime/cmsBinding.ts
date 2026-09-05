@@ -1,4 +1,5 @@
 import { IntegrationRuntimeError } from "../../../errors";
+import { readPersistedSource } from "@bernouy/cms-sources";
 import { buildSourceWrites } from "../../../import/declarative/builders/artifactWrites/sourceWrites";
 import { writeSourcesWithRollback } from "../../../import/writes/sourceWrites";
 import type { IntegrationImportDeps, IntegrationImportResult } from "../../../../interfaces/IntegrationImport";
@@ -35,7 +36,7 @@ export class CmsSourceBindingMigrationHandler implements IntegrationMigrationExt
         if (!target) {
             return { confirmed: true, externalOperationId: "cms-binding:none", importResult: emptyResult() };
         }
-        const current = await this.deps.sources.getSource(target.source.urn);
+        const current = await readPersistedSource(this.deps.sources, target.source.urn);
         if (!current || (await cmsSourceDigest(current)) !== target.digest) {
             return { confirmed: false };
         }
@@ -73,7 +74,7 @@ export class CmsSourceBindingMigrationHandler implements IntegrationMigrationExt
         if (source.source.urn !== target.source.urn) {
             throw new IntegrationRuntimeError("CMS binding compensation cannot change the Source identity", 409);
         }
-        const current = await this.deps.sources.getSource(source.source.urn);
+        const current = await readPersistedSource(this.deps.sources, source.source.urn);
         if (!current) {
             throw new IntegrationRuntimeError(`CMS binding Source "${source.source.urn}" disappeared`, 409);
         }
@@ -89,7 +90,7 @@ export class CmsSourceBindingMigrationHandler implements IntegrationMigrationExt
         }
         const writes = await buildSourceWrites(this.deps, [source.source], { force: true });
         await writeSourcesWithRollback(this.deps.sources, writes);
-        const restored = await this.deps.sources.getSource(source.source.urn);
+        const restored = await readPersistedSource(this.deps.sources, source.source.urn);
         if (!restored || (await cmsSourceDigest(restored)) !== source.digest) {
             throw new IntegrationRuntimeError(
                 `CMS binding Source "${source.source.urn}" rollback was not confirmed`,

@@ -1,6 +1,6 @@
 import { InMemoryIntegrationInstallationRepository, type IntegrationInstallation } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import type { Source, SourceRepository } from "@bernouy/cms-sources";
+import { readPersistedSource, type Source, type SourceRepository } from "@bernouy/cms-sources";
 
 export class FailingCreateSourceRepository implements SourceRepository {
     constructor(
@@ -25,6 +25,10 @@ export class FailingCreateSourceRepository implements SourceRepository {
 
     getSource(urn: string): Promise<Source | null> {
         return this.inner.getSource(urn);
+    }
+
+    getPersistedSource(urn: string): Promise<Source | null> {
+        return readPersistedSource(this.inner, urn);
     }
 
     getAllSources(): Promise<Source[]> {
