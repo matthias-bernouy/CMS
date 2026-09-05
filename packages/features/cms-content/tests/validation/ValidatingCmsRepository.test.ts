@@ -109,9 +109,9 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("persists controlled native content and component light DOM", async () => {
-        const { repo, calls } = makeRepo({ blocs: ["mossa-newsletter-card", "mossa-input", "mossa-button"] });
+        const { repo, calls } = makeRepo({ blocs: ["fixture-newsletter-card", "fixture-input", "fixture-button"] });
         const content = `
-            <mossa-newsletter-card cms-source="/.cms/sources/content/newsletter as newsletterPage">
+            <fixture-newsletter-card cms-source="/.cms/sources/content/newsletter as newsletterPage">
                 <h2 slot="title">Stay informed</h2>
                 <form slot="form"
                     cms-source="/.cms/sources/newsletter/setSubscription as newsletterSubscription"
@@ -119,15 +119,15 @@ describe("ValidatingCmsRepository — pages", () => {
                     cms-source-trigger="submit"
                     cms-source-method="POST"
                     cms-source-success-reset="true">
-                    <mossa-input name="email"></mossa-input>
-                    <mossa-button><button type="submit">Subscribe</button></mossa-button>
+                    <fixture-input name="email"></fixture-input>
+                    <fixture-button><button type="submit">Subscribe</button></fixture-button>
                     <p class="status" data-state="loading"
                         cms-condition="$sources.newsletterSubscription.loading">Loading</p>
                 </form>
                 <img slot="illustration" src="/.cms/files/by-id/newsletter" alt="Newsletter illustration">
                 <span>Default-slot label</span>
                 <li slot="criteria">Component-owned list criterion</li>
-            </mossa-newsletter-card>
+            </fixture-newsletter-card>
         `;
 
         await repo.insertPage("/newsletter", "Newsletter", content);

@@ -73,7 +73,7 @@ describe("platform native HTML policy", () => {
                 structure: [
                     {
                         kind: "bloc",
-                        tag: "mossa-grade",
+                        tag: "fixture-grade",
                         attributes: {},
                         children: [
                             { kind: "bloc", tag: "span", attributes: {}, children: [] },
@@ -85,7 +85,7 @@ describe("platform native HTML policy", () => {
             }),
         );
 
-        expect(snapshot.dependencies).toEqual(["mossa-grade"]);
+        expect(snapshot.dependencies).toEqual(["fixture-grade"]);
     });
 
     test.each([

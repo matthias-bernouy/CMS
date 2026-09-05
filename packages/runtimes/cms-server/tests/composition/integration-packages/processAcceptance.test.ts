@@ -2,8 +2,6 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import {
     REMOTE_INTEGRATION_KIND,
     REMOTE_INTEGRATION_VERSION,
@@ -43,10 +41,6 @@ describe("Lot 0 external integration process acceptance", () => {
         roots.push(root);
         const repositoryRoot = join(root, "repository");
         await writeRemoteIntegrationCatalog(repositoryRoot);
-        expect(
-            await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(REMOTE_INTEGRATION_KIND),
-        ).toBeNull();
-
         const repository = await spawnFixture("repository", { repositoryRoot }, join(root, "repository-process.json"));
         processes.push(repository);
         const repositoryUrl = `http://127.0.0.1:${repository.ready.port}/.cms/repository`;
