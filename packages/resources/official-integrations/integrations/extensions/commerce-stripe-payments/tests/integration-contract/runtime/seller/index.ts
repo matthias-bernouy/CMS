@@ -1,5 +1,6 @@
 import type { InMemoryIdentityService } from "@bernouy/cms-identities";
 import type { IntegrationContractContext } from "../../harness";
+import { assertSellerCapabilityRefresh } from "./capability-refresh";
 import { assertSellerEnrollment } from "./enrollment";
 import { assertSellerEnrollmentFailures } from "./failures";
 import { assertFirstSellerPrice } from "./first-price";
@@ -12,6 +13,7 @@ export async function assertSellerContracts(
     identities: InMemoryIdentityService,
 ): Promise<void> {
     const sellerState = await assertSellerEnrollment(context, identities);
+    await assertSellerCapabilityRefresh(context, identities);
     await assertSellerInputValidation(context, identities, sellerState);
     await assertFirstSellerPrice(context, identities, sellerState);
     await assertSellerPriceReplay(context, identities, sellerState);

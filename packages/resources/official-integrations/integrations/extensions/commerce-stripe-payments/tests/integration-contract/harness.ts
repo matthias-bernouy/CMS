@@ -1,10 +1,6 @@
 import { expect } from "bun:test";
 import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
-import {
-    importIntegration,
-    InMemoryIntegrationInstallationRepository,
-    type IntegrationBlocArtifact,
-} from "@bernouy/cms-integrations";
+import { importIntegration, InMemoryIntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
@@ -25,7 +21,6 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
     const triggers = new InMemoryTriggerRepository();
     const dashboards = new InMemoryDashboardRepository();
     const dashboardViews = new InMemoryDashboardViewRepository();
-    const importedBlocs: IntegrationBlocArtifact[] = [];
     await sources.createSource(commerceSource());
     await sources.createSource(stripeSource());
     await seedInstallation(installations, "commerce");
@@ -48,12 +43,6 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
             triggers,
             dashboards,
             dashboardViews,
-            blocs: {
-                async importBloc(artifact) {
-                    importedBlocs.push(artifact);
-                    return { id: artifact.tag, action: "created" };
-                },
-            },
         },
         {
             kind: "commerce-stripe-payments",
@@ -76,6 +65,7 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
     const refundWorker = await functions.getFunction("dispatchPendingProtectedRefunds");
     const reconciliationWorker = await functions.getFunction("reconcileProtectedPaymentSystems");
     const enrollmentFn = await functions.getFunction("getSellerSaleEnrollment");
+    const capabilityRefreshFn = await functions.getFunction("refreshMyProtectedPaymentCapability");
     const platformDecreaseFn = await functions.getFunction("applyPlatformPayoutLiabilityDecrease");
     const submitPriceFn = await functions.getFunction("submitSellerOfferPrice");
     const protectedOrderFn = await functions.getFunction("createProtectedOrder");
@@ -108,7 +98,7 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
     ) {
         throw new Error("protected financial workers not imported");
     }
-    if (!enrollmentFn || !platformDecreaseFn || !submitPriceFn || !protectedOrderFn) {
+    if (!enrollmentFn || !capabilityRefreshFn || !platformDecreaseFn || !submitPriceFn || !protectedOrderFn) {
         throw new Error("seller sale enrollment functions not imported");
     }
     return {
@@ -117,7 +107,6 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
         triggers,
         dashboards,
         dashboardViews,
-        importedBlocs,
         result,
         fn,
         legalFn,
@@ -133,6 +122,7 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
         refundWorker,
         reconciliationWorker,
         enrollmentFn,
+        capabilityRefreshFn,
         platformDecreaseFn,
         submitPriceFn,
         protectedOrderFn,

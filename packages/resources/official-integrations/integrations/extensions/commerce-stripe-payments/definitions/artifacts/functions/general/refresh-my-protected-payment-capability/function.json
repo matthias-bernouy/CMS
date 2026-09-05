@@ -1,0 +1,95 @@
+{
+    "id": "refreshMyProtectedPaymentCapability",
+    "method": "POST",
+    "access": {
+        "mode": "auth"
+    },
+    "meta": {
+        "name": "Refresh my protected payment capability",
+        "description": "Synchronize the authenticated seller's current Stripe held-payment eligibility into Commerce after onboarding or terms acceptance."
+    },
+    "input": {
+        "body": {
+            "type": "object",
+            "properties": {}
+        }
+    },
+    "output": [
+        {
+            "status": "200",
+            "body": {
+                "type": "object",
+                "properties": {
+                    "connect": {
+                        "type": "object"
+                    },
+                    "capability": {
+                        "type": "object",
+                        "properties": {
+                            "sellerId": {
+                                "type": "number"
+                            },
+                            "capabilityKey": {
+                                "type": "string"
+                            },
+                            "ready": {
+                                "type": "boolean"
+                            },
+                            "confirmedAt": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "revokedAt": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        },
+                        "required": ["sellerId", "capabilityKey", "ready", "confirmedAt", "revokedAt"]
+                    }
+                },
+                "required": ["connect", "capability"]
+            }
+        }
+    ],
+    "steps": [
+        {
+            "id": "connect",
+            "call": {
+                "source": "{{dependencies.stripe.sourceId}}",
+                "endpoint": "getConnectStatus",
+                "params": {}
+            }
+        },
+        {
+            "assert": {
+                "condition": {
+                    "equals": ["$steps.connect.userId", "$ctx.user.id"]
+                },
+                "failure": {
+                    "status": 403,
+                    "error": "Seller capability identity mismatch"
+                }
+            }
+        },
+        {
+            "id": "capability",
+            "call": {
+                "source": "{{dependencies.commerce.sourceId}}",
+                "endpoint": "recordSellerSaleCapability",
+                "body": {
+                    "sellerCmsUserId": "$ctx.user.id",
+                    "capabilityKey": "protected_payment",
+                    "ready": "$steps.connect.canAcceptHeldPayments",
+                    "evidenceReference": "$steps.connect.enrollmentStatus"
+                }
+            }
+        }
+    ],
+    "return": {
+        "status": 200,
+        "body": {
+            "connect": "$steps.connect",
+            "capability": "$steps.capability"
+        }
+    }
+}

@@ -1,6 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { isNativeBlocTag, prepare_bloc } from "@bernouy/cms-bloc-compile";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import {
     InMemoryDashboardRepository,
     InMemoryDashboardViewRepository,
@@ -13,7 +11,6 @@ import {
     InMemoryIntegrationInstallationRepository,
     runIntegrationInstallation,
     type IntegrationAnswerValue,
-    type IntegrationBlocArtifact,
     type IntegrationConnectorDeployer,
     type IntegrationConnectorDeployment,
     type IntegrationDefinition,
@@ -52,7 +49,6 @@ describe("Commerce protected Stripe combined installation", () => {
         const relations = new InMemoryRelationRepository();
         const secrets = new InMemorySecretStore();
         const installations = new InMemoryIntegrationInstallationRepository();
-        const blocs = new InMemoryCmsRepository();
         const deployments: IntegrationConnectorDeployment[] = [];
         const connectorDeployer: IntegrationConnectorDeployer = {
             provider: "supabase",
@@ -84,7 +80,6 @@ describe("Commerce protected Stripe combined installation", () => {
                 fetchImpl: async (input) => afterInstallationResponse(new Request(input)),
                 resolveSecret: async () => "combined-install-cms-api-key",
             },
-            blocs: repositoryBackedBlocImporter(blocs),
         };
 
         await install(
@@ -127,19 +122,19 @@ describe("Commerce protected Stripe combined installation", () => {
             {
                 integrationKind: "commerce",
                 dataApiSchemas: ["commerce"],
-                schemas: ["sql/schema.manifest.json"],
+                schemas: ["install/sql/schema.manifest.json"],
                 functions: ["cms-commerce"],
             },
             {
                 integrationKind: "stripe-connect",
                 dataApiSchemas: ["stripe_connect"],
-                schemas: ["sql/schema.manifest.json"],
+                schemas: ["install/sql/schema.manifest.json"],
                 functions: ["cms-stripe-connect", "cms-stripe-connect-management"],
             },
         ]);
         expect(linkingResult.installation.status).toBe("success");
         expect(linkingResult.artifacts.map((artifact) => artifact.type)).toEqual([
-            ...Array(17).fill("function"),
+            ...Array(18).fill("function"),
             ...Array(15).fill("trigger"),
             "dashboard-view",
             "dashboard",
@@ -195,6 +190,7 @@ describe("Commerce protected Stripe combined installation", () => {
             "getStripePaymentClientConfig",
             "processDueOrderDeadlines",
             "reconcileProtectedPaymentSystems",
+            "refreshMyProtectedPaymentCapability",
             "refreshPaymentForOrder",
             "submitSellerOfferPrice",
         ]);
@@ -346,20 +342,6 @@ describe("Commerce protected Stripe combined installation", () => {
             (await sources.getEndpoint(makeEndpointUrn("stripe-connect", "submitStripeDisputeEvidence")))?.access,
         ).toEqual({ mode: "admin" });
 
-        const expectedBlocIds = definitions
-            .flatMap((definition) =>
-                (definition.artifacts ?? [])
-                    .filter(
-                        (artifact): artifact is Extract<typeof artifact, { type: "bloc" }> => artifact.type === "bloc",
-                    )
-                    .map((artifact) => artifact.bloc.tag),
-            )
-            .sort();
-        expect((await blocs.getBlocsList()).map((bloc) => bloc.id).sort()).toEqual(expectedBlocIds);
-        for (const blocId of expectedBlocIds) {
-            expect(await blocs.getBlocViewJS(blocId)).not.toBeNull();
-        }
-
         const persistedInstallations = await Promise.all(INTEGRATION_KINDS.map((kind) => installations.get(kind)));
         const persistedJson = JSON.stringify(persistedInstallations);
         expect(persistedJson).not.toContain("sk_test_combined_install");
@@ -417,36 +399,6 @@ async function install(
         siteIntegrations: definitions,
         dto: { kind, answers, options: {} },
     });
-}
-
-function repositoryBackedBlocImporter(repository: InMemoryCmsRepository) {
-    return {
-        async importBloc(artifact: IntegrationBlocArtifact, options: { force?: boolean }) {
-            const previous = await repository.getBlocViewJS(artifact.tag);
-            const bloc = await prepare_bloc(
-                new File([artifact.viewJS], `${artifact.tag}.view.ts`, { type: "text/typescript" }),
-                artifact.editorJS
-                    ? new File([artifact.editorJS], `${artifact.tag}.editor.ts`, { type: "text/typescript" })
-                    : null,
-                artifact.name,
-                artifact.group ?? "",
-                artifact.description ?? "",
-                artifact.tag,
-                artifact.source,
-                undefined,
-                {
-                    native: isNativeBlocTag(artifact.tag),
-                    ...(artifact.viewPath ? { viewPath: artifact.viewPath } : {}),
-                },
-            );
-            if (previous !== null && options.force) {
-                await repository.replaceBloc(bloc);
-            } else {
-                await repository.createBloc(bloc);
-            }
-            return { id: bloc.id, action: previous === null ? ("created" as const) : ("updated" as const) };
-        },
-    };
 }
 
 async function assertImportedAccessGrants(

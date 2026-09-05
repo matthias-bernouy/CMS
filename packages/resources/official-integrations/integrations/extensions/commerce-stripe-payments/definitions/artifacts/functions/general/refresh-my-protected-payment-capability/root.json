@@ -1,0 +1,7 @@
+{
+    "type": "function",
+    "function": {
+        "$include": "function.json"
+    },
+    "contractVersion": "1.0.0"
+}

@@ -1,1 +1,1 @@
-Minor release: publish the reusable protected-payments operations view while site dashboard composition remains CMS-owned.
+Initial Commerce Stripe Payments release: compose Commerce and Stripe Connect with protected-payment capability refresh.

@@ -2,11 +2,11 @@
     {
         "name": "commerce",
         "kind": "commerce",
-        "versionRange": ">=2.0.0 <4.0.0"
+        "versionRange": "^1.0.0"
     },
     {
         "name": "stripe",
         "kind": "stripe-connect",
-        "versionRange": ">=2.1.0 <4.0.0"
+        "versionRange": "^1.0.0"
     }
 ]

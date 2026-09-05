@@ -1,5 +1,6 @@
 import { expect } from "bun:test";
 import { validateFunction } from "@bernouy/cms-functions";
+import { USER_ROLE } from "@bernouy/cms-permissions";
 import { makeEndpointUrn } from "@bernouy/cms-sources";
 import type { IntegrationContractContext } from "./harness";
 
@@ -7,6 +8,7 @@ export async function assertArtifactContracts({
     fn,
     legalFn,
     enrollmentFn,
+    capabilityRefreshFn,
     sources,
     result,
     platformDecreaseFn,
@@ -23,8 +25,22 @@ export async function assertArtifactContracts({
     releaseWorker,
     refundWorker,
     reconciliationWorker,
+    roles,
 }: IntegrationContractContext): Promise<void> {
     expect(fn.access).toEqual({ mode: "auth" });
+    expect((await roles.get(USER_ROLE))?.grants.map((grant) => grant.permission)).toEqual(
+        expect.arrayContaining([
+            "urn:system-functions:createPaymentForOrder",
+            "urn:system-functions:getPaymentLegalRequirements",
+            "urn:system-functions:getStripePaymentClientConfig",
+            "urn:system-functions:getPaymentForOrder",
+            "urn:system-functions:refreshPaymentForOrder",
+            "urn:system-functions:getSellerSaleEnrollment",
+            "urn:system-functions:refreshMyProtectedPaymentCapability",
+            "urn:system-functions:submitSellerOfferPrice",
+            "urn:system-functions:createProtectedOrder",
+        ]),
+    );
     const buyerLegalBrowserInputs = JSON.stringify({
         requirements: legalFn.input,
         payment: fn.input,
@@ -42,6 +58,7 @@ export async function assertArtifactContracts({
     });
     expect(result.artifacts).toEqual([
         { type: "function", id: enrollmentFn.id, action: "created" },
+        { type: "function", id: capabilityRefreshFn.id, action: "created" },
         { type: "function", id: platformDecreaseFn.id, action: "created" },
         { type: "function", id: submitPriceFn.id, action: "created" },
         { type: "function", id: protectedOrderFn.id, action: "created" },
@@ -81,6 +98,7 @@ export async function assertArtifactContracts({
     expect(await validateFunction(configFn, { sources })).toEqual([]);
     expect(await validateFunction(statusFn, { sources })).toEqual([]);
     expect(await validateFunction(refreshFn, { sources })).toEqual([]);
+    expect(await validateFunction(capabilityRefreshFn, { sources })).toEqual([]);
     expect(await validateFunction(releaseFn, { sources })).toEqual([]);
     expect(await validateFunction(refundFn, { sources })).toEqual([]);
     expect(await validateFunction(cancellationFn, { sources })).toEqual([]);

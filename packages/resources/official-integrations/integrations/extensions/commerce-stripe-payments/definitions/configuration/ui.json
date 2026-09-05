@@ -35,10 +35,6 @@
             "Protected payment, release, refund, dispute, and reconciliation orchestration"
         ],
         [
-            "Blocs",
-            "Theme-aware Commerce payment form"
-        ],
-        [
             "Dashboard",
             "Payments, marketplace claims, refunds, Stripe disputes, and exceptions; seller terms live in Stripe Connect"
         ]
@@ -47,8 +43,7 @@
         "Validate dependencies",
         "Install protected payment and provider-operation functions",
         "Install asynchronous operation triggers",
-        "Install payment bloc",
         "Install the Payments & Disputes dashboard",
-        "Refresh Functions, Triggers, Dashboards, and Blocs"
+        "Refresh Functions, Triggers, and Dashboards"
     ]
 }

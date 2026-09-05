@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "commerce-stripe-payments",
     "label": "Commerce Stripe payments",
-    "version": "4.1.0",
+    "version": "1.0.0",
     "category": "Payments",
     "description": "Orchestrate protected Commerce payments, settlements, refunds, and disputes through Stripe Connect.",
     "inputs": {
@@ -20,6 +20,7 @@
     "artifacts": {
         "$files": [
             "artifacts/functions/general/get-seller-sale-enrollment/root.json",
+            "artifacts/functions/general/refresh-my-protected-payment-capability/root.json",
             "artifacts/functions/settlements/apply-platform-payout-liability-decrease.json",
             "artifacts/functions/offers/submit-seller-offer-price/root.json",
             "artifacts/functions/orders/create-protected-order/root.json",

@@ -4,11 +4,11 @@
     "label": "Commerce Stripe payments",
     "category": "Payments",
     "description": "Orchestrate protected Commerce payments, settlement, refunds, and disputes through Stripe Connect.",
-    "stable": "4.1.0",
-    "latest": "4.1.0",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
     "versions": [
         {
-            "version": "4.1.0",
+            "version": "1.0.0",
             "path": ".",
             "definition": "definition.json"
         }

@@ -40,9 +40,9 @@ async function assertRequirements(
                         documents: [
                             {
                                 key: "terms",
-                                label: "Conditions générales de vente",
-                                consentText: "J’accepte les conditions générales de vente.",
-                                pageUrl: "/cgu-cgv",
+                                label: "Terms and conditions",
+                                consentText: "I accept the terms and conditions.",
+                                pageUrl: "/terms",
                                 versionId: currentVersionId,
                                 versionDate: "2026-07-24T12:00:00.000Z",
                             },
