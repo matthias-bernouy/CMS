@@ -1,1 +1,1 @@
-Minor release: publish reusable User Account dashboard views while site dashboard composition remains CMS-owned.
+Initial User Account release: publish the source-only account contracts without presentation dependencies.

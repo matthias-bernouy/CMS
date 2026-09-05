@@ -4,10 +4,6 @@
     "emit": "source:updated",
     "instructions": [
         [
-            "Install Basic Blocs",
-            "Install the Basic Blocs integration used by the composable account form controls."
-        ],
-        [
             "Deploy connector resources",
             "Apply the bundled Supabase schema and Edge Function to the configured project."
         ],
@@ -39,10 +35,6 @@
     ],
     "resources": [
         [
-            "Dependencies",
-            "Basic Blocs form controls"
-        ],
-        [
             "Sources",
             "User personal information source contract"
         ],
@@ -66,7 +58,6 @@
     ],
     "sync": [
         "Validate answers",
-        "Validate Basic Blocs dependency",
         "Generate private API key",
         "Deploy Supabase connector",
         "Install user personal information source",

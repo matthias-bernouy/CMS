@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "user-account",
     "label": "User Personal Information",
-    "version": "3.1.0",
+    "version": "1.0.0",
     "category": "Users",
     "description": "Store personal information for CMS users with the configured connector.",
     "icon": {
