@@ -5,6 +5,45 @@ import { el, resetDom, text, waitFor } from "../../testUtils";
 afterEach(resetDom);
 
 describe("Source — nested submit sources", () => {
+    test("nested submit source owns its local $source conditions", async () => {
+        location.href = "http://localhost/";
+        globalThis.fetch = (async (url: string) => {
+            if (url === "/account") {
+                return new Response(JSON.stringify({ givenName: "Ada" }), {
+                    headers: { "content-type": "application/json" },
+                });
+            }
+            return new Response(JSON.stringify({ updated: true }), {
+                headers: { "content-type": "application/json" },
+            });
+        }) as typeof fetch;
+
+        const root = el(`
+            <section cms-source="/account">
+                <form cms-source="/account/update" cms-source-trigger="submit" cms-source-method="POST">
+                    <input name="givenName" value="{{ givenName }}">
+                    <p class="saving" cms-condition="$source.loading">Saving</p>
+                    <p class="saved" cms-condition="$source.loaded">Saved</p>
+                    <p class="failed" cms-condition="$source.error">Failed</p>
+                    <button type="submit">Save</button>
+                </form>
+            </section>
+        `);
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+
+        await waitFor(() => root.querySelector<HTMLInputElement>("input")?.value === "Ada");
+        expect(root.querySelector(".saved")).toBeNull();
+
+        root.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        await waitFor(() => text(root.querySelector(".saved")) === "Saved");
+
+        expect(root.querySelector(".saving")).toBeNull();
+        expect(root.querySelector(".failed")).toBeNull();
+        runtime.stop();
+    });
+
     test("form-owned submit source inside a parent source keeps parent-bound fields and owns result state", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
         location.href = "http://localhost/";
