@@ -1,0 +1,59 @@
+[
+    {
+        "id": "enabled",
+        "path": "enabled",
+        "label": "Require consent",
+        "type": "checkbox"
+    },
+    {
+        "id": "documents",
+        "label": "Documents",
+        "path": "documents",
+        "type": "reorderable-list",
+        "layout": "cards",
+        "itemKey": "key",
+        "positionPath": "position",
+        "addLabel": "Add document",
+        "maxItems": 8,
+        "fields": [
+            {
+                "id": "enabled",
+                "label": "Required",
+                "path": "enabled",
+                "type": "checkbox"
+            },
+            {
+                "id": "key",
+                "label": "Stable key",
+                "path": "key",
+                "required": true
+            },
+            {
+                "id": "label",
+                "label": "Public label",
+                "path": "label",
+                "required": true
+            },
+            {
+                "id": "consentText",
+                "label": "Consent sentence",
+                "path": "consentText",
+                "required": true
+            },
+            {
+                "id": "page",
+                "label": "Published page",
+                "path": "page",
+                "type": "page-link",
+                "publishedOnly": true,
+                "allowExternal": false,
+                "allowMedia": false,
+                "required": true
+            }
+        ],
+        "visibleWhen": {
+            "value": "$field.enabled",
+            "equals": true
+        }
+    }
+]

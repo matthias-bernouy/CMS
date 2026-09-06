@@ -1,6 +1,6 @@
 {
-    "id": "{{answers.id}}-taxonomy",
-    "source": "{{answers.id}}",
+    "id": "commerce-taxonomy",
+    "source": "commerce",
     "meta": {
         "name": "Catalogue taxonomy",
         "icon": {

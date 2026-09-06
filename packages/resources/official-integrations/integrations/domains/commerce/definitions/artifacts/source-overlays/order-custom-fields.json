@@ -1,8 +1,8 @@
 {
     "type": "sourceOverlay",
     "overlay": {
-        "id": "{{answers.id}}-order-custom-fields",
-        "sourceId": "{{answers.id}}",
+        "id": "commerce-order-custom-fields",
+        "sourceId": "commerce",
         "label": "Order custom fields",
         "sections": [
             {

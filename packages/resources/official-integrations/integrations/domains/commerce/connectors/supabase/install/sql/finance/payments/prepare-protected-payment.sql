@@ -2,14 +2,14 @@
 
 drop function if exists commerce.prepare_protected_payment(bigint, text);
 drop function if exists commerce.prepare_protected_payment(bigint, text, uuid[], text, uuid);
+drop function if exists commerce.prepare_protected_payment(bigint, text, uuid[], text, uuid, jsonb);
 
 create or replace function commerce.prepare_protected_payment(
     p_order_id bigint,
     p_buyer_cms_user_id text,
-    p_accepted_legal_document_version_ids uuid[] default '{}'::uuid[],
     p_payment_provider text default 'stripe',
     p_correlation_id uuid default gen_random_uuid(),
-    p_verified_legal_documents jsonb default '[]'::jsonb
+    p_consent_receipts jsonb default '[]'::jsonb
 )
 returns jsonb
 language plpgsql
@@ -70,14 +70,12 @@ begin
         or v_attempt.financial_terms_hash <> v_terms.financial_terms_hash then
         raise exception 'conflict: payment attempt does not match immutable financial terms';
     end if;
-    v_legal_acceptances := commerce.record_verified_buyer_legal_acceptances(
+    v_legal_acceptances := commerce.record_verified_order_consent(
         v_order.id,
-        v_order.checkout_group_id,
         v_attempt.id,
         v_order.buyer_cms_user_id,
-        coalesce(p_accepted_legal_document_version_ids, '{}'::uuid[]),
         p_correlation_id,
-        p_verified_legal_documents
+        p_consent_receipts
     );
     perform commerce.assert_order_seller_risk(v_order.id, 'payment preparation');
     select * into v_seller from commerce.sellers where id = v_order.seller_id;

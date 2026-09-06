@@ -1,5 +1,6 @@
 import { requireCmsRequest } from "./core/auth.ts";
-import { handleError, json, optionsResponse } from "./core/http.ts";
+import { handleError, json, optionsResponse, methodNotAllowed } from "./core/http.ts";
+import { manageCommerce } from "./routes/configuration/management.ts";
 import { handleAdminConfigurationRoute } from "./routing/admin-configuration.ts";
 import { handleAdminMarketplaceRoute } from "./routing/admin-marketplace.ts";
 import { handleCatalogRoute } from "./routing/catalog.ts";
@@ -23,6 +24,9 @@ export async function handleCommerceRequest(request: Request): Promise<Response>
         }
         requireCmsRequest(request);
         const route = routePath(request);
+        if (route === "/management") {
+            return request.method === "POST" ? await manageCommerce(request) : methodNotAllowed("POST");
+        }
 
         for (const handler of routeHandlers) {
             const response = await handler(route, request);

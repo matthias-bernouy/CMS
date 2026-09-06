@@ -53,11 +53,25 @@ begin
         'checkoutGroupId', v_order.checkout_group_id,
         'buyerCmsUserId', v_order.buyer_cms_user_id,
         'paymentAttemptIds', coalesce((
-            select jsonb_agg(distinct proof.payment_attempt_id)
-            from commerce.order_buyer_legal_acceptances proof
-            where proof.order_id = v_order.id
+            select jsonb_agg(distinct proof.payment_attempt_id) from (
+                select payment_attempt_id from commerce.order_buyer_legal_acceptances where order_id = v_order.id
+                union select payment_attempt_id from commerce.order_consent_acceptances where order_id = v_order.id
+            ) proof
         ), '[]'::jsonb),
-        'acceptances', v_acceptances
+        'acceptances', v_acceptances,
+        'consentReferences', coalesce((
+            select jsonb_agg(reference) from (
+                select distinct jsonb_build_object(
+                    'contextKey', proof.context_key,
+                    'operationKey', proof.operation_key,
+                    'acceptanceId', proof.consent_acceptance_id,
+                    'correlationId', proof.correlation_id,
+                    'paymentAttemptId', proof.payment_attempt_id
+                ) as reference
+                from commerce.order_consent_acceptances proof
+                where proof.order_id = v_order.id
+            ) receipt_references
+        ), '[]'::jsonb)
     );
 end;
 $$;

@@ -8,9 +8,6 @@
     "icon": {
         "path": "assets/icon.svg"
     },
-    "inputs": {
-        "$include": "configuration/inputs.json"
-    },
     "ui": {
         "$include": "configuration/ui.json"
     },
@@ -31,8 +28,23 @@
             "artifacts/triggers/stage-target-consent.json",
             "artifacts/triggers/commit-target-consent.json",
             "artifacts/dashboards/acceptances.json",
-            "artifacts/dashboards/contexts/root.json"
+            "artifacts/dashboards/contexts/root.json",
+            "artifacts/functions/manage-consent.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "management": {
+        "schemaVersion": 1,
+        "health": {
+            "functionId": "manageConsent"
+        },
+        "settings": {
+            "readFunctionId": "manageConsent",
+            "saveFunctionId": "manageConsent",
+            "fields": {
+                "$include": "artifacts/dashboards/contexts/fields.json"
+            },
+            "dashboardId": "consent-contexts"
+        }
+    }
 }

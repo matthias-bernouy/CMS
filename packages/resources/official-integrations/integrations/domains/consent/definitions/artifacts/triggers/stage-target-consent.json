@@ -15,7 +15,7 @@
         "function": {
             "id": "stageConsentAcceptance",
             "body": {
-                "contextKey": "{{answers.contextKey}}",
+                "contextKey": "signup",
                 "subjectClaim": "$request.body.email",
                 "attemptId": "$request.body.consentAttemptId",
                 "acceptedVersionIds": "$request.body.acceptedConsentVersionIds"

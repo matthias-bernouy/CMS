@@ -25,7 +25,7 @@ describe("commerce product dashboard definition", () => {
         const definition = await commerceDefinitionWithDeferredDashboards<{ artifacts: Artifact[] }>();
         const source = definition.artifacts.find((artifact) => artifact.type === "source")?.source;
         const dashboards = definition.artifacts.flatMap((artifact) => (artifact.view ? [artifact.view] : []));
-        const products = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-products");
+        const products = dashboards.find((dashboard) => dashboard.id === "commerce-products");
         const views = products?.views ?? [];
         const productDetail = products?.views.find((view) => view.id === "productDetail");
         const fields = [...(productDetail?.main ?? []), ...(productDetail?.aside ?? [])].flatMap(
@@ -84,9 +84,7 @@ describe("commerce taxonomy dashboard definition", () => {
         const definition = await commerceDefinitionWithDeferredDashboards<any>();
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "upsertCategory");
-        const dashboard = definition.artifacts.find(
-            (artifact: any) => artifact.view?.id === "{{answers.id}}-taxonomy",
-        ).view;
+        const dashboard = definition.artifacts.find((artifact: any) => artifact.view?.id === "commerce-taxonomy").view;
         const detail = dashboard.views.find((view: any) => view.id === "categoryDetail");
 
         expect(endpoint.body.properties.parentId).toEqual({ type: "string" });
@@ -105,9 +103,7 @@ describe("commerce taxonomy dashboard definition", () => {
 
     test("uses reorderable navigation lists and keeps state in detail asides", async () => {
         const definition = await commerceDefinitionWithDeferredDashboards<any>();
-        const taxonomy = definition.artifacts.find(
-            (artifact: any) => artifact.view?.id === "{{answers.id}}-taxonomy",
-        ).view;
+        const taxonomy = definition.artifacts.find((artifact: any) => artifact.view?.id === "commerce-taxonomy").view;
         const brands = taxonomy.views.find((view: any) => view.id === "brandsTable");
         const categories = taxonomy.views.find((view: any) => view.id === "categoriesTable");
         const details = taxonomy.views.filter((view: any) => ["brandDetail", "categoryDetail"].includes(view.id));
@@ -126,8 +122,8 @@ describe("commerce taxonomy dashboard definition", () => {
         const definition = await commerceDefinitionWithDeferredDashboards<any>();
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const dashboards = definition.artifacts.flatMap((artifact: any) => (artifact.view ? [artifact.view] : []));
-        const taxonomy = dashboards.find((dashboard: any) => dashboard.id === "{{answers.id}}-taxonomy");
-        const metadata = dashboards.find((dashboard: any) => dashboard.id === "{{answers.id}}-metadata");
+        const taxonomy = dashboards.find((dashboard: any) => dashboard.id === "commerce-taxonomy");
+        const metadata = dashboards.find((dashboard: any) => dashboard.id === "commerce-metadata");
         const brand = taxonomy.views.find((view: any) => view.id === "brandDetail");
         const category = taxonomy.views.find((view: any) => view.id === "categoryDetail");
         const customField = metadata.views.find((view: any) => view.id === "customFieldDetail");
@@ -172,9 +168,7 @@ describe("commerce taxonomy dashboard definition", () => {
     test("lets categories select Product metadata policies", async () => {
         const definition = await commerceDefinitionWithDeferredDashboards<any>();
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
-        const taxonomy = definition.artifacts.find(
-            (artifact: any) => artifact.view?.id === "{{answers.id}}-taxonomy",
-        ).view;
+        const taxonomy = definition.artifacts.find((artifact: any) => artifact.view?.id === "commerce-taxonomy").view;
         const detail = taxonomy.views.find((view: any) => view.id === "categoryDetail");
         const field = detail.main[0].fields.find((candidate: any) => candidate.id === "categoryFields");
         const save = detail.actions.find((action: any) => action.id === "saveCategory");

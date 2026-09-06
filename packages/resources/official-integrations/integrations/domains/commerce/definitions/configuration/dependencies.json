@@ -4,5 +4,10 @@
         "kind": "emailer",
         "optional": true,
         "versionRange": "^1.0.0"
+    },
+    {
+        "name": "consent",
+        "kind": "consent",
+        "versionRange": "^1.0.0"
     }
 ]

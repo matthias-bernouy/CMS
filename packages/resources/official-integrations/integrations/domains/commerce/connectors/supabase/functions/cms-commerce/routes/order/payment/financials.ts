@@ -11,7 +11,8 @@ import {
     text,
 } from "../../../core/records.ts";
 import { rpc } from "../../../core/rest.ts";
-import { acceptedLegalDocumentVersionIds, verifiedLegalDocuments } from "./legal.ts";
+import { acceptedLegalDocumentVersionIds } from "./legal.ts";
+import { verifiedBuyerConsentReceipts } from "./consent/accept.ts";
 
 export async function lockOrderFinancialTerms(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
@@ -45,14 +46,18 @@ export async function prepareProtectedPayment(request: Request): Promise<Respons
     if (!/^[a-z][a-z0-9_.-]{1,79}$/.test(paymentProvider)) {
         throw new HttpError(400, "paymentProvider is invalid");
     }
-    const verifiedDocuments = await verifiedLegalDocuments(orderId, buyerCmsUserId, paymentProvider);
+    const consentReceipts = await verifiedBuyerConsentReceipts(
+        orderId,
+        buyerCmsUserId,
+        paymentProvider,
+        acceptedVersionIds,
+    );
     const result = await rpc("prepare_protected_payment", {
         p_order_id: orderId,
         p_buyer_cms_user_id: buyerCmsUserId,
-        p_accepted_legal_document_version_ids: acceptedVersionIds,
         p_payment_provider: paymentProvider,
         p_correlation_id: requestCorrelationId(request),
-        p_verified_legal_documents: verifiedDocuments,
+        p_consent_receipts: consentReceipts,
     });
     return json(camelize(result));
 }

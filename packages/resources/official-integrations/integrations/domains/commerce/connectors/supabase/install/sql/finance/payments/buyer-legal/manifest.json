@@ -2,16 +2,20 @@
     "schema": "cms.integration.sql-bundle.v1",
     "transaction": "atomic",
     "entries": [
-        { "file": "requirements/checkout-context.sql" },
-        { "file": "requirements/required-versions.sql" },
-        { "file": "requirements/get-requirements.sql" },
-        { "file": "requirements/get-verification-context.sql" },
-        { "file": "snapshots/refresh-required.sql" },
-        { "file": "snapshots/refresh-document-snapshots.sql" },
-        { "file": "requirements/get-fresh-requirements.sql" },
-        { "file": "acceptances/projection.sql" },
-        { "file": "acceptances/record.sql" },
-        { "file": "acceptances/record-verified.sql" },
-        { "file": "acceptances/get-audit.sql" }
+        {
+            "file": "requirements/checkout-context.sql"
+        },
+        {
+            "file": "acceptances/get-audit.sql"
+        },
+        {
+            "file": "consent/context.sql"
+        },
+        {
+            "file": "consent/projection.sql"
+        },
+        {
+            "file": "consent/record.sql"
+        }
     ]
 }

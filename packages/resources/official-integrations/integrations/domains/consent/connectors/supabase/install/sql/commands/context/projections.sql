@@ -34,7 +34,8 @@ begin
             'path', version.page_path,
             'title', version.page_title
         ),
-        'contentHash', version.content_hash
+        'contentHash', version.content_hash,
+        'versionDate', version.materialized_at
     ) order by document.sort_order, document.document_key), '[]'::jsonb)
     into v_documents
     from consent.documents document

@@ -56,7 +56,6 @@
         "endpoints/admin/orders/order/root.json",
         "endpoints/admin/orders/get-buyer-legal-acceptance-audit.json",
         "endpoints/admin/configuration/settings/settings-management/root.json",
-        "endpoints/admin/configuration/legal/sync-buyer-legal-documents.json",
         "endpoints/system/protection/seller-payment-contexts.json",
         "endpoints/buyer/orders/protected-payment/prepare-protected-payment.json",
         "endpoints/system/protection/platform-payout-liability/root.json",
@@ -99,6 +98,7 @@
         "endpoints/admin/configuration/conditions/offer-conditions.json",
         "endpoints/admin/configuration/fields/custom-fields.json",
         "endpoints/public/general/public-custom-fields/root.json",
-        "endpoints/admin/configuration/fields/custom-field-management/root.json"
+        "endpoints/admin/configuration/fields/custom-field-management/root.json",
+        "endpoints/system/management.json"
     ]
 }

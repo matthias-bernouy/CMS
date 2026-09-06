@@ -1,8 +1,8 @@
 {
     "type": "dashboard-view",
     "view": {
-        "id": "{{answers.id}}-contexts",
-        "source": "{{answers.id}}",
+        "id": "consent-contexts",
+        "source": "consent",
         "meta": { "name": "Consent policies", "icon": "file-check" },
         "views": { "$include": "views.json" }
     }

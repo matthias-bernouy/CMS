@@ -23,6 +23,7 @@ begin
                 'label', document.label,
                 'consentText', document.consent_text,
                 'pageId', document.cms_page_id,
+                'page', version.page_path,
                 'publishedSnapshotUrl', document.published_snapshot_url,
                 'versionId', document.current_version_id,
                 'contentHash', version.content_hash

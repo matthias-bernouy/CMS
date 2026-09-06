@@ -69,7 +69,7 @@ describe("commerce custom-field overlays", () => {
         );
         expect(byEntity.order.output).not.toContainEqual({ endpointId: "createOrder", path: "orders[]" });
         expect(dynamicOverlays.every((overlay) => overlay.fieldSource?.endpointId === "entityCustomFields")).toBeTrue();
-        const classification = overlays.find((overlay) => overlay.id === "{{answers.id}}-product-classification");
+        const classification = overlays.find((overlay) => overlay.id === "commerce-product-classification");
         expect(classification?.fields).toEqual([
             expect.objectContaining({ id: "brandId", nullable: true }),
             expect.objectContaining({ id: "brandName", nullable: true }),

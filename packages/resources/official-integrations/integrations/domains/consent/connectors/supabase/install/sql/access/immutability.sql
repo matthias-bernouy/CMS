@@ -38,3 +38,9 @@ drop trigger if exists consent_acceptance_documents_immutable
 create trigger consent_acceptance_documents_immutable
 before update or delete on consent.acceptance_documents
 for each row execute function consent.reject_evidence_mutation();
+
+drop trigger if exists consent_operation_acceptances_immutable
+    on consent.operation_acceptances;
+create trigger consent_operation_acceptances_immutable
+before update or delete on consent.operation_acceptances
+for each row execute function consent.reject_evidence_mutation();

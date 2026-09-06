@@ -1,6 +1,6 @@
 {
-    "id": "{{answers.id}}-configuration",
-    "source": "{{answers.id}}",
+    "id": "commerce-configuration",
+    "source": "commerce",
     "meta": {
         "name": "Settings",
         "icon": {

@@ -1,5 +1,5 @@
 {
-    "id": "{{answers.id}}",
+    "id": "consent",
     "meta": {
         "name": "Consent",
         "description": "Versioned consent requirements, staging and immutable subject evidence.",

@@ -5,9 +5,86 @@
             {
                 "id": "bootstrap",
                 "call": {
-                    "source": "{{answers.id}}",
+                    "source": "consent",
                     "endpoint": "bootstrapContext",
-                    "body": { "contextKey": "{{answers.contextKey}}" }
+                    "body": {
+                        "contextKey": "signup"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "bootstrap-buyer-checkout",
+        "steps": [
+            {
+                "id": "bootstrap",
+                "call": {
+                    "source": "consent",
+                    "endpoint": "bootstrapContext",
+                    "body": {
+                        "contextKey": "buyer_checkout"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "bootstrap-direct-purchase",
+        "steps": [
+            {
+                "id": "bootstrap",
+                "call": {
+                    "source": "consent",
+                    "endpoint": "bootstrapContext",
+                    "body": {
+                        "contextKey": "direct_purchase"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "bootstrap-negotiated-offer",
+        "steps": [
+            {
+                "id": "bootstrap",
+                "call": {
+                    "source": "consent",
+                    "endpoint": "bootstrapContext",
+                    "body": {
+                        "contextKey": "negotiated_offer"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "bootstrap-cart",
+        "steps": [
+            {
+                "id": "bootstrap",
+                "call": {
+                    "source": "consent",
+                    "endpoint": "bootstrapContext",
+                    "body": {
+                        "contextKey": "cart"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "id": "bootstrap-protected-payment",
+        "steps": [
+            {
+                "id": "bootstrap",
+                "call": {
+                    "source": "consent",
+                    "endpoint": "bootstrapContext",
+                    "body": {
+                        "contextKey": "protected_payment"
+                    }
                 }
             }
         ]

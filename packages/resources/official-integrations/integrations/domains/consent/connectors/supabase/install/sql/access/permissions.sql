@@ -31,7 +31,7 @@ grant select, insert, update on consent.contexts, consent.documents to service_r
 grant select, insert on consent.document_versions to service_role;
 grant select, insert, update, delete on consent.acceptance_intents to service_role;
 grant select, insert on consent.acceptance_intent_documents to service_role;
-grant select, insert on consent.acceptances, consent.acceptance_documents to service_role;
+grant select, insert on consent.acceptances, consent.acceptance_documents, consent.operation_acceptances to service_role;
 grant usage, select on all sequences in schema consent to service_role;
 grant execute on all functions in schema consent to service_role;
 

@@ -95,7 +95,7 @@ describe("Consent integration contract", () => {
             event: { source: "system-auth", endpoint: "signup", phase: "request" },
             function: {
                 body: {
-                    contextKey: "{{answers.contextKey}}",
+                    contextKey: "signup",
                     subjectClaim: "$request.body.email",
                     attemptId: "$request.body.consentAttemptId",
                     acceptedVersionIds: "$request.body.acceptedConsentVersionIds",
@@ -157,9 +157,9 @@ describe("Consent integration contract", () => {
                     {
                         id: "bootstrap",
                         call: {
-                            source: "{{answers.id}}",
+                            source: "consent",
                             endpoint: "bootstrapContext",
-                            body: { contextKey: "{{answers.contextKey}}" },
+                            body: { contextKey: "signup" },
                         },
                     },
                 ],

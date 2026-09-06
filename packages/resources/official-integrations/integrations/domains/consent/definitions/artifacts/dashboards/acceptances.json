@@ -1,12 +1,12 @@
 {
     "type": "dashboard-view",
     "view": {
-        "id": "{{answers.id}}-acceptances",
+        "id": "consent-acceptances",
         "meta": {
             "name": "Consent evidence",
             "icon": "check-square"
         },
-        "source": "{{answers.id}}",
+        "source": "consent",
         "views": [
             {
                 "widget": "w-table",

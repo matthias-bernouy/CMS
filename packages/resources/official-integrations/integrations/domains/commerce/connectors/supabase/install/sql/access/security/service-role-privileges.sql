@@ -79,6 +79,7 @@ grant update on commerce.platform_payout_liability_cache_state to service_role;
 grant insert on
     commerce.buyer_legal_document_versions,
     commerce.order_buyer_legal_acceptances,
+    commerce.order_consent_acceptances,
     commerce.marketplace_service_withdrawal_events,
     commerce.fee_policies,
     commerce.fee_policy_components,

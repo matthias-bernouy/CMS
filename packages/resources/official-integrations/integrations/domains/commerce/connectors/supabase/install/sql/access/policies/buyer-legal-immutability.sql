@@ -8,6 +8,12 @@ begin
 end;
 $$;
 
+drop trigger if exists order_consent_acceptances_immutable
+on commerce.order_consent_acceptances;
+create trigger order_consent_acceptances_immutable
+before update or delete on commerce.order_consent_acceptances
+for each row execute function commerce.reject_buyer_legal_evidence_mutation();
+
 drop trigger if exists buyer_legal_document_versions_immutable
 on commerce.buyer_legal_document_versions;
 create trigger buyer_legal_document_versions_immutable

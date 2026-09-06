@@ -4,11 +4,16 @@ import { stageAcceptance, commitAcceptance } from "./routes/acceptances.ts";
 import { listAcceptances } from "./routes/audit.ts";
 import { bootstrapContext, getContext, listContexts, publishContext, syncContext } from "./routes/configuration.ts";
 import { getRequirements } from "./routes/requirements.ts";
+import { manageConsent } from "./routes/management.ts";
+import { getOperationAcceptance, recordOperationAcceptance } from "./routes/operations.ts";
 
 export async function handleConsentRequest(request: Request): Promise<Response> {
     try {
         requireCmsRequest(request);
         const route = routePath(request);
+        if (route === "/management") {
+            return await withMethod(request, "POST", () => manageConsent(request));
+        }
         if (route === "/health") {
             return await withMethod(request, "GET", async () => json({ ok: true }));
         }
@@ -38,6 +43,12 @@ export async function handleConsentRequest(request: Request): Promise<Response> 
         }
         if (route === "/acceptances") {
             return await withMethod(request, "GET", () => listAcceptances(request));
+        }
+        if (route === "/operations/accept") {
+            return await withMethod(request, "POST", () => recordOperationAcceptance(request));
+        }
+        if (route === "/operations/receipt") {
+            return await withMethod(request, "POST", () => getOperationAcceptance(request));
         }
         return json({ error: "not found" }, 404);
     } catch (error) {

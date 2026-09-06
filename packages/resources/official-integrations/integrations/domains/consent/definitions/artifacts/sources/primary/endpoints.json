@@ -9,6 +9,8 @@
         "endpoints/admin/get-context.json",
         "endpoints/admin/publish-context.json",
         "endpoints/admin/list-acceptances.json",
-        "endpoints/health/health.json"
+        "endpoints/health/health.json",
+        "endpoints/health/management.json",
+        "endpoints/system/operations.json"
     ]
 }

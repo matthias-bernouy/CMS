@@ -27,7 +27,7 @@
             {
                 "id": "commit",
                 "call": {
-                    "source": "{{answers.id}}",
+                    "source": "consent",
                     "endpoint": "commitAcceptance",
                     "body": {
                         "contextKey": "$input.body.contextKey",

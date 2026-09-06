@@ -2,24 +2,34 @@
     {
         "widget": "w-detail",
         "id": "newConsentContext",
-        "source": { "endpoint": "getConsentContext" },
-        "title": { "path": "contextKey", "fallback": "Create a consent policy" },
+        "source": {
+            "endpoint": "getConsentContext"
+        },
+        "title": {
+            "path": "contextKey",
+            "fallback": "Create a consent policy"
+        },
         "actions": [
             {
                 "id": "publishContext",
                 "label": "Create policy",
                 "tone": "primary",
                 "placement": "primary",
-                "endpoint": {
-                    "endpoint": "publishConsentContext",
+                "after": {
+                    "opens": "consentContext",
+                    "row": "$result.contextKey",
+                    "resource": "$result"
+                },
+                "management": {
+                    "installationId": "consent",
+                    "action": "save-settings",
                     "body": {
                         "contextKey": "$field.contextKey",
                         "enabled": "$field.enabled",
                         "expectedRevision": "$resource.revision",
                         "documents": "$field.documents"
                     }
-                },
-                "after": { "opens": "consentContext", "row": "$result.contextKey", "resource": "$result" }
+                }
             }
         ],
         "main": [
@@ -28,8 +38,19 @@
                 "title": "Policy",
                 "description": "Create it inactive or publish at least one verified CMS page.",
                 "fields": [
-                    { "id": "contextKey", "label": "Stable context key", "path": "contextKey", "type": "text", "required": true },
-                    { "id": "enabled", "label": "Require consent", "path": "enabled", "type": "checkbox" },
+                    {
+                        "id": "contextKey",
+                        "label": "Stable context key",
+                        "path": "contextKey",
+                        "type": "text",
+                        "required": true
+                    },
+                    {
+                        "id": "enabled",
+                        "label": "Require consent",
+                        "path": "enabled",
+                        "type": "checkbox"
+                    },
                     {
                         "id": "documents",
                         "label": "Documents",
@@ -41,18 +62,45 @@
                         "addLabel": "Add document",
                         "maxItems": 8,
                         "fields": [
-                            { "id": "enabled", "label": "Required", "path": "enabled", "type": "checkbox" },
-                            { "id": "key", "label": "Stable key", "path": "key", "required": true },
-                            { "id": "label", "label": "Public label", "path": "label", "required": true },
-                            { "id": "consentText", "label": "Consent sentence", "path": "consentText", "required": true },
                             {
-                                "id": "publishedSnapshotUrl",
-                                "label": "Published page snapshot URL",
-                                "path": "publishedSnapshotUrl",
-                                "required": true,
-                                "secondary": true
+                                "id": "enabled",
+                                "label": "Required",
+                                "path": "enabled",
+                                "type": "checkbox"
+                            },
+                            {
+                                "id": "key",
+                                "label": "Stable key",
+                                "path": "key",
+                                "required": true
+                            },
+                            {
+                                "id": "label",
+                                "label": "Public label",
+                                "path": "label",
+                                "required": true
+                            },
+                            {
+                                "id": "consentText",
+                                "label": "Consent sentence",
+                                "path": "consentText",
+                                "required": true
+                            },
+                            {
+                                "id": "page",
+                                "label": "Published page",
+                                "path": "page",
+                                "type": "page-link",
+                                "publishedOnly": true,
+                                "allowExternal": false,
+                                "allowMedia": false,
+                                "required": true
                             }
-                        ]
+                        ],
+                        "visibleWhen": {
+                            "value": "$field.enabled",
+                            "equals": true
+                        }
                     }
                 ]
             }

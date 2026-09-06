@@ -1,0 +1,104 @@
+[
+    {
+        "endpointId": "recordOperationAcceptance",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/operations/accept",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "contextKey": {
+                    "type": "string"
+                },
+                "operationKey": {
+                    "type": "string"
+                },
+                "cmsUserId": {
+                    "type": "string"
+                },
+                "acceptedVersionIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            "required": [
+                "contextKey",
+                "operationKey",
+                "cmsUserId",
+                "acceptedVersionIds",
+                "metadata"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        ]
+    },
+    {
+        "endpointId": "getOperationAcceptance",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/operations/receipt",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "contextKey": {
+                    "type": "string"
+                },
+                "operationKey": {
+                    "type": "string"
+                },
+                "cmsUserId": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "contextKey",
+                "operationKey",
+                "cmsUserId"
+            ]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        ]
+    }
+]

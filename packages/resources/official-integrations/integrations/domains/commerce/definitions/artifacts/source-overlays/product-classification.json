@@ -1,8 +1,8 @@
 {
     "type": "sourceOverlay",
     "overlay": {
-        "id": "{{answers.id}}-product-classification",
-        "sourceId": "{{answers.id}}",
+        "id": "commerce-product-classification",
+        "sourceId": "commerce",
         "label": "Product classification",
         "output": [
             {

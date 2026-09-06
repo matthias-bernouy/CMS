@@ -1,0 +1,118 @@
+[
+    {
+        "endpointId": "manageIntegration",
+        "method": "POST",
+        "access": "system",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-consent/management",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "properties": {
+                        "schemaVersion": {
+                            "type": "number"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "checkedAt": {
+                            "type": "string"
+                        },
+                        "values": {
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "savedRevision": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "appliedRevision": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    }
+                }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "422",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            },
+            {
+                "status": "503",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "error"
+                    ]
+                }
+            }
+        ]
+    }
+]

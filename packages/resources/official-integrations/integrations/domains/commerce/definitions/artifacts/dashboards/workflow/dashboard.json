@@ -1,6 +1,6 @@
 {
-    "id": "{{answers.id}}-workflow",
-    "source": "{{answers.id}}",
+    "id": "commerce-workflow",
+    "source": "commerce",
     "meta": {
         "name": "Workflow",
         "icon": {

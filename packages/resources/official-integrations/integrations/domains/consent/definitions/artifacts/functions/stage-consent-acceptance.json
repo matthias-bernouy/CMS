@@ -27,7 +27,7 @@
             {
                 "id": "stage",
                 "call": {
-                    "source": "{{answers.id}}",
+                    "source": "consent",
                     "endpoint": "stageAcceptance",
                     "body": {
                         "contextKey": "$input.body.contextKey",

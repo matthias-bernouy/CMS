@@ -8,9 +8,6 @@
     "icon": {
         "path": "assets/icon.svg"
     },
-    "inputs": {
-        "$include": "configuration/inputs.json"
-    },
     "dependencies": {
         "$include": "configuration/dependencies.json"
     },
@@ -42,8 +39,21 @@
             "artifacts/dashboards/products/definition.json",
             "artifacts/dashboards/sellers/root.json",
             "artifacts/dashboards/taxonomy/definition.json",
-            "artifacts/dashboards/workflow/definition.json"
+            "artifacts/dashboards/workflow/definition.json",
+            "artifacts/functions/manage-commerce.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "management": {
+        "schemaVersion": 1,
+        "health": {
+            "functionId": "manageCommerce"
+        },
+        "settings": {
+            "readFunctionId": "manageCommerce",
+            "saveFunctionId": "manageCommerce",
+            "dashboardId": "commerce-configuration",
+            "fields": []
+        }
+    }
 }

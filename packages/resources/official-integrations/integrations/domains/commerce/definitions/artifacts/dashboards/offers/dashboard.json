@@ -1,6 +1,6 @@
 {
-    "id": "{{answers.id}}-offers",
-    "source": "{{answers.id}}",
+    "id": "commerce-offers",
+    "source": "commerce",
     "meta": {
         "name": "Offers",
         "icon": {

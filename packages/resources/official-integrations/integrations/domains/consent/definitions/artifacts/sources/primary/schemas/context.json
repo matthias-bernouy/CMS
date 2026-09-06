@@ -1,26 +1,64 @@
 {
     "type": "object",
     "properties": {
-        "contextKey": { "type": "string" },
-        "enabled": { "type": "boolean" },
-        "status": { "type": "string" },
-        "revision": { "type": "string" },
-        "approvedSnapshotOrigin": { "type": "string", "nullable": true },
-        "updatedAt": { "type": "string", "nullable": true },
+        "contextKey": {
+            "type": "string"
+        },
+        "enabled": {
+            "type": "boolean"
+        },
+        "status": {
+            "type": "string"
+        },
+        "revision": {
+            "type": "string"
+        },
+        "approvedSnapshotOrigin": {
+            "type": "string",
+            "nullable": true
+        },
+        "updatedAt": {
+            "type": "string",
+            "nullable": true
+        },
         "documents": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "key": { "type": "string" },
-                    "enabled": { "type": "boolean" },
-                    "position": { "type": "number" },
-                    "label": { "type": "string" },
-                    "consentText": { "type": "string" },
-                    "pageId": { "type": "string" },
-                    "publishedSnapshotUrl": { "type": "string" },
-                    "versionId": { "type": "string", "nullable": true },
-                    "contentHash": { "type": "string", "nullable": true }
+                    "key": {
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "position": {
+                        "type": "number"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "consentText": {
+                        "type": "string"
+                    },
+                    "pageId": {
+                        "type": "string"
+                    },
+                    "publishedSnapshotUrl": {
+                        "type": "string"
+                    },
+                    "versionId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "contentHash": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "page": {
+                        "type": "string",
+                        "nullable": true
+                    }
                 },
                 "required": [
                     "key",
@@ -34,5 +72,11 @@
             }
         }
     },
-    "required": ["contextKey", "enabled", "status", "revision", "documents"]
+    "required": [
+        "contextKey",
+        "enabled",
+        "status",
+        "revision",
+        "documents"
+    ]
 }

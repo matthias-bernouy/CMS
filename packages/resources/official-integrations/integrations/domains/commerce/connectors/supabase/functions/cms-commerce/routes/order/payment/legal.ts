@@ -1,39 +1,18 @@
 import { cmsUserId } from "../../../core/auth.ts";
 import { HttpError } from "../../../core/errors.ts";
 import { json } from "../../../core/http.ts";
-import {
-    buyerLegalVerificationContext,
-    fetchVerifiedBuyerLegalDocuments,
-} from "../../configuration/buyer-legal/published-page-snapshot.ts";
-import { camelize, integer } from "../../../core/records.ts";
+import { buyerConsentContext, buyerConsentPolicies, publicConsentRequirements } from "./consent/requirements.ts";
+import { camelize, integer, isRecord } from "../../../core/records.ts";
 import { rpc } from "../../../core/rest.ts";
 import type { JsonRecord } from "../../../core/types.ts";
+import { consentRequest } from "./consent/client.ts";
 
 export async function getBuyerLegalRequirements(request: Request): Promise<Response> {
     const id = orderId(request);
     const buyerId = cmsUserId(request);
     const provider = paymentProvider(request);
-    const verified = await verifiedLegalDocuments(id, buyerId, provider);
-    const result = await rpc("get_fresh_buyer_legal_requirements", {
-        p_order_id: id,
-        p_buyer_cms_user_id: buyerId,
-        p_payment_provider: provider,
-        p_verified_documents: verified,
-    });
-    return json(camelize(result));
-}
-
-export async function verifiedLegalDocuments(
-    orderId: number,
-    buyerCmsUserId: string,
-    paymentProvider: string | null,
-): Promise<JsonRecord[]> {
-    const rawContext = await rpc("get_buyer_legal_verification_context", {
-        p_order_id: orderId,
-        p_buyer_cms_user_id: buyerCmsUserId,
-        p_payment_provider: paymentProvider,
-    });
-    return fetchVerifiedBuyerLegalDocuments(buyerLegalVerificationContext(rawContext));
+    const context = await buyerConsentContext(id, buyerId, provider);
+    return json(publicConsentRequirements(await buyerConsentPolicies(context)));
 }
 
 export async function getMyBuyerLegalAcceptanceAudit(request: Request): Promise<Response> {
@@ -48,11 +27,11 @@ export function acceptedLegalDocumentVersionIds(value: unknown): string[] {
     if (value === undefined || value === null) {
         return [];
     }
-    if (!Array.isArray(value) || value.length > 20) {
-        throw new HttpError(400, "acceptedLegalDocumentVersionIds must be an array of at most 20 UUIDs");
+    if (!Array.isArray(value) || value.length > 24) {
+        throw new HttpError(400, "acceptedLegalDocumentVersionIds must be an array of at most 24 version ids");
     }
     const ids = value.map((entry) => {
-        if (typeof entry !== "string" || !uuidPattern.test(entry)) {
+        if (typeof entry !== "string" || !versionPattern.test(entry)) {
             throw new HttpError(409, "LEGAL_DOCUMENT_VERSION_CHANGED");
         }
         return entry.toLowerCase();
@@ -68,7 +47,41 @@ async function buyerLegalAcceptanceAudit(request: Request, buyerCmsUserId: strin
         p_order_id: orderId(request),
         p_buyer_cms_user_id: buyerCmsUserId,
     });
-    return json(camelize(result));
+    const audit = camelize(result);
+    if (!isRecord(audit)) {
+        throw new HttpError(502, "invalid consent audit response");
+    }
+    const references = Array.isArray(audit.consentReferences) ? audit.consentReferences.filter(isRecord) : [];
+    const receipts = await Promise.all(
+        references.map(async (reference) => {
+            const result = await consentRequest("/operations/receipt", {
+                contextKey: reference.contextKey,
+                operationKey: reference.operationKey,
+                cmsUserId: audit.buyerCmsUserId,
+            });
+            const receipt = result.receipt;
+            if (
+                !isRecord(receipt) ||
+                receipt.acceptanceId !== reference.acceptanceId ||
+                !Array.isArray(receipt.documents)
+            ) {
+                throw new HttpError(503, "CONSENT_UNAVAILABLE");
+            }
+            return receipt.documents.filter(isRecord).map((document) => ({
+                ...document,
+                key: document.documentKey,
+                acceptanceId: receipt.acceptanceId,
+                contextKey: receipt.contextKey,
+                acceptedAt: receipt.acceptedAt,
+                correlationId: reference.correlationId,
+            }));
+        }),
+    );
+    const { consentReferences: _, ...publicAudit } = audit;
+    return json({
+        ...publicAudit,
+        acceptances: [...(Array.isArray(audit.acceptances) ? audit.acceptances : []), ...receipts.flat()],
+    });
 }
 
 function orderId(request: Request): number {
@@ -87,5 +100,5 @@ function paymentProvider(request: Request): string {
     return value;
 }
 
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const versionPattern = /^[a-f0-9]{64}$/;
 const providerPattern = /^[a-z][a-z0-9_.-]{1,79}$/;
