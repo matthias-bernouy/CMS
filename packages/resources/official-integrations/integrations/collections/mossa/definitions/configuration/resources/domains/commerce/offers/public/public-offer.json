@@ -24,7 +24,6 @@
     "theme": {
         "contract": "ulvia-theme@3",
         "required": [
-            "font-heading",
             "secondary-contrasted",
             "space-lg",
             "space-xl",

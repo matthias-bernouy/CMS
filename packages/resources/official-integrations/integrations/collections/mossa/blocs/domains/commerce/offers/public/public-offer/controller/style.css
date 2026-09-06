@@ -2,7 +2,7 @@
 [hidden] { display: none !important; }
 [data-content] { display: grid; gap: var(--ulvia-space-xl); }
 [data-title], [data-meta], [data-description] { margin: 0; }
-[data-title] { font-family: var(--ulvia-font-heading); font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.05; }
+[data-title] { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.05; }
 [data-meta], [data-description] { color: var(--ulvia-surface-muted-text); line-height: 1.6; }
 [data-main-image] { width: 100%; height: 100%; object-fit: cover; }
 [data-condition] { align-self: flex-start; }
