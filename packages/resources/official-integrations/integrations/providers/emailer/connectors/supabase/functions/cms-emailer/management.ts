@@ -69,15 +69,18 @@ export function createSourceManagement(deps: Dependencies) {
             code: "connection_incomplete",
             message: "Complete the SMTP Connection settings.",
         };
-        if (password && row.smtp_host && row.smtp_port && row.smtp_user && row.default_from) {
+        const authenticationComplete = row.smtp_user ? Boolean(password) : !password && !row.smtp_password;
+        if (authenticationComplete && row.smtp_host && row.smtp_port && row.default_from) {
             try {
                 await deps.verify(row, password);
                 status = "ready";
                 check = {
                     id: "smtp_credentials",
                     status: "ok",
-                    code: "smtp_authenticated",
-                    message: "SMTP connection and authentication verified without sending mail.",
+                    code: row.smtp_user ? "smtp_authenticated" : "smtp_connected",
+                    message: row.smtp_user
+                        ? "SMTP connection and authentication verified without sending mail."
+                        : "SMTP connection verified without authentication or sending mail.",
                 };
             } catch {
                 status = "blocked";

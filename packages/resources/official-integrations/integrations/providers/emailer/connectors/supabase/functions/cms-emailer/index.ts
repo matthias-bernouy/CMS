@@ -968,10 +968,14 @@ async function emailTransport(settings: EmailSettings): Promise<EmailTransport> 
         host: requiredSetting(settings.smtpHost, "SMTP host"),
         port: settings.smtpPort ?? missingSetting("SMTP port"),
         secure: settings.smtpSecure,
-        auth: {
-            user: requiredSetting(settings.smtpUser, "SMTP user"),
-            pass: requiredSetting(settings.smtpPassword, "SMTP password"),
-        },
+        ...(settings.smtpUser || settings.smtpPassword
+            ? {
+                  auth: {
+                      user: requiredSetting(settings.smtpUser, "SMTP user"),
+                      pass: requiredSetting(settings.smtpPassword, "SMTP password"),
+                  },
+              }
+            : {}),
     });
 }
 
