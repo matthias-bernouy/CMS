@@ -1,5 +1,5 @@
 import { Component } from "@bernouy/components/base";
-import { purchaseCopy, syncPurchaseCopy } from "./copy";
+import { purchaseCopy, purchaseLabels, purchaseText, syncPurchaseCopy } from "./copy";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
@@ -24,10 +24,15 @@ export class PurchaseList extends Component {
         "page-param",
         "page-size",
         "previous-label",
+        "pagination-previous-label",
+        "pagination-next-label",
         ...Object.keys(purchaseCopy),
+        ...Object.keys(purchaseLabels),
     ];
 
     private requestVersion = 0;
+    private orders: RecordValue[] = [];
+    private total = 0;
     private inFlightRequests = new Map<string, Promise<RecordValue>>();
 
     constructor() {
@@ -99,23 +104,39 @@ export class PurchaseList extends Component {
                 return;
             }
             const orders = Array.isArray(data.items) ? data.items : [];
+            this.orders = orders;
+            this.total = total;
             if (!orders.length && total === 0) {
                 this.show("empty");
                 return;
             }
-            const renderedOrders = orders.map((order, index) => this.orderCard(order, index));
-            this.list.replaceChildren(...renderedOrders.map(({ card }) => card));
-            this.append(...renderedOrders.map(({ action }) => action));
-            this.pageLabel.textContent = `Page ${page} of ${pageCount}`;
-            this.previousButton.toggleAttribute("disabled", page <= 1);
-            this.nextButton.toggleAttribute("disabled", page >= pageCount);
-            this.pagination.hidden = pageCount <= 1;
+            this.renderOrders();
             this.show("content");
         } catch (error) {
             if (version === this.requestVersion) {
                 this.fail(error);
             }
         }
+    }
+
+    private renderOrders(): void {
+        this.clearGeneratedActions();
+        const renderedOrders = this.orders.map((order, index) => this.orderCard(order, index));
+        this.list.replaceChildren(...renderedOrders.map(({ card }) => card));
+        this.append(...renderedOrders.map(({ action }) => action));
+        const page = this.page;
+        const pages = Math.max(1, Math.ceil(this.total / this.pageSize));
+        this.pageLabel.textContent = purchaseText(this, "pagination-summary-template", {
+            page,
+            pages,
+            pageCount: pages,
+            total: this.total,
+            start: this.total ? (page - 1) * this.pageSize + 1 : 0,
+            end: Math.min(page * this.pageSize, this.total),
+        });
+        this.previousButton.toggleAttribute("disabled", page <= 1);
+        this.nextButton.toggleAttribute("disabled", page >= pages);
+        this.pagination.hidden = pages <= 1;
     }
 
     private orderCard(order: RecordValue, index: number): { card: HTMLElement; action: HTMLElement } {
@@ -131,12 +152,14 @@ export class PurchaseList extends Component {
         identity.className = "identity";
         const number = document.createElement("strong");
         number.className = "order-number";
-        const reference = String(order.orderNumber || `Order ${order.id}`);
-        const summary = lineSummaryLabel(order);
+        const reference = String(order.orderNumber || purchaseText(this, "order-reference-template", { id: order.id }));
+        const summary = lineSummaryLabel(this, order);
         number.textContent = summary || reference;
         const date = document.createElement("span");
         date.className = "order-date";
-        const datedAt = `Placed on ${formatDate(order.createdAt, this.locale)}`;
+        const datedAt = purchaseText(this, "placed-on-template", {
+            date: formatDate(order.createdAt, this.locale, purchaseText(this, "unknown-date-label")),
+        });
         date.textContent = summary ? `${reference} · ${datedAt}` : datedAt;
         identity.append(number, date);
 
@@ -144,12 +167,12 @@ export class PurchaseList extends Component {
         const presentation = orderStatus(order);
         status.className = "status";
         status.dataset.tone = presentation.tone;
-        status.textContent = presentation.label;
+        status.textContent = purchaseText(this, `label-${presentation.key}`);
 
         const total = document.createElement("div");
         total.className = "amount";
         const totalLabel = document.createElement("span");
-        totalLabel.textContent = "Total";
+        totalLabel.textContent = purchaseText(this, "total-label");
         const totalValue = document.createElement("strong");
         totalValue.textContent = money(Number(order.totalAmount), order.currency, this.locale);
         total.append(totalLabel, totalValue);
@@ -161,6 +184,7 @@ export class PurchaseList extends Component {
         linkWrapper.slot = actionSlot.name;
         linkWrapper.dataset.generatedPurchaseAction = "";
         linkWrapper.setAttribute("appearance", "outlined");
+        linkWrapper.setAttribute("tone", "neutral");
         linkWrapper.setAttribute("size", "sm");
         linkWrapper.setAttribute("width", "full");
         const link = document.createElement("a");
@@ -209,8 +233,18 @@ export class PurchaseList extends Component {
 
     private syncPresentation(): void {
         syncPurchaseCopy(this);
-        this.previousButton.textContent = this.getAttribute("previous-label")?.trim() || "Previous";
-        this.nextButton.textContent = this.getAttribute("next-label")?.trim() || "Next";
+        this.previousButton.textContent =
+            this.getAttribute("pagination-previous-label")?.trim() ||
+            this.getAttribute("previous-label")?.trim() ||
+            "Previous";
+        this.nextButton.textContent =
+            this.getAttribute("pagination-next-label")?.trim() || this.getAttribute("next-label")?.trim() || "Next";
+        for (const button of this.pagination.querySelectorAll("mossa-button")) {
+            button.setAttribute("tone", purchaseText(this, "pagination-tone"));
+        }
+        if (this.orders.length) {
+            this.renderOrders();
+        }
     }
 
     private async request(path: string): Promise<RecordValue> {
@@ -308,13 +342,13 @@ function money(amount: number, currency: unknown, locale: string): string {
         return `${(amount / 100).toFixed(2)} ${String(currency || "USD").toUpperCase()}`;
     }
 }
-function formatDate(value: unknown, locale: string): string {
+function formatDate(value: unknown, locale: string, unknownDate: string): string {
     const parsed = new Date(String(value || ""));
     return Number.isNaN(parsed.getTime())
-        ? "unknown date"
+        ? unknownDate
         : new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(parsed);
 }
-function lineSummaryLabel(order: RecordValue): string {
+function lineSummaryLabel(host: HTMLElement, order: RecordValue): string {
     const summary = order?.lineSummary && typeof order.lineSummary === "object" ? order.lineSummary : {};
     const firstTitle = typeof summary.firstTitle === "string" ? summary.firstTitle.trim() : "";
     if (!firstTitle) {
@@ -322,49 +356,52 @@ function lineSummaryLabel(order: RecordValue): string {
     }
     const lineCount = Number(summary.lineCount);
     return Number.isSafeInteger(lineCount) && lineCount > 1
-        ? `${firstTitle} + ${lineCount - 1} other${lineCount > 2 ? "s" : ""}`
+        ? purchaseText(host, lineCount > 2 ? "other-items-template" : "other-item-template", {
+              title: firstTitle,
+              count: lineCount - 1,
+          })
         : firstTitle;
 }
-function orderStatus(order: RecordValue): { label: string; tone: string } {
+function orderStatus(order: RecordValue): { key: string; tone: string } {
     const operation = order?.operation && typeof order.operation === "object" ? order.operation : {};
     const settlement = String(operation.settlementStatus || "").toLowerCase();
     const payment = String(operation.paymentStatus || "").toLowerCase();
     const claim = String(operation.claimStatus || "").toLowerCase();
 
     if (settlement === "manual_review" || settlement === "blocked") {
-        return { label: "Review required", tone: "danger" };
+        return { key: "review-required", tone: "danger" };
     }
     if (claim && !["resolved_buyer", "resolved_seller", "resolved_split"].includes(claim)) {
-        return { label: "Dispute in progress", tone: "progress" };
+        return { key: "dispute-in-progress", tone: "progress" };
     }
     if (["refund_pending", "reversal_pending"].includes(settlement)) {
-        return { label: "Refund in progress", tone: "progress" };
+        return { key: "refund-in-progress", tone: "progress" };
     }
     if (settlement === "refunded" || settlement === "reversed" || payment === "refunded") {
-        return { label: "Refunded", tone: "neutral" };
+        return { key: "refunded", tone: "neutral" };
     }
     if (payment === "partially_refunded") {
-        return { label: "Remboursement partiel", tone: "neutral" };
+        return { key: "partially-refunded", tone: "neutral" };
     }
     if (["failed", "cancelled", "canceled"].includes(payment)) {
-        return { label: payment === "failed" ? "Payment failed" : "Payment cancelled", tone: "danger" };
+        return { key: payment === "failed" ? "payment-failed" : "payment-cancelled", tone: "danger" };
     }
     if (["created", "requires_action", "requires_payment_method", "processing"].includes(payment)) {
-        return { label: "Payment pending", tone: "progress" };
+        return { key: "payment-pending", tone: "progress" };
     }
 
     return (
         (
             {
-                awaiting_quote: { label: "Delivery to complete", tone: "progress" },
-                awaiting_payment: { label: "Payment pending", tone: "progress" },
-                active: { label: "Order in progress", tone: "progress" },
-                completed: { label: "Completed", tone: "success" },
-                expired: { label: "Expired", tone: "neutral" },
-                cancellation_pending: { label: "Cancellation in progress", tone: "progress" },
-                cancelled: { label: "Cancelled", tone: "danger" },
-            } as Record<string, { label: string; tone: string }>
-        )[String(order?.status)] || { label: "Status unavailable", tone: "neutral" }
+                awaiting_quote: { key: "awaiting_quote", tone: "progress" },
+                awaiting_payment: { key: "awaiting_payment", tone: "progress" },
+                active: { key: "active", tone: "progress" },
+                completed: { key: "completed", tone: "success" },
+                expired: { key: "expired", tone: "neutral" },
+                cancellation_pending: { key: "cancellation_pending", tone: "progress" },
+                cancelled: { key: "cancelled", tone: "danger" },
+            } as Record<string, { key: string; tone: string }>
+        )[String(order?.status)] || { key: "unavailable", tone: "neutral" }
     );
 }
 

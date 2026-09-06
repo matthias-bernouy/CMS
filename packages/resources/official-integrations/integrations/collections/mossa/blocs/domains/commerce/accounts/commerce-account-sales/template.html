@@ -2,19 +2,19 @@
     <input data-pagination-offset cms-param-sync="commerceSalesOffset" type="hidden">
     <mossa-stack gap="lg">
         <mossa-select data-pagination-reset cms-param-sync="commerceSalesStatus" accessible-label="Filter sales by status">
-            <mossa-option value="">All</mossa-option>
-            <mossa-option value="awaiting_quote">Delivery to complete</mossa-option>
-            <mossa-option value="awaiting_payment">Payment pending</mossa-option>
-            <mossa-option value="active">To ship</mossa-option>
-            <mossa-option value="completed">Completed</mossa-option>
-            <mossa-option value="cancellation_pending">Cancellation in progress</mossa-option>
-            <mossa-option value="cancelled">Cancelled</mossa-option>
-            <mossa-option value="expired">Expired</mossa-option>
+            <mossa-option data-copy="label-all" value="">All</mossa-option>
+            <mossa-option data-copy="label-awaiting_quote" value="awaiting_quote">Delivery to complete</mossa-option>
+            <mossa-option data-copy="label-awaiting_payment" value="awaiting_payment">Payment pending</mossa-option>
+            <mossa-option data-copy="label-active" value="active">To ship</mossa-option>
+            <mossa-option data-copy="label-completed" value="completed">Completed</mossa-option>
+            <mossa-option data-copy="label-cancellation_pending" value="cancellation_pending">Cancellation in progress</mossa-option>
+            <mossa-option data-copy="label-cancelled" value="cancelled">Cancelled</mossa-option>
+            <mossa-option data-copy="label-expired" value="expired">Expired</mossa-option>
         </mossa-select>
 
         <section cms-source="/.cms/sources/commerce/mySales?status=#{commerceSalesStatus}&amp;limit=10&amp;offset=#{commerceSalesOffset}">
             <mossa-stack gap="sm" cms-condition="$source.loading">
-                <mossa-skeleton height="7rem" animation="wave" label="Loading sales"></mossa-skeleton>
+                <mossa-skeleton height="7rem" animation="wave" data-sales-loading label="Loading sales"></mossa-skeleton>
                 <mossa-skeleton height="7rem" animation="wave" aria-hidden="true"></mossa-skeleton>
                 <mossa-skeleton height="7rem" animation="wave" aria-hidden="true"></mossa-skeleton>
             </mossa-stack>
@@ -25,8 +25,8 @@
 
             <mossa-stack gap="lg" cms-condition="$source.loaded">
                 <mossa-surface-card appearance="outlined" density="compact" cms-condition="total == 0">
-                    <strong slot="title">No sales yet</strong>
-                    <span slot="description">Buyer orders will appear here.</span>
+                    <strong data-copy="empty-title" slot="title">No sales yet</strong>
+                    <span data-copy="empty-message" slot="description">Buyer orders will appear here.</span>
                 </mossa-surface-card>
 
                 <mossa-stack gap="sm" cms-condition="total > 0">
@@ -35,23 +35,23 @@
                             <mossa-stack gap="xs">
                                 <strong>{{ sale.orderNumber }}</strong>
                                 <span>{{ sale.lineSummary.firstTitle }}</span>
-                                <small cms-condition="sale.lineSummary.lineCount > 1">{{ sale.lineSummary.lineCount }} items</small>
-                                <small>Sold on <time datetime="{{ sale.createdAt }}">{{ sale.createdAt | dateLong }}</time></small>
+                                <small cms-condition="sale.lineSummary.lineCount > 1">{{ sale.lineSummary.lineCount }} <span data-copy="items-label">items</span></small>
+                                <small><span data-copy="sold-on-label">Sold on</span> <time datetime="{{ sale.createdAt }}">{{ sale.createdAt | dateLong }}</time></small>
                             </mossa-stack>
 
                             <mossa-stack gap="xs">
-                                <mossa-badge tone="warning" variant="filled" cms-condition="sale.status == 'awaiting_quote'">Delivery to complete</mossa-badge>
-                                <mossa-badge tone="warning" variant="filled" cms-condition="sale.status == 'awaiting_payment'">Payment pending</mossa-badge>
-                                <mossa-badge tone="primary" variant="filled" cms-condition="sale.status == 'active'">To ship</mossa-badge>
-                                <mossa-badge tone="success" variant="filled" cms-condition="sale.status == 'completed'">Completed</mossa-badge>
-                                <mossa-badge tone="warning" variant="filled" cms-condition="sale.status == 'cancellation_pending'">Cancellation in progress</mossa-badge>
-                                <mossa-badge tone="danger" variant="filled" cms-condition="sale.status == 'cancelled'">Cancelled</mossa-badge>
-                                <mossa-badge tone="danger" variant="filled" cms-condition="sale.status == 'expired'">Expired</mossa-badge>
+                                <mossa-badge tone="warning" variant="filled" data-copy="label-awaiting_quote" cms-condition="sale.status == 'awaiting_quote'">Delivery to complete</mossa-badge>
+                                <mossa-badge tone="warning" variant="filled" data-copy="label-awaiting_payment" cms-condition="sale.status == 'awaiting_payment'">Payment pending</mossa-badge>
+                                <mossa-badge tone="primary" variant="filled" data-copy="label-active" cms-condition="sale.status == 'active'">To ship</mossa-badge>
+                                <mossa-badge tone="success" variant="filled" data-copy="label-completed" cms-condition="sale.status == 'completed'">Completed</mossa-badge>
+                                <mossa-badge tone="warning" variant="filled" data-copy="label-cancellation_pending" cms-condition="sale.status == 'cancellation_pending'">Cancellation in progress</mossa-badge>
+                                <mossa-badge tone="danger" variant="filled" data-copy="label-cancelled" cms-condition="sale.status == 'cancelled'">Cancelled</mossa-badge>
+                                <mossa-badge tone="danger" variant="filled" data-copy="label-expired" cms-condition="sale.status == 'expired'">Expired</mossa-badge>
                             </mossa-stack>
 
                             <strong>{{ sale.totalAmount | minorCurrency(sale.currency) }}</strong>
 
-                            <mossa-button appearance="outlined" size="sm">
+                            <mossa-button appearance="outlined" tone="neutral" size="sm">
                                 <a data-sale-link data-sale-id="{{ sale.id }}">View sale</a>
                             </mossa-button>
                         </mossa-responsive-grid>

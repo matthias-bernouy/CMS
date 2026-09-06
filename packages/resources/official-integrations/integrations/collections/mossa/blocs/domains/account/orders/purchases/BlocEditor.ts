@@ -1,5 +1,5 @@
 import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
-import { purchaseCopy } from "./copy";
+import { purchaseCopy, purchaseLabels } from "./copy";
 
 export class PurchaseListEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -8,6 +8,16 @@ export class PurchaseListEditor extends Editor {
                 kind: "self",
                 label: "Status messages",
                 settings: Object.entries(purchaseCopy).map(([attribute, { text }]) => ({
+                    type: "text",
+                    label: attribute.replaceAll("-", " "),
+                    attribute,
+                    defaultValue: text,
+                })),
+            },
+            {
+                kind: "self",
+                label: "Order presentation",
+                settings: Object.entries(purchaseLabels).map(([attribute, text]) => ({
                     type: "text",
                     label: attribute.replaceAll("-", " "),
                     attribute,
