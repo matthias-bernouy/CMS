@@ -36,7 +36,7 @@ export async function executeDashboardAction(
     if (!action) {
         throw new Error(`Dashboard action "${actionId}" was not found`);
     }
-    if (!action.endpoint) {
+    if (!action.endpoint && !action.management) {
         throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     }
     const resource = currentResource ?? (await fetchActionResource(dashboard.source, widget, detail.row));
@@ -65,7 +65,7 @@ export async function executeDashboardTableAction(
     if (!action) {
         throw new Error(`Dashboard table action "${actionId}" was not found`);
     }
-    if (!action.endpoint) {
+    if (!action.endpoint && !action.management) {
         throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
     return executeEndpointAction(group, groups, action, {

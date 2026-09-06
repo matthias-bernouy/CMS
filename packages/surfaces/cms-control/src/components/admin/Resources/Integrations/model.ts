@@ -11,6 +11,9 @@ export type IntegrationInstallationRow = {
     definitionVersion: string;
     packageDigest?: string;
     status: IntegrationInstallationStatus;
+    integrationType?: "source" | "collection";
+    sourceIds?: string[];
+    extensionOf?: { kind: string };
     runCount: number;
     artifactCount: number;
     missingArtifactCount: number;
@@ -108,7 +111,4 @@ export type IntegrationBrowserHost = HTMLElement & {
 export type {
     IntegrationAnswerValue,
     IntegrationDefinition,
-    IntegrationInput,
-    IntegrationObjectListField,
-    IntegrationObjectListInput,
 } from "@bernouy/cms-integrations";

@@ -1,6 +1,5 @@
-import { renderFields } from "../fields";
 import type { IntegrationBrowserHost, IntegrationDefinition } from "../model";
-import { renderLinkedPlaceholder } from "./detail";
+import { renderLinkedResources } from "./detail";
 import { cloneElement, fillIcon, text } from "./templates";
 import { renderCollectionSelection, renderResourceRows, renderSummary, resourceRows } from "./resources";
 
@@ -23,10 +22,9 @@ export function renderSetup(
             options.resources,
         );
     }
-    renderLinkedPlaceholder(shell.querySelector<HTMLElement>("[data-linked]")!);
+    renderLinkedResources(shell.querySelector<HTMLElement>("[data-linked]")!, host, definition);
     renderSummary(shell.querySelector<HTMLElement>("[data-summary]")!, summaryRows(definition));
     host.query<HTMLElement>("[data-detail-view]").replaceChildren(shell);
-    renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition, options.answers);
 }
 
 export function renderImporting(

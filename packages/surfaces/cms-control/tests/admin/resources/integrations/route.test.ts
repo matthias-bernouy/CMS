@@ -25,18 +25,16 @@ afterEach(() => {
 
 describe("integration admin routes", () => {
     test("builds URLs for list, setup, and installed detail", () => {
-        expect(integrationRouteUrl({ view: "list", tab: "installed" })).toBe("/admin/integrations");
-        expect(integrationRouteUrl({ view: "list", tab: "catalogue" })).toBe("/admin/integrations?tab=catalogue");
+        expect(integrationRouteUrl({ view: "list", tab: "installed" })).toBe("/admin/sources?tab=installed");
+        expect(integrationRouteUrl({ view: "list", tab: "catalogue" })).toBe("/admin/sources?tab=catalogue");
         expect(integrationRouteUrl({ view: "setup", kind: "stripe-connect" })).toBe(
-            "/admin/integrations?setup=stripe-connect",
+            "/admin/sources?setup=stripe-connect",
         );
-        expect(integrationRouteUrl({ view: "installation", id: "orders" })).toBe(
-            "/admin/integrations?integration=orders",
-        );
+        expect(integrationRouteUrl({ view: "installation", id: "orders" })).toBe("/admin/sources?integration=orders");
     });
 
     test("reads and updates the current integration route", () => {
-        history.replaceState(null, "", "/admin/integrations?setup=user-account");
+        history.replaceState(null, "", "/admin/sources?setup=user-account");
         expect(currentIntegrationRoute()).toEqual({ view: "setup", kind: "user-account" });
 
         pushIntegrationRoute({ view: "installation", id: "user-account" });

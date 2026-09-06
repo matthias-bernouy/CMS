@@ -1,8 +1,8 @@
-import { route } from "../api";
-import type { IntegrationBrowserHost } from "../model";
+import "../management/IntegrationManagement";
+import { route, integrationRouteUrl } from "../api";
+import type { IntegrationBrowserHost, IntegrationDefinition } from "../model";
 import { definitionFor } from "./browser";
 import { cloneElement, fillIcon, text } from "./templates";
-import { renderPlaceholder } from "./resources";
 
 export function renderDetail(host: IntegrationBrowserHost): void {
     const root = host.query<HTMLElement>("[data-detail-view]");
@@ -20,19 +20,33 @@ export function renderDetail(host: IntegrationBrowserHost): void {
     text(content, "[data-title]", installation.label);
     text(content, "[data-description]", definition?.description ?? "No description.");
     content.querySelector<HTMLElement>("[data-run-sync]")!.dataset.integrationId = installation.id;
+    content.querySelector<HTMLElement>("[data-management]")!.setAttribute("installation-id", installation.id);
     const upgrade = content.querySelector<HTMLElement>("[data-upgrade-panel]")!;
     upgrade.dataset.integrationId = installation.id;
     upgrade.dataset.currentVersion = installation.definitionVersion;
     fillIcon(content, "[data-back-icon]", "table");
     fillIcon(content, "[data-grid-icon]", "grid");
-    renderLinkedPlaceholder(content.querySelector<HTMLElement>("[data-linked]")!);
+    renderLinkedResources(content.querySelector<HTMLElement>("[data-linked]")!, host, definition);
     root.replaceChildren(shell);
 }
 
-export function renderLinkedPlaceholder(root: HTMLElement): void {
-    renderPlaceholder(
-        root,
-        "Coming soon",
-        "Compatibility data will be displayed here when integrations declare their relationships.",
-    );
+export function renderLinkedResources(
+    root: HTMLElement,
+    host: IntegrationBrowserHost,
+    definition?: IntegrationDefinition,
+): void {
+    const dependencies = definition?.dependencies ?? [];
+    root.replaceChildren();
+    for (const dependency of dependencies) {
+        const installed = host.installations.find((item) => item.id === dependency.kind);
+        const item = document.createElement(installed ? "a" : "p");
+        item.textContent = `${dependency.name || dependency.kind}: ${installed ? "Installed" : dependency.optional ? "Optional" : "Required"}${dependency.versionRange ? ` (${dependency.versionRange})` : ""}`;
+        if (installed) {
+            item.setAttribute("href", integrationRouteUrl({ view: "installation", id: installed.id }));
+        }
+        root.append(item);
+    }
+    if (!dependencies.length) {
+        root.textContent = "No related resources declared.";
+    }
 }

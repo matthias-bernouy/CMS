@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { BindingCore, setBindingFilters } from "@bernouy/components/binding";
 import "../../../../src/components/admin/Resources/Integrations/IntegrationBrowser";
-import { collectAnswers, renderFields } from "cms-control/components/admin/Resources/Integrations/fields";
+import { renderSetup } from "cms-control/components/admin/Resources/Integrations/ui/setup";
+import type { IntegrationBrowserHost } from "cms-control/components/admin/Resources/Integrations/model";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 
 const originalFetch = globalThis.fetch;
@@ -29,7 +30,7 @@ describe("integration catalogue binding", () => {
 
         const source = admin.querySelector<HTMLElement>("[data-catalogue-source]")!;
         expect(source.getAttribute("cms-source")).toBe(
-            "/cms/api/integrations/catalogue?q=#{integrationSearch}&category=#{integrationCategory} as catalogue",
+            "/cms/api/integrations/catalogue?scope=sources&q=#{integrationSearch}&category=#{integrationCategory} as catalogue",
         );
         expect(source.getAttribute("cms-reload-on")).toBe("integration:updated");
 
@@ -48,59 +49,19 @@ describe("integration catalogue binding", () => {
         expect(template.content.querySelector("[cms-param-sync='integrationCategory']")).not.toBeNull();
     });
 
-    test("renders repeatable object fields with the CMS page lookup", async () => {
-        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
-        const requests: string[] = [];
-        globalThis.fetch = (async (input) => {
-            requests.push(String(input));
-            return Response.json([{ path: "/terms", title: "Terms" }]);
-        }) as typeof fetch;
-        const root = document.createElement("div");
-        const template = document.createElement("template");
-        template.innerHTML =
-            '<label class="field"><span data-label></span><span data-control></span><small data-hint></small></label>';
+    test("installs without asking for configuration inputs", () => {
+        const admin = document.createElement("cms-integrations-admin") as IntegrationBrowserHost;
+        document.body.append(admin);
         const definition: IntegrationDefinition = {
-            kind: "legal",
-            label: "Legal",
-            inputs: [
-                {
-                    name: "documents",
-                    label: "Documents",
-                    type: "object-list",
-                    addLabel: "Add document",
-                    fields: [
-                        { name: "page", label: "Page", type: "page-link", required: true },
-                        {
-                            name: "contexts",
-                            label: "Contexts",
-                            type: "select",
-                            multiple: true,
-                            options: [
-                                { label: "Checkout", value: "checkout" },
-                                { label: "Offer", value: "offer" },
-                            ],
-                        },
-                    ],
-                },
-            ],
+            kind: "payments",
+            label: "Payments",
+            inputs: [{ name: "secret", label: "Secret", type: "password", required: true }],
         };
-
-        renderFields(root, template, definition, {
-            documents: [{ page: "/terms", contexts: ["checkout", "offer"] }],
-        });
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        expect(requests).toEqual(["/cms/api/page/links?visible=published"]);
-        expect(root.querySelector<HTMLSelectElement>('[data-object-field="page"]')?.value).toBe("/terms");
-        expect(root.querySelector<HTMLSelectElement>('[data-object-field="contexts"]')?.multiple).toBeTrue();
-        expect(collectAnswers(root, definition)).toEqual({
-            documents: [{ page: "/terms", contexts: ["checkout", "offer"] }],
-        });
-
-        root.querySelector<HTMLButtonElement>(".object-list-add")!.click();
-        expect(root.querySelectorAll("[data-object-list-item]")).toHaveLength(2);
-        root.querySelector<HTMLButtonElement>(".object-list-remove")!.click();
-        expect(root.querySelectorAll("[data-object-list-item]")).toHaveLength(1);
+        renderSetup(admin, definition);
+        expect(admin.querySelector("[data-detail-view] input")).toBeNull();
+        expect(admin.querySelector("[data-detail-view] [data-fields]")).toBeNull();
+        expect(admin.querySelector("[data-import-setup]")?.textContent).toBe("Install");
+        expect(admin.querySelector("[data-reconfigure-modal]")).toBeNull();
     });
 
     test("keeps installed integrations usable while a 503 repository error is explicit and retryable", async () => {
@@ -143,7 +104,7 @@ describe("integration catalogue binding", () => {
                         kind: "available-integration",
                         label: "Available integration",
                         description: "Available after retry.",
-                        setupUrl: "/cms/admin/integrations?setup=available-integration",
+                        setupUrl: "/cms/admin/sources?setup=available-integration",
                         iconHtml: "",
                         badges: [{ label: "Commerce", className: "badge" }],
                     },

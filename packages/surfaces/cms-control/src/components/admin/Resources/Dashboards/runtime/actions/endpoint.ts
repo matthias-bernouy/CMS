@@ -1,5 +1,7 @@
 import type { DashboardAction } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../../types";
+import { managementRequest } from "../../../Integrations/management/api";
+import { resolveBody } from "../expressions";
 import { sendSourceDownload, sendSourceJson } from "../source";
 
 type ActionResultMeta = {
@@ -23,6 +25,14 @@ export async function executeEndpointAction(
         value?: unknown;
     },
 ): Promise<DashboardActionResult> {
+    if (action.management) {
+        const result = await managementRequest<{ values: unknown }>(
+            action.management.installationId,
+            "settings",
+            resolveBody(action.management.body, vars) ?? vars.fields ?? {},
+        );
+        return { kind: "value", value: result.values, ...actionMeta(group, groups, action) };
+    }
     if (!action.endpoint) {
         throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
     }

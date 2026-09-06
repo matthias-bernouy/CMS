@@ -53,7 +53,7 @@ export abstract class DashboardStateController extends Component {
         if (this.detailSelection && !validDetailSelection(dashboard, this.detailSelection)) {
             clearDetailResource();
             this.detailSelection = null;
-            if (!this.isExampleMode()) {
+            if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
                 replaceSelectionUrl(this.selection());
             }
         }
@@ -118,7 +118,7 @@ export abstract class DashboardStateController extends Component {
         if (!dashboard || !validDetailSelection(dashboard, detail)) {
             this.detailResource.clearResource();
             this.detailSelection = null;
-            if (!this.isExampleMode()) {
+            if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
                 replaceSelectionUrl(this.selection());
             }
             this.renderDashboard();
@@ -128,7 +128,7 @@ export abstract class DashboardStateController extends Component {
             this.detailResource.clearResource();
         }
         this.detailSelection = detail;
-        if (!this.isExampleMode()) {
+        if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
             replaceSelectionUrl(this.selection());
         }
         this.renderDashboard();
@@ -137,14 +137,14 @@ export abstract class DashboardStateController extends Component {
     protected clearDetail(): void {
         this.detailResource.clearResource();
         this.detailSelection = null;
-        if (!this.isExampleMode()) {
+        if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
             replaceSelectionUrl(this.selection());
         }
         this.renderDashboard();
     }
 
     protected async reloadDefinitions(): Promise<void> {
-        if (this.hasAttribute("external")) {
+        if (this.hasAttribute("external") && !this.hasAttribute("embedded")) {
             window.dispatchEvent(new CustomEvent("cms-dashboard-workspace:reload"));
             return;
         }

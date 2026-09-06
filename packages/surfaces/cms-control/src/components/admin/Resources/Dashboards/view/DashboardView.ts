@@ -33,7 +33,9 @@ export class DashboardView extends DashboardViewController {
 
     override connectedCallback(): void {
         super.connectedCallback();
-        this.syncFromSelection(currentSelection());
+        if (!this.hasAttribute("embedded")) {
+            this.syncFromSelection(currentSelection());
+        }
         this.shadowRoot!.addEventListener("click", this.onClick);
         this.shadowRoot!.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
         this.shadowRoot!.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
@@ -68,13 +70,21 @@ export class DashboardView extends DashboardViewController {
         this.renderDashboard();
     };
 
-    private onSelection = (event: CustomEvent<DashboardSelection>): void => this.syncSelectionAndRender(event.detail);
-    private onPopState = (): void => this.syncSelectionAndRender(currentSelection());
+    private onSelection = (event: CustomEvent<DashboardSelection>): void => {
+        if (!this.hasAttribute("embedded")) {
+            this.syncSelectionAndRender(event.detail);
+        }
+    };
+    private onPopState = (): void => {
+        if (!this.hasAttribute("embedded")) {
+            this.syncSelectionAndRender(currentSelection());
+        }
+    };
 
     private onWidgetRowSelect = (event: CustomEvent<WidgetRowSelectDetail>): void => {
         this.invalidateDetailResource();
         this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
-        if (!this.isExampleMode()) {
+        if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
             pushSelectionUrl(this.selection());
         }
         this.renderDashboard();

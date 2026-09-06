@@ -8,16 +8,11 @@
                 <span slot="title" data-title></span>
                 <div slot="actions" class="integration-detail-actions">
                     <p9r-button type="button" color="primary" data-run-sync>Run sync</p9r-button>
-                    <p9r-action-menu label="More actions">
-                        <p9r-action-menu-section label="Configuration">
-                            <p9r-action-menu-item data-reconfigure>Reconfigure</p9r-action-menu-item>
-                        </p9r-action-menu-section>
-                        <p9r-action-menu-section label="Danger zone">
-                            <p9r-action-menu-item color="danger" disabled title="No uninstall endpoint is available yet.">Uninstall</p9r-action-menu-item>
-                        </p9r-action-menu-section>
-                    </p9r-action-menu>
+
                     <span class="action-status" role="status" aria-live="polite" data-action-status></span>
                 </div>
+
+                <cms-integration-management slot="main" data-management></cms-integration-management>
 
                 <cms-detail-section slot="main" heading="Created resources">
                     <div class="resource-list">

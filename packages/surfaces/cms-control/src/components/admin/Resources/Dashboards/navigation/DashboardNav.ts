@@ -1,3 +1,5 @@
+import { loadSourceInstallations, renderSourceManagement, sourceForInstallation } from "./management";
+import type { IntegrationInstallationRow } from "../../Integrations/model";
 import { Component } from "@bernouy/components/base";
 import {
     currentSelection,
@@ -15,6 +17,7 @@ import template from "./nav.html" with { type: "text" };
 import type { DashboardSourceGroup } from "../types";
 
 export class DashboardNav extends Component {
+    private installations: IntegrationInstallationRow[] = [];
     private groups: DashboardSourceGroup[] = [];
     private selectedSource = "";
     private selectedDashboard = "";
@@ -31,13 +34,17 @@ export class DashboardNav extends Component {
         this.shadowRoot!.addEventListener("click", this.onClick);
         window.addEventListener("popstate", this.onPopState);
         window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection as EventListener);
+        this.query<HTMLElement>("[data-add-source]").setAttribute("href", route("/admin/sources?tab=catalogue"));
         this.startBoundSource();
+        document.addEventListener("integration:updated", this.refreshInstallations);
+        void this.refreshInstallations();
     }
 
     disconnectedCallback(): void {
         this.shadowRoot?.removeEventListener("click", this.onClick);
         window.removeEventListener("popstate", this.onPopState);
         window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection as EventListener);
+        document.removeEventListener("integration:updated", this.refreshInstallations);
         this.observer?.disconnect();
         this.observer = null;
     }
@@ -90,7 +97,27 @@ export class DashboardNav extends Component {
     private render(): void {
         const menu = this.query<HTMLElement>("w13c-lateral-menu");
         renderDashboardNavigation(menu, this.groups, this.selectedSource, this.selectedDashboard);
+        renderSourceManagement(menu, this.selectedSource, this.installations);
     }
+
+    private refreshInstallations = async (): Promise<void> => {
+        if (this.isExampleMode()) {
+            return;
+        }
+        try {
+            this.installations = await loadSourceInstallations();
+            if (!this.isConnected) {
+                return;
+            }
+            const id = new URL(window.location.href).searchParams.get("integration");
+            if (id) {
+                this.selectedSource = sourceForInstallation(id, this.installations) ?? this.selectedSource;
+            }
+            this.render();
+        } catch {
+            /* Source data navigation remains available when management is unavailable. */
+        }
+    };
 
     private activeGroup(): DashboardSourceGroup | null {
         return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;

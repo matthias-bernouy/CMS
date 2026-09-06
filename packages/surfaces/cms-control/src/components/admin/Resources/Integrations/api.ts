@@ -18,11 +18,6 @@ export type IntegrationImportResponse = {
     };
 };
 
-export type IntegrationPageLink = {
-    path: string;
-    title: string;
-};
-
 export function basePath(): string {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
@@ -56,19 +51,22 @@ export function integrationRouteUrl(next: IntegrationRoute): string {
         params.set("integration", next.id);
     } else if (next.view === "setup") {
         params.set("setup", next.kind);
-    } else if (next.tab === "catalogue") {
-        params.set("tab", "catalogue");
+    } else {
+        params.set("tab", next.tab);
     }
     const suffix = params.toString() ? `?${params.toString()}` : "";
-    return route(`/admin/integrations${suffix}`);
+    const destination = window.location.pathname.endsWith("/admin/blocs") ? "blocs" : "sources";
+    return route(`/admin/${destination}${suffix}`);
 }
 
 export function pushIntegrationRoute(next: IntegrationRoute): void {
     history.pushState(null, "", integrationRouteUrl(next));
+    window.dispatchEvent(new Event("cms-resources:route"));
 }
 
 export function replaceIntegrationRoute(next: IntegrationRoute): void {
     history.replaceState(null, "", integrationRouteUrl(next));
+    window.dispatchEvent(new Event("cms-resources:route"));
 }
 
 export async function importIntegration(payload: IntegrationImportPayload): Promise<IntegrationImportResponse> {
@@ -90,10 +88,6 @@ export async function rerunIntegrationInstallation(
     await postJson(`${route("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id)}`, body);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
-}
-
-export async function getPageLinks(): Promise<IntegrationPageLink[]> {
-    return getJson(route("/api/page/links?visible=published"));
 }
 
 export async function integrationUpgradeVersions(id: string): Promise<IntegrationUpgradeVersions> {

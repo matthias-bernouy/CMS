@@ -10,13 +10,15 @@ export function renderBrowser(host: IntegrationBrowserHost): void {
 }
 
 export function renderCounts(host: IntegrationBrowserHost): void {
-    text(host, "[data-installed-count]", host.installations.length);
+    text(host, "[data-installed-count]", host.installations.filter((row) => inScope(row.integrationType)).length);
     text(host, "[data-catalogue-count]", availableDefinitions(host).length);
 }
 
 export function renderInstallations(host: IntegrationBrowserHost): void {
     const root = host.query<HTMLElement>("[data-installations]");
-    const rows = [...host.installations].sort((left, right) => left.label.localeCompare(right.label));
+    const rows = host.installations
+        .filter((row) => inScope(row.integrationType))
+        .sort((left, right) => left.label.localeCompare(right.label));
     root.replaceChildren();
     if (rows.length) {
         root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
@@ -26,7 +28,12 @@ export function renderInstallations(host: IntegrationBrowserHost): void {
 
 export function availableDefinitions(host: IntegrationBrowserHost): IntegrationDefinition[] {
     const counts = installedCounts(host.installations);
-    return host.definitions.filter((definition) => !counts.has(definition.kind));
+    return host.definitions.filter(
+        (definition) =>
+            !counts.has(definition.kind) &&
+            inScope(definition.type) &&
+            (!definition.extensionOf || counts.has(definition.extensionOf.kind)),
+    );
 }
 
 export function definitionFor(
@@ -55,4 +62,8 @@ function installationRow(host: IntegrationBrowserHost, installation: Integration
     );
     text(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
+}
+
+function inScope(type: "source" | "collection" | undefined): boolean {
+    return window.location.pathname.endsWith("/admin/blocs") ? type === "collection" : type !== "collection";
 }

@@ -13,11 +13,6 @@ import type {
 } from "./model";
 import { renderDetail } from "./ui/detail";
 import { renderSetup } from "./ui/setup";
-import {
-    handleReconfigureCollectionSelection,
-    handleReconfigureModalClose,
-    submitIntegrationReconfigure,
-} from "./reconfigure";
 
 export class IntegrationBrowser extends HTMLElement implements IntegrationBrowserHost {
     definitions: IntegrationDefinition[] = [];
@@ -97,13 +92,7 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
     }
 
     private bind(): void {
-        this.addEventListener("click", (event) => {
-            if (!handleReconfigureCollectionSelection(this, event)) {
-                void handleClick(this, event);
-            }
-        });
-        this.addEventListener("submit", (event) => void submitIntegrationReconfigure(this, event as SubmitEvent));
-        this.addEventListener("close", (event) => handleReconfigureModalClose(this, event));
+        this.addEventListener("click", (event) => void handleClick(this, event));
     }
 
     private renderRoute(): void {

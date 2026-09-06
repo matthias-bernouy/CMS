@@ -1,5 +1,6 @@
 import type {
     IntegrationBrowserHost,
+    IntegrationAnswerValue,
     IntegrationDefinition,
 } from "cms-control/components/admin/Resources/Integrations/model";
 
@@ -33,7 +34,9 @@ export function createAdmin(catalogueDefinition: IntegrationDefinition = definit
     return admin;
 }
 
-export function detail(options: { answers?: Record<string, unknown>; definition?: IntegrationDefinition } = {}) {
+export function detail(
+    options: { answers?: Record<string, IntegrationAnswerValue>; definition?: IntegrationDefinition } = {},
+) {
     return {
         ...installation,
         answers: options.answers ?? { id: "stripe-connect", stripePublishableKey: "pk_test_public" },

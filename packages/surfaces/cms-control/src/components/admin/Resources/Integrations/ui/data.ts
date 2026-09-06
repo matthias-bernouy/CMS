@@ -7,9 +7,10 @@ export function startBoundSources(host: IntegrationBrowserHost): void {
     const catalogue = host.query<HTMLElement>("[data-catalogue-source]");
     definitions.setAttribute("cms-source", `${route("/api/integrations/list")} as definitions`);
     installations.setAttribute("cms-source", `${route("/api/integrations/installations")} as installations`);
+    const scope = window.location.pathname.endsWith("/admin/blocs") ? "collections" : "sources";
     catalogue.setAttribute(
         "cms-source",
-        `${route("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`,
+        `${route("/api/integrations/catalogue")}?scope=${scope}&q=#{integrationSearch}&category=#{integrationCategory} as catalogue`,
     );
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });

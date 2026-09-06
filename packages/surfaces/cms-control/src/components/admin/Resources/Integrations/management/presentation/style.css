@@ -1,0 +1,6 @@
+cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
+.management-tabs { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
+.management-tabs button { padding: .5rem .8rem; border: 1px solid var(--border-default); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+.management-tabs button[aria-pressed="true"] { font-weight: 700; border-color: currentColor; }
+.management-check { display: flex; gap: 1rem; justify-content: space-between; flex-wrap: wrap; padding: .75rem 0; border-bottom: 1px solid var(--border-default); }
+.management-status { margin: .75rem 0; }

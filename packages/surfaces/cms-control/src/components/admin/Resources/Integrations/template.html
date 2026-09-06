@@ -8,7 +8,7 @@
     </div>
 
     <section class="integrations-browser" data-browser>
-        <nav class="integration-tabs" aria-label="Integration views">
+        <nav class="integration-tabs" aria-label="Resource views">
             <button type="button" class="integration-tab is-active" data-tab="installed">
                 Installed <span data-installed-count></span>
             </button>
@@ -48,7 +48,7 @@
                     </div>
                     <div class="catalogue-content" cms-condition="$source.loaded || $source.empty">
                         <div class="filters">
-                            <p9r-input type="search" label="Search" placeholder="Search integrations" data-search cms-param-sync="integrationSearch"></p9r-input>
+                            <p9r-input type="search" label="Search" placeholder="Search sources and extensions" data-search cms-param-sync="integrationSearch"></p9r-input>
                             <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
                                 <option value="">All categories</option>
                                 <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
@@ -77,35 +77,5 @@
 
     <section class="integration-detail" data-detail-view hidden></section>
 
-    <p9r-modal class="integration-reconfigure-modal" data-reconfigure-modal aria-label="Reconfigure integration">
-        <span slot="title" data-reconfigure-title>Reconfigure integration</span>
-        <form id="integration-reconfigure-form" data-reconfigure-form>
-            <p class="reconfigure-note">
-                Review the installation values, then save to update its resources and connectors in one sync.
-            </p>
-            <div class="fields reconfigure-fields" data-reconfigure-fields></div>
-            <div class="collection-selection" data-reconfigure-resources hidden>
-                <p class="collection-source-plan" data-collection-source-plan></p>
-            </div>
-            <p class="action-status" role="status" aria-live="polite" data-reconfigure-status></p>
-        </form>
-        <div slot="footer" class="reconfigure-actions">
-            <p9r-button type="button" variant="outlined" data-reconfigure-cancel>Cancel</p9r-button>
-            <p9r-button
-                type="submit"
-                form="integration-reconfigure-form"
-                color="primary"
-                data-reconfigure-submit
-                disabled
-            >Save and sync</p9r-button>
-        </div>
-    </p9r-modal>
 
-    <template data-field-template>
-        <label class="field">
-            <span data-label></span>
-            <span data-control></span>
-            <small data-hint></small>
-        </label>
-    </template>
 </div>

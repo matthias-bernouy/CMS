@@ -10,7 +10,9 @@ registry.innerHTML = [browserHtml, detailHtml, iconsHtml, importingHtml, itemsHt
 
 export function cloneElement<T extends HTMLElement = HTMLElement>(name: string): T {
     const template = registry.content.querySelector<HTMLTemplateElement>(`template[data-template="${name}"]`);
-    const element = template?.content.firstElementChild?.cloneNode(true);
+    const container = document.createElement("div");
+    container.innerHTML = template?.innerHTML ?? "";
+    const element = container.firstElementChild;
     if (!(element instanceof HTMLElement)) {
         throw new Error(`Missing integration template: ${name}`);
     }

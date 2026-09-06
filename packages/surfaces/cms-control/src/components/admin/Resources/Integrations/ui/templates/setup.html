@@ -4,13 +4,11 @@
         <span slot="title" data-title></span>
         <div slot="actions" class="integration-detail-actions">
             <p9r-button type="button" variant="outlined" data-setup-cancel>Cancel</p9r-button>
-            <p9r-button type="button" color="primary" data-import-setup>Import</p9r-button>
+            <p9r-button type="button" color="primary" data-import-setup>Install</p9r-button>
             <span class="action-status" data-setup-status></span>
         </div>
 
-        <cms-detail-section slot="main" heading="Configuration" description="Only values needed to create this integration are shown here.">
-            <div class="fields setup-fields" data-fields></div>
-        </cms-detail-section>
+        <p slot="main">Install first, then configure the connection from its settings.</p>
 
         <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
             <div class="collection-selection" data-collection-selection hidden>
@@ -19,7 +17,7 @@
             <div class="resource-list" data-resources></div>
         </cms-detail-section>
 
-        <cms-detail-section slot="aside" heading="Linked integrations" description="Related integrations stay available from this setup flow.">
+        <cms-detail-section slot="aside" heading="Related resources" description="Related integrations stay available from this setup flow.">
             <div data-linked></div>
         </cms-detail-section>
 

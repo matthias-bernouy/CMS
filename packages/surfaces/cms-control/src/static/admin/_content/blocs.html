@@ -4,6 +4,10 @@
         <p9r-button color="primary">+ New composition</p9r-button>
     </p9r-open-modal>
 
+    <a slot="action" href="{{BASE_PATH}}/admin/blocs?tab=installed">Manage collections</a>
+    <a slot="action" href="{{BASE_PATH}}/admin/blocs?tab=catalogue">Import a collection</a>
+    <cms-resource-workspace>
+    <div data-bloc-catalogue>
     <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.25rem;">
         <div style="flex: 1 1 280px; min-width: 220px;">
             <p9r-input cms-param-sync="search" label="Search" placeholder="Name, tag, group or description…"></p9r-input>
@@ -41,7 +45,7 @@
                 <small>{{ group }} · {{ description }}</small>
             </p9r-cell>
             <p9r-cell><p9r-tag color="primary">{{ origin.label }}</p9r-tag><br><small>{{ origin.detail }}</small></p9r-cell>
-            <p9r-cell><p9r-tag color="{{ stateColor }}">{{ stateLabel }}</p9r-tag></p9r-cell>
+            <p9r-cell><p9r-tag color="{{ stateColor }}">{{ stateLabel }}</p9r-tag><br><small cms-condition="active">Enabled in editor</small><small cms-condition="!active">Hidden from editor</small></p9r-cell>
             <p9r-cell>
                 <strong>{{ directDependencyCount }} direct</strong>
                 <div><p9r-tag cms-repeat="directDependencies">{{ value }}</p9r-tag></div>
@@ -66,7 +70,7 @@
                 <small>{{ group }} · {{ description }}</small>
             </p9r-cell>
             <p9r-cell><p9r-tag color="secondary">{{ origin.label }}</p9r-tag><br><small>{{ origin.detail }}</small></p9r-cell>
-            <p9r-cell><p9r-tag color="{{ stateColor }}">{{ stateLabel }}</p9r-tag></p9r-cell>
+            <p9r-cell><p9r-tag color="{{ stateColor }}">{{ stateLabel }}</p9r-tag><br><small cms-condition="active">Enabled in editor</small><small cms-condition="!active">Hidden from editor</small></p9r-cell>
             <p9r-cell>
                 <strong>{{ directDependencyCount }} direct</strong>
                 <div><p9r-tag cms-repeat="directDependencies">{{ value }}</p9r-tag></div>
@@ -95,6 +99,8 @@
             <p slot="hint">Adjust the filters or create a composition.</p>
         </cms-empty-state>
     </p9r-table>
+    </div>
+    </cms-resource-workspace>
 </w13c-fixed-admin-layout>
 
 <p9r-modal id="create-site-bloc-modal" aria-label="Create a composition">

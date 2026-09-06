@@ -1,7 +1,5 @@
 import { importIntegration, pushIntegrationRoute } from "../../api";
-import { collectAnswers } from "../../fields";
 import type { BrowserTab, IntegrationBrowserHost, IntegrationDefinition } from "../../model";
-import { closeIntegrationReconfigure, openIntegrationReconfigure } from "../../reconfigure";
 import { retryBoundSources } from "../data";
 import { renderImporting, renderSetup } from "../setup";
 import { handleCollectionSelection, selectedCollectionResources } from "../resources";
@@ -41,13 +39,6 @@ export async function handleClick(host: IntegrationBrowserHost, event: Event): P
     if (target.closest("[data-import-setup]")) {
         return importActive(host);
     }
-    if (target.closest("[data-reconfigure-cancel]")) {
-        closeIntegrationReconfigure(host);
-        return;
-    }
-    if (target.closest("[data-reconfigure]")) {
-        return openIntegrationReconfigure(host);
-    }
     const upgradeOpen = target.closest("[data-upgrade-open]") as HTMLElement | null;
     if (upgradeOpen) {
         return openIntegrationUpgrade(upgradeOpen);
@@ -65,7 +56,7 @@ export async function handleClick(host: IntegrationBrowserHost, event: Event): P
     if (runSync) {
         return runIntegrationSync(host, runSync);
     }
-    const installation = target.closest("[data-installation-id]") as HTMLElement | null;
+    const installation = target.closest("[data-integration-id]") as HTMLElement | null;
     if (installation?.dataset.integrationId) {
         if (!shouldInterceptNavigation(event)) {
             return;
@@ -104,7 +95,7 @@ async function importActive(host: IntegrationBrowserHost): Promise<void> {
         return;
     }
     const definition = host.activeDefinition;
-    const answers = collectAnswers(host.query("[data-fields]"), definition);
+    const answers = {};
     const resources =
         definition.schema === "cms.integration.definition.v2" && definition.type === "collection"
             ? selectedCollectionResources(host)
