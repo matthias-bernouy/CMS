@@ -4,6 +4,7 @@ import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
 import { BindingCore, BINDING_CORE_TAG } from "@bernouy/components/binding";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { submitConsentValues } from "./formPayload";
 
 const tag = "mossa-consent-field";
 const blocRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/mossa/blocs/foundation/forms/fields/consent-field");
@@ -137,8 +138,11 @@ describe("consent field", () => {
         expect(firstCopy.textContent?.match(/Conditions générales de vente/g)).toHaveLength(1);
     });
 
-    test("emits one attempt id and repeated accepted version ids as FormData", async () => {
-        globalThis.fetch = (async () => Response.json(requirements())) as typeof fetch;
+    test.each([1, 2])("submits %i accepted versions as an array through Binding Core", async (count) => {
+        const required = requirements();
+        required.documents = required.documents.slice(0, count);
+        const versions = required.documents.map((document) => document.versionId);
+        globalThis.fetch = (async () => Response.json(required)) as typeof fetch;
         const records: Array<{ value: FormData | null; state?: string }> = [];
         const originalAttachInternals = HTMLElement.prototype.attachInternals;
         HTMLElement.prototype.attachInternals = function () {
@@ -154,7 +158,7 @@ describe("consent field", () => {
         };
         try {
             const core = await mountRuntime();
-            await waitFor(() => core.querySelectorAll("input[data-consent-version]").length === 2);
+            await waitFor(() => core.querySelectorAll("input[data-consent-version]").length === count);
             const checkboxes = [...core.querySelectorAll<HTMLInputElement>("input[data-consent-version]")];
             for (const checkbox of checkboxes) {
                 checkbox.checked = true;
@@ -179,12 +183,15 @@ describe("consent field", () => {
             expect(latest).toBeTruthy();
             expect([...latest!.value!.entries()]).toEqual([
                 ["consentAttemptId", expect.stringMatching(/^[0-9a-f-]{36}$/i)],
-                ["acceptedConsentVersionIds", "a".repeat(64)],
-                ["acceptedConsentVersionIds", "b".repeat(64)],
+                ...versions.map((version) => ["acceptedConsentVersionIds[]", version]),
             ]);
             expect(JSON.parse(latest!.state!)).toMatchObject({
                 attemptId: expect.stringMatching(/^[0-9a-f-]{36}$/i),
-                versionIds: ["a".repeat(64), "b".repeat(64)],
+                versionIds: versions,
+            });
+            expect(await submitConsentValues(latest!.value!)).toEqual({
+                consentAttemptId: latest!.value!.get("consentAttemptId"),
+                acceptedConsentVersionIds: versions,
             });
         } finally {
             HTMLElement.prototype.attachInternals = originalAttachInternals;

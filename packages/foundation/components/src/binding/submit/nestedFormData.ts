@@ -4,8 +4,12 @@ const PATH_NAME = /^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])+$/;
 const FORBIDDEN_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
 
 export function appendSerializedValue(data: SerializedFormData, name: string, value: FormDataEntryValue): void {
-    const path = nestedPath(name);
-    if (!path || !appendNestedValue(data, path, value)) {
+    const explicitArray = name.endsWith("[]");
+    const fieldName = explicitArray ? name.slice(0, -2) : name;
+    const path = nestedPath(fieldName);
+    if (explicitArray && /^[A-Za-z0-9_-]+$/.test(fieldName) && !FORBIDDEN_SEGMENTS.has(fieldName)) {
+        appendValue(data, fieldName, value, true);
+    } else if (!path || !appendNestedValue(data, path, value, explicitArray)) {
         appendValue(data, name, value);
     }
 }
@@ -21,7 +25,12 @@ function nestedPath(name: string): string[] | null {
     return path.some((segment) => FORBIDDEN_SEGMENTS.has(segment)) ? null : path;
 }
 
-function appendNestedValue(data: SerializedFormData, path: string[], value: FormDataEntryValue): boolean {
+function appendNestedValue(
+    data: SerializedFormData,
+    path: string[],
+    value: FormDataEntryValue,
+    explicitArray: boolean,
+): boolean {
     const root = path[0]!;
     const existing = data[root];
     if (existing !== undefined && !isRecord(existing)) {
@@ -41,14 +50,19 @@ function appendNestedValue(data: SerializedFormData, path: string[], value: Form
         cursor[segment] = next;
         cursor = next as Record<string, SerializedFormValue>;
     }
-    appendValue(cursor, path.at(-1)!, value);
+    appendValue(cursor, path.at(-1)!, value, explicitArray);
     return true;
 }
 
-function appendValue(target: Record<string, SerializedFormValue>, key: string, value: FormDataEntryValue): void {
-    const current = target[key];
+function appendValue(
+    target: Record<string, SerializedFormValue>,
+    key: string,
+    value: FormDataEntryValue,
+    explicitArray = false,
+): void {
+    const current = Object.hasOwn(target, key) ? target[key] : undefined;
     if (current === undefined) {
-        target[key] = value;
+        target[key] = explicitArray ? [value] : value;
     } else if (Array.isArray(current)) {
         current.push(value);
     } else {

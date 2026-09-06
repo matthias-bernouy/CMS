@@ -220,7 +220,7 @@ export class ConsentField extends HTMLElement {
         const data = new FormData();
         data.append("consentAttemptId", this.attemptId);
         for (const checkbox of selected) {
-            data.append("acceptedConsentVersionIds", checkbox.value);
+            data.append("acceptedConsentVersionIds[]", checkbox.value);
         }
         setHidden(this.querySelector("[data-consent-changed]"), true);
         this.internals.setFormValue(
