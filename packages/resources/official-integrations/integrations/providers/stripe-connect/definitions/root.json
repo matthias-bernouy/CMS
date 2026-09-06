@@ -131,6 +131,44 @@
             "STRIPE_CONNECT_SELLER_PAYOUT_SCHEDULE": {
                 "field": "sellerPayoutSchedule"
             }
-        }
+        },
+        "actions": [
+            {
+                "id": "publish-seller-terms",
+                "label": "Publish seller terms",
+                "functionId": "manageStripeConnectSource",
+                "fields": [
+                    {
+                        "id": "documentKey",
+                        "label": "Stable key",
+                        "path": "documentKey",
+                        "type": "text",
+                        "required": true
+                    },
+                    {
+                        "id": "label",
+                        "label": "Public label",
+                        "path": "label",
+                        "type": "text",
+                        "required": true
+                    },
+                    {
+                        "id": "consentText",
+                        "label": "Consent sentence",
+                        "path": "consentText",
+                        "type": "textarea",
+                        "required": true
+                    },
+                    {
+                        "id": "page",
+                        "label": "Published page",
+                        "path": "page",
+                        "type": "page-link",
+                        "publishedOnly": true,
+                        "required": true
+                    }
+                ]
+            }
+        ]
     }
 }

@@ -43,6 +43,7 @@ export function registerMarketplaceTermsManagementSourceScenario(
             label: "",
             consentText: "",
             publishedSnapshotUrl: "",
+            page: "",
             updatedAt: null,
         });
         const body = {
@@ -64,10 +65,26 @@ export function registerMarketplaceTermsManagementSourceScenario(
         expect(String(published.revision)).toStartWith("cms-page:");
         expect(published.revision).toBe(harness.rest.currentMarketplaceTermsConfiguration?.version);
         expect(snapshotFetches).toBe(1);
+        const managed = await okJson(
+            await sourceJsonWithUser(harness, "admin-1", "manageSource", {
+                operation: "action",
+                actionId: "publish-seller-terms",
+                installationId: "stripe-connect",
+                input: {
+                    ...body,
+                    expectedVersion: published.revision,
+                    page: "/seller-terms",
+                    publishedSnapshotUrl: "https://untrusted.invalid/",
+                },
+                resolvedPages: { page: { path: "/seller-terms", publishedSnapshotUrl: body.publishedSnapshotUrl } },
+            }),
+        );
+        expect(managed.values).toMatchObject({ status: "published", page: "/seller-terms" });
+        expect(snapshotFetches).toBe(2);
 
         const stale = await sourceJsonWithUser(harness, "admin-2", "publishMarketplaceTermsManagement", body);
         expect(stale.status).toBe(409);
         expect(await jsonBody(stale)).toEqual({ error: "MARKETPLACE_TERMS_VERSION_CHANGED" });
-        expect(snapshotFetches).toBe(1);
+        expect(snapshotFetches).toBe(2);
     });
 }

@@ -1,3 +1,4 @@
+import { publishSellerTermsAction } from "./seller-terms.ts";
 import { HttpError, isRecord, json, readJsonObject, requireCmsRequest, type JsonRecord } from "../core/runtime.ts";
 import { readSettings, settingsResult, updateSettings } from "./store.ts";
 import { saveSettings } from "./settings.ts";
@@ -13,6 +14,9 @@ export async function manageSource(request: Request): Promise<Response> {
     const owner = typeof body.installationId === "string" && body.installationId ? "stripe-connect" : "";
     if (!owner) {
         throw new HttpError(422, "Installation context is required");
+    }
+    if (body.operation === "action" && body.actionId === "publish-seller-terms") {
+        return publishSellerTermsAction(request, body);
     }
     switch (body.operation) {
         case "health":

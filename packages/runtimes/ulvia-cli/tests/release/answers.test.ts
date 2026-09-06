@@ -42,10 +42,10 @@ describe("release sandbox answers", () => {
             sandboxAnswers(
                 parseIntegrationDefinition(
                     integrationDefinition("consent", "1.0.0", {
-                        inputs: [{ name: "enabled", label: "Enabled", type: "boolean", defaultValue: true }],
+                        inputs: [],
                     }),
                 ),
             ),
-        ).toEqual({ enabled: false });
+        ).toEqual({});
     });
 });

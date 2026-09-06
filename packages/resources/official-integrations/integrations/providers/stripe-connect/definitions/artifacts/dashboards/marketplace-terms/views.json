@@ -2,9 +2,16 @@
     {
         "widget": "w-detail",
         "id": "marketplaceTerms",
-        "source": { "endpoint": "getMarketplaceTermsManagement" },
-        "title": { "path": "label", "fallback": "Seller terms" },
-        "status": { "path": "status" },
+        "source": {
+            "endpoint": "getMarketplaceTermsManagement"
+        },
+        "title": {
+            "path": "label",
+            "fallback": "Seller terms"
+        },
+        "status": {
+            "path": "status"
+        },
         "actions": [
             {
                 "id": "publishMarketplaceTerms",
@@ -12,17 +19,21 @@
                 "tone": "primary",
                 "placement": "primary",
                 "confirm": "Publish this immutable seller terms version? Existing seller acceptances remain attached to their original version.",
-                "endpoint": {
-                    "endpoint": "publishMarketplaceTermsManagement",
+                "after": {
+                    "resource": "$result"
+                },
+                "management": {
+                    "installationId": "stripe-connect",
+                    "action": "action",
+                    "actionId": "publish-seller-terms",
                     "body": {
                         "expectedVersion": "$resource.revision",
                         "documentKey": "$field.documentKey",
                         "label": "$field.label",
                         "consentText": "$field.consentText",
-                        "publishedSnapshotUrl": "$field.publishedSnapshotUrl"
+                        "page": "$field.page"
                     }
-                },
-                "after": { "resource": "$result" }
+                }
             }
         ],
         "main": [
@@ -31,14 +42,33 @@
                 "title": "Runtime seller policy",
                 "description": "Publishing downloads the current CMS page snapshot, verifies its digest, and creates an immutable version.",
                 "fields": [
-                    { "id": "documentKey", "label": "Stable key", "path": "documentKey", "type": "text", "required": true },
-                    { "id": "label", "label": "Public label", "path": "label", "type": "text", "required": true },
-                    { "id": "consentText", "label": "Consent sentence", "path": "consentText", "type": "textarea", "required": true },
                     {
-                        "id": "publishedSnapshotUrl",
-                        "label": "Published page snapshot URL",
-                        "path": "publishedSnapshotUrl",
+                        "id": "documentKey",
+                        "label": "Stable key",
+                        "path": "documentKey",
                         "type": "text",
+                        "required": true
+                    },
+                    {
+                        "id": "label",
+                        "label": "Public label",
+                        "path": "label",
+                        "type": "text",
+                        "required": true
+                    },
+                    {
+                        "id": "consentText",
+                        "label": "Consent sentence",
+                        "path": "consentText",
+                        "type": "textarea",
+                        "required": true
+                    },
+                    {
+                        "id": "page",
+                        "label": "Published page",
+                        "path": "page",
+                        "type": "page-link",
+                        "publishedOnly": true,
                         "required": true
                     }
                 ]
@@ -49,9 +79,26 @@
                 "id": "publication",
                 "title": "Publication",
                 "fields": [
-                    { "id": "status", "label": "Status", "path": "status", "type": "readonly", "format": "badge" },
-                    { "id": "revision", "label": "Current version", "path": "revision", "type": "readonly" },
-                    { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "type": "readonly", "format": "date" }
+                    {
+                        "id": "status",
+                        "label": "Status",
+                        "path": "status",
+                        "type": "readonly",
+                        "format": "badge"
+                    },
+                    {
+                        "id": "revision",
+                        "label": "Current version",
+                        "path": "revision",
+                        "type": "readonly"
+                    },
+                    {
+                        "id": "updatedAt",
+                        "label": "Updated",
+                        "path": "updatedAt",
+                        "type": "readonly",
+                        "format": "date"
+                    }
                 ]
             }
         ]

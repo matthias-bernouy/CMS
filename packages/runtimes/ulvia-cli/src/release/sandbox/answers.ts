@@ -21,7 +21,7 @@ export function sandboxAnswers(definition: IntegrationDefinition): Record<string
             return [[input.name, sandboxValue(input)]];
         }),
     );
-    return definition.kind === "consent" ? { ...required, enabled: false } : required;
+    return required;
 }
 
 function sandboxValue(input: Exclude<IntegrationInput, { type: "object-list" }>): IntegrationAnswerValue {

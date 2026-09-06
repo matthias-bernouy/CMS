@@ -26,10 +26,12 @@ export async function executeEndpointAction(
     },
 ): Promise<DashboardActionResult> {
     if (action.management) {
+        const management = action.management;
+        const input = resolveBody(management.body, vars) ?? vars.fields ?? {};
         const result = await managementRequest<{ values: unknown }>(
-            action.management.installationId,
-            "settings",
-            resolveBody(action.management.body, vars) ?? vars.fields ?? {},
+            management.installationId,
+            management.action === "action" ? "action" : "settings",
+            management.action === "action" ? { actionId: management.actionId, input } : input,
         );
         return { kind: "value", value: result.values, ...actionMeta(group, groups, action) };
     }

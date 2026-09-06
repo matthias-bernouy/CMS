@@ -1,13 +1,31 @@
 {
     "type": "object",
     "properties": {
-        "status": { "type": "string" },
-        "revision": { "type": "string" },
-        "documentKey": { "type": "string" },
-        "label": { "type": "string" },
-        "consentText": { "type": "string" },
-        "publishedSnapshotUrl": { "type": "string" },
-        "updatedAt": { "type": "string", "nullable": true }
+        "status": {
+            "type": "string"
+        },
+        "revision": {
+            "type": "string"
+        },
+        "documentKey": {
+            "type": "string"
+        },
+        "label": {
+            "type": "string"
+        },
+        "consentText": {
+            "type": "string"
+        },
+        "publishedSnapshotUrl": {
+            "type": "string"
+        },
+        "updatedAt": {
+            "type": "string",
+            "nullable": true
+        },
+        "page": {
+            "type": "string"
+        }
     },
     "required": [
         "status",

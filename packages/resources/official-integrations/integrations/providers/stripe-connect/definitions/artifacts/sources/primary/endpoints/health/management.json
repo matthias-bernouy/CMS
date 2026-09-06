@@ -15,6 +15,20 @@
                     "ref": "{{secrets.cmsApiKey}}",
                     "prefix": "Bearer "
                 }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
             }
         ],
         "body": {

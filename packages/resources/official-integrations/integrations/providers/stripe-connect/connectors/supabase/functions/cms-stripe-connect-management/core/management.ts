@@ -48,6 +48,7 @@ function managementProjection(
             label: "",
             consentText: "",
             publishedSnapshotUrl: "",
+            page: "",
             updatedAt: null,
         };
     }
@@ -58,6 +59,7 @@ function managementProjection(
         label: configuration.label ?? "",
         consentText: configuration.consentText ?? "",
         publishedSnapshotUrl: configuration.publishedSnapshotUrl ?? "",
+        page: configuration.page?.path ?? "",
         updatedAt: configuration.updatedAt,
     };
 }
