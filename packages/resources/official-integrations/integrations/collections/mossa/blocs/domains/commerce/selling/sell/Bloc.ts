@@ -65,7 +65,6 @@ export class Bloc extends Component {
     override connectedCallback(): void {
         this.applyCopy();
         this.copySlots.forEach((slot) => slot.addEventListener("slotchange", this.applyCopy));
-        this.syncPhotoPolicy();
         this.form.addEventListener("submit", this.onSubmit);
         this.search.addEventListener("input", this.onSearch);
         this.search.addEventListener("focus", this.onSearch);
@@ -92,7 +91,6 @@ export class Bloc extends Component {
         if (!this.isConnected) {
             return;
         }
-        this.syncPhotoPolicy();
         this.applyCopy();
         this.renderPhotoPreviews();
     }
@@ -419,7 +417,7 @@ export class Bloc extends Component {
             this.minimumPhotos === this.maximumPhotos ? "photoRequirementExact" : "photoRequirementRange",
             { minimum: String(this.minimumPhotos), maximum: String(this.maximumPhotos) },
         );
-        this.photoHint.textContent = `${requirement} JPEG, PNG, WebP, or AVIF, up to 5 MB per image.`;
+        this.photoHint.textContent = `${requirement} ${this.copy("photoFormats")}`.trim();
     }
 
     private clearPhotoPreviews() {
@@ -773,13 +771,16 @@ export class Bloc extends Component {
                 ?.assignedNodes({ flatten: true })
                 .map((node) => node.textContent || "")
                 .join("")
-                .trim() || "";
+                .trim() ||
+            slot?.textContent?.trim() ||
+            "";
         for (const [key, replacement] of Object.entries(replacements)) {
             value = value.replaceAll(`{${key}}`, replacement);
         }
         return value;
     }
     private applyCopy = () => {
+        this.syncPhotoPolicy();
         this.shadowRoot?.querySelectorAll<HTMLElement>("[data-copy]").forEach((element) => {
             element.textContent = this.copy(element.dataset.copy || "");
         });

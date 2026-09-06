@@ -35,6 +35,7 @@ const definitions = [
     ["No photo", "noPhoto"],
     ["Add more photos", "addMorePhotos"],
     ["Add photos", "addPhotos"],
+    ["Photo formats and size", "photoFormats"],
     ["Exact photo requirement", "photoRequirementExact"],
     ["Photo range requirement", "photoRequirementRange"],
     ["Expired session", "sessionExpired"],
@@ -60,7 +61,7 @@ export const sellCopySlots: ContentSlot[] = definitions.map(([label, name]) => (
     label,
     slot: copySlotName(name),
     accepts: [{ kind: "any-component" }],
-    min: 1,
+    min: name === "photoFormats" ? 0 : 1,
     max: 1,
 }));
 
