@@ -18,6 +18,8 @@ export async function runtimeFixture() {
     cms.roles = new InMemoryRolesRepository();
     cms.dashboardAssignments = new InMemoryDashboardAssignmentRepository();
     const environment: Record<string, string> = {};
+    const runtime = { passwordName: "SMTP_PASSWORD" };
+    const bootstrapSecrets: Record<string, string> = {};
     const phases: string[] = [];
     let settings: Record<string, unknown> = {};
     let savedRevision: string | null = null;
@@ -30,13 +32,13 @@ export async function runtimeFixture() {
             projectRef: "project-one",
         }),
         secrets,
-        functionSecrets: { SMTP_PASSWORD: "stale-bootstrap-password" },
+        functionSecrets: bootstrapSecrets,
         fetch: (async (input, init) => {
             const request = new Request(input, init);
             if (request.url.endsWith("/secrets")) {
                 for (const { name, value } of (await request.json()) as Array<{ name: string; value: string }>) {
                     environment[name] = value;
-                    if (name === "SMTP_PASSWORD" && value === "selected-smtp-password") {
+                    if (name === runtime.passwordName && value === "selected-smtp-password") {
                         phases.push("sync");
                     }
                 }
@@ -61,7 +63,7 @@ export async function runtimeFixture() {
                 expect(payload.secretValues).toEqual({ smtpPassword: "selected-smtp-password" });
             }
             if (payload.operation === "confirm-apply") {
-                expect(environment.SMTP_PASSWORD).toBe("selected-smtp-password");
+                expect(environment[runtime.passwordName]).toBe("selected-smtp-password");
                 appliedRevision = savedRevision;
             }
             return Response.json({ values: settings, savedRevision, appliedRevision });
@@ -80,6 +82,13 @@ export async function runtimeFixture() {
             expectedKind: kind,
             expectedVersion: "1.0.0",
         });
+        const passwordBinding = Object.entries(definition.management?.runtimeSecrets ?? {}).find(
+            ([, binding]) => "field" in binding && binding.field === "smtpPassword",
+        );
+        if (passwordBinding) {
+            runtime.passwordName = passwordBinding[0];
+            bootstrapSecrets[runtime.passwordName] = "stale-bootstrap-password";
+        }
         return { definition, root };
     }
     async function run(mode: "create" | "rerun" | "upgrade", definition: IntegrationDefinition, root: string) {
@@ -112,5 +121,5 @@ export async function runtimeFixture() {
                 })
               : runIntegrationInstallation({ ...common, mode, integrationId: definition.kind });
     }
-    return { cms, secrets, installations, environment, phases, load, run };
+    return { cms, secrets, installations, environment, runtime, phases, load, run };
 }

@@ -3,7 +3,7 @@ import { integrationManagement } from "cms-control/core/management/integrations/
 import { runtimeFixture } from "./runtimeFixture";
 
 test("official ordinary connector install saves and applies settings, then preserves runtime values across deployments", async () => {
-    const { cms, secrets, installations, environment, phases, load, run } = await runtimeFixture();
+    const { cms, secrets, installations, environment, runtime, phases, load, run } = await runtimeFixture();
     const newsletter = await load("newsletter", "domains");
     await run("create", newsletter.definition, newsletter.root);
     const emailer = await load("emailer", "providers");
@@ -31,7 +31,7 @@ test("official ordinary connector install saves and applies settings, then prese
     await run("upgrade", { ...emailer.definition, version: "1.1.0" }, emailer.root);
     // A different integration also receives provider bootstrap secrets in the same project.
     await run("rerun", newsletter.definition, newsletter.root);
-    expect(environment.SMTP_PASSWORD).toBe("selected-smtp-password");
+    expect(environment[runtime.passwordName]).toBe("selected-smtp-password");
     expect(environment.CMS_EMAILER_API_KEY).toBe(authKey);
     expect((await installations.get("emailer"))?.managementSecretRefs).toEqual({
         smtpPassword: "${SELECTED_SMTP_PASSWORD}",
@@ -40,7 +40,7 @@ test("official ordinary connector install saves and applies settings, then prese
 });
 
 test("existing ordinary installations recover their runtime destination from successful deployment history", async () => {
-    const { cms, installations, secrets, load, run, environment } = await runtimeFixture();
+    const { cms, installations, secrets, load, run, environment, runtime } = await runtimeFixture();
     const newsletter = await load("newsletter", "domains");
     await run("create", newsletter.definition, newsletter.root);
     const emailer = await load("emailer", "providers");
@@ -53,5 +53,5 @@ test("existing ordinary installations recover their runtime destination from suc
         values: { smtpPassword: "${SELECTED_SMTP_PASSWORD}" },
         expectedRevision: null,
     });
-    expect(environment.SMTP_PASSWORD).toBe("selected-smtp-password");
+    expect(environment[runtime.passwordName]).toBe("selected-smtp-password");
 });

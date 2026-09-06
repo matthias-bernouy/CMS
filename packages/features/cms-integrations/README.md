@@ -54,9 +54,15 @@ values are preserved during deployment reruns and upgrades.
 
 `runtimeSecrets` maps environment names to declared settings fields or granted
 generated slots. Control delegates synchronization through the installation's
-single connector binding and the adapter's optional `syncSecrets` method. The
+single connector destination and the adapter's optional `syncSecrets` method.
+Ordinary deployments persist `connectorRuntimeTargets`; migration-aware
+connectors retain their lineage bindings. Legacy ordinary installations can
+recover their destination from the latest successful deployment run. The
 configured Supabase adapter rejects provider drift and updates only supplied
 variables. Provider credentials are not delivered to integration functions.
+Deployment preserves runtime variable names owned by installed integrations,
+including when another integration shares the provider's project. Obsolete
+installation keys remain in the vault while selected settings still grant them.
 
 A health report declares `schemaVersion: 1`, overall status, `checkedAt`,
 configuration revisions, and checks. Overall status is one of
