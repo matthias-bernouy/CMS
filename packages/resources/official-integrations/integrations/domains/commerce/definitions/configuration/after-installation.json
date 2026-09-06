@@ -15,7 +15,7 @@
             {
                 "id": "installation",
                 "call": {
-                    "source": "{{dependencies.emailer.sourceId}}",
+                    "source": "emailer",
                     "endpoint": "installTemplates",
                     "body": {
                         "templates": "$steps.templates.items"

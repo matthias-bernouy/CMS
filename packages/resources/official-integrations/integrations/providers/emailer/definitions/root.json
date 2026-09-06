@@ -82,8 +82,7 @@
                     "id": "smtpUser",
                     "label": "SMTP user",
                     "type": "text",
-                    "path": "smtpUser",
-                    "required": true
+                    "path": "smtpUser"
                 },
                 {
                     "id": "smtpPassword",

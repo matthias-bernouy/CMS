@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { createSourceManagement } from "../connectors/supabase/functions/cms-emailer/management.ts";
 
 test("Emailer verifies credentials without persisting values and confirms after sync", async () => {
@@ -111,4 +113,15 @@ test.each([
     expect(health.status).toBe("ready");
     expect(health.checks[0].code).toBe("smtp_connected");
     expect(verified).toBe(2);
+});
+
+test("Emailer Connection fields allow anonymous SMTP configuration", async () => {
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("emailer");
+    const fields = definition?.management?.settings?.fields ?? [];
+    const username = fields.find((field) => field.id === "smtpUser");
+    const password = fields.find((field) => field.id === "smtpPassword");
+    expect(username).toMatchObject({ type: "text", path: "smtpUser" });
+    expect(username?.required).not.toBe(true);
+    expect(password).toMatchObject({ type: "secret-ref", path: "smtpPassword" });
+    expect(password?.required).not.toBe(true);
 });
