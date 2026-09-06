@@ -1,8 +1,8 @@
 :host {
-    --_mossa-item-padding-y: var(--_mossa-acc-item-padding-y, var(--ulvia-space-md));
+    --_mossa-item-padding-y: var(--_mossa-acc-item-padding-y, var(--ulvia-space-sm));
     --_mossa-item-padding-x: var(
         --_mossa-acc-item-padding-x,
-        calc(var(--ulvia-space-md) + var(--ulvia-space-xs))
+        calc(var(--ulvia-space-sm) + var(--ulvia-space-xs) / 2)
     );
     --_mossa-item-font-size: var(--_mossa-acc-item-font-size, 1rem);
     --_mossa-item-accent:    var(--ulvia-secondary-base);
