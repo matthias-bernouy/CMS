@@ -24,6 +24,8 @@ export function renderSourceManagement(
     for (const item of related) {
         const link = document.createElement("w13c-lateral-menu-item");
         link.dataset.generated = "true";
+        link.setAttribute("manual-active", "");
+        link.toggleAttribute("active", new URL(window.location.href).searchParams.get("integration") === item.id);
         link.classList.add("dashboard-item");
         link.setAttribute(
             "href",

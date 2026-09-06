@@ -22,7 +22,7 @@ export class LateralMenuItem extends Component {
     }
 
     static get observedAttributes(): string[] {
-        return ["href", "badge", "disabled", "active", "exact"];
+        return ["href", "badge", "disabled", "active", "exact", "manual-active"];
     }
 
     override connectedCallback(): void {
@@ -79,7 +79,7 @@ export class LateralMenuItem extends Component {
                 checkActiveState(this, this._anchor);
             }
         }
-        if (name === "exact" && this.isConnected) {
+        if ((name === "exact" || name === "manual-active") && this.isConnected) {
             checkActiveState(this, this._anchor);
         }
         if (name === "disabled") {

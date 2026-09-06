@@ -33,8 +33,10 @@ export class DashboardNav extends Component {
         this.syncFromUrl();
         this.shadowRoot!.addEventListener("click", this.onClick);
         window.addEventListener("popstate", this.onPopState);
+        window.addEventListener("cms-resources:route", this.onResourceRoute);
         window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection as EventListener);
         this.query<HTMLElement>("[data-add-source]").setAttribute("href", route("/admin/sources?tab=catalogue"));
+        this.updateCatalogueAction();
         this.startBoundSource();
         document.addEventListener("integration:updated", this.refreshInstallations);
         void this.refreshInstallations();
@@ -43,6 +45,7 @@ export class DashboardNav extends Component {
     disconnectedCallback(): void {
         this.shadowRoot?.removeEventListener("click", this.onClick);
         window.removeEventListener("popstate", this.onPopState);
+        window.removeEventListener("cms-resources:route", this.onResourceRoute);
         window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection as EventListener);
         document.removeEventListener("integration:updated", this.refreshInstallations);
         this.observer?.disconnect();
@@ -96,9 +99,30 @@ export class DashboardNav extends Component {
 
     private render(): void {
         const menu = this.query<HTMLElement>("w13c-lateral-menu");
-        renderDashboardNavigation(menu, this.groups, this.selectedSource, this.selectedDashboard);
+        const params = new URL(window.location.href).searchParams;
+        const installation = params.get("integration");
+        if (installation) {
+            this.selectedSource = sourceForInstallation(installation, this.installations) ?? this.selectedSource;
+        }
+        this.updateCatalogueAction();
+        renderDashboardNavigation(
+            menu,
+            this.groups,
+            params.has("tab") || params.has("setup") ? "" : this.selectedSource,
+            installation ? "" : this.selectedDashboard,
+        );
         renderSourceManagement(menu, this.selectedSource, this.installations);
     }
+
+    private updateCatalogueAction(): void {
+        const params = new URL(window.location.href).searchParams;
+        this.query<HTMLElement>("[data-add-source]").toggleAttribute(
+            "active",
+            params.get("tab") === "catalogue" || params.has("setup"),
+        );
+    }
+
+    private onResourceRoute = (): void => this.render();
 
     private refreshInstallations = async (): Promise<void> => {
         if (this.isExampleMode()) {
@@ -108,10 +132,6 @@ export class DashboardNav extends Component {
             this.installations = await loadSourceInstallations();
             if (!this.isConnected) {
                 return;
-            }
-            const id = new URL(window.location.href).searchParams.get("integration");
-            if (id) {
-                this.selectedSource = sourceForInstallation(id, this.installations) ?? this.selectedSource;
             }
             this.render();
         } catch {

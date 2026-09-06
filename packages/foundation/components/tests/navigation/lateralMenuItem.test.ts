@@ -48,3 +48,34 @@ describe("LateralMenuItem actions", () => {
         expect(navigationClicks).toBe(0);
     });
 });
+
+describe("LateralMenuItem controlled active state", () => {
+    test("preserves automatic path matching by default", () => {
+        const item = document.createElement("w13c-lateral-menu-item-actions-test");
+        item.setAttribute("href", `${location.pathname}?different=query`);
+        document.body.append(item);
+        expect(item.hasAttribute("active")).toBe(true);
+        expect(item.getAttribute("aria-current")).toBe("page");
+        item.remove();
+    });
+    test("manual-active lets a caller select and clear query-specific links without URL reactivation", () => {
+        const item = document.createElement("w13c-lateral-menu-item-actions-test");
+        item.setAttribute("manual-active", "");
+        item.setAttribute("href", location.pathname);
+        document.body.append(item);
+        const anchor = item.shadowRoot!.querySelector("a")!;
+        expect(item.hasAttribute("active")).toBe(false);
+        expect(anchor.classList.contains("active")).toBe(false);
+        item.setAttribute("active", "");
+        expect(item.getAttribute("aria-current")).toBe("page");
+        expect(anchor.classList.contains("active")).toBe(true);
+        item.removeAttribute("active");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        expect(item.hasAttribute("active")).toBe(false);
+        expect(item.hasAttribute("aria-current")).toBe(false);
+        expect(anchor.classList.contains("active")).toBe(false);
+        item.removeAttribute("manual-active");
+        expect(item.hasAttribute("active")).toBe(true);
+        item.remove();
+    });
+});

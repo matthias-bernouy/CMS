@@ -108,6 +108,10 @@ Two tag prefixes are currently in use across the library: `p9r-` (majority) and 
 | `LateralMenu` | `<w13c-lateral-menu>` | Lateral navigation menu. |
 | `LateralMenuItem` | `<w13c-lateral-menu-item>` | Item inside a `LateralMenu`. |
 
+`LateralMenuItem` normally derives its active state from the URL pathname. Set
+`manual-active` to control selection explicitly with the `active` attribute,
+for example when several application views share a pathname and use query parameters.
+
 ### Navigation
 
 | Class | Tag | Description |

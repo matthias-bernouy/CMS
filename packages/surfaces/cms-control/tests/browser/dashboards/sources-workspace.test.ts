@@ -18,12 +18,45 @@ test("Sources parser keeps catalogue exclusive and the add action above source n
                     contentType: "text/html",
                     body: `<!doctype html>
                     <head><script src="/control.js"></script></head><body>
-                    <cms-dashboards-nav example></cms-dashboards-nav>
+                    <cms-dashboards-nav></cms-dashboards-nav>
                     <cms-resource-workspace>
                         <script>window.dashboardWasAbsent = !document.querySelector('cms-dashboards-admin');</script>
                         <cms-dashboards-admin external></cms-dashboards-admin>
                     </cms-resource-workspace></body>`,
                 });
+            } else if (url.pathname === "/api/dashboards") {
+                await route.fulfill({
+                    json: [
+                        {
+                            source: {
+                                id: "commerce",
+                                urn: "urn:commerce",
+                                name: "Commerce",
+                                endpointCount: 0,
+                                dashboardCount: 0,
+                                readonly: false,
+                            },
+                            endpoints: [],
+                            dashboards: [],
+                        },
+                    ],
+                });
+            } else if (url.pathname === "/api/integrations/installations") {
+                const installation = {
+                    id: "commerce",
+                    label: "Commerce",
+                    definitionVersion: "1.0.0",
+                    status: "success",
+                    sourceIds: ["commerce"],
+                    integrationType: "source",
+                    answers: {},
+                    runCount: 1,
+                    artifactCount: 1,
+                    missingArtifactCount: 0,
+                    updatedAt: "2026-09-06T10:00:00Z",
+                    definition: { kind: "commerce", label: "Commerce", inputs: [] },
+                };
+                await route.fulfill({ json: url.searchParams.has("id") ? installation : [installation] });
             } else {
                 await route.fulfill({ json: [] });
             }
@@ -48,12 +81,30 @@ test("Sources parser keeps catalogue exclusive and the add action above source n
                 return !!source && !!(node.compareDocumentPosition(source) & Node.DOCUMENT_POSITION_FOLLOWING);
             }),
         ).toBe(true);
+        const settings = page.locator('cms-dashboards-nav w13c-lateral-menu-item[href*="integration=commerce"]');
+        await settings.waitFor();
+        expect(await action.getAttribute("active")).toBe("");
+        expect(await settings.getAttribute("active")).toBeNull();
+        await page.evaluate(() => {
+            history.replaceState(null, "", "/admin/sources?source=commerce&integration=commerce");
+            window.dispatchEvent(new Event("cms-resources:route"));
+        });
+        expect(await action.getAttribute("active")).toBeNull();
+        expect(await settings.getAttribute("active")).toBe("");
         await page.evaluate(() => {
             history.replaceState(null, "", "/admin/sources?source=commerce");
             window.dispatchEvent(new Event("cms-resources:route"));
         });
         expect(await dashboard.isVisible()).toBe(true);
         expect(await page.locator("cms-integrations-admin").isVisible()).toBe(false);
+        expect(await action.getAttribute("active")).toBeNull();
+        expect(await settings.getAttribute("active")).toBeNull();
+        expect(await page.locator('cms-dashboards-nav [data-source="commerce"]').getAttribute("active")).toBe("");
+        await action.click();
+        await page.waitForURL("http://cms.test/admin/sources?tab=catalogue");
+        await settings.waitFor();
+        expect(await action.getAttribute("active")).toBe("");
+        expect(await settings.getAttribute("active")).toBeNull();
         expect(errors).toEqual([]);
     } finally {
         await browser.close();

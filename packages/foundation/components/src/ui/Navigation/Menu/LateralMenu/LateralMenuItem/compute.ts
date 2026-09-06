@@ -41,6 +41,10 @@ export const setActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | nu
 };
 
 export const checkActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | null) => {
+    if (host.hasAttribute("manual-active")) {
+        setActiveState(host, anchor, host.hasAttribute("active"));
+        return;
+    }
     if (host.hasAttribute("active")) {
         setActiveState(host, anchor, true);
         return;
