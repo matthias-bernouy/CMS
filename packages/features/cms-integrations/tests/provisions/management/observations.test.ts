@@ -7,6 +7,36 @@ import {
 } from "@bernouy/cms-integrations";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { definition, fixture, report } from "./fixture";
+test("deleted selected keys remain diagnosable and replaceable while apply stays strict", async () => {
+    const { service, installations } = await fixture(
+        async (_installation, _fn, payload) => {
+            if (payload.operation === "health") {
+                expect(payload.secretValues).toEqual({});
+                return { ...report(), status: "needs_configuration" };
+            }
+            if (payload.operation === "read-settings") {
+                expect(payload.secretValues).toEqual({});
+                return { values: { key: "${DELETED_KEY}" }, savedRevision: "1", appliedRevision: "1" };
+            }
+            expect(payload.secretValues.key).toBe("selected-private-value");
+            return { values: { key: "${SELECTED_KEY}" }, savedRevision: "2", appliedRevision: "2" };
+        },
+        { syncRuntimeSecrets: async () => {} },
+    );
+    await installations.replace({
+        ...(await installations.get(definition.kind))!,
+        managementSecretRefs: { key: "${DELETED_KEY}" },
+    });
+    expect(await service.health(definition.kind)).toMatchObject({
+        observation: "valid",
+        report: { status: "needs_configuration" },
+    });
+    expect(await service.settings(definition.kind)).toMatchObject({ values: { key: "${DELETED_KEY}" } });
+    await expect(service.action(definition.kind, "apply-settings")).rejects.toThrow("Granted secret is unavailable");
+    expect(
+        await service.saveSettings(definition.kind, { values: { key: "${SELECTED_KEY}" }, expectedRevision: "1" }),
+    ).toMatchObject({ values: { key: "${SELECTED_KEY}" }, appliedRevision: "2" });
+});
 test("failed settings save retains stale health evidence and a safe revision conflict", async () => {
     let fail = false;
     const { service } = await fixture(async (_installation, _fn, payload) => {

@@ -33,6 +33,7 @@ export async function managementSecrets(
     deps: IntegrationManagementDeps,
     installation: IntegrationInstallation,
     refs: Record<string, string>,
+    allowMissing = false,
 ) {
     const generated = installation.definitionSnapshot?.management?.generatedSecrets ?? [];
     const generatedRefs = Object.fromEntries(
@@ -51,11 +52,15 @@ export async function managementSecrets(
     ]);
     return {
         reader,
-        secretValues: await resolve(reader, refs),
-        generatedSecretValues: await resolve(reader, generatedRefs),
+        secretValues: await resolve(reader, refs, allowMissing),
+        generatedSecretValues: await resolve(reader, generatedRefs, allowMissing),
     };
 }
-async function resolve(reader: SecretReader, refs: Record<string, string>): Promise<Record<string, string>> {
+async function resolve(
+    reader: SecretReader,
+    refs: Record<string, string>,
+    allowMissing: boolean,
+): Promise<Record<string, string>> {
     const entries = await Promise.all(
         Object.entries(refs).map(async ([name, ref]) => {
             let value: string | null;
@@ -65,12 +70,15 @@ async function resolve(reader: SecretReader, refs: Record<string, string>): Prom
                 throw new IntegrationRuntimeError("Granted secret is unavailable", 503);
             }
             if (value === null) {
+                if (allowMissing) {
+                    return [];
+                }
                 throw new IntegrationRuntimeError("Granted secret is unavailable", 503);
             }
-            return [name, value];
+            return [[name, value]];
         }),
     );
-    return Object.fromEntries(entries);
+    return Object.fromEntries(entries.flat());
 }
 export async function saveGeneratedSecrets(
     deps: IntegrationManagementDeps,

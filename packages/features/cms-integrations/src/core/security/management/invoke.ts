@@ -24,7 +24,7 @@ export async function invokeManagement(
     if (!["health", "read-settings"].includes(operation)) {
         await verifyManagementLease(deps, installation);
     }
-    const secrets = await managementSecrets(deps, installation, refs);
+    const secrets = await managementSecrets(deps, installation, refs, ["health", "read-settings"].includes(operation));
     const resolvedPages = operation === "save-settings" ? await resolveManagementPages(deps, installation, input) : {};
     let result: unknown;
     try {
