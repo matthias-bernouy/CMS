@@ -38,6 +38,16 @@ export class CommerceOfferFilterEditor extends Editor {
                     },
                 ],
             },
+            {
+                kind: "self",
+                label: "Filter copy",
+                settings: [
+                    { type: "text", label: "All options", attribute: "all-label", defaultValue: "All" },
+                    { type: "text", label: "True option", attribute: "boolean-true-label", defaultValue: "Yes" },
+                    { type: "text", label: "False option", attribute: "boolean-false-label", defaultValue: "No" },
+                    { type: "text", label: "Error message", attribute: "error-label" },
+                ],
+            },
         ];
     }
 

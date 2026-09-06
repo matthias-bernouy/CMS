@@ -144,7 +144,11 @@ export class SchemaOfferFilters {
             }
             console.error(error);
             this.schema = null;
-            renderSchemaState(this.host, "error", "Filters for this category could not be loaded.");
+            renderSchemaState(
+                this.host,
+                "error",
+                this.host.getAttribute("error-label") || "Filters for this category could not be loaded.",
+            );
         }
     }
 

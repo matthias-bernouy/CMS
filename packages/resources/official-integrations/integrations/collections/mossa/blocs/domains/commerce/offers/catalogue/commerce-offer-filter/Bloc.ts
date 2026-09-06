@@ -2,7 +2,15 @@ import { NumericRangeFilters } from "./range/range-controller";
 import { SchemaOfferFilters } from "./schema/schema";
 
 export class CommerceOfferFilter extends HTMLElement {
-    static observedAttributes = ["category-param", "schema-driven", "show-brand"];
+    static observedAttributes = [
+        "category-param",
+        "schema-driven",
+        "show-brand",
+        "all-label",
+        "boolean-true-label",
+        "boolean-false-label",
+        "error-label",
+    ];
 
     constructor() {
         super();
@@ -44,7 +52,7 @@ export class CommerceOfferFilter extends HTMLElement {
             return;
         }
         this.activateSchemaMode();
-        if (name === "show-brand") {
+        if (name !== "category-param" && name !== "schema-driven") {
             this.schemaFilters.render();
         }
     }

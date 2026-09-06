@@ -1,4 +1,6 @@
 import "./behavior/offer-filter-contract.cases";
+import "./behavior/offer-filter-copy.cases";
+import "./behavior/offer-filter-range-pending.cases";
 import "./behavior/offer-filter-lifecycle.cases";
 import "./behavior/offer-filter-panel.cases";
 import "./behavior/offer-filter-source-change.cases";

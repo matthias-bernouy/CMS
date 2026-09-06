@@ -36,7 +36,7 @@ export function renderSchema(host, schema) {
             continue;
         }
         for (const control of controls) {
-            stack.append(renderField(host.localName, field, control));
+            stack.append(renderField(host, field, control));
         }
     }
     if (stack.childElementCount === 1) {
@@ -98,8 +98,8 @@ function renderBrand(host, schema) {
     return select;
 }
 
-function renderField(filterTag, field, definition) {
-    const wrapper = filterWrapper(filterTag, field, definition);
+function renderField(host, field, definition) {
+    const wrapper = filterWrapper(host.localName, field, definition);
     const options = Array.isArray(field.options) ? field.options : [];
     if (options.length > 0 || field.type === "boolean") {
         const select = createSelectElement(field.label, {
@@ -107,10 +107,13 @@ function renderField(filterTag, field, definition) {
             "cms-param-sync": definition.param,
             "data-filter-param": definition.param,
         });
-        select.append(createOptionElement("", `All · ${field.label}`));
+        select.append(createOptionElement("", `${host.getAttribute("all-label") || "All"} · ${field.label}`));
         select.append(
             ...(field.type === "boolean"
-                ? [createOptionElement("true", "Oui"), createOptionElement("false", "Non")]
+                ? [
+                      createOptionElement("true", host.getAttribute("boolean-true-label") || "Yes"),
+                      createOptionElement("false", host.getAttribute("boolean-false-label") || "No"),
+                  ]
                 : options.map((value) => createOptionElement(String(value), String(value)))),
         );
         wrapper.append(select);

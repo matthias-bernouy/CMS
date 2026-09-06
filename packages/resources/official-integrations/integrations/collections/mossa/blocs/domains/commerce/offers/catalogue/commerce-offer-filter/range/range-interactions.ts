@@ -13,6 +13,7 @@ export function updateSlider(range, event) {
     if (minimum > maximum) {
         [minimum, maximum] = minimumEdited ? [maximum, maximum] : [minimum, minimum];
     }
+    range.readUrlOnSync = false;
     range.applyValues(minimum, maximum);
     const proxy = minimumEdited ? range.elements.minimumProxy : range.elements.maximumProxy;
     const value = minimumEdited ? minimum : maximum;
@@ -43,6 +44,8 @@ export function updateManualControl(range, event) {
     if (!valid || !ordered) {
         return;
     }
+    // A pending URL reflection must not overwrite the newer local edit.
+    range.readUrlOnSync = false;
     range.activeBound = minimumEdited ? "minimum" : "maximum";
     const minimum = minimumEdited ? requested : range.boundValue(true);
     const maximum = minimumEdited ? range.boundValue(false) : requested;
