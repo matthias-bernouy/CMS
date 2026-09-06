@@ -34,10 +34,10 @@ test("availability preserves explicitly submitted resources missing from the dis
     );
     expect((await integrationInstallations.get("gallery"))?.activeResources).toEqual(["gallery/blocs/retained"]);
     expect((await cms.repository.getBlocRecord("gallery-card")).artifact.catalogue).toBe("inactive");
-    expect((await cms.repository.getBlocRecord("gallery-retained")).artifact.catalogue).toBe("active");
+    expect(await cms.repository.getBlocRecord("gallery-retained")).toBeNull();
 });
 
-test("pending installations expose read-only controls while failed installations allow availability retry", async () => {
+test("pending and failed installations expose read-only availability controls", async () => {
     const { cms, integrationInstallations } = await libraryHarness();
     const installed = (await integrationInstallations.get("gallery"))!;
     for (const status of ["pending", "failed"] as const) {
@@ -46,10 +46,8 @@ test("pending installations expose read-only controls while failed installations
         expect(result.collection).toMatchObject({
             statusLabel: status === "pending" ? "Pending" : "Failed",
             canCheckUpdates: false,
-            canManageAvailability: status === "failed",
+            canManageAvailability: false,
         });
-        expect(result.blocs.every((bloc: { selectable: boolean }) => bloc.selectable === (status === "failed"))).toBe(
-            true,
-        );
+        expect(result.blocs.every((bloc: { selectable: boolean }) => bloc.selectable === false)).toBe(true);
     }
 });

@@ -1,3 +1,4 @@
+import { ContentConflictError, ContentValidationError } from "cms-content/core/validation/errors";
 import type { BlocListItemResponse } from "cms-content/interfaces/CmsRepository";
 import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
 import type {
@@ -26,6 +27,18 @@ import type { SiteBlocPublicationGuard } from "cms-content/interfaces/CmsReposit
 export class InMemoryBlocRepository {
     protected readonly blocs = new Map<string, BlocRecord>();
     private readonly siteBlocPublications = new SiteBlocPublicationQueue();
+
+    async setBlocCatalogue(tag: string, ownership: BlocOwnership, catalogue: "active" | "inactive"): Promise<void> {
+        if (catalogue !== "active" && catalogue !== "inactive") {
+            throw new ContentValidationError("catalogue", "active or inactive expected");
+        }
+        const record = this.blocs.get(tag);
+        if (!record?.artifact || record.siteDefinition) {
+            throw new ContentConflictError("Installed bloc artifact is unavailable");
+        }
+        assertBlocRecordOwner(record, ownership);
+        record.artifact.catalogue = catalogue;
+    }
 
     async createBloc(write: TBlocWrite): Promise<TBloc> {
         const bloc = normalizeBlocWrite(write);

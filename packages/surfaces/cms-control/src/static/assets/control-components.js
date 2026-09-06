@@ -12059,8 +12059,9 @@ p {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    min-width: 280px;
-    max-width: 420px;
+    box-sizing: border-box;
+    min-width: min(280px, calc(100vw - 48px));
+    max-width: min(420px, calc(100vw - 48px));
     padding: 12px 14px;
     background: var(--_bg);
     color: var(--_color);
@@ -43692,69 +43693,95 @@ button[slot="back"]:disabled {
     customElements.define("cms-resource-workspace", ResourceWorkspace);
   }
 
-  // src/components/admin/Resources/Blocs/AvailabilityDrafts.ts
-  class AvailabilityDrafts {
-    changes = new Map;
+  // src/components/admin/Resources/Blocs/AvailabilityQueue.ts
+  var key = (change) => `${change.id}\x00${change.resource}`;
+
+  class AvailabilityQueue {
+    queued = new Map;
+    retryChanges = [];
+    pending;
+    timer;
     get dirty() {
-      return [...this.changes.values()].some((changes) => changes.size > 0);
+      return Boolean(this.pending || this.queued.size);
     }
-    change(choice) {
-      const id2 = this.installation(choice);
+    change(root, choice) {
+      const id2 = choice.closest("[data-installation]")?.dataset.installation;
       const resource = choice.getAttribute("resource");
       const toggle2 = choice.querySelector("w13c-switch");
       if (!id2 || !resource || !toggle2) {
         return;
       }
-      const changes = this.changes.get(id2) ?? new Map;
-      if (toggle2.checked === (choice.getAttribute("selected") === "true")) {
-        changes.delete(resource);
-      } else {
-        changes.set(resource, toggle2.checked);
-      }
-      this.changes.set(id2, changes);
+      const change = { id: id2, resource, active: toggle2.checked };
+      this.retryChanges = [];
+      this.queued.set(key(change), change);
+      this.pump(root);
     }
     sync(root) {
       for (const choice of Array.from(root.querySelectorAll("cms-bloc-choice"))) {
+        const id2 = choice.closest("[data-installation]")?.dataset.installation ?? "";
+        const changeKey = key({ id: id2, resource: choice.getAttribute("resource") ?? "" });
+        const intent = this.queued.get(changeKey) ?? (this.pending && key(this.pending) === changeKey ? this.pending : undefined);
         const toggle2 = choice.querySelector("w13c-switch");
         if (toggle2) {
-          toggle2.checked = this.changes.get(this.installation(choice))?.get(choice.getAttribute("resource") ?? "") ?? choice.getAttribute("selected") === "true";
-        }
-      }
-      for (const section2 of Array.from(root.querySelectorAll("[data-installation]"))) {
-        const count = this.changes.get(section2.dataset.installation ?? "")?.size ?? 0;
-        const bar = section2.querySelector("[data-save-bar]");
-        if (bar) {
-          bar.hidden = count === 0;
-        }
-        const note = section2.querySelector("[data-draft-count]");
-        if (note) {
-          note.textContent = `${count} unsaved ${count === 1 ? "change" : "changes"}`;
+          toggle2.checked = intent?.active ?? choice.getAttribute("selected") === "true";
         }
       }
     }
-    prepare(form) {
-      const selected2 = new Set(Array.from(form.querySelectorAll("[data-saved-resource]"), (input2) => input2.value));
-      for (const [resource, active] of this.changes.get(this.installation(form)) ?? []) {
-        if (active) {
-          selected2.add(resource);
-        } else {
-          selected2.delete(resource);
-        }
+    complete(root, success) {
+      const change = this.pending;
+      if (!change) {
+        return;
       }
-      const fields = Array.from(selected2, (resource) => {
-        const input2 = form.ownerDocument.createElement("input");
-        input2.type = "hidden";
-        input2.name = "resources[]";
-        input2.value = resource;
-        return input2;
-      });
-      form.querySelector("[data-selected-fields]")?.replaceChildren(...fields);
+      if (success) {
+        for (const choice of Array.from(root.querySelectorAll("cms-bloc-choice"))) {
+          if (choice.getAttribute("resource") === change.resource && choice.closest("[data-installation]")?.dataset.installation === change.id) {
+            choice.setAttribute("selected", String(change.active));
+          }
+        }
+        if (this.queued.get(key(change))?.active === change.active) {
+          this.queued.delete(key(change));
+        }
+      } else {
+        const retries = new Map([[key(change), change], ...this.queued]);
+        this.retryChanges = [...retries.values()];
+        this.queued.clear();
+      }
+      this.pending = undefined;
+      this.sync(root);
+      this.timer = setTimeout(() => {
+        if (this.queued.size) {
+          this.pump(root);
+        } else if (!this.pending && root.isConnected && (!success || new URLSearchParams(location.search).get("visibility"))) {
+          root.ownerDocument.dispatchEvent(new Event("bloc:availability-changed"));
+        }
+      }, 0);
     }
-    clear(element) {
-      this.changes.delete(this.installation(element));
+    retry(root) {
+      for (const change of this.retryChanges) {
+        this.queued.set(key(change), change);
+      }
+      this.retryChanges = [];
+      this.pump(root);
+      this.sync(root);
     }
-    installation(element) {
-      return element.closest("[data-installation]")?.dataset.installation ?? "";
+    dispose() {
+      clearTimeout(this.timer);
+    }
+    pump(root) {
+      if (this.pending || !root.isConnected) {
+        return;
+      }
+      const change = this.queued.values().next().value;
+      const form = root.querySelector("[data-availability-form]");
+      if (!change || !form) {
+        return;
+      }
+      this.queued.delete(key(change));
+      this.pending = change;
+      for (const field3 of ["id", "resource", "active"]) {
+        form.querySelector(`input[name="${field3}"]`).value = String(change[field3]);
+      }
+      form.requestSubmit();
     }
   }
 
@@ -43933,50 +43960,46 @@ iframe {
 
   // src/components/admin/Resources/Blocs/BlocLibrary.ts
   class BlocLibrary extends HTMLElement {
-    drafts = new AvailabilityDrafts;
+    queue = new AvailabilityQueue;
     connectedCallback() {
       this.addEventListener("click", this.clickAction);
       this.addEventListener("change", this.changeChoice);
       this.addEventListener("bloc:choice-ready", this.syncChoices);
-      this.addEventListener("submit", this.prepareSubmission, true);
       this.addEventListener("cms-source:success", this.saved);
+      this.addEventListener("cms-source:failed", this.saved);
       window.addEventListener("beforeunload", this.beforeUnload);
     }
     disconnectedCallback() {
       this.removeEventListener("click", this.clickAction);
       this.removeEventListener("change", this.changeChoice);
       this.removeEventListener("bloc:choice-ready", this.syncChoices);
-      this.removeEventListener("submit", this.prepareSubmission, true);
       this.removeEventListener("cms-source:success", this.saved);
+      this.removeEventListener("cms-source:failed", this.saved);
+      this.queue.dispose();
       window.removeEventListener("beforeunload", this.beforeUnload);
     }
-    syncChoices = () => this.drafts.sync(this);
+    syncChoices = () => this.queue.sync(this);
     changeChoice = (event) => {
       const choice = event.target?.closest("cms-bloc-choice");
       if (choice) {
-        this.drafts.change(choice);
+        this.queue.change(this, choice);
         this.syncChoices();
-      }
-    };
-    prepareSubmission = (event) => {
-      if (event.target instanceof HTMLFormElement && event.target.hasAttribute("data-availability-form")) {
-        this.drafts.prepare(event.target);
       }
     };
     saved = (event) => {
       if (event.target instanceof HTMLFormElement && event.target.hasAttribute("data-availability-form")) {
-        this.drafts.clear(event.target);
+        this.queue.complete(this, event.type === "cms-source:success");
         this.syncChoices();
       }
     };
     clickAction = (event) => {
       const target2 = event.target instanceof Element ? event.target : null;
-      const action = target2?.closest("[data-reload], [data-discard], [data-preview]");
+      const action = target2?.closest("[data-reload], [data-retry-availability], [data-preview]");
       if (!action) {
         return;
       }
-      if (action.hasAttribute("data-discard")) {
-        this.drafts.clear(action);
+      if (action.hasAttribute("data-retry-availability")) {
+        this.queue.retry(this);
         this.syncChoices();
       } else if (action.dataset.reload) {
         this.ownerDocument.dispatchEvent(new Event(action.dataset.reload));
@@ -43991,7 +44014,7 @@ iframe {
       }
     };
     beforeUnload = (event) => {
-      if (this.drafts.dirty) {
+      if (this.queue.dirty) {
         event.preventDefault();
         event.returnValue = "";
       }
@@ -46208,14 +46231,14 @@ button:hover {
   function providerGroups(sources) {
     const groups = new Map;
     for (const source2 of sources) {
-      const key = source2.provider ?? "default";
-      const current = groups.get(key) ?? {
-        key,
+      const key2 = source2.provider ?? "default";
+      const current = groups.get(key2) ?? {
+        key: key2,
         label: source2.providerLabel ?? source2.provider ?? "Sources",
         count: 0
       };
       current.count += 1;
-      groups.set(key, current);
+      groups.set(key2, current);
     }
     return [...groups.values()];
   }
@@ -47526,13 +47549,13 @@ textarea { min-height: 92px; resize: vertical; }
     return section2;
   }
   function renderState2(source2, state2, options2) {
-    const key = sourceStateKey(options2.sources, source2.editor, state2);
+    const key2 = sourceStateKey(options2.sources, source2.editor, state2);
     const label4 = document.createElement("label");
     const input3 = document.createElement("input");
     input3.type = "checkbox";
-    input3.checked = options2.selected.has(key);
+    input3.checked = options2.selected.has(key2);
     input3.addEventListener("change", () => {
-      input3.checked ? options2.selected.add(key) : options2.selected.delete(key);
+      input3.checked ? options2.selected.add(key2) : options2.selected.delete(key2);
       options2.onChange();
     });
     const text5 = document.createElement("span");
@@ -47773,11 +47796,11 @@ textarea { min-height: 92px; resize: vertical; }
     if (isEditableKeyEvent(event)) {
       return;
     }
-    const key = event.key.toLowerCase();
-    if (key === "c" && context.selectedEditor) {
+    const key2 = event.key.toLowerCase();
+    if (key2 === "c" && context.selectedEditor) {
       event.preventDefault();
       context.emitCopy(context.selectedEditor);
-    } else if (key === "v") {
+    } else if (key2 === "v") {
       event.preventDefault();
       context.emitPaste(context.selectedEditor ?? undefined);
     }
@@ -49253,8 +49276,8 @@ dd {
       }
     }
     toggleNode(node) {
-      const key = this.nodeCollapseKey(node);
-      this.isCollapsed(node) ? this.state.collapsedTargets.delete(key) : this.state.collapsedTargets.add(key);
+      const key2 = this.nodeCollapseKey(node);
+      this.isCollapsed(node) ? this.state.collapsedTargets.delete(key2) : this.state.collapsedTargets.add(key2);
     }
     isCollapsed(node) {
       return this.state.collapsedTargets.has(this.nodeCollapseKey(node));
@@ -49263,8 +49286,8 @@ dd {
       return this.areBadgesExpanded(node) ? node.badges : node.badges.slice(0, 2);
     }
     toggleBadges(node) {
-      const key = this.nodeCollapseKey(node);
-      this.areBadgesExpanded(node) ? this.state.expandedBadgeTargets.delete(key) : this.state.expandedBadgeTargets.add(key);
+      const key2 = this.nodeCollapseKey(node);
+      this.areBadgesExpanded(node) ? this.state.expandedBadgeTargets.delete(key2) : this.state.expandedBadgeTargets.add(key2);
     }
     areBadgesExpanded(node) {
       return this.state.expandedBadgeTargets.has(this.nodeCollapseKey(node));
@@ -50040,9 +50063,9 @@ dd {
       });
     }
     toggleNode(node) {
-      const key = this.tree.nodes.nodeCollapseKey(node);
-      const row = this.findRenderedRow(key);
-      const anchor = row ? { key, offsetTop: row.getBoundingClientRect().top } : undefined;
+      const key2 = this.tree.nodes.nodeCollapseKey(node);
+      const row = this.findRenderedRow(key2);
+      const anchor = row ? { key: key2, offsetTop: row.getBoundingClientRect().top } : undefined;
       this.tree.nodes.toggleNode(node);
       this.render({ anchor });
     }
@@ -50051,13 +50074,13 @@ dd {
       this.render();
     }
     trackRenderedRow(node, row) {
-      const key = this.tree.nodes.nodeCollapseKey(node);
-      if (typeof key === "object") {
-        this.tree.state.renderedRows.set(key, row);
+      const key2 = this.tree.nodes.nodeCollapseKey(node);
+      if (typeof key2 === "object") {
+        this.tree.state.renderedRows.set(key2, row);
       }
     }
-    findRenderedRow(key) {
-      return typeof key === "object" ? this.tree.state.renderedRows.get(key) ?? null : null;
+    findRenderedRow(key2) {
+      return typeof key2 === "object" ? this.tree.state.renderedRows.get(key2) ?? null : null;
     }
     scrollSelectedIntoView() {
       if (!this.tree.state.selectedEditor) {
@@ -56484,11 +56507,11 @@ label {
         nextId += 1;
         ids.set(usage.target, id2);
       }
-      const key = `${id2}:${usage.attribute ?? ""}`;
-      if (seen.has(key)) {
+      const key2 = `${id2}:${usage.attribute ?? ""}`;
+      if (seen.has(key2)) {
         return false;
       }
-      seen.add(key);
+      seen.add(key2);
       return true;
     });
   }
@@ -56604,11 +56627,11 @@ label {
   function dedupeSourceStatusConditions(conditions2) {
     const seen = new Set;
     return conditions2.filter((condition) => {
-      const key = `${condition.sourceId ?? ""}:${condition.state}`;
-      if (seen.has(key)) {
+      const key2 = `${condition.sourceId ?? ""}:${condition.state}`;
+      if (seen.has(key2)) {
         return false;
       }
-      seen.add(key);
+      seen.add(key2);
       return true;
     });
   }
@@ -57948,8 +57971,8 @@ label {
       if (!format) {
         return;
       }
-      const key = event.key;
-      if (key !== "Escape" && (key !== "Enter" || format === "richtext")) {
+      const key2 = event.key;
+      if (key2 !== "Escape" && (key2 !== "Enter" || format === "richtext")) {
         return;
       }
       event.preventDefault();

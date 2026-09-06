@@ -319,3 +319,5 @@ export type {
 export { IntegrationManagementService } from "../core/security/management/service";
 export type { IntegrationManagementDeps } from "../core/security/management/contracts";
 export { parseHealthReport } from "../core/security/management/report";
+
+export { updateCollectionAvailability } from "../core/resources/availability";

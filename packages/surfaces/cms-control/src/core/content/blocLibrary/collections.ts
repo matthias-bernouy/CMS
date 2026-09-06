@@ -59,7 +59,7 @@ export function libraryCollectionRows(
                           }
                         : {}),
                     canCheckUpdates: managed && installation?.status === "success",
-                    canManageAvailability: managed && installation?.status !== "pending",
+                    canManageAvailability: managed && installation?.status === "success",
                     ...collectionAssets(basePath, definition, installation?.definitionVersion),
                 },
                 selected,

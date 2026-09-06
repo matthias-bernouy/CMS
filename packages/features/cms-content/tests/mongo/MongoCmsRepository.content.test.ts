@@ -103,3 +103,30 @@ describe("MongoCmsRepository content persistence", () => {
 async function duplicateKey(): Promise<never> {
     throw Object.assign(new Error("duplicate key"), { code: 11000 });
 }
+
+test("catalogue updates preserve installed source and editors and reject an ownership mismatch", async () => {
+    const { repository, db } = createMongoContentRepository("tenant_");
+    const ownership = {
+        kind: "integration" as const,
+        installationId: "gallery",
+        integrationKind: "gallery",
+        definitionVersion: "1.0.0",
+    };
+    await repository.createBloc({ ...card, ownership });
+    const before = await repository.getBlocRecord(card.id);
+    await repository.setBlocCatalogue(card.id, ownership, "inactive");
+    expect(await repository.getBlocRecord(card.id)).toEqual({
+        ...before!,
+        artifact: { ...before!.artifact!, catalogue: "inactive" },
+    });
+    expect(await repository.getBlocsList()).toEqual([]);
+    expect(await repository.getBlocsJS()).toEqual([{ id: card.id, editorJS: card.editorJS, viewJS: card.viewJS }]);
+    expect(await repository.getBlocSource(card.id)).toEqual(card.source!);
+    expect(db.get("tenant_blocs").replaceOneCalls).toHaveLength(0);
+    await expect(
+        repository.setBlocCatalogue(card.id, { ...ownership, installationId: "other" }, "active"),
+    ).rejects.toThrow("owner changed");
+    await expect(repository.setBlocCatalogue(card.id, ownership, "invalid" as "active")).rejects.toThrow("catalogue");
+    await repository.setBlocCatalogue(card.id, ownership, "active");
+    expect(await repository.getBlocsList()).toHaveLength(1);
+});

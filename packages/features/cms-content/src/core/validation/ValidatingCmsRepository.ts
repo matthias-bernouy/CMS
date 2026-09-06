@@ -48,6 +48,9 @@ export class ValidatingCmsRepository implements CmsRepository {
     async updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
         return this.inner.updateSiteBlocCollection(id, validateSiteBlocCollectionInput(input));
     }
+    async setBlocCatalogue(tag: string, ownership: BlocOwnership, catalogue: "active" | "inactive"): Promise<void> {
+        return this.inner.setBlocCatalogue(tag, ownership, catalogue);
+    }
     // ── Validated authored-content writes ─────────────────────────────────
     async insertPage(path: string, title: string, content?: string): Promise<void> {
         const validPath = validatePagePath(path);

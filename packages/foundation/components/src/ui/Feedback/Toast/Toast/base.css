@@ -12,8 +12,9 @@
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    min-width: 280px;
-    max-width: 420px;
+    box-sizing: border-box;
+    min-width: min(280px, calc(100vw - 48px));
+    max-width: min(420px, calc(100vw - 48px));
     padding: 12px 14px;
     background: var(--_bg);
     color: var(--_color);

@@ -29,7 +29,11 @@ export async function fixture() {
     const writes: Array<{ path: string; body: Record<string, unknown> }> = [];
     const failures = new Map<string, string>();
     const reads: string[] = [];
-    const state = { versions: ["1.3.0"], brokenImages: false };
+    const state = {
+        versions: ["1.3.0"],
+        brokenImages: false,
+        availabilityDelay: undefined as (() => Promise<void>) | undefined,
+    };
     await page.route(`${origin}/**`, async (route) => {
         const request = route.request();
         const url = new URL(request.url());
@@ -77,6 +81,11 @@ export async function fixture() {
             writes.push({ path, body: request.postDataJSON() });
         } else {
             reads.push(`${path}${url.search}`);
+        }
+        if (path === "/api/bloc/collections/availability" && state.availabilityDelay) {
+            const delay = state.availabilityDelay;
+            state.availabilityDelay = undefined;
+            await delay();
         }
         if (failures.has(path)) {
             const error = failures.get(path);

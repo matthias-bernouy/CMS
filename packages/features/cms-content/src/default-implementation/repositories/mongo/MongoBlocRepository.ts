@@ -1,3 +1,4 @@
+import { ContentConflictError, ContentValidationError } from "cms-content/core/validation/errors";
 import type { BlocListItemResponse, SiteBlocPublicationGuard } from "cms-content/interfaces/CmsRepository";
 import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
 import type {
@@ -36,6 +37,24 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
     override async init(): Promise<void> {
         await super.init();
         await migrateLegacyBlocs(this.blocs);
+    }
+
+    async setBlocCatalogue(tag: string, ownership: BlocOwnership, catalogue: "active" | "inactive"): Promise<void> {
+        if (catalogue !== "active" && catalogue !== "inactive") {
+            throw new ContentValidationError("catalogue", "active or inactive expected");
+        }
+        const result = await this.blocs.updateOne(
+            {
+                _id: tag,
+                ...Object.fromEntries(Object.entries(ownership).map(([key, value]) => [`ownership.${key}`, value])),
+                artifact: { $exists: true, $ne: null },
+                siteDefinition: { $exists: false },
+            },
+            { $set: { "artifact.catalogue": catalogue } },
+        );
+        if (!result.matchedCount) {
+            throw new ContentConflictError("Installed bloc artifact is unavailable or its owner changed");
+        }
     }
 
     async createBloc(write: TBlocWrite): Promise<TBloc> {

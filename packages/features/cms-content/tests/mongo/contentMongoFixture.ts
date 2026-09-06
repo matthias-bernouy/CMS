@@ -72,7 +72,16 @@ export class FakeContentCollection {
         await this.beforeUpdateOne?.(structuredClone(update));
         const document = this.findStored(filter);
         if (document) {
-            this.documents.set(document._id, { ...document, ...structuredClone(update.$set) });
+            const next = structuredClone(document);
+            for (const [path, value] of Object.entries(update.$set)) {
+                const segments = path.split(".");
+                let target: Record<string, unknown> = next;
+                for (const segment of segments.slice(0, -1)) {
+                    target = (target[segment] ??= {}) as Record<string, unknown>;
+                }
+                target[segments.at(-1)!] = structuredClone(value);
+            }
+            this.documents.set(document._id, next);
             await this.afterUpdateOne?.(structuredClone(update));
             return { matchedCount: 1 };
         }

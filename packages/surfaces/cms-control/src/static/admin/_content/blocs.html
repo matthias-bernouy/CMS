@@ -97,47 +97,33 @@
                 <p9r-container size="3xs"><p9r-select cms-param-sync="category" label="Category"><option cms-repeat="library.categories as category" value="{{ category.value }}">{{ category.label }}</option></p9r-select></p9r-container>
                 <p9r-container size="3xs"><p9r-select cms-param-sync="visibility" label="Status"><option cms-repeat="library.stateOptions as option" value="{{ option.value }}">{{ option.label }}</option></p9r-select></p9r-container>
             </p9r-stack>
-            <span role="status">{{ library.filteredCount }} of {{ library.totalCount }} blocs</span>
-            <form cms-condition="library.collection.canManageAvailability" data-availability-form cms-source="{{BASE_PATH}}/api/bloc/collections/availability?id={{ library.collection.installationId }} as saved" cms-source-method="POST" cms-source-trigger="submit" cms-source-publish="bloc:changed" cms-source-success-reset="false">
-                <input cms-repeat="library.selectedResources as resource" type="hidden" value="{{ resource }}" data-saved-resource>
-                <div data-selected-fields hidden></div>
-                <div data-save-bar hidden>
-                    <p9r-card>
-                        <p9r-stack direction="row" align-items="center" justify="between" gap="md" wrap>
-                            <strong data-draft-count></strong>
-                            <p9r-stack direction="row" gap="sm">
-                                <p9r-button type="button" variant="outlined" data-discard>Discard changes</p9r-button>
-                                <p9r-button type="submit" color="primary">Save changes</p9r-button>
-                            </p9r-stack>
-                        </p9r-stack>
-                    </p9r-card>
-                </div>
-                <p role="status" cms-condition="$source.loading">Saving availability…</p>
+            <p cms-condition="library.collection.canManageAvailability">Availability controls new insertions. Existing pages and bloc editors remain available.</p>
+            <p9r-stack gap="lg" trim data-collection-blocs cms-source="{{BASE_PATH}}/api/bloc/library?collection=#{collection}&search=#{search}&category=#{category}&visibility=#{visibility} as catalogue" cms-reload-on="bloc:availability-changed">
                 <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
-                <p role="status" cms-condition="$source.loaded">Availability saved.</p>
-            </form>
-            <cms-empty-state cms-condition="library.filteredCount == 0">
-                <span slot="title">{{ library.emptyTitle }}</span>
-                <span slot="hint">{{ library.emptyDescription }}</span>
-            </cms-empty-state>
-            <p9r-stack cms-repeat="library.groups as group" gap="md" trim data-category="{{ group.label }}">
-                <h2>{{ group.label }} <small>({{ group.count }})</small></h2>
-                <p9r-grid min="md" gap="md">
-                    <p9r-card cms-repeat="group.blocs as bloc" stretch>
-                        <cms-library-artwork slot="media" label="{{ bloc.name }}">
-                            <img slot="image" cms-condition="bloc.thumbnailUrl" data-cms-src="{{ bloc.thumbnailUrl }}" alt="{{ bloc.name }}" loading="lazy">
-                        </cms-library-artwork>
-                        <a slot="title" cms-condition="bloc.editable" href="{{ bloc.editPath }}">{{ bloc.name }}</a>
-                        <h3 slot="title" cms-condition="!bloc.editable">{{ bloc.name }}</h3>
-                        <span slot="description">{{ bloc.description }}</span>
-                        <span slot="meta" cms-condition="bloc.editable">{{ bloc.state }}</span>
-                        <cms-bloc-choice slot="meta" cms-condition="bloc.selectable" resource="{{ bloc.resourceId }}" selected="{{ bloc.selected }}">
-                            <w13c-switch aria-label="Available in editor: {{ bloc.name }}">Available</w13c-switch>
-                        </cms-bloc-choice>
-                        <a slot="actions" cms-condition="bloc.editable" href="{{ bloc.editPath }}">Edit composition →</a>
-                        <p9r-button slot="actions" cms-condition="!bloc.editable" type="button" variant="ghost" data-preview="{{BASE_PATH}}/api/bloc/preview?id={{ bloc.tag }}" data-preview-title="{{ bloc.name }}">Preview</p9r-button>
-                    </p9r-card>
-                </p9r-grid>
+                <span role="status" cms-condition="$source.loaded">{{ catalogue.filteredCount }} of {{ catalogue.totalCount }} blocs</span>
+                <cms-empty-state cms-condition="catalogue.filteredCount == 0">
+                    <span slot="title">{{ catalogue.emptyTitle }}</span>
+                    <span slot="hint">{{ catalogue.emptyDescription }}</span>
+                </cms-empty-state>
+                <p9r-stack cms-repeat="catalogue.groups as group" gap="md" trim data-category="{{ group.label }}">
+                    <h2>{{ group.label }} <small>({{ group.count }})</small></h2>
+                    <p9r-grid min="md" gap="md">
+                        <p9r-card cms-repeat="group.blocs as bloc" stretch>
+                            <cms-library-artwork slot="media" label="{{ bloc.name }}">
+                                <img slot="image" cms-condition="bloc.thumbnailUrl" data-cms-src="{{ bloc.thumbnailUrl }}" alt="{{ bloc.name }}" loading="lazy">
+                            </cms-library-artwork>
+                            <a slot="title" cms-condition="bloc.editable" href="{{ bloc.editPath }}">{{ bloc.name }}</a>
+                            <h3 slot="title" cms-condition="!bloc.editable">{{ bloc.name }}</h3>
+                            <span slot="description">{{ bloc.description }}</span>
+                            <span slot="meta" cms-condition="bloc.editable">{{ bloc.state }}</span>
+                            <cms-bloc-choice slot="meta" cms-condition="bloc.selectable" resource="{{ bloc.resourceId }}" selected="{{ bloc.selected }}">
+                                <w13c-switch aria-label="Available in editor: {{ bloc.name }}">Available</w13c-switch>
+                            </cms-bloc-choice>
+                            <a slot="actions" cms-condition="bloc.editable" href="{{ bloc.editPath }}">Edit composition →</a>
+                            <p9r-button slot="actions" cms-condition="!bloc.editable" type="button" variant="ghost" data-preview="{{BASE_PATH}}/api/bloc/preview?id={{ bloc.tag }}" data-preview-title="{{ bloc.name }}">Preview</p9r-button>
+                        </p9r-card>
+                    </p9r-grid>
+                </p9r-stack>
             </p9r-stack>
         </p9r-stack>
         <p9r-modal id="new-collection-modal" cms-condition="library.isExplore" aria-label="Create private collection">
@@ -204,4 +190,17 @@
             <p>Default content preview. Live data and interactions are paused.</p>
         </p9r-stack>
     </p9r-modal>
+    <form data-availability-form cms-source="{{BASE_PATH}}/api/bloc/collections/availability as saved" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-reset="false">
+        <input type="hidden" name="id">
+        <input type="hidden" name="resource">
+        <input type="hidden" name="active">
+        <p9r-toast-stack position="bottom-right">
+            <p9r-toast type="info" duration="0" role="status" cms-condition="$source.loading">Saving availability…</p9r-toast>
+            <p9r-toast type="error" duration="0" role="alert" cms-condition="$source.error">
+                <p>{{ $source.message }} Your latest changes were not confirmed.</p>
+                <p9r-button type="button" variant="outlined" data-retry-availability>Retry saving</p9r-button>
+            </p9r-toast>
+            <p9r-toast type="success" duration="2500" role="status" cms-condition="$source.loaded">Availability saved.</p9r-toast>
+        </p9r-toast-stack>
+    </form>
 </cms-bloc-library>

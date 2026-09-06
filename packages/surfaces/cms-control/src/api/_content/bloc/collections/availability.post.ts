@@ -4,9 +4,10 @@ import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 import { saveCollectionAvailability } from "cms-control/core/content/blocLibrary/availability";
 
 export default async function postCollectionAvailability(req: Request, cms: ControlCms): Promise<Response> {
-    const id = new URL(req.url).searchParams.get("id")?.trim();
+    const body = await readJsonBody(req);
+    const id = new URL(req.url).searchParams.get("id")?.trim() ?? (typeof body.id === "string" ? body.id.trim() : "");
     if (!id) {
         throw new MissingParam("id");
     }
-    return Response.json(await saveCollectionAvailability(cms, id, await readJsonBody(req)));
+    return Response.json(await saveCollectionAvailability(cms, id, body));
 }

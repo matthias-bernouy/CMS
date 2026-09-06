@@ -80,11 +80,22 @@ available collection with its declared default resources and default answers.
 The existing integration installation result is returned.
 
 `POST <basePath>/api/bloc/collections/availability?id=<installationId>` accepts
-JSON `{ resources: string[] }`. It replaces the entire active selection through
-the existing installation rerun service. `{ resources: [] }` and `{}` both clear
-the selection. Malformed, duplicate or unknown resource IDs are rejected, as are
-legacy non-v2 collection owners. Hiding a bloc preserves rendering on existing
-pages. Missing installations return 404.
+`{ resource: string, active: boolean }` for a single switch. HTML forms may send
+`"true"` / `"false"`; the installation ID may instead be supplied as body `id`.
+The existing `{ resources: string[] }` full replacement remains supported;
+`{ resources: [] }` and `{}` clear the selection. The two formats cannot be mixed.
+
+The operation validates installed dependencies, claims the installation with
+compare-and-swap, updates only changed catalogue flags, and saves `activeResources`.
+Failed writes compensate flags already changed. Pending/failed installations,
+unresolved migrations, missing artifacts on activation and conflicting operations
+are rejected. Identical selections are no-ops. Installation runs, compiled bundles,
+source files, and public page caches remain unchanged. No packages or sources are
+installed by a switch. The response contains `id`, `activeResources`, and `changed`
+(bloc tags); it does not expose installation answers or secrets.
+
+Availability controls new insertions only. Blocs already present in pages remain
+renderable and editable. Runtime and editor bundles retain inactive blocs.
 
 `GET <basePath>/api/integrations/installations/versions?id=<installationId>`
 returns `id`, `current`, eligible `versions`, preflight `targets`, and eligible
@@ -98,8 +109,7 @@ remain in effect.
 Site compositions are editable. Integration-owned and code-managed blocs remain
 read-only in the site composition editor. Legacy owners and missing managed
 installations remain visible without collection availability/update controls.
-Pending installations disable availability; failed installations expose retry
-through availability. Version checks are enabled for successful v2 collections.
+Pending and failed installations disable availability. Version checks are enabled for successful v2 collections.
 
 Optional managed cover/icon and bloc thumbnail URLs target
 `<basePath>/api/integrations/asset?kind=<kind>&version=<exactVersion>&path=<path>`.
@@ -112,8 +122,14 @@ absent so presentation can use an icon or plain fallback.
 
 The static Blocs page composes the official admin layout, secondary menu, cards,
 fields and dialogs. Its single page binding core owns data reads, mutations and
-query filters. The light-DOM controller keeps only unsaved availability choices
-and preview dialog interactions; it neither fetches data nor injects styles.
+query filters. The light-DOM controller queues switch intents and
+preview dialog interactions; it neither fetches data nor injects styles. A persistent
+declarative form submits scalar changes sequentially, including across query-filter
+renders. Rapid changes retain the latest intent per resource. Failures restore the
+visible saved state and offer retry; a list refresh reconciles uncertain
+network outcomes. Successful unfiltered switches do not reload the library. A
+separate binding source refreshes only the bloc list when a visibility filter
+requires a row to disappear; the navigation and collection header stay mounted. The form renders official toasts for saving/error/success feedback.
 
 `Explore collections` is the entry screen. `Create private collection` creates a
 site-owned collection; “private” means not published to the collection catalogue,

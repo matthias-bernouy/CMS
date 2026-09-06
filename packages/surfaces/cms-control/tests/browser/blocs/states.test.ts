@@ -23,15 +23,15 @@ test("collection errors can be retried and empty search preserves navigation", a
     }
 }, 30000);
 
-test("discard restores saved choices and previews open a separate read-only frame", async () => {
+test("autosaved choices retain separate read-only previews", async () => {
     const f = await fixture();
     try {
         await f.goto("?collection=managed:gallery");
         const choice = f.page.locator('cms-bloc-choice[resource="gallery/blocs/card"] w13c-switch');
         await choice.click();
-        await f.page.getByRole("button", { name: "Discard changes" }).click();
-        expect(await choice.evaluate((element) => (element as HTMLElement & { checked: boolean }).checked)).toBe(true);
-        expect(f.writes).toHaveLength(0);
+        await f.page.locator("p9r-toast").filter({ hasText: "Availability saved." }).waitFor();
+        expect(await choice.evaluate((element) => (element as HTMLElement & { checked: boolean }).checked)).toBe(false);
+        expect(f.writes).toHaveLength(1);
         await f.page.getByRole("button", { name: "Preview", exact: true }).first().click();
         const modal = f.page.locator("[data-preview-modal]");
         await modal.frameLocator("iframe").getByText("Read-only preview").waitFor();
