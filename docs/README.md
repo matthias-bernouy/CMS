@@ -14,6 +14,9 @@ implementation notes live in each package's `AGENTS.md`.
 
 ## Surfaces
 
+- [UI contracts](./quality/ui-contracts.md) documents binding ownership,
+  browser request diagnostics, source/form checks, and the reviewed inventory.
+
 - [api-folder.md](./api-folder.md) documents the file-routed REST API convention
   used by `@bernouy/cms-control`.
 - [static-folder.md](./static-folder.md) documents the static HTML routing and
