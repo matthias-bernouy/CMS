@@ -6,7 +6,7 @@
     <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
         <strong slot="title">Request unavailable</strong>
         <span slot="description" data-error-message></span>
-        <mossa-button slot="actions" data-retry appearance="outlined"><button type="button">Try again</button></mossa-button>
+        <mossa-button slot="actions" data-retry appearance="outlined" tone="neutral"><button type="button">Try again</button></mossa-button>
     </mossa-surface-card>
 
     <form data-form hidden novalidate>
@@ -71,7 +71,7 @@
             <div><dt data-withdrawal-copy="date-label">Date and time</dt><dd data-confirmed-at></dd></div>
             <div><dt data-withdrawal-copy="status-label">Status</dt><dd data-status></dd></div>
         </dl>
-        <mossa-button slot="actions" data-download appearance="outlined"><button type="button" data-withdrawal-copy="download-label">
+        <mossa-button slot="actions" data-download appearance="outlined" tone="neutral"><button type="button" data-withdrawal-copy="download-label">
             Download receipt
         </button></mossa-button>
         <slot name="back-action" slot="actions"></slot>

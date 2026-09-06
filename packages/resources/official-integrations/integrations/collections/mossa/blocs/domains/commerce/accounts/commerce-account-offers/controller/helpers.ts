@@ -43,13 +43,13 @@ export function setTextIfChanged(element, value) {
     }
 }
 
-export function formatMoney(amount, currency, locale) {
+export function formatMoney(amount, currency, locale, pendingLabel = "Price pending") {
     if (amount === null || amount === undefined || String(amount).trim() === "") {
-        return "Price pending";
+        return pendingLabel;
     }
     const value = Number(amount);
     if (!Number.isSafeInteger(value)) {
-        return "Price pending";
+        return pendingLabel;
     }
     try {
         return new Intl.NumberFormat(locale, {
@@ -61,12 +61,12 @@ export function formatMoney(amount, currency, locale) {
     }
 }
 
-export function formatDate(value, locale) {
+export function formatDate(value, locale, template = "Updated on {date}") {
     const date = new Date(String(value || ""));
     if (Number.isNaN(date.getTime())) {
         return "";
     }
-    return `Updated on ${new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date)}`;
+    return template.replaceAll("{date}", new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date));
 }
 
 export function offerUrl(base, id, slug = "") {

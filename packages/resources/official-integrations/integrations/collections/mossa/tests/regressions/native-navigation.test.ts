@@ -1,12 +1,77 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
+import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { Component } from "@bernouy/components/base";
+import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
 const MOSSA_ROOT = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/mossa");
 const BUTTON_SEMANTIC_ATTRIBUTES = ["action", "href", "target", "rel", "type", "disabled", "name", "value"];
 
 describe("Mossa native navigation", () => {
+    test("applies pagination appearance to its visual wrappers and preserves native navigation", async () => {
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
+        const artifact = definition?.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "mossa-pagination",
+        );
+        if (artifact?.type !== "bloc") {
+            throw new Error("Pagination artifact missing");
+        }
+        const tag = "test-mossa-pagination-visual-controls";
+        const bloc = artifact.bloc;
+        const compiled = await prepare_bloc(
+            new File([bloc.viewJS!], "Bloc.ts"),
+            null,
+            bloc.name,
+            "Navigation",
+            "",
+            tag,
+            bloc.source,
+        );
+        Object.assign(((window as Window & { p9r?: Record<string, unknown> }).p9r ??= {}), { Component });
+        new Function(compiled.viewJS)();
+        const pagination = document.createElement(tag);
+        for (const [name, value] of Object.entries({
+            "page-size": "10",
+            total: "15",
+            tone: "neutral",
+            appearance: "ghost",
+            "previous-label": "Back",
+            "next-label": "Forward",
+            "summary-template": "{page}/{pages}",
+        })) {
+            pagination.setAttribute(name, value);
+        }
+        document.body.append(pagination);
+        try {
+            const previous = pagination.shadowRoot!.querySelector<HTMLButtonElement>("[data-previous]")!;
+            const next = pagination.shadowRoot!.querySelector<HTMLButtonElement>("[data-next]")!;
+            for (const button of [previous, next]) {
+                expect(button.closest("mossa-button")?.getAttribute("tone")).toBe("neutral");
+                expect(button.closest("mossa-button")?.getAttribute("appearance")).toBe("ghost");
+                expect(button.hasAttribute("tone")).toBeFalse();
+            }
+            expect(previous.disabled).toBeTrue();
+            expect(next.disabled).toBeFalse();
+            expect(previous.textContent).toBe("Back");
+            expect(next.textContent).toBe("Forward");
+            expect(pagination.shadowRoot!.querySelector("[data-summary]")?.textContent).toBe("1/2");
+            let detail: unknown;
+            pagination.addEventListener("mossa-pagination:change", (event) => {
+                detail = (event as CustomEvent).detail;
+            });
+            next.click();
+            expect(detail).toEqual({ page: 2, limit: 10, offset: 10 });
+            expect(previous.disabled).toBeFalse();
+            expect(next.disabled).toBeTrue();
+            pagination.removeAttribute("tone");
+            expect(next.closest("mossa-button")?.getAttribute("tone")).toBe("primary");
+        } finally {
+            pagination.remove();
+        }
+    });
+
     test("keeps authored HTML semantics on direct native controls", () => {
         const findings: string[] = [];
         for (const file of glob(MOSSA_ROOT, "**/*.html")) {

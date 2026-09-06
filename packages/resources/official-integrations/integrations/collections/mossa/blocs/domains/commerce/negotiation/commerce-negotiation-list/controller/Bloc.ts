@@ -55,6 +55,9 @@ export class CommerceNegotiationList extends Component {
         "grid-min",
         "grid-packing",
         "initial-role",
+        "image-unavailable-label",
+        "offer-link-template",
+        ...["previous-label", "next-label", "summary-template", "tone"].map((name) => `pagination-${name}`),
         "locale",
         "offer-param",
         "offer-url",
@@ -287,6 +290,9 @@ export class CommerceNegotiationList extends Component {
         setAttribute(grid, "justify-items", "stretch");
         const pagination = this.querySelector("[data-pagination]");
         setAttribute(pagination, "page-size", String(positiveInteger(this.getAttribute("page-size"), 12)));
+        for (const name of ["previous-label", "next-label", "summary-template", "tone"]) {
+            setAttribute(pagination, name, this.getAttribute(`pagination-${name}`) || "");
+        }
     }
 
     renderItems() {
@@ -617,7 +623,14 @@ export class CommerceNegotiationList extends Component {
             } else {
                 target?.removeAttribute("href");
             }
-            setAttribute(target, "aria-label", `View offer ${proposal.offerTitle}`);
+            setAttribute(
+                target,
+                "aria-label",
+                (this.getAttribute("offer-link-template") || "View offer {title}").replaceAll(
+                    "{title}",
+                    proposal.offerTitle,
+                ),
+            );
         }
     }
 
@@ -629,6 +642,17 @@ export class CommerceNegotiationList extends Component {
         const sourceHeight = positiveInteger(proposal.offerMainImageHeight ?? proposal.mainImageHeight);
         setHidden(image, !mediaId);
         setHidden(placeholder, Boolean(mediaId));
+        setAttribute(placeholder, "aria-label", this.getAttribute("image-unavailable-label") || "No photo available");
+        if (image) {
+            image.addEventListener(
+                "error",
+                () => {
+                    setHidden(image, true);
+                    setHidden(placeholder, false);
+                },
+                { once: true },
+            );
+        }
         if (!mediaId) {
             image?.removeAttribute("data-cms-src");
             image?.removeAttribute("data-source-image-access");

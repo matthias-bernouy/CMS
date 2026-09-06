@@ -36,6 +36,9 @@ export function syncPresentation(host, pageSize) {
     const pagination = host.querySelector("[data-pagination]");
     setAttributeIfChanged(pagination, "page", String(host.page));
     setAttributeIfChanged(pagination, "page-size", String(pageSize));
+    for (const name of ["previous-label", "next-label", "summary-template", "tone"]) {
+        setAttributeIfChanged(pagination, name, host.getAttribute(`pagination-${name}`) || "");
+    }
     const errorToast = host.querySelector("[data-error-toast]");
     setTextIfChanged(errorToast, host.getAttribute("error-message") || "Unable to load your offers.");
 }
@@ -65,7 +68,15 @@ export function syncRenderedOffers(host) {
         const price = card.querySelector("[data-offer-price]");
         price?.toggleAttribute("hidden", host.getAttribute("show-price") === "false");
         if (price) {
-            setTextIfChanged(price, formatMoney(price.dataset.displayAmount, price.dataset.currency, locale));
+            setTextIfChanged(
+                price,
+                formatMoney(
+                    price.dataset.displayAmount,
+                    price.dataset.currency,
+                    locale,
+                    host.getAttribute("pending-price-label") || "Price pending",
+                ),
+            );
         }
 
         const status = card.querySelector("[data-offer-status]");
@@ -77,7 +88,14 @@ export function syncRenderedOffers(host) {
         const updated = card.querySelector("[data-offer-updated]");
         updated?.toggleAttribute("hidden", host.getAttribute("show-updated-at") === "false");
         if (updated) {
-            setTextIfChanged(updated, formatDate(updated.dataset.date, locale));
+            setTextIfChanged(
+                updated,
+                formatDate(
+                    updated.dataset.date,
+                    locale,
+                    host.getAttribute("updated-on-template") || "Updated on {date}",
+                ),
+            );
         }
 
         const edit = card.querySelector("[data-edit-button]");

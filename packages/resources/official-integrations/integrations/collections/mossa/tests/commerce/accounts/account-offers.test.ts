@@ -5,7 +5,10 @@ import { Component } from "@bernouy/components/base";
 import { createBlocUsageResolver, expandCompositions } from "@bernouy/cms-content";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { syncRenderedOffers } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/accounts/commerce-account-offers/controller/presentation.ts";
+import {
+    syncPresentation,
+    syncRenderedOffers,
+} from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/accounts/commerce-account-offers/controller/presentation.ts";
 import { declaredBlocViewSources } from "../../../../../../tests/helpers/blocArtifactSource";
 
 async function commerceWithMossaBlocs() {
@@ -18,6 +21,41 @@ async function commerceWithMossaBlocs() {
 }
 
 describe("Mossa Commerce account offers", () => {
+    test("localizes populated offer dates, pending prices and pagination through optional copy", () => {
+        const host = document.createElement("section") as HTMLElement & Record<string, any>;
+        host.status = "all";
+        host.page = 2;
+        host.statusLabel = (status: string) => status;
+        host.offerAction = () => ({ label: "View", url: "/offer" });
+        host.innerHTML = `<article data-offer-card><span data-offer-price data-display-amount=""></span><time data-offer-updated data-date="2026-09-06T12:00:00Z"></time><a data-edit-button></a></article><mossa-pagination data-pagination></mossa-pagination>`;
+        host.setAttribute("locale", "en-US");
+        host.setAttribute("pending-price-label", "Awaiting price");
+        host.setAttribute("updated-on-template", "Changed {date}");
+        for (const [name, value] of Object.entries({
+            "previous-label": "Back",
+            "next-label": "Forward",
+            "summary-template": "{page}/{pages}",
+            tone: "neutral",
+        })) {
+            host.setAttribute(`pagination-${name}`, value);
+        }
+        syncPresentation(host, 12);
+        syncRenderedOffers(host);
+        expect(host.querySelector("[data-offer-price]")?.textContent).toBe("Awaiting price");
+        expect(host.querySelector("[data-offer-updated]")?.textContent).toBe("Changed Sep 6, 2026");
+        const pagination = host.querySelector("[data-pagination]")!;
+        expect(pagination.getAttribute("page")).toBe("2");
+        expect(pagination.getAttribute("previous-label")).toBe("Back");
+        expect(pagination.getAttribute("next-label")).toBe("Forward");
+        expect(pagination.getAttribute("summary-template")).toBe("{page}/{pages}");
+        expect(pagination.getAttribute("tone")).toBe("neutral");
+        host.removeAttribute("pending-price-label");
+        host.removeAttribute("updated-on-template");
+        syncRenderedOffers(host);
+        expect(host.querySelector("[data-offer-price]")?.textContent).toBe("Price pending");
+        expect(host.querySelector("[data-offer-updated]")?.textContent).toBe("Updated on Sep 6, 2026");
+    });
+
     test("waits for a resolved positive media id before publishing a seller image binding", () => {
         const host = document.createElement("section") as HTMLElement & Record<string, any>;
         host.status = "all";

@@ -61,6 +61,12 @@ describe("commerce negotiation list buyer checkout", () => {
         list.setAttribute("grid-packing", "fill");
         list.setAttribute("grid-max", "lg");
         list.setAttribute("whole-unit-prices", "true");
+        list.setAttribute("pagination-previous-label", "Back");
+        list.setAttribute("pagination-next-label", "Forward");
+        list.setAttribute("pagination-summary-template", "{page}/{pages}");
+        list.setAttribute("pagination-tone", "neutral");
+        list.setAttribute("image-unavailable-label", "Image unavailable");
+        list.setAttribute("offer-link-template", "Open {title}");
         try {
             document.body.append(list);
             await settleLifecycle();
@@ -80,6 +86,29 @@ describe("commerce negotiation list buyer checkout", () => {
             const cards = list.querySelectorAll<HTMLElement>("[data-proposal-card]");
             expect(cards[0].querySelector<HTMLElement>('[data-action-link="checkout"]')?.hidden).toBe(false);
             expect(cards[1].querySelector<HTMLElement>('[data-action="accept"]')?.hidden).toBe(false);
+            const pagination = list.querySelector("[data-pagination]")!;
+            expect(pagination.getAttribute("previous-label")).toBe("Back");
+            expect(pagination.getAttribute("next-label")).toBe("Forward");
+            expect(pagination.getAttribute("summary-template")).toBe("{page}/{pages}");
+            expect(pagination.getAttribute("tone")).toBe("neutral");
+            expect(cards[0].querySelector("[data-offer-title-link]")?.getAttribute("aria-label")).toBe(
+                "Open Example product",
+            );
+            const image = cards[0].querySelector<HTMLImageElement>("[data-offer-image]")!;
+            const placeholder = cards[0].querySelector("[data-offer-placeholder]")!;
+            expect(image.hidden).toBeFalse();
+            expect(placeholder.hasAttribute("hidden")).toBeTrue();
+            image.dispatchEvent(new Event("error"));
+            expect(image.hidden).toBeTrue();
+            expect(placeholder.hasAttribute("hidden")).toBeFalse();
+            expect(placeholder.getAttribute("aria-label")).toBe("Image unavailable");
+            expect(requests).toHaveLength(1);
+            expect(
+                cards[1].querySelector('[data-action="reject"]')?.closest("mossa-button")?.getAttribute("tone"),
+            ).toBe("neutral");
+            expect(
+                cards[1].querySelector('[data-action="withdraw"]')?.closest("mossa-button")?.getAttribute("tone"),
+            ).toBe("neutral");
         } finally {
             list.remove();
             globalThis.fetch = realFetch;

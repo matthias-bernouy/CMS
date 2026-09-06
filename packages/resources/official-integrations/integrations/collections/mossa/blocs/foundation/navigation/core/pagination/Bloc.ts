@@ -74,8 +74,8 @@ export class MossaPagination extends Component {
             .replaceAll("{total}", String(this.total));
         this.style.setProperty("--_mossa-pagination-justify", justifyValue(this.getAttribute("justify")));
         for (const button of [this.previousButton, this.nextButton]) {
-            copyAttribute(this, button, "appearance", "outlined");
-            copyAttribute(this, button, "tone", "primary");
+            copyAttribute(this, button.closest("mossa-button"), "appearance", "outlined");
+            copyAttribute(this, button.closest("mossa-button"), "tone", "primary");
         }
     }
 
