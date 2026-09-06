@@ -53,6 +53,70 @@
                         "appliedRevision": {
                             "type": "string",
                             "nullable": true
+                        },
+                        "configuration": {
+                            "type": "object",
+                            "properties": {
+                                "savedRevision": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "appliedRevision": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            }
+                        },
+                        "checks": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    },
+                                    "actionIds": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "operation": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "steps": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "status": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
