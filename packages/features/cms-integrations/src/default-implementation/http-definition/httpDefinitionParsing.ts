@@ -1,3 +1,4 @@
+import { parsePresentationImage } from "@bernouy/cms-content";
 import { parseIntegrationIcon } from "../../core/parsing/definition/icon";
 import { assertExactIntegrationVersion, isIntegrationPrerelease } from "../../core/definitions/versioning";
 import type {
@@ -82,6 +83,7 @@ function parseSummary(value: unknown): IntegrationDefinitionSummary {
 }
 
 function definitionMetadata(value: Record<string, unknown>, versions: readonly string[]) {
+    const cover = parsePresentationImage(value.cover, "cover");
     const icon = parseIntegrationIcon(value.icon, "icon");
     const stable = repositoryChannel(value.stable, "stable", versions, true);
     const latest = repositoryChannel(value.latest, "latest", versions, false);
@@ -93,6 +95,7 @@ function definitionMetadata(value: Record<string, unknown>, versions: readonly s
             : {}),
         ...(text(value.schema) ? { schema: text(value.schema)! } : {}),
         ...(icon ? { icon } : {}),
+        ...(cover ? { cover } : {}),
         ...(text(value.category) ? { category: text(value.category)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
         ...(stable ? { stable } : {}),

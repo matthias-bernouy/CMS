@@ -30,6 +30,7 @@ export function projectBlocList(records: BlocRecord[], options: BlocListOptions 
                       ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
                       ...(bloc.internal ? { internal: true } : {}),
                       ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
+                      ...(bloc.thumbnail ? { thumbnail: structuredClone(bloc.thumbnail) } : {}),
                       ownership: structuredClone(record.ownership),
                   },
               ]

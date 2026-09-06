@@ -1,3 +1,4 @@
+import { parsePresentationImage } from "@bernouy/cms-content";
 import { parseManagement, parseExtension, validateManagement } from "./metadata/management";
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import { isExactIntegrationVersion } from "../../definitions/versioning";
@@ -122,6 +123,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     const artifacts = parseArtifactTemplates(value.artifacts, schema !== INTEGRATION_DEFINITION_SCHEMA_V2);
     const dependencies = parseDependencies(value.dependencies, kind);
     validateAfterInstallationTemplates(afterInstallation, dependencies);
+    const cover = parsePresentationImage(value.cover, "cover");
     const icon = parseIntegrationIcon(value.icon);
     const ui = parseUiDefinition(value.ui);
     const theme = parseThemeDefinition(value.theme, kind);
@@ -138,6 +140,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
         ...(text(value.category) ? { category: text(value.category)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
         ...(icon ? { icon } : {}),
+        ...(cover ? { cover } : {}),
         inputs,
         ...(secrets.length ? { secrets } : {}),
         ...(generatedSecrets.length ? { generatedSecrets } : {}),

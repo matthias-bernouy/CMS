@@ -1,3 +1,4 @@
+import { parsePresentationImage, blocThumbnailFromSource } from "@bernouy/cms-content";
 import { isNativeHtmlTag, isPlatformManagedNativeElementTag } from "@bernouy/cms-content";
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import type { DeclarativeArtifactTemplate } from "../../../interfaces/Integration";
@@ -29,8 +30,11 @@ export function parseBlocTemplate(
             `unsupported managed native element "${nativeElement}"`,
         );
     }
+    const source = value.source !== undefined ? parseSourceBundle(value.source, `${name}.source`) : undefined;
+    const thumbnail = parsePresentationImage(value.thumbnail, `${name}.thumbnail`) ?? blocThumbnailFromSource(source);
     return {
         tag,
+        ...(thumbnail ? { thumbnail } : {}),
         name: blocName,
         ...(text(value.group) ? { group: text(value.group)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
@@ -43,7 +47,7 @@ export function parseBlocTemplate(
         ...(viewJS !== undefined ? { viewJS } : {}),
         ...(compositionHTML !== undefined ? { compositionHTML } : {}),
         ...(value.editorJS === null ? { editorJS: null } : editorJS !== undefined ? { editorJS } : {}),
-        ...(value.source !== undefined ? { source: parseSourceBundle(value.source, `${name}.source`) } : {}),
+        ...(source ? { source } : {}),
     };
 }
 

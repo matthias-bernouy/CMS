@@ -114,6 +114,7 @@ export function buildBlocArtifacts(
                         ? { description: resolveTemplate(artifact.bloc.description, context) }
                         : {}),
                     ...(artifact.bloc.internal ? { internal: true } : {}),
+                    ...(artifact.bloc.thumbnail ? { thumbnail: artifact.bloc.thumbnail } : {}),
                     ...(artifact.bloc.nativeElement ? { nativeElement: artifact.bloc.nativeElement } : {}),
                     ...(artifact.bloc.viewJS && artifact.bloc.view ? { viewPath: artifact.bloc.view } : {}),
                     ...(artifact.bloc.viewJS ? { viewJS: artifact.bloc.viewJS } : {}),

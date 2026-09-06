@@ -4,6 +4,7 @@ import {
     type IntegrationDefinition,
     type IntegrationDependency,
     type IntegrationIcon,
+    type IntegrationCover,
 } from "@bernouy/cms-integrations";
 
 const LEGACY_SCHEMA = "ulvia.local-repository.v1" as const;
@@ -13,6 +14,7 @@ export type LocalPackageMetadata = Readonly<{
     label: string;
     type?: "source" | "collection";
     icon?: IntegrationIcon;
+    cover?: IntegrationCover;
     category?: string;
     description?: string;
 }>;
@@ -125,6 +127,7 @@ function parseCompactRecord(
             category: metadata.category,
             description: metadata.description,
             icon: metadata.icon,
+            cover: metadata.cover,
             inputs: [],
             dependencies,
         },
@@ -139,6 +142,7 @@ function metadataFrom(definition: IntegrationDefinition): LocalPackageMetadata {
         label: definition.label,
         ...(definition.type ? { type: definition.type } : {}),
         ...(definition.icon ? { icon: { ...definition.icon } } : {}),
+        ...(definition.cover ? { cover: { ...definition.cover } } : {}),
         ...(definition.category ? { category: definition.category } : {}),
         ...(definition.description ? { description: definition.description } : {}),
     };

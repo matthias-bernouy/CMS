@@ -1,3 +1,4 @@
+import { blocThumbnailFromSource, parsePresentationImage, type PresentationImage } from "@bernouy/cms-content";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
@@ -33,11 +34,18 @@ export async function prepare_bloc(
     blocId: string,
     source: Record<string, string> | undefined = undefined,
     defaultContent: string | undefined = undefined,
-    options: { native?: boolean; nativeElement?: string; compositionHTML?: string; viewPath?: string } = {},
+    options: {
+        thumbnail?: PresentationImage;
+        native?: boolean;
+        nativeElement?: string;
+        compositionHTML?: string;
+        viewPath?: string;
+    } = {},
 ) {
     if (options.native || isNativeBlocTag(blocId)) {
         throw new Error(nativeBlocOwnershipError(blocId));
     }
+    const thumbnail = parsePresentationImage(options.thumbnail) ?? blocThumbnailFromSource(source);
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
     const nativeElement = options.nativeElement?.toLowerCase();
 
@@ -99,6 +107,7 @@ export async function prepare_bloc(
 
         return {
             id: blocId,
+            ...(thumbnail ? { thumbnail } : {}),
             editorJS: editorJS,
             viewJS: viewJS,
             ...(options.compositionHTML !== undefined ? { compositionHTML: options.compositionHTML } : {}),

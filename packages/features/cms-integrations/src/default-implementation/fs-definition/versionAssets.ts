@@ -1,3 +1,4 @@
+import { blocThumbnailFromSource } from "@bernouy/cms-content";
 import { Buffer } from "node:buffer";
 import { readdir, readFile } from "node:fs/promises";
 import { relative, sep } from "node:path";
@@ -16,7 +17,11 @@ export async function hydrateVersionAssets(
     if (!withIcons.artifacts?.some((artifact) => artifact.type === "bloc")) {
         return withIcons;
     }
-    const artifacts = await Promise.all(withIcons.artifacts.map((artifact) => hydrateBloc(artifact, versionRoot)));
+    const artifacts = await Promise.all(
+        withIcons.artifacts.map(async (artifact) =>
+            hydrateThumbnail(await hydrateBloc(artifact, versionRoot), versionRoot),
+        ),
+    );
     return { ...withIcons, artifacts } as IntegrationDefinition;
 }
 
@@ -42,6 +47,7 @@ async function hydrateBloc(
               )
             : undefined;
     const editorJS = await readOptionalEditor(blocRoot, artifact.bloc.editor);
+    const source = await readSourceBundle(blocRoot);
     return {
         ...artifact,
         bloc: {
@@ -49,7 +55,31 @@ async function hydrateBloc(
             ...(viewJS !== undefined ? { viewJS } : {}),
             ...(compositionHTML !== undefined ? { compositionHTML } : {}),
             ...(editorJS !== undefined ? { editorJS } : {}),
-            source: await readSourceBundle(blocRoot),
+            source,
+        },
+    };
+}
+
+async function hydrateThumbnail(
+    artifact: DeclarativeArtifactTemplate,
+    root: string,
+): Promise<DeclarativeArtifactTemplate> {
+    if (artifact.type !== "bloc") {
+        return artifact;
+    }
+    const thumbnail = artifact.bloc.thumbnail ?? blocThumbnailFromSource(artifact.bloc.source);
+    if (!thumbnail) {
+        return artifact;
+    }
+    const image = await readIntegrationAsset(root, thumbnail.path);
+    return {
+        ...artifact,
+        bloc: {
+            ...artifact.bloc,
+            thumbnail,
+            ...(image
+                ? { source: { ...artifact.bloc.source, [thumbnail.path]: Buffer.from(image.bytes).toString("base64") } }
+                : {}),
         },
     };
 }

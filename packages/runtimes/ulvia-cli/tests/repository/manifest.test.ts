@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { LocalRepositoryCatalog } from "../../src/repository/catalog";
 import { LocalIntegrationRepository } from "../../src/repository/local";
 import { integrationDefinition, integrationPackage, removeReadonlyTree } from "../fixtures";
 
@@ -13,10 +14,12 @@ afterEach(async () => {
 describe("local repository manifest", () => {
     test("indexes compact metadata while definitions remain in immutable packages", async () => {
         const fixture = await repositoryFixture();
-        const resolved = await integrationPackage();
+        const cover = { path: "assets/icon.svg", alt: "Collection cover" };
+        const definition = integrationDefinition("demo", "1.0.0", { cover });
+        const resolved = await integrationPackage("demo", "1.0.0", { cover });
         const stored = await fixture.repository.store({
             package: resolved,
-            definition: integrationDefinition(),
+            definition,
             source: "local:/demo",
         });
 
@@ -25,11 +28,16 @@ describe("local repository manifest", () => {
         expect(manifest.packages[0]).toMatchObject({
             kind: "demo",
             version: "1.0.0",
-            metadata: { label: "Demo integration", category: "tests" },
+            metadata: { label: "Demo integration", category: "tests", cover },
             dependencies: [],
         });
         expect(manifest.packages[0]?.definition).toBeUndefined();
-        expect(await fixture.repository.getDefinition(stored.record)).toEqual(integrationDefinition());
+        expect(await fixture.repository.getDefinition(stored.record)).toEqual(definition);
+        const catalog = new LocalRepositoryCatalog(fixture.repository);
+        expect((await catalog.list())[0]?.cover).toEqual(cover);
+        expect((await catalog.index("demo"))?.cover).toEqual(cover);
+        expect((await catalog.asset(stored.record, cover.path))?.contentType).toBe("image/svg+xml");
+        expect(await catalog.asset(stored.record, "definition.json")).toBeNull();
     });
 
     test("reads legacy manifests and rewrites them compactly on the next mutation", async () => {

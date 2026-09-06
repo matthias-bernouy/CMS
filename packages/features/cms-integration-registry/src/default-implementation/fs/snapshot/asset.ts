@@ -1,5 +1,6 @@
+import { blocThumbnailFromSource, presentationImageContentType, isPresentationImageBytes } from "@bernouy/cms-content";
 import { Buffer } from "node:buffer";
-import { extname, posix } from "node:path";
+import { posix } from "node:path";
 import {
     decodeIntegrationPackageFile,
     type IntegrationPackageEnvelopeV1,
@@ -7,13 +8,6 @@ import {
 } from "@bernouy/cms-integration-packages";
 import type { DeclarativeArtifactTemplate, IntegrationAsset, IntegrationDefinition } from "@bernouy/cms-integrations";
 
-const CONTENT_TYPES: Readonly<Record<string, string>> = Object.freeze({
-    ".svg": "image/svg+xml; charset=utf-8",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".webp": "image/webp",
-});
 const SVG_ICON_MAX_LENGTH = 8_000;
 
 export async function readSnapshotIntegrationAsset(
@@ -25,13 +19,20 @@ export async function readSnapshotIntegrationAsset(
     if (!path.startsWith("assets/")) {
         return null;
     }
-    const contentType = CONTENT_TYPES[extname(path).toLowerCase()];
+    const contentType = presentationImageContentType(path);
     if (!contentType) {
         return null;
     }
     const resolvedPackage = await packages.getPackage(kind, version);
     const file = resolvedPackage?.envelope.files[path];
-    return file ? { bytes: decodeIntegrationPackageFile(file), contentType } : null;
+    if (!file) {
+        return null;
+    }
+    const bytes = decodeIntegrationPackageFile(file);
+    if (!isPresentationImageBytes(bytes, contentType)) {
+        throw new Error(`Invalid integration image asset "${path}"`);
+    }
+    return { bytes, contentType };
 }
 
 export function hydrateSnapshotDefinitionAssets(
@@ -43,7 +44,9 @@ export function hydrateSnapshotDefinitionAssets(
     }
     return {
         ...definition,
-        artifacts: definition.artifacts.map((artifact) => hydrateArtifact(artifact, envelope)),
+        artifacts: definition.artifacts.map((artifact) =>
+            hydrateThumbnail(hydrateArtifact(artifact, envelope), envelope),
+        ),
     } as IntegrationDefinition;
 }
 
@@ -123,6 +126,34 @@ function hydrateBloc(
             ...(compositionHTML !== undefined ? { compositionHTML } : {}),
             ...(editorJS !== undefined ? { editorJS } : {}),
             source,
+        },
+    };
+}
+
+function hydrateThumbnail(
+    artifact: DeclarativeArtifactTemplate,
+    envelope: IntegrationPackageEnvelopeV1,
+): DeclarativeArtifactTemplate {
+    if (artifact.type !== "bloc") {
+        return artifact;
+    }
+    const thumbnail = artifact.bloc.thumbnail ?? blocThumbnailFromSource(artifact.bloc.source);
+    if (!thumbnail) {
+        return artifact;
+    }
+    const image = envelope.files[thumbnail.path];
+    const bytes = image ? decodeIntegrationPackageFile(image) : undefined;
+    if (bytes && !isPresentationImageBytes(bytes, presentationImageContentType(thumbnail.path)!)) {
+        throw new Error(`Invalid bloc thumbnail asset "${thumbnail.path}"`);
+    }
+    return {
+        ...artifact,
+        bloc: {
+            ...artifact.bloc,
+            thumbnail,
+            ...(bytes
+                ? { source: { ...artifact.bloc.source, [thumbnail.path]: Buffer.from(bytes).toString("base64") } }
+                : {}),
         },
     };
 }

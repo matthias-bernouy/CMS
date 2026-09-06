@@ -64,6 +64,7 @@ function portableMetadata(metadata: LocalPackageMetadata): LocalPackageMetadata 
         label: metadata.label,
         ...(metadata.type ? { type: metadata.type } : {}),
         ...(metadata.icon ? { icon: { ...metadata.icon } } : {}),
+        ...(metadata.cover ? { cover: { ...metadata.cover } } : {}),
         ...(metadata.category ? { category: metadata.category } : {}),
         ...(metadata.description ? { description: metadata.description } : {}),
     };

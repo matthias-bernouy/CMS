@@ -1,15 +1,7 @@
+import { presentationImageContentType, isPresentationImageBytes } from "@bernouy/cms-content";
 import { open, readFile } from "node:fs/promises";
-import { extname } from "node:path";
 import type { IntegrationAsset } from "../../interfaces/IntegrationDefinitionRepository";
 import { isNodeError, resolveExistingPathWithin } from "./repositorySupport";
-
-const CONTENT_TYPES: Record<string, string> = {
-    ".svg": "image/svg+xml; charset=utf-8",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".webp": "image/webp",
-};
 
 export async function readIntegrationAsset(
     versionRoot: string,
@@ -19,7 +11,7 @@ export async function readIntegrationAsset(
     if (!path.startsWith("assets/")) {
         return null;
     }
-    const contentType = CONTENT_TYPES[extname(path).toLowerCase()];
+    const contentType = presentationImageContentType(path);
     if (!contentType) {
         return null;
     }
@@ -28,11 +20,16 @@ export async function readIntegrationAsset(
     try {
         const assetRoot = await resolveExistingPathWithin(versionRoot, "asset", "assets");
         const assetPath = await resolveExistingPathWithin(assetRoot, "asset", relativePath);
-        return {
-            bytes:
-                maxBytes === undefined ? await readFile(assetPath) : await readFileBounded(assetPath, path, maxBytes),
-            contentType,
-        };
+        const bytes =
+            maxBytes === undefined ? await readFile(assetPath) : await readFileBounded(assetPath, path, maxBytes);
+        if (!isPresentationImageBytes(bytes, contentType)) {
+            throw new Error(
+                contentType === "image/svg+xml"
+                    ? `Integration image asset "${path}" must contain an SVG root`
+                    : `Invalid integration image asset "${path}"`,
+            );
+        }
+        return { bytes, contentType };
     } catch (error) {
         if (isNodeError(error) && error.code === "ENOENT") {
             return null;

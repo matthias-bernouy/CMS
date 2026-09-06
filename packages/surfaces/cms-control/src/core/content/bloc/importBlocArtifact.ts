@@ -6,6 +6,7 @@ import {
     DuplicateBlocTagError,
     type CmsRepository,
     type TBloc,
+    type PresentationImage,
     isPlatformManagedNativeElementTag,
     managedNativeElementIssue,
 } from "@bernouy/cms-content";
@@ -32,6 +33,7 @@ export type BlocImportInput = {
     catalogue?: "active" | "inactive";
     internal?: boolean;
     nativeElement?: string;
+    thumbnail?: PresentationImage;
     viewPath?: string;
     viewJS?: string | File | null;
     compositionHTML?: string;
@@ -122,6 +124,7 @@ export async function importBlocArtifact(
             ...(input.compositionHTML !== undefined ? { compositionHTML: input.compositionHTML } : {}),
             ...(input.viewPath ? { viewPath: input.viewPath } : {}),
             ...(nativeElement ? { nativeElement } : {}),
+            ...(input.thumbnail ? { thumbnail: input.thumbnail } : {}),
         },
     );
     const bloc: TBloc = {

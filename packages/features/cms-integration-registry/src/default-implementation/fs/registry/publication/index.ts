@@ -47,6 +47,7 @@ export function nextIntegrationRegistryIndex(
             kind,
             label: definition.label,
             ...(definition.icon ? { icon: definition.icon } : {}),
+            ...(definition.cover ? { cover: definition.cover } : {}),
             ...(definition.category ? { category: definition.category } : {}),
             ...(definition.description ? { description: definition.description } : {}),
             ...(advanceChannels ? { stable: previous?.stable ?? version, latest: version } : {}),

@@ -16,6 +16,7 @@ export async function cliBlocList(repository: CmsRepository): Promise<BlocListIt
                 group: metadata.group,
                 description: metadata.description,
                 ownership: structuredClone(record.ownership),
+                ...(record.artifact?.thumbnail ? { thumbnail: structuredClone(record.artifact.thumbnail) } : {}),
             },
         ];
     });

@@ -63,7 +63,9 @@ describe("filesystem integration icon assets", () => {
 
     test("keeps public raster asset reads unbounded", async () => {
         const fixture = createFixture();
-        writeFileSync(join(fixture.versionRoot, "assets", "large.png"), new Uint8Array(64_000));
+        const image = new Uint8Array(64_000);
+        image.set([137, 80, 78, 71, 13, 10, 26, 10]);
+        writeFileSync(join(fixture.versionRoot, "assets", "large.png"), image);
 
         const asset = await fixture.repository.getAsset("icon-pack", "1.0.0", "assets/large.png");
 

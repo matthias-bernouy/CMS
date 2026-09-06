@@ -43,6 +43,7 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
                 label: index.label,
                 ...(index.schema ? { schema: index.schema } : {}),
                 ...(index.icon ? { icon: index.icon } : {}),
+                ...(index.cover ? { cover: index.cover } : {}),
                 ...(index.category ? { category: index.category } : {}),
                 ...(index.description ? { description: index.description } : {}),
                 ...(index.stable ? { stable: index.stable } : {}),

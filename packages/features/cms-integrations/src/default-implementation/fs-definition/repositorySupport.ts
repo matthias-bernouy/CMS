@@ -1,3 +1,4 @@
+import { parsePresentationImage } from "@bernouy/cms-content";
 import { realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { parseIntegrationIcon } from "../../core/parsing/definition/icon";
@@ -37,6 +38,7 @@ export function parseIntegrationDefinitionIndex(value: unknown, source: string):
     if (!Array.isArray(value.versions) || value.versions.length === 0) {
         throw new Error(`${source}: versions must be a non-empty array`);
     }
+    const cover = parsePresentationImage(value.cover, "cover");
     const icon = parseIntegrationIcon(value.icon, `${source}.icon`);
     const versions = value.versions.map((entry, index) => parseVersion(entry, `${source}: versions.${index}`));
     const stable = parseChannel(value.stable, `${source}: stable`, versions, true);
@@ -47,6 +49,7 @@ export function parseIntegrationDefinitionIndex(value: unknown, source: string):
         label,
         ...(value.type === "source" || value.type === "collection" ? { type: value.type } : {}),
         ...(icon ? { icon } : {}),
+        ...(cover ? { cover } : {}),
         ...(text(value.category) ? { category: text(value.category)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
         ...(stable ? { stable } : {}),

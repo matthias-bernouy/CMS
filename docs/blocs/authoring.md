@@ -208,3 +208,26 @@ through typed controls:
 Visual form controls such as Mossa inputs, selectors, checkboxes, and filters
 remain custom collection blocs, distinct from the data-only `forms` Source.
 See [Expose Editing Capabilities](./editor.md) for the editor API.
+
+## Optional presentation images
+
+A bloc `manifest.json` may declare `"thumbnail": { "path": "assets/card.webp", "alt": "Card overview" }`.
+Collection definitions and their catalogue index may similarly declare optional
+`cover: { path, alt? }`. References use PNG, JPEG, WebP or SVG files under the
+integration version's `assets/` directory; they are package paths, not URLs.
+For standalone bloc imports, include the declared file at the same path in the
+base64 source bundle. The compiler retains thumbnail metadata, and import,
+repository list and CLI source export preserve it and its bundled bytes.
+
+Managed artwork is served through `/api/integrations/asset` using the owning
+integration kind, exact installed definition version and declared path. A
+standalone persisted bloc uses `/api/bloc/thumbnail?id=<tag>`. Control authenticates
+these requests, validates image paths and MIME signatures, and sends `nosniff`
+and a sandbox CSP. Standalone responses are private and are not cached;
+explicit version assets may be cached privately.
+
+Images are optional. Missing files return 404 and do not prevent loading a
+collection; cards should fall back to the official icon or a plain card.
+Unsupported paths and mismatched image bytes are rejected. Malformed package
+images encountered during hydration fail validation rather than being served.
+These references do not generate screenshots or synthetic example content.

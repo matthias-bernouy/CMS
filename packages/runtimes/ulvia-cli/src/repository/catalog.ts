@@ -1,3 +1,4 @@
+import { presentationImageContentType, isPresentationImageBytes } from "@bernouy/cms-content";
 import { decodeIntegrationPackageFile } from "@bernouy/cms-integration-packages";
 import type {
     IntegrationAsset,
@@ -47,12 +48,20 @@ export class LocalRepositoryCatalog {
     }
 
     async asset(record: LocalPackageRecord, path: string): Promise<IntegrationAsset | null> {
+        const imageType = presentationImageContentType(path);
+        if (!imageType) {
+            return null;
+        }
         const resolved = await this.repository.getPackage(record);
         const file = resolved.envelope.files[path];
         if (!file) {
             return null;
         }
-        return { bytes: decodeIntegrationPackageFile(file), contentType: contentType(path) };
+        const bytes = decodeIntegrationPackageFile(file);
+        if (!isPresentationImageBytes(bytes, imageType)) {
+            throw new Error(`Invalid integration image asset "${path}"`);
+        }
+        return { bytes, contentType: imageType };
     }
 
     private async summary(kind: string, records: readonly LocalPackageRecord[]): Promise<IntegrationDefinitionSummary> {
@@ -90,12 +99,13 @@ function newestOrUndefined(records: readonly LocalPackageRecord[]): LocalPackage
 }
 
 function metadata(record: LocalPackageRecord) {
-    const { label, icon, category, description, type } = record.metadata;
+    const { label, icon, cover, category, description, type } = record.metadata;
     return {
         kind: record.kind,
         label,
         ...(type ? { type } : {}),
         ...(icon ? { icon } : {}),
+        ...(cover ? { cover } : {}),
         ...(category ? { category } : {}),
         ...(description ? { description } : {}),
     };
@@ -111,20 +121,4 @@ function versionEntry(record: LocalPackageRecord): IntegrationDefinitionVersion 
 
 function byVersion(left: LocalPackageRecord, right: LocalPackageRecord): number {
     return compare(left.version, right.version);
-}
-
-function contentType(path: string): string {
-    if (path.endsWith(".svg")) {
-        return "image/svg+xml";
-    }
-    if (path.endsWith(".json")) {
-        return "application/json";
-    }
-    if (path.endsWith(".png")) {
-        return "image/png";
-    }
-    if (path.endsWith(".jpg") || path.endsWith(".jpeg")) {
-        return "image/jpeg";
-    }
-    return "application/octet-stream";
 }
