@@ -36,3 +36,26 @@ describe("Mongo site collections", () => {
         expect((await repository.getBlocRecord(definition.tag))?.siteDefinition?.collectionId).toBe(collection.id);
     });
 });
+
+test("renames default and named collections without changing membership or duplicating the default", async () => {
+    const { repository, db } = createMongoContentRepository("tenant_");
+    const custom = await repository.createSiteBlocCollection({ name: "Sections", description: "" });
+    const updated = await repository.updateSiteBlocCollection(custom.id, {
+        name: "Campaigns",
+        description: "Reusable",
+        icon: "star",
+    });
+    await repository.updateSiteBlocCollection("site", { name: "Our site", description: "Private", icon: "layers" });
+    const reloaded = new MongoCmsRepository(db as unknown as Db, { collectionPrefix: "tenant_" });
+    expect(await reloaded.getSiteBlocCollections()).toEqual([
+        { id: "site", name: "Our site", description: "Private", icon: "layers" },
+        updated,
+    ]);
+    expect(await new MongoCmsRepository(db as unknown as Db).getSiteBlocCollections()).toHaveLength(1);
+    await expect(repository.updateSiteBlocCollection("unknown", { name: "No", description: "" })).rejects.toThrow(
+        "not found",
+    );
+    await expect(
+        repository.updateSiteBlocCollection(custom.id, { name: "No", description: "", icon: "bad" as "star" }),
+    ).rejects.toThrow("unsupported");
+});

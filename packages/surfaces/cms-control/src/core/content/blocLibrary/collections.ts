@@ -18,6 +18,7 @@ export function libraryCollectionRows(
                 description: site.description,
                 kind: "site",
                 siteId: site.id,
+                icon: site.icon ?? "folder",
             },
             selected,
             basePath,

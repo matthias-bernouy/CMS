@@ -9,6 +9,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 export function parseSiteBlocCollectionInput(body: Record<string, unknown>): Omit<SiteBlocCollection, "id"> {
     return validateSiteBlocCollectionInput({
         name: body.name as string,
+        ...(body.icon !== undefined ? { icon: body.icon as SiteBlocCollection["icon"] } : {}),
         description: (body.description ?? "") as string,
     });
 }

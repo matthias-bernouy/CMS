@@ -156,7 +156,6 @@ import "./admin/Resources/Functions/create/FunctionCreate";
 import "./admin/Resources/Integrations/IntegrationBrowser";
 import "./admin/Resources/Sources/ResourceWorkspace";
 import "./admin/Resources/Blocs/BlocLibrary";
-import "./admin/Resources/Blocs/navigation/BlocCollectionsNav";
 import "./admin/Resources/Triggers/TriggersAdmin";
 import "./admin/Resources/Triggers/TriggerCreate";
 

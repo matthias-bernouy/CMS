@@ -1,5 +1,8 @@
 :host {
     display: block;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
     min-width: 0;
 }
 
@@ -65,4 +68,11 @@ slot[name="tabs"]::slotted(*) {
         width: 100%;
         padding-top: 0;
     }
+}
+
+slot[name="secondary-lateral-nav"]::slotted(*) {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    --menu-border-width: 0;
 }

@@ -1,11 +1,14 @@
 <article class="card" part="card">
-    <header class="header" part="header">
-        <slot name="header"></slot>
-    </header>
+    <div class="media" part="media"><slot name="media"></slot></div>
+    <header class="header" part="header"><slot name="header"></slot></header>
     <section class="body" part="body">
+        <div class="title" part="title"><slot name="title"></slot></div>
+        <div class="description" part="description"><slot name="description"></slot></div>
         <slot></slot>
     </section>
-    <footer class="footer" part="footer">
-        <slot name="footer"></slot>
-    </footer>
+    <div class="actions" part="actions">
+        <div class="meta" part="meta"><slot name="meta"></slot></div>
+        <slot name="actions"></slot>
+    </div>
+    <footer class="footer" part="footer"><slot name="footer"></slot></footer>
 </article>

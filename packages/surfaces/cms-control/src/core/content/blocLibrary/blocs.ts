@@ -73,7 +73,7 @@ export function filterLibraryBlocs(blocs: LibraryBloc[], query: BlocLibraryQuery
     return blocs.filter((bloc) => {
         const visibility = bloc.editable ? bloc.state : bloc.selected ? "available" : "hidden";
         return (
-            (!query.category || bloc.group === query.category) &&
+            (!query.category || (bloc.group || "Other") === query.category) &&
             (!query.visibility || visibility === query.visibility) &&
             (!search ||
                 [bloc.name, bloc.description, bloc.group, bloc.tag].some((value) =>

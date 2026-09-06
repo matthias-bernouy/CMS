@@ -4,12 +4,13 @@ import { FakeMongoClient, type FakeTransactionSupport } from "./fakeMongoSession
 
 type StoredDocument = { _id: string } & Record<string, unknown>;
 type Filter = Record<string, unknown>;
+type ReplacementDocument = Record<string, unknown> & { _id?: string };
 
 export class FakeContentCollection {
     readonly indexes: Array<{ keys: Filter; options: Filter }> = [];
     readonly replaceOneCalls: Array<{
         filter: Filter;
-        document: StoredDocument;
+        document: ReplacementDocument;
         options: { session?: unknown; upsert?: boolean };
     }> = [];
     readonly usedSessions: unknown[] = [];
@@ -33,7 +34,7 @@ export class FakeContentCollection {
 
     async replaceOne(
         filter: Filter,
-        document: StoredDocument,
+        document: ReplacementDocument,
         options: { session?: unknown; upsert?: boolean } = {},
     ): Promise<{ matchedCount: number; upsertedCount: number }> {
         this.recordSession(options.session);
@@ -44,7 +45,8 @@ export class FakeContentCollection {
             return { matchedCount: 1, upsertedCount: 0 };
         }
         if (options.upsert) {
-            this.documents.set(document._id, structuredClone(document));
+            const id = document._id ?? String(filter._id);
+            this.documents.set(id, structuredClone({ ...document, _id: id }));
             return { matchedCount: 0, upsertedCount: 1 };
         }
         return { matchedCount: 0, upsertedCount: 0 };

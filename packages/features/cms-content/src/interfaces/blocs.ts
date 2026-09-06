@@ -72,6 +72,7 @@ export type SiteBlocSnapshot = {
 };
 
 export type SiteBlocCollection = {
+    icon?: "folder" | "layers" | "grid" | "layout" | "star" | "code";
     id: string;
     name: string;
     description: string;

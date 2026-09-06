@@ -23,6 +23,7 @@ export type LibraryCollection = {
     description: string;
     kind: "site" | "managed" | "code";
     siteId?: string;
+    icon?: string;
     installationId?: string;
     status?: string;
     blocCount: number;
@@ -53,6 +54,9 @@ export type AvailableLibraryCollection = {
 };
 
 export type BlocLibraryResponse = {
+    isExplore: boolean;
+    explore: Array<AvailableLibraryCollection & { imported: boolean; href?: string }>;
+    groups: Array<{ label: string; count: number; blocs: LibraryBloc[] }>;
     isOverview: boolean;
     isCollection: boolean;
     isAdd: boolean;

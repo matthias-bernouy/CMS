@@ -63,11 +63,10 @@ dialog[open]::backdrop { opacity: 1; }
 }
 
 .header, .footer { display: none; align-items: center; padding: 14px var(--modal-pad); }
-.header { justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--modal-border); }
+.header { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--modal-border); }
 .footer { justify-content: flex-end; gap: 8px; border-top: 1px solid var(--modal-border); }
 
-:host(:has(> [slot="title"])) .header,
-:host(:not([no-close])) .header { display: flex; }
+:host([no-close]:not([has-title])) .header { display: none; }
 :host([has-footer]) .footer { display: flex; }
 
 .title { font-weight: 600; font-size: 1.05rem; }

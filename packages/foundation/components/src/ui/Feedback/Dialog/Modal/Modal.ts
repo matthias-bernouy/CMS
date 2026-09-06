@@ -6,6 +6,7 @@ import css from "./style.css" with { type: "text" };
 
 export class Modal extends Component {
     private _dialog: HTMLDialogElement | null = null;
+    private _titleSlot: HTMLSlotElement | null = null;
     private _footerSlot: HTMLSlotElement | null = null;
     private _onBackdrop = (e: MouseEvent) => handleBackdropClick(this, e);
     private _onCancel = (e: Event) => handleCancel(this, e);
@@ -21,12 +22,15 @@ export class Modal extends Component {
 
     override connectedCallback() {
         this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null;
+        this._titleSlot ??= this.shadowRoot?.querySelector('slot[name="title"]') ?? null;
         this._footerSlot ??= this.shadowRoot?.querySelector('slot[name="footer"]') ?? null;
         upgradeProperty(this, "open");
         this._dialog?.addEventListener("click", this._onBackdrop);
         this._dialog?.addEventListener("cancel", this._onCancel);
         this._dialog?.addEventListener("close", this._onClose);
         this._footerSlot?.addEventListener("slotchange", this._syncFooter);
+        this._titleSlot?.addEventListener("slotchange", this._syncTitle);
+        this._syncTitle();
         this.addEventListener("form:success", this.hide);
         this._syncLabel();
         this._syncFooter();
@@ -38,6 +42,7 @@ export class Modal extends Component {
         this._dialog?.removeEventListener("cancel", this._onCancel);
         this._dialog?.removeEventListener("close", this._onClose);
         this._footerSlot?.removeEventListener("slotchange", this._syncFooter);
+        this._titleSlot?.removeEventListener("slotchange", this._syncTitle);
         this.removeEventListener("form:success", this.hide);
     }
 
@@ -60,6 +65,14 @@ export class Modal extends Component {
             this._dialog?.removeAttribute("aria-label");
         }
     }
+
+    private _syncTitle = (): void => {
+        const assigned = this._titleSlot?.assignedNodes({ flatten: true }) ?? [];
+        this.toggleAttribute(
+            "has-title",
+            assigned.some((node) => node.nodeType === Node.ELEMENT_NODE || Boolean(node.textContent?.trim())),
+        );
+    };
 
     private _syncFooter = () => {
         const assigned = this._footerSlot?.assignedNodes({ flatten: true }) ?? [];

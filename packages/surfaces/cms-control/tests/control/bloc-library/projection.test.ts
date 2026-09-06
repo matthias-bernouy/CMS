@@ -116,3 +116,25 @@ test("add view excludes installed collections and counts selectable resources", 
     expect(empty.selectedResources).toEqual([]);
     expect(empty.blocs.every(({ selected }) => !selected)).toBe(true);
 });
+
+test("explore includes repository and imported collections while private collections stay in navigation", async () => {
+    const harness = await libraryHarness();
+    const result = await read(harness);
+    expect(result.isExplore).toBe(true);
+    expect(result.explore.map(({ kind }) => kind)).toEqual(["additional", "gallery"]);
+    expect(result.explore.find(({ kind }) => kind === "gallery")).toMatchObject({
+        imported: true,
+        canImport: false,
+        href: "/tenant/control/admin/blocs?collection=managed%3Agallery",
+    });
+    expect((await read(harness, "?visibility=available")).explore.map(({ kind }) => kind)).toEqual(["additional"]);
+    expect((await read(harness, "?visibility=imported")).explore.map(({ kind }) => kind)).toEqual(["gallery"]);
+    const detail = await read(harness, "?collection=managed%3Agallery");
+    expect(detail.groups.map(({ label, count }) => ({ label, count }))).toEqual([
+        { label: "Content", count: 1 },
+        { label: "Layout", count: 1 },
+    ]);
+    expect(
+        (await read(harness, "?collection=managed%3Agallery&search=banner")).groups.map(({ label }) => label),
+    ).toEqual(["Layout"]);
+});

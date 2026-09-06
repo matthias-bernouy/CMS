@@ -68,3 +68,6 @@
     margin-inline-start: var(--gap);
     padding-inline-start: var(--gap);
 }
+
+/* Let the stack own spacing instead of adding native paragraph/heading margins. */
+:host([trim]) ::slotted(*) { margin: 0; }

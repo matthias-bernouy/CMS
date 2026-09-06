@@ -1,106 +1,82 @@
-import { Component } from "@bernouy/components/base";
-import { LibraryOperations } from "./actions/operations";
-import { currentRoute, interceptLink, libraryUrl, LIBRARY_ROUTE_EVENT, navigate } from "./data/route";
-import { BlocWorkspace } from "./Workspace";
-import base from "./view/styles/base.css" with { type: "text" };
-import collections from "./view/styles/collections.css" with { type: "text" };
-import blocks from "./view/styles/blocks.css" with { type: "text" };
-import dialogs from "./view/styles/dialogs.css" with { type: "text" };
-import responsive from "./view/styles/responsive.css" with { type: "text" };
+import { AvailabilityDrafts } from "./AvailabilityDrafts";
+import "./BlocChoice";
+import "./artwork/LibraryArtwork";
+import "./icons/LibraryIcon";
+import "./preview/BlocPreview";
 
-export class BlocLibrary extends Component {
-    private workspace: BlocWorkspace;
-    private operations: LibraryOperations;
-    private searchTimer?: ReturnType<typeof setTimeout>;
+type Modal = HTMLElement & { show(): void };
 
-    constructor() {
-        super({
-            css: [base, collections, blocks, dialogs, responsive].join("\n"),
-            template:
-                '<div class="library"><div data-status class="status" role="status" aria-live="polite"></div><div data-content><p>Loading collections…</p></div><div data-save-bar></div></div><dialog></dialog>',
-        });
-        this.workspace = new BlocWorkspace(this.shadowRoot!);
-        this.operations = new LibraryOperations(this.workspace);
-    }
+/** Light-DOM interaction controller; all page markup and data bindings are static. */
+export class BlocLibrary extends HTMLElement {
+    private readonly drafts = new AvailabilityDrafts();
 
-    override connectedCallback(): void {
-        super.connectedCallback();
-        this.shadowRoot!.addEventListener("click", this.handleClick);
-        this.shadowRoot!.addEventListener("input", this.input);
-        this.shadowRoot!.addEventListener("change", this.change);
-        this.shadowRoot!.querySelector("dialog")!.addEventListener("close", this.closedDialog);
-        window.addEventListener(LIBRARY_ROUTE_EVENT, this.routeChanged);
-        window.addEventListener("popstate", this.routeChanged);
-        this.routeChanged();
+    connectedCallback(): void {
+        this.addEventListener("click", this.clickAction);
+        this.addEventListener("change", this.changeChoice);
+        this.addEventListener("bloc:choice-ready", this.syncChoices);
+        this.addEventListener("submit", this.prepareSubmission, true);
+        this.addEventListener("cms-source:success", this.saved);
+        window.addEventListener("beforeunload", this.beforeUnload);
     }
 
     disconnectedCallback(): void {
-        this.shadowRoot?.removeEventListener("click", this.handleClick);
-        this.shadowRoot?.removeEventListener("input", this.input);
-        this.shadowRoot?.removeEventListener("change", this.change);
-        this.shadowRoot?.querySelector("dialog")?.removeEventListener("close", this.closedDialog);
-        window.removeEventListener(LIBRARY_ROUTE_EVENT, this.routeChanged);
-        window.removeEventListener("popstate", this.routeChanged);
-        clearTimeout(this.searchTimer);
-        this.workspace.dispose();
+        this.removeEventListener("click", this.clickAction);
+        this.removeEventListener("change", this.changeChoice);
+        this.removeEventListener("bloc:choice-ready", this.syncChoices);
+        this.removeEventListener("submit", this.prepareSubmission, true);
+        this.removeEventListener("cms-source:success", this.saved);
+        window.removeEventListener("beforeunload", this.beforeUnload);
     }
 
-    private routeChanged = (): void => {
-        clearTimeout(this.searchTimer);
-        if (!currentRoute().bloc) {
-            this.shadowRoot!.querySelector("dialog")!.close();
+    private readonly syncChoices = (): void => this.drafts.sync(this);
+
+    private readonly changeChoice = (event: Event): void => {
+        const choice = (event.target as Element | null)?.closest<HTMLElement>("cms-bloc-choice");
+        if (choice) {
+            this.drafts.change(choice);
+            this.syncChoices();
         }
-        void this.workspace.load();
     };
 
-    private closedDialog = (): void => {
-        if (this.shadowRoot!.querySelector("dialog")!.open) {
+    private readonly prepareSubmission = (event: Event): void => {
+        if (event.target instanceof HTMLFormElement && event.target.hasAttribute("data-availability-form")) {
+            this.drafts.prepare(event.target);
+        }
+    };
+
+    private readonly saved = (event: Event): void => {
+        if (event.target instanceof HTMLFormElement && event.target.hasAttribute("data-availability-form")) {
+            this.drafts.clear(event.target);
+            this.syncChoices();
+        }
+    };
+
+    private readonly clickAction = (event: Event): void => {
+        const target = event.target instanceof Element ? event.target : null;
+        const action = target?.closest<HTMLElement>("[data-reload], [data-discard], [data-preview]");
+        if (!action) {
             return;
         }
-        const route = currentRoute();
-        if (route.bloc) {
-            history.replaceState(null, "", libraryUrl({ ...route, bloc: "" }));
-        }
-    };
-
-    private handleClick = (event: Event): void => {
-        const target = event.target as Element;
-        const link = target.closest<HTMLAnchorElement>("a[data-collection-link]");
-        if (link && interceptLink(event)) {
-            event.preventDefault();
-            navigate({ collection: link.dataset.collectionLink });
-            return;
-        }
-        const action = target.closest<HTMLElement>("[data-action]");
-        if (action) {
-            void this.operations
-                .perform(action.dataset.action!, action)
-                .catch((error) => this.workspace.notice(String(error), true));
-        }
-    };
-
-    private input = (event: Event): void => {
-        const input = event.target as HTMLInputElement;
-        if (!input.matches("[data-search]")) {
-            return;
-        }
-        clearTimeout(this.searchTimer);
-        this.searchTimer = setTimeout(() => this.workspace.search(input.value), 180);
-    };
-
-    private change = (event: Event): void => {
-        const input = event.target as HTMLInputElement;
-        if (input.dataset.filter === "group" || input.dataset.filter === "state") {
-            this.workspace.filters[input.dataset.filter] = input.value;
-            this.workspace.filters.limit = 24;
-            this.workspace.render();
-        } else if (input.dataset.resource && this.workspace.detail && !this.workspace.busy) {
-            this.workspace.drafts.toggle(this.workspace.detail, input.dataset.resource, input.checked);
-            if (this.workspace.filters.state) {
-                this.workspace.render();
-            } else {
-                this.workspace.renderAvailability();
+        if (action.hasAttribute("data-discard")) {
+            this.drafts.clear(action);
+            this.syncChoices();
+        } else if (action.dataset.reload) {
+            this.ownerDocument.dispatchEvent(new Event(action.dataset.reload));
+        } else if (action.dataset.preview) {
+            const modal = this.querySelector<Modal>("[data-preview-modal]");
+            modal?.querySelector("cms-bloc-preview")?.setAttribute("src", action.dataset.preview);
+            const heading = modal?.querySelector("[slot=title]");
+            if (heading) {
+                heading.textContent = action.dataset.previewTitle ?? "Bloc preview";
             }
+            modal?.show();
+        }
+    };
+
+    private readonly beforeUnload = (event: BeforeUnloadEvent): void => {
+        if (this.drafts.dirty) {
+            event.preventDefault();
+            event.returnValue = "";
         }
     };
 }

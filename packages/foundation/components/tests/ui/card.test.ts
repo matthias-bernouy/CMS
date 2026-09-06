@@ -36,3 +36,20 @@ describe("Card", () => {
         expect(card.hasAttribute("has-footer")).toBe(true);
     });
 });
+
+test("Card exposes media, copy and actions without moving authored binding content", async () => {
+    const card = document.createElement("p9r-card-test");
+    card.innerHTML =
+        '<img slot="media" data-cms-src="{{ item.image }}"><h3 slot="title">Title</h3><span slot="description">Description</span><span slot="meta">12 items</span><a slot="actions" href="/items">Open</a>';
+    document.body.append(card);
+    await flush();
+    for (const name of ["media", "title", "description", "meta", "actions"]) {
+        expect(card.hasAttribute(`has-${name}`)).toBe(true);
+    }
+    expect(card.querySelector("img")?.parentNode).toBe(card);
+    expect(card.querySelector("img")?.getAttribute("data-cms-src")).toBe("{{ item.image }}");
+    card.querySelector('[slot="actions"]')!.remove();
+    await flush();
+    expect(card.hasAttribute("has-actions")).toBe(false);
+    card.remove();
+});

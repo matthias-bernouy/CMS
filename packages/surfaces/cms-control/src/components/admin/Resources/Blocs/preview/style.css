@@ -1,0 +1,13 @@
+:host {
+    display: block;
+    min-width: 0;
+}
+
+iframe {
+    display: block;
+    width: 100%;
+    height: min(60vh, 480px);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-surface);
+}

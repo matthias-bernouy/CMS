@@ -67,6 +67,7 @@ export type PagesQuery = {
 
 export interface CmsRepository extends ContentReader {
     getSiteBlocCollections(): Promise<SiteBlocCollection[]>;
+    updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
     createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
 
     // BLOC

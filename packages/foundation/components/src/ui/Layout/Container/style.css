@@ -17,3 +17,6 @@
 :host([align="start"])  { margin-inline-start: 0;    margin-inline-end: auto; }
 :host([align="center"]) { margin-inline-start: auto; margin-inline-end: auto; }
 :host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
+
+:host([size="2xs"]) { --max-width: var(--p9r-container-2xs, 320px); }
+:host([size="3xs"]) { --max-width: var(--p9r-container-3xs, 200px); }

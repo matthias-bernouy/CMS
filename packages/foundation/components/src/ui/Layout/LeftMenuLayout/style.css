@@ -1,6 +1,7 @@
 :host {
     display: block;
     height: 100vh;
+    height: 100dvh;
     width: 100vw;
     overflow: hidden;
 
@@ -77,11 +78,13 @@
 .app-nav {
     height: 100%;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
 }
 
 .secondary-nav {
     height: 100%;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
 }
 
 ::slotted([slot="sidebar"]) {
@@ -119,6 +122,7 @@
     height: 100%;
     min-width: 0;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     padding: var(--_content-padding);
     box-sizing: border-box;
     background-color: var(--_content-bg);

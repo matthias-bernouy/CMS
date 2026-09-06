@@ -1,5 +1,207 @@
-<w13c-fixed-admin-layout>
-    <span slot="title">Blocs</span>
-    <cms-bloc-collections-nav slot="secondary-lateral-nav"></cms-bloc-collections-nav>
-    <cms-bloc-library></cms-bloc-library>
-</w13c-fixed-admin-layout>
+<cms-bloc-library>
+    <w13c-fixed-admin-layout cms-source="{{BASE_PATH}}/api/bloc/library?collection=#{collection}&view=#{view}&search=#{search}&category=#{category}&visibility=#{visibility} as library" cms-reload-on="collection:changed bloc:changed integration:updated">
+        <span slot="title" cms-condition="!library">Blocs</span>
+        <span slot="title" cms-condition="library.isExplore">Explore collections</span>
+        <span slot="title" cms-condition="library.isCollection">{{ library.collection.name }}</span>
+        <p9r-open-modal role="presentation" tabindex="-1" slot="action" cms-condition="library.isExplore" modal-target="new-collection-modal">
+            <p9r-button type="button" variant="outlined">Create private collection</p9r-button>
+        </p9r-open-modal>
+        <p9r-open-modal role="presentation" tabindex="-1" slot="action" cms-condition="library.collection.isSite && library.isCollection" modal-target="new-composition-modal">
+            <p9r-button type="button" color="primary">New composition</p9r-button>
+        </p9r-open-modal>
+        <p9r-open-modal role="presentation" tabindex="-1" slot="action" cms-condition="library.collection.canCheckUpdates && library.isCollection" modal-target="collection-updates-modal">
+            <p9r-button type="button" variant="outlined" data-reload="bloc:check-updates">Check for updates</p9r-button>
+        </p9r-open-modal>
+        <p9r-open-modal role="presentation" tabindex="-1" slot="action" cms-condition="library.collection.isSite && library.isCollection" modal-target="collection-settings-modal">
+            <p9r-button type="button" variant="outlined">Collection settings</p9r-button>
+        </p9r-open-modal>
+        <w13c-lateral-menu slot="secondary-lateral-nav" aria-label="Bloc collections">
+            <span slot="header">Blocs</span>
+            <w13c-lateral-menu-item cms-condition="library.isExplore" href="{{BASE_PATH}}/admin/blocs" manual-active active><cms-library-icon slot="icon" name="compass"></cms-library-icon>Explore collections</w13c-lateral-menu-item>
+            <w13c-lateral-menu-item cms-condition="!library.isExplore" href="{{BASE_PATH}}/admin/blocs" manual-active><cms-library-icon slot="icon" name="compass"></cms-library-icon>Explore collections</w13c-lateral-menu-item>
+            <div class="menu-section" cms-condition="library.hasSiteCollections">Site collections</div>
+            <div cms-repeat="library.collections as collection" cms-condition="collection.isSite">
+                <w13c-lateral-menu-item cms-condition="collection.active && !library.isExplore" href="{{ collection.href }}" badge="{{ collection.blocCount }}" manual-active active>
+                    <cms-library-icon slot="icon" name="{{ collection.icon }}"></cms-library-icon>{{ collection.name }}
+                </w13c-lateral-menu-item>
+                <w13c-lateral-menu-item cms-condition="!collection.active || library.isExplore" href="{{ collection.href }}" badge="{{ collection.blocCount }}" manual-active>
+                    <cms-library-icon slot="icon" name="{{ collection.icon }}"></cms-library-icon>{{ collection.name }}
+                </w13c-lateral-menu-item>
+            </div>
+            <div class="menu-section" cms-condition="library.hasManagedCollections">Imported collections</div>
+            <div cms-repeat="library.collections as collection" cms-condition="collection.isManaged">
+                <w13c-lateral-menu-item cms-condition="collection.active && !library.isExplore" href="{{ collection.href }}" badge="{{ collection.blocCount }}" manual-active active>
+                    <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor" fill="none" stroke-width="1.7"><path d="m12 3 8 4v10l-8 4-8-4V7l8-4Z M4 7l8 4 8-4 M12 11v10"/></svg>
+                    {{ collection.name }}
+                </w13c-lateral-menu-item>
+                <w13c-lateral-menu-item cms-condition="!collection.active || library.isExplore" href="{{ collection.href }}" badge="{{ collection.blocCount }}" manual-active>
+                    <svg slot="icon" viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor" fill="none" stroke-width="1.7"><path d="m12 3 8 4v10l-8 4-8-4V7l8-4Z M4 7l8 4 8-4 M12 11v10"/></svg>
+                    {{ collection.name }}
+                </w13c-lateral-menu-item>
+            </div>
+            <div class="menu-section" cms-condition="library.hasCodeCollections">Code collections</div>
+            <div cms-repeat="library.collections as collection" cms-condition="collection.isCode">
+                <w13c-lateral-menu-item cms-condition="collection.active && !library.isExplore" href="{{ collection.href }}" badge="{{ collection.blocCount }}" manual-active active>
+                    {{ collection.name }}
+                </w13c-lateral-menu-item>
+                <w13c-lateral-menu-item cms-condition="!collection.active || library.isExplore" href="{{ collection.href }}" badge="{{ collection.blocCount }}" manual-active>
+                    {{ collection.name }}
+                </w13c-lateral-menu-item>
+            </div>
+        </w13c-lateral-menu>
+        <p role="status" cms-condition="!library && !$source.error">Loading collections…</p>
+        <p9r-alert type="error" cms-condition="$source.error">
+            <p>Unable to load this collection. {{ $source.message }}</p>
+            <p9r-button type="button" variant="outlined" data-reload="collection:changed">Try again</p9r-button>
+            <a href="{{BASE_PATH}}/admin/blocs">Explore collections</a>
+        </p9r-alert>
+        <p9r-stack gap="lg" trim cms-condition="library.isExplore">
+            <p>Discover collections for your site. Import one, then choose the blocs available in your editor.</p>
+            <p9r-stack direction="row" align-items="end" wrap gap="md" trim>
+                <p9r-container size="2xs"><p9r-input cms-param-sync="search" label="Search collections" placeholder="Name or description…"></p9r-input></p9r-container>
+                <p9r-container size="3xs"><p9r-select cms-param-sync="visibility" label="Availability"><option value="">All collections</option><option value="imported">Imported</option><option value="available">Available to import</option></p9r-select></p9r-container>
+            </p9r-stack>
+            <cms-empty-state cms-condition="library.explore.length == 0">
+                <span slot="title">No matching collections</span>
+                <span slot="hint">Try another search or availability filter. You can also create a private collection.</span>
+            </cms-empty-state>
+            <p9r-grid min="md" gap="lg">
+                <p9r-card cms-repeat="library.explore as collection" stretch>
+                    <cms-library-artwork slot="media" label="{{ collection.label }}">
+                        <img slot="image" cms-condition="collection.coverUrl" data-cms-src="{{ collection.coverUrl }}" alt="{{ collection.label }}" loading="lazy">
+                    </cms-library-artwork>
+                    <h2 slot="title">{{ collection.label }}</h2>
+                    <span slot="description">{{ collection.description }}</span>
+                    <p9r-tag cms-condition="collection.imported">✓ Imported</p9r-tag>
+                    <span slot="meta">{{ collection.resourceCount }} blocs · v{{ collection.version }}</span>
+                    <a slot="actions" cms-condition="collection.imported" href="{{ collection.href }}">Open collection →</a>
+                    <form slot="actions" cms-condition="collection.canImport" cms-source="{{BASE_PATH}}/api/integrations/import as imported" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-redirect="{{BASE_PATH}}/admin/blocs?collection=managed:{{ imported.body.installation.id }}">
+                        <input type="hidden" name="kind" value="{{ collection.kind }}">
+                        <p9r-button type="submit" color="primary">Import collection</p9r-button>
+                        <p role="status" cms-condition="$source.loading">Importing…</p>
+                        <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
+                    </form>
+                </p9r-card>
+            </p9r-grid>
+        </p9r-stack>
+        <p9r-stack gap="lg" trim cms-condition="library.isCollection" data-installation="{{ library.collection.installationId }}">
+            <p>{{ library.collection.description }}</p>
+            <p9r-stack direction="row" gap="sm" wrap>
+                <p9r-tag cms-condition="library.collection.isSite">Private collection</p9r-tag>
+                <p9r-tag cms-condition="library.collection.isManaged">Version {{ library.collection.version }}</p9r-tag>
+                <p9r-tag cms-condition="library.collection.statusLabel">{{ library.collection.statusLabel }}</p9r-tag>
+                <span>{{ library.totalCount }} blocs</span>
+            </p9r-stack>
+            <p9r-stack direction="row" gap="md" align-items="end" wrap trim>
+                <p9r-container size="2xs"><p9r-input cms-param-sync="search" label="Search blocs" placeholder="Name or description…"></p9r-input></p9r-container>
+                <p9r-container size="3xs"><p9r-select cms-param-sync="category" label="Category"><option cms-repeat="library.categories as category" value="{{ category.value }}">{{ category.label }}</option></p9r-select></p9r-container>
+                <p9r-container size="3xs"><p9r-select cms-param-sync="visibility" label="Status"><option cms-repeat="library.stateOptions as option" value="{{ option.value }}">{{ option.label }}</option></p9r-select></p9r-container>
+            </p9r-stack>
+            <span role="status">{{ library.filteredCount }} of {{ library.totalCount }} blocs</span>
+            <form cms-condition="library.collection.canManageAvailability" data-availability-form cms-source="{{BASE_PATH}}/api/bloc/collections/availability?id={{ library.collection.installationId }} as saved" cms-source-method="POST" cms-source-trigger="submit" cms-source-publish="bloc:changed" cms-source-success-reset="false">
+                <input cms-repeat="library.selectedResources as resource" type="hidden" value="{{ resource }}" data-saved-resource>
+                <div data-selected-fields hidden></div>
+                <div data-save-bar hidden>
+                    <p9r-card>
+                        <p9r-stack direction="row" align-items="center" justify="between" gap="md" wrap>
+                            <strong data-draft-count></strong>
+                            <p9r-stack direction="row" gap="sm">
+                                <p9r-button type="button" variant="outlined" data-discard>Discard changes</p9r-button>
+                                <p9r-button type="submit" color="primary">Save changes</p9r-button>
+                            </p9r-stack>
+                        </p9r-stack>
+                    </p9r-card>
+                </div>
+                <p role="status" cms-condition="$source.loading">Saving availability…</p>
+                <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
+                <p role="status" cms-condition="$source.loaded">Availability saved.</p>
+            </form>
+            <cms-empty-state cms-condition="library.filteredCount == 0">
+                <span slot="title">{{ library.emptyTitle }}</span>
+                <span slot="hint">{{ library.emptyDescription }}</span>
+            </cms-empty-state>
+            <p9r-stack cms-repeat="library.groups as group" gap="md" trim data-category="{{ group.label }}">
+                <h2>{{ group.label }} <small>({{ group.count }})</small></h2>
+                <p9r-grid min="md" gap="md">
+                    <p9r-card cms-repeat="group.blocs as bloc" stretch>
+                        <cms-library-artwork slot="media" label="{{ bloc.name }}">
+                            <img slot="image" cms-condition="bloc.thumbnailUrl" data-cms-src="{{ bloc.thumbnailUrl }}" alt="{{ bloc.name }}" loading="lazy">
+                        </cms-library-artwork>
+                        <a slot="title" cms-condition="bloc.editable" href="{{ bloc.editPath }}">{{ bloc.name }}</a>
+                        <h3 slot="title" cms-condition="!bloc.editable">{{ bloc.name }}</h3>
+                        <span slot="description">{{ bloc.description }}</span>
+                        <span slot="meta" cms-condition="bloc.editable">{{ bloc.state }}</span>
+                        <cms-bloc-choice slot="meta" cms-condition="bloc.selectable" resource="{{ bloc.resourceId }}" selected="{{ bloc.selected }}">
+                            <w13c-switch aria-label="Available in editor: {{ bloc.name }}">Available</w13c-switch>
+                        </cms-bloc-choice>
+                        <a slot="actions" cms-condition="bloc.editable" href="{{ bloc.editPath }}">Edit composition →</a>
+                        <p9r-button slot="actions" cms-condition="!bloc.editable" type="button" variant="ghost" data-preview="{{BASE_PATH}}/api/bloc/preview?id={{ bloc.tag }}" data-preview-title="{{ bloc.name }}">Preview</p9r-button>
+                    </p9r-card>
+                </p9r-grid>
+            </p9r-stack>
+        </p9r-stack>
+        <p9r-modal id="new-collection-modal" cms-condition="library.isExplore" aria-label="Create private collection">
+            <span slot="title">Create private collection</span>
+            <form cms-source="{{BASE_PATH}}/api/bloc/collections as created" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-redirect="{{BASE_PATH}}/admin/blocs?collection=site:{{ created.body.id }}">
+                <p9r-stack gap="md">
+                    <p9r-input name="name" label="Label" maxlength="120" required></p9r-input>
+                    <p9r-select name="icon" label="Icon"><option value="folder">Folder</option><option value="layers">Layers</option><option value="grid">Grid</option><option value="layout">Layout</option><option value="star">Star</option><option value="code">Code</option></p9r-select>
+                    <p9r-textarea name="description" label="Description" maxlength="1000"></p9r-textarea>
+                    <p9r-button type="submit" color="primary">Create private collection</p9r-button>
+                    <p role="status" cms-condition="$source.loading">Creating collection…</p>
+                    <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
+                </p9r-stack>
+            </form>
+        </p9r-modal>
+        <p9r-modal id="collection-settings-modal" cms-condition="library.collection.isSite && library.isCollection" aria-label="Collection settings">
+            <span slot="title">Collection settings</span>
+            <form cms-source="{{BASE_PATH}}/api/bloc/collections?id={{ library.collection.siteId }} as updated" cms-source-method="PUT" cms-source-trigger="submit" cms-source-success-redirect="{{BASE_PATH}}/admin/blocs?collection=site:{{ updated.body.id }}">
+                <p9r-stack gap="md">
+                    <p9r-input name="name" label="Label" value="{{ library.collection.name }}" maxlength="120" required></p9r-input>
+                    <p9r-select name="icon" label="Icon" value="{{ library.collection.icon }}"><option value="folder">Folder</option><option value="layers">Layers</option><option value="grid">Grid</option><option value="layout">Layout</option><option value="star">Star</option><option value="code">Code</option></p9r-select>
+                    <p9r-textarea name="description" label="Description" value="{{ library.collection.description }}" maxlength="1000"></p9r-textarea>
+                    <p9r-button type="submit" color="primary">Save collection</p9r-button>
+                    <p role="status" cms-condition="$source.loading">Saving collection…</p>
+                    <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
+                </p9r-stack>
+            </form>
+        </p9r-modal>
+        <p9r-modal id="new-composition-modal" cms-condition="library.collection.isSite && library.isCollection" aria-label="New composition">
+            <span slot="title">New composition</span>
+            <form cms-source="{{BASE_PATH}}/api/site-bloc as created" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-redirect="{{BASE_PATH}}/editor/bloc?id={{ created.body.tag }}">
+                <input type="hidden" name="collectionId" value="{{ library.collection.siteId }}">
+                <p9r-stack gap="md">
+                    <p9r-input name="name" label="Name" maxlength="120" required></p9r-input>
+                    <p9r-textarea name="description" label="Description" maxlength="1000"></p9r-textarea>
+                    <p9r-button type="submit" color="primary">Create and open editor</p9r-button>
+                    <p role="status" cms-condition="$source.loading">Creating composition…</p>
+                    <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
+                </p9r-stack>
+            </form>
+        </p9r-modal>
+        <p9r-modal id="collection-updates-modal" cms-condition="library.collection.canCheckUpdates" aria-label="Collection updates">
+            <span slot="title">Collection updates</span>
+            <p9r-stack gap="md" cms-source="{{BASE_PATH}}/api/integrations/installations/versions?id={{ library.collection.installationId }} as updates" cms-reload-on="bloc:check-updates">
+                <p role="status" cms-condition="$source.loading">Checking available versions…</p>
+                <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
+                <p cms-condition="$source.loaded">Installed version: {{ updates.current }}</p>
+                <p cms-condition="$source.loaded && updates.versions.length == 0">Your collection is up to date. No newer compatible version is available.</p>
+                <form cms-condition="updates.versions.length > 0" cms-source="{{BASE_PATH}}/api/integrations/installations/upgrade?id={{ updates.id }}" cms-source-method="POST" cms-source-trigger="submit" cms-source-publish="integration:updated">
+                    <p9r-stack gap="md">
+                        <p9r-select name="version" label="Version to install" required><option cms-repeat="updates.versions as version" value="{{ version }}">{{ version }}</option></p9r-select>
+                        <p9r-button type="submit" color="primary">Update collection</p9r-button>
+                        <p role="status" cms-condition="$source.loading">Updating collection…</p>
+                        <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
+                    </p9r-stack>
+                </form>
+            </p9r-stack>
+        </p9r-modal>
+    </w13c-fixed-admin-layout>
+    <p9r-modal data-preview-modal aria-label="Bloc preview">
+        <span slot="title">Bloc preview</span>
+        <p9r-stack gap="md">
+            <cms-bloc-preview></cms-bloc-preview>
+            <p>Default content preview. Live data and interactions are paused.</p>
+        </p9r-stack>
+    </p9r-modal>
+</cms-bloc-library>

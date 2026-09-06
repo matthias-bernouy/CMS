@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { siteBlocCatalogue } from "cms-control/core/content/siteBloc/catalogue";
-import { availableLibraryCollections } from "./available";
+import { availableLibraryCollections, exploreLibraryCollections } from "./available";
 import { filterLibraryBlocs, libraryBlocs, selectableBlocs, selectedCollectionResources } from "./blocs";
 import { belongsToCollection, libraryCollectionRows, matchingCollections } from "./collections";
 import type { BlocLibraryQuery, BlocLibraryResponse } from "./types";
@@ -46,7 +46,17 @@ export async function blocLibrary(
               ["available", "Available"],
               ["hidden", "Hidden"],
           ];
+    const isExplore = !isCollection;
+    const groups = [...new Set(blocs.map((bloc) => bloc.group || "Other"))].sort().map((label) => {
+        const members = blocs.filter((bloc) => (bloc.group || "Other") === label);
+        return { label, count: members.length, blocs: members };
+    });
     return {
+        isExplore,
+        explore: isExplore
+            ? await exploreLibraryCollections(cms, installations, basePath, query.search, query.visibility)
+            : [],
+        groups,
         isOverview: !isAdd && !isCollection,
         isCollection,
         isAdd,
@@ -60,7 +70,7 @@ export async function blocLibrary(
         ...(bloc ? { bloc } : {}),
         categories: [
             { value: "", label: "All categories" },
-            ...[...new Set(scope.map(({ group }) => group).filter(Boolean))]
+            ...[...new Set(scope.map(({ group }) => group || "Other"))]
                 .sort()
                 .map((value) => ({ value, label: value })),
         ],
