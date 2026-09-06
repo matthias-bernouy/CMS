@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
 import getBlocsList from "cms-control/api/_content/bloc/list.get";
-import getBlocSource from "cms-control/api/_content/bloc/source.get";
+import getBlocSource from "cms-control/api/_content/bloc/_runtime/source.get";
 import { blocArtifact, seedSiteBloc, siteBlocHarness, siteSnapshot } from "../../site-blocs/fixtures";
 
 describe("CLI site-bloc export", () => {
