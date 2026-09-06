@@ -76,3 +76,21 @@ describe("dashboard action result resources", () => {
         );
     });
 });
+
+test("management action dispatch requires a declared action id and safe body expressions", () => {
+    const { dashboard, detail } = dashboardWithDetail();
+    const action = detail.actions![0]!;
+    delete action.endpoint;
+    action.management = {
+        installationId: "commerce",
+        action: "action",
+        actionId: "publish-terms",
+        body: { page: "$field.title" },
+    };
+    expect(validateDashboard(dashboard, { source: productSource })).toEqual([]);
+    action.management.actionId = "";
+    expect(validateDashboard(dashboard, { source: productSource }).join(" ")).toContain("management.actionId");
+    action.management.actionId = "publish-terms";
+    action.management.body = { page: "$field.__proto__" };
+    expect(validateDashboard(dashboard, { source: productSource }).join(" ")).toContain("safe expressions");
+});

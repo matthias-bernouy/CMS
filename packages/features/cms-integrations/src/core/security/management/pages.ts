@@ -10,9 +10,13 @@ export async function resolveManagementPages(
     deps: IntegrationManagementDeps,
     installation: IntegrationInstallation,
     input: Record<string, unknown>,
+    actionId?: string,
 ): Promise<Record<string, IntegrationResolvedPage>> {
     const values = record(input.values) ? input.values : input;
-    const fields = installation.definitionSnapshot?.management?.settings?.fields ?? [];
+    const management = installation.definitionSnapshot?.management;
+    const fields =
+        (actionId ? management?.actions?.find(({ id }) => id === actionId)?.fields : management?.settings?.fields) ??
+        [];
     const visibleFields = fields.filter((field) =>
         evaluateDashboardVisibility(field.visibleWhen, (expression) => {
             if (expression.startsWith("$resource.")) {

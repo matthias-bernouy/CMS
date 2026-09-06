@@ -106,12 +106,17 @@ function parseActionPlacement(value: unknown, name: string): DashboardAction["pl
 }
 
 function parseManagementAction(value: unknown, name: string): NonNullable<DashboardAction["management"]> {
-    if (!isRecord(value) || value.action !== "save-settings") {
-        throw new IntegrationInputError(name, "must declare save-settings management action");
+    if (!isRecord(value) || (value.action !== "save-settings" && value.action !== "action")) {
+        throw new IntegrationInputError(name, "must declare save-settings or action management action");
+    }
+    if (value.action === "save-settings" && value.actionId !== undefined) {
+        throw new IntegrationInputError(name, "actionId requires action");
     }
     return {
         installationId: requiredText(value.installationId, `${name}.installationId`),
-        action: "save-settings",
+        ...(value.action === "action"
+            ? ({ action: "action", actionId: requiredText(value.actionId, `${name}.actionId`) } as const)
+            : ({ action: "save-settings" } as const)),
         ...(value.body !== undefined ? { body: parseStringMap(value.body, `${name}.body`) } : {}),
     };
 }

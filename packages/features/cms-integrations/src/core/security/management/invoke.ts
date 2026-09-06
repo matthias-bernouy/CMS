@@ -25,7 +25,10 @@ export async function invokeManagement(
         await verifyManagementLease(deps, installation);
     }
     const secrets = await managementSecrets(deps, installation, refs, ["health", "read-settings"].includes(operation));
-    const resolvedPages = operation === "save-settings" ? await resolveManagementPages(deps, installation, input) : {};
+    const resolvedPages =
+        operation === "save-settings" || operation === "action"
+            ? await resolveManagementPages(deps, installation, input, operation === "action" ? actionId : undefined)
+            : {};
     let result: unknown;
     try {
         result = await deps.invoke(

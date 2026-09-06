@@ -18,7 +18,7 @@ export type IntegrationManagement = {
         fields: DashboardField[];
         dashboardId?: string;
     };
-    actions?: Array<{ id: string; label: string; functionId: string }>;
+    actions?: Array<{ id: string; label: string; functionId: string; fields?: DashboardField[] }>;
     /** Existing owned generated-secret slots allowed for management reads and writes. */
     generatedSecrets?: string[];
     /** Environment bindings applied through the installation's configured connector. */

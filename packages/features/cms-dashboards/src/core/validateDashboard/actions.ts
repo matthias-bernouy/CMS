@@ -37,8 +37,13 @@ export function validateAction(
     }
     if (action.management) {
         validateRequiredId(`${path}.management.installationId`, action.management.installationId, errors);
-        if (action.management.action !== "save-settings" || action.endpoint || action.download) {
-            errors.push(`${path}.management requires save-settings and cannot declare endpoint or download`);
+        if (!["save-settings", "action"].includes(action.management.action) || action.endpoint || action.download) {
+            errors.push(`${path}.management requires save-settings or action and cannot declare endpoint or download`);
+        }
+        if (action.management.action === "action") {
+            validateRequiredId(`${path}.management.actionId`, action.management.actionId, errors);
+        } else if (action.management.actionId !== undefined) {
+            errors.push(`${path}.management.actionId requires action`);
         }
         for (const expression of Object.values(action.management.body ?? {})) {
             if (

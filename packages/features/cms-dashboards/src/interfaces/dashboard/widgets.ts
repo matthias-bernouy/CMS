@@ -18,7 +18,10 @@ export type DashboardAction = {
     placement?: "primary" | "secondary" | "more";
     section?: string;
     endpoint?: DashboardEndpointRef;
-    management?: { installationId: string; action: "save-settings"; body?: Record<string, DashboardExpr> };
+    management?: { installationId: string; body?: Record<string, DashboardExpr> } & (
+        | { action: "save-settings"; actionId?: never }
+        | { action: "action"; actionId: string }
+    );
     download?: {
         filename?: string;
     };

@@ -64,6 +64,12 @@ configuration revisions, and checks. Overall status is one of
 is `ok`, `warning`, `error`, or `unknown`; `actionIds` must reference declared
 actions. Reports may include an actual operation with named step statuses.
 
+Declared management actions may reuse `DashboardField[]` through `actions[].fields`.
+Core resolves page-link fields only within the selected action's declared scope
+and supplies trusted `resolvedPages` alongside `input`. Existing dashboards may
+dispatch `{ installationId, action: "action", actionId, body }` through their
+management action binding; no extra settings form is required.
+
 The observation envelope distinguishes valid reports, unreachable functions,
 invalid reports, and unsupported health capabilities. Freshness is independent
 of the integration's status. The last valid report is retained as stale evidence

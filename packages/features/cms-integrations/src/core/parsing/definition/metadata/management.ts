@@ -53,7 +53,23 @@ export function parseManagement(value: unknown): IntegrationManagement | undefin
             if (id === "apply-settings") {
                 fail("apply-settings is reserved");
             }
-            return { id, label: action.label, functionId: identifier(action.functionId) };
+            const fields =
+                action.fields === undefined
+                    ? undefined
+                    : parseFields(action.fields, `definition.management.actions.${id}.fields`);
+            if (
+                fields &&
+                (fields.some(({ path }) => !isSafeDashboardPath(path)) ||
+                    new Set(fields.map(({ path }) => path)).size !== fields.length)
+            ) {
+                fail("action field paths must be safe and unique");
+            }
+            return {
+                id,
+                label: action.label,
+                functionId: identifier(action.functionId),
+                ...(fields ? { fields } : {}),
+            };
         });
         if (new Set(result.actions.map(({ id }) => id)).size !== result.actions.length) {
             fail("action ids must be unique");
