@@ -1,36 +1,24 @@
 import { describe, expect, test } from "bun:test";
-import { resolveTemplates, type IntegrationProvisionDeployment } from "@bernouy/cms-integrations";
-import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
-import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
-import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { StripeWebhookProvisioner } from "../../connectors/supabase/functions/cms-stripe-connect-management/lifecycle/webhooks/StripeWebhookProvisioner.ts";
+import type { IntegrationProvisionDeployment } from "../../connectors/supabase/functions/cms-stripe-connect-management/lifecycle/webhooks/contracts.ts";
+import configuration from "../../connectors/supabase/functions/cms-stripe-connect-management/lifecycle/webhooks/destinations.json";
 
 describe("stripe-connect 1.0.0 provisioning contract", () => {
     test("subscribes the Accounts v2 destination to account closure events", async () => {
-        const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-        const definition = await repository.get("stripe-connect");
-        const provision = definition?.provisions?.find(({ provider }) => provider === "stripe-webhooks");
-        expect(provision).toBeDefined();
-        if (!definition || !provision) {
-            throw new Error("stripe-connect Stripe webhook provision is missing");
-        }
-
-        const resolved = resolveTemplates(provision, {
-            answers: { id: "closed-event-contract" },
-            secrets: {},
-            connectorSecrets: { stripeSecretKey: "sk_test_contract" },
-            connectors: {
-                supabase: {
-                    functionsBaseUrl: "https://project.supabase.co/functions/v1",
-                },
+        const deployment = {
+            integrationKind: "stripe-connect",
+            version: "1.0.0",
+            configuration: {
+                ...configuration,
+                owner: "closed-event-contract",
+                secretKey: "sk_test_contract",
+                destinations: configuration.destinations.map((value) => ({
+                    ...value,
+                    url: `https://project.supabase.co/functions/v1${value.url}`,
+                })),
             },
-        });
-        const deployment: IntegrationProvisionDeployment = {
-            integrationKind: definition.kind,
-            ...(definition.version ? { version: definition.version } : {}),
-            provider: resolved.provider,
-            configuration: resolved.configuration,
-            outputs: resolved.outputs,
-        };
+            outputs: configuration.destinations.map(({ name }) => ({ name })),
+        } as IntegrationProvisionDeployment;
         const requests: Array<{ url: string; method: string; body: string }> = [];
         let v1CreateCount = 0;
         const provisioner = new StripeWebhookProvisioner({
@@ -62,7 +50,7 @@ describe("stripe-connect 1.0.0 provisioning contract", () => {
             },
         });
 
-        await provisioner.provision(deployment, { existingOutputs: {}, env: {} });
+        await provisioner.provision(deployment, { existingOutputs: {} });
 
         const request = requests.find(
             ({ url, method }) => url.endsWith("/v2/core/event_destinations") && method === "POST",
