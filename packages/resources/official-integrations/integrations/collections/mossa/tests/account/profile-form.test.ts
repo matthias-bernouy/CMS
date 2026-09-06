@@ -142,6 +142,7 @@ describe("Mossa user-account form", () => {
             expect(birthDate?.getAttribute("type")).toBe("date");
             expect(birthDate?.getAttribute("max")).toBe(expectedMaximum);
             expect(birthDate?.hasAttribute("date-format")).toBe(false);
+            form?.setAttribute("avatar-hint", "Choose an image up to 5 MiB");
             form?.setAttribute("given-name-label", "Preferred given name");
             form?.setAttribute("success-message", "Profile updated");
             form?.setAttribute("avatar-error-message", "Please retry the image upload");
@@ -153,9 +154,16 @@ describe("Mossa user-account form", () => {
             expect(form?.querySelector('[data-account-copy="avatar-error-message"]')?.textContent).toBe(
                 "Please retry the image upload",
             );
+            expect(form?.querySelector("[data-avatar-input]")?.getAttribute("hint")).toBe(
+                "Choose an image up to 5 MiB",
+            );
+            form?.removeAttribute("avatar-hint");
             form?.removeAttribute("given-name-label");
             await Promise.resolve();
             expect(form?.querySelector('[data-account-field="given-name"]')?.getAttribute("label")).toBe("First name");
+            expect(form?.querySelector("[data-avatar-input]")?.getAttribute("hint")).toBe(
+                "JPEG, PNG, WebP, or GIF, up to 5 MiB.",
+            );
         } finally {
             document.body.replaceChildren();
             (window as typeof window & { p9r?: unknown }).p9r = previousP9r;

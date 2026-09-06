@@ -37,6 +37,7 @@
 }
 
 ::slotted([slot="title"]) {
+    text-wrap: balance;
     margin: 0;
     font-family: var(--ulvia-font-heading);
     font-size: 1.25rem;
@@ -70,6 +71,11 @@
 
 :host([variant="card"][size="lg"]) {
     --_mossa-es-pad: 4rem 2rem;
+}
+
+:host([size="lg"]) ::slotted([slot="title"]) {
+    font-size: 1.75rem;
+    line-height: 1.15;
 }
 
 /* Alignment */

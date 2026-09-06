@@ -28,9 +28,15 @@ export const accountCopyAttributes = [
     ...accountFields.map((field) => `${field}-label`),
     ...Object.keys(accountMessages),
     "loading-label",
+    "avatar-hint",
 ];
 
 export function syncAccountCopy(host: HTMLElement): void {
+    setAttribute(
+        host.querySelector("[data-avatar-input]"),
+        "hint",
+        host.getAttribute("avatar-hint")?.trim() || "JPEG, PNG, WebP, or GIF, up to 5 MiB.",
+    );
     for (const [field, fallback] of Object.entries(accountFieldLabels)) {
         const input = host.querySelector(
             field === "avatar" ? "[data-avatar-input]" : `[data-account-field="${field}"]`,

@@ -63,6 +63,7 @@
 }
 
 ::slotted([slot="title"]) {
+    text-wrap: balance;
     margin: 0;
     font-family: var(--ulvia-font-heading);
     font-size: clamp(2.5rem, 7.5vw, 5.5rem);

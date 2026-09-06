@@ -8,9 +8,11 @@
         "contract": "ulvia-theme@3",
         "required": [
             "body-text",
+            "font-heading",
             "page-background",
             "primary-base",
             "radius-lg",
+            "secondary-base",
             "surface-background",
             "surface-border",
             "surface-muted-text",

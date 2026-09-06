@@ -1,5 +1,6 @@
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
+import { installArticleProse } from "./prose";
 import { Component } from "@bernouy/components/base";
 
 export class Bloc extends Component {
@@ -11,6 +12,7 @@ export class Bloc extends Component {
     }
 
     override connectedCallback(): void {
+        installArticleProse(this);
         this._coverSlot = this.shadowRoot?.querySelector('slot[name="cover"]') as HTMLSlotElement | null;
         this._coverSlot?.addEventListener("slotchange", this._syncHasCover);
         this._bylineSlots = Array.from(

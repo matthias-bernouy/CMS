@@ -45,6 +45,7 @@
 :host(:not([has-eyebrow])) .eyebrow { display: none; }
 
 ::slotted([slot="title"]) {
+    text-wrap: balance;
     margin: 0;
     color: var(--_mossa-header-title);
     font-family: var(--ulvia-font-heading);

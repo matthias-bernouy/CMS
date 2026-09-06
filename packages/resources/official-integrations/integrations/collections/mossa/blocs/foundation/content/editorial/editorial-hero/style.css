@@ -38,6 +38,7 @@
 :host(:not(:has([slot="eyebrow"]))) .eyebrow { display: none; }
 
 ::slotted([slot="title"]) {
+    text-wrap: balance;
     margin: 0;
     font-family: var(--ulvia-font-heading);
     font-size: clamp(2rem, 5vw, 3rem);

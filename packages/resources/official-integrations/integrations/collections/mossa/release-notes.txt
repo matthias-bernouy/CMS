@@ -1,3 +1,7 @@
+Major release: article prose now requires font-heading and secondary-base tokens for theme typography and authored links. Articles retain their original markup. Forward configurable avatar hints through the account form.
+
+Balance display heading wraps and give large empty states an appropriately sized title.
+
 Fix localized public-offer trust labels inside their shadow root and verify populated offer hydration with configurable copy.
 
 Major release: existing accordion items now require the Ulvia space-sm token, and seller onboarding now requires secondary-foreground for readable buttons and balances. Themes must provide these tokens before upgrading; the strict theme contract has no fallback values.
