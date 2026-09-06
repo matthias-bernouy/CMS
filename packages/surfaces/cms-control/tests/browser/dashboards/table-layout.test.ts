@@ -15,50 +15,92 @@ test("a wide dashboard table scrolls inside a narrow grid without overflowing th
                 await route.fulfill({ contentType: "text/javascript", body: await Bun.file(bundlePath).text() });
                 return;
             }
+            if (route.request().resourceType() !== "document") {
+                await route.fulfill({
+                    json: {
+                        items: [
+                            {
+                                id: "signup",
+                                context: "Signup",
+                                status: "Active",
+                                documents: "1",
+                                revision: "42",
+                                updated: "2026-09-06",
+                            },
+                        ],
+                    },
+                });
+                return;
+            }
             await route.fulfill({
                 contentType: "text/html",
                 body: `<!doctype html><head><script src="/control.js"></script><style>
                 body { margin:0; font:14px sans-serif; }
                 main { padding:16px; overflow:auto; }
                 .management { border:1px solid; padding:14px; }
-                .widgets { display:grid; min-width:0; }
-                </style></head><body><main><section class="management"><div class="widgets">
-                <cms-dashboard-w-table></cms-dashboard-w-table>
-                </div></section></main></body>`,
+                </style></head><body><main id="admin-content"><section class="management">
+                <cms-dashboards-admin id="dashboard" external embedded></cms-dashboards-admin>
+                </section></main></body>`,
             });
         });
         for (const width of [390, 1440]) {
             await page.setViewportSize({ width, height: 1000 });
             await page.goto("http://cms.test/admin/sources");
             await page.evaluate(() => {
-                const table = document.querySelector("cms-dashboard-w-table") as HTMLElement & { data: unknown };
-                const labels = ["Context", "Status", "Active documents", "Revision", "Updated at"];
-                table.data = {
-                    title: "Policies",
-                    columns: labels.map((label, index) => ({ key: `column-${index}`, label })),
-                    rows: [
+                const dashboard = document.querySelector("#dashboard") as HTMLElement & {
+                    setExternalContext(groups: unknown[], selection: unknown): void;
+                };
+                const columns = [
+                    ["context", "Context"],
+                    ["status", "Status"],
+                    ["documents", "Active documents"],
+                    ["revision", "Revision"],
+                    ["updated", "Updated at"],
+                ].map(([id, label]) => ({ id, path: id, label }));
+                dashboard.setExternalContext(
+                    [
                         {
-                            id: "signup",
-                            collection: "policies",
-                            cells: Object.fromEntries(
-                                ["Signup", "Active", "1", "42", "2026-09-06"].map((value, index) => [
-                                    `column-${index}`,
-                                    value,
-                                ]),
-                            ),
+                            source: {
+                                id: "policies",
+                                urn: "urn:policies",
+                                name: "Policies",
+                                endpointCount: 1,
+                                dashboardCount: 1,
+                                readonly: false,
+                            },
+                            endpoints: [{ endpointId: "list", params: [] }],
+                            dashboards: [
+                                {
+                                    id: "policies",
+                                    source: "policies",
+                                    meta: { name: "Policies" },
+                                    views: [
+                                        {
+                                            widget: "w-table",
+                                            id: "policies",
+                                            title: "Policies",
+                                            source: { endpoint: "list", itemsPath: "items" },
+                                            rowKey: "id",
+                                            columns,
+                                            selection: { opens: "policy" },
+                                        },
+                                    ],
+                                },
+                            ],
                         },
                     ],
-                };
-                table.addEventListener("cms-dashboard-widget:row-select", () => {
-                    table.dataset.selectedByUser = "true";
+                    { source: "policies", dashboard: "policies" },
+                );
+                dashboard.addEventListener("cms-dashboard-widget:row-select", () => {
+                    dashboard.dataset.selectedByUser = "true";
                 });
             });
             const table = page.locator("cms-dashboard-w-table");
             const frame = table.locator(".w-table-frame");
             await table.getByText("Signup", { exact: true }).waitFor({ state: "visible" });
-            expect(await page.locator("main").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
-                true,
-            );
+            expect(
+                await page.locator("#admin-content").evaluate((element) => element.scrollWidth <= element.clientWidth),
+            ).toBe(true);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             expect(await frame.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(width === 390);
             await frame.evaluate((element) => (element.scrollLeft = element.scrollWidth));
@@ -75,7 +117,7 @@ test("a wide dashboard table scrolls inside a narrow grid without overflowing th
                 true,
             );
             await table.getByText("Signup", { exact: true }).click();
-            expect(await table.getAttribute("data-selected-by-user")).toBe("true");
+            expect(await page.locator("#dashboard").getAttribute("data-selected-by-user")).toBe("true");
         }
         expect(errors).toEqual([]);
     } finally {

@@ -21,6 +21,7 @@ p {
 .tab-body,
 .dashboard-widget-binding {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     min-width: 0;
 }
