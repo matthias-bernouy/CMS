@@ -44,7 +44,13 @@ export class IntegrationManagementView extends HTMLElement {
         }
     }
     private render(): void {
-        renderManagementShell(this, this.installation?.status ?? "unknown", this.panel, (panel) => {
+        const configurationLabel =
+            this.installation?.integrationType === "collection"
+                ? "Availability"
+                : this.management?.settings?.dashboardId
+                  ? "Settings"
+                  : "Connection";
+        renderManagementShell(this, this.installation?.status ?? "unknown", configurationLabel, this.panel, (panel) => {
             if (!this.busy) {
                 this.panel = panel;
                 this.render();

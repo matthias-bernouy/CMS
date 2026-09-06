@@ -142,3 +142,36 @@ test("late settings responses do not replace the selected Health panel", async (
     expect(host.querySelector("cms-dashboard-w-detail")).toBeNull();
     expect(host.textContent).toContain("No valid service observation");
 });
+
+test.each([
+    { integrationType: "source", dashboardId: "consent-contexts", label: "Settings" },
+    { integrationType: "collection", dashboardId: undefined, label: "Availability" },
+])("management names the panel for its actual content: $label", async ({ integrationType, dashboardId, label }) => {
+    globalThis.fetch = (async (input) => {
+        if (String(input).includes("/installations?")) {
+            return Response.json({
+                ...detail(),
+                integrationType,
+                definition: {
+                    ...detail().definition,
+                    management: {
+                        schemaVersion: 1,
+                        settings: {
+                            readFunctionId: "read",
+                            saveFunctionId: "save",
+                            fields: [],
+                            dashboardId,
+                        },
+                    },
+                },
+            });
+        }
+        return Response.json([]);
+    }) as typeof fetch;
+    const host = document.createElement("cms-integration-management");
+    host.setAttribute("installation-id", "source");
+    document.body.append(host);
+    await flush();
+    expect(host.querySelector("[data-panel='connection']")?.textContent).toBe(label);
+    expect(host.querySelector("[data-panel='health']")?.textContent).toBe("Health");
+});

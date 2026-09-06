@@ -3,6 +3,7 @@ import styles from "./style.css" with { type: "text" };
 export function renderManagementShell(
     host: HTMLElement,
     deploymentStatus: string,
+    configurationLabel: "Connection" | "Settings" | "Availability",
     panel: string,
     select: (panel: string) => void,
 ): void {
@@ -12,7 +13,7 @@ export function renderManagementShell(
     nav.className = "management-tabs";
     nav.setAttribute("aria-label", "Source settings");
     for (const [id, label] of [
-        ["connection", "Connection"],
+        ["connection", configurationLabel],
         ["health", "Health"],
     ] as const) {
         const button = document.createElement("button");

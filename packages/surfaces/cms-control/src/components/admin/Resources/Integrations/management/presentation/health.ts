@@ -13,6 +13,16 @@ export function renderHealth(
         "p",
         `Observation: ${label(health.observation)} · ${label(health.freshness)} · ${date(health.observedAt)}`,
     );
+    if (health.reason) {
+        appendText(
+            root,
+            "p",
+            `Observation issue: ${label(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}`,
+        );
+    }
+    if (health.reportDefinitionVersion) {
+        appendText(root, "p", `Observed version: ${health.reportDefinitionVersion}`);
+    }
     if (!report) {
         appendText(root, "p", "No valid service observation is available.");
         return;
@@ -23,13 +33,7 @@ export function renderHealth(
         `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label(report.status)}`,
     );
     appendText(root, "p", `Checked ${date(report.checkedAt)}`);
-    appendText(
-        root,
-        "p",
-        report.configuration.savedRevision === report.configuration.appliedRevision
-            ? "The saved configuration is applied."
-            : "Saved changes are waiting to be applied.",
-    );
+    appendText(root, "p", configurationStatus(health));
     for (const check of report.checks) {
         const row = document.createElement("article");
         row.className = "management-check";
@@ -65,4 +69,19 @@ function date(value: string): string {
 }
 function label(value: string): string {
     return value.replaceAll("_", " ");
+}
+
+function configurationStatus(health: IntegrationHealthEnvelope): string {
+    const { savedRevision, appliedRevision } = health.report!.configuration;
+    if (savedRevision === null) {
+        return "No saved configuration revision was reported.";
+    }
+    if (savedRevision !== appliedRevision) {
+        return health.freshness === "fresh"
+            ? "Saved changes are waiting to be applied."
+            : "Saved changes were waiting to be applied at the last observation.";
+    }
+    return health.freshness === "fresh"
+        ? "The saved configuration is applied."
+        : "The saved configuration was applied at the last observation.";
 }

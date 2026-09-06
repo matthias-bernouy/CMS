@@ -3,6 +3,7 @@ import "../Integrations/IntegrationBrowser";
 /** Mounts the shared catalogue in the Sources or Blocs workspace. */
 export class ResourceWorkspace extends HTMLElement {
     private browser?: HTMLElement;
+    private observer?: MutationObserver;
     connectedCallback(): void {
         if (!this.querySelector(":scope > style")) {
             const style = document.createElement("style");
@@ -13,9 +14,13 @@ export class ResourceWorkspace extends HTMLElement {
         window.addEventListener("popstate", this.sync);
         window.addEventListener("cms-resources:route", this.sync);
         window.addEventListener("cms-dashboards:selection", this.sync);
+        this.observer = new MutationObserver(this.sync);
+        this.observer.observe(this, { childList: true });
         this.sync();
     }
     disconnectedCallback(): void {
+        this.observer?.disconnect();
+        this.observer = undefined;
         window.removeEventListener("popstate", this.sync);
         window.removeEventListener("cms-resources:route", this.sync);
         window.removeEventListener("cms-dashboards:selection", this.sync);

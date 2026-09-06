@@ -18,6 +18,9 @@ export function renderSourceManagement(
         return;
     }
     const related = [parent, ...installations.filter((item) => item.extensionOf?.kind === parent.id)];
+    let anchor = Array.from(menu.children)
+        .filter((item) => item instanceof HTMLElement && item.dataset.source === source)
+        .at(-1);
     for (const item of related) {
         const link = document.createElement("w13c-lateral-menu-item");
         link.dataset.generated = "true";
@@ -27,7 +30,12 @@ export function renderSourceManagement(
             route(`/admin/sources?source=${encodeURIComponent(source)}&integration=${encodeURIComponent(item.id)}`),
         );
         link.textContent = item === parent ? "Settings & health" : `${item.label} settings`;
-        menu.append(link);
+        if (anchor) {
+            anchor.after(link);
+        } else {
+            menu.append(link);
+        }
+        anchor = link;
     }
 }
 export function sourceForInstallation(id: string, installations: IntegrationInstallationRow[]): string | undefined {

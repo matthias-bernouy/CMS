@@ -41,3 +41,13 @@ test("embedded settings dashboard selections keep the installation route", () =>
     );
     expect(location.pathname + location.search).toBe("/admin/sources?integration=consent");
 });
+
+test("Sources hides dashboard children parsed after the workspace connected", async () => {
+    history.replaceState(null, "", "/admin/sources?tab=catalogue");
+    const workspace = document.createElement("cms-resource-workspace");
+    document.body.append(workspace);
+    workspace.insertAdjacentHTML("beforeend", "<cms-dashboards-admin external></cms-dashboards-admin>");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(workspace.querySelector("cms-dashboards-admin")?.hasAttribute("hidden")).toBe(true);
+    expect(workspace.querySelector("cms-integrations-admin")?.hasAttribute("hidden")).toBe(false);
+});

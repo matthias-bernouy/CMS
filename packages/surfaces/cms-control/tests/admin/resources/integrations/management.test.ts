@@ -130,11 +130,51 @@ test("settings save sends expected revision and management dashboard actions unw
 
 test("source-less extension settings are listed under the real parent source", () => {
     const menu = document.createElement("div");
+    const parent = document.createElement("div");
+    parent.dataset.source = "shop-source";
+    const unrelated = document.createElement("div");
+    unrelated.dataset.source = "newsletter";
+    menu.append(parent, unrelated);
     renderSourceManagement(menu, "shop-source", [
         { ...detail(), id: "commerce", label: "Commerce", sourceIds: ["shop-source"] },
         { ...detail(), id: "stripe", label: "Stripe", sourceIds: [], extensionOf: { kind: "commerce" } },
     ]);
-    expect(menu.children).toHaveLength(2);
+    expect(menu.children).toHaveLength(4);
+    expect(menu.lastElementChild).toBe(unrelated);
     expect(menu.textContent).toContain("Stripe settings");
-    expect(menu.lastElementChild?.getAttribute("href")).toBe("/admin/sources?source=shop-source&integration=stripe");
+    expect(parent.nextElementSibling?.nextElementSibling?.getAttribute("href")).toBe(
+        "/admin/sources?source=shop-source&integration=stripe",
+    );
+});
+
+test("health does not equate absent revisions with applied configuration and explains observation failures", () => {
+    const root = document.createElement("div");
+    const health: IntegrationHealthEnvelope = {
+        schemaVersion: 1,
+        installationId: "service",
+        observedAt: "2026-09-06T10:00:00Z",
+        freshness: "stale",
+        observation: "unreachable",
+        reason: "forbidden",
+        httpStatus: 403,
+        reportDefinitionVersion: "1.0.0",
+        report: {
+            schemaVersion: 1,
+            status: "needs_configuration",
+            checkedAt: "2026-09-06T09:00:00Z",
+            configuration: { savedRevision: null, appliedRevision: null },
+            checks: [],
+        },
+    };
+    renderHealth(root, health, { schemaVersion: 1 }, () => {});
+    expect(root.textContent).toContain("No saved configuration revision was reported");
+    expect(root.textContent).not.toContain("configuration is applied");
+    expect(root.textContent).toContain("Observation issue: forbidden (HTTP 403)");
+    expect(root.textContent).toContain("Observed version: 1.0.0");
+    health.report!.configuration = { savedRevision: "r1", appliedRevision: "r1" };
+    renderHealth(root, health, { schemaVersion: 1 }, () => {});
+    expect(root.textContent).toContain("was applied at the last observation");
+    health.freshness = "fresh";
+    renderHealth(root, health, { schemaVersion: 1 }, () => {});
+    expect(root.textContent).toContain("The saved configuration is applied");
 });
