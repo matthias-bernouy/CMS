@@ -219,7 +219,7 @@ export class PublicOffer extends Component {
             ["buyer-protection-label", "Buyer protection"],
             ["tracked-delivery-label", "Tracked delivery"],
         ]) {
-            this.querySelector(`[data-${attribute}]`)!.textContent = this.text(attribute!, fallback!);
+            this.shadowRoot!.querySelector(`[data-${attribute}]`)!.textContent = this.text(attribute!, fallback!);
         }
         if (this.offer) {
             this.renderSpecifications(this.offer);

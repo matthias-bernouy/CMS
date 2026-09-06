@@ -1,3 +1,5 @@
+Fix localized public-offer trust labels inside their shadow root and verify populated offer hydration with configurable copy.
+
 Major release: existing accordion items now require the Ulvia space-sm token, and seller onboarding now requires secondary-foreground for readable buttons and balances. Themes must provide these tokens before upgrading; the strict theme contract has no fallback values.
 
 Add a responsive, theme-driven footer with navigation, copyright, and legal slots. Add muted inherited links and soften inherited outlined button borders. Restore secondary editorial subtitle contrast and make default accordion spacing smaller than the large size.
