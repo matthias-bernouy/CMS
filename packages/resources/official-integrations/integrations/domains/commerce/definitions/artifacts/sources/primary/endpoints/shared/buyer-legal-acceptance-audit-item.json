@@ -55,6 +55,12 @@
         },
         "correlationId": {
             "type": "string"
+        },
+        "acceptanceId": {
+            "type": "string"
+        },
+        "contextKey": {
+            "type": "string"
         }
     },
     "required": [
