@@ -1,3 +1,4 @@
+import type { SiteBlocCollection } from "cms-content/interfaces/blocs";
 import type { Collection, Db } from "mongodb";
 import {
     SYSTEM_ID,
@@ -25,6 +26,10 @@ export class MongoRepositoryStorage {
     /** Create the unique indexes required by the repository contract. */
     async init(): Promise<void> {
         await this.pages.createIndex({ path: 1 }, { unique: true });
+    }
+
+    protected get siteBlocCollections(): Collection<Omit<SiteBlocCollection, "id"> & { _id: string }> {
+        return this.db.collection(this.prefix + "site_bloc_collections");
     }
 
     protected get blocs(): Collection<BlocDoc> {

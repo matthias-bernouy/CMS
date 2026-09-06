@@ -67,7 +67,15 @@ export type SiteBlocSnapshot = {
     dependencies: string[];
 };
 
+export type SiteBlocCollection = {
+    id: string;
+    name: string;
+    description: string;
+};
+
 export type SiteBlocDefinition = {
+    /** Missing membership belongs to the default Site collection. */
+    collectionId?: string;
     schema: "cms.site-bloc.v1";
     id: string;
     tag: string;

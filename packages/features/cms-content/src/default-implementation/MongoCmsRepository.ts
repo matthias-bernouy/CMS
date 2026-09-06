@@ -1,4 +1,6 @@
 import type { CmsRepository, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
+import type { SiteBlocCollection } from "cms-content/interfaces/blocs";
+import { createSiteBlocCollection, siteBlocCollections } from "cms-content/core/lifecycle/siteBlocCollections";
 import type { TSystem } from "cms-content/interfaces/settings";
 import { escapeRegex } from "cms-content/core/utils/escapeRegex";
 import { defaultSystem, mergeSystemUpdate } from "cms-content/core/lifecycle/system";
@@ -12,6 +14,18 @@ import {
 export type { MongoCmsRepositoryConfig } from "cms-content/default-implementation/repositories/mongo/MongoRepositoryStorage";
 
 export class MongoCmsRepository extends MongoContentRepository implements CmsRepository {
+    async getSiteBlocCollections(): Promise<SiteBlocCollection[]> {
+        const documents = await this.siteBlocCollections.find({}).toArray();
+        return siteBlocCollections(documents.map(({ _id, ...metadata }) => ({ id: _id, ...metadata })));
+    }
+
+    async createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
+        const collection = createSiteBlocCollection(input);
+        const { id, ...metadata } = collection;
+        await this.siteBlocCollections.insertOne({ _id: id, ...metadata });
+        return structuredClone(collection);
+    }
+
     async getPagesMetadata(options: PagesQuery = {}): Promise<PageMeta[]> {
         const filter: Record<string, unknown> = {};
         const search = options.search?.trim();

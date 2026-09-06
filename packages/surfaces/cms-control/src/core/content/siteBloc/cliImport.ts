@@ -7,6 +7,7 @@ import {
     validateSiteBlocDefinition,
 } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
+import { importedSiteBlocCollection } from "./collections";
 import { publishSiteBloc, saveSiteBloc } from "./service";
 import { validateSiteBlocDraft } from "./validation/draft";
 
@@ -30,6 +31,7 @@ export async function importSiteBlocDefinition(
         const draft = await validateSiteBlocDraft(cms, incoming, incoming.draft);
         const created = await cms.repository.createSiteBloc({
             ...incoming,
+            collectionId: await importedSiteBlocCollection(cms, incoming.collectionId),
             draft,
             lifecycle: "active",
             publishedRevision: null,

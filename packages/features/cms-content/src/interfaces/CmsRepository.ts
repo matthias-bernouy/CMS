@@ -3,6 +3,7 @@ import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
 import type {
     BlocOwnership,
     BlocRecord,
+    SiteBlocCollection,
     SiteBlocDefinition,
     SiteBlocSnapshot,
     TBloc,
@@ -64,6 +65,9 @@ export type PagesQuery = {
 };
 
 export interface CmsRepository extends ContentReader {
+    getSiteBlocCollections(): Promise<SiteBlocCollection[]>;
+    createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
+
     // BLOC
     createBloc(bloc: TBlocWrite): Promise<TBloc>;
     replaceBloc(bloc: TBlocWrite): Promise<TBloc>;

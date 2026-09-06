@@ -11,6 +11,7 @@
 export type {
     BlocOwnership,
     BlocRecord,
+    SiteBlocCollection,
     SiteBlocDefinition,
     SiteBlocNode,
     SiteBlocSlot,
@@ -97,6 +98,10 @@ export {
     publishedSiteRecord,
     sameBlocOwner,
 } from "cms-content/core/blocs/records";
+export {
+    DEFAULT_SITE_BLOC_COLLECTION_ID,
+    validateSiteBlocCollectionInput,
+} from "cms-content/core/lifecycle/siteBlocCollections";
 export { nextSiteBlocUpdatedAt } from "cms-content/core/blocs/timestamps";
 export { SiteBlocPublicationQueue } from "cms-content/core/blocs/SiteBlocPublicationQueue";
 export {

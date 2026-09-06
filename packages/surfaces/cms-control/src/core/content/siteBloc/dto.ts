@@ -4,6 +4,7 @@ import type { CreateSiteBlocInput, SaveSiteBlocInput } from "./service";
 export function parseCreateSiteBlocInput(body: Record<string, unknown>): CreateSiteBlocInput {
     return {
         tag: requiredString(body.tag, "tag").toLowerCase(),
+        ...(body.collectionId !== undefined ? { collectionId: requiredString(body.collectionId, "collectionId") } : {}),
         name: requiredString(body.name, "name"),
         group: optionalString(body.group, "group"),
         description: optionalString(body.description, "description"),

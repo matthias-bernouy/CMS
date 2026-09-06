@@ -9,12 +9,15 @@ import type {
 import type {
     BlocOwnership,
     BlocRecord,
+    SiteBlocCollection,
     SiteBlocDefinition,
     SiteBlocSnapshot,
     TBloc,
     TBlocWrite,
 } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
+import { ContentValidationError } from "cms-content/core/validation/errors";
+import { validateSiteBlocCollectionInput } from "cms-content/core/lifecycle/siteBlocCollections";
 import type { TSystem } from "cms-content/interfaces/settings";
 import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/documents/pages";
 import { assertContentRefsExist } from "cms-content/core/validation/documents/assertContentRefsExist";
@@ -36,6 +39,12 @@ import {
  */
 export class ValidatingCmsRepository implements CmsRepository {
     constructor(private readonly inner: CmsRepository) {}
+    getSiteBlocCollections(): Promise<SiteBlocCollection[]> {
+        return this.inner.getSiteBlocCollections();
+    }
+    async createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
+        return this.inner.createSiteBlocCollection(validateSiteBlocCollectionInput(input));
+    }
     // ── Validated authored-content writes ─────────────────────────────────
     async insertPage(path: string, title: string, content?: string): Promise<void> {
         const validPath = validatePagePath(path);
@@ -72,8 +81,15 @@ export class ValidatingCmsRepository implements CmsRepository {
     getBlocRecords(): Promise<BlocRecord[]> {
         return this.inner.getBlocRecords();
     }
-    createSiteBloc(definition: SiteBlocDefinition): Promise<BlocRecord> {
-        return this.inner.createSiteBloc(validateSiteBlocDefinition(definition));
+    async createSiteBloc(definition: SiteBlocDefinition): Promise<BlocRecord> {
+        const validated = validateSiteBlocDefinition(definition);
+        if (validated.collectionId !== undefined) {
+            const collections = await this.getSiteBlocCollections();
+            if (!collections.some(({ id }) => id === validated.collectionId)) {
+                throw new ContentValidationError("collectionId", "site collection was not found");
+            }
+        }
+        return this.inner.createSiteBloc(validated);
     }
     saveSiteBlocDraft(
         tag: string,

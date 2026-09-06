@@ -44,6 +44,9 @@ export function validateSiteBlocDefinition(value: SiteBlocDefinition): SiteBlocD
     if (!isRecord(value)) {
         throw new ContentValidationError("definition", "object expected");
     }
+    if (value.collectionId !== undefined && (typeof value.collectionId !== "string" || !value.collectionId.trim())) {
+        throw new ContentValidationError("collectionId", "non-empty collection identifier expected");
+    }
     if (value.schema !== "cms.site-bloc.v1") {
         throw new ContentValidationError("schema", 'expected "cms.site-bloc.v1"');
     }

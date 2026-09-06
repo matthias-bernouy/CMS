@@ -17,6 +17,7 @@ export function normalizeSiteBlocSnapshot(snapshot: SiteBlocSnapshot): SiteBlocS
 export function canonicalSiteBlocDefinition(definition: SiteBlocDefinition): string {
     const normalized = {
         schema: definition.schema,
+        ...(definition.collectionId ? { collectionId: definition.collectionId } : {}),
         id: definition.id,
         tag: definition.tag,
         ownership: definition.ownership,

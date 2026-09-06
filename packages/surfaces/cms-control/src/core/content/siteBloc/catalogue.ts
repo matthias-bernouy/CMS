@@ -1,8 +1,13 @@
-import { findUsedBlocTags, type BlocOwnership, type BlocRecord } from "@bernouy/cms-content";
+import {
+    DEFAULT_SITE_BLOC_COLLECTION_ID,
+    findUsedBlocTags,
+    type BlocOwnership,
+    type BlocRecord,
+} from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
 import { siteBlocDependencyGraph, transitiveDependencies } from "./validation/dependencies";
 
-export type BlocCatalogueQuery = { search?: string; origin?: string; group?: string };
+export type BlocCatalogueQuery = { search?: string; origin?: string; group?: string; collection?: string };
 
 export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQuery = {}) {
     const [records, pages] = await Promise.all([cms.repository.getBlocRecords(), cms.repository.getAllPages()]);
@@ -40,6 +45,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
             const publishedTransitive = transitiveDependencies(publishedGraph, record.tag);
             return {
                 tag: record.tag,
+                collectionId: definition ? (definition.collectionId ?? DEFAULT_SITE_BLOC_COLLECTION_ID) : null,
                 active: record.artifact?.catalogue !== "inactive",
                 name: metadata?.name ?? record.tag,
                 group: metadata?.group ?? "",
@@ -73,6 +79,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
                     definition !== undefined && definition.publishedRevision !== definition.draftRevision,
             };
         })
+        .filter((item) => !query.collection || item.collectionId === query.collection)
         .filter((item) => !query.origin || item.origin.kind === query.origin)
         .filter((item) => !query.group || item.group === query.group)
         .filter(

@@ -1,3 +1,4 @@
+import { requireSiteBlocCollection } from "cms-control/core/content/siteBloc/collections";
 import { randomUUIDv7 } from "bun";
 import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
 import {
@@ -13,7 +14,13 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { importBlocArtifact } from "cms-control/core/content/bloc/importBlocArtifact";
 import { snapshotFromEditor, validateSiteBlocDraft } from "cms-control/core/content/siteBloc/validation/draft";
 
-export type CreateSiteBlocInput = { tag: string; name: string; group: string; description: string };
+export type CreateSiteBlocInput = {
+    tag: string;
+    name: string;
+    group: string;
+    description: string;
+    collectionId?: string;
+};
 
 export type SaveSiteBlocInput = {
     expectedDraftRevision: number;
@@ -26,6 +33,7 @@ export type SaveSiteBlocInput = {
 };
 
 export async function createSiteBloc(cms: ControlCms, input: CreateSiteBlocInput): Promise<SiteBlocDefinition> {
+    const collectionId = await requireSiteBlocCollection(cms, input.collectionId);
     const now = new Date();
     const id = randomUUIDv7();
     const draft = validateSiteBlocSnapshot(
@@ -42,6 +50,7 @@ export async function createSiteBloc(cms: ControlCms, input: CreateSiteBlocInput
     );
     const definition: SiteBlocDefinition = {
         schema: "cms.site-bloc.v1",
+        collectionId,
         id,
         tag: input.tag,
         ownership: { kind: "site-builder", definitionId: id },
