@@ -76,3 +76,14 @@ export class MissingIntegrationInstallationError extends Error {
         this.name = "MissingIntegrationInstallationError";
     }
 }
+
+export class IntegrationManagementError extends IntegrationRuntimeError {
+    constructor(
+        message: string,
+        status: number,
+        readonly publicCode?: string,
+    ) {
+        super(message, status);
+        this.name = "IntegrationManagementError";
+    }
+}

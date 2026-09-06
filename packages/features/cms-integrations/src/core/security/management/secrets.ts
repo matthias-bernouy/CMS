@@ -58,7 +58,12 @@ export async function managementSecrets(
 async function resolve(reader: SecretReader, refs: Record<string, string>): Promise<Record<string, string>> {
     const entries = await Promise.all(
         Object.entries(refs).map(async ([name, ref]) => {
-            const value = await reader.get(secretRefToKey(ref)!);
+            let value: string | null;
+            try {
+                value = await reader.get(secretRefToKey(ref)!);
+            } catch {
+                throw new IntegrationRuntimeError("Granted secret is unavailable", 503);
+            }
             if (value === null) {
                 throw new IntegrationRuntimeError("Granted secret is unavailable", 503);
             }
@@ -87,7 +92,11 @@ export async function saveGeneratedSecrets(
         }
     }
     for (const [name, secret] of entries) {
-        await deps.secrets.set(installation.secretRefs[name]!, secret as string);
+        try {
+            await deps.secrets.set(installation.secretRefs[name]!, secret as string);
+        } catch {
+            throw new IntegrationRuntimeError("Generated secret could not be stored", 503);
+        }
     }
     return entries.map(([, secret]) => secret as string);
 }

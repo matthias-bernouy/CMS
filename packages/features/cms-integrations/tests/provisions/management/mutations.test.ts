@@ -33,8 +33,10 @@ describe("integration settings mutations", () => {
                 },
             },
         );
-        await service.saveSettings("test-management", { values: { key: "${SELECTED_KEY}" }, expectedRevision: null });
-        const result = await service.action("test-management", "apply-settings");
+        const result = await service.saveSettings("test-management", {
+            values: { key: "${SELECTED_KEY}" },
+            expectedRevision: null,
+        });
         expect(phases).toEqual(["save-settings", "apply-settings", "sync", "confirm-apply"]);
         expect(sync).toEqual({ API_KEY: "selected-private-value", SIGNING_KEY: "new-signing" });
         expect(JSON.stringify(result)).not.toContain("new-signing");
@@ -79,7 +81,7 @@ describe("integration settings mutations", () => {
                 },
             },
         );
-        await expect(service.action("test-management", "apply-settings")).rejects.toThrow("sync failed");
+        await expect(service.action("test-management", "apply-settings")).rejects.toThrow("synchronization failed");
         expect(confirm).toBe(false);
         expect(await secrets.get("MANAGED_SIGNING")).toBe("retry-signing");
     });

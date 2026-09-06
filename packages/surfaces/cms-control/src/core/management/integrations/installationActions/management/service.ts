@@ -1,6 +1,10 @@
 import { publishedPageResolver } from "cms-control/core/management/integrations/publishedPageResolver";
 import { executeFunction } from "@bernouy/cms-functions";
-import { IntegrationManagementService, IntegrationRuntimeError } from "@bernouy/cms-integrations";
+import {
+    IntegrationManagementService,
+    IntegrationManagementError,
+    IntegrationRuntimeError,
+} from "@bernouy/cms-integrations";
 import { createSecretResolver } from "@bernouy/cms-secrets";
 import type { ControlCms } from "cms-control/ControlCms";
 
@@ -22,6 +26,7 @@ export function integrationManagement(cms: ControlCms): IntegrationManagementSer
             if (!fn || fn.method !== "POST" || fn.access?.mode !== "system") {
                 throw new IntegrationRuntimeError("Integration management function is unavailable", 503);
             }
+            let callStatus: number | undefined;
             const response = await executeFunction(
                 fn,
                 new Request("https://cms.internal/integrations/management", {
@@ -31,19 +36,54 @@ export function integrationManagement(cms: ControlCms): IntegrationManagementSer
                 }),
                 {
                     sources: cms.sources,
-                    deps: { ...cms.sourceExecutorDeps, resolveSecret: createSecretResolver(secrets) },
+                    deps: {
+                        ...cms.sourceExecutorDeps,
+                        resolveSecret: createSecretResolver(secrets),
+                        resolveContext: async () => ({ userID: payload.actor?.id, userRole: payload.actor?.role }),
+                    },
                     identities: cms.identities,
                     user: payload.actor ?? {},
+                    reportFailure: (failure) => {
+                        callStatus = failure.callStatus;
+                    },
                 },
             );
-            if (!response.ok) {
-                throw new IntegrationRuntimeError("Integration management request failed", response.status);
-            }
             const text = await response.text();
             if (text.length > 1_000_000) {
                 throw new IntegrationRuntimeError("Integration management response is too large", 502);
             }
-            return JSON.parse(text);
+            let value: unknown;
+            try {
+                value = JSON.parse(text);
+            } catch {
+                if (!response.ok) {
+                    throw new IntegrationRuntimeError("Integration management request failed", response.status);
+                }
+                if (payload.operation === "health") {
+                    return null;
+                }
+                throw new IntegrationRuntimeError("Invalid integration management response", 502);
+            }
+            if (!response.ok) {
+                if (payload.operation === "health" && callStatus && [401, 403, 408, 504].includes(callStatus)) {
+                    throw new IntegrationRuntimeError(
+                        "Integration health check failed",
+                        callStatus === 408 ? 504 : callStatus,
+                    );
+                }
+                const error = value && typeof value === "object" ? (value as { error?: unknown }).error : undefined;
+                const message =
+                    response.status < 500 && typeof error === "string"
+                        ? error.slice(0, 1_000)
+                        : "Integration management request failed";
+                const code = value && typeof value === "object" ? (value as { code?: unknown }).code : undefined;
+                throw new IntegrationManagementError(
+                    message,
+                    response.status,
+                    typeof code === "string" && /^[a-z][a-z0-9_]{0,99}$/.test(code) ? code : undefined,
+                );
+            }
+            return value;
         },
         async syncRuntimeSecrets(installation, values) {
             const bindings = Object.values(installation.connectorBindings ?? {});

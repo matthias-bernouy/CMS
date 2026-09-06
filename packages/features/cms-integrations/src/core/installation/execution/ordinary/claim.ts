@@ -7,6 +7,9 @@ export async function claimPendingIntegrationOperation(
     repository: IntegrationInstallationRepository,
     installation: IntegrationInstallation,
 ): Promise<IntegrationInstallation> {
+    if (installation.managementLease && installation.managementLease.expiresAt.getTime() > Date.now()) {
+        throw new IntegrationRuntimeError("Integration management operation is in progress", 409);
+    }
     if (!repository.compareAndSwapMigration) {
         return await repository.replace({ ...installation, status: "pending", updatedAt: new Date() });
     }

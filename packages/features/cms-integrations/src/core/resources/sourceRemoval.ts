@@ -1,4 +1,4 @@
-import { IntegrationInputError } from "../errors";
+import { IntegrationInputError, IntegrationRuntimeError } from "../errors";
 import type { IntegrationInstallation } from "../../interfaces/IntegrationInstallation";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import { resolveCollectionSelection } from "./selection";
@@ -49,6 +49,19 @@ export function sourceRemovalBlockers(
 }
 
 export function assertSourceCanBeRemoved(source: string, installations: readonly IntegrationInstallation[]): void {
+    if (
+        installations.some(
+            (installation) =>
+                installation.managementLease &&
+                installation.managementLease.expiresAt.getTime() > Date.now() &&
+                installation.artifacts.some(
+                    (artifact) =>
+                        artifact.type === "source" && (artifact.id === source || artifact.id === `urn:${source}`),
+                ),
+        )
+    ) {
+        throw new IntegrationRuntimeError("Integration management operation is in progress", 409);
+    }
     const blockers = sourceRemovalBlockers(source, installations);
     if (!blockers.length) {
         return;

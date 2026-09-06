@@ -1,3 +1,4 @@
+import { integrationVersionSatisfies } from "@bernouy/cms-integrations";
 import type { IntegrationDefinition, IntegrationInstallation } from "@bernouy/cms-integrations";
 import { escapeAttr } from "@bernouy/http-runner/html";
 
@@ -26,7 +27,9 @@ export type IntegrationCatalogueView = {
 
 export function buildIntegrationCatalogue(input: {
     definitions: IntegrationDefinition[];
-    installations: Pick<IntegrationInstallation, "id">[];
+    installations: Array<
+        Pick<IntegrationInstallation, "id"> & Partial<Pick<IntegrationInstallation, "status" | "definitionVersion">>
+    >;
     scope?: "sources" | "collections";
     parent?: string;
     query: string;
@@ -41,7 +44,20 @@ export function buildIntegrationCatalogue(input: {
                 !input.scope ||
                 (input.scope === "collections" ? definition.type === "collection" : definition.type === "source"),
         )
-        .filter((definition) => !definition.extensionOf || installed.has(definition.extensionOf.kind))
+        .filter((definition) => {
+            if (!definition.extensionOf) {
+                return true;
+            }
+            const parent = input.installations.find(({ id }) => id === definition.extensionOf!.kind);
+            const dependency = definition.dependencies?.find(({ kind }) => kind === definition.extensionOf!.kind);
+            return Boolean(
+                parent &&
+                    (!parent.status || parent.status === "success") &&
+                    (!dependency?.versionRange ||
+                        (parent.definitionVersion &&
+                            integrationVersionSatisfies(parent.definitionVersion, dependency.versionRange))),
+            );
+        })
         .filter((definition) => !input.parent || definition.extensionOf?.kind === input.parent)
         .sort((left, right) => left.label.localeCompare(right.label));
     const categories = Array.from(new Set(available.map((definition) => categoryLabel(definition)))).sort();

@@ -124,7 +124,7 @@ describe("GET /api/integrations/catalogue", () => {
                 kind: "products",
                 label: "Products",
                 category: "Commerce",
-                setupUrl: "/cms/admin/integrations?setup=products",
+                setupUrl: "/cms/admin/sources?setup=products",
                 badges: [
                     { label: "Commerce", className: "badge" },
                     { label: "Source", className: "badge" },

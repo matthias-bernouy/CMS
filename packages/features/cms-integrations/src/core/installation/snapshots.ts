@@ -27,7 +27,7 @@ export function sanitizeAnswers(
     const out: Record<string, IntegrationAnswerValue> = {};
     for (const [key, value] of Object.entries(answers)) {
         const input = definition.inputs.find((candidate) => candidate.name === key);
-        if (!input || !isSensitiveInput(input)) {
+        if (input && !isSensitiveInput(input)) {
             out[key] = structuredClone(value);
         }
     }

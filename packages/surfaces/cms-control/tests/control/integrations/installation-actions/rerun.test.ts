@@ -83,7 +83,7 @@ describe("POST /api/integrations/installations/rerun", () => {
             ),
         ).rejects.toThrow();
 
-        expect((await integrationInstallations.get("test-secret-source"))?.status).toBe("failed");
+        expect((await integrationInstallations.get("test-secret-source"))?.status).toBe("success");
         expect(cache.get(P9R_CACHE.STYLE)).toBeNull();
         expect(cache.get(P9R_CACHE.page("/cached"))).toBeNull();
     });

@@ -34,3 +34,25 @@ test("install needs no answers and rerun/upgrade preserve configured generated s
     });
     expect(await secrets.get("MANAGED_SIGNING")).toBe("applied-signing-value");
 });
+
+test("undeclared answers cannot reach installation persistence", async () => {
+    const installations = new InMemoryIntegrationInstallationRepository();
+    const secrets = new InMemorySecretStore();
+    const deps = {
+        sources: new InMemorySourceRepository(),
+        functions: new InMemoryFunctionRepository(),
+        secrets,
+        installations,
+    };
+    await expect(
+        runIntegrationInstallation({
+            mode: "create",
+            deps,
+            installations,
+            dto: { kind: definition.kind, answers: { privateKey: "raw-value-must-not-persist" }, options: {} },
+            siteIntegrations: [definition],
+        }),
+    ).rejects.toThrow("undeclared installation inputs");
+    expect(await installations.list()).toEqual([]);
+    expect(await secrets.listKeys()).toEqual([]);
+});

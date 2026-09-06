@@ -43,6 +43,9 @@ export type IntegrationHealthEnvelope = {
     installationId: string;
     observedAt: string;
     freshness: "fresh" | "stale" | "unavailable";
+    reason?: "timeout" | "unauthorized" | "forbidden" | "unreachable" | "invalid_report" | "unsupported";
+    httpStatus?: number;
+    reportDefinitionVersion?: string;
     observation: "valid" | "unreachable" | "invalid_report" | "unsupported";
     report: IntegrationHealthReport | null;
 };
@@ -61,6 +64,7 @@ export type IntegrationManagementOperation =
 export type IntegrationManagementInvocation = {
     operation: IntegrationManagementOperation;
     actor?: IntegrationManagementActor;
+    actionId?: string;
     resolvedPages?: Record<string, import("../IntegrationImport").IntegrationResolvedPage>;
     installationId: string;
     definitionVersion: string;

@@ -55,6 +55,9 @@ export async function claimMigrationOperation(input: {
     allowAbortRequested?: boolean;
 }): Promise<IntegrationInstallation> {
     const now = input.clock.now();
+    if (input.installation.managementLease && input.installation.managementLease.expiresAt.getTime() > now.getTime()) {
+        throw new IntegrationRuntimeError("Integration management operation is in progress", 409);
+    }
     const current = input.installation.migrationOperation;
     const unfinished = current && current.status !== "completed" && current.status !== "aborted" ? current : undefined;
     if (!unfinished && input.repository.compareAndSwapMigration && input.installation.status === "pending") {

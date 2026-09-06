@@ -28,6 +28,10 @@ export async function runCreate(
         throw new IntegrationInputError("kind", `unknown integration "${request.dto.kind}"`);
     }
 
+    const declaredInputs = new Set(definition.inputs.map(({ name }) => name));
+    if (Object.keys(request.dto.answers).some((name) => !declaredInputs.has(name))) {
+        throw new IntegrationInputError("answers", "undeclared installation inputs are not accepted");
+    }
     const integrationId = integrationInstallationId(request.dto.kind);
     if (await request.installations.get(integrationId)) {
         throw new DuplicateIntegrationInstallationError(integrationId);

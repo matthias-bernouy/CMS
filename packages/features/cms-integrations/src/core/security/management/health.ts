@@ -1,3 +1,4 @@
+import { IntegrationRuntimeError } from "../../errors";
 import type { IntegrationHealthEnvelope } from "../../../interfaces/Integration/management";
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationManagementDeps } from "./contracts";
@@ -11,7 +12,10 @@ export class IntegrationHealthObserver {
     private readonly pending = new Map<string, Promise<IntegrationHealthEnvelope>>();
     constructor(private readonly deps: IntegrationManagementDeps) {}
     invalidate(id: string): void {
-        this.cache.delete(id);
+        const cached = this.cache.get(id);
+        if (cached) {
+            cached.checked = 0;
+        }
         this.generation++;
     }
     async read(installation: IntegrationInstallation, refresh = false): Promise<IntegrationHealthEnvelope> {
@@ -26,7 +30,7 @@ export class IntegrationHealthObserver {
         if (pending) {
             return structuredClone(await pending);
         }
-        const promise = this.observe(installation, cached?.key === key ? cached : undefined)
+        const promise = this.observe(installation, cached)
             .then((envelope) => {
                 if (this.cache.size >= 1_000) {
                     this.cache.delete(this.cache.keys().next().value!);
@@ -55,10 +59,13 @@ export class IntegrationHealthObserver {
             freshness: cached?.envelope.report ? "stale" : "unavailable",
             observation: "unsupported",
             report: cached?.envelope.report ?? null,
+            ...(cached?.envelope.reportDefinitionVersion
+                ? { reportDefinitionVersion: cached.envelope.reportDefinitionVersion }
+                : {}),
         };
         const management = installation.definitionSnapshot?.management;
         if (!management?.health) {
-            return envelope;
+            return { ...envelope, reason: "unsupported" };
         }
         let timer: ReturnType<typeof setTimeout> | undefined;
         let result: unknown;
@@ -68,11 +75,27 @@ export class IntegrationHealthObserver {
                     ({ public: value }) => value,
                 ),
                 new Promise<never>((_, reject) => {
-                    timer = setTimeout(() => reject(new Error("timeout")), this.deps.healthTimeoutMs ?? 10_000);
+                    timer = setTimeout(
+                        () => reject(new IntegrationRuntimeError("timeout", 504)),
+                        this.deps.healthTimeoutMs ?? 10_000,
+                    );
                 }),
             ]);
-        } catch {
-            return { ...envelope, observation: "unreachable" };
+        } catch (error) {
+            const status = error instanceof IntegrationRuntimeError ? error.status : undefined;
+            return {
+                ...envelope,
+                observation: "unreachable",
+                reason:
+                    status === 504
+                        ? "timeout"
+                        : status === 401
+                          ? "unauthorized"
+                          : status === 403
+                            ? "forbidden"
+                            : "unreachable",
+                ...(status ? { httpStatus: status } : {}),
+            };
         } finally {
             if (timer) {
                 clearTimeout(timer);
@@ -87,6 +110,7 @@ export class IntegrationHealthObserver {
             return {
                 ...envelope,
                 observation: "valid",
+                reportDefinitionVersion: installation.definitionVersion,
                 freshness:
                     now.getTime() - Date.parse(report.checkedAt) <= (this.deps.healthTtlMs ?? 30_000)
                         ? "fresh"
@@ -94,7 +118,7 @@ export class IntegrationHealthObserver {
                 report,
             };
         } catch {
-            return { ...envelope, observation: "invalid_report" };
+            return { ...envelope, observation: "invalid_report", reason: "invalid_report" };
         }
     }
 }

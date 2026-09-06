@@ -193,6 +193,7 @@ export {
     IntegrationRepositoryError,
     IntegrationRepositoryUnavailableError,
     IntegrationRuntimeError,
+    IntegrationManagementError,
     MissingIntegrationPackageError,
     MissingIntegrationInstallationError,
     MissingIntegrationParam,

@@ -1,4 +1,4 @@
-import { dashboardReferenceFieldPaths } from "@bernouy/cms-dashboards";
+import { dashboardReferenceFieldPaths, evaluateDashboardVisibility } from "@bernouy/cms-dashboards";
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationResolvedPage } from "../../../interfaces/IntegrationImport";
 import { IntegrationInputError } from "../../errors";
@@ -13,8 +13,21 @@ export async function resolveManagementPages(
 ): Promise<Record<string, IntegrationResolvedPage>> {
     const values = record(input.values) ? input.values : input;
     const fields = installation.definitionSnapshot?.management?.settings?.fields ?? [];
+    const visibleFields = fields.filter((field) =>
+        evaluateDashboardVisibility(field.visibleWhen, (expression) => {
+            if (expression.startsWith("$resource.")) {
+                return readPath(values, expression.slice(10));
+            }
+            if (expression.startsWith("$field.")) {
+                const [id, ...segments] = expression.slice(7).split(".");
+                const target = fields.find((candidate) => candidate.id === id);
+                return target ? readPath(values, [target.path, ...segments].join(".")) : undefined;
+            }
+            return undefined;
+        }),
+    );
     const result: Record<string, IntegrationResolvedPage> = {};
-    for (const { path, field } of dashboardReferenceFieldPaths(fields, values, "page-link")) {
+    for (const { path, field } of dashboardReferenceFieldPaths(visibleFields, values, "page-link")) {
         const value = readPath(values, path);
         if (value === undefined || value === null || value === "") {
             continue;

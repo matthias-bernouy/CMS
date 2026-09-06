@@ -1,3 +1,4 @@
+import { parseUrn } from "@bernouy/cms-sources";
 import type { IntegrationArtifactResult, IntegrationInstallation, IntegrationRun } from "@bernouy/cms-integrations";
 import type { IntegrationArtifactContext } from "./artifactContext";
 
@@ -16,7 +17,9 @@ export function buildIntegrationInstallationView(
         integrationType: installation.definitionSnapshot?.type,
         extensionOf: installation.definitionSnapshot?.extensionOf,
         management: installation.definitionSnapshot?.management,
-        sourceIds: installation.artifacts.filter(({ type }) => type === "source").map(({ id }) => id),
+        sourceIds: installation.artifacts
+            .filter(({ type }) => type === "source")
+            .map(({ id }) => parseUrn(id)?.source ?? id),
         activeResources: installation.activeResources,
 
         ...(installation.packageDigest ? { packageDigest: installation.packageDigest } : {}),

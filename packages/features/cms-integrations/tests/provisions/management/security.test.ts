@@ -36,15 +36,19 @@ describe("integration management authorization", () => {
         expect(calls).toBe(0);
     });
     test("rejects writes to selected refs and strips echoed authorized secret values", async () => {
-        const { service, secrets } = await fixture(async (_installation, _fn, payload) =>
-            payload.operation === "save-settings"
-                ? { values: { key: "${SELECTED_KEY}" }, echo: payload.secretValues.key }
-                : { generatedSecrets: { key: "replace-user-secret" } },
+        let bad = false;
+        const { service, secrets } = await fixture(
+            async (_installation, _fn, payload) =>
+                bad
+                    ? { generatedSecrets: { key: "replace-user-secret" } }
+                    : { values: { key: "${SELECTED_KEY}" }, echo: payload.secretValues.key },
+            { syncRuntimeSecrets: async () => {} },
         );
         expect(await service.saveSettings("test-management", { values: { key: "${SELECTED_KEY}" } })).toEqual({
             values: { key: "${SELECTED_KEY}" },
             echo: "[REDACTED]",
         });
+        bad = true;
         await expect(service.action("test-management", "apply-settings")).rejects.toThrow("not authorized");
         expect(await secrets.get("SELECTED_KEY")).toBe("selected-private-value");
     });
@@ -72,6 +76,7 @@ describe("integration management authorization", () => {
                 fields: [{ id: "page", label: "Page", path: "page", type: "page-link", publishedOnly: true }],
             },
         ];
+        delete installation.definitionSnapshot!.management!.settings!.applyFunctionId;
         await installations.replace(installation);
         const result = await service.saveSettings(
             "test-management",
@@ -83,4 +88,37 @@ describe("integration management authorization", () => {
             actor: { id: "admin", role: "admin" },
         });
     });
+});
+
+test("hidden page fields do not prevent disabling settings after a selected page is removed", async () => {
+    let resolutions = 0;
+    const { service, installations } = await fixture(
+        async (_installation, _fn, payload) => ({ values: payload.input, resolvedPages: payload.resolvedPages }),
+        {
+            resolvePublishedPage: async () => {
+                resolutions++;
+                return null;
+            },
+        },
+    );
+    const installation = (await installations.get("test-management"))!;
+    const settings = installation.definitionSnapshot!.management!.settings!;
+    delete settings.applyFunctionId;
+    settings.fields = [
+        { id: "enabled", label: "Enabled", path: "enabled", type: "checkbox" },
+        {
+            id: "page",
+            label: "Page",
+            path: "page",
+            type: "page-link",
+            visibleWhen: { value: "$field.enabled", equals: true },
+        },
+    ];
+    await installations.replace(installation);
+    await service.saveSettings("test-management", { enabled: false, page: "/deleted" });
+    expect(resolutions).toBe(0);
+    await expect(service.saveSettings("test-management", { enabled: true, page: "/deleted" })).rejects.toThrow(
+        "missing or unpublished",
+    );
+    expect(resolutions).toBe(1);
 });

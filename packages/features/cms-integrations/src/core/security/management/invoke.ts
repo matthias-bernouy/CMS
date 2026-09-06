@@ -5,7 +5,7 @@ import type {
     IntegrationManagementOperation,
     IntegrationManagementActor,
 } from "../../../interfaces/Integration/management";
-import { IntegrationRuntimeError } from "../../errors";
+import { IntegrationRuntimeError, IntegrationManagementError } from "../../errors";
 import type { IntegrationManagementDeps } from "./contracts";
 import { managementSecrets, publicResult, readPath, saveGeneratedSecrets } from "./secrets";
 import { record } from "./report";
@@ -19,6 +19,7 @@ export async function invokeManagement(
     refs = installation.managementSecretRefs ?? {},
     allowGenerated = false,
     actor?: IntegrationManagementActor,
+    actionId?: string,
 ) {
     if (!["health", "read-settings"].includes(operation)) {
         await verifyManagementLease(deps, installation);
@@ -32,6 +33,7 @@ export async function invokeManagement(
             functionId,
             {
                 operation,
+                ...(actionId ? { actionId } : {}),
                 resolvedPages,
                 ...(actor ? { actor } : {}),
                 installationId: installation.id,
@@ -43,10 +45,22 @@ export async function invokeManagement(
             secrets.reader,
         );
     } catch (error) {
-        throw new IntegrationRuntimeError(
-            "Integration management function is unavailable",
-            error instanceof IntegrationRuntimeError ? error.status : 502,
+        const status = error instanceof IntegrationRuntimeError ? error.status : 502;
+        const message =
+            error instanceof IntegrationRuntimeError && status >= 400 && status < 500
+                ? (publicResult(error.message, [
+                      ...Object.values(secrets.secretValues),
+                      ...Object.values(secrets.generatedSecretValues),
+                  ]) as string)
+                : "Integration management function is unavailable";
+        throw new IntegrationManagementError(
+            message,
+            status,
+            error instanceof IntegrationManagementError ? error.publicCode : undefined,
         );
+    }
+    if (operation === "health" && (!record(result) || result.generatedSecrets !== undefined)) {
+        return { raw: {}, public: null, secretValues: secrets.secretValues };
     }
     if (!record(result)) {
         throw new IntegrationRuntimeError("Invalid integration management response", 502);
@@ -93,6 +107,10 @@ export async function syncManagementRuntime(
         values[name] = String(value);
     }
     await verifyManagementLease(deps, installation);
-    await deps.syncRuntimeSecrets(installation, values);
+    try {
+        await deps.syncRuntimeSecrets(installation, values);
+    } catch {
+        throw new IntegrationRuntimeError("Integration runtime secret synchronization failed", 502);
+    }
     await verifyManagementLease(deps, installation);
 }
