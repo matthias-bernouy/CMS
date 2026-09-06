@@ -4723,7 +4723,7 @@ dialog[open]::backdrop { opacity: 1; }
     }
   }
 
-  class J extends l {
+  class tt extends l {
     static formAssociated = true;
     _internals;
     _defaultChecked = false;
@@ -4959,7 +4959,7 @@ input:focus-visible ~ .custom-box {
   };
   var uc = Dr + Nr;
 
-  class Xr extends J {
+  class Xr extends tt {
     _input;
     _labelText;
     _labelSlot;
@@ -5040,7 +5040,7 @@ input:focus-visible ~ .custom-box {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var gt = `:host {
+  var yt = `:host {
     display: block;
 }
 
@@ -5195,7 +5195,7 @@ input:disabled {
     color: var(--success-base, #10b981);
 }
 `;
-  var xt = `.listbox {
+  var _t = `.listbox {
     position: absolute;
     inset-block-start: calc(100% + 3px);
     inset-inline: 0;
@@ -5326,10 +5326,10 @@ input:disabled {
     transform: rotate(90deg);
 }
 `;
-  function yt(t) {
+  function wt(t) {
     return Array.from(t.querySelectorAll("option")).map((e) => ({ value: e.value, label: e.textContent ?? e.value, disabled: e.disabled }));
   }
-  function _t(t, e, i = false) {
+  function kt(t, e, i = false) {
     let r = e.toLowerCase(), n = (r ? t.filter((s) => s.label.toLowerCase().includes(r)) : t).slice(0, 8).map((s) => ({ ...s, kind: "option" })), a = t.some((s) => s.value === e || s.label.toLowerCase() === r);
     if (i && e && !a)
       n.unshift({ kind: "create", value: e, label: `Add "${e}"`, disabled: false }), n.length = Math.min(n.length, 8);
@@ -5341,14 +5341,14 @@ input:disabled {
       r.unshift({ kind: "create", value: e, label: `Add "${e}"`, disabled: false });
     return r;
   }
-  function wt(t, e, i, r, o) {
+  function Et(t, e, i, r, o) {
     let n = document.createElement("div");
     return n.className = `option ${t.kind}`, n.id = `option-${e}`, n.dataset.active = String(e === i), n.dataset.selected = String(t.kind === "option" && t.value === r), n.setAttribute("role", "option"), n.setAttribute("aria-selected", n.dataset.selected), n.addEventListener("mousedown", (a) => {
       if (a.preventDefault(), !t.disabled)
         o(t);
     }), n.append(Gr(), Wr(t.label)), n;
   }
-  function kt() {
+  function At() {
     let t = document.createElement("div");
     return t.className = "empty", t.textContent = "No results", t;
   }
@@ -5523,8 +5523,8 @@ input:disabled {
     renderList(t, e, i, r, o = null) {
       if (!this.listbox)
         return;
-      if (this.listbox.replaceChildren(...t.map((n, a) => wt(n, a, e, i, r))), t.length === 0 && !o?.loading)
-        this.listbox.append(kt());
+      if (this.listbox.replaceChildren(...t.map((n, a) => Et(n, a, e, i, r))), t.length === 0 && !o?.loading)
+        this.listbox.append(At());
       if (o?.loading)
         this.listbox.append(Ut("Loading…", "loading"));
       else if (o?.hasMore)
@@ -5572,7 +5572,7 @@ input:disabled {
     defaultsCaptured = false;
     showValidationMessage = false;
     constructor() {
-      super({ css: gt + xt, template: Zr });
+      super({ css: yt + _t, template: Zr });
       this.view = new Yt(this.shadowRoot, this.attachInternals()), this.keyboard = new Xt(this.view, () => this.items, () => this.view.input?.value.trim() ?? "", (t) => this.renderList(t), this.selectItem, () => this.syncDisplay());
     }
     connectedCallback() {
@@ -5634,7 +5634,7 @@ input:disabled {
       this.view.syncAttributes(this, this.disabled), this.syncDisplay();
     }
     syncOptions() {
-      if (this.options = yt(this), this.value = this.getAttribute("value") ?? this.selectedValue, !this.view.listHidden)
+      if (this.options = wt(this), this.value = this.getAttribute("value") ?? this.selectedValue, !this.view.listHidden)
         this.renderList(this.keyboard.query);
     }
     syncDisplay() {
@@ -5643,7 +5643,7 @@ input:disabled {
       this.view.syncValidity(this, this.selectedValue, this.showValidationMessage);
     }
     renderList(t) {
-      this.items = this.hasAttribute("remote-search") ? Yr(this.options, t, this.hasAttribute("creatable")) : _t(this.options, t, this.hasAttribute("creatable"));
+      this.items = this.hasAttribute("remote-search") ? Yr(this.options, t, this.hasAttribute("creatable")) : kt(this.options, t, this.hasAttribute("creatable"));
       let e = this.hasAttribute("remote-search") || this.hasAttribute("has-more") ? { loading: this.hasAttribute("loading"), hasMore: this.hasAttribute("has-more"), loadMore: () => this.dispatchEvent(new CustomEvent("combobox-load-more", { bubbles: true, composed: true })) } : null;
       this.view.renderList(this.items, this.keyboard.activeIndex, this.selectedValue, this.selectItem, e);
     }
@@ -7281,7 +7281,7 @@ input:disabled {
   pointer-events: none;
 }
 `;
-  var it = (t) => {
+  var rt = (t) => {
     if (!t)
       return [];
     return t.assignedElements().filter((e) => e.tagName === "OPTION");
@@ -7290,7 +7290,7 @@ input:disabled {
     if (t)
       t.textContent = e;
   };
-  var Lt = (t, e, i) => {
+  var Ct = (t, e, i) => {
     let r = e.findIndex((o) => o.getAttribute("value") === i);
     if (r === -1)
       return;
@@ -7299,7 +7299,7 @@ input:disabled {
       o.setAttribute("aria-checked", a.toString()), o.setAttribute("tabindex", a ? "0" : "-1");
     });
   };
-  var St = (t, e) => {
+  var Tt = (t, e) => {
     t.forEach((i) => {
       if (i.getAttribute("value") === e)
         i.setAttribute("selected", "");
@@ -7308,7 +7308,7 @@ input:disabled {
     });
   };
   var fe = (t, e) => {
-    let i = it(e);
+    let i = rt(e);
     t.style.setProperty("--total-options", i.length.toString()), i.forEach((r, o) => {
       if (r.setAttribute("role", "radio"), r.setAttribute("part", "segment"), !r.hasAttribute("tabindex"))
         r.setAttribute("tabindex", o === 0 ? "0" : "-1");
@@ -7317,14 +7317,14 @@ input:disabled {
           return;
         t.value = r.getAttribute("value") ?? "", r.focus();
       };
-    }), Lt(t, i, t.value), St(i, t.value);
+    }), Ct(t, i, t.value), Tt(i, t.value);
   };
   var un = (t, e, i) => {
     if (t.disabled)
       return;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(i.key))
       return;
-    let o = it(e);
+    let o = rt(e);
     if (o.length === 0)
       return;
     let n = o.findIndex((d) => d.getAttribute("value") === t.value), a = n === -1 ? 0 : n, s = a;
@@ -7405,8 +7405,8 @@ input:disabled {
       if (this.getAttribute("value") !== t)
         this.setAttribute("value", t);
       this._internals.setFormValue(t);
-      let e = it(this._slot);
-      if (Lt(this, e, t), St(e, t), !this._silentValueChange)
+      let e = rt(this._slot);
+      if (Ct(this, e, t), Tt(e, t), !this._silentValueChange)
         this.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: t } }));
     }
     get name() {
@@ -7564,7 +7564,7 @@ input:focus-visible ~ .track {
       e.preventDefault(), e.stopImmediatePropagation();
   };
 
-  class fn extends J {
+  class fn extends tt {
     _input;
     static get observedAttributes() {
       return ["checked", "disabled", "name", "value", "aria-label"];
@@ -7804,7 +7804,7 @@ p9r-tag:hover {
     filter: brightness(0.92);
 }
 `;
-  var Ct = (t, e) => {
+  var Mt = (t, e) => {
     if (!t)
       return;
     t.textContent = "", window.setTimeout(() => {
@@ -7883,17 +7883,17 @@ p9r-tag:hover {
     return e ? [e.trim()] : [];
   };
   var w = (t) => t;
-  var rt = (t, e) => {
+  var ot = (t, e) => {
     let i = w(t), r = t.getAttribute("mode") || "multiple", o = e.trim();
     if (!o || !i._input)
       return;
     if (r === "multiple") {
       if (!i._tags.includes(o))
-        i._tags.push(o), Ct(i._liveRegion, `${o} added`);
+        i._tags.push(o), Mt(i._liveRegion, `${o} added`);
       i._input.value = "";
     } else
-      i._tags = [o], i._input.value = o, Ct(i._liveRegion, `${o} selected`);
-    i._activeIndex = -1, Tt(t), Ht(t);
+      i._tags = [o], i._input.value = o, Mt(i._liveRegion, `${o} selected`);
+    i._activeIndex = -1, Ht(t), It(t);
   };
   var Ln = (t, e) => {
     let i = w(t), r = e.trim();
@@ -7905,7 +7905,7 @@ p9r-tag:hover {
     let i = w(t), r = i._tags[e];
     if (r === undefined)
       return;
-    i._tags.splice(e, 1), Ct(i._liveRegion, `${r} removed`), Tt(t), i._input?.focus();
+    i._tags.splice(e, 1), Mt(i._liveRegion, `${r} removed`), Ht(t), i._input?.focus();
   };
   var Cn = (t) => {
     let e = w(t);
@@ -7913,7 +7913,7 @@ p9r-tag:hover {
       return;
     Sn(t, e._tags.length - 1);
   };
-  var Tt = (t) => {
+  var Ht = (t) => {
     let e = w(t);
     if (ye(t), e._internals.setFormValue(e.value), e._silent)
       return;
@@ -7925,13 +7925,13 @@ p9r-tag:hover {
   };
   var _e = (t, e) => {
     let i = w(t), o = (t.getAttribute("mode") || "multiple") === "multiple" ? i._tags : [];
-    i._suggestions = kn(i._allSuggestions, o, e), i._activeIndex = -1, Mt(t);
+    i._suggestions = kn(i._allSuggestions, o, e), i._activeIndex = -1, zt(t);
   };
-  var Mt = (t) => {
+  var zt = (t) => {
     let e = w(t);
-    wn(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (i) => rt(t, i));
+    wn(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (i) => ot(t, i));
   };
-  var Ht = (t) => {
+  var It = (t) => {
     let e = w(t);
     xe(e._suggestionsEl, e._input), e._activeIndex = -1;
   };
@@ -7941,7 +7941,7 @@ p9r-tag:hover {
     _e(t, e.value.trim().toLowerCase());
   };
   var Mn = (t) => {
-    setTimeout(() => Ht(t), 150);
+    setTimeout(() => It(t), 150);
   };
   var Hn = (t, e) => {
     if (!e)
@@ -7956,30 +7956,30 @@ p9r-tag:hover {
     if (i.key === "ArrowDown") {
       if (i.preventDefault(), o._suggestions.length === 0)
         return;
-      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), Mt(t);
+      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), zt(t);
     } else if (i.key === "ArrowUp") {
       if (i.preventDefault(), o._suggestions.length === 0)
         return;
-      o._activeIndex = Math.max(o._activeIndex - 1, -1), Mt(t);
+      o._activeIndex = Math.max(o._activeIndex - 1, -1), zt(t);
     } else if (i.key === "Enter") {
       i.preventDefault();
       let n = o._activeIndex >= 0 ? o._suggestions[o._activeIndex] : undefined;
       if (n)
-        rt(t, n.value);
+        ot(t, n.value);
       else {
         let a = e.value.trim();
         if (a)
-          rt(t, a);
+          ot(t, a);
       }
     } else if (i.key === "Escape")
-      i.preventDefault(), Ht(t);
+      i.preventDefault(), It(t);
     else if (i.key === "Backspace" && e.value === "" && r === "multiple")
       Cn(t);
     else if (i.key === "," && r === "multiple") {
       i.preventDefault();
       let n = e.value.trim();
       if (n)
-        rt(t, n);
+        ot(t, n);
     }
   };
   var nu = xn + yn;
@@ -8058,7 +8058,7 @@ p9r-tag:hover {
       let e = this.getAttribute("mode") || "multiple";
       if (this._tags = An(e, t), this._input)
         this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
-      Tt(this);
+      Ht(this);
     }
     get name() {
       return this.getAttribute("name") || "";
@@ -8251,13 +8251,13 @@ p9r-tag:hover {
     let n = e.value.length;
     r.textContent = String(n), i.dataset.over = String(n > o);
   };
-  var ot = (t, e, i) => {
+  var nt = (t, e, i) => {
     if (!t || !e || !i)
       return;
     let r = (t.textContent ?? "").length > 0, o = !e.hidden;
     i.hidden = !r && !o;
   };
-  var nt = (t, e) => {
+  var at = (t, e) => {
     if (!e || !t.hasAttribute("autosize"))
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
@@ -8321,7 +8321,7 @@ p9r-tag:hover {
   var ke = (t, e, i, r) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", ot(e, i, r);
+    e.textContent = t.getAttribute("hint") ?? "", nt(e, i, r);
   };
   var Ee = (t, e) => {
     if (!e)
@@ -8344,7 +8344,7 @@ p9r-tag:hover {
       e.hidden = true;
     else
       e.hidden = false, i.textContent = String(n);
-    ot(r, e, o);
+    nt(r, e, o);
   };
   var Se = (t, e, i) => {
     if (!t)
@@ -8361,7 +8361,7 @@ p9r-tag:hover {
   var Fn = (t, e, i, r, o) => {
     if (!e)
       return;
-    i.setFormValue(e.value), j(t, e, r, o), nt(t, e);
+    i.setFormValue(e.value), j(t, e, r, o), at(t, e);
   };
   var On = (t, e, i) => {
     if (!e)
@@ -8380,7 +8380,7 @@ p9r-tag:hover {
     if (r && !o.validity.valid) {
       if (o.setAttribute("aria-invalid", "true"), n)
         n.textContent = c, n.dataset.level = "error";
-      ot(n, s, a);
+      nt(n, s, a);
     } else
       ke(t, n, s, a), Ee(t, n), Ae(t, o);
     return Se(o, n, s), r;
@@ -8434,7 +8434,7 @@ p9r-tag:hover {
       else if (t === "max-count")
         Le(this, this._counter, this._max, this._hint, this._meta), j(this, this._textarea, this._counter, this._count);
       else if (t === "autosize")
-        nt(this, this._textarea);
+        at(this, this._textarea);
       else
         Ce(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
       this._syncValidity();
@@ -8445,7 +8445,7 @@ p9r-tag:hover {
     set value(t) {
       if (!this._textarea)
         return;
-      this._textarea.value = t, this._internals.setFormValue(t), j(this, this._textarea, this._counter, this._count), nt(this, this._textarea), this._syncValidity();
+      this._textarea.value = t, this._internals.setFormValue(t), j(this, this._textarea, this._counter, this._count), at(this, this._textarea), this._syncValidity();
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -8707,7 +8707,7 @@ input:hover:not(:disabled) {
     return t.map((i) => e.find((r) => r.value === i) ?? { value: i, label: i, disabled: false });
   }
   function Un(t, e, i, r) {
-    let o = t.filter((a) => !e.includes(a.value)), n = _t(o, i);
+    let o = t.filter((a) => !e.includes(a.value)), n = kt(o, i);
     if (n.length > 0 || !i || !r || e.includes(i))
       return n;
     return [{ kind: "create", value: i, label: `Add "${i}"`, disabled: false }];
@@ -8774,7 +8774,7 @@ input:hover:not(:disabled) {
     renderList(t, e, i, r) {
       if (!this.listbox)
         return;
-      if (this.listbox.replaceChildren(...t.map((o, n) => wt(o, n, e, "", i))), t.length === 0)
+      if (this.listbox.replaceChildren(...t.map((o, n) => Et(o, n, e, "", i))), t.length === 0)
         this.listbox.append(r);
       if (this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true"), e >= 0)
         this.input?.setAttribute("aria-activedescendant", `option-${e}`);
@@ -8823,7 +8823,7 @@ input:hover:not(:disabled) {
     defaultsCaptured = false;
     showValidationMessage = false;
     constructor() {
-      super({ css: gt + xt + Nn, template: Dn });
+      super({ css: yt + _t + Nn, template: Dn });
       this.view = new ze(this.shadowRoot, this.attachInternals()), this.remoteOptions = new Me(this, () => this.syncOptions());
     }
     connectedCallback() {
@@ -8884,7 +8884,7 @@ input:hover:not(:disabled) {
       this.view.syncAttributes(this, this.disabled, this.selected.length), this.syncDisplay();
     }
     syncOptions() {
-      if (this.options = this.remoteOptions.merge(yt(this)), this.value = this.getAttribute("value") ?? this.value, this.inputFocused)
+      if (this.options = this.remoteOptions.merge(wt(this)), this.value = this.getAttribute("value") ?? this.value, this.inputFocused)
         this.renderList(this.query);
     }
     syncDisplay() {
@@ -8898,7 +8898,7 @@ input:hover:not(:disabled) {
         return;
       }
       this.items = Un(this.options, this.selected, t, this.hasAttribute("creatable"));
-      let e = this.hasAttribute("creatable") ? Qr("Type to create", () => this.view.input?.focus()) : kt();
+      let e = this.hasAttribute("creatable") ? Qr("Type to create", () => this.view.input?.focus()) : At();
       this.view.renderList(this.items, this.activeIndex, this.selectItem, e);
     }
     selectItem = (t) => {
@@ -10914,7 +10914,7 @@ p {
     else
       t.textContent = "", t.style.display = "none";
   };
-  var zt = (t, e, i) => {
+  var st = (t, e, i) => {
     if (i) {
       if (!t.hasAttribute("active"))
         t.setAttribute("active", "");
@@ -10926,8 +10926,12 @@ p {
     }
   };
   var $ = (t, e) => {
+    if (t.hasAttribute("manual-active")) {
+      st(t, e, t.hasAttribute("active"));
+      return;
+    }
     if (t.hasAttribute("active")) {
-      zt(t, e, true);
+      st(t, e, true);
       return;
     }
     if (!e || !t.hasAttribute("href"))
@@ -10937,7 +10941,7 @@ p {
       return;
     try {
       let r = new URL(i, window.location.href), n = new URL(window.location.href).pathname, a = r.pathname, s = t.hasAttribute("exact") ? n === a : a === "/" ? n === "/" : n === a || n.startsWith(a + "/");
-      zt(t, e, s);
+      st(t, e, s);
     } catch {
       console.warn("Invalid href in LateralMenuItem:", i);
     }
@@ -10963,7 +10967,7 @@ p {
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null, this._quickActionsSlot = this.shadowRoot?.querySelector('slot[name="quick-actions"]') ?? null, this._moreActionsSlot = this.shadowRoot?.querySelector('slot[name="more-actions"]') ?? null;
     }
     static get observedAttributes() {
-      return ["href", "badge", "disabled", "active", "exact"];
+      return ["href", "badge", "disabled", "active", "exact", "manual-active"];
     }
     connectedCallback() {
       for (let t of ["href", "badge", "disabled", "active", "exact"])
@@ -10993,10 +10997,10 @@ p {
         Re(this._badgeEl, i);
       if (t === "active")
         if (i !== null)
-          zt(this, this._anchor, true);
+          st(this, this._anchor, true);
         else
           $(this, this._anchor);
-      if (t === "exact" && this.isConnected)
+      if ((t === "exact" || t === "manual-active") && this.isConnected)
         $(this, this._anchor);
       if (t === "disabled") {
         let r = this.hasAttribute("disabled");
@@ -12413,13 +12417,13 @@ p {
     let e = new Date(t);
     return Number.isNaN(e.getTime()) ? t : Xp.format(e);
   };
-  function Pt(t, e) {
+  function Rt(t, e) {
     return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${E(t)}</p>${e ? `<p class="empty-hint">${E(e)}</p>` : ""}</div>`;
   }
   function il(t) {
     if (t.length === 0)
       return "";
-    let e = 320, i = 140, r = 32, o = 8, n = 10, a = 22, s = e - r - o, c = i - n - a, d = n + c, p = Math.max(...t.map((R) => R.value), 1), b = t.length, m = t.map((R, W) => [r + (b === 1 ? s / 2 : W / (b - 1) * s), n + (1 - R.value / p) * c]), C = m.map(([R, W]) => `${R.toFixed(1)},${W.toFixed(1)}`).join(" "), yd = `${m[0][0].toFixed(1)},${d} ${C} ${m[b - 1][0].toFixed(1)},${d}`, _d = m.map(([R, W]) => `<circle class="dot" cx="${R.toFixed(1)}" cy="${W.toFixed(1)}" r="2.5"/>`).join("");
+    let e = 320, i = 140, r = 32, o = 8, n = 10, a = 22, s = e - r - o, c = i - n - a, d = n + c, p = Math.max(...t.map((R) => R.value), 1), b = t.length, m = t.map((R, J) => [r + (b === 1 ? s / 2 : J / (b - 1) * s), n + (1 - R.value / p) * c]), C = m.map(([R, J]) => `${R.toFixed(1)},${J.toFixed(1)}`).join(" "), yd = `${m[0][0].toFixed(1)},${d} ${C} ${m[b - 1][0].toFixed(1)},${d}`, _d = m.map(([R, J]) => `<circle class="dot" cx="${R.toFixed(1)}" cy="${J.toFixed(1)}" r="2.5"/>`).join("");
     return `<svg class="line" viewBox="0 0 ${e} ${i}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${r}" y1="${n}" x2="${r}" y2="${d}"/><line class="axis" x1="${r}" y1="${d}" x2="${e - o}" y2="${d}"/><text class="tick" x="${r - 4}" y="${n + 3}" text-anchor="end">${Zp(p)}</text><text class="tick" x="${r - 4}" y="${d}" text-anchor="end">0</text><polygon class="area" points="${yd}" fill="url(#lc-grad)"/><polyline class="stroke" points="${C}"/>${_d}<text class="tick" x="${r}" y="${i - 6}">${E(t[0].label)}</text><text class="tick" x="${e - o}" y="${i - 6}" text-anchor="end">${E(t[b - 1].label)}</text></svg>`;
   }
   function rl(t, e) {
@@ -12588,7 +12592,7 @@ p {
     async _load() {
       let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), i = e ? await U(e) : null, r = Array.isArray(i) ? i : [];
       if (r.length === 0) {
-        t.innerHTML = Pt(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
+        t.innerHTML = Rt(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
       }
       let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = r.map((s) => ({ label: n ? el(String(s[n] ?? "")) : "", value: Number(s[o] ?? 0) }));
@@ -12680,7 +12684,7 @@ p {
     async _load() {
       let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), i = e ? await U(e) : null, r = Array.isArray(i) ? i : [];
       if (r.length === 0) {
-        t.innerHTML = Pt(this.getAttribute("empty") ?? "Aucune donnée");
+        t.innerHTML = Rt(this.getAttribute("empty") ?? "Aucune donnée");
         return;
       }
       let o = this.getAttribute("label-field") ?? "key", n = this.getAttribute("value-field") ?? "value", a = r.map((s) => ({ label: String(s[o] ?? ""), value: Number(s[n] ?? 0) }));
@@ -12743,12 +12747,12 @@ p {
     }
   }
   var g = "cms-binding-core";
-  var at = "cms-binding-disabled";
-  var Rt = "cms-source-state-force";
+  var lt = "cms-binding-disabled";
+  var Bt = "cms-source-state-force";
   var h = "cms-source";
   var Ne = "cms-source-body";
-  var st = "cms-source-id";
-  var lt = "cms-source-trigger";
+  var dt = "cms-source-id";
+  var ct = "cms-source-trigger";
   var vl = "cms-source-method";
   var fl = "cms-source-publish";
   var gl = "cms-source-success-reset";
@@ -12801,7 +12805,7 @@ p {
   function Z(t, e = document) {
     return $e(e).get(t.trim()) ?? "";
   }
-  function Bt(t, e, i = document) {
+  function Ft(t, e, i = document) {
     let r = t.trim();
     if (!r)
       return;
@@ -12900,7 +12904,7 @@ p {
       let t = this.currentValue();
       if (t === this.last)
         return;
-      this.last = t, Bt(this.key, t, this.el.ownerDocument);
+      this.last = t, Ft(this.key, t, this.el.ownerDocument);
     }
   }
   var y = "cms-param-sync";
@@ -13005,7 +13009,7 @@ p {
         return true;
     return false;
   }
-  function Ft(t, e, i) {
+  function Ot(t, e, i) {
     L(t, h, e, (r) => i.registerSource(r)), L(t, y, e, (r) => i.registerParamSync(r)), L(t, f, e, (r) => i.registerPageStateSync(r));
   }
   function Tl(t, e, i) {
@@ -13106,7 +13110,7 @@ p {
     };
   }
   var ch = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function Ot(t) {
+  function Vt(t) {
     return z(t).url;
   }
   function z(t) {
@@ -13117,26 +13121,25 @@ p {
   }
   var Vl = "cms-reload-on";
   var ql = "cms-source:reload";
-  function Vt(t) {
-    let e = t.getAttribute(lt);
+  function Y(t) {
+    let e = t.getAttribute(ct);
     return wl(e) ? e : "auto";
   }
   function Dl(t, e) {
-    let i = t.ownerDocument, r = [ql, ...ph(t)];
-    for (let a of r)
+    let i = t.ownerDocument, r = Y(t), o = new Set([...r === "auto" ? [ql] : [], ...ph(t)]);
+    for (let a of o)
       i.addEventListener(a, e.onReload);
-    let o = Vt(t);
-    if (o === "submit" || o === "change") {
-      let a = uh(t) ?? t.closest("form"), s = o === "submit" ? "submit" : "change", c = o === "submit" ? e.onSubmit : e.onChange;
+    if (r === "submit" || r === "change") {
+      let a = uh(t) ?? t.closest("form"), s = r === "submit" ? "submit" : "change", c = r === "submit" ? e.onSubmit : e.onChange;
       return a?.addEventListener(s, c), () => {
-        for (let d of r)
+        for (let d of o)
           i.removeEventListener(d, e.onReload);
         a?.removeEventListener(s, c);
       };
     }
-    let n = Ol(Ot(t.getAttribute(h) ?? ""), i, e.onReactiveUrlChange);
+    let n = Ol(Vt(t.getAttribute(h) ?? ""), i, e.onReactiveUrlChange);
     return () => {
-      for (let a of r)
+      for (let a of o)
         i.removeEventListener(a, e.onReload);
       n();
     };
@@ -13148,10 +13151,10 @@ p {
   function ph(t) {
     return (t.getAttribute(Vl) ?? "").split(/\s+/).filter(Boolean);
   }
-  var dt = ["src", "srcset", "sizes", "media", "width", "height"];
+  var ut = ["src", "srcset", "sizes", "media", "width", "height"];
   var qt = "data-cms-network-inert";
   var Nl = "img,picture,source";
-  function ct(t, e) {
+  function pt(t, e) {
     if (!jl(t))
       return t.getAttribute(e);
     let i = Dt(e);
@@ -13171,7 +13174,7 @@ p {
   var hh = ["src", "srcset"];
   var bh = ["sizes", "media"];
   var mh = "template";
-  function Y(t) {
+  function Q(t) {
     let e = Ul(t, Nl), i = new Set;
     for (let r of e.filter((o) => o.localName === "picture")) {
       let o = [r, ...Array.from(r.querySelectorAll("img,source")).filter((n) => n.closest("picture") === r)];
@@ -13182,12 +13185,12 @@ p {
       if (!i.has(r) && Kl(r))
         $l(r);
     for (let r of Ul(t, mh))
-      Y(r.content);
+      Q(r.content);
   }
   function $l(t) {
-    let e = new Map(dt.map((i) => [i, ct(t, i)]));
+    let e = new Map(ut.map((i) => [i, pt(t, i)]));
     t.setAttribute(qt, "");
-    for (let i of dt) {
+    for (let i of ut) {
       let r = e.get(i);
       if (r !== null && r !== undefined)
         t.setAttribute(Dt(i), r);
@@ -13195,10 +13198,10 @@ p {
     }
   }
   function Kl(t) {
-    return t.hasAttribute(qt) || vh(t) || hh.some((e) => fh(ct(t, e))) || bh.some((e) => Xe(ct(t, e)));
+    return t.hasAttribute(qt) || vh(t) || hh.some((e) => fh(pt(t, e))) || bh.some((e) => Xe(pt(t, e)));
   }
   function vh(t) {
-    return dt.some((e) => t.hasAttribute(Dt(e)));
+    return ut.some((e) => t.hasAttribute(Dt(e)));
   }
   function fh(t) {
     return t !== null && (!t.trim() || Xe(t));
@@ -13241,7 +13244,7 @@ p {
         t.unmount?.();
     }
   }
-  function ut(t, e) {
+  function ht(t, e) {
     let i = t.nextSibling;
     while (i && i !== e) {
       let r = i.nextSibling;
@@ -13300,11 +13303,11 @@ p {
     if (t.kind === "path")
       return _h(t.path, e);
     if (t.kind === "not")
-      return !pt(S(t.node, e));
+      return !bt(S(t.node, e));
     if (t.kind === "and")
-      return pt(S(t.left, e)) && pt(S(t.right, e));
+      return bt(S(t.left, e)) && bt(S(t.right, e));
     if (t.kind === "or")
-      return pt(S(t.left, e)) || pt(S(t.right, e));
+      return bt(S(t.left, e)) || bt(S(t.right, e));
     if (t.kind === "compare")
       return wh(S(t.left, e), S(t.right, e), t.operator);
     return false;
@@ -13313,7 +13316,7 @@ p {
     let i = I(e, t.trim());
     return i.found ? i.value : undefined;
   }
-  function pt(t) {
+  function bt(t) {
     return Boolean(t);
   }
   function wh(t, e, i) {
@@ -13556,16 +13559,16 @@ p {
       return false;
     Wl.lastIndex = 0;
     for (let i of t.matchAll(Wl))
-      if (Q(i[1] ?? "", e))
+      if (G(i[1] ?? "", e))
         return true;
     return false;
   }
   function We(t, e) {
     if (!e)
       return false;
-    return Qe(t).some((i) => Q(i, e));
+    return Qe(t).some((i) => G(i, e));
   }
-  function Q(t, e) {
+  function G(t, e) {
     if (!e)
       return false;
     let i = t.trim().split(".")[0] ?? "";
@@ -13599,7 +13602,7 @@ p {
   }
   function id(t, e, i, r, o, n) {
     let a = t.getAttribute(A) ?? "";
-    if (i.skipRepeat || !t.hasAttribute(A) || Q(a, i.submitBoundary))
+    if (i.skipRepeat || !t.hasAttribute(A) || G(a, i.submitBoundary))
       return false;
     let s = t.getAttribute(M), c = s ? We(s, i.submitBoundary) : false;
     return r.repeats.push({ path: e, spec: Kt(a), template: od(t, o, n, { removeRepeat: true, removeCondition: !!i.submitBoundary && !!s && !c, submitBoundary: i.submitBoundary }), rootCondition: c || !s ? null : Ge(s) }), true;
@@ -13639,7 +13642,7 @@ p {
     if (rd(a, e, i, r, o, n))
       return;
     if (a.hasAttribute(h)) {
-      let c = a.getAttribute(lt)?.trim().toLowerCase(), d = c === "submit" || c === "change" ? Jl(a) : null;
+      let c = a.getAttribute(ct)?.trim().toLowerCase(), d = c === "submit" || c === "change" ? Jl(a) : null;
       if ($t(a, e, r, d ?? i.submitBoundary), c === "submit" || c === "change")
         nd(a, e, r, o, n, d);
       return;
@@ -13650,7 +13653,7 @@ p {
     }
     let s = td(a);
     if (s) {
-      if (!Q(s, i.submitBoundary))
+      if (!G(s, i.submitBoundary))
         r.rawHtml.push({ path: e, expression: s });
       return;
     }
@@ -13667,7 +13670,7 @@ p {
     return { dateLong: (i) => Ph(i, e), minorCurrency: (i, r) => Rh(i, r, e), urlencode: (i) => encodeURIComponent(i == null ? "" : String(i)) };
   }
   var Ih = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+)(?:\(\s*([\w$.-]+)\s*\))?)?\s*\}\}/g;
-  function ht(t, e, i = {}) {
+  function mt(t, e, i = {}) {
     return t.replace(Ih, (r, o, n, a) => {
       let s = I(e, o);
       if (!s.found)
@@ -13703,7 +13706,7 @@ p {
       this.filters = i;
     }
     update(t) {
-      this.node.nodeValue = ht(this.template, t, this.filters);
+      this.node.nodeValue = mt(this.template, t, this.filters);
     }
   }
 
@@ -13719,7 +13722,7 @@ p {
       this.filters = r;
     }
     update(t) {
-      this.element.setAttribute(this.name, ht(this.template, t, this.filters));
+      this.element.setAttribute(this.name, mt(this.template, t, this.filters));
     }
   }
 
@@ -13749,7 +13752,7 @@ p {
         this.child = this.template.mount(e, t, this.end);
     }
     unmount() {
-      this.child?.unmount(), this.child = null, ut(this.start, this.end);
+      this.child?.unmount(), this.child = null, ht(this.start, this.end);
     }
   }
 
@@ -13797,7 +13800,7 @@ p {
     unmount() {
       for (let t of this.regions)
         t.unmount();
-      this.regions = [], ut(this.start, this.end);
+      this.regions = [], ht(this.start, this.end);
     }
   }
 
@@ -13811,19 +13814,19 @@ p {
       this.expression = i;
     }
     update(t) {
-      ut(this.start, this.end);
+      ht(this.start, this.end);
       let e = this.end.parentNode;
       if (!e)
         return;
       let i = I(t, this.expression), r = (this.end.ownerDocument ?? document).createElement("template");
-      r.innerHTML = i.found && i.value != null ? String(i.value) : "", Y(r.content), e.insertBefore(r.content, this.end);
+      r.innerHTML = i.found && i.value != null ? String(i.value) : "", Q(r.content), e.insertBefore(r.content, this.end);
     }
     unmount() {
-      ut(this.start, this.end);
+      ht(this.start, this.end);
     }
   }
   function si(t, e, i) {
-    let r = [], o = e.text.map((d) => ({ item: d, node: bt(t, d.path) })), n = e.attributes.map((d) => ({ item: d, node: bt(t, d.path) })), a = e.conditions.map((d) => ({ item: d, node: bt(t, d.path) })), s = e.repeats.map((d) => ({ item: d, node: bt(t, d.path) })), c = e.rawHtml.map((d) => ({ item: d, node: bt(t, d.path) }));
+    let r = [], o = e.text.map((d) => ({ item: d, node: vt(t, d.path) })), n = e.attributes.map((d) => ({ item: d, node: vt(t, d.path) })), a = e.conditions.map((d) => ({ item: d, node: vt(t, d.path) })), s = e.repeats.map((d) => ({ item: d, node: vt(t, d.path) })), c = e.rawHtml.map((d) => ({ item: d, node: vt(t, d.path) }));
     for (let { item: d, node: p } of o) {
       if (p.nodeType !== Node.TEXT_NODE)
         throw Error("Compiled text binding no longer points to a text node.");
@@ -13848,7 +13851,7 @@ p {
     }
     return r;
   }
-  function bt(t, e) {
+  function vt(t, e) {
     let i = t;
     for (let r of e) {
       let o = i.childNodes.item(r);
@@ -13882,12 +13885,12 @@ p {
     }
     static fromTemplate(t, e, i = {}) {
       let r = t.cloneNode(true), o = t.cloneNode(true);
-      Y(o);
+      Q(o);
       let n = Je(o, e, i, _.fromTemplate);
       return new _(r, o, n, e);
     }
     static bindChildrenInPlace(t, e, i = {}) {
-      Y(t);
+      Q(t);
       let o = (t.ownerDocument ?? document).createDocumentFragment();
       for (let s of Array.from(t.childNodes))
         o.appendChild(s.cloneNode(true));
@@ -13950,7 +13953,7 @@ p {
         e.add(n);
     return e;
   }
-  function G(t, e) {
+  function W(t, e) {
     return { loading: t === "loading", loaded: t === "loaded", empty: t === "empty", error: t === "error", status: sd(e) ? e.status : undefined, message: sd(e) ? e.message : undefined };
   }
   function F(t, e, i) {
@@ -13972,7 +13975,7 @@ p {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
   function Fh(t, e) {
-    let i = t.getAttribute(st)?.trim();
+    let i = t.getAttribute(dt)?.trim();
     return i ? { [i]: e } : {};
   }
 
@@ -13993,28 +13996,28 @@ p {
       F(this.el, e, this.options), this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
     }
     loading(t) {
-      let e = G("loading", undefined);
+      let e = W("loading", undefined);
       if (F(this.el, e, this.options), this.renderedBody && !this.hasConditions("loading"))
         return;
       this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
     }
     error(t, e, i, r) {
-      let o = { status: i, message: r }, n = G("error", o);
+      let o = { status: i, message: r }, n = W("error", o);
       if (F(this.el, n, this.options), this.renderer.body(this.scope(t, n, o)), this.renderedBody = true, !this.hasConditions("error"))
         console.warn(`cms-source "${e}": ${r}`);
     }
     data(t, e) {
-      let i = Bl(e) ? "empty" : "loaded", r = G(i, e);
+      let i = Bl(e) ? "empty" : "loaded", r = W(i, e);
       F(this.el, r, this.options);
       let o = this.scope(t, r, e);
       this.renderer.body(o), this.renderedBody = true;
     }
     result(t, e) {
-      let i = e.ok ? "loaded" : "error", r = G(i, e);
+      let i = e.ok ? "loaded" : "error", r = W(i, e);
       F(this.el, r, this.options), this.renderer.body(this.scope(t, r, e)), this.renderedBody = true;
     }
     forced(t) {
-      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, i = G(t, e), r = z(this.el.getAttribute(h) ?? "");
+      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, i = W(t, e), r = z(this.el.getAttribute(h) ?? "");
       F(this.el, i, this.options), this.renderer.body(this.scope(r.alias, i, e)), this.renderedBody = true;
     }
     scope(t, e, i) {
@@ -14078,7 +14081,7 @@ p {
   }
   var ci = "cms-source:success";
   var ui = "cms-source:failed";
-  function mt(t) {
+  function ft(t) {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
@@ -14179,7 +14182,7 @@ p {
     return e;
   }
   function mi(t, e) {
-    let i = e.formData ?? mt(t);
+    let i = e.formData ?? ft(t);
     if (e.method === "GET" || e.method === "HEAD")
       return { kind: "query", url: Uh(e.url, i), formData: i, data: hi(i) };
     let r = Xh(hi(i), i, e.bodyFields);
@@ -14271,11 +14274,11 @@ p {
       this.filters = e;
     }
     capture() {
-      let t = vt(this.element, this.element.ownerDocument);
+      let t = gt(this.element, this.element.ownerDocument);
       if (!t)
         return null;
       let e = this.sourceMethod();
-      return { form: t, method: e, formData: mt(t), bodyFields: e === "GET" || e === "HEAD" ? undefined : cd(this.element.getAttribute(Ne), this.element.ownerDocument) };
+      return { form: t, method: e, formData: ft(t), bodyFields: e === "GET" || e === "HEAD" ? undefined : cd(this.element.getAttribute(Ne), this.element.ownerDocument) };
     }
     async send(t, e, i) {
       return gi(t.form, { url: this.submitUrl(e), method: t.method, signal: i, bodyFields: t.bodyFields, formData: t.formData });
@@ -14324,7 +14327,7 @@ p {
       if (!o)
         return "";
       let n = { value: t, vars: { ...e ? { [e]: t } : {}, result: t, $source: { loading: false, loaded: t.ok, empty: false, error: !t.ok, status: t.status, message: t.message } } };
-      return ht(o, n, this.filters).trim();
+      return mt(o, n, this.filters).trim();
     }
     redirect(t) {
       let e = this.redirectUrl(t);
@@ -14343,7 +14346,7 @@ p {
       return null;
     }
   }
-  function vt(t, e) {
+  function gt(t, e) {
     let i = e.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof i === "function" && t instanceof i ? t : null;
   }
@@ -14367,7 +14370,7 @@ p {
         this.run({ onlyIfUrlChanged: true });
     };
     onSubmit = (t) => {
-      let e = vt(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
+      let e = gt(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
       if (!(typeof e?.reportValidity === "function" ? e.reportValidity() : true)) {
         t.preventDefault();
         return;
@@ -14376,7 +14379,7 @@ p {
         this.run();
     };
     onChange = () => {
-      let t = vt(this.el, this.el.ownerDocument) ?? this.el.closest("form");
+      let t = gt(this.el, this.el.ownerDocument) ?? this.el.closest("form");
       if ((typeof t?.reportValidity === "function" ? t.reportValidity() : true) && this.el.isConnected)
         this.run();
     };
@@ -14384,12 +14387,12 @@ p {
       this.el = t;
       this.filters = e;
       this.options = i;
-      this.formOwned = vt(t, t.ownerDocument) !== null && Vt(t) !== "auto", this.submission = this.formOwned ? new xi(t, e) : null;
+      this.formOwned = gt(t, t.ownerDocument) !== null && Y(t) !== "auto", this.submission = this.formOwned ? new xi(t, e) : null;
       let r = this.formOwned ? Rl(t) : Pl(t);
       this.renderer = new li(t, r, this.filters, { inPlace: this.formOwned }), this.presenter = new di(t, r, this.renderer, this.options);
     }
     start() {
-      if (this.stopListeners = Dl(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), Vt(this.el) === "auto" || this.options.sourceStateForce)
+      if (this.stopListeners = Dl(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), Y(this.el) === "auto" || this.options.sourceStateForce)
         this.run();
       else {
         let t = z(this.el.getAttribute(h) ?? "");
@@ -14448,7 +14451,7 @@ p {
     for (let n of Jh(t, i)) {
       if (!n.hasAttribute(h))
         continue;
-      let a = n.getAttribute(st)?.trim();
+      let a = n.getAttribute(dt)?.trim();
       if (!a)
         continue;
       let s = n === i ? r : e.get(n);
@@ -14498,9 +14501,10 @@ p {
         return;
       }
       let e = this.sources.get(t);
-      if (e)
-        e.run({ onlyIfUrlChanged: true });
-      else
+      if (e) {
+        if (Y(t) === "auto")
+          e.run({ onlyIfUrlChanged: true });
+      } else
         this.registerSource(t);
     }
     registerSource(t) {
@@ -14559,7 +14563,7 @@ p {
       return true;
     }
     hasSourceUrl(t) {
-      return Ot(t.getAttribute(h) ?? "").trim() !== "";
+      return Vt(t.getAttribute(h) ?? "").trim() !== "";
     }
   }
 
@@ -14651,7 +14655,7 @@ p {
     activate() {
       if (this.stopped)
         return;
-      Ei(this.root), this.fixedRanges.mountWithin(this.root), Ft(this.root, this.root, this.registry);
+      Ei(this.root), this.fixedRanges.mountWithin(this.root), Ot(this.root, this.root, this.registry);
       let t = this.root.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
       this.observer = new t((e) => {
         for (let i of e) {
@@ -14660,7 +14664,7 @@ p {
             continue;
           }
           i.removedNodes.forEach((r) => Tl(r, this.root, this.registry)), i.addedNodes.forEach((r) => {
-            Ei(r), this.fixedRanges.mountWithin(r), Ft(r, this.root, this.registry);
+            Ei(r), this.fixedRanges.mountWithin(r), Ot(r, this.root, this.registry);
           });
         }
       }), this.observer.observe(this.root, { attributes: true, attributeFilter: [h, y, f], childList: true, subtree: true });
@@ -14674,7 +14678,7 @@ p {
       if (this.stopped)
         return;
       if (this.registry.pruneDetached(), t.isConnected)
-        Ft(t, this.root, this.registry);
+        Ot(t, this.root, this.registry);
     }
   }
   var vd = "cms-binding-cloak";
@@ -14693,7 +14697,7 @@ p {
   class xd extends HTMLElement {
     _runtime = null;
     static get observedAttributes() {
-      return [at, Rt];
+      return [lt, Bt];
     }
     connectedCallback() {
       fd(this.ownerDocument ?? document), this._syncRuntime();
@@ -14729,15 +14733,15 @@ p {
       this.startRuntime();
     }
     _isRuntimeDisabled() {
-      if (this.hasAttribute(at) || this.closest(`[${x}]`) !== null)
+      if (this.hasAttribute(lt) || this.closest(`[${x}]`) !== null)
         return true;
       for (let t = this.parentElement;t; t = t.parentElement)
-        if (t.localName === g && t.hasAttribute(at))
+        if (t.localName === g && t.hasAttribute(lt))
           return true;
       return false;
     }
     _sourceStateForce() {
-      let t = this.getAttribute(Rt);
+      let t = this.getAttribute(Bt);
       return _l(t) ? t : undefined;
     }
     _revealInertSources() {
@@ -15919,13 +15923,7 @@ slot[name="tabs"]::slotted(*) {
             Dashboards
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="integrations">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 3v4h1.5a2.5 2.5 0 1 1 0 5H14v4h-4v-1.5a2.5 2.5 0 1 0-5 0V16H3v-6h1.5a2.5 2.5 0 1 0 0-5H3V3h6v1.5a2.5 2.5 0 1 0 5 0V3Z" />
-            </svg>
-            Integrations
-        </w13c-lateral-menu-item>
+
 
         <w13c-lateral-menu-item data-route="users">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -18044,7 +18042,7 @@ p9r-action-menu {
       try {
         const items = await fetchSecrets(this._api);
         items.sort((a, b) => a.key.localeCompare(b.key));
-        this._list.replaceChildren(...items.map((it2) => this._buildRow(it2.key)));
+        this._list.replaceChildren(...items.map((it) => this._buildRow(it.key)));
         this._empty.hidden = items.length > 0;
       } catch {
         this._empty.hidden = false;
@@ -23414,17 +23412,20 @@ p9r-modal[data-variable-edit-modal]::part(footer) {
       params.set("integration", next.id);
     } else if (next.view === "setup") {
       params.set("setup", next.kind);
-    } else if (next.tab === "catalogue") {
-      params.set("tab", "catalogue");
+    } else {
+      params.set("tab", next.tab);
     }
     const suffix = params.toString() ? `?${params.toString()}` : "";
-    return route(`/admin/integrations${suffix}`);
+    const destination = window.location.pathname.endsWith("/admin/blocs") ? "blocs" : "sources";
+    return route(`/admin/${destination}${suffix}`);
   }
   function pushIntegrationRoute(next) {
     history.pushState(null, "", integrationRouteUrl(next));
+    window.dispatchEvent(new Event("cms-resources:route"));
   }
   function replaceIntegrationRoute(next) {
     history.replaceState(null, "", integrationRouteUrl(next));
+    window.dispatchEvent(new Event("cms-resources:route"));
   }
   async function importIntegration(payload) {
     const result = await postJson(route("/api/integrations/import"), payload);
@@ -23439,9 +23440,6 @@ p9r-modal[data-variable-edit-modal]::part(footer) {
     await postJson(`${route("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)}`, body);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
-  }
-  async function getPageLinks() {
-    return getJson(route("/api/page/links?visible=published"));
   }
   async function integrationUpgradeVersions(id2) {
     return getJson(`${route("/api/integrations/installations/versions")}?id=${encodeURIComponent(id2)}`);
@@ -23756,16 +23754,11 @@ ${ThemeNavActions_default}`;
                 <span slot="title" data-title></span>
                 <div slot="actions" class="integration-detail-actions">
                     <p9r-button type="button" color="primary" data-run-sync>Run sync</p9r-button>
-                    <p9r-action-menu label="More actions">
-                        <p9r-action-menu-section label="Configuration">
-                            <p9r-action-menu-item data-reconfigure>Reconfigure</p9r-action-menu-item>
-                        </p9r-action-menu-section>
-                        <p9r-action-menu-section label="Danger zone">
-                            <p9r-action-menu-item color="danger" disabled title="No uninstall endpoint is available yet.">Uninstall</p9r-action-menu-item>
-                        </p9r-action-menu-section>
-                    </p9r-action-menu>
+
                     <span class="action-status" role="status" aria-live="polite" data-action-status></span>
                 </div>
+
+                <cms-integration-management slot="main" data-management></cms-integration-management>
 
                 <cms-detail-section slot="main" heading="Created resources">
                     <div class="resource-list">
@@ -23915,13 +23908,11 @@ ${ThemeNavActions_default}`;
         <span slot="title" data-title></span>
         <div slot="actions" class="integration-detail-actions">
             <p9r-button type="button" variant="outlined" data-setup-cancel>Cancel</p9r-button>
-            <p9r-button type="button" color="primary" data-import-setup>Import</p9r-button>
+            <p9r-button type="button" color="primary" data-import-setup>Install</p9r-button>
             <span class="action-status" data-setup-status></span>
         </div>
 
-        <cms-detail-section slot="main" heading="Configuration" description="Only values needed to create this integration are shown here.">
-            <div class="fields setup-fields" data-fields></div>
-        </cms-detail-section>
+        <p slot="main">Install first, then configure the connection from its settings.</p>
 
         <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
             <div class="collection-selection" data-collection-selection hidden>
@@ -23930,7 +23921,7 @@ ${ThemeNavActions_default}`;
             <div class="resource-list" data-resources></div>
         </cms-detail-section>
 
-        <cms-detail-section slot="aside" heading="Linked integrations" description="Related integrations stay available from this setup flow.">
+        <cms-detail-section slot="aside" heading="Related resources" description="Related integrations stay available from this setup flow.">
             <div data-linked></div>
         </cms-detail-section>
 
@@ -23946,7 +23937,9 @@ ${ThemeNavActions_default}`;
   registry.innerHTML = [browser_default, detail_default, icons_default, importing_default, items_default, setup_default].join("");
   function cloneElement(name) {
     const template = registry.content.querySelector(`template[data-template="${name}"]`);
-    const element = template?.content.firstElementChild?.cloneNode(true);
+    const container = document.createElement("div");
+    container.innerHTML = template?.innerHTML ?? "";
+    const element = container.firstElementChild;
     if (!(element instanceof HTMLElement)) {
       throw new Error(`Missing integration template: ${name}`);
     }
@@ -24063,12 +24056,6 @@ ${ThemeNavActions_default}`;
       grid.append(element);
     }
     root.replaceChildren(grid);
-  }
-  function renderPlaceholder(root, title, copy) {
-    const element = cloneElement("placeholder");
-    text3(element, "[data-title]", title);
-    text3(element, "[data-copy]", copy);
-    root.replaceChildren(element);
   }
   function empty(message) {
     const element = document.createElement("p");
@@ -24595,6 +24582,42 @@ ${ThemeNavActions_default}`;
     return typeof value2 === "string" ? value2.trim() : "";
   }
 
+  // src/components/admin/Resources/Dashboards/navigation/management.ts
+  async function loadSourceInstallations() {
+    const response = await fetch(route2("/api/integrations/installations"));
+    if (!response.ok) {
+      throw new Error(`Unable to load source settings (HTTP ${response.status})`);
+    }
+    return response.json();
+  }
+  function renderSourceManagement(menu, source2, installations) {
+    const parent = installations.find((item) => item.sourceIds?.includes(source2));
+    if (!parent) {
+      return;
+    }
+    const related = [parent, ...installations.filter((item) => item.extensionOf?.kind === parent.id)];
+    let anchor = Array.from(menu.children).filter((item) => item instanceof HTMLElement && item.dataset.source === source2).at(-1);
+    for (const item of related) {
+      const link = document.createElement("w13c-lateral-menu-item");
+      link.dataset.generated = "true";
+      link.setAttribute("manual-active", "");
+      link.toggleAttribute("active", new URL(window.location.href).searchParams.get("integration") === item.id);
+      link.classList.add("dashboard-item");
+      link.setAttribute("href", route2(`/admin/sources?source=${encodeURIComponent(source2)}&integration=${encodeURIComponent(item.id)}`));
+      link.textContent = item === parent ? "Settings & health" : `${item.label} settings`;
+      if (anchor) {
+        anchor.after(link);
+      } else {
+        menu.append(link);
+      }
+      anchor = link;
+    }
+  }
+  function sourceForInstallation(id2, installations) {
+    const item = installations.find((item2) => item2.id === id2);
+    return item?.sourceIds?.[0] ?? installations.find((parent) => parent.id === item?.extensionOf?.kind)?.sourceIds?.[0];
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/mounting/bindingFilters.ts
   var configured = false;
   function configureDashboardBindingFilters() {
@@ -24876,11 +24899,13 @@ w13c-lateral-menu-item {
     style="width: 100%; height: 100%; --menu-brand-mark-display: none; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;"
 >
     <span slot="header">Sources</span>
+    <w13c-lateral-menu-item data-add-source manual-active>Add a source</w13c-lateral-menu-item>
 </w13c-lateral-menu>
 `;
 
   // src/components/admin/Resources/Dashboards/navigation/DashboardNav.ts
   class DashboardNav extends l2 {
+    installations = [];
     groups = [];
     selectedSource = "";
     selectedDashboard = "";
@@ -24894,13 +24919,20 @@ w13c-lateral-menu-item {
       this.syncFromUrl();
       this.shadowRoot.addEventListener("click", this.onClick);
       window.addEventListener("popstate", this.onPopState);
+      window.addEventListener("cms-resources:route", this.onResourceRoute);
       window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
+      this.query("[data-add-source]").setAttribute("href", route2("/admin/sources?tab=catalogue"));
+      this.updateCatalogueAction();
       this.startBoundSource();
+      document.addEventListener("integration:updated", this.refreshInstallations);
+      this.refreshInstallations();
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
       window.removeEventListener("popstate", this.onPopState);
+      window.removeEventListener("cms-resources:route", this.onResourceRoute);
       window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
+      document.removeEventListener("integration:updated", this.refreshInstallations);
       this.observer?.disconnect();
       this.observer = null;
     }
@@ -24947,8 +24979,32 @@ w13c-lateral-menu-item {
     }
     render() {
       const menu = this.query("w13c-lateral-menu");
-      renderDashboardNavigation(menu, this.groups, this.selectedSource, this.selectedDashboard);
+      const params = new URL(window.location.href).searchParams;
+      const installation = params.get("integration");
+      if (installation) {
+        this.selectedSource = sourceForInstallation(installation, this.installations) ?? this.selectedSource;
+      }
+      this.updateCatalogueAction();
+      renderDashboardNavigation(menu, this.groups, params.has("tab") || params.has("setup") ? "" : this.selectedSource, installation ? "" : this.selectedDashboard);
+      renderSourceManagement(menu, this.selectedSource, this.installations);
     }
+    updateCatalogueAction() {
+      const params = new URL(window.location.href).searchParams;
+      this.query("[data-add-source]").toggleAttribute("active", params.get("tab") === "catalogue" || params.has("setup"));
+    }
+    onResourceRoute = () => this.render();
+    refreshInstallations = async () => {
+      if (this.isExampleMode()) {
+        return;
+      }
+      try {
+        this.installations = await loadSourceInstallations();
+        if (!this.isConnected) {
+          return;
+        }
+        this.render();
+      } catch {}
+    };
     activeGroup() {
       return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
     }
@@ -27904,6 +27960,13 @@ button {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-1.css
   var part_1_default = `:host {
+    --_page-link-surface: var(--editor-v2-surface, var(--bg-surface, #ffffff));
+    --_page-link-surface-muted: var(--editor-v2-surface-muted, var(--bg-subtle, #f9faf9));
+    --_page-link-border: var(--editor-v2-border, var(--border-default, #e2e6e4));
+    --_page-link-text: var(--editor-v2-text, var(--text-default, #151b19));
+    --_page-link-label: var(--editor-v2-label, var(--text-muted, #5f6d68));
+    --_page-link-muted: var(--editor-v2-muted, var(--text-muted, #87948f));
+    --_page-link-accent: var(--editor-v2-accent, var(--primary-base, #165f4b));
     display: block;
 }
 
@@ -27926,13 +27989,13 @@ button {
 }
 
 .label {
-    color: var(--editor-v2-label);
+    color: var(--_page-link-label);
     font-size: 12px;
     font-weight: 720;
 }
 
 .hint {
-    color: var(--editor-v2-muted);
+    color: var(--_page-link-muted);
     font-size: 11px;
     line-height: 1.35;
 }
@@ -27940,9 +28003,9 @@ button {
 .tabs {
     display: flex;
     gap: 2px;
-    border: 1px solid var(--editor-v2-border);
+    border: 1px solid var(--_page-link-border);
     border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
+    background: var(--_page-link-surface-muted);
     padding: 3px;
 }
 
@@ -27964,14 +28027,14 @@ button {
     border: 0;
     border-radius: 6px;
     background: transparent;
-    color: var(--editor-v2-muted);
+    color: var(--_page-link-muted);
     font-size: 12px;
     font-weight: 650;
 }
 
 .tabs button[aria-selected="true"] {
-    background: var(--editor-v2-surface);
-    color: var(--editor-v2-text);
+    background: var(--_page-link-surface);
+    color: var(--_page-link-text);
     box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
 }
 
@@ -27992,10 +28055,10 @@ button {
 .external-input {
     width: 100%;
     min-height: 32px;
-    border: 1px solid var(--editor-v2-border);
+    border: 1px solid var(--_page-link-border);
     border-radius: 7px;
-    background: var(--editor-v2-surface);
-    color: var(--editor-v2-text);
+    background: var(--_page-link-surface);
+    color: var(--_page-link-text);
     font: inherit;
     font-size: 12px;
     outline: none;
@@ -28006,18 +28069,18 @@ button {
     display: grid;
     gap: 8px;
     width: 100%;
-    border: 1px solid color-mix(in srgb, var(--editor-v2-border) 76%, transparent);
+    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
     border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
-    color: var(--editor-v2-text);
+    background: var(--_page-link-surface-muted);
+    color: var(--_page-link-text);
     padding: 8px;
     cursor: pointer;
     text-align: left;
 }
 
 .file-button:hover {
-    border-color: color-mix(in srgb, var(--editor-v2-accent) 32%, var(--editor-v2-border));
-    background: color-mix(in srgb, var(--editor-v2-accent) 4%, var(--editor-v2-surface));
+    border-color: color-mix(in srgb, var(--_page-link-accent) 32%, var(--_page-link-border));
+    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
 }
 
 .file-preview {
@@ -28028,8 +28091,8 @@ button {
     min-height: 112px;
     aspect-ratio: 16 / 9;
     border-radius: 7px;
-    background: color-mix(in srgb, var(--editor-v2-accent) 10%, var(--editor-v2-surface));
-    color: var(--editor-v2-accent);
+    background: color-mix(in srgb, var(--_page-link-accent) 10%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
     font-size: 18px;
 }
 
@@ -28062,15 +28125,15 @@ button {
 
 .file-action {
     justify-self: start;
-    color: var(--editor-v2-accent);
+    color: var(--_page-link-accent);
     font-size: 11px;
     font-weight: 720;
 }
 
 .search:focus,
 .external-input:focus {
-    border-color: color-mix(in srgb, var(--editor-v2-accent) 46%, var(--editor-v2-border));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 10%, transparent);
+    border-color: color-mix(in srgb, var(--_page-link-accent) 46%, var(--_page-link-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--_page-link-accent) 10%, transparent);
 }
 
 .picker {
@@ -28080,9 +28143,9 @@ button {
     right: 0;
     left: 0;
     overflow: hidden;
-    border: 1px solid var(--editor-v2-border);
+    border: 1px solid var(--_page-link-border);
     border-radius: 8px;
-    background: var(--editor-v2-surface);
+    background: var(--_page-link-surface);
     box-shadow: 0 12px 28px rgba(16, 24, 21, .14);
 }
 
@@ -28107,19 +28170,19 @@ button {
     border: 0;
     border-radius: 6px;
     background: transparent;
-    color: var(--editor-v2-text);
+    color: var(--_page-link-text);
     padding: 6px 7px;
     text-align: left;
     cursor: pointer;
 }
 
 .page-option:hover {
-    background: color-mix(in srgb, var(--editor-v2-accent) 4%, var(--editor-v2-surface));
+    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
 }
 
 .page-option[aria-selected="true"] {
-    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
-    color: var(--editor-v2-accent);
+    background: color-mix(in srgb, var(--_page-link-accent) 8%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
 }
 
 .page-title {
@@ -28134,14 +28197,14 @@ button {
 .page-path {
     overflow: hidden;
     min-width: 0;
-    color: var(--editor-v2-muted);
+    color: var(--_page-link-muted);
     font-size: 11px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .empty {
-    color: var(--editor-v2-muted);
+    color: var(--_page-link-muted);
     font-size: 12px;
     padding: 10px 11px;
 }
@@ -28151,9 +28214,9 @@ button {
     align-items: center;
     gap: 10px;
     min-height: 34px;
-    border: 1px solid color-mix(in srgb, var(--editor-v2-border) 76%, transparent);
+    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
     border-radius: 7px;
-    background: var(--editor-v2-surface-muted);
+    background: var(--_page-link-surface-muted);
     padding: 6px 8px;
     cursor: pointer;
 }
@@ -28169,8 +28232,8 @@ button {
     width: 22px;
     height: 22px;
     border-radius: 6px;
-    background: color-mix(in srgb, var(--editor-v2-accent) 12%, var(--editor-v2-surface));
-    color: var(--editor-v2-accent);
+    background: color-mix(in srgb, var(--_page-link-accent) 12%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
     font-size: 12px;
 }
 
@@ -28182,7 +28245,7 @@ button {
 
 strong {
     overflow: hidden;
-    color: var(--editor-v2-text);
+    color: var(--_page-link-text);
     font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -28190,7 +28253,7 @@ strong {
 
 code {
     overflow: hidden;
-    color: var(--editor-v2-muted);
+    color: var(--_page-link-muted);
     font-size: 11px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -32999,6 +33062,7 @@ p9r-token-input {
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
   var style_default10 = `:host {
     display: block;
+    min-width: 0;
     --dashboard-table-columns: 46px 1fr;
 }
 
@@ -33619,8 +33683,31 @@ slot {
     return element;
   }
 
+  // src/components/admin/Resources/Integrations/management/api.ts
+  async function managementRequest(id2, operation, body, refresh = false) {
+    const url = `${route(`/api/integrations/management/${operation}`)}?id=${encodeURIComponent(id2)}${refresh ? "&refresh=true" : ""}`;
+    const response = await fetch(url, body === undefined ? undefined : {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      const detail = await response.json().catch(() => null);
+      throw new Error(detail?.error ?? `Request failed (HTTP ${response.status})`);
+    }
+    return response.json();
+  }
+  var readSettings = (id2) => managementRequest(id2, "settings");
+  var readHealth = (id2, refresh = false) => managementRequest(id2, "health", undefined, refresh);
+
   // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
   async function executeEndpointAction(group, groups, action, vars) {
+    if (action.management) {
+      const management = action.management;
+      const input = resolveBody(management.body, vars) ?? vars.fields ?? {};
+      const result = await managementRequest(management.installationId, management.action === "action" ? "action" : "settings", management.action === "action" ? { actionId: management.actionId, input } : input);
+      return { kind: "value", value: result.values, ...actionMeta(group, groups, action) };
+    }
     if (!action.endpoint) {
       throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
     }
@@ -33738,7 +33825,7 @@ slot {
     if (!action) {
       throw new Error(`Dashboard action "${actionId}" was not found`);
     }
-    if (!action.endpoint) {
+    if (!action.endpoint && !action.management) {
       throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     }
     const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
@@ -33757,7 +33844,7 @@ slot {
     if (!action) {
       throw new Error(`Dashboard table action "${actionId}" was not found`);
     }
-    if (!action.endpoint) {
+    if (!action.endpoint && !action.management) {
       throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
     return executeEndpointAction(group, groups, action, {
@@ -34856,7 +34943,7 @@ slot { display: contents; }
       if (this.detailSelection && !validDetailSelection(dashboard, this.detailSelection)) {
         clearDetailResource();
         this.detailSelection = null;
-        if (!this.isExampleMode()) {
+        if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
           replaceSelectionUrl(this.selection());
         }
       }
@@ -34911,7 +34998,7 @@ slot { display: contents; }
       if (!dashboard || !validDetailSelection(dashboard, detail)) {
         this.detailResource.clearResource();
         this.detailSelection = null;
-        if (!this.isExampleMode()) {
+        if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
           replaceSelectionUrl(this.selection());
         }
         this.renderDashboard();
@@ -34921,7 +35008,7 @@ slot { display: contents; }
         this.detailResource.clearResource();
       }
       this.detailSelection = detail;
-      if (!this.isExampleMode()) {
+      if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
         replaceSelectionUrl(this.selection());
       }
       this.renderDashboard();
@@ -34929,13 +35016,13 @@ slot { display: contents; }
     clearDetail() {
       this.detailResource.clearResource();
       this.detailSelection = null;
-      if (!this.isExampleMode()) {
+      if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
         replaceSelectionUrl(this.selection());
       }
       this.renderDashboard();
     }
     async reloadDefinitions() {
-      if (this.hasAttribute("external")) {
+      if (this.hasAttribute("external") && !this.hasAttribute("embedded")) {
         window.dispatchEvent(new CustomEvent("cms-dashboard-workspace:reload"));
         return;
       }
@@ -35201,6 +35288,7 @@ p {
 .tab-body,
 .dashboard-widget-binding {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     min-width: 0;
 }
@@ -35339,6 +35427,7 @@ p {
 
 .tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     border-bottom: 1px solid var(--border-default, #dfe5e2);
     padding: 0 14px;
@@ -35413,7 +35502,9 @@ p {
     }
     connectedCallback() {
       super.connectedCallback();
-      this.syncFromSelection(currentSelection());
+      if (!this.hasAttribute("embedded")) {
+        this.syncFromSelection(currentSelection());
+      }
       this.shadowRoot.addEventListener("click", this.onClick);
       this.shadowRoot.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
       this.shadowRoot.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
@@ -35445,12 +35536,20 @@ p {
       this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
       this.renderDashboard();
     };
-    onSelection = (event) => this.syncSelectionAndRender(event.detail);
-    onPopState = () => this.syncSelectionAndRender(currentSelection());
+    onSelection = (event) => {
+      if (!this.hasAttribute("embedded")) {
+        this.syncSelectionAndRender(event.detail);
+      }
+    };
+    onPopState = () => {
+      if (!this.hasAttribute("embedded")) {
+        this.syncSelectionAndRender(currentSelection());
+      }
+    };
     onWidgetRowSelect = (event) => {
       this.invalidateDetailResource();
       this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
-      if (!this.isExampleMode()) {
+      if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
         pushSelectionUrl(this.selection());
       }
       this.renderDashboard();
@@ -36777,8 +36876,8 @@ cms-dashboard-icon svg {
   var m2 = "cms-binding-core";
   var d2 = "cms-source";
   var et = "cms-source-body";
-  var B2 = "cms-source-id";
-  var $2 = "cms-source-trigger";
+  var $2 = "cms-source-id";
+  var z2 = "cms-source-trigger";
   var Ht2 = "cms-source-method";
   var jt2 = "cms-source-publish";
   var Tt2 = "cms-source-success-reset";
@@ -36805,10 +36904,10 @@ cms-dashboard-icon svg {
   function Ut2(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
   }
-  function R2() {
+  function A3() {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
-  function Gt(t, e = R2()) {
+  function Gt(t, e = A3()) {
     return t.replace(Xe2, (r, o) => encodeURIComponent(e.get(o) ?? ""));
   }
   function Yt2(t, e = document) {
@@ -36816,7 +36915,7 @@ cms-dashboard-icon svg {
     return t.replace(Ue2, (o, i) => encodeURIComponent(r.get(i) ?? ""));
   }
   function Wt(t, e) {
-    let r = R2();
+    let r = A3();
     if (e === "")
       r.delete(t);
     else
@@ -36824,7 +36923,7 @@ cms-dashboard-icon svg {
     let o = r.toString();
     history.replaceState(history.state, "", location.pathname + (o ? `?${o}` : "") + location.hash), document.dispatchEvent(new Event("cms-params:change"));
   }
-  function z2(t, e = document) {
+  function L2(t, e = document) {
     return ot2(e).get(t.trim()) ?? "";
   }
   function rt2(t, e, r = document) {
@@ -36847,7 +36946,7 @@ cms-dashboard-icon svg {
   }
   var Ge2 = 300;
 
-  class it2 {
+  class it {
     el;
     key;
     timer = null;
@@ -36886,7 +36985,7 @@ cms-dashboard-icon svg {
     reflect() {
       if (this.timer)
         return;
-      let t = z2(this.key, this.el.ownerDocument), e = this.el;
+      let t = L2(this.key, this.el.ownerDocument), e = this.el;
       if (e.type === "checkbox") {
         let r = t !== "" && t === (e.value || "true");
         if (e.checked !== r)
@@ -36929,7 +37028,7 @@ cms-dashboard-icon svg {
       this.last = t, rt2(this.key, t, this.el.ownerDocument);
     }
   }
-  var S2 = "cms-param-sync";
+  var y2 = "cms-param-sync";
   var Ye2 = 300;
 
   class nt2 {
@@ -36950,11 +37049,11 @@ cms-dashboard-icon svg {
     };
     constructor(t) {
       this.el = t;
-      this.key = (t.getAttribute(S2) || "").trim() || t.name || "";
+      this.key = (t.getAttribute(y2) || "").trim() || t.name || "";
     }
     start() {
       if (!this.key) {
-        console.warn(`${S2}: no key — set ${S2}="<param>" or a name attribute`, this.el);
+        console.warn(`${y2}: no key — set ${y2}="<param>" or a name attribute`, this.el);
         return;
       }
       this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(O2, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
@@ -36969,7 +37068,7 @@ cms-dashboard-icon svg {
     reflect() {
       if (this.timer)
         return;
-      let t = R2().get(this.key) ?? "", e = this.el;
+      let t = A3().get(this.key) ?? "", e = this.el;
       if (e.type === "checkbox") {
         let r = t !== "" && t === (e.value || "true");
         if (e.checked !== r)
@@ -37107,7 +37206,7 @@ cms-dashboard-icon svg {
     };
   }
   var We2 = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function U3(t) {
+  function G2(t) {
     return C(t).url;
   }
   function C(t) {
@@ -37118,26 +37217,25 @@ cms-dashboard-icon svg {
   }
   var ae = "cms-reload-on";
   var de = "cms-source:reload";
-  function G2(t) {
-    let e = t.getAttribute($2);
+  function R2(t) {
+    let e = t.getAttribute(z2);
     return qt2(e) ? e : "auto";
   }
   function ce2(t, e) {
-    let r = t.ownerDocument, o = [de, ...Ie2(t)];
-    for (let s2 of o)
+    let r = t.ownerDocument, o = R2(t), i = new Set([...o === "auto" ? [de] : [], ...Ie2(t)]);
+    for (let s2 of i)
       r.addEventListener(s2, e.onReload);
-    let i = G2(t);
-    if (i === "submit" || i === "change") {
-      let s2 = Ke2(t) ?? t.closest("form"), a = i === "submit" ? "submit" : "change", c = i === "submit" ? e.onSubmit : e.onChange;
+    if (o === "submit" || o === "change") {
+      let s2 = Ke2(t) ?? t.closest("form"), a = o === "submit" ? "submit" : "change", c = o === "submit" ? e.onSubmit : e.onChange;
       return s2?.addEventListener(a, c), () => {
-        for (let u3 of o)
+        for (let u3 of i)
           r.removeEventListener(u3, e.onReload);
         s2?.removeEventListener(a, c);
       };
     }
-    let n = ue2(U3(t.getAttribute(d2) ?? ""), r, e.onReactiveUrlChange);
+    let n = ue2(G2(t.getAttribute(d2) ?? ""), r, e.onReactiveUrlChange);
     return () => {
-      for (let s2 of o)
+      for (let s2 of i)
         r.removeEventListener(s2, e.onReload);
       n();
     };
@@ -37149,18 +37247,18 @@ cms-dashboard-icon svg {
   function Ie2(t) {
     return (t.getAttribute(ae) ?? "").split(/\s+/).filter(Boolean);
   }
-  var L2 = ["src", "srcset", "sizes", "media", "width", "height"];
+  var H2 = ["src", "srcset", "sizes", "media", "width", "height"];
   var Y2 = "data-cms-network-inert";
   var le = "img,picture,source";
-  function H2(t, e) {
+  function j2(t, e) {
     if (!pe2(t))
       return t.getAttribute(e);
-    let r = W(e);
+    let r = W2(e);
     if (t.hasAttribute(r))
       return t.getAttribute(r);
     return t.hasAttribute("data-cms-network-inert") ? null : t.getAttribute(e);
   }
-  function W(t) {
+  function W2(t) {
     return `data-cms-${t}`;
   }
   function st2(t) {
@@ -37186,20 +37284,20 @@ cms-dashboard-icon svg {
       V2(o.content);
   }
   function fe2(t) {
-    let e = new Map(L2.map((r) => [r, H2(t, r)]));
+    let e = new Map(H2.map((r) => [r, j2(t, r)]));
     t.setAttribute(Y2, "");
-    for (let r of L2) {
+    for (let r of H2) {
       let o = e.get(r);
       if (o !== null && o !== undefined)
-        t.setAttribute(W(r), o);
+        t.setAttribute(W2(r), o);
       t.removeAttribute(r);
     }
   }
   function me(t) {
-    return t.hasAttribute(Y2) || rr2(t) || _e2.some((e) => or2(H2(t, e))) || tr.some((e) => st2(H2(t, e)));
+    return t.hasAttribute(Y2) || rr2(t) || _e2.some((e) => or2(j2(t, e))) || tr.some((e) => st2(j2(t, e)));
   }
   function rr2(t) {
-    return L2.some((e) => t.hasAttribute(W(e)));
+    return H2.some((e) => t.hasAttribute(W2(e)));
   }
   function or2(t) {
     return t !== null && (!t.trim() || st2(t));
@@ -37242,7 +37340,7 @@ cms-dashboard-icon svg {
         t.unmount?.();
     }
   }
-  function j2(t, e) {
+  function T(t, e) {
     let r = t.nextSibling;
     while (r && r !== e) {
       let o = r.nextSibling;
@@ -37268,20 +37366,20 @@ cms-dashboard-icon svg {
     let r = e.indexOf("."), o = r === -1 ? e : e.slice(0, r), i = r === -1 ? "" : e.slice(r + 1);
     for (let n = t;n; n = n.parent) {
       if (n.vars && o in n.vars)
-        return { found: true, value: Se2(n.vars[o], i) };
+        return { found: true, value: ye2(n.vars[o], i) };
       let s2 = n.value;
-      if (ye2(s2) && o in s2)
-        return { found: true, value: Se2(s2[o], i) };
+      if (Se2(s2) && o in s2)
+        return { found: true, value: ye2(s2[o], i) };
     }
     return nr;
   }
   function sr2(t) {
     let e = t.value;
-    if (ye2(e) && "value" in e)
+    if (Se2(e) && "value" in e)
       return e.value;
     return e;
   }
-  function Se2(t, e) {
+  function ye2(t, e) {
     if (e === "")
       return t;
     let r = t;
@@ -37292,7 +37390,7 @@ cms-dashboard-icon svg {
     }
     return r;
   }
-  function ye2(t) {
+  function Se2(t) {
     return t !== null && typeof t === "object";
   }
   function v2(t, e) {
@@ -37301,11 +37399,11 @@ cms-dashboard-icon svg {
     if (t.kind === "path")
       return ur(t.path, e);
     if (t.kind === "not")
-      return !T(v2(t.node, e));
+      return !N2(v2(t.node, e));
     if (t.kind === "and")
-      return T(v2(t.left, e)) && T(v2(t.right, e));
+      return N2(v2(t.left, e)) && N2(v2(t.right, e));
     if (t.kind === "or")
-      return T(v2(t.left, e)) || T(v2(t.right, e));
+      return N2(v2(t.left, e)) || N2(v2(t.right, e));
     if (t.kind === "compare")
       return ar2(v2(t.left, e), v2(t.right, e), t.operator);
     return false;
@@ -37314,7 +37412,7 @@ cms-dashboard-icon svg {
     let r = x2(e, t.trim());
     return r.found ? r.value : undefined;
   }
-  function T(t) {
+  function N2(t) {
     return Boolean(t);
   }
   function ar2(t, e, r) {
@@ -37557,16 +37655,16 @@ cms-dashboard-icon svg {
       return false;
     Fe2.lastIndex = 0;
     for (let r of t.matchAll(Fe2))
-      if (A3(r[1] ?? "", e))
+      if (M2(r[1] ?? "", e))
         return true;
     return false;
   }
   function lt2(t, e) {
     if (!e)
       return false;
-    return dt2(t).some((r) => A3(r, e));
+    return dt2(t).some((r) => M2(r, e));
   }
-  function A3(t, e) {
+  function M2(t, e) {
     if (!e)
       return false;
     let r = t.trim().split(".")[0] ?? "";
@@ -37584,14 +37682,14 @@ cms-dashboard-icon svg {
       return null;
     return (e.nodeValue ?? "").trim().match(hr2)?.[1] ?? null;
   }
-  var Sr2 = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  var yr2 = /^\$range\((0|[1-9]\d*)\)$/;
+  var yr2 = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var Sr2 = /^\$range\((0|[1-9]\d*)\)$/;
   var xe2 = 100;
-  function tt(t) {
-    let e = t.match(Sr2), r = e ? { path: e[1], name: e[2] } : { path: t.trim() };
+  function tt2(t) {
+    let e = t.match(yr2), r = e ? { path: e[1], name: e[2] } : { path: t.trim() };
     if (!r.path.startsWith("$range("))
       return r;
-    let o = yr2.exec(r.path), i = o ? Number(o[1]) : Number.NaN;
+    let o = Sr2.exec(r.path), i = o ? Number(o[1]) : Number.NaN;
     if (!r.name)
       return { ...r, rangeError: "$range(n) requires an alias." };
     if (!Number.isInteger(i) || i < 0 || i > xe2)
@@ -37600,10 +37698,10 @@ cms-dashboard-icon svg {
   }
   function ke2(t, e, r, o, i, n) {
     let s2 = t.getAttribute(g2) ?? "";
-    if (r.skipRepeat || !t.hasAttribute(g2) || A3(s2, r.submitBoundary))
+    if (r.skipRepeat || !t.hasAttribute(g2) || M2(s2, r.submitBoundary))
       return false;
     let a = t.getAttribute(w2), c = a ? lt2(a, r.submitBoundary) : false;
-    return o.repeats.push({ path: e, spec: tt(s2), template: Pe2(t, i, n, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!a && !c, submitBoundary: r.submitBoundary }), rootCondition: c || !a ? null : ct2(a) }), true;
+    return o.repeats.push({ path: e, spec: tt2(s2), template: Pe2(t, i, n, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!a && !c, submitBoundary: r.submitBoundary }), rootCondition: c || !a ? null : ct2(a) }), true;
   }
   function Ee2(t, e, r, o, i, n) {
     let s2 = t.getAttribute(w2) ?? "";
@@ -37622,10 +37720,10 @@ cms-dashboard-icon svg {
   function pt2(t, e, r, o) {
     let i = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
     return Array.from(t.childNodes).forEach((n, s2) => {
-      Re2(n, [s2], { skipCondition: r.skipRootCondition === true, skipRepeat: r.skipRootRepeat === true, submitBoundary: r.submitBoundary ?? null }, i, e, o);
+      Ae2(n, [s2], { skipCondition: r.skipRootCondition === true, skipRepeat: r.skipRootRepeat === true, submitBoundary: r.submitBoundary ?? null }, i, e, o);
     }), i;
   }
-  function Re2(t, e, r, o, i, n) {
+  function Ae2(t, e, r, o, i, n) {
     if (t.nodeType === Node.TEXT_NODE) {
       let c = t.nodeValue ?? "";
       if (c.includes("{{") && !I3(c, r.submitBoundary))
@@ -37640,7 +37738,7 @@ cms-dashboard-icon svg {
     if (Ee2(s2, e, r, o, i, n))
       return;
     if (s2.hasAttribute(d2)) {
-      let c = s2.getAttribute($2)?.trim().toLowerCase(), u3 = c === "submit" || c === "change" ? we2(s2) : null;
+      let c = s2.getAttribute(z2)?.trim().toLowerCase(), u3 = c === "submit" || c === "change" ? we2(s2) : null;
       if (_2(s2, e, o, u3 ?? r.submitBoundary), c === "submit" || c === "change")
         Oe2(s2, e, o, i, n, u3);
       return;
@@ -37651,7 +37749,7 @@ cms-dashboard-icon svg {
     }
     let a = Ce2(s2);
     if (a) {
-      if (!A3(a, r.submitBoundary))
+      if (!M2(a, r.submitBoundary))
         o.rawHtml.push({ path: e, expression: a });
       return;
     }
@@ -37659,16 +37757,16 @@ cms-dashboard-icon svg {
   }
   function Oe2(t, e, r, o, i, n) {
     Array.from(t.childNodes).forEach((s2, a) => {
-      Re2(s2, [...e, a], { skipCondition: false, skipRepeat: false, submitBoundary: n }, r, o, i);
+      Ae2(s2, [...e, a], { skipCondition: false, skipRepeat: false, submitBoundary: n }, r, o, i);
     });
   }
-  var gr2 = ft();
-  function ft(t) {
+  var gr2 = ft2();
+  function ft2(t) {
     let e = t?.trim() || undefined;
     return { dateLong: (r) => vr2(r, e), minorCurrency: (r, o) => Fr2(r, o, e), urlencode: (r) => encodeURIComponent(r == null ? "" : String(r)) };
   }
   var br2 = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+)(?:\(\s*([\w$.-]+)\s*\))?)?\s*\}\}/g;
-  function N2(t, e, r = {}) {
+  function Z2(t, e, r = {}) {
     return t.replace(br2, (o, i, n, s2) => {
       let a = x2(e, i);
       if (!a.found)
@@ -37704,7 +37802,7 @@ cms-dashboard-icon svg {
       this.filters = r;
     }
     update(t) {
-      this.node.nodeValue = N2(this.template, t, this.filters);
+      this.node.nodeValue = Z2(this.template, t, this.filters);
     }
   }
 
@@ -37720,11 +37818,11 @@ cms-dashboard-icon svg {
       this.filters = o;
     }
     update(t) {
-      this.element.setAttribute(this.name, N2(this.template, t, this.filters));
+      this.element.setAttribute(this.name, Z2(this.template, t, this.filters));
     }
   }
 
-  class St2 {
+  class yt2 {
     start;
     end;
     condition;
@@ -37750,11 +37848,11 @@ cms-dashboard-icon svg {
         this.child = this.template.mount(e, t, this.end);
     }
     unmount() {
-      this.child?.unmount(), this.child = null, j2(this.start, this.end);
+      this.child?.unmount(), this.child = null, T(this.start, this.end);
     }
   }
 
-  class yt2 {
+  class St {
     start;
     end;
     spec;
@@ -37798,7 +37896,7 @@ cms-dashboard-icon svg {
     unmount() {
       for (let t of this.regions)
         t.unmount();
-      this.regions = [], j2(this.start, this.end);
+      this.regions = [], T(this.start, this.end);
     }
   }
 
@@ -37812,7 +37910,7 @@ cms-dashboard-icon svg {
       this.expression = r;
     }
     update(t) {
-      j2(this.start, this.end);
+      T(this.start, this.end);
       let e = this.end.parentNode;
       if (!e)
         return;
@@ -37820,11 +37918,11 @@ cms-dashboard-icon svg {
       o.innerHTML = r.found && r.value != null ? String(r.value) : "", V2(o.content), e.insertBefore(o.content, this.end);
     }
     unmount() {
-      j2(this.start, this.end);
+      T(this.start, this.end);
     }
   }
   function vt2(t, e, r) {
-    let o = [], i = e.text.map((u3) => ({ item: u3, node: Z2(t, u3.path) })), n = e.attributes.map((u3) => ({ item: u3, node: Z2(t, u3.path) })), s2 = e.conditions.map((u3) => ({ item: u3, node: Z2(t, u3.path) })), a = e.repeats.map((u3) => ({ item: u3, node: Z2(t, u3.path) })), c = e.rawHtml.map((u3) => ({ item: u3, node: Z2(t, u3.path) }));
+    let o = [], i = e.text.map((u3) => ({ item: u3, node: J(t, u3.path) })), n = e.attributes.map((u3) => ({ item: u3, node: J(t, u3.path) })), s2 = e.conditions.map((u3) => ({ item: u3, node: J(t, u3.path) })), a = e.repeats.map((u3) => ({ item: u3, node: J(t, u3.path) })), c = e.rawHtml.map((u3) => ({ item: u3, node: J(t, u3.path) }));
     for (let { item: u3, node: l3 } of i) {
       if (l3.nodeType !== Node.TEXT_NODE)
         throw Error("Compiled text binding no longer points to a text node.");
@@ -37837,11 +37935,11 @@ cms-dashboard-icon svg {
     }
     for (let { item: u3, node: l3 } of s2) {
       let F2 = bt2(l3, "cms-condition");
-      o.push(new St2(F2.start, F2.end, u3.condition, u3.template));
+      o.push(new yt2(F2.start, F2.end, u3.condition, u3.template));
     }
     for (let { item: u3, node: l3 } of a) {
       let F2 = bt2(l3, `cms-repeat ${u3.spec.path}`);
-      o.push(new yt2(F2.start, F2.end, u3.spec, u3.template, u3.rootCondition));
+      o.push(new St(F2.start, F2.end, u3.spec, u3.template, u3.rootCondition));
     }
     for (let { item: u3, node: l3 } of c) {
       let F2 = bt2(l3, `cms-html ${u3.expression}`);
@@ -37849,7 +37947,7 @@ cms-dashboard-icon svg {
     }
     return o;
   }
-  function Z2(t, e) {
+  function J(t, e) {
     let r = t;
     for (let o of e) {
       let i = r.childNodes.item(o);
@@ -37867,7 +37965,7 @@ cms-dashboard-icon svg {
     return r.replaceChild(n, t), r.insertBefore(i, n), { start: i, end: n };
   }
 
-  class y2 {
+  class S2 {
     authoredTemplate;
     executableTemplate;
     plan;
@@ -37879,20 +37977,20 @@ cms-dashboard-icon svg {
       this.filters = o;
     }
     static fromFragment(t, e = {}) {
-      return y2.fromTemplate(t, e);
+      return S2.fromTemplate(t, e);
     }
     static fromTemplate(t, e, r = {}) {
       let o = t.cloneNode(true), i = t.cloneNode(true);
       V2(i);
-      let n = pt2(i, e, r, y2.fromTemplate);
-      return new y2(o, i, n, e);
+      let n = pt2(i, e, r, S2.fromTemplate);
+      return new S2(o, i, n, e);
     }
     static bindChildrenInPlace(t, e, r = {}) {
       V2(t);
       let i = (t.ownerDocument ?? document).createDocumentFragment();
       for (let a of Array.from(t.childNodes))
         i.appendChild(a.cloneNode(true));
-      let n = pt2(i, r, {}, y2.fromTemplate), s2 = new at2(vt2(t, n, r));
+      let n = pt2(i, r, {}, S2.fromTemplate), s2 = new at2(vt2(t, n, r));
       return s2.update(e), s2;
     }
     mount(t, e, r = null) {
@@ -37918,12 +38016,12 @@ cms-dashboard-icon svg {
       this.captured = e;
       this.filters = r;
       this.options = o;
-      this.bodyTemplate = o.inPlace ? null : y2.fromFragment(e.body, r);
+      this.bodyTemplate = o.inPlace ? null : S2.fromFragment(e.body, r);
     }
     body(t) {
       if (this.options.inPlace) {
         if (!this.inPlaceRegion) {
-          this.inPlaceRegion = y2.bindChildrenInPlace(this.el, t, this.filters), this.rendered = "body";
+          this.inPlaceRegion = S2.bindChildrenInPlace(this.el, t, this.filters), this.rendered = "body";
           return;
         }
         this.inPlaceRegion.update(t);
@@ -37944,15 +38042,15 @@ cms-dashboard-icon svg {
       this.bodyRegion?.unmount(), this.bodyRegion = null, this.el.replaceChildren(), this.rendered = "none";
     }
   }
-  function Ae2(t) {
+  function Ve2(t) {
     let e = new Set, r = Array.from(t.children), o = Array.from(t.querySelectorAll(`[${w2}]`));
     for (let i of [...r, ...o])
       for (let n of wr2(i.getAttribute(w2)))
         e.add(n);
     return e;
   }
-  function M2(t, e) {
-    return { loading: t === "loading", loaded: t === "loaded", empty: t === "empty", error: t === "error", status: Ve2(e) ? e.status : undefined, message: Ve2(e) ? e.message : undefined };
+  function D(t, e) {
+    return { loading: t === "loading", loaded: t === "loaded", empty: t === "empty", error: t === "error", status: Re2(e) ? e.status : undefined, message: Re2(e) ? e.message : undefined };
   }
   function P2(t, e, r) {
     r.setSourceStatus?.(t, e);
@@ -37969,11 +38067,11 @@ cms-dashboard-icon svg {
       e.push(r[1]);
     return e;
   }
-  function Ve2(t) {
+  function Re2(t) {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
   function Cr2(t, e) {
-    let r = t.getAttribute(B2)?.trim();
+    let r = t.getAttribute($2)?.trim();
     return r ? { [r]: e } : {};
   }
 
@@ -37987,35 +38085,35 @@ cms-dashboard-icon svg {
       this.el = t;
       this.renderer = r;
       this.options = o;
-      this.conditions = Ae2(e.body);
+      this.conditions = Ve2(e.body);
     }
     initial(t) {
       let e = { loading: false, loaded: false, empty: false, error: false };
       P2(this.el, e, this.options), this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
     }
     loading(t) {
-      let e = M2("loading", undefined);
+      let e = D("loading", undefined);
       if (P2(this.el, e, this.options), this.renderedBody && !this.hasConditions("loading"))
         return;
       this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
     }
     error(t, e, r, o) {
-      let i = { status: r, message: o }, n = M2("error", i);
+      let i = { status: r, message: o }, n = D("error", i);
       if (P2(this.el, n, this.options), this.renderer.body(this.scope(t, n, i)), this.renderedBody = true, !this.hasConditions("error"))
         console.warn(`cms-source "${e}": ${o}`);
     }
     data(t, e) {
-      let r = ne2(e) ? "empty" : "loaded", o = M2(r, e);
+      let r = ne2(e) ? "empty" : "loaded", o = D(r, e);
       P2(this.el, o, this.options);
       let i = this.scope(t, o, e);
       this.renderer.body(i), this.renderedBody = true;
     }
     result(t, e) {
-      let r = e.ok ? "loaded" : "error", o = M2(r, e);
+      let r = e.ok ? "loaded" : "error", o = D(r, e);
       P2(this.el, o, this.options), this.renderer.body(this.scope(t, o, e)), this.renderedBody = true;
     }
     forced(t) {
-      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, r = M2(t, e), o = C(this.el.getAttribute(d2) ?? "");
+      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, r = D(t, e), o = C(this.el.getAttribute(d2) ?? "");
       P2(this.el, r, this.options), this.renderer.body(this.scope(o.alias, r, e)), this.renderedBody = true;
     }
     scope(t, e, r) {
@@ -38029,12 +38127,12 @@ cms-dashboard-icon svg {
     let r = xr2(t);
     if (!r)
       return;
-    let o = {}, i = R2();
+    let o = {}, i = A3();
     for (let [n, s2] of Object.entries(r))
       if (s2.from === "queryParam")
         o[n] = i.get(s2.name) ?? "";
       else if (s2.from === "state")
-        o[n] = z2(s2.name, e);
+        o[n] = L2(s2.name, e);
       else
         o[n] = s2.value;
     return Object.keys(o).length ? o : undefined;
@@ -38078,8 +38176,8 @@ cms-dashboard-icon svg {
     return typeof t === "object" && t !== null && !Array.isArray(t);
   }
   var Ct2 = "cms-source:success";
-  var xt2 = "cms-source:failed";
-  function J2(t) {
+  var xt = "cms-source:failed";
+  function q(t) {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
@@ -38131,19 +38229,19 @@ cms-dashboard-icon svg {
   var Or2 = /^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])+$/;
   var ze2 = new Set(["__proto__", "constructor", "prototype"]);
   function Le2(t, e, r) {
-    let o = e.endsWith("[]"), i = o ? e.slice(0, -2) : e, n = Rr(i);
+    let o = e.endsWith("[]"), i = o ? e.slice(0, -2) : e, n = Ar2(i);
     if (o && /^[A-Za-z0-9_-]+$/.test(i) && !ze2.has(i))
       kt2(t, i, r, true);
-    else if (!n || !Vr2(t, n, r, o))
+    else if (!n || !Rr(t, n, r, o))
       kt2(t, e, r);
   }
-  function Rr(t) {
+  function Ar2(t) {
     if (!Or2.test(t))
       return null;
     let e = [t.slice(0, t.indexOf("[")), ...Array.from(t.matchAll(/\[([^\]]+)\]/g), (r) => r[1])];
     return e.some((r) => ze2.has(r)) ? null : e;
   }
-  function Vr2(t, e, r, o) {
+  function Rr(t, e, r, o) {
     let i = e[0], n = t[i];
     if (n !== undefined && !$e2(n))
       return false;
@@ -38172,26 +38270,26 @@ cms-dashboard-icon svg {
   function $e2(t) {
     return typeof t === "object" && t !== null && Object.getPrototypeOf(t) === null;
   }
-  var Ar2 = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-  function Pt2(t, e) {
+  var Vr2 = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  function Pt(t, e) {
     let r = (t ?? "").trim().toUpperCase();
     if (r === "GET" || r === "POST" || r === "PUT" || r === "PATCH" || r === "DELETE" || r === "HEAD")
       return r;
     return e;
   }
   function Ot2(t, e) {
-    let r = e.formData ?? J2(t);
+    let r = e.formData ?? q(t);
     if (e.method === "GET" || e.method === "HEAD")
-      return { kind: "query", url: Mr2(e.url, r), formData: r, data: Et(r) };
-    let o = Dr2(Et(r), r, e.bodyFields);
-    if (Ar2.has(e.method) && Br2(r))
+      return { kind: "query", url: Mr2(e.url, r), formData: r, data: Et2(r) };
+    let o = Dr2(Et2(r), r, e.bodyFields);
+    if (Vr2.has(e.method) && Br2(r))
       return { kind: "formData", url: e.url, formData: r, data: o, body: r };
     return { kind: "json", url: e.url, formData: r, data: o, body: JSON.stringify(o) };
   }
-  function Et(t) {
+  function Et2(t) {
     let e = {};
     for (let [r, o] of t.entries()) {
-      if (Rt2(o))
+      if (At2(o))
         continue;
       Le2(e, r, o);
     }
@@ -38200,8 +38298,8 @@ cms-dashboard-icon svg {
   function Mr2(t, e) {
     let r = new URL(t, location.href);
     for (let [o, i] of e.entries())
-      if (!Rt2(i))
-        r.searchParams.append(o, Vt2(i) ? i.name : i);
+      if (!At2(i))
+        r.searchParams.append(o, Rt2(i) ? i.name : i);
     return r.toString();
   }
   function Dr2(t, e, r) {
@@ -38219,15 +38317,15 @@ cms-dashboard-icon svg {
     return o;
   }
   function Br2(t) {
-    return Array.from(t.values()).some((e) => !Rt2(e) && Vt2(e));
+    return Array.from(t.values()).some((e) => !At2(e) && Rt2(e));
+  }
+  function At2(t) {
+    return Rt2(t) && t.name === "" && t.size === 0;
   }
   function Rt2(t) {
-    return Vt2(t) && t.name === "" && t.size === 0;
-  }
-  function Vt2(t) {
     return typeof t === "object" && t !== null && typeof t.name === "string" && typeof t.size === "number";
   }
-  async function At(t, e) {
+  async function Vt2(t, e) {
     let r = Ot2(t, e), o = new Headers({ Accept: "application/json" }), i = { method: e.method, headers: o, signal: e.signal };
     if (r.kind === "json")
       o.set("Content-Type", "application/json"), i.body = r.body;
@@ -38272,14 +38370,14 @@ cms-dashboard-icon svg {
       this.filters = e;
     }
     capture() {
-      let t = q(this.element, this.element.ownerDocument);
+      let t = X2(this.element, this.element.ownerDocument);
       if (!t)
         return null;
       let e = this.sourceMethod();
-      return { form: t, method: e, formData: J2(t), bodyFields: e === "GET" || e === "HEAD" ? undefined : De2(this.element.getAttribute(et), this.element.ownerDocument) };
+      return { form: t, method: e, formData: q(t), bodyFields: e === "GET" || e === "HEAD" ? undefined : De2(this.element.getAttribute(et), this.element.ownerDocument) };
     }
     async send(t, e, r) {
-      return At(t.form, { url: this.submitUrl(e), method: t.method, signal: r, bodyFields: t.bodyFields, formData: t.formData });
+      return Vt2(t.form, { url: this.submitUrl(e), method: t.method, signal: r, bodyFields: t.bodyFields, formData: t.formData });
     }
     complete(t, e) {
       if (this.dispatchResult(t), !t.ok)
@@ -38291,7 +38389,7 @@ cms-dashboard-icon svg {
         this.redirect(r);
     }
     sourceMethod() {
-      return Pt2(this.element.getAttribute(Ht2), "POST");
+      return Pt(this.element.getAttribute(Ht2), "POST");
     }
     submitUrl(t) {
       let e = new URL(t, location.href);
@@ -38300,7 +38398,7 @@ cms-dashboard-icon svg {
       return e.toString();
     }
     dispatchResult(t) {
-      let e = t.ok ? Ct2 : xt2, r = t.ok ? Lr2 : Hr2, o = { bubbles: true, composed: true, detail: t };
+      let e = t.ok ? Ct2 : xt, r = t.ok ? Lr2 : Hr2, o = { bubbles: true, composed: true, detail: t };
       this.element.dispatchEvent(new CustomEvent(e, o)), this.element.dispatchEvent(new CustomEvent(r, o));
     }
     publish(t) {
@@ -38325,7 +38423,7 @@ cms-dashboard-icon svg {
       if (!i)
         return "";
       let n = { value: t, vars: { ...e ? { [e]: t } : {}, result: t, $source: { loading: false, loaded: t.ok, empty: false, error: !t.ok, status: t.status, message: t.message } } };
-      return N2(i, n, this.filters).trim();
+      return Z2(i, n, this.filters).trim();
     }
     redirect(t) {
       let e = this.redirectUrl(t);
@@ -38344,7 +38442,7 @@ cms-dashboard-icon svg {
       return null;
     }
   }
-  function q(t, e) {
+  function X2(t, e) {
     let r = e.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof r === "function" && t instanceof r ? t : null;
   }
@@ -38368,7 +38466,7 @@ cms-dashboard-icon svg {
         this.run({ onlyIfUrlChanged: true });
     };
     onSubmit = (t) => {
-      let e = q(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
+      let e = X2(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
       if (!(typeof e?.reportValidity === "function" ? e.reportValidity() : true)) {
         t.preventDefault();
         return;
@@ -38377,7 +38475,7 @@ cms-dashboard-icon svg {
         this.run();
     };
     onChange = () => {
-      let t = q(this.el, this.el.ownerDocument) ?? this.el.closest("form");
+      let t = X2(this.el, this.el.ownerDocument) ?? this.el.closest("form");
       if ((typeof t?.reportValidity === "function" ? t.reportValidity() : true) && this.el.isConnected)
         this.run();
     };
@@ -38385,12 +38483,12 @@ cms-dashboard-icon svg {
       this.el = t;
       this.filters = e;
       this.options = r;
-      this.formOwned = q(t, t.ownerDocument) !== null && G2(t) !== "auto", this.submission = this.formOwned ? new Mt2(t, e) : null;
+      this.formOwned = X2(t, t.ownerDocument) !== null && R2(t) !== "auto", this.submission = this.formOwned ? new Mt2(t, e) : null;
       let o = this.formOwned ? ie2(t) : oe2(t);
       this.renderer = new Ft2(t, o, this.filters, { inPlace: this.formOwned }), this.presenter = new wt2(t, o, this.renderer, this.options);
     }
     start() {
-      if (this.stopListeners = ce2(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), G2(this.el) === "auto" || this.options.sourceStateForce)
+      if (this.stopListeners = ce2(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), R2(this.el) === "auto" || this.options.sourceStateForce)
         this.run();
       else {
         let t = C(this.el.getAttribute(d2) ?? "");
@@ -38449,7 +38547,7 @@ cms-dashboard-icon svg {
     for (let n of jr2(t, r)) {
       if (!n.hasAttribute(d2))
         continue;
-      let s2 = n.getAttribute(B2)?.trim();
+      let s2 = n.getAttribute($2)?.trim();
       if (!s2)
         continue;
       let a = n === r ? o : e.get(n);
@@ -38499,9 +38597,10 @@ cms-dashboard-icon svg {
         return;
       }
       let e = this.sources.get(t);
-      if (e)
-        e.run({ onlyIfUrlChanged: true });
-      else
+      if (e) {
+        if (R2(t) === "auto")
+          e.run({ onlyIfUrlChanged: true });
+      } else
         this.registerSource(t);
     }
     registerSource(t) {
@@ -38531,7 +38630,7 @@ cms-dashboard-icon svg {
     registerPageStateSync(t) {
       if (!t.isConnected || this.pageStateSyncs.has(t))
         return;
-      let e = new it2(t);
+      let e = new it(t);
       this.pageStateSyncs.set(t, e), e.start();
     }
     unregisterPageStateSync(t) {
@@ -38560,7 +38659,7 @@ cms-dashboard-icon svg {
       return true;
     }
     hasSourceUrl(t) {
-      return U3(t.getAttribute(d2) ?? "").trim() !== "";
+      return G2(t.getAttribute(d2) ?? "").trim() !== "";
     }
   }
 
@@ -38588,13 +38687,13 @@ cms-dashboard-icon svg {
         return;
       let r = t.ownerDocument ?? document, o = r.createDocumentFragment();
       o.appendChild(t.cloneNode(true));
-      let i = y2.fromFragment(o, this.filters), n = r.createComment("cms-fixed-range authored"), s2 = t.nextSibling;
+      let i = S2.fromFragment(o, this.filters), n = r.createComment("cms-fixed-range authored"), s2 = t.nextSibling;
       e.insertBefore(n, t), t.remove();
       let a = i.mount(e, {}, s2);
       this.mounted.set(t, { authored: t, marker: n, region: a });
     }
     isStandaloneRange(t) {
-      if (!tt(t.getAttribute(g2) ?? "").path.startsWith("$range("))
+      if (!tt2(t.getAttribute(g2) ?? "").path.startsWith("$range("))
         return false;
       for (let r = t.parentElement;r && r !== this.root; r = r.parentElement)
         if (r.hasAttribute(d2) || r.hasAttribute(g2))
@@ -41598,7 +41697,7 @@ details[open] > summary > .chevron {
     </div>
 
     <section class="integrations-browser" data-browser>
-        <nav class="integration-tabs" aria-label="Integration views">
+        <nav class="integration-tabs" aria-label="Resource views">
             <button type="button" class="integration-tab is-active" data-tab="installed">
                 Installed <span data-installed-count></span>
             </button>
@@ -41638,7 +41737,7 @@ details[open] > summary > .chevron {
                     </div>
                     <div class="catalogue-content" cms-condition="$source.loaded || $source.empty">
                         <div class="filters">
-                            <p9r-input type="search" label="Search" placeholder="Search integrations" data-search cms-param-sync="integrationSearch"></p9r-input>
+                            <p9r-input type="search" label="Search" placeholder="Search sources and extensions" data-search cms-param-sync="integrationSearch"></p9r-input>
                             <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
                                 <option value="">All categories</option>
                                 <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
@@ -41667,636 +41766,9 @@ details[open] > summary > .chevron {
 
     <section class="integration-detail" data-detail-view hidden></section>
 
-    <p9r-modal class="integration-reconfigure-modal" data-reconfigure-modal aria-label="Reconfigure integration">
-        <span slot="title" data-reconfigure-title>Reconfigure integration</span>
-        <form id="integration-reconfigure-form" data-reconfigure-form>
-            <p class="reconfigure-note">
-                Review the installation values, then save to update its resources and connectors in one sync.
-            </p>
-            <div class="fields reconfigure-fields" data-reconfigure-fields></div>
-            <div class="collection-selection" data-reconfigure-resources hidden>
-                <p class="collection-source-plan" data-collection-source-plan></p>
-            </div>
-            <p class="action-status" role="status" aria-live="polite" data-reconfigure-status></p>
-        </form>
-        <div slot="footer" class="reconfigure-actions">
-            <p9r-button type="button" variant="outlined" data-reconfigure-cancel>Cancel</p9r-button>
-            <p9r-button
-                type="submit"
-                form="integration-reconfigure-form"
-                color="primary"
-                data-reconfigure-submit
-                disabled
-            >Save and sync</p9r-button>
-        </div>
-    </p9r-modal>
 
-    <template data-field-template>
-        <label class="field">
-            <span data-label></span>
-            <span data-control></span>
-            <small data-hint></small>
-        </label>
-    </template>
 </div>
 `;
-
-  // src/components/admin/Resources/Integrations/fields/selects.ts
-  function configureSelect(control, options2, value3, multiple) {
-    addOptions(control, options2);
-    control.multiple = multiple;
-    const selected2 = new Set(Array.isArray(value3) ? value3 : typeof value3 === "string" ? [value3] : []);
-    for (const option4 of Array.from(control.options)) {
-      option4.selected = selected2.has(option4.value);
-    }
-  }
-  function configurePageLinkSelect(control, value3, pageLinks) {
-    const current = typeof value3 === "string" ? value3 : "";
-    addOptions(control, current ? [{ label: current, value: current }] : [], "Select a page");
-    if (!pageLinks) {
-      return;
-    }
-    pageLinks.then((links) => {
-      addOptions(control, links.map((link) => ({ label: `${link.title} (${link.path})`, value: link.path })), "Select a page");
-      control.value = current;
-    }, () => {
-      control.options[0].textContent = "Pages could not be loaded";
-    });
-  }
-  function addOptions(control, options2, placeholder) {
-    control.replaceChildren();
-    if (placeholder !== undefined) {
-      control.append(option4(placeholder, ""));
-    }
-    for (const item of options2) {
-      control.append(option4(item.label, item.value));
-    }
-  }
-  function option4(label3, value3) {
-    const element = document.createElement("option");
-    element.textContent = label3;
-    element.value = value3;
-    return element;
-  }
-
-  // src/components/admin/Resources/Integrations/fields/objectList.ts
-  function objectListControl(input2, answer, loadPageLinks) {
-    const root = document.createElement("div");
-    root.className = "object-list";
-    root.dataset.objectListName = input2.name;
-    const items = document.createElement("div");
-    items.className = "object-list-items";
-    const add = document.createElement("button");
-    add.type = "button";
-    add.className = "object-list-add";
-    add.textContent = input2.addLabel ?? "Add item";
-    add.addEventListener("click", () => {
-      items.append(objectListItem(input2, {}, loadPageLinks));
-      refreshList2(input2, root);
-    });
-    root.append(items, add);
-    const values = Array.isArray(answer) ? answer : [];
-    const initialCount = values.length || input2.minItems || (input2.required ? 1 : 0);
-    for (let index = 0;index < initialCount; index++) {
-      items.append(objectListItem(input2, record3(values[index]), loadPageLinks));
-    }
-    refreshList2(input2, root);
-    return root;
-  }
-  function collectObjectListAnswer(root, input2) {
-    const list = root.querySelector(`[data-object-list-name="${cssEscape3(input2.name)}"]`);
-    if (!list) {
-      return;
-    }
-    return Array.from(list.querySelectorAll("[data-object-list-item]")).map((item) => {
-      const value3 = {};
-      for (const field3 of input2.fields) {
-        const control = item.querySelector(`[data-object-field="${cssEscape3(field3.name)}"]`);
-        value3[field3.name] = field3.type === "boolean" ? control.checked : field3.type === "select" && field3.multiple ? Array.from(control.selectedOptions, (option5) => option5.value) : control.value;
-      }
-      return value3;
-    });
-  }
-  function objectListItem(input2, value3, loadPageLinks) {
-    const item = document.createElement("article");
-    item.className = "object-list-item";
-    item.dataset.objectListItem = "";
-    const header = document.createElement("div");
-    header.className = "object-list-item-header";
-    const title2 = document.createElement("strong");
-    title2.dataset.objectListItemTitle = "";
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "object-list-remove";
-    remove.textContent = "Remove";
-    remove.addEventListener("click", () => {
-      const root = item.closest("[data-object-list-name]");
-      item.remove();
-      refreshList2(input2, root);
-    });
-    header.append(title2, remove);
-    const fields = document.createElement("div");
-    fields.className = "object-list-item-fields";
-    for (const field3 of input2.fields) {
-      fields.append(fieldControl2(field3, value3[field3.name], loadPageLinks));
-    }
-    item.append(header, fields);
-    return item;
-  }
-  function fieldControl2(field3, value3, loadPageLinks) {
-    const label3 = document.createElement("label");
-    label3.className = "object-list-item-field";
-    const caption = document.createElement("span");
-    caption.textContent = field3.label;
-    const control = field3.type === "textarea" ? document.createElement("textarea") : field3.type === "select" || field3.type === "page-link" ? document.createElement("select") : document.createElement("input");
-    control.dataset.objectField = field3.name;
-    control.required = field3.required === true;
-    if (field3.type === "boolean") {
-      control.type = "checkbox";
-      control.checked = value3 === true;
-    } else if (field3.type === "textarea") {
-      control.rows = 3;
-      control.value = typeof value3 === "string" ? value3 : "";
-    } else if (field3.type === "select") {
-      configureSelect(control, field3.options, value3, field3.multiple === true);
-    } else if (field3.type === "page-link") {
-      configurePageLinkSelect(control, value3, loadPageLinks?.());
-    } else {
-      control.type = "text";
-      control.value = typeof value3 === "string" ? value3 : "";
-    }
-    label3.append(caption, control);
-    return label3;
-  }
-  function refreshList2(input2, root) {
-    const items = Array.from(root.querySelectorAll("[data-object-list-item]"));
-    items.forEach((item, index) => {
-      item.querySelector("[data-object-list-item-title]").textContent = `Item ${index + 1}`;
-      item.querySelector(".object-list-remove").disabled = items.length <= (input2.minItems ?? 0);
-    });
-    const add = root.querySelector(".object-list-add");
-    add.disabled = input2.maxItems !== undefined && items.length >= input2.maxItems;
-  }
-  function record3(value3) {
-    return typeof value3 === "object" && value3 !== null && !Array.isArray(value3) ? value3 : {};
-  }
-  function cssEscape3(value3) {
-    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
-  }
-
-  // src/components/admin/Resources/Integrations/fields/reconfigure.ts
-  function isSecretInput(input2, secretInputs) {
-    return secretInputs.includes(input2.name) || input2.type !== "object-list" && (input2.type === "password" || input2.secret === true);
-  }
-  function hasStoredSecret(input2, secretInputs) {
-    return secretInputs.includes(input2.name);
-  }
-  function reconfigureAnswer(input2, answer, secretInputs) {
-    return isSecretInput(input2, secretInputs) ? undefined : answer;
-  }
-  function configureReconfigureField(row, input2, secretInputs) {
-    if (input2.name === "id") {
-      for (const control2 of Array.from(row.querySelectorAll("input, textarea, select"))) {
-        control2.disabled = true;
-        control2.setAttribute("aria-disabled", "true");
-      }
-      for (const button2 of Array.from(row.querySelectorAll("button"))) {
-        button2.disabled = true;
-      }
-    }
-    if (!isSecretInput(input2, secretInputs)) {
-      return;
-    }
-    const control = row.querySelector("input, textarea");
-    if (!control) {
-      return;
-    }
-    if (control instanceof HTMLInputElement) {
-      control.type = "password";
-      control.autocomplete = "new-password";
-    }
-    control.value = "";
-    if (hasStoredSecret(input2, secretInputs)) {
-      control.required = false;
-      control.placeholder = "Leave blank to keep the current secret";
-    } else {
-      control.placeholder = input2.required ? "Enter the required secret" : "Enter a secret (optional)";
-    }
-  }
-  function filterReconfigureAnswers(answers, definition, secretInputs, savedAnswers) {
-    const overrides = {};
-    for (const input2 of definition.inputs) {
-      if (input2.name === "id" || !(input2.name in answers)) {
-        continue;
-      }
-      const answer = answers[input2.name];
-      if (answer === undefined) {
-        continue;
-      }
-      if (isSecretInput(input2, secretInputs)) {
-        if (typeof answer === "string" && answer !== "") {
-          overrides[input2.name] = answer;
-        }
-        continue;
-      }
-      if (!answersEqual(answer, savedAnswers[input2.name])) {
-        overrides[input2.name] = answer;
-      }
-    }
-    return overrides;
-  }
-  function answersEqual(left, right) {
-    if (Object.is(left, right)) {
-      return true;
-    }
-    if (Array.isArray(left) || Array.isArray(right)) {
-      return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value3, index) => answersEqual(value3, right[index]));
-    }
-    if (!isObject(left) || !isObject(right)) {
-      return false;
-    }
-    const leftKeys = Object.keys(left);
-    const rightKeys = Object.keys(right);
-    return leftKeys.length === rightKeys.length && leftKeys.every((key) => Object.hasOwn(right, key) && answersEqual(left[key], right[key]));
-  }
-  function isObject(value3) {
-    return typeof value3 === "object" && value3 !== null;
-  }
-
-  // src/components/admin/Resources/Integrations/fields/value.ts
-  function valueControl(input2, answer) {
-    if (input2.type === "json") {
-      return textarea3(input2, answer);
-    }
-    if (input2.type === "select") {
-      return select3(input2, answer);
-    }
-    const element = document.createElement("input");
-    element.name = input2.name;
-    element.type = input2.type === "password" ? "password" : input2.type === "boolean" ? "checkbox" : "text";
-    if (input2.type === "boolean") {
-      element.checked = typeof answer === "boolean" ? answer : input2.defaultValue === true;
-    } else {
-      const value3 = answer ?? input2.defaultValue;
-      element.value = value3 == null ? "" : String(value3);
-    }
-    element.required = input2.required === true;
-    return element;
-  }
-  function collectValueAnswer(root, input2) {
-    const element = root.querySelector(`[name="${cssEscape4(input2.name)}"]`);
-    if (!element) {
-      return;
-    }
-    if (input2.type === "boolean") {
-      return element.checked;
-    }
-    if (input2.type === "json") {
-      return JSON.parse(element.value || "null");
-    }
-    return element.value;
-  }
-  function select3(input2, answer) {
-    const element = document.createElement("select");
-    element.name = input2.name;
-    for (const option5 of input2.options ?? []) {
-      const child = document.createElement("option");
-      child.value = option5.value;
-      child.textContent = option5.label;
-      element.append(child);
-    }
-    element.value = typeof answer === "string" ? answer : String(input2.defaultValue ?? "");
-    element.required = input2.required === true;
-    return element;
-  }
-  function textarea3(input2, answer) {
-    const element = document.createElement("textarea");
-    element.name = input2.name;
-    element.rows = 6;
-    const value3 = answer ?? input2.defaultValue;
-    element.value = value3 == null ? "" : typeof value3 === "string" ? value3 : JSON.stringify(value3);
-    element.required = input2.required === true;
-    return element;
-  }
-  function cssEscape4(value3) {
-    return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value3) : value3.replaceAll('"', "\\\"");
-  }
-
-  // src/components/admin/Resources/Integrations/fields/index.ts
-  function renderFields(root, template6, definition, answers = {}, options2 = {}) {
-    root.replaceChildren();
-    if (!definition.inputs.length) {
-      const empty2 = document.createElement("p");
-      empty2.className = "empty";
-      empty2.textContent = "No inputs required.";
-      root.append(empty2);
-      return;
-    }
-    let pageLinks;
-    const loadPageLinks = definition.inputs.some((input2) => input2.type === "object-list" && input2.fields.some((field3) => field3.type === "page-link")) ? () => pageLinks ??= getPageLinks() : undefined;
-    for (const input2 of definition.inputs) {
-      root.append(inputRow(template6, input2, answers[input2.name], loadPageLinks, options2));
-    }
-  }
-  function collectReconfigureAnswers(root, definition, secretInputs, savedAnswers) {
-    return filterReconfigureAnswers(collectAnswers(root, definition), definition, secretInputs, savedAnswers);
-  }
-  function collectAnswers(root, definition) {
-    const answers = {};
-    for (const input2 of definition.inputs) {
-      const value3 = input2.type === "object-list" ? collectObjectListAnswer(root, input2) : collectValueAnswer(root, input2);
-      if (value3 !== undefined) {
-        answers[input2.name] = value3;
-      }
-    }
-    return answers;
-  }
-  function inputRow(template6, input2, answer, loadPageLinks, options2 = {}) {
-    const displayedAnswer = options2.mode === "reconfigure" ? reconfigureAnswer(input2, answer, options2.secretInputs ?? []) : answer;
-    if (input2.type === "object-list") {
-      const row2 = document.createElement("section");
-      row2.className = "field object-list-fieldset";
-      const label3 = document.createElement("strong");
-      label3.className = "object-list-label";
-      label3.textContent = input2.label;
-      row2.append(label3, objectListControl(input2, displayedAnswer, loadPageLinks));
-      if (options2.mode === "reconfigure") {
-        configureReconfigureField(row2, input2, options2.secretInputs ?? []);
-      }
-      return row2;
-    }
-    const row = template6.content.firstElementChild.cloneNode(true);
-    row.querySelector("[data-label]").textContent = input2.label;
-    row.querySelector("[data-hint]").textContent = hint(input2, options2);
-    row.querySelector("[data-control]").append(valueControl(input2, displayedAnswer));
-    if (options2.mode === "reconfigure") {
-      configureReconfigureField(row, input2, options2.secretInputs ?? []);
-    }
-    return row;
-  }
-  function hint(input2, options2) {
-    if (options2.mode === "reconfigure" && input2.name === "id") {
-      return "The identifier cannot be changed after installation.";
-    }
-    if (options2.mode === "reconfigure" && isSecretInput(input2, options2.secretInputs ?? [])) {
-      if (hasStoredSecret(input2, options2.secretInputs ?? [])) {
-        return "Leave blank to keep the current secret.";
-      }
-      return input2.required ? "Required. Enter a value for this new secret." : "Optional. No secret is currently stored.";
-    }
-    if (isSecretInput(input2, [])) {
-      return "Stored as a secret.";
-    }
-    return input2.required ? "Required." : "";
-  }
-
-  // src/components/admin/Resources/Integrations/domain.ts
-  function installedCounts(installations) {
-    const counts = new Map;
-    for (const installation of installations) {
-      counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
-    }
-    return counts;
-  }
-
-  // src/components/admin/Resources/Integrations/ui/browser.ts
-  function renderBrowser(host) {
-    renderInstallations(host);
-    renderCounts(host);
-  }
-  function renderCounts(host) {
-    text3(host, "[data-installed-count]", host.installations.length);
-    text3(host, "[data-catalogue-count]", availableDefinitions(host).length);
-  }
-  function renderInstallations(host) {
-    const root = host.query("[data-installations]");
-    const rows = [...host.installations].sort((left, right) => left.label.localeCompare(right.label));
-    root.replaceChildren();
-    if (rows.length) {
-      root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
-    }
-    host.query("[data-installations-empty]").hidden = rows.length > 0;
-  }
-  function availableDefinitions(host) {
-    const counts = installedCounts(host.installations);
-    return host.definitions.filter((definition) => !counts.has(definition.kind));
-  }
-  function definitionFor(host, installation) {
-    return host.definitions.find((definition) => definition.kind === installation.id);
-  }
-  function installationRow(host, installation) {
-    const definition = definitionFor(host, installation);
-    const row = cloneElement("installed-row");
-    row.href = integrationRouteUrl({ view: "installation", id: installation.id });
-    row.dataset.integrationId = installation.id;
-    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text3(row, "[data-label]", installation.label);
-    text3(row, "[data-kind]", installation.id);
-    const status = row.querySelector("[data-status]");
-    if (status) {
-      status.textContent = statusLabel(installation.status);
-      status.classList.add(`status-${installation.status}`);
-    }
-    appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
-    text3(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
-    return row;
-  }
-
-  // src/components/admin/Resources/Integrations/ui/detail.ts
-  function renderDetail(host) {
-    const root = host.query("[data-detail-view]");
-    const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
-    if (!installation) {
-      return;
-    }
-    const definition = definitionFor(host, installation);
-    const shell = cloneElement("detail-shell");
-    const content = shell.querySelector("template").content;
-    shell.setAttribute("cms-source", `${route("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
-    text3(content, "[data-title]", installation.label);
-    text3(content, "[data-description]", definition?.description ?? "No description.");
-    content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
-    const upgrade = content.querySelector("[data-upgrade-panel]");
-    upgrade.dataset.integrationId = installation.id;
-    upgrade.dataset.currentVersion = installation.definitionVersion;
-    fillIcon(content, "[data-back-icon]", "table");
-    fillIcon(content, "[data-grid-icon]", "grid");
-    renderLinkedPlaceholder(content.querySelector("[data-linked]"));
-    root.replaceChildren(shell);
-  }
-  function renderLinkedPlaceholder(root) {
-    renderPlaceholder(root, "Coming soon", "Compatibility data will be displayed here when integrations declare their relationships.");
-  }
-
-  // src/components/admin/Resources/Integrations/reconfigure/state.ts
-  var states2 = new WeakMap;
-  function stateFor(host) {
-    let state2 = states2.get(host);
-    if (!state2) {
-      state2 = { detail: null, definition: null, loadToken: 0, pending: false, disabledControls: [] };
-      states2.set(host, state2);
-    }
-    return state2;
-  }
-
-  // src/components/admin/Resources/Integrations/reconfigure/view.ts
-  function modal(host) {
-    return host.query("[data-reconfigure-modal]");
-  }
-  function fields(host) {
-    return host.query("[data-reconfigure-fields]");
-  }
-  function resources(host) {
-    return host.query("[data-reconfigure-resources]");
-  }
-  function submitButton(host) {
-    return host.query("[data-reconfigure-submit]");
-  }
-  function setLoadingContent(host) {
-    const loading = document.createElement("p");
-    loading.className = "empty";
-    loading.textContent = "Loading saved configuration…";
-    fields(host).replaceChildren(loading);
-    resources(host).hidden = true;
-    resources(host).replaceChildren();
-  }
-  function setStatus(host, value3, error = false) {
-    const status = host.query("[data-reconfigure-status]");
-    status.textContent = value3;
-    status.classList.toggle("is-error", error);
-  }
-  function errorMessage3(error, fallback) {
-    return error instanceof Error && error.message.trim() ? error.message : fallback;
-  }
-
-  // src/components/admin/Resources/Integrations/reconfigure/index.ts
-  async function openIntegrationReconfigure(host) {
-    const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
-    if (!installation) {
-      return;
-    }
-    const state2 = stateFor(host);
-    const token = ++state2.loadToken;
-    state2.detail = null;
-    state2.definition = null;
-    setStatus(host, "Loading saved configuration…");
-    setLoadingContent(host);
-    setActionPending(host, false);
-    submitButton(host).disabled = true;
-    host.query("[data-reconfigure-title]").textContent = `Reconfigure ${installation.label}`;
-    modal(host).setAttribute("open", "");
-    try {
-      const detail = await getIntegrationInstallation(installation.id);
-      if (token !== state2.loadToken || !modal(host).hasAttribute("open")) {
-        return;
-      }
-      const definition = definitionFor(host, installation) ?? detail.definition;
-      if (!definition) {
-        throw new Error("The installed integration definition is unavailable.");
-      }
-      state2.detail = detail;
-      state2.definition = definition;
-      renderFields(fields(host), host.query("[data-field-template]"), definition, detail.answers, {
-        mode: "reconfigure",
-        secretInputs: detail.secretInputs
-      });
-      if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
-        renderCollectionSelection(resources(host), definition, detail.activeResources);
-      } else {
-        resources(host).hidden = true;
-        resources(host).replaceChildren();
-      }
-      setStatus(host, "Existing secrets can stay blank. Any newly required secret must be provided.");
-      submitButton(host).disabled = false;
-      queueMicrotask(() => fields(host).querySelector("input:not(:disabled), select:not(:disabled)")?.focus());
-    } catch (error) {
-      if (token !== state2.loadToken) {
-        return;
-      }
-      setStatus(host, errorMessage3(error, "Configuration could not be loaded."), true);
-    }
-  }
-  async function submitIntegrationReconfigure(host, event) {
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !form.matches("[data-reconfigure-form]")) {
-      return;
-    }
-    event.preventDefault();
-    const state2 = stateFor(host);
-    if (state2.pending || !state2.detail || !state2.definition || !form.reportValidity()) {
-      return;
-    }
-    const token = state2.loadToken;
-    try {
-      const answers = collectReconfigureAnswers(fields(host), state2.definition, state2.detail.secretInputs, state2.detail.answers);
-      const selectedResources = state2.definition.schema === "cms.integration.definition.v2" && state2.definition.type === "collection" ? selectedCollectionResources(resources(host)) : undefined;
-      setActionPending(host, true);
-      setStatus(host, "Saving configuration and syncing resources…");
-      await rerunIntegrationInstallation(state2.detail.id, answers, selectedResources);
-      document.dispatchEvent(new Event("integration:reconfigured", { bubbles: true }));
-      if (token !== state2.loadToken) {
-        return;
-      }
-      closeIntegrationReconfigure(host);
-      renderDetail(host);
-    } catch (error) {
-      if (token !== state2.loadToken) {
-        return;
-      }
-      setActionPending(host, false);
-      setStatus(host, errorMessage3(error, "Reconfiguration failed."), true);
-    }
-  }
-  function handleReconfigureCollectionSelection(host, event) {
-    const state2 = stateFor(host);
-    const target2 = event.target instanceof Element ? event.target : null;
-    return Boolean(target2 && target2.closest("[data-reconfigure-resources]") && state2.definition?.schema === "cms.integration.definition.v2" && state2.definition.type === "collection" && handleCollectionSelection(target2, state2.definition));
-  }
-  function closeIntegrationReconfigure(host) {
-    clearReconfigure(host);
-    modal(host).removeAttribute("open");
-  }
-  function handleReconfigureModalClose(host, event) {
-    if (event.target !== modal(host)) {
-      return;
-    }
-    if (stateFor(host).pending) {
-      modal(host).setAttribute("open", "");
-      return;
-    }
-    clearReconfigure(host);
-  }
-  function setActionPending(host, pending) {
-    const state2 = stateFor(host);
-    state2.pending = pending;
-    const controls = Array.from(fields(host).querySelectorAll("input, select, textarea, button"));
-    if (pending) {
-      state2.disabledControls = controls.map((control) => [control, control.disabled]);
-      for (const control of controls) {
-        control.disabled = true;
-      }
-    } else {
-      for (const [control, disabled] of state2.disabledControls) {
-        control.disabled = disabled;
-      }
-      state2.disabledControls = [];
-    }
-    submitButton(host).disabled = pending || !state2.detail;
-    submitButton(host).toggleAttribute("aria-busy", pending);
-    host.query("[data-reconfigure-cancel]").toggleAttribute("disabled", pending);
-    modal(host).toggleAttribute("no-close", pending);
-  }
-  function clearReconfigure(host) {
-    const state2 = stateFor(host);
-    state2.loadToken++;
-    state2.detail = null;
-    state2.definition = null;
-    setActionPending(host, false);
-    fields(host).replaceChildren();
-    resources(host).hidden = true;
-    resources(host).replaceChildren();
-    setStatus(host, "");
-  }
 
   // src/components/admin/Resources/Integrations/ui/data.ts
   function startBoundSources(host) {
@@ -42305,7 +41777,8 @@ details[open] > summary > .chevron {
     const catalogue = host.query("[data-catalogue-source]");
     definitions.setAttribute("cms-source", `${route("/api/integrations/list")} as definitions`);
     installations.setAttribute("cms-source", `${route("/api/integrations/installations")} as installations`);
-    catalogue.setAttribute("cms-source", `${route("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
+    const scope = window.location.pathname.endsWith("/admin/blocs") ? "collections" : "sources";
+    catalogue.setAttribute("cms-source", `${route("/api/integrations/catalogue")}?scope=${scope}&q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
     host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
@@ -42384,6 +41857,455 @@ details[open] > summary > .chevron {
     }
   }
 
+  // src/components/admin/Resources/Integrations/management/collections.ts
+  function renderCollectionSettings(root, installation, status) {
+    const definition = installation.definition;
+    if (definition?.schema !== "cms.integration.definition.v2" || definition.type !== "collection") {
+      return;
+    }
+    const selection = document.createElement("div");
+    selection.dataset.collectionSelection = "";
+    const hint = document.createElement("p");
+    hint.textContent = "Select the blocs available for new content in the editor. Existing pages keep rendering their blocs.";
+    renderCollectionSelection(selection, definition, installation.activeResources);
+    selection.addEventListener("click", (event) => {
+      if (event.target instanceof Element) {
+        handleCollectionSelection(event.target, definition);
+      }
+    });
+    const button2 = document.createElement("button");
+    button2.type = "button";
+    button2.textContent = "Save active blocs";
+    button2.addEventListener("click", async () => {
+      button2.disabled = true;
+      status("Saving active blocs…");
+      try {
+        await rerunIntegrationInstallation(installation.id, undefined, selectedCollectionResources(selection));
+        status("Active blocs saved.");
+      } catch (error) {
+        status(error instanceof Error ? error.message : "Unable to save active blocs.");
+      } finally {
+        button2.disabled = false;
+      }
+    });
+    root.replaceChildren(hint, selection, button2);
+  }
+
+  // src/components/admin/Resources/Integrations/management/presentation/health.ts
+  function renderHealth(root, health, management, run) {
+    root.replaceChildren();
+    const report = health.report;
+    appendText(root, "p", `Observation: ${label3(health.observation)} · ${label3(health.freshness)} · ${date(health.observedAt)}`);
+    if (health.reason) {
+      appendText(root, "p", `Observation issue: ${label3(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}`);
+    }
+    if (health.reportDefinitionVersion) {
+      appendText(root, "p", `Observed version: ${health.reportDefinitionVersion}`);
+    }
+    if (!report) {
+      appendText(root, "p", "No valid service observation is available.");
+      return;
+    }
+    appendText(root, "h3", `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label3(report.status)}`);
+    appendText(root, "p", `Checked ${date(report.checkedAt)}`);
+    appendText(root, "p", configurationStatus(health));
+    for (const check of report.checks) {
+      const row = document.createElement("article");
+      row.className = "management-check";
+      row.dataset.checkId = check.id;
+      appendText(row, "strong", `${label3(check.status)} · ${check.message || check.code || check.id}`);
+      for (const id2 of check.actionIds ?? []) {
+        const action = management.actions?.find((candidate) => candidate.id === id2);
+        if (action || id2 === "apply-settings" && management.settings?.applyFunctionId) {
+          const button2 = document.createElement("button");
+          button2.type = "button";
+          button2.textContent = action?.label ?? "Apply configuration";
+          button2.addEventListener("click", () => run(id2));
+          row.append(button2);
+        }
+      }
+      root.append(row);
+    }
+    if (report.operation) {
+      appendText(root, "h3", `Operation ${report.operation.id}: ${label3(report.operation.status)}`);
+      for (const step of report.operation.steps) {
+        appendText(root, "p", `${step.id}: ${label3(step.status)}`);
+      }
+    }
+  }
+  function appendText(root, tag, text5) {
+    const node = document.createElement(tag);
+    node.textContent = text5;
+    root.append(node);
+  }
+  function date(value3) {
+    const parsed = new Date(value3);
+    return Number.isNaN(parsed.getTime()) ? value3 : parsed.toLocaleString();
+  }
+  function label3(value3) {
+    return value3.replaceAll("_", " ");
+  }
+  function configurationStatus(health) {
+    const { savedRevision, appliedRevision } = health.report.configuration;
+    if (savedRevision === null) {
+      return "No saved configuration revision was reported.";
+    }
+    if (savedRevision !== appliedRevision) {
+      return health.freshness === "fresh" ? "Saved changes are waiting to be applied." : "Saved changes were waiting to be applied at the last observation.";
+    }
+    return health.freshness === "fresh" ? "The saved configuration is applied." : "The saved configuration was applied at the last observation.";
+  }
+
+  // src/components/admin/Resources/Integrations/management/dashboard.ts
+  async function settingsDashboard(id2) {
+    const groups = await fetchDashboards();
+    const group = groups.find((group2) => group2.dashboards.some((dashboard) => dashboard.id === id2));
+    if (!group) {
+      throw new Error("The settings dashboard is unavailable.");
+    }
+    const view = document.createElement("cms-dashboards-admin");
+    view.setAttribute("external", "");
+    view.setAttribute("embedded", "");
+    queueMicrotask(() => view.setExternalContext(groups, { source: group.source.id, dashboard: id2 }));
+    return view;
+  }
+
+  // src/components/admin/Resources/Integrations/management/settings.ts
+  function renderSettings(root, fields, settings, save) {
+    const editor = document.createElement("cms-dashboard-w-detail");
+    editor.data = {
+      rowKey: "settings",
+      eyebrow: "",
+      title: "Connection",
+      aside: [],
+      actions: [{ label: "Save settings", action: "save-settings", tone: "primary" }],
+      main: [
+        { title: "Configuration", fields: fields.map((field3) => detailField(field3, settings.values, {}, {}, "")) }
+      ]
+    };
+    editor.addEventListener(WIDGET_ACTION_EVENT, (event) => {
+      event.stopPropagation();
+      const detail = event.detail;
+      if (detail.action !== "save-settings") {
+        return;
+      }
+      const values = structuredClone(settings.values);
+      for (const field3 of fields) {
+        if (detail.fields && Object.hasOwn(detail.fields, field3.id)) {
+          setValueAt(values, field3.path, detail.fields[field3.id]);
+        }
+      }
+      save(values);
+    });
+    root.replaceChildren(editor);
+  }
+
+  // src/components/admin/Resources/Integrations/management/presentation/style.css
+  var style_default15 = `cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
+.management-tabs { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
+.management-tabs button { padding: .5rem .8rem; border: 1px solid var(--border-default); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+.management-tabs button[aria-pressed="true"] { font-weight: 700; border-color: currentColor; }
+.management-check { display: flex; gap: 1rem; justify-content: space-between; flex-wrap: wrap; padding: .75rem 0; border-bottom: 1px solid var(--border-default); }
+.management-status { margin: .75rem 0; }
+`;
+
+  // src/components/admin/Resources/Integrations/management/presentation/shell.ts
+  function renderManagementShell(host, deploymentStatus, configurationLabel, panel, select3) {
+    const style = document.createElement("style");
+    style.textContent = style_default15;
+    const nav = document.createElement("nav");
+    nav.className = "management-tabs";
+    nav.setAttribute("aria-label", "Source settings");
+    for (const [id2, label4] of [
+      ["connection", configurationLabel],
+      ["health", "Health"]
+    ]) {
+      const button2 = document.createElement("button");
+      button2.type = "button";
+      button2.textContent = label4;
+      button2.dataset.panel = id2;
+      button2.setAttribute("aria-pressed", String(id2 === panel));
+      button2.addEventListener("click", () => select3(id2));
+      nav.append(button2);
+    }
+    const deployment = document.createElement("p");
+    deployment.textContent = `Deployment: ${deploymentStatus}`;
+    const status = document.createElement("p");
+    status.className = "management-status";
+    status.dataset.managementStatus = "";
+    status.setAttribute("role", "status");
+    const content = document.createElement("div");
+    content.dataset.managementContent = "";
+    host.replaceChildren(style, nav, deployment, status, content);
+  }
+
+  // src/components/admin/Resources/Integrations/management/feedback.ts
+  var changed = "cms-integration-management:feedback";
+  var latest = new WeakMap;
+  function managementFeedback(host, installationId, render) {
+    const workspace = host.closest("cms-integrations-admin") ?? host.parentElement ?? host;
+    const refresh = () => {
+      const state2 = latest.get(workspace);
+      render(state2?.installationId === installationId ? state2.message : "");
+    };
+    workspace.addEventListener(changed, refresh);
+    return {
+      refresh,
+      set(message) {
+        latest.set(workspace, { installationId, message });
+        workspace.dispatchEvent(new Event(changed));
+      },
+      disconnect() {
+        workspace.removeEventListener(changed, refresh);
+      }
+    };
+  }
+
+  // src/components/admin/Resources/Integrations/management/IntegrationManagement.ts
+  class IntegrationManagementView extends HTMLElement {
+    installation;
+    management;
+    settings;
+    busy = false;
+    revision = 0;
+    feedback;
+    panel = new URL(window.location.href).searchParams.get("panel") === "health" ? "health" : "connection";
+    connectedCallback() {
+      this.feedback = managementFeedback(this, this.getAttribute("installation-id") ?? "", (message) => {
+        const status = this.querySelector("[data-management-status]");
+        if (status) {
+          status.textContent = message;
+        }
+      });
+      this.load();
+    }
+    disconnectedCallback() {
+      this.revision += 1;
+      this.feedback?.disconnect();
+    }
+    async load() {
+      const revision = ++this.revision;
+      const id2 = this.getAttribute("installation-id");
+      if (!id2) {
+        return;
+      }
+      this.textContent = "Loading settings…";
+      try {
+        const installation = await getIntegrationInstallation(id2);
+        if (!this.isConnected || revision !== this.revision) {
+          return;
+        }
+        this.installation = installation;
+        this.management = installation.definition?.management;
+        this.render();
+        await this.showPanel();
+      } catch (error) {
+        if (revision === this.revision) {
+          this.textContent = error instanceof Error ? error.message : "Unable to load settings.";
+        }
+      }
+    }
+    render() {
+      const configurationLabel = this.installation?.integrationType === "collection" ? "Availability" : this.management?.settings?.dashboardId ? "Settings" : "Connection";
+      renderManagementShell(this, this.installation?.status ?? "unknown", configurationLabel, this.panel, (panel) => {
+        if (!this.busy) {
+          this.panel = panel;
+          this.render();
+          this.showPanel();
+        }
+      });
+      this.feedback?.refresh();
+    }
+    async showPanel(refresh = false) {
+      const revision = ++this.revision;
+      const root = this.querySelector("[data-management-content]");
+      const installation = this.installation;
+      root.textContent = "Loading…";
+      try {
+        if (this.panel === "health") {
+          const health = await readHealth(installation.id, refresh);
+          if (revision !== this.revision || !this.isConnected) {
+            return;
+          }
+          renderHealth(root, health, this.management ?? { schemaVersion: 1 }, (id2) => void this.runAction(id2));
+          const button2 = document.createElement("button");
+          button2.type = "button";
+          button2.textContent = "Refresh health";
+          button2.addEventListener("click", () => void this.showPanel(true));
+          root.prepend(button2);
+        } else if (installation.integrationType === "collection") {
+          renderCollectionSettings(root, installation, (message) => this.status(message));
+        } else if (this.management?.settings?.dashboardId) {
+          const dashboard = await settingsDashboard(this.management.settings.dashboardId);
+          if (revision !== this.revision || !this.isConnected) {
+            return;
+          }
+          root.replaceChildren(dashboard);
+        } else if (this.management?.settings) {
+          this.settings = await readSettings(installation.id);
+          if (revision !== this.revision || !this.isConnected) {
+            return;
+          }
+          renderSettings(root, this.management.settings.fields, this.settings, (values) => void this.save(values));
+          if (this.management.settings.applyFunctionId && this.settings.savedRevision !== this.settings.appliedRevision) {
+            const apply = document.createElement("button");
+            apply.type = "button";
+            apply.textContent = "Retry applying configuration";
+            apply.addEventListener("click", () => void this.runAction("apply-settings"));
+            root.append(apply);
+          }
+        } else {
+          root.textContent = "This source has no connection settings.";
+        }
+      } catch (error) {
+        if (revision === this.revision) {
+          root.textContent = error instanceof Error ? error.message : "Unable to load this panel.";
+        }
+      }
+    }
+    async save(values) {
+      if (this.busy || !this.settings) {
+        return;
+      }
+      this.setBusy(true);
+      this.status("Saving settings…");
+      try {
+        this.settings = await managementRequest(this.installation.id, "settings", {
+          values,
+          expectedRevision: this.settings.savedRevision
+        });
+        await this.showPanel();
+        this.status("Settings saved.");
+      } catch (error) {
+        this.status(error instanceof Error ? error.message : "Unable to save settings.");
+      } finally {
+        this.setBusy(false);
+      }
+    }
+    async runAction(actionId) {
+      if (this.busy) {
+        return;
+      }
+      this.setBusy(true);
+      this.status("Applying configuration…");
+      try {
+        await managementRequest(this.installation.id, "action", { actionId, input: {} });
+        this.status("Action completed.");
+        await this.showPanel(true);
+      } catch (error) {
+        this.status(error instanceof Error ? error.message : "Action failed.");
+      } finally {
+        this.setBusy(false);
+      }
+    }
+    setBusy(busy) {
+      this.busy = busy;
+      this.querySelector("[data-management-content]")?.toggleAttribute("inert", busy);
+      this.toggleAttribute("aria-busy", busy);
+    }
+    status(message) {
+      this.feedback?.set(message);
+    }
+  }
+  if (!customElements.get("cms-integration-management")) {
+    customElements.define("cms-integration-management", IntegrationManagementView);
+  }
+
+  // src/components/admin/Resources/Integrations/domain.ts
+  function installedCounts(installations) {
+    const counts = new Map;
+    for (const installation of installations) {
+      counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
+    }
+    return counts;
+  }
+
+  // src/components/admin/Resources/Integrations/ui/browser.ts
+  function renderBrowser(host) {
+    renderInstallations(host);
+    renderCounts(host);
+  }
+  function renderCounts(host) {
+    text3(host, "[data-installed-count]", host.installations.filter((row) => inScope(row.integrationType)).length);
+    text3(host, "[data-catalogue-count]", availableDefinitions(host).length);
+  }
+  function renderInstallations(host) {
+    const root = host.query("[data-installations]");
+    const rows = host.installations.filter((row) => inScope(row.integrationType)).sort((left, right) => left.label.localeCompare(right.label));
+    root.replaceChildren();
+    if (rows.length) {
+      root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
+    }
+    host.query("[data-installations-empty]").hidden = rows.length > 0;
+  }
+  function availableDefinitions(host) {
+    const counts = installedCounts(host.installations);
+    return host.definitions.filter((definition) => !counts.has(definition.kind) && inScope(definition.type) && (!definition.extensionOf || counts.has(definition.extensionOf.kind)));
+  }
+  function definitionFor(host, installation) {
+    return host.definitions.find((definition) => definition.kind === installation.id);
+  }
+  function installationRow(host, installation) {
+    const definition = definitionFor(host, installation);
+    const row = cloneElement("installed-row");
+    row.href = integrationRouteUrl({ view: "installation", id: installation.id });
+    row.dataset.integrationId = installation.id;
+    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
+    text3(row, "[data-label]", installation.label);
+    text3(row, "[data-kind]", installation.id);
+    const status = row.querySelector("[data-status]");
+    if (status) {
+      status.textContent = statusLabel(installation.status);
+      status.classList.add(`status-${installation.status}`);
+    }
+    appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
+    text3(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
+    return row;
+  }
+  function inScope(type) {
+    return window.location.pathname.endsWith("/admin/blocs") ? type === "collection" : type !== "collection";
+  }
+
+  // src/components/admin/Resources/Integrations/ui/detail.ts
+  function renderDetail(host) {
+    const root = host.query("[data-detail-view]");
+    const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
+    if (!installation) {
+      return;
+    }
+    const definition = definitionFor(host, installation);
+    const shell = cloneElement("detail-shell");
+    const content = shell.querySelector("template").content;
+    shell.setAttribute("cms-source", `${route("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
+    text3(content, "[data-title]", installation.label);
+    text3(content, "[data-description]", definition?.description ?? "No description.");
+    content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
+    content.querySelector("[data-management]").setAttribute("installation-id", installation.id);
+    const upgrade = content.querySelector("[data-upgrade-panel]");
+    upgrade.dataset.integrationId = installation.id;
+    upgrade.dataset.currentVersion = installation.definitionVersion;
+    fillIcon(content, "[data-back-icon]", "table");
+    fillIcon(content, "[data-grid-icon]", "grid");
+    renderLinkedResources(content.querySelector("[data-linked]"), host, definition);
+    root.replaceChildren(shell);
+  }
+  function renderLinkedResources(root, host, definition) {
+    const dependencies = definition?.dependencies ?? [];
+    root.replaceChildren();
+    for (const dependency of dependencies) {
+      const installed = host.installations.find((item2) => item2.id === dependency.kind);
+      const item = document.createElement(installed ? "a" : "p");
+      item.textContent = `${dependency.name || dependency.kind}: ${installed ? "Installed" : dependency.optional ? "Optional" : "Required"}${dependency.versionRange ? ` (${dependency.versionRange})` : ""}`;
+      if (installed) {
+        item.setAttribute("href", integrationRouteUrl({ view: "installation", id: installed.id }));
+      }
+      root.append(item);
+    }
+    if (!dependencies.length) {
+      root.textContent = "No related resources declared.";
+    }
+  }
+
   // src/components/admin/Resources/Integrations/ui/setup.ts
   function renderSetup(host, definition, options2 = {}) {
     const shell = cloneElement("setup-shell");
@@ -42396,10 +42318,9 @@ details[open] > summary > .chevron {
     if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
       renderCollectionSelection(shell.querySelector("[data-collection-selection]"), definition, options2.resources);
     }
-    renderLinkedPlaceholder(shell.querySelector("[data-linked]"));
+    renderLinkedResources(shell.querySelector("[data-linked]"), host, definition);
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
     host.query("[data-detail-view]").replaceChildren(shell);
-    renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition, options2.answers);
   }
   function renderImporting(host, definition, answers) {
     const shell = cloneElement("importing-shell");
@@ -42427,14 +42348,14 @@ details[open] > summary > .chevron {
     }
     const status = host.querySelector("[data-action-status]");
     setBusy(button2, true, "Syncing");
-    setStatus2(status, "");
+    setStatus(status, "");
     try {
       await rerunIntegrationInstallation(id2);
       setBusy(button2, false, "Run sync");
-      setStatus2(status, "Synced");
+      setStatus(status, "Synced");
     } catch (error) {
       setBusy(button2, false, "Run sync");
-      setStatus2(status, error instanceof Error ? error.message : "Sync failed", true);
+      setStatus(status, error instanceof Error ? error.message : "Sync failed", true);
     }
   }
   async function openIntegrationUpgrade(button2) {
@@ -42444,7 +42365,7 @@ details[open] > summary > .chevron {
       return;
     }
     setBusy(button2, true, "Checking");
-    setStatus2(statusElement(panel), "Checking available versions...");
+    setStatus(statusElement(panel), "Checking available versions...");
     try {
       const choices = await integrationUpgradeVersions(id2);
       renderUpgradeChoices(panel, choices);
@@ -42452,7 +42373,7 @@ details[open] > summary > .chevron {
       setBusy(button2, false, choices.versions.length ? "Check again" : "Up to date");
     } catch (error) {
       setBusy(button2, false, "Try again");
-      setStatus2(statusElement(panel), integrationUpgradeErrorMessage(error), true);
+      setStatus(statusElement(panel), integrationUpgradeErrorMessage(error), true);
     }
   }
   function cancelIntegrationUpgrade(button2) {
@@ -42462,43 +42383,43 @@ details[open] > summary > .chevron {
     }
     panel.querySelector("[data-upgrade-form]").hidden = true;
     panel.querySelector("[data-upgrade-open]").hidden = false;
-    setStatus2(statusElement(panel), "Upgrade cancelled.");
+    setStatus(statusElement(panel), "Upgrade cancelled.");
   }
   async function confirmIntegrationUpgrade(button2) {
     const panel = upgradePanel(button2);
     const id2 = panel?.dataset.integrationId;
-    const select4 = panel?.querySelector("[data-upgrade-target]");
+    const select3 = panel?.querySelector("[data-upgrade-target]");
     const confirmation = panel?.querySelector("[data-upgrade-confirmation]");
-    if (!panel || !id2 || !select4 || !confirmation) {
+    if (!panel || !id2 || !select3 || !confirmation) {
       return;
     }
-    const target2 = select4.value;
+    const target2 = select3.value;
     if (!target2 || confirmation.value.trim() !== target2) {
-      setStatus2(statusElement(panel), `Type ${target2 || "the target version"} exactly to confirm.`, true);
+      setStatus(statusElement(panel), `Type ${target2 || "the target version"} exactly to confirm.`, true);
       return;
     }
     setBusy(button2, true, "Upgrading");
-    setStatus2(statusElement(panel), `Upgrading to ${target2}...`);
+    setStatus(statusElement(panel), `Upgrading to ${target2}...`);
     try {
       await upgradeIntegrationInstallation(id2, target2);
       setBusy(button2, false, "Upgrade complete");
-      setStatus2(statusElement(panel), `Upgraded to ${target2}. Installation data is refreshing.`);
+      setStatus(statusElement(panel), `Upgraded to ${target2}. Installation data is refreshing.`);
     } catch (error) {
       setBusy(button2, false, "Upgrade");
-      setStatus2(statusElement(panel), integrationUpgradeErrorMessage(error), true);
+      setStatus(statusElement(panel), integrationUpgradeErrorMessage(error), true);
     }
   }
   function renderUpgradeChoices(panel, choices) {
     const form = panel.querySelector("[data-upgrade-form]");
-    const select4 = panel.querySelector("[data-upgrade-target]");
+    const select3 = panel.querySelector("[data-upgrade-target]");
     const confirmation = panel.querySelector("[data-upgrade-confirmation]");
-    select4.replaceChildren(...choices.versions.map((version) => versionOption(version, choices)));
+    select3.replaceChildren(...choices.versions.map((version) => versionOption(version, choices)));
     const preferred = choices.stable ?? choices.latest ?? choices.versions[0] ?? "";
-    select4.value = preferred;
+    select3.value = preferred;
     confirmation.value = "";
     confirmation.placeholder = preferred;
     form.hidden = choices.versions.length === 0;
-    setStatus2(statusElement(panel), choices.versions.length ? upgradeSummary(choices) : unavailableUpgradeSummary(choices));
+    setStatus(statusElement(panel), choices.versions.length ? upgradeSummary(choices) : unavailableUpgradeSummary(choices));
   }
   function integrationUpgradeErrorMessage(error) {
     if (!(error instanceof IntegrationApiError)) {
@@ -42516,16 +42437,16 @@ details[open] > summary > .chevron {
     return error.message;
   }
   function versionOption(version, choices) {
-    const option5 = document.createElement("option");
-    option5.value = version;
+    const option4 = document.createElement("option");
+    option4.value = version;
     const channels = [choices.stable === version ? "stable" : "", choices.latest === version ? "latest" : ""].filter(Boolean);
     const target2 = choices.targets?.find((candidate) => candidate.version === version);
     const labels = [
       ...channels,
       ...target2?.migrations.map((migration) => `${migration.connectorKey} from ${migration.supportedSourceRange}; rollback ${migration.rollback}`) ?? []
     ];
-    option5.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
-    return option5;
+    option4.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
+    return option4;
   }
   function upgradeSummary(choices) {
     const unavailable = choices.targets?.filter((target2) => !target2.eligible) ?? [];
@@ -42549,11 +42470,11 @@ details[open] > summary > .chevron {
     const activation = executionStatusSummary("activation", migration.activationOutcome);
     return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; ${cmsCutover}; ${providerCutover}; ${activation}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
   }
-  function cutoverExecutionSummary(label3, strategy, outcome) {
-    return `${label3} ${strategy} (${executionStatus(outcome)})`;
+  function cutoverExecutionSummary(label4, strategy, outcome) {
+    return `${label4} ${strategy} (${executionStatus(outcome)})`;
   }
-  function executionStatusSummary(label3, outcome) {
-    return `${label3} ${executionStatus(outcome)}`;
+  function executionStatusSummary(label4, outcome) {
+    return `${label4} ${executionStatus(outcome)}`;
   }
   function executionStatus(outcome) {
     if (outcome === undefined) {
@@ -42577,11 +42498,11 @@ details[open] > summary > .chevron {
   function statusElement(panel) {
     return panel.querySelector("[data-upgrade-status]");
   }
-  function setBusy(element, busy, label3) {
+  function setBusy(element, busy, label4) {
     element.toggleAttribute("aria-busy", busy);
-    element.textContent = label3;
+    element.textContent = label4;
   }
-  function setStatus2(element, message, error = false) {
+  function setStatus(element, message, error = false) {
     if (!element) {
       return;
     }
@@ -42615,13 +42536,6 @@ details[open] > summary > .chevron {
     if (target2.closest("[data-import-setup]")) {
       return importActive(host);
     }
-    if (target2.closest("[data-reconfigure-cancel]")) {
-      closeIntegrationReconfigure(host);
-      return;
-    }
-    if (target2.closest("[data-reconfigure]")) {
-      return openIntegrationReconfigure(host);
-    }
     const upgradeOpen = target2.closest("[data-upgrade-open]");
     if (upgradeOpen) {
       return openIntegrationUpgrade(upgradeOpen);
@@ -42639,7 +42553,7 @@ details[open] > summary > .chevron {
     if (runSync) {
       return runIntegrationSync(host, runSync);
     }
-    const installation = target2.closest("[data-installation-id]");
+    const installation = target2.closest("[data-integration-id]");
     if (installation?.dataset.integrationId) {
       if (!shouldInterceptNavigation(event)) {
         return;
@@ -42672,11 +42586,11 @@ details[open] > summary > .chevron {
       return;
     }
     const definition = host.activeDefinition;
-    const answers = collectAnswers(host.query("[data-fields]"), definition);
-    const resources2 = definition.schema === "cms.integration.definition.v2" && definition.type === "collection" ? selectedCollectionResources(host) : undefined;
+    const answers = {};
+    const resources = definition.schema === "cms.integration.definition.v2" && definition.type === "collection" ? selectedCollectionResources(host) : undefined;
     renderImporting(host, definition, answers);
     try {
-      const result = await importIntegration({ kind: definition.kind, answers, ...resources2 ? { resources: resources2 } : {} });
+      const result = await importIntegration({ kind: definition.kind, answers, ...resources ? { resources } : {} });
       host.tab = "installed";
       const id2 = result.installation?.id ?? "";
       await host.waitForBoundData(() => id2 ? host.installations.some((installation) => installation.id === id2) : host.installations.some((installation) => installation.id === definition.kind));
@@ -42684,7 +42598,7 @@ details[open] > summary > .chevron {
     } catch (error) {
       openSetup(host, definition, {
         answers,
-        ...resources2 ? { resources: resources2 } : {},
+        ...resources ? { resources } : {},
         error: error instanceof Error ? error.message : "Import failed"
       });
     }
@@ -43141,50 +43055,6 @@ button[slot="back"] svg {
 }
 `;
 
-  // src/components/admin/Resources/Integrations/ui/styles/reconfigure.css
-  var reconfigure_default = `.integration-reconfigure-modal {
-    --p9r-modal-width: 720px;
-}
-
-.integration-reconfigure-modal::part(header),
-.integration-reconfigure-modal::part(footer) {
-    display: flex;
-}
-
-.integration-reconfigure-modal form {
-    display: grid;
-    gap: 16px;
-}
-
-.reconfigure-note {
-    margin: 0;
-    color: #66736f;
-    line-height: 1.5;
-}
-
-.reconfigure-fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.reconfigure-fields .empty,
-.reconfigure-fields .field:has(textarea),
-.reconfigure-fields .object-list-fieldset {
-    grid-column: 1 / -1;
-}
-
-.reconfigure-fields :disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-}
-
-.reconfigure-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-`;
-
   // src/components/admin/Resources/Integrations/ui/styles/setup.css
   var setup_default2 = `.resource-row {
     display: grid;
@@ -43519,7 +43389,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default7 = [base_default4, browser_default2, detail_default2, reconfigure_default, setup_default2, states_default2, responsive_default].join(`
+  var styles_default7 = [base_default4, browser_default2, detail_default2, setup_default2, states_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
@@ -43588,13 +43458,7 @@ button[slot="back"]:disabled {
       return element;
     }
     bind() {
-      this.addEventListener("click", (event) => {
-        if (!handleReconfigureCollectionSelection(this, event)) {
-          handleClick(this, event);
-        }
-      });
-      this.addEventListener("submit", (event) => void submitIntegrationReconfigure(this, event));
-      this.addEventListener("close", (event) => handleReconfigureModalClose(this, event));
+      this.addEventListener("click", (event) => void handleClick(this, event));
     }
     renderRoute() {
       const route4 = currentIntegrationRoute();
@@ -43654,6 +43518,48 @@ button[slot="back"]:disabled {
     customElements.define("cms-integrations-admin", IntegrationBrowser);
   }
 
+  // src/components/admin/Resources/Sources/ResourceWorkspace.ts
+  class ResourceWorkspace extends HTMLElement {
+    browser;
+    observer;
+    connectedCallback() {
+      if (!this.querySelector(":scope > style")) {
+        const style = document.createElement("style");
+        style.textContent = "cms-resource-workspace { display: block; } cms-resource-workspace > [hidden] { display: none !important; }";
+        this.prepend(style);
+      }
+      window.addEventListener("popstate", this.sync);
+      window.addEventListener("cms-resources:route", this.sync);
+      window.addEventListener("cms-dashboards:selection", this.sync);
+      this.observer = new MutationObserver(this.sync);
+      this.observer.observe(this, { childList: true });
+      this.sync();
+    }
+    disconnectedCallback() {
+      this.observer?.disconnect();
+      this.observer = undefined;
+      window.removeEventListener("popstate", this.sync);
+      window.removeEventListener("cms-resources:route", this.sync);
+      window.removeEventListener("cms-dashboards:selection", this.sync);
+    }
+    sync = () => {
+      const params = new URL(window.location.href).searchParams;
+      const catalogue = params.has("integration") || params.has("setup") || params.has("tab");
+      if (catalogue && !this.browser) {
+        this.browser = document.createElement("cms-integrations-admin");
+        this.append(this.browser);
+      }
+      for (const child of Array.from(this.children)) {
+        if (child instanceof HTMLElement) {
+          child.hidden = child === this.browser !== catalogue;
+        }
+      }
+    };
+  }
+  if (!customElements.get("cms-resource-workspace")) {
+    customElements.define("cms-resource-workspace", ResourceWorkspace);
+  }
+
   // src/components/admin/Resources/Triggers/template.html
   var template_default21 = `<section class="triggers-surface">
     <div data-state="loading" class="state">Loading triggers...</div>
@@ -43679,7 +43585,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default15 = `.triggers-surface {
+  var style_default16 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -43892,11 +43798,11 @@ button.run:disabled {
     return value3 % 60000 === 0 ? `${value3 / 60000} min` : `${value3 / 1000} s`;
   }
   function formatDate3(value3) {
-    const date = new Date(value3);
-    if (Number.isNaN(date.getTime())) {
+    const date2 = new Date(value3);
+    if (Number.isNaN(date2.getTime())) {
       return value3;
     }
-    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date2);
   }
 
   // src/components/admin/Resources/Triggers/TriggersAdmin.ts
@@ -43912,7 +43818,7 @@ button.run:disabled {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default15;
+      style.textContent = style_default16;
       const body = document.createElement("template");
       body.innerHTML = template_default21;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -43985,22 +43891,22 @@ button.run:disabled {
   function input2(root, name) {
     return root.querySelector(`[data-field="${name}"]`);
   }
-  function textarea4(root, name) {
+  function textarea3(root, name) {
     return root.querySelector(`[data-field="${name}"]`);
   }
-  function select4(root, name) {
+  function select3(root, name) {
     return root.querySelector(`[data-field="${name}"]`);
   }
   function checkbox2(root, name) {
     return input2(root, name);
   }
-  function option5(value3, label3) {
+  function option4(value3, label4) {
     const element = document.createElement("option");
     element.value = value3;
-    element.textContent = label3;
+    element.textContent = label4;
     return element;
   }
-  function parseOptionalObject(raw, label3) {
+  function parseOptionalObject(raw, label4) {
     if (!raw.trim()) {
       return;
     }
@@ -44011,7 +43917,7 @@ button.run:disabled {
       }
       return value3;
     } catch {
-      throw new Error(`${label3} must be a JSON object.`);
+      throw new Error(`${label4} must be a JSON object.`);
     }
   }
   function mappedDraft2(draft) {
@@ -44057,33 +43963,33 @@ button.run:disabled {
   // src/components/admin/Resources/Triggers/create/definition.ts
   function buildTriggerDefinition(root, conditionLeft, conditionRight, functionParams, functionBody) {
     const id2 = input2(root, "id").value.trim();
-    const label3 = input2(root, "label").value.trim();
-    const advancedParams = parseOptionalObject(textarea4(root, "params").value, "Params mapping");
-    const advancedBody = parseOptionalValue(textarea4(root, "body").value);
+    const label4 = input2(root, "label").value.trim();
+    const advancedParams = parseOptionalObject(textarea3(root, "params").value, "Params mapping");
+    const advancedBody = parseOptionalValue(textarea3(root, "body").value);
     const params = advancedParams ?? mappedObject(functionParams);
     const body = advancedBody ?? mappedDraft2(functionBody);
-    const mode = select4(root, "mode").value;
+    const mode = select3(root, "mode").value;
     return {
       id: id2,
-      ...label3 ? { label: label3 } : {},
+      ...label4 ? { label: label4 } : {},
       event: {
         kind: "endpoint",
-        source: select4(root, "source").value,
-        endpoint: select4(root, "endpoint").value,
-        phase: select4(root, "phase").value
+        source: select3(root, "source").value,
+        endpoint: select3(root, "endpoint").value,
+        phase: select3(root, "phase").value
       },
       mode,
-      failureMode: select4(root, "failure").value,
+      failureMode: select3(root, "failure").value,
       ...checkbox2(root, "condition-enabled").checked ? { condition: buildCondition(root, conditionLeft, conditionRight) } : {},
       function: {
-        id: select4(root, "function").value,
+        id: select3(root, "function").value,
         ...Object.keys(params).length ? { params } : {},
         ...body !== undefined ? { body } : {}
       }
     };
   }
   function buildCondition(root, leftDraft, rightDraft) {
-    const operator = select4(root, "operator").value;
+    const operator = select3(root, "operator").value;
     const left = resolvedDraftValue(leftDraft);
     if (operator === "exists") {
       return { exists: left };
@@ -44117,7 +44023,7 @@ button.run:disabled {
       });
     }
     references.push(...referencesFromShape(endpoint?.body, "$request.body", "Request body"));
-    if (select4(root, "phase").value === "response") {
+    if (select3(root, "phase").value === "response") {
       references.push({ value: "$response.status", label: "Response / status", shape: { type: "number" } });
       const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status)) ?? endpoint?.output?.find((entry) => entry.status === "default");
       references.push(...referencesFromShape(output?.body, "$response.body", "Response body"));
@@ -44126,7 +44032,7 @@ button.run:disabled {
     return uniqueReferences(references);
   }
   function selectedEndpoint(root, sources) {
-    return sources.find((item) => item.id === select4(root, "source").value)?.endpoints.find((endpoint) => endpoint.endpointId === select4(root, "endpoint").value);
+    return sources.find((item) => item.id === select3(root, "source").value)?.endpoints.find((endpoint) => endpoint.endpointId === select3(root, "endpoint").value);
   }
 
   // src/components/admin/Resources/Triggers/create/mappings.ts
@@ -44136,7 +44042,7 @@ button.run:disabled {
     root.querySelector("[data-role='condition-right']")?.replaceChildren(valuePicker(right, references, "Choose a value"));
   }
   function renderFunctionMappings(root, sources, functions, functionParams, functionBody) {
-    const fn2 = functions.find((item) => item.id === select4(root, "function").value);
+    const fn2 = functions.find((item) => item.id === select3(root, "function").value);
     const references = eventReferences(root, sources);
     const params = Object.entries(fn2?.params ?? {}).map(([name, shape]) => ({
       path: name,
@@ -44733,25 +44639,25 @@ details[open] > summary > .chevron {
     host.replaceChildren(style, shell);
   }
   function populateSources(host, sources) {
-    const sourceSelect = select4(host, "source");
+    const sourceSelect = select3(host, "source");
     for (const source2 of sources) {
-      sourceSelect.append(option5(source2.id, source2.label));
+      sourceSelect.append(option4(source2.id, source2.label));
     }
   }
   function syncEndpointOptions(host, sources) {
-    const endpointSelect = select4(host, "endpoint");
-    const source2 = sources.find((item) => item.id === select4(host, "source").value);
-    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option5(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
+    const endpointSelect = select3(host, "endpoint");
+    const source2 = sources.find((item) => item.id === select3(host, "source").value);
+    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option4(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
   }
   function populateFunctions(host, functions) {
-    const functionSelect = select4(host, "function");
+    const functionSelect = select3(host, "function");
     for (const fn2 of functions) {
-      functionSelect.append(option5(fn2.id, `${fn2.label} (${fn2.method})`));
+      functionSelect.append(option4(fn2.id, `${fn2.label} (${fn2.method})`));
     }
   }
   function syncFunctionContract(host, functions) {
     const root = host.querySelector("[data-role='function-contract']");
-    const fn2 = functions.find((item) => item.id === select4(host, "function").value);
+    const fn2 = functions.find((item) => item.id === select3(host, "function").value);
     if (!root) {
       return;
     }
@@ -44765,12 +44671,12 @@ details[open] > summary > .chevron {
   function syncPhaseHelp(host) {
     const help = host.querySelector("[data-role='phase-help']");
     if (help) {
-      help.textContent = select4(host, "phase").value === "request" ? "Request triggers run before the endpoint and cannot inspect $response values." : "Response triggers can inspect both the request and response.";
+      help.textContent = select3(host, "phase").value === "request" ? "Request triggers run before the endpoint and cannot inspect $response values." : "Response triggers can inspect both the request and response.";
     }
   }
   function syncExecutionOptions(host) {
-    const failure = select4(host, "failure");
-    const asyncMode = select4(host, "mode").value === "async";
+    const failure = select3(host, "failure");
+    const asyncMode = select3(host, "mode").value === "async";
     const block = failure.querySelector('option[value="block"]');
     if (block) {
       block.disabled = asyncMode;
@@ -44787,7 +44693,7 @@ details[open] > summary > .chevron {
       root.hidden = !enabled;
     }
     if (right) {
-      right.hidden = select4(host, "operator").value === "exists";
+      right.hidden = select3(host, "operator").value === "exists";
     }
   }
 
@@ -44835,23 +44741,23 @@ details[open] > summary > .chevron {
       this.renderMappings();
     }
     bind() {
-      select4(this, "source").addEventListener("change", () => {
+      select3(this, "source").addEventListener("change", () => {
         syncEndpointOptions(this, this.sources);
         this.resetEventMappings();
       });
-      select4(this, "endpoint").addEventListener("change", () => this.resetEventMappings());
-      select4(this, "function").addEventListener("change", () => {
+      select3(this, "endpoint").addEventListener("change", () => this.resetEventMappings());
+      select3(this, "function").addEventListener("change", () => {
         this.functionParams = {};
         this.functionBody = {};
         syncFunctionContract(this, this.functions);
         this.renderMappings();
       });
-      select4(this, "mode").addEventListener("change", () => syncExecutionOptions(this));
-      select4(this, "phase").addEventListener("change", () => {
+      select3(this, "mode").addEventListener("change", () => syncExecutionOptions(this));
+      select3(this, "phase").addEventListener("change", () => {
         syncPhaseHelp(this);
         this.resetEventMappings();
       });
-      select4(this, "operator").addEventListener("change", () => this.renderCondition());
+      select3(this, "operator").addEventListener("change", () => this.renderCondition());
       checkbox2(this, "condition-enabled").addEventListener("change", () => this.renderCondition());
       this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) => {
         this.togglePanels(event.currentTarget);
@@ -44860,13 +44766,13 @@ details[open] > summary > .chevron {
       this.saveButton?.addEventListener("click", () => void this.save());
     }
     bindIdentifier() {
-      const label3 = input2(this, "label");
+      const label4 = input2(this, "label");
       const id2 = input2(this, "id");
       let idWasEdited = false;
       id2.addEventListener("input", () => idWasEdited = true);
-      label3.addEventListener("input", () => {
+      label4.addEventListener("input", () => {
         if (!idWasEdited) {
-          id2.value = identifier2(label3.value);
+          id2.value = identifier2(label4.value);
         }
       });
     }
@@ -45329,10 +45235,10 @@ button:hover {
     set sourceState(sourceState) {
       this._setSourceState(sourceState, false);
     }
-    set saveStatus(label3) {
+    set saveStatus(label4) {
       const target2 = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
       if (target2) {
-        target2.textContent = label3;
+        target2.textContent = label4;
       }
     }
     setPageTitle(title2, path) {
@@ -45438,7 +45344,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default16 = `:host {
+  var style_default17 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -45538,7 +45444,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default16)}</style>${String(template_default23)}`;
+  template7.innerHTML = `<style>${String(style_default17)}</style>${String(template_default23)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -45677,12 +45583,12 @@ button:hover {
       input3.reportValidity?.();
     }
   }
-  function selectedMode(select5) {
-    const value3 = select5.options[select5.selectedIndex]?.value;
+  function selectedMode(select4) {
+    const value3 = select4.options[select4.selectedIndex]?.value;
     return value3 === "raw" || value3 === "state" ? value3 : "queryParam";
   }
-  function selectedTrigger(select5) {
-    const value3 = select5?.options[select5.selectedIndex]?.value;
+  function selectedTrigger(select4) {
+    const value3 = select4?.options[select4.selectedIndex]?.value;
     return value3 === "submit" || value3 === "change" ? value3 : "auto";
   }
 
@@ -45791,9 +45697,9 @@ button:hover {
     heading.textContent = text5;
     return heading;
   }
-  function bodyBindingFields(fields2) {
+  function bodyBindingFields(fields) {
     const rows = [];
-    for (const field3 of fields2) {
+    for (const field3 of fields) {
       if (field3.path !== "." && field3.type !== "object" && field3.type !== "array") {
         rows.push({ name: field3.path, type: field3.type, required: field3.required });
       }
@@ -45823,7 +45729,7 @@ button:hover {
     controls.className = "param-controls";
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option6("queryParam", "Query param"), option6("raw", "Raw value"), option6("state", "Page state"));
+    mode.append(option5("queryParam", "Query param"), option5("raw", "Raw value"), option5("state", "Page state"));
     const value3 = document.createElement("input");
     value3.className = "param-value";
     value3.placeholder = name;
@@ -45834,10 +45740,10 @@ button:hover {
     controls.append(mode, value3);
     return controls;
   }
-  function option6(value3, label3) {
+  function option5(value3, label4) {
     const element = document.createElement("option");
     element.value = value3;
-    element.textContent = label3;
+    element.textContent = label4;
     return element;
   }
   function textSpan(value3) {
@@ -45845,10 +45751,10 @@ button:hover {
     element.textContent = value3;
     return element;
   }
-  function selectOption(select5, value3) {
-    const index = Array.from(select5.options).findIndex((option7) => option7.value === value3);
+  function selectOption(select4, value3) {
+    const index = Array.from(select4.options).findIndex((option6) => option6.value === value3);
     if (index >= 0) {
-      select5.selectedIndex = index;
+      select4.selectedIndex = index;
     }
   }
 
@@ -45884,8 +45790,8 @@ button:hover {
       fields: [...source2.fields]
     }));
   }
-  function cloneBodyFields(fields2) {
-    return fields2.map((field3) => ({
+  function cloneBodyFields(fields) {
+    return fields.map((field3) => ({
       ...field3,
       children: field3.children ? cloneBodyFields(field3.children) : undefined
     }));
@@ -45920,14 +45826,14 @@ button:hover {
     return aliasLabel;
   }
   function renderTriggerSelect(value3) {
-    const label3 = document.createElement("label");
-    label3.textContent = "Trigger";
+    const label4 = document.createElement("label");
+    label4.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option7("auto", "Auto"), option7("submit", "Submit"), option7("change", "Change"));
+    trigger.append(option6("auto", "Auto"), option6("submit", "Submit"), option6("change", "Change"));
     selectOption2(trigger, value3);
-    label3.append(trigger);
-    return label3;
+    label4.append(trigger);
+    return label4;
   }
   function defaultTrigger(source2) {
     return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
@@ -45951,12 +45857,12 @@ button:hover {
     }
   }
   function renderRequestBody(section2, source2, initialBinding) {
-    const fields2 = bodyBindingFields(source2.body?.fields ?? []);
-    if (fields2.length === 0) {
+    const fields = bodyBindingFields(source2.body?.fields ?? []);
+    if (fields.length === 0) {
       return;
     }
     section2.append(renderBindingHeading("Request body"));
-    for (const field3 of fields2) {
+    for (const field3 of fields) {
       section2.append(renderBindingRow({
         kind: "body",
         name: field3.name,
@@ -45966,30 +45872,30 @@ button:hover {
       }, initialBinding?.body?.[field3.name]));
     }
   }
-  function option7(value3, label3) {
+  function option6(value3, label4) {
     const element = document.createElement("option");
     element.value = value3;
-    element.textContent = label3;
+    element.textContent = label4;
     return element;
   }
-  function selectOption2(select5, value3) {
-    const index = Array.from(select5.options).findIndex((option8) => option8.value === value3);
+  function selectOption2(select4, value3) {
+    const index = Array.from(select4.options).findIndex((option7) => option7.value === value3);
     if (index >= 0) {
-      select5.selectedIndex = index;
+      select4.selectedIndex = index;
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourceFieldRenderer.ts
-  function renderDataSourceFields(fields2) {
-    return renderFieldList(fields2, "No schema fields declared.");
+  function renderDataSourceFields(fields) {
+    return renderFieldList(fields, "No schema fields declared.");
   }
-  function renderDataSourceBodyFields(fields2) {
-    return renderFieldList(fields2, "No request body declared.");
+  function renderDataSourceBodyFields(fields) {
+    return renderFieldList(fields, "No request body declared.");
   }
-  function renderFieldList(fields2, emptyMessage) {
+  function renderFieldList(fields, emptyMessage) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field3 of fields2) {
+    for (const field3 of fields) {
       list.append(renderField(field3, 0));
     }
     if (list.children.length === 0) {
@@ -46125,17 +46031,17 @@ button:hover {
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
-    const index = options2.findIndex((option8) => option8.value === value3);
+    const index = options2.findIndex((option7) => option7.value === value3);
     filter.selectedIndex = index >= 0 ? index : 0;
-    options2.forEach((option8, optionIndex) => {
-      option8.selected = optionIndex === filter.selectedIndex;
-      option8.toggleAttribute("selected", option8.selected);
+    options2.forEach((option7, optionIndex) => {
+      option7.selected = optionIndex === filter.selectedIndex;
+      option7.toggleAttribute("selected", option7.selected);
     });
     filter.setAttribute("value", options2[filter.selectedIndex]?.value ?? "GET");
   }
   function selectedMethodFilter(filter) {
     const options2 = Array.from(filter.options);
-    const selected2 = options2.find((option8) => option8.selected);
+    const selected2 = options2.find((option7) => option7.selected);
     if (selected2?.value) {
       return selected2.value;
     }
@@ -46143,7 +46049,7 @@ button:hover {
     if (selectedIndexValue) {
       return selectedIndexValue;
     }
-    const selectedAttribute = options2.find((option8) => option8.hasAttribute("selected"));
+    const selectedAttribute = options2.find((option7) => option7.hasAttribute("selected"));
     return selectedAttribute?.value ?? filter.getAttribute("value") ?? "GET";
   }
 
@@ -46850,7 +46756,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default17 = `:host { display: contents; }
+  var style_default18 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -46997,17 +46903,17 @@ textarea { min-height: 92px; resize: vertical; }
   function renderAdvancedMode(expression, onInput) {
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
-    const label3 = document.createElement("label");
-    label3.className = "control";
+    const label4 = document.createElement("label");
+    label4.className = "control";
     const text5 = document.createElement("span");
     text5.textContent = "Expression";
-    const textarea5 = document.createElement("textarea");
-    textarea5.className = "advanced-expression";
-    textarea5.value = expression;
-    textarea5.placeholder = 'plan.status == "active" && $source.loaded';
-    textarea5.addEventListener("input", () => onInput(textarea5.value));
-    label3.append(text5, textarea5);
-    root.append(label3);
+    const textarea4 = document.createElement("textarea");
+    textarea4.className = "advanced-expression";
+    textarea4.value = expression;
+    textarea4.placeholder = 'plan.status == "active" && $source.loaded';
+    textarea4.addEventListener("input", () => onInput(textarea4.value));
+    label4.append(text5, textarea4);
+    root.append(label4);
     return root;
   }
 
@@ -47038,14 +46944,14 @@ textarea { min-height: 92px; resize: vertical; }
     { value: "empty", label: "is empty", needsValue: false },
     { value: "notEmpty", label: "is not empty", needsValue: false }
   ];
-  function renderFieldMode(fields2, draft, onChange) {
+  function renderFieldMode(fields, draft, onChange) {
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
-    if (fields2.length === 0) {
+    if (fields.length === 0) {
       root.append(empty3("No data field available."));
       return root;
     }
-    root.append(fieldSelect(fields2, draft, onChange), operatorSelect(draft, onChange));
+    root.append(fieldSelect(fields, draft, onChange), operatorSelect(draft, onChange));
     if (operatorNeedsValue(draft.operator)) {
       root.append(valueInput(draft, onChange));
     }
@@ -47054,40 +46960,40 @@ textarea { min-height: 92px; resize: vertical; }
   function fieldExpression(draft) {
     return asFieldCondition(draft.path, draft.operator, parseValue(draft.value));
   }
-  function defaultFieldDraft(fields2) {
-    return { path: fields2[0]?.path ?? "", operator: "truthy", value: "" };
+  function defaultFieldDraft(fields) {
+    return { path: fields[0]?.path ?? "", operator: "truthy", value: "" };
   }
-  function fieldSelect(fields2, draft, onChange) {
-    const select5 = document.createElement("select");
-    select5.className = "field-path";
-    for (const field3 of fields2) {
-      const option8 = document.createElement("option");
-      option8.value = field3.path;
-      option8.textContent = `${field3.scopeLabel}: ${field3.path}`;
-      select5.append(option8);
+  function fieldSelect(fields, draft, onChange) {
+    const select4 = document.createElement("select");
+    select4.className = "field-path";
+    for (const field3 of fields) {
+      const option7 = document.createElement("option");
+      option7.value = field3.path;
+      option7.textContent = `${field3.scopeLabel}: ${field3.path}`;
+      select4.append(option7);
     }
-    select5.selectedIndex = Math.max(0, fields2.findIndex((field3) => field3.path === draft.path));
-    select5.addEventListener("change", () => {
-      draft.path = select5.options.item(select5.selectedIndex)?.value ?? "";
+    select4.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
+    select4.addEventListener("change", () => {
+      draft.path = select4.options.item(select4.selectedIndex)?.value ?? "";
       onChange(false);
     });
-    return control("Field", select5);
+    return control("Field", select4);
   }
   function operatorSelect(draft, onChange) {
-    const select5 = document.createElement("select");
-    select5.className = "field-operator";
+    const select4 = document.createElement("select");
+    select4.className = "field-operator";
     for (const operator of OPERATORS) {
-      const option8 = document.createElement("option");
-      option8.value = operator.value;
-      option8.textContent = operator.label;
-      select5.append(option8);
+      const option7 = document.createElement("option");
+      option7.value = operator.value;
+      option7.textContent = operator.label;
+      select4.append(option7);
     }
-    select5.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
-    select5.addEventListener("change", () => {
-      draft.operator = select5.options.item(select5.selectedIndex)?.value ?? "truthy";
+    select4.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
+    select4.addEventListener("change", () => {
+      draft.operator = select4.options.item(select4.selectedIndex)?.value ?? "truthy";
       onChange(true);
     });
-    return control("Operator", select5);
+    return control("Operator", select4);
   }
   function valueInput(draft, onChange) {
     const input3 = document.createElement("input");
@@ -47172,17 +47078,17 @@ textarea { min-height: 92px; resize: vertical; }
     if (source2.sourceName) {
       section2.append(textBlock2("source-name", `Source: ${source2.sourceName}`));
     }
-    const states3 = document.createElement("div");
-    states3.className = "states";
+    const states2 = document.createElement("div");
+    states2.className = "states";
     for (const state2 of STATES) {
-      states3.append(renderState2(source2, state2, options2));
+      states2.append(renderState2(source2, state2, options2));
     }
-    section2.append(states3);
+    section2.append(states2);
     return section2;
   }
   function renderState2(source2, state2, options2) {
     const key = sourceStateKey(options2.sources, source2.editor, state2);
-    const label3 = document.createElement("label");
+    const label4 = document.createElement("label");
     const input3 = document.createElement("input");
     input3.type = "checkbox";
     input3.checked = options2.selected.has(key);
@@ -47192,8 +47098,8 @@ textarea { min-height: 92px; resize: vertical; }
     });
     const text5 = document.createElement("span");
     text5.textContent = state2;
-    label3.append(input3, text5);
-    return label3;
+    label4.append(input3, text5);
+    return label4;
   }
   function textBlock2(className, text5) {
     const element = document.createElement("div");
@@ -47236,17 +47142,17 @@ textarea { min-height: 92px; resize: vertical; }
     return summary2;
   }
   function conditionSummaryParts(expression) {
-    const label3 = document.createElement("span");
-    label3.textContent = "Expression";
+    const label4 = document.createElement("span");
+    label4.textContent = "Expression";
     const code = document.createElement("code");
     code.textContent = expression || "No condition selected.";
-    return [label3, code];
+    return [label4, code];
   }
-  function modeButton(mode, label3, activeMode, onSelect) {
+  function modeButton(mode, label4, activeMode, onSelect) {
     const button2 = document.createElement("button");
     button2.type = "button";
     button2.className = "mode";
-    button2.textContent = label3;
+    button2.textContent = label4;
     button2.setAttribute("aria-pressed", String(activeMode === mode));
     button2.addEventListener("click", () => onSelect(mode));
     return button2;
@@ -47254,7 +47160,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default17)}</style>${String(template_default25)}`;
+  template9.innerHTML = `<style>${String(style_default18)}</style>${String(template_default25)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -47879,33 +47785,33 @@ dd {
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option8) {
-    if (option8.item) {
+  function normalizeBlockPickerOption(option7) {
+    if (option7.item) {
       return {
-        ...option8,
-        kind: option8.item.kind
+        ...option7,
+        kind: option7.item.kind
       };
     }
-    if (!option8.entry) {
+    if (!option7.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option8,
+      ...option7,
       kind: "block",
       item: {
         kind: "block",
-        entry: option8.entry
+        entry: option7.entry
       }
     };
   }
-  function blockPickerOptionItem(option8) {
-    if (option8.item) {
-      return option8.item;
+  function blockPickerOptionItem(option7) {
+    if (option7.item) {
+      return option7.item;
     }
-    if (option8.entry) {
+    if (option7.entry) {
       return {
         kind: "block",
-        entry: option8.entry
+        entry: option7.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -47943,54 +47849,54 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option8) {
-    const item = blockPickerOptionItem(option8);
+  function blockPickerCategoryLabel(option7) {
+    const item = blockPickerOptionItem(option7);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option8, query7) {
+  function blockPickerOptionMatches(option7, query7) {
     if (!query7) {
       return true;
     }
-    const item = blockPickerOptionItem(option8);
+    const item = blockPickerOptionItem(option7);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option8.slotLabel
+      option7.slotLabel
     ].some((value3) => value3?.toLowerCase().includes(query7));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
   function blockPickerVisibleOptions(group, source2, category, query7) {
-    return group?.options.filter((option8) => {
-      const item = blockPickerOptionItem(option8);
+    return group?.options.filter((option7) => {
+      const item = blockPickerOptionItem(option7);
       if (item.kind !== source2) {
         return false;
       }
-      if (category && blockPickerCategoryLabel(option8) !== category) {
+      if (category && blockPickerCategoryLabel(option7) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option8, query7);
+      return blockPickerOptionMatches(option7, query7);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
-    return group?.options.filter((option8) => blockPickerOptionItem(option8).kind === source2) ?? [];
+    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2) ?? [];
   }
   function blockPickerSourceCount(group, source2) {
     return blockPickerOptionsForSource(group, source2).length;
   }
   function blockPickerCategoryCount(group, source2, category) {
-    return group?.options.filter((option8) => blockPickerOptionItem(option8).kind === source2 && blockPickerCategoryLabel(option8) === category).length ?? 0;
+    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2 && blockPickerCategoryLabel(option7) === category).length ?? 0;
   }
   function blockPickerCategories(group, source2) {
     const categories = new Set;
-    for (const option8 of group?.options ?? []) {
-      if (blockPickerOptionItem(option8).kind === source2) {
-        categories.add(blockPickerCategoryLabel(option8));
+    for (const option7 of group?.options ?? []) {
+      if (blockPickerOptionItem(option7).kind === source2) {
+        categories.add(blockPickerCategoryLabel(option7));
       }
     }
     return [...categories].sort((left, right) => left.localeCompare(right));
@@ -48006,16 +47912,16 @@ dd {
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts
-  function renderBlockPickerDetails(container, option8, onSelect) {
+  function renderBlockPickerDetails(container, option7, onSelect) {
     container.replaceChildren();
-    if (!option8) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select content to see details.";
       container.append(empty4);
       return;
     }
-    const item = blockPickerOptionItem(option8);
+    const item = blockPickerOptionItem(option7);
     const eyebrow = document.createElement("div");
     eyebrow.className = "details-eyebrow";
     eyebrow.textContent = blockPickerSourceLabel(item.kind);
@@ -48030,22 +47936,22 @@ dd {
     previewIcon.textContent = blockPickerIconText(item);
     preview.append(previewIcon);
     const meta = document.createElement("dl");
-    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option8.slotLabel), metaRow("Category", blockPickerCategoryLabel(option8)));
+    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option7.slotLabel), metaRow("Category", blockPickerCategoryLabel(option7)));
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Insert";
-    insert.addEventListener("click", () => onSelect(option8));
+    insert.addEventListener("click", () => onSelect(option7));
     container.append(preview, eyebrow, title2, description, meta, insert);
   }
-  function renderBlockPickerOption(option8, activeOption, onActivate, onSelect) {
+  function renderBlockPickerOption(option7, activeOption, onActivate, onSelect) {
     const button2 = document.createElement("button");
     button2.className = "block";
     button2.type = "button";
-    button2.ariaSelected = String(option8 === activeOption);
-    button2.addEventListener("click", () => onActivate(option8));
-    button2.addEventListener("dblclick", () => onSelect(option8));
-    const item = blockPickerOptionItem(option8);
+    button2.ariaSelected = String(option7 === activeOption);
+    button2.addEventListener("click", () => onActivate(option7));
+    button2.addEventListener("dblclick", () => onSelect(option7));
+    const item = blockPickerOptionItem(option7);
     const icon = document.createElement("span");
     icon.className = "icon";
     icon.textContent = blockPickerIconText(item);
@@ -48058,7 +47964,7 @@ dd {
     description.textContent = blockPickerItemDescription(item);
     const category = document.createElement("span");
     category.className = "category";
-    category.textContent = blockPickerCategoryLabel(option8);
+    category.textContent = blockPickerCategoryLabel(option7);
     body.append(name, description, category);
     button2.append(icon, body);
     return button2;
@@ -48085,11 +47991,11 @@ dd {
       container.append(button2);
     }
   }
-  function metaRow(label3, value3) {
+  function metaRow(label4, value3) {
     const wrapper = document.createElement("div");
     const term = document.createElement("dt");
     const detail = document.createElement("dd");
-    term.textContent = label3;
+    term.textContent = label4;
     detail.textContent = value3;
     wrapper.append(term, detail);
     return wrapper;
@@ -48108,8 +48014,8 @@ dd {
       return null;
     }
     const activeOption = input3.activeOption && options2.includes(input3.activeOption) ? input3.activeOption : options2[0];
-    for (const option8 of options2) {
-      input3.results.append(renderBlockPickerOption(option8, activeOption, input3.onActivate, input3.onSelect));
+    for (const option7 of options2) {
+      input3.results.append(renderBlockPickerOption(option7, activeOption, input3.onActivate, input3.onSelect));
     }
     renderBlockPickerDetails(input3.details, activeOption, input3.onSelect);
     return activeOption;
@@ -48125,16 +48031,16 @@ dd {
       input3.categories.append(filterButton(category, input3.activeCategory === category, () => input3.onCategory(category), blockPickerCategoryCount(input3.group, input3.activeSource, category)));
     }
   }
-  function sourceButton(label3, source2, input3) {
+  function sourceButton(label4, source2, input3) {
     const count = blockPickerSourceCount(input3.group, source2);
-    return filterButton(label3, input3.activeSource === source2, () => {
+    return filterButton(label4, input3.activeSource === source2, () => {
       if (source2 === "media" && input3.onSingleMedia()) {
         return;
       }
       input3.onSource(source2);
     }, count, source2 !== "block" && count === 0);
   }
-  function filterButton(label3, active, onClick, count, disabled = false) {
+  function filterButton(label4, active, onClick, count, disabled = false) {
     const button2 = document.createElement("button");
     button2.className = "filter";
     button2.type = "button";
@@ -48146,7 +48052,7 @@ dd {
       }
     });
     const text5 = document.createElement("span");
-    text5.textContent = label3;
+    text5.textContent = label4;
     const badge3 = document.createElement("span");
     badge3.className = "count";
     badge3.textContent = String(count);
@@ -48202,7 +48108,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option8) => normalizeBlockPickerOption(option8))
+        options: group.options.map((option7) => normalizeBlockPickerOption(option7))
       }));
       this._activeSlotKey = firstEnabledBlockPickerGroup(this._groups)?.slot ?? "";
       this._activeSource = "block";
@@ -48238,11 +48144,11 @@ dd {
         activeSource: this._activeSource,
         details: this.elements.details,
         group: this._activeGroup(),
-        onActivate: (option8) => {
-          this._activeOption = option8;
+        onActivate: (option7) => {
+          this._activeOption = option7;
           this._renderEntries();
         },
-        onSelect: (option8) => this._selectOption(option8),
+        onSelect: (option7) => this._selectOption(option7),
         query: this.elements.search.value.trim().toLowerCase(),
         results: this.elements.results
       });
@@ -48271,11 +48177,11 @@ dd {
         sources: this.elements.sources
       });
     }
-    _selectOption(option8) {
+    _selectOption(option7) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option8 }
+        detail: { option: option7 }
       }));
       this.close();
     }
@@ -48504,13 +48410,13 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenuItems.ts
-  function contextMenuButton(label3, action, closeContextMenu, variant, disabled = false) {
+  function contextMenuButton(label4, action, closeContextMenu, variant, disabled = false) {
     const button2 = document.createElement("button");
     button2.className = variant ? `context-item ${variant}` : "context-item";
     button2.role = "menuitem";
     button2.type = "button";
     button2.disabled = disabled;
-    button2.textContent = label3;
+    button2.textContent = label4;
     button2.addEventListener("click", (event) => {
       event.stopPropagation();
       if (button2.disabled) {
@@ -48613,9 +48519,9 @@ dd {
       iconEl.textContent = icon;
       badge3.append(iconEl);
     }
-    const label3 = document.createElement("span");
-    label3.textContent = value3;
-    badge3.append(label3);
+    const label4 = document.createElement("span");
+    label4.textContent = value3;
+    badge3.append(label4);
     return badge3;
   }
   function structureBadgeClass(value3) {
@@ -48962,9 +48868,9 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option8 = singleEnabledOption(groups);
-    if (option8?.item?.kind === "media") {
-      context.emitAction(action.action, option8.item, option8.slot);
+    const option7 = singleEnabledOption(groups);
+    if (option7?.item?.kind === "media") {
+      context.emitAction(action.action, option7.item, option7.slot);
       return;
     }
     context.setPendingPickerAction(action);
@@ -49196,8 +49102,8 @@ dd {
       }
     ] : [];
     return [
-      ...blockOptions.filter((option8) => canFitItem(context, parent, slot, option8.item, replaced)),
-      ...mediaOptions.filter((option8) => option8.item && canFitItem(context, parent, slot, option8.item, replaced))
+      ...blockOptions.filter((option7) => canFitItem(context, parent, slot, option7.item, replaced)),
+      ...mediaOptions.filter((option7) => option7.item && canFitItem(context, parent, slot, option7.item, replaced))
     ];
   }
   function canFitItem(context, parent, slot, item, replaced) {
@@ -49304,17 +49210,17 @@ dd {
   function conditionFieldOptions(scopes) {
     const byPath = new Map;
     for (const scope of scopes) {
-      for (const option8 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option8.path)) {
-          byPath.set(option8.path, option8);
+      for (const option7 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
+        if (!byPath.has(option7.path)) {
+          byPath.set(option7.path, option7);
         }
       }
     }
     return [...byPath.values()];
   }
-  function fieldOptions(fields2, scopeName, scopeLabel, prefix = "") {
+  function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
     const options2 = [];
-    for (const field3 of fields2) {
+    for (const field3 of fields) {
       const relative = relativePath(field3.path, prefix);
       const path = relative ? `${scopeName}.${relative}` : scopeName;
       options2.push({
@@ -49570,13 +49476,13 @@ dd {
     const icon = document.createElement("span");
     icon.className = context.iconClass(node);
     icon.textContent = context.iconText(node);
-    const label3 = document.createElement("span");
-    label3.className = "label";
-    label3.textContent = context.nodeLabel(node);
+    const label4 = document.createElement("span");
+    label4.className = "label";
+    label4.textContent = context.nodeLabel(node);
     const badges = document.createElement("span");
     badges.className = "badges";
     appendBadges2(badges, node, context);
-    item.append(icon, label3, badges);
+    item.append(icon, label4, badges);
     row.append(item, actionsButton(node, context));
     return row;
   }
@@ -50007,7 +49913,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default18 = `:host {
+  var style_default19 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -50178,7 +50084,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${[style_default18, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+  template11.innerHTML = `<style>${[style_default19, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default27)}`;
 
   class StructureTree extends HTMLElement {
@@ -50229,7 +50135,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default19 = `:host {
+  var style_default20 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -50338,7 +50244,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default19)}</style>${String(template_default28)}`;
+  template12.innerHTML = `<style>${String(style_default20)}</style>${String(template_default28)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -50491,7 +50397,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default20 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
@@ -50568,19 +50474,19 @@ iframe {
     return root;
   }
   function syncFieldCopy(host) {
-    const label3 = host.getAttribute("label") ?? "";
-    host.shadowRoot.querySelector(".label").textContent = label3;
+    const label4 = host.getAttribute("label") ?? "";
+    host.shadowRoot.querySelector(".label").textContent = label4;
     host.shadowRoot.querySelector(".hint").textContent = host.getAttribute("hint") ?? "";
     const labelDisplay = host.getAttribute("label-display") ?? "visible";
     const ariaLabel = host.getAttribute("aria-label");
     if (ariaLabel || labelDisplay !== "visible") {
       const control2 = host.shadowRoot.querySelector("input, select, textarea, button");
-      control2?.setAttribute("aria-label", ariaLabel ?? label3);
+      control2?.setAttribute("aria-label", ariaLabel ?? label4);
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default29, style_default20);
+  var template13 = createFieldTemplate(template_default29, style_default21);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -50625,7 +50531,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -50860,7 +50766,7 @@ input:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
   function matchingDynamicDataOptions(options2, query7) {
     const normalized = query7.trim().toLowerCase();
-    return normalized ? options2.filter((option8) => `${option8.label} ${option8.path}`.toLowerCase().includes(normalized)) : options2;
+    return normalized ? options2.filter((option7) => `${option7.label} ${option7.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
@@ -50871,18 +50777,18 @@ input:disabled {
       list.append(empty4);
       return;
     }
-    for (const option8 of options2) {
+    for (const option7 of options2) {
       const button2 = document.createElement("button");
       button2.className = "data-option";
       button2.type = "button";
-      button2.dataset.path = option8.path;
-      const label3 = document.createElement("span");
-      label3.className = "data-label";
-      label3.textContent = option8.label;
+      button2.dataset.path = option7.path;
+      const label4 = document.createElement("span");
+      label4.className = "data-label";
+      label4.textContent = option7.label;
       const path = document.createElement("code");
-      path.textContent = option8.path;
-      button2.append(label3, path);
-      button2.addEventListener("click", () => onSelect(option8.path));
+      path.textContent = option7.path;
+      button2.append(label4, path);
+      button2.addEventListener("click", () => onSelect(option7.path));
       list.append(button2);
     }
   }
@@ -50892,16 +50798,16 @@ input:disabled {
     const byPath = new Map;
     for (const scope of scopes) {
       const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option8 of options2) {
-        if (!byPath.has(option8.path)) {
-          byPath.set(option8.path, option8);
+      for (const option7 of options2) {
+        if (!byPath.has(option7.path)) {
+          byPath.set(option7.path, option7);
         }
       }
     }
     return [...byPath.values()];
   }
-  function fieldOptions2(fields2, scopeName, scopeLabel, prefix = "") {
-    return fields2.flatMap((field3) => {
+  function fieldOptions2(fields, scopeName, scopeLabel, prefix = "") {
+    return fields.flatMap((field3) => {
       const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
       const path = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
       if (field3.type === "array") {
@@ -50911,8 +50817,8 @@ input:disabled {
       if (field3.type === "object" || field3.children?.length) {
         return children;
       }
-      const label3 = field3.label ? `${scopeLabel} / ${field3.label}` : `${scopeLabel} / ${relativePath2}`;
-      return [{ label: label3, path }, ...children];
+      const label4 = field3.label ? `${scopeLabel} / ${field3.label}` : `${scopeLabel} / ${relativePath2}`;
+      return [{ label: label4, path }, ...children];
     });
   }
 
@@ -51062,7 +50968,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default30, `${String(style_default21)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default30, `${String(style_default22)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -51143,7 +51049,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -51215,7 +51121,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default31, `${String(style_default22)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default31, `${String(style_default23)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -51274,7 +51180,7 @@ textarea:disabled {
 
   // ../../foundation/components/dist/binding-dom.js
   var Y3 = ["src", "srcset", "sizes", "media", "width", "height"];
-  var X2 = "data-cms-network-inert";
+  var X3 = "data-cms-network-inert";
   var x3 = "img,picture,source";
   function $3(j3, z3) {
     if (!Q2(j3))
@@ -51294,34 +51200,34 @@ textarea:disabled {
     return j3.matches("img,picture,source");
   }
   var G3 = ["src", "srcset"];
-  var W2 = ["sizes", "media"];
-  var D = "template";
+  var W3 = ["sizes", "media"];
+  var D2 = "template";
   function L3(j3) {
     let z3 = V3(j3, x3), F2 = new Set;
-    for (let H3 of z3.filter((J3) => J3.localName === "picture")) {
-      let J3 = [H3, ...Array.from(H3.querySelectorAll("img,source")).filter((f4) => f4.closest("picture") === H3)];
-      if (J3.forEach((f4) => F2.add(f4)), J3.some(C2))
-        J3.forEach(y3);
+    for (let H3 of z3.filter((J2) => J2.localName === "picture")) {
+      let J2 = [H3, ...Array.from(H3.querySelectorAll("img,source")).filter((f4) => f4.closest("picture") === H3)];
+      if (J2.forEach((f4) => F2.add(f4)), J2.some(C2))
+        J2.forEach(y3);
     }
     for (let H3 of z3)
       if (!F2.has(H3) && C2(H3))
         y3(H3);
-    for (let H3 of V3(j3, D))
+    for (let H3 of V3(j3, D2))
       L3(H3.content);
   }
   function S3(j3) {
     for (let z3 of V3(j3, x3)) {
-      let F2 = z3.hasAttribute(X2);
+      let F2 = z3.hasAttribute(X3);
       for (let H3 of Y3) {
-        let J3 = Z3(H3);
-        if (z3.hasAttribute(J3))
-          z3.setAttribute(H3, z3.getAttribute(J3) ?? ""), z3.removeAttribute(J3);
+        let J2 = Z3(H3);
+        if (z3.hasAttribute(J2))
+          z3.setAttribute(H3, z3.getAttribute(J2) ?? ""), z3.removeAttribute(J2);
         else if (F2)
           z3.removeAttribute(H3);
       }
-      z3.removeAttribute(X2);
+      z3.removeAttribute(X3);
     }
-    for (let z3 of V3(j3, D))
+    for (let z3 of V3(j3, D2))
       S3(z3.content);
   }
   function p3(j3, z3, F2) {
@@ -51349,7 +51255,7 @@ textarea:disabled {
   }
   function y3(j3) {
     let z3 = new Map(Y3.map((F2) => [F2, $3(j3, F2)]));
-    j3.setAttribute(X2, "");
+    j3.setAttribute(X3, "");
     for (let F2 of Y3) {
       let H3 = z3.get(F2);
       if (H3 !== null && H3 !== undefined)
@@ -51358,15 +51264,15 @@ textarea:disabled {
     }
   }
   function C2(j3) {
-    return j3.hasAttribute(X2) || P3(j3) || G3.some((z3) => h3($3(j3, z3))) || W2.some((z3) => q2($3(j3, z3)));
+    return j3.hasAttribute(X3) || P3(j3) || G3.some((z3) => h3($3(j3, z3))) || W3.some((z3) => q2($3(j3, z3)));
   }
   function M3(j3) {
-    if (j3.hasAttribute(X2) || P3(j3))
+    if (j3.hasAttribute(X3) || P3(j3))
       return true;
     let z3 = j3.localName === "picture" ? j3 : j3.closest("picture");
     if (!z3)
       return false;
-    return [z3, ...Array.from(z3.querySelectorAll("img,source"))].some((F2) => F2.hasAttribute(X2) || P3(F2));
+    return [z3, ...Array.from(z3.querySelectorAll("img,source"))].some((F2) => F2.hasAttribute(X3) || P3(F2));
   }
   function P3(j3) {
     return Y3.some((z3) => j3.hasAttribute(Z3(z3)));
@@ -52047,7 +51953,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -52151,7 +52057,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default33, style_default23);
+  var template17 = createFieldTemplate(template_default33, style_default24);
 
   class Select extends HTMLElement {
     constructor() {
@@ -52162,11 +52068,11 @@ select:disabled {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option8) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option7) => {
         const element = document.createElement("option");
-        element.textContent = option8.label;
-        element.value = option8.value;
-        element.selected = option8.value === current;
+        element.textContent = option7.label;
+        element.value = option7.value;
+        element.selected = option7.value === current;
         return element;
       }));
     }
@@ -52198,7 +52104,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -52311,7 +52217,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default34, style_default24);
+  var template18 = createFieldTemplate(template_default34, style_default25);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -52334,7 +52240,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default25 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -52380,7 +52286,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default35, style_default25);
+  var template19 = createFieldTemplate(template_default35, style_default26);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -52477,7 +52383,7 @@ select:disabled {
     render(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field endpoint-field";
-      const label3 = this.renderFieldLabel(setting.label, setting.labelDisplay);
+      const label4 = this.renderFieldLabel(setting.label, setting.labelDisplay);
       const button2 = document.createElement("button");
       button2.className = "endpoint-button";
       button2.type = "button";
@@ -52487,8 +52393,8 @@ select:disabled {
       if (!setting.disabled) {
         button2.addEventListener("click", () => this.open(setting, button2));
       }
-      if (label3) {
-        wrapper.append(label3);
+      if (label4) {
+        wrapper.append(label4);
       }
       wrapper.append(button2);
       if (setting.help) {
@@ -52557,9 +52463,9 @@ select:disabled {
   function renderColorSetting(setting, themeTokens, renderFieldLabel, emitColorChange) {
     const wrapper = document.createElement("div");
     wrapper.className = "field color-field";
-    const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
-    if (label3) {
-      wrapper.append(label3);
+    const label4 = renderFieldLabel(setting.label, setting.labelDisplay);
+    if (label4) {
+      wrapper.append(label4);
     }
     const controls = document.createElement("div");
     controls.className = "color-custom";
@@ -52590,22 +52496,22 @@ select:disabled {
     return wrapper;
   }
   function createTokenSelect(setting, tokens, picker, input3, emitColorChange) {
-    const select5 = document.createElement("select");
-    select5.className = "color-token-select";
-    select5.ariaLabel = `${setting.label} theme token`;
-    select5.disabled = setting.disabled === true;
+    const select4 = document.createElement("select");
+    select4.className = "color-token-select";
+    select4.ariaLabel = `${setting.label} theme token`;
+    select4.disabled = setting.disabled === true;
     const custom = document.createElement("option");
     custom.value = "";
     custom.textContent = "Custom color";
-    select5.append(custom);
+    select4.append(custom);
     const groups = new Map;
     for (const token of tokens) {
-      const option8 = document.createElement("option");
-      option8.value = `var(--${token.variable})`;
-      option8.textContent = token.label;
+      const option7 = document.createElement("option");
+      option7.value = `var(--${token.variable})`;
+      option7.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select5.append(option8);
+        select4.append(option7);
         continue;
       }
       let group = groups.get(category);
@@ -52613,23 +52519,23 @@ select:disabled {
         group = document.createElement("optgroup");
         group.label = category;
         groups.set(category, group);
-        select5.append(group);
+        select4.append(group);
       }
-      group.append(option8);
+      group.append(option7);
     }
-    const selected2 = Array.from(select5.querySelectorAll("option")).find((option8) => option8.value === (setting.defaultValue ?? ""));
+    const selected2 = Array.from(select4.querySelectorAll("option")).find((option7) => option7.value === (setting.defaultValue ?? ""));
     if (selected2) {
       selected2.selected = true;
     }
-    select5.addEventListener("change", () => {
-      if (setting.disabled || !select5.value) {
+    select4.addEventListener("change", () => {
+      if (setting.disabled || !select4.value) {
         return;
       }
-      input3.value = select5.value;
-      picker.value = colorPickerValue(select5.value);
-      emitColorChange(select5.value);
+      input3.value = select4.value;
+      picker.value = colorPickerValue(select4.value);
+      emitColorChange(select4.value);
     });
-    return select5;
+    return select4;
   }
   function createColorPicker(setting) {
     const picker = document.createElement("input");
@@ -52818,11 +52724,11 @@ select:disabled {
     renderRow(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "setting-row";
-      const label3 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
-      if (label3) {
-        label3.classList.add("setting-row-label");
+      const label4 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
+      if (label4) {
+        label4.classList.add("setting-row-label");
         wrapper.classList.add("setting-row-labeled");
-        wrapper.append(label3);
+        wrapper.append(label4);
       }
       const controls = document.createElement("div");
       controls.className = "setting-row-controls";
@@ -52885,18 +52791,18 @@ select:disabled {
     renderSegmented(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field";
-      const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
+      const label4 = renderFieldLabel(setting.label, setting.labelDisplay);
       const control2 = document.createElement("cms-editor-v2-segmented-control");
       control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      for (const option8 of setting.options) {
+      for (const option7 of setting.options) {
         const button2 = document.createElement("button");
         button2.type = "button";
-        button2.value = option8.value;
+        button2.value = option7.value;
         button2.disabled = setting.disabled === true;
-        button2.title = option8.ariaLabel ?? option8.label;
-        button2.ariaLabel = option8.ariaLabel ?? option8.label;
-        button2.ariaPressed = String(option8.value === setting.defaultValue);
-        button2.append(...renderOptionContent(setting.display, option8.display, option8.icon ?? setting.icon, option8.label));
+        button2.title = option7.ariaLabel ?? option7.label;
+        button2.ariaLabel = option7.ariaLabel ?? option7.label;
+        button2.ariaPressed = String(option7.value === setting.defaultValue);
+        button2.append(...renderOptionContent(setting.display, option7.display, option7.icon ?? setting.icon, option7.label));
         button2.addEventListener("click", () => {
           if (setting.disabled) {
             return;
@@ -52904,12 +52810,12 @@ select:disabled {
           for (const item of Array.from(control2.querySelectorAll("button"))) {
             item.ariaPressed = String(item === button2);
           }
-          this.emitSettingChange(setting, option8.value);
+          this.emitSettingChange(setting, option7.value);
         });
         control2.append(button2);
       }
-      if (label3) {
-        wrapper.append(label3);
+      if (label4) {
+        wrapper.append(label4);
       }
       wrapper.append(control2);
       return wrapper;
@@ -52932,22 +52838,22 @@ select:disabled {
     applyDisabled(control2, setting);
     return control2;
   }
-  function renderFieldLabel(label3, display) {
+  function renderFieldLabel(label4, display) {
     if (display === "hidden") {
       return null;
     }
     const element = document.createElement("div");
     element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
-    element.textContent = label3;
+    element.textContent = label4;
     return element;
   }
-  function renderOptionContent(settingDisplay, optionDisplay, iconName, label3) {
+  function renderOptionContent(settingDisplay, optionDisplay, iconName, label4) {
     const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
     const icon = iconName ? settingIcon(iconName) : null;
     const nodes = icon && (display === "icon" || display === "icon-label") ? [icon] : [];
     if (display !== "icon" || !icon) {
       const text5 = document.createElement("span");
-      text5.textContent = label3;
+      text5.textContent = label4;
       nodes.push(text5);
     }
     return nodes;
@@ -53016,21 +52922,21 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
-  function renderSettingsStates(states3, onToggle) {
+  function renderSettingsStates(states2, onToggle) {
     const section2 = document.createElement("cms-editor-v2-section");
     section2.setAttribute("label", "States");
-    for (const state2 of states3) {
+    for (const state2 of states2) {
       const button2 = document.createElement("button");
       button2.className = "state-button";
       button2.type = "button";
       button2.ariaPressed = String(state2.isActive());
-      const label3 = document.createElement("span");
-      label3.className = "state-label";
-      label3.textContent = state2.label;
+      const label4 = document.createElement("span");
+      label4.className = "state-label";
+      label4.textContent = state2.label;
       const description = document.createElement("span");
       description.className = "state-description";
       description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
-      button2.append(label3, description);
+      button2.append(label4, description);
       button2.addEventListener("click", () => onToggle(state2));
       section2.append(button2);
     }
@@ -53085,7 +52991,7 @@ select:disabled {
       capability.link ? "link" : null,
       capability.code ? "code" : null,
       capability.dynamic ? "dynamic" : null
-    ].filter((option8) => Boolean(option8));
+    ].filter((option7) => Boolean(option7));
     return options2.length > 0 ? options2.join(", ") : "Plain text";
   }
 
@@ -53392,14 +53298,14 @@ cms-editor-v2-segmented-control button svg:only-child {
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
     }
-    setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states3 = [], dataScopes2 = [], dataSources = []) {
+    setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states2 = [], dataScopes2 = [], dataSources = []) {
       this._endpointSettings.setDataSources(dataSources);
       this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
       const visibleSections = sections2.filter((section2) => mode === "settings" ? section2.kind === "self" : section2.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
-      const shouldRenderStates = mode === "settings" && states3.length > 0;
+      const shouldRenderStates = mode === "settings" && states2.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
         const empty4 = document.createElement("div");
         empty4.className = "empty";
@@ -53411,7 +53317,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         view.append(renderTextCapability(textCapability, textValue6, dataScopes2, (value3, format) => this._emitContentChange(value3, format)));
       }
       if (shouldRenderStates) {
-        view.append(renderSettingsStates(states3, (state2) => this._emitStateToggle(state2)));
+        view.append(renderSettingsStates(states2, (state2) => this._emitStateToggle(state2)));
       }
       for (const section2 of visibleSections) {
         view.append(renderSettingSection(section2, this._settingControls));
@@ -53843,15 +53749,15 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option8 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option8.path)) {
-        byPath.set(option8.path, option8);
+    for (const option7 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option7.path)) {
+        byPath.set(option7.path, option7);
       }
     }
     return [...byPath.values()];
   }
-  function repeatArrayFields(fields2, scopeName, scopeLabel, prefix = "") {
-    return fields2.flatMap((field3) => {
+  function repeatArrayFields(fields, scopeName, scopeLabel, prefix = "") {
+    return fields.flatMap((field3) => {
       const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
       const fullPath = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
       if (field3.type !== "array") {
@@ -53872,7 +53778,7 @@ label {
     if (!normalizedQuery) {
       return options2;
     }
-    return options2.filter((option8) => [option8.path, option8.label, option8.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
+    return options2.filter((option7) => [option7.path, option7.label, option7.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -53890,26 +53796,26 @@ label {
       container.append(empty4);
       return;
     }
-    for (const option8 of options2) {
+    for (const option7 of options2) {
       const button2 = document.createElement("button");
       button2.className = "array";
       button2.type = "button";
-      button2.ariaSelected = String(option8 === activeOption);
+      button2.ariaSelected = String(option7 === activeOption);
       const name = document.createElement("span");
       name.className = "name";
-      name.textContent = option8.path;
+      name.textContent = option7.path;
       const scope = document.createElement("span");
       scope.className = "scope";
-      scope.textContent = option8.scopeLabel;
+      scope.textContent = option7.scopeLabel;
       button2.append(name, scope);
-      button2.addEventListener("click", () => onActivate(option8));
-      button2.addEventListener("dblclick", () => onSelect(option8));
+      button2.addEventListener("click", () => onActivate(option7));
+      button2.addEventListener("dblclick", () => onSelect(option7));
       container.append(button2);
     }
   }
-  function renderRepeatDetails(container, option8) {
+  function renderRepeatDetails(container, option7) {
     container.replaceChildren();
-    if (!option8) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to inspect item fields.";
@@ -53919,11 +53825,11 @@ label {
     const heading = document.createElement("div");
     heading.className = "details-eyebrow";
     heading.textContent = "Response fields";
-    container.append(heading, renderFields2(option8.fields));
+    container.append(heading, renderFields(option7.fields));
   }
-  function renderRepeatBinding(container, option8, onSelect) {
+  function renderRepeatBinding(container, option7, onSelect) {
     container.replaceChildren();
-    if (!option8) {
+    if (!option7) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to configure repeat.";
@@ -53938,22 +53844,22 @@ label {
     const pathLabel2 = document.createElement("span");
     pathLabel2.textContent = "Array";
     const pathValue = document.createElement("strong");
-    pathValue.textContent = option8.path;
+    pathValue.textContent = option7.path;
     path.append(pathLabel2, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
-    const label3 = document.createElement("label");
-    label3.textContent = "Alias";
+    const label4 = document.createElement("label");
+    label4.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
-    alias.value = defaultRepeatAlias(option8.path);
-    label3.append(alias);
-    config.append(label3);
+    alias.value = defaultRepeatAlias(option7.path);
+    label4.append(alias);
+    config.append(label4);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Use repeat";
-    insert.addEventListener("click", () => onSelect(option8, alias.value));
+    insert.addEventListener("click", () => onSelect(option7, alias.value));
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
     scroll.append(heading, path, config);
@@ -53962,10 +53868,10 @@ label {
     footer.append(insert);
     container.append(scroll, footer);
   }
-  function renderFields2(fields2) {
+  function renderFields(fields) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field3 of fields2) {
+    for (const field3 of fields) {
       list.append(renderField2(field3, 0));
     }
     if (list.children.length === 0) {
@@ -54048,8 +53954,8 @@ label {
     container.append(scroll, footer);
   }
   function numberInput2(text5, value3) {
-    const label3 = document.createElement("label");
-    label3.textContent = text5;
+    const label4 = document.createElement("label");
+    label4.textContent = text5;
     const input3 = document.createElement("input");
     input3.className = "count";
     input3.type = "number";
@@ -54058,19 +53964,19 @@ label {
     input3.step = "1";
     input3.required = true;
     input3.value = String(value3);
-    label3.append(input3);
-    return { label: label3, input: input3 };
+    label4.append(input3);
+    return { label: label4, input: input3 };
   }
   function textInput2(text5, value3) {
-    const label3 = document.createElement("label");
-    label3.textContent = text5;
+    const label4 = document.createElement("label");
+    label4.textContent = text5;
     const input3 = document.createElement("input");
     input3.className = "alias";
     input3.pattern = "[A-Za-z_$][A-Za-z0-9_$]*";
     input3.required = true;
     input3.value = value3;
-    label3.append(input3);
-    return { label: label3, input: input3 };
+    label4.append(input3);
+    return { label: label4, input: input3 };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
@@ -54127,17 +54033,17 @@ label {
       }
       this._renderOptions();
       renderRepeatDetails(this.details, this._activeOption);
-      renderRepeatBinding(this.binding, this._activeOption, (option8, alias) => this._selectPath(option8.path, alias));
+      renderRepeatBinding(this.binding, this._activeOption, (option7, alias) => this._selectPath(option7.path, alias));
     }
     _renderOptions() {
       const options2 = visibleRepeatOptions(this._options, this.search.value);
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      renderRepeatOptions(this.arrays, options2, this._activeOption, (option8) => {
-        this._activeOption = option8;
+      renderRepeatOptions(this.arrays, options2, this._activeOption, (option7) => {
+        this._activeOption = option7;
         this._render();
-      }, (option8) => this._selectPath(option8.path, defaultRepeatAlias(option8.path)));
+      }, (option7) => this._selectPath(option7.path, defaultRepeatAlias(option7.path)));
     }
     _selectPath(path, alias) {
       const cleanAlias = alias.trim();
@@ -55591,10 +55497,10 @@ label {
     return imported;
   }
   function normalizeAccessibility(root) {
-    const label3 = root.getAttribute("aria-label")?.trim() || root.querySelector("title")?.textContent?.trim() || "";
-    if (label3) {
+    const label4 = root.getAttribute("aria-label")?.trim() || root.querySelector("title")?.textContent?.trim() || "";
+    if (label4) {
       root.setAttribute("role", "img");
-      root.setAttribute("aria-label", label3);
+      root.setAttribute("aria-label", label4);
       root.removeAttribute("aria-hidden");
       return;
     }
@@ -56862,7 +56768,7 @@ label {
     }
     const controlled = CONTROLLED_VALUES[tag]?.[attribute];
     if (controlled && (setting.type === "select" || setting.type === "segmented")) {
-      return setting.options.length > 0 && setting.options.every((option8) => controlled.has(option8.value));
+      return setting.options.length > 0 && setting.options.every((option7) => controlled.has(option7.value));
     }
     if (setting.type === "page-link") {
       return pageLinkSettingIsControlled(tag, attribute, setting);
@@ -57207,12 +57113,12 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellPageSettings.ts
-  function openPageSettingsModal(modal2) {
-    modal2.hidden = false;
-    modal2.querySelector("input")?.focus();
+  function openPageSettingsModal(modal) {
+    modal.hidden = false;
+    modal.querySelector("input")?.focus();
   }
-  function closePageSettingsModal(modal2) {
-    modal2.hidden = true;
+  function closePageSettingsModal(modal) {
+    modal.hidden = true;
   }
   function syncPageSettingsForm(config, pageField) {
     if (!config) {
@@ -57381,8 +57287,8 @@ label {
       this.context.state.pageConfig = pageConfig;
       applyPageSettingsTitle(this.context.refs.topBar, pageConfig);
     }
-    setSaveStatus(label3) {
-      this.context.refs.topBar.saveStatus = label3;
+    setSaveStatus(label4) {
+      this.context.refs.topBar.saveStatus = label4;
     }
     syncStructureTreeCatalog() {
       syncStructureTreeCatalog(this.context.host.shadowRoot, this.context.state.catalog);
@@ -57864,8 +57770,8 @@ label {
       getStates() {
         return [...super.getStates(), ...this._addedStates];
       }
-      addStates(states3) {
-        this._addedStates.push(...toList(states3));
+      addStates(states2) {
+        this._addedStates.push(...toList(states2));
         this._emit(CMS_EDITOR_STATES_CHANGE_EVENT, {
           editor: this,
           states: this.getStates()
@@ -57958,8 +57864,8 @@ label {
     }
     return;
   }
-  function findDataFieldInList(fields2, path) {
-    for (const field3 of fields2) {
+  function findDataFieldInList(fields, path) {
+    for (const field3 of fields) {
       if (field3.path === path) {
         return field3;
       }
@@ -58366,7 +58272,7 @@ label {
         pageConfig: () => this.context.state.pageConfig,
         contentHtml: () => this.getContentHtml(),
         syncEditorMode: () => this.syncEditorMode(),
-        setSaveStatus: (label3) => this.setSaveStatus(label3),
+        setSaveStatus: (label4) => this.setSaveStatus(label4),
         saveEventName: this.context.saveEventName
       });
     }
@@ -58454,8 +58360,8 @@ label {
     getContentHtml() {
       return this.context.renderSync.getContentHtml();
     }
-    setSaveStatus(label3) {
-      this.context.renderSync.setSaveStatus(label3);
+    setSaveStatus(label4) {
+      this.context.renderSync.setSaveStatus(label4);
     }
   }
 
@@ -58560,8 +58466,8 @@ label {
     getContentHtml() {
       return this.context.frames.contentHtml();
     }
-    setSaveStatus(label3) {
-      this.context.sync.setSaveStatus(label3);
+    setSaveStatus(label4) {
+      this.context.sync.setSaveStatus(label4);
     }
     syncStructureTreeCatalog() {
       this.context.sync.syncStructureTreeCatalog();
@@ -59073,7 +58979,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default26 = `:host {
+  var style_default27 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -59201,7 +59107,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default26, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default27, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default38)}`;
     return template22;
   }
@@ -59393,8 +59299,8 @@ label {
     setPageConfig(config) {
       this._parts.api.setPageConfig(config);
     }
-    setSaveStatus(label3) {
-      this._parts.renderSync.setSaveStatus(label3);
+    setSaveStatus(label4) {
+      this._parts.renderSync.setSaveStatus(label4);
     }
     loadDocument(document2, selectedTarget = null) {
       this._parts.api.loadDocument(document2, selectedTarget);
@@ -59759,10 +59665,10 @@ label {
   function semanticLabel(tag) {
     return tag.charAt(0).toUpperCase() + tag.slice(1);
   }
-  function entry(tag, label3, description, defaultContent, bloc, editor) {
+  function entry(tag, label4, description, defaultContent, bloc, editor) {
     return {
       tag,
-      label: label3,
+      label: label4,
       description,
       category: "Content",
       defaultContent,
@@ -60305,7 +60211,7 @@ label {
       return true;
     }
     const id2 = element.id;
-    return Boolean(id2 && Array.from(root.querySelectorAll("label[for]")).some((label3) => label3.getAttribute("for") === id2));
+    return Boolean(id2 && Array.from(root.querySelectorAll("label[for]")).some((label4) => label4.getAttribute("for") === id2));
   }
   function needsControlLabel(element) {
     if (element.localName !== "input") {
@@ -60563,7 +60469,7 @@ label {
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default27 = `:host {
+  var style_default28 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -60611,7 +60517,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template22 = document.createElement("template");
-  template22.innerHTML = `<style>${String(style_default27)}</style>${String(template_default39)}`;
+  template22.innerHTML = `<style>${String(style_default28)}</style>${String(template_default39)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -60772,7 +60678,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default28 = `:host {
+  var style_default29 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -60897,7 +60803,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l2 {
     constructor() {
       super({
-        css: style_default28,
+        css: style_default29,
         template: template_default40
       });
     }
@@ -61467,9 +61373,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         }
       });
     }
-    open(label3) {
-      if (label3) {
-        this.shadowRoot.getElementById("title").textContent = label3;
+    open(label4) {
+      if (label4) {
+        this.shadowRoot.getElementById("title").textContent = label4;
       }
       this.setAttribute("open", "");
     }
@@ -62023,13 +61929,13 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     return trail;
   }
   // src/components/media/GridMedia/api/write.ts
-  async function renameItem(id2, label3) {
+  async function renameItem(id2, label4) {
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id2);
     const res = await fetch(url.toString(), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label3 })
+      body: JSON.stringify({ name: label4 })
     });
     return res.ok;
   }
@@ -62040,11 +61946,11 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     const res = await fetch(url.toString(), { method: "DELETE" });
     return res.ok;
   }
-  async function createFolder(label3, parent) {
+  async function createFolder(label4, parent) {
     const res = await fetch(`${filesBase()}/folder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label3, parentId: parent })
+      body: JSON.stringify({ name: label4, parentId: parent })
     });
     return res.ok;
   }
@@ -62130,10 +62036,10 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       } else {
         appendMediaPreview(card, item);
       }
-      const label3 = document.createElement("span");
-      label3.slot = "label";
-      label3.textContent = item.label;
-      card.appendChild(label3);
+      const label4 = document.createElement("span");
+      label4.slot = "label";
+      label4.textContent = item.label;
+      card.appendChild(label4);
       grid2.appendChild(card);
     }
   }
@@ -62445,8 +62351,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         if (preview) {
           detail.appendChild(preview);
         }
-        const fields2 = buildFields(item);
-        detail.appendChild(fields2);
+        const fields = buildFields(item);
+        detail.appendChild(fields);
         const actions = buildActions(item);
         detail.appendChild(actions);
         actions.querySelector("#btn-save").addEventListener("click", () => {
@@ -62461,7 +62367,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         actions.querySelector("#btn-delete").addEventListener("click", () => {
           callbacks.onDelete(item.id);
         });
-        fields2.addEventListener("keydown", (e) => {
+        fields.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
             e.preventDefault();
             callbacks.onSave(item.id, readFields(detail));
@@ -62635,7 +62541,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       renderGrid(this.shadowRoot.getElementById("grid"), this._items);
       renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
     }
-    _navigateTo(folderId, label3) {
+    _navigateTo(folderId, label4) {
       const url = new URL(window.location.href);
       if (folderId) {
         url.searchParams.set("folder", folderId);
@@ -62646,8 +62552,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label3) {
-        this._breadcrumb.push({ id: folderId, label: label3 });
+      } else if (label4) {
+        this._breadcrumb.push({ id: folderId, label: label4 });
       }
       this._refresh();
     }
@@ -63352,7 +63258,7 @@ dialog::backdrop {
         grid: this._grid,
         getFolder: () => this._folder,
         findItem: (id2) => this._items.find((item) => item.id === id2),
-        navigate: (folderId, label3) => this._navigateTo(folderId, label3),
+        navigate: (folderId, label4) => this._navigateTo(folderId, label4),
         navigateBreadcrumb: (folderId, index) => {
           this._breadcrumb = this._breadcrumb.slice(0, index + 1);
           this._navigateTo(folderId);
@@ -63417,12 +63323,12 @@ dialog::backdrop {
       }));
       this._dialog?.close();
     }
-    _navigateTo(folderId, label3) {
+    _navigateTo(folderId, label4) {
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label3) {
-        this._breadcrumb.push({ id: folderId, label: label3 });
+      } else if (label4) {
+        this._breadcrumb.push({ id: folderId, label: label4 });
       }
       this._refresh();
     }
@@ -63665,10 +63571,10 @@ dialog::backdrop {
       if (!this._tile) {
         return;
       }
-      const label3 = this.getAttribute("label") ?? "";
+      const label4 = this.getAttribute("label") ?? "";
       const size = Number.parseInt(this.getAttribute("size") ?? "64", 10);
-      this._label.textContent = label3;
-      this._label.hidden = label3 === "";
+      this._label.textContent = label4;
+      this._label.hidden = label4 === "";
       this._tile.disabled = this.disabled;
       this._clearBtn.disabled = this.disabled;
       const accessibleName2 = this.getAttribute("aria-label");
@@ -63677,7 +63583,7 @@ dialog::backdrop {
       } else {
         this._tile.removeAttribute("aria-label");
       }
-      this._clearBtn.setAttribute("aria-label", label3 ? `Remove ${label3}` : "Remove selected file");
+      this._clearBtn.setAttribute("aria-label", label4 ? `Remove ${label4}` : "Remove selected file");
       this._tile.parentElement?.style.setProperty("--tile-size", `${size > 0 ? size : 64}px`);
     }
   }
