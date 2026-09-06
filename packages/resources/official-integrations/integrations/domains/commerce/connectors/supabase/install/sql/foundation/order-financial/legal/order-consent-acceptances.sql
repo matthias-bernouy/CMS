@@ -33,3 +33,33 @@ alter table commerce.order_consent_acceptances force row level security;
 
 comment on table commerce.order_consent_acceptances is
     'Immutable payment-operation links to evidence owned by the Consent integration; contains no document snapshots.';
+
+create or replace function commerce.guard_order_consent_evidence()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+    if tg_op <> 'INSERT' then
+        raise exception 'conflict: payment consent evidence is immutable';
+    end if;
+    if not exists (
+        select 1 from commerce.orders order_row
+        join commerce.order_payment_attempts attempt on attempt.order_id = order_row.id
+        where order_row.id = new.order_id
+          and order_row.checkout_group_id = new.checkout_group_id
+          and order_row.buyer_cms_user_id = new.buyer_cms_user_id
+          and attempt.id = new.payment_attempt_id
+          and new.operation_key = 'commerce:payment:' || attempt.provider || ':' || order_row.public_id::text
+    ) then
+        raise exception 'conflict: consent evidence does not match its order and payment attempt';
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists guard_order_consent_evidence on commerce.order_consent_acceptances;
+create trigger guard_order_consent_evidence
+before insert or update or delete on commerce.order_consent_acceptances
+for each row execute function commerce.guard_order_consent_evidence();

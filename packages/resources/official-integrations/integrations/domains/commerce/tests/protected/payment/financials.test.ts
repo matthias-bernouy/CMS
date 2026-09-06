@@ -42,11 +42,10 @@ describe("commerce protected C2C financial routes", () => {
 
     test("prepares payment from immutable Commerce terms and trusted buyer identity", async () => {
         setRestResponder((request) =>
-            request.url.endsWith("/rpc/get_buyer_legal_verification_context")
+            request.url.endsWith("/rpc/get_buyer_consent_context")
                 ? Response.json({
-                      enabled: false,
-                      paymentAlreadyCreated: false,
-                      documents: [],
+                      requiresConsent: false,
+                      contexts: [],
                   })
                 : Response.json({ id: 1 }),
         );
@@ -60,9 +59,8 @@ describe("commerce protected C2C financial routes", () => {
         expect(body).toMatchObject({
             p_order_id: 42,
             p_buyer_cms_user_id: "buyer-17",
-            p_accepted_legal_document_version_ids: [],
             p_payment_provider: "stripe",
-            p_verified_legal_documents: [],
+            p_consent_receipts: [],
         });
         expect(body.p_correlation_id).toMatch(
             /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,

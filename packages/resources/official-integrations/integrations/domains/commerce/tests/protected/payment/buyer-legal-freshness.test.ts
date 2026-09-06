@@ -1,150 +1,94 @@
 import { describe, expect, test } from "bun:test";
+import { capturedFetches, expectRpc, installCommerceTestEnvironment, jsonResponse } from "../../harness";
 import {
-    capturedFetches,
-    expectRpc,
-    installCommerceTestEnvironment,
-    jsonResponse,
-    requestCommerce,
-    setRestResponder,
-} from "../../harness";
-import {
-    contentHash,
-    legalPage,
-    rpcName,
-    snapshotResponse,
-    snapshotUrl,
-    verificationContext,
+    consentContext,
+    consentDocument,
+    consentReceipt,
+    consentResponder,
+    consentUrl,
+    nextVersionId,
+    prepare,
     versionId,
 } from "./buyer-legal-fixtures";
-
 installCommerceTestEnvironment();
-
-describe("buyer legal published-page freshness gate", () => {
-    test("passes a newly published snapshot to SQL so the stale accepted version fails closed", async () => {
-        const republished = {
-            ...legalPage,
-            path: "/new-terms",
-            content: "<main>Terms revision two</main>",
-        };
-        setRestResponder((request) => {
-            if (request.url === snapshotUrl) {
-                return snapshotResponse(republished);
-            }
-            if (rpcName(request) === "get_buyer_legal_verification_context") {
-                return jsonResponse(verificationContext());
-            }
-            if (rpcName(request) === "prepare_protected_payment") {
-                return jsonResponse({ message: "conflict: LEGAL_DOCUMENT_VERSION_CHANGED" }, 400);
-            }
-            return jsonResponse({});
-        });
-
-        const response = await prepare([versionId]);
-
+describe("Commerce Consent freshness and retry boundary", () => {
+    test.each([{ ids: [] }, { ids: [nextVersionId] }, { ids: [versionId, nextVersionId] }])(
+        "requires exactly the current document revisions: %j",
+        async ({ ids }) => {
+            consentResponder();
+            const response = await prepare(ids);
+            expect(response.status).toBe(409);
+            expect(await response.json()).toEqual({ error: "LEGAL_DOCUMENT_VERSION_CHANGED" });
+            expect(
+                capturedFetches().some(
+                    (call) =>
+                        call.url.endsWith("/operations/accept") || call.url.endsWith("/rpc/prepare_protected_payment"),
+                ),
+            ).toBe(false);
+        },
+    );
+    test("rejects a policy revision changed between display and submission", async () => {
+        consentResponder((request) =>
+            request.url.includes("/requirements?")
+                ? jsonResponse({ enabled: true, documents: [{ ...consentDocument, versionId: nextVersionId }] })
+                : undefined,
+        );
+        expect((await prepare()).status).toBe(409);
+        expect(capturedFetches()).toHaveLength(3);
+    });
+    test("maps a version race during Consent recording and never prepares payment", async () => {
+        consentResponder((request) =>
+            request.url.endsWith("/operations/accept")
+                ? jsonResponse({ error: "CONSENT_DOCUMENT_VERSION_CHANGED" }, 409)
+                : undefined,
+        );
+        const response = await prepare();
         expect(response.status).toBe(409);
         expect(await response.json()).toEqual({ error: "LEGAL_DOCUMENT_VERSION_CHANGED" });
-        expect(expectRpc("prepare_protected_payment").body.p_verified_legal_documents).toEqual([
-            {
-                key: "terms",
-                expectedVersionId: versionId,
-                contentHash: contentHash(republished),
-                page: republished,
-            },
-        ]);
-    });
-
-    test.each([
-        ["missing publication", () => jsonResponse({ error: "not found" }, 404)],
-        ["redirect", () => new Response(null, { status: 302, headers: { location: "https://elsewhere.test" } })],
-        [
-            "wrong schema",
-            () => jsonResponse({ schema: "unknown", page: legalPage, contentHash: contentHash(legalPage) }),
-        ],
-        ["hash mismatch", () => snapshotResponse(legalPage, "a".repeat(64))],
-        [
-            "oversized response",
-            () => snapshotResponse(legalPage, contentHash(legalPage), 200, { "content-length": "20000000" }),
-        ],
-    ])("rejects a %s before payment preparation", async (_label, responseFactory) => {
-        setRestResponder((request) => {
-            if (rpcName(request) === "get_buyer_legal_verification_context") {
-                return jsonResponse(verificationContext());
-            }
-            if (request.url === snapshotUrl) {
-                return responseFactory();
-            }
-            return jsonResponse({ id: 1 });
-        });
-
-        const response = await prepare([versionId]);
-
-        expect(response.status).toBe(409);
-        expect(await response.json()).toEqual({ error: "LEGAL_DOCUMENT_NOT_AVAILABLE" });
         expect(capturedFetches().some((call) => call.url.endsWith("/rpc/prepare_protected_payment"))).toBe(false);
     });
-
-    test("allows a provider-created retry without consulting an unavailable page", async () => {
-        setRestResponder((request) => {
-            if (rpcName(request) === "get_buyer_legal_verification_context") {
-                return jsonResponse(verificationContext({ paymentAlreadyCreated: true }));
-            }
-            if (rpcName(request) === "prepare_protected_payment") {
-                return jsonResponse({ paymentAttemptId: 8 });
-            }
-            return jsonResponse({ error: "must not fetch Delivery" }, 404);
-        });
-
+    test("reuses the operation receipt across policy publication and preserves immutable evidence", async () => {
+        consentResponder((request) =>
+            request.url.endsWith("/operations/receipt") ? jsonResponse({ receipt: consentReceipt() }) : undefined,
+        );
         const response = await prepare([]);
-
         expect(response.status).toBe(200);
-        expect(expectRpc("prepare_protected_payment").body.p_verified_legal_documents).toEqual([]);
-        expect(capturedFetches().some((call) => call.url === snapshotUrl)).toBe(false);
+        expect(capturedFetches().some((call) => call.url.includes("/requirements?"))).toBe(false);
+        expect(
+            capturedFetches().find((call) => call.url === `${consentUrl}/operations/accept`)?.body.acceptedVersionIds,
+        ).toEqual([]);
+        expect(expectRpc("prepare_protected_payment").body.p_consent_receipts).toEqual([consentReceipt()]);
     });
-
-    test("does not grant the same bypass to a merely reserved payment attempt", async () => {
-        setRestResponder((request) => {
-            if (rpcName(request) === "get_buyer_legal_verification_context") {
-                return jsonResponse(verificationContext({ paymentAlreadyCreated: false }));
-            }
-            if (request.url === snapshotUrl) {
-                return jsonResponse({ error: "not found" }, 404);
-            }
-            return jsonResponse({});
-        });
-
-        const response = await prepare([]);
-
-        expect(response.status).toBe(409);
-        expect(await response.json()).toEqual({ error: "LEGAL_DOCUMENT_NOT_AVAILABLE" });
-    });
-
-    test("preserves the disabled historical path without any Delivery fetch", async () => {
-        setRestResponder((request) => {
-            if (rpcName(request) === "get_buyer_legal_verification_context") {
-                return jsonResponse({
-                    enabled: false,
-                    paymentAlreadyCreated: false,
-                    documents: [],
-                });
-            }
-            return jsonResponse({ paymentAttemptId: 9 });
-        });
-
-        const response = await prepare([]);
-
-        expect(response.status).toBe(200);
-        expect(expectRpc("prepare_protected_payment").body.p_verified_legal_documents).toEqual([]);
+    test("allows the SQL-authorized provider-created retry without contacting Consent", async () => {
+        consentResponder((request) =>
+            request.url.endsWith("/rpc/get_buyer_consent_context")
+                ? jsonResponse(consentContext({ requiresConsent: false }))
+                : undefined,
+        );
+        expect((await prepare([])).status).toBe(200);
+        expect(expectRpc("prepare_protected_payment").body.p_consent_receipts).toEqual([]);
         expect(capturedFetches()).toHaveLength(2);
     });
-});
-
-function prepare(acceptedIds: string[]): Promise<Response> {
-    return requestCommerce("/me/order/payment/prepare", {
-        userId: "buyer-17",
-        body: {
-            orderId: 42,
-            paymentProvider: "stripe",
-            acceptedLegalDocumentVersionIds: acceptedIds,
-        },
+    test("requires Consent for a reserved attempt and blocks if the service is unavailable", async () => {
+        consentResponder((request) =>
+            request.url.startsWith(consentUrl) ? jsonResponse({ error: "unavailable" }, 503) : undefined,
+        );
+        const response = await prepare([]);
+        expect(response.status).toBe(503);
+        expect(await response.json()).toEqual({ error: "CONSENT_UNAVAILABLE" });
+        expect(capturedFetches()).toHaveLength(2);
     });
-}
+    test("records a disabled context receipt instead of bypassing policy resolution", async () => {
+        const disabled = consentReceipt({ required: false, documents: [], acceptanceId: null });
+        consentResponder((request) =>
+            request.url.includes("/requirements?")
+                ? jsonResponse({ enabled: false, documents: [] })
+                : request.url.endsWith("/operations/accept")
+                  ? jsonResponse(disabled)
+                  : undefined,
+        );
+        expect((await prepare([])).status).toBe(200);
+        expect(expectRpc("prepare_protected_payment").body.p_consent_receipts).toEqual([disabled]);
+        expect(capturedFetches().filter((call) => call.url.startsWith(consentUrl))).toHaveLength(3);
+    });
+});

@@ -7,7 +7,8 @@ import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
-import { connectorDeployer } from "./setup";
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
+import { connectorDeployer, installedConsent } from "./setup";
 
 describe("commerce 1.0.0 indexing contract", () => {
     test("publishes the current source as the sole authored release", async () => {
@@ -27,17 +28,18 @@ describe("commerce 1.0.0 indexing contract", () => {
         await importIntegration(
             {
                 sources,
+                functions: new InMemoryFunctionRepository(),
                 sourceOverlays: new InMemorySourceOverlayRepository(),
                 dashboards: new InMemoryDashboardRepository(),
                 dashboardViews: new InMemoryDashboardViewRepository(),
                 secrets: new InMemorySecretStore(),
                 roles: new InMemoryRolesRepository(),
-                installations: new InMemoryIntegrationInstallationRepository(),
+                installations: await installedConsent(),
                 triggers: new InMemoryTriggerRepository(),
                 connectorDeployers: [connectorDeployer(() => {})],
                 connectorInstanceIds: { primary: "commerce-test-primary" },
             },
-            { kind: "commerce", version: "1.0.0", answers: { id: "commerce" }, options: {} },
+            { kind: "commerce", version: "1.0.0", answers: {}, options: {} },
             [definition],
         );
 

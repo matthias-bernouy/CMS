@@ -50,6 +50,7 @@ set local role service_role;
 
 \ir fixture.sql
 \ir behavior.sql
+\ir negotiated.sql
 \ir security.sql
 
 rollback;

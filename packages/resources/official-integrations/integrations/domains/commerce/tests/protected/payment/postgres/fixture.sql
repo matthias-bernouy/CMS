@@ -61,4 +61,5 @@ cross join commerce.products product
 where seller.slug = 'buyer-legal-contract-seller'
   and product.slug = 'buyer-legal-negotiated-product';
 
-select commerce_buyer_legal_test.seed_order('legacy-disabled');
+select commerce_buyer_legal_test.seed_order(label) from unnest(array['missing','required','disabled','mismatch']) label;
+select commerce_buyer_legal_test.seed_order('negotiated', true);

@@ -129,7 +129,7 @@ describe("platform liability error boundaries", () => {
             name: "maps a missing protected order to not found",
             path: "/me/order/payment/prepare",
             body: { orderId: 42 },
-            rpc: "get_buyer_legal_verification_context",
+            rpc: "get_buyer_consent_context",
             message: "not_found: order",
             upstreamStatus: 400,
             status: 404,

@@ -149,100 +149,23 @@ begin
 end;
 $$;
 
-create function commerce_buyer_legal_test.verified_snapshot(
-    p_version_id uuid,
-    p_content text default null
-)
-returns jsonb
-language plpgsql
-security invoker
-set search_path = ''
-as $$
-declare
-    v_version commerce.buyer_legal_document_versions%rowtype;
-    v_content text;
-    v_hash text;
-begin
-    select * into strict v_version
-    from commerce.buyer_legal_document_versions
-    where id = p_version_id;
-    v_content := coalesce(p_content, v_version.page_content #>> '{}');
-    v_hash := commerce.buyer_legal_published_page_hash(
-        v_version.cms_page_id,
-        v_version.page_path,
-        v_version.page_title,
-        coalesce(v_version.page_description, ''),
-        v_content
-    );
-    return jsonb_build_object(
-        'key', v_version.document_key,
-        'expectedVersionId', v_version.id,
-        'contentHash', v_hash,
-        'page', jsonb_build_object(
-            'id', v_version.cms_page_id,
-            'path', v_version.page_path,
-            'title', v_version.page_title,
-            'description', coalesce(v_version.page_description, ''),
-            'content', v_content
-        )
-    );
-end;
-$$;
-
-create function commerce_buyer_legal_test.mutate_version(
-    p_version_id uuid,
-    p_delete boolean
-)
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-    if p_delete then
-        delete from commerce.buyer_legal_document_versions
-        where id = p_version_id;
-    else
-        update commerce.buyer_legal_document_versions
-        set label = label || ' changed'
-        where id = p_version_id;
-    end if;
-end;
-$$;
-
-create function commerce_buyer_legal_test.mutate_acceptance(
-    p_acceptance_id bigint,
-    p_delete boolean
-)
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-    if p_delete then
-        delete from commerce.order_buyer_legal_acceptances
-        where id = p_acceptance_id;
-    else
-        update commerce.order_buyer_legal_acceptances
-        set correlation_id = gen_random_uuid()
-        where id = p_acceptance_id;
-    end if;
-end;
+create function commerce_buyer_legal_test.receipts(p_order_id bigint, p_required boolean default true)
+returns jsonb language sql security invoker set search_path = '' as $$
+    select jsonb_agg(jsonb_build_object(
+        'schemaVersion', 1, 'required', p_required, 'contextKey', context.key,
+        'operationKey', scope.value->>'operationKey', 'cmsUserId', scope.value->>'buyerCmsUserId',
+        'acceptanceId', '23484f33-28d7-4b47-a0bf-48870a4d80ba', 'acceptedAt', now(),
+        'metadata', jsonb_build_object('orderId', p_order_id, 'orderPublicId', scope.value->>'orderPublicId',
+            'checkoutGroupId', scope.value->>'checkoutGroupId', 'paymentProvider', 'stripe'),
+        'documents', case when p_required then jsonb_build_array(jsonb_build_object(
+            'documentKey', 'terms', 'versionId', repeat('a',64), 'contentHash', repeat('b',64))) else '[]'::jsonb end
+    ) order by context.key)
+    from commerce.orders order_row
+    cross join lateral (select commerce.get_buyer_consent_context(order_row.id, order_row.buyer_cms_user_id, 'stripe') value) scope
+    cross join lateral jsonb_array_elements_text(scope.value->'contexts') context(key)
+    where order_row.id = p_order_id;
 $$;
 
 grant usage on schema commerce_buyer_legal_test to service_role;
-grant select, insert, update on
-    commerce_buyer_legal_test.orders,
-    commerce_buyer_legal_test.state
-to service_role;
-grant execute on function commerce_buyer_legal_test.assert_true(boolean, text)
-to service_role;
-grant execute on function commerce_buyer_legal_test.seed_order(text, boolean)
-to service_role;
-grant execute on function commerce_buyer_legal_test.verified_snapshot(uuid, text)
-to service_role;
-grant execute on function commerce_buyer_legal_test.mutate_version(uuid, boolean)
-to service_role;
-grant execute on function commerce_buyer_legal_test.mutate_acceptance(bigint, boolean)
-to service_role;
+grant select, insert, update on all tables in schema commerce_buyer_legal_test to service_role;
+grant execute on all functions in schema commerce_buyer_legal_test to service_role;

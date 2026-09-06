@@ -15,6 +15,7 @@ describe("Consent integration contract", () => {
             "dashboard-view",
             "function",
             "function",
+            "function",
             "source",
             "trigger",
             "trigger",
@@ -32,6 +33,9 @@ describe("Consent integration contract", () => {
             ["publishConsentContext", { mode: "admin" }],
             ["listAcceptances", { mode: "admin" }],
             ["health", { mode: "admin" }],
+            ["manageIntegration", { mode: "system" }],
+            ["recordOperationAcceptance", { mode: "system" }],
+            ["getOperationAcceptance", { mode: "system" }],
         ]);
 
         const httpContract = definition?.connectors?.[0]?.functions?.[0]?.compatibility?.http;
@@ -140,35 +144,33 @@ describe("Consent integration contract", () => {
     });
 
     test("keeps mutable legal policy out of installation answers", async () => {
-        const inputs = await json("definitions/configuration/inputs.json");
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("consent");
         const afterInstallation = await json("definitions/configuration/after-installation.json");
         const dashboard = await json("definitions/artifacts/dashboards/contexts/root.json");
         const detail = await json("definitions/artifacts/dashboards/contexts/views/context-detail.json");
         const bootstrap = await text("connectors/supabase/install/sql/commands/context/management.sql");
 
-        expect(Array.from(inputs as unknown as Array<{ name: string }>, ({ name }) => name)).toEqual([
-            "id",
-            "contextKey",
-        ]);
-        expect(afterInstallation).toEqual([
-            {
-                id: "bootstrap-consent-context",
-                steps: [
-                    {
-                        id: "bootstrap",
-                        call: {
-                            source: "consent",
-                            endpoint: "bootstrapContext",
-                            body: { contextKey: "signup" },
-                        },
-                    },
-                ],
-            },
-        ]);
+        expect(definition?.inputs).toEqual([]);
+        expect(
+            afterInstallation.map(
+                (flow: { steps: Array<{ call: { body: { contextKey: string } } }> }) =>
+                    flow.steps[0]?.call.body.contextKey,
+            ),
+        ).toEqual(["signup", "buyer_checkout", "direct_purchase", "negotiated_offer", "cart", "protected_payment"]);
         expect(JSON.stringify(afterInstallation)).not.toContain("documents");
         expect(dashboard).toMatchObject({ type: "dashboard-view" });
         expect(detail[0]).toMatchObject({ widget: "w-detail", id: "consentContext" });
-        expect(JSON.stringify(detail)).toContain("publishConsentContext");
+        expect(detail[0].actions[0].management).toEqual({
+            installationId: "consent",
+            action: "save-settings",
+            body: {
+                contextKey: "$resource.contextKey",
+                enabled: "$field.enabled",
+                expectedRevision: "$resource.revision",
+                documents: "$field.documents",
+            },
+        });
+        expect(JSON.stringify(detail)).toContain("page-link");
         expect(JSON.stringify(detail)).toContain("reorderable-list");
         expect(bootstrap).toContain("on conflict (context_key) do nothing");
         expect(bootstrap).toContain("CONSENT_CONTEXT_REVISION_CHANGED");

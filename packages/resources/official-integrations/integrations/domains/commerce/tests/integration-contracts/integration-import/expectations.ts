@@ -45,7 +45,7 @@ export const expectedEndpointUrns = [
     "urn:commerce:getBuyerLegalRequirements",
     "urn:commerce:getMyBuyerLegalAcceptanceAudit",
     "urn:commerce:getBuyerLegalAcceptanceAudit",
-    "urn:commerce:syncBuyerLegalDocuments",
+    "urn:commerce:manageIntegration",
     "urn:commerce:submitMyMarketplaceServiceWithdrawalRequest",
     "urn:commerce:myMarketplaceServiceWithdrawalRequests",
     "urn:commerce:marketplaceServiceWithdrawalRequests",

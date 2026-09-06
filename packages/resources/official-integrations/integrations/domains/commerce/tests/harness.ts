@@ -23,6 +23,7 @@ export function installCommerceTestEnvironment(): void {
             get(key) {
                 return {
                     CMS_COMMERCE_API_KEY: commerceApiKey,
+                    CMS_CONSENT_API_KEY: "consent-api-key",
                     SUPABASE_URL: supabaseUrl,
                     SUPABASE_SECRET_KEYS: JSON.stringify({ default: "sb_secret_test" }),
                 }[key];

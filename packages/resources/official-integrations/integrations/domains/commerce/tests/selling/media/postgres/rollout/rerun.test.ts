@@ -14,6 +14,9 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
+import { installedConsent } from "../../../../integration-contracts/integration-import/setup";
+
 type ManagementRequest = { body: BodyInit | null | undefined; method: string; url: string };
 
 describe("Commerce media connector rerun", () => {
@@ -30,7 +33,7 @@ describe("Commerce media connector rerun", () => {
         }
         const requests: ManagementRequest[] = [];
         const secrets = new InMemorySecretStore();
-        const installations = new InMemoryIntegrationInstallationRepository();
+        const installations = await installedConsent();
         const providerRepository = new InMemoryIntegrationConnectorProviderRepository({
             provider: "supabase",
             enabled: true,
@@ -54,6 +57,7 @@ describe("Commerce media connector rerun", () => {
         };
         const deps = {
             sources: new InMemorySourceRepository(),
+            functions: new InMemoryFunctionRepository(),
             sourceOverlays: new InMemorySourceOverlayRepository(),
             dashboards: new InMemoryDashboardRepository(),
             dashboardViews: new InMemoryDashboardViewRepository(),
@@ -63,19 +67,6 @@ describe("Commerce media connector rerun", () => {
             installations,
             connectorDeployers: [deployer],
             connectorInstanceIds: { primary: "commerce-test-primary" },
-            sourceExecutorDeps: {
-                fetchImpl: async (input) => {
-                    const request = new Request(input);
-                    if (request.url.includes("/cms-commerce/system/buyer-legal-documents/sync")) {
-                        return Response.json({ enabled: false, documents: [] });
-                    }
-                    return Response.json(
-                        { error: `unexpected after-installation request: ${request.url}` },
-                        { status: 500 },
-                    );
-                },
-                resolveSecret: async () => "commerce-rollout-cms-api-key",
-            },
         };
 
         await runIntegrationInstallation({
@@ -86,7 +77,7 @@ describe("Commerce media connector rerun", () => {
             siteIntegrations: [definition],
             dto: {
                 kind: "commerce",
-                answers: { id: "commerce", buyerLegalEnabled: false, buyerLegalDocuments: [] },
+                answers: {},
                 options: {},
             },
         });

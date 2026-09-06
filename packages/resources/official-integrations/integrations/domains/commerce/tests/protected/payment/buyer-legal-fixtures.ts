@@ -1,69 +1,82 @@
-import { createHash } from "node:crypto";
-import { jsonResponse, type JsonRecord } from "../../harness";
+import { jsonResponse, requestCommerce, setRestResponder, supabaseUrl, type JsonRecord } from "../../harness";
 
-export const versionId = "3d341928-b30d-4af5-b918-eab9df624706";
-export const nextVersionId = "d4593559-25c8-42ec-87f4-83c496b8bde8";
+export const versionId = "a".repeat(64);
+export const nextVersionId = "b".repeat(64);
 export const correlationId = "23484f33-28d7-4b47-a0bf-48870a4d80ba";
-export const deliveryOrigin = "https://delivery.example.test";
-export const snapshotUrl = `${deliveryOrigin}/tenant/.cms/content/published-page-snapshot?id=page-1`;
-
-export const legalPage = {
-    id: "page-1",
-    path: "/terms",
-    title: "Terms",
-    description: "",
-    content: "<main>Terms revision one</main>",
+export const consentUrl = `${supabaseUrl}/functions/v1/cms-consent`;
+export const consentDocument = {
+    documentKey: "terms",
+    versionId,
+    versionDate: "2026-09-06T08:00:00Z",
+    label: "Terms",
+    consentText: "I accept the terms",
+    page: { path: "/terms" },
 };
-
-export function contentHash(page: typeof legalPage): string {
-    return createHash("sha256")
-        .update(
-            JSON.stringify({
-                id: page.id,
-                path: page.path,
-                title: page.title,
-                description: page.description,
-                content: page.content,
-            }),
-        )
-        .digest("hex");
-}
-
-export function verificationContext(overrides: Partial<JsonRecord> = {}): JsonRecord {
+export function consentContext(overrides: JsonRecord = {}): JsonRecord {
     return {
-        enabled: true,
-        paymentAlreadyCreated: false,
-        approvedSnapshotOrigin: deliveryOrigin,
-        documents: [
-            {
-                key: "terms",
-                versionId,
-                pageId: legalPage.id,
-                publishedSnapshotUrl: snapshotUrl,
-            },
-        ],
+        requiresConsent: true,
+        contexts: ["buyer_checkout"],
+        orderId: 42,
+        orderPublicId: "order-public-42",
+        checkoutGroupId: "checkout-42",
+        buyerCmsUserId: "buyer-17",
+        paymentProvider: "stripe",
+        operationKey: "commerce:payment:stripe:order-public-42",
         ...overrides,
     };
 }
-
-export function snapshotResponse(
-    page = legalPage,
-    hash = contentHash(page),
-    status = 200,
-    headers: HeadersInit = {},
-): Response {
-    return jsonResponse(
-        {
-            schema: "cms-published-page-snapshot-v1",
-            page,
-            contentHash: hash,
+export function consentReceipt(overrides: JsonRecord = {}): JsonRecord {
+    const context = consentContext();
+    return {
+        schemaVersion: 1,
+        required: true,
+        contextKey: "buyer_checkout",
+        operationKey: context.operationKey,
+        cmsUserId: "buyer-17",
+        acceptanceId: "3d341928-b30d-4af5-b918-eab9df624706",
+        acceptedAt: "2026-09-06T08:00:00Z",
+        documents: [{ ...consentDocument, contentHash: "c".repeat(64) }],
+        metadata: {
+            orderId: 42,
+            orderPublicId: context.orderPublicId,
+            checkoutGroupId: context.checkoutGroupId,
+            paymentProvider: "stripe",
         },
-        status,
-        headers,
-    );
+        ...overrides,
+    };
 }
-
-export function rpcName(request: Request): string {
-    const marker = "/rest/v1/rpc/";
-    return request.url.includes(marker) ? request.url.slice(request.url.indexOf(marker) + marker.length) : "";
+export function consentResponder(overrides: (request: Request) => Response | undefined = () => undefined): void {
+    setRestResponder((request) => {
+        const overridden = overrides(request);
+        if (overridden) {
+            return overridden;
+        }
+        if (request.url.endsWith("/rpc/get_buyer_consent_context")) {
+            return jsonResponse(consentContext());
+        }
+        if (request.url === `${consentUrl}/operations/receipt`) {
+            return jsonResponse({ receipt: null });
+        }
+        if (request.url.startsWith(`${consentUrl}/requirements?`)) {
+            return jsonResponse({ enabled: true, documents: [consentDocument] });
+        }
+        if (request.url === `${consentUrl}/operations/accept`) {
+            return jsonResponse(consentReceipt());
+        }
+        if (request.url.endsWith("/rpc/prepare_protected_payment")) {
+            return jsonResponse({ paymentAttemptId: 8 });
+        }
+        throw new Error(`Unexpected request: ${request.url}`);
+    });
+}
+export function prepare(acceptedIds: string[] = [versionId], extra: JsonRecord = {}): Promise<Response> {
+    return requestCommerce("/me/order/payment/prepare", {
+        userId: "buyer-17",
+        body: {
+            orderId: 42,
+            paymentProvider: "stripe",
+            acceptedLegalDocumentVersionIds: acceptedIds,
+            ...extra,
+        },
+    });
 }

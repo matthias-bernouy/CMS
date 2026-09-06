@@ -1,163 +1,69 @@
-do $immutability$
-declare
-    v_version_id uuid;
-    v_acceptance_id bigint;
+do $owner_and_grants$
+declare v_order commerce_buyer_legal_test.orders%rowtype; v_role text; v_audit jsonb;
 begin
-    select (value->>'versionId')::uuid into strict v_version_id
-    from commerce_buyer_legal_test.state where key = 'v1';
-    select min(id) into strict v_acceptance_id
-    from commerce.order_buyer_legal_acceptances;
+    select * into strict v_order from commerce_buyer_legal_test.orders where label = 'required';
     begin
-        perform commerce_buyer_legal_test.mutate_version(v_version_id, false);
-        raise exception 'test: legal version update passed';
+        perform commerce.prepare_protected_payment(v_order.order_id, 'another-buyer');
+        raise exception 'test: wrong buyer prepared a payment';
     exception when others then
-        if sqlerrm = 'test: legal version update passed'
-           or sqlerrm <> 'conflict: buyer legal evidence is immutable' then
-            raise;
-        end if;
+        if sqlerrm <> 'not_found: order' then raise; end if;
     end;
     begin
-        perform commerce_buyer_legal_test.mutate_version(v_version_id, true);
-        raise exception 'test: legal version delete passed';
+        perform commerce.get_buyer_legal_acceptance_audit(v_order.order_id, 'another-buyer');
+        raise exception 'test: wrong buyer read evidence';
     exception when others then
-        if sqlerrm = 'test: legal version delete passed'
-           or sqlerrm <> 'conflict: buyer legal evidence is immutable' then
-            raise;
-        end if;
+        if sqlerrm <> 'not_found: order' then raise; end if;
     end;
-    begin
-        perform commerce_buyer_legal_test.mutate_acceptance(v_acceptance_id, false);
-        raise exception 'test: legal proof update passed';
-    exception when others then
-        if sqlerrm = 'test: legal proof update passed'
-           or sqlerrm <> 'conflict: buyer legal evidence is immutable' then
-            raise;
-        end if;
-    end;
-    begin
-        perform commerce_buyer_legal_test.mutate_acceptance(v_acceptance_id, true);
-        raise exception 'test: legal proof delete passed';
-    exception when others then
-        if sqlerrm = 'test: legal proof delete passed'
-           or sqlerrm <> 'conflict: buyer legal evidence is immutable' then
-            raise;
-        end if;
-    end;
-end;
-$immutability$;
-
-do $direct_insert_consistency$
-declare
-    v_proof commerce.order_buyer_legal_acceptances%rowtype;
-begin
-    select * into strict v_proof
-    from commerce.order_buyer_legal_acceptances
-    order by id limit 1;
-    begin
-        insert into commerce.order_buyer_legal_acceptances (
-            order_id, checkout_group_id, payment_attempt_id, buyer_cms_user_id,
-            document_key, document_version_id, content_hash, correlation_id
-        ) values (
-            v_proof.order_id,
-            v_proof.checkout_group_id,
-            v_proof.payment_attempt_id,
-            'wrong-buyer',
-            v_proof.document_key,
-            v_proof.document_version_id,
-            v_proof.content_hash,
-            gen_random_uuid()
-        );
-        raise exception 'test: inconsistent direct evidence insert passed';
-    exception when others then
-        if sqlerrm = 'test: inconsistent direct evidence insert passed'
-           or sqlerrm <>
-                'conflict: buyer legal evidence does not match its order and payment attempt' then
-            raise;
-        end if;
-    end;
-end;
-$direct_insert_consistency$;
-
-do $grants$
-declare
-    v_role text;
-    v_table text;
-begin
-    foreach v_role in array array['anon', 'authenticated']
-    loop
-        if exists (
-            select 1
-            from pg_proc procedure
-            join pg_namespace namespace
-              on namespace.oid = procedure.pronamespace
-            where namespace.nspname = 'commerce'
-              and procedure.proname like '%buyer_legal%'
-              and has_function_privilege(
-                  v_role,
-                  procedure.oid,
-                  'EXECUTE'
-              )
-        ) then
-            raise exception
-                '% unexpectedly executes an internal buyer legal function',
-                v_role;
-        end if;
-        foreach v_table in array array[
-            'buyer_legal_documents',
-            'buyer_legal_document_versions',
-            'order_buyer_legal_acceptances'
-        ]
-        loop
-            if has_table_privilege(v_role, 'commerce.' || v_table, 'SELECT')
-               or has_table_privilege(v_role, 'commerce.' || v_table, 'INSERT') then
-                raise exception '% unexpectedly accesses commerce.%', v_role, v_table;
-            end if;
-        end loop;
-        if has_function_privilege(
-            v_role,
-            'commerce.prepare_protected_payment(bigint,text,uuid[],text,uuid,jsonb)',
-            'EXECUTE'
-        ) or has_function_privilege(
-            v_role,
-            'commerce.sync_buyer_legal_documents(boolean,jsonb,text,text)',
-            'EXECUTE'
-        ) or has_function_privilege(
-            v_role,
-            'commerce.validate_buyer_legal_sync_document(jsonb,text)',
-            'EXECUTE'
-        ) or has_function_privilege(
-            v_role,
-            'commerce.buyer_legal_acceptance_projection(bigint,uuid[])',
-            'EXECUTE'
-        ) then
-            raise exception '% unexpectedly executes buyer legal privileged functions', v_role;
+    v_audit := commerce.get_buyer_legal_acceptance_audit(v_order.order_id, v_order.buyer_cms_user_id);
+    perform commerce_buyer_legal_test.assert_true(jsonb_array_length(v_audit->'consentReferences') = 3
+        and v_audit->'acceptances' = '[]'::jsonb,
+        'Commerce audit must link Consent receipts without duplicating their document snapshots');
+    foreach v_role in array array['anon','authenticated'] loop
+        if has_table_privilege(v_role, 'commerce.order_consent_acceptances', 'SELECT')
+            or has_table_privilege(v_role, 'commerce.order_consent_acceptances', 'INSERT')
+            or has_function_privilege(v_role, 'commerce.prepare_protected_payment(bigint,text,text,uuid,jsonb)', 'EXECUTE')
+            or has_function_privilege(v_role, 'commerce.record_verified_order_consent(bigint,bigint,text,uuid,jsonb)', 'EXECUTE') then
+            raise exception '% can access private payment evidence', v_role;
         end if;
     end loop;
-    if not has_table_privilege(
-        'service_role', 'commerce.buyer_legal_document_versions', 'SELECT'
-    ) or not has_table_privilege(
-        'service_role', 'commerce.order_buyer_legal_acceptances', 'INSERT'
-    ) or has_table_privilege(
-        'service_role', 'commerce.order_buyer_legal_acceptances', 'UPDATE'
-    ) or has_table_privilege(
-        'service_role', 'commerce.order_buyer_legal_acceptances', 'DELETE'
-    ) then
-        raise exception 'service_role buyer legal least-privilege grants changed';
-    end if;
-    if exists (
-        select 1
-        from pg_proc procedure
-        join pg_namespace namespace
-          on namespace.oid = procedure.pronamespace
-        where namespace.nspname = 'commerce'
-          and procedure.proname like '%buyer_legal%'
-          and not has_function_privilege(
-              'service_role',
-              procedure.oid,
-              'EXECUTE'
-          )
-    ) then
-        raise exception 'service_role cannot execute every buyer legal backend function';
+    if not has_table_privilege('service_role', 'commerce.order_consent_acceptances', 'SELECT')
+        or not has_table_privilege('service_role', 'commerce.order_consent_acceptances', 'INSERT')
+        or has_table_privilege('service_role', 'commerce.order_consent_acceptances', 'UPDATE')
+        or has_table_privilege('service_role', 'commerce.order_consent_acceptances', 'DELETE') then
+        raise exception 'payment evidence backend privileges changed';
     end if;
 end;
-$grants$;
+$owner_and_grants$;
+
+reset role;
+do $immutability_and_consistency$
+declare v_proof commerce.order_consent_acceptances%rowtype;
+begin
+    select * into strict v_proof from commerce.order_consent_acceptances order by id limit 1;
+    begin
+        update commerce.order_consent_acceptances set content_hash = repeat('c',64) where id = v_proof.id;
+        raise exception 'test: evidence update passed';
+    exception when others then
+        if sqlerrm <> 'conflict: payment consent evidence is immutable' then raise; end if;
+    end;
+    begin
+        delete from commerce.order_consent_acceptances where id = v_proof.id;
+        raise exception 'test: evidence delete passed';
+    exception when others then
+        if sqlerrm <> 'conflict: payment consent evidence is immutable' then raise; end if;
+    end;
+    begin
+        insert into commerce.order_consent_acceptances (
+            order_id, checkout_group_id, payment_attempt_id, buyer_cms_user_id, context_key,
+            operation_key, consent_acceptance_id, document_key, document_version_id, content_hash, correlation_id, accepted_at
+        ) values (
+            v_proof.order_id, v_proof.checkout_group_id, v_proof.payment_attempt_id, 'another-buyer', v_proof.context_key,
+            v_proof.operation_key, v_proof.consent_acceptance_id, v_proof.document_key, repeat('c',64), v_proof.content_hash, gen_random_uuid(), now()
+        );
+        raise exception 'test: inconsistent direct insert passed';
+    exception when others then
+        if sqlerrm <> 'conflict: consent evidence does not match its order and payment attempt' then raise; end if;
+    end;
+end;
+$immutability_and_consistency$;
+set local role service_role;

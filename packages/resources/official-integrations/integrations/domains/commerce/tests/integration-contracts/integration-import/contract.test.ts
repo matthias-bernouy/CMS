@@ -25,7 +25,8 @@ import {
 } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { expectedEndpointUrns } from "./expectations";
-import { connectorDeployer } from "./setup";
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
+import { connectorDeployer, installedConsent } from "./setup";
 import { installCommerceTestEnvironment, supabaseUrl } from "../../harness";
 installCommerceTestEnvironment();
 describe("commerce 1.0.0 contract", () => {
@@ -43,7 +44,7 @@ describe("commerce 1.0.0 contract", () => {
         const triggers = new InMemoryTriggerRepository();
         const secrets = new InMemorySecretStore(),
             roles = new InMemoryRolesRepository();
-        const installations = new InMemoryIntegrationInstallationRepository();
+        const installations = await installedConsent();
         let deployment: IntegrationConnectorDeployment | undefined;
         const deployer = connectorDeployer((value) => {
             deployment = value;
@@ -51,6 +52,7 @@ describe("commerce 1.0.0 contract", () => {
         const result = await importIntegration(
             {
                 sources,
+                functions: new InMemoryFunctionRepository(),
                 sourceOverlays,
                 dashboards,
                 dashboardViews,
@@ -61,7 +63,7 @@ describe("commerce 1.0.0 contract", () => {
                 connectorDeployers: [deployer],
                 connectorInstanceIds: { primary: "commerce-test-primary" },
             },
-            { kind: "commerce", answers: { id: "commerce" }, options: {} },
+            { kind: "commerce", answers: {}, options: {} },
             [definition],
         );
         const source = await sources.getSource("urn:commerce");
@@ -89,6 +91,7 @@ describe("commerce 1.0.0 contract", () => {
         expect(definition).toMatchObject({ kind: "commerce", version: "1.0.0", type: "source" });
         expect(definition.dependencies).toEqual([
             { name: "emailer", kind: "emailer", optional: true, versionRange: "^1.0.0" },
+            { name: "consent", kind: "consent", versionRange: "^1.0.0" },
         ]);
         expect(JSON.stringify(definition).match(/\$selection\.(?!id)/g) ?? []).toEqual([]);
         expect(result.artifacts).toEqual(

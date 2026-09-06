@@ -25,10 +25,18 @@
                     "body": "$input.body",
                     "onError": {
                         "propagate": [
-                            400,
-                            409,
-                            422,
-                            503
+                            {
+                                "sourceStatus": 400,
+                                "status": 400
+                            },
+                            {
+                                "sourceStatus": 409,
+                                "status": 409
+                            },
+                            {
+                                "sourceStatus": 422,
+                                "status": 422
+                            }
                         ]
                     }
                 }

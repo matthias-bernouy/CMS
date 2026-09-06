@@ -4,116 +4,89 @@ import {
     expectRpc,
     expectSingleRpc,
     installCommerceTestEnvironment,
-    jsonResponse,
     requestCommerce,
-    setRestResponder,
 } from "../../harness";
 import {
+    consentDocument,
+    consentReceipt,
+    consentResponder,
+    consentUrl,
     correlationId,
-    legalPage,
-    rpcName,
-    snapshotResponse,
-    snapshotUrl,
-    verificationContext,
+    prepare,
     versionId,
 } from "./buyer-legal-fixtures";
-
 installCommerceTestEnvironment();
-
-describe("commerce buyer legal acceptance routes", () => {
-    test("loads live owner-scoped requirements without exposing verification coordinates", async () => {
-        setSuccessfulResponder({
-            get_fresh_buyer_legal_requirements: {
-                enabled: true,
-                documents: [
-                    {
-                        key: "terms",
-                        label: "Terms",
-                        consentText: "I accept the terms",
-                        pageUrl: "/terms",
-                        versionId,
-                    },
-                ],
-            },
-        });
+describe("Commerce buyer Consent routes", () => {
+    test("loads owner-scoped requirements through authenticated Consent HTTP without Delivery coordinates", async () => {
+        consentResponder();
         const response = await requestCommerce("/me/order/legal-requirements?orderId=42&paymentProvider=stripe", {
             userId: "buyer-17",
         });
-
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({
             enabled: true,
             documents: [
                 {
-                    key: "terms",
-                    label: "Terms",
-                    consentText: "I accept the terms",
+                    key: "buyer_checkout.terms",
+                    label: consentDocument.label,
+                    consentText: consentDocument.consentText,
                     pageUrl: "/terms",
                     versionId,
+                    versionDate: consentDocument.versionDate,
                 },
             ],
         });
-        expect(expectRpc("get_buyer_legal_verification_context").body).toEqual({
+        expect(expectRpc("get_buyer_consent_context").body).toEqual({
             p_order_id: 42,
             p_buyer_cms_user_id: "buyer-17",
             p_payment_provider: "stripe",
         });
-        expect(expectRpc("get_fresh_buyer_legal_requirements").body).toEqual({
-            p_order_id: 42,
-            p_buyer_cms_user_id: "buyer-17",
-            p_payment_provider: "stripe",
-            p_verified_documents: [
-                expect.objectContaining({
-                    key: "terms",
-                    expectedVersionId: versionId,
-                    page: legalPage,
-                }),
-            ],
+        const calls = capturedFetches().filter((call) => call.url.startsWith(consentUrl));
+        expect(calls).toHaveLength(2);
+        expect(calls[0]!.body).toEqual({
+            contextKey: "buyer_checkout",
+            operationKey: "commerce:payment:stripe:order-public-42",
+            cmsUserId: "buyer-17",
         });
-        expect(capturedFetches().find((call) => call.url === snapshotUrl)?.redirect).toBe("error");
+        for (const call of calls) {
+            expect(call.headers.get("authorization")).toBe("Bearer consent-api-key");
+            expect(call.headers.get("apikey")).toBeNull();
+            expect(call.redirect).toBe("error");
+        }
+        expect(capturedFetches()).toHaveLength(3);
     });
-
-    test("requires a valid provider before resolving legal snapshots", async () => {
-        const response = await requestCommerce("/me/order/legal-requirements?orderId=42", {
-            userId: "buyer-17",
-        });
-
+    test("requires a valid provider before resolving Consent", async () => {
+        const response = await requestCommerce("/me/order/legal-requirements?orderId=42", { userId: "buyer-17" });
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: "paymentProvider is invalid" });
         expect(capturedFetches()).toHaveLength(0);
     });
-
-    test("forwards only accepted revisions plus server-verified snapshots to prepare", async () => {
-        setSuccessfulResponder();
-        const response = await requestCommerce("/me/order/payment/prepare", {
-            userId: "buyer-17",
-            body: {
-                orderId: 42,
-                acceptedLegalDocumentVersionIds: [versionId],
-                paymentProvider: "stripe",
-                verifiedLegalDocuments: [{ publishedSnapshotUrl: "https://attacker.test" }],
-            },
+    test("records accepted versions with server-derived order identity and forwards only the service receipt", async () => {
+        consentResponder();
+        const response = await prepare([versionId], {
+            buyerId: "attacker",
+            consentReceipts: [{ forged: true }],
+            verifiedLegalDocuments: [{ publishedSnapshotUrl: "https://attacker.test" }],
         });
-
         expect(response.status).toBe(200);
+        const acceptance = capturedFetches().find((call) => call.url === `${consentUrl}/operations/accept`)!;
+        expect(acceptance.body).toEqual({
+            contextKey: "buyer_checkout",
+            operationKey: "commerce:payment:stripe:order-public-42",
+            cmsUserId: "buyer-17",
+            acceptedVersionIds: [versionId],
+            metadata: consentReceipt().metadata,
+        });
         const body = expectRpc("prepare_protected_payment").body;
-        expect(body).toMatchObject({
+        expect(body).toEqual({
             p_order_id: 42,
             p_buyer_cms_user_id: "buyer-17",
-            p_accepted_legal_document_version_ids: [versionId],
             p_payment_provider: "stripe",
-            p_verified_legal_documents: [
-                {
-                    key: "terms",
-                    expectedVersionId: versionId,
-                    page: legalPage,
-                },
-            ],
+            p_consent_receipts: [consentReceipt()],
+            p_correlation_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
         });
-        expect(JSON.stringify(body)).not.toContain("attacker.test");
-        expect(body.p_correlation_id).toMatch(/^[0-9a-f-]{36}$/);
+        expect(JSON.stringify(capturedFetches())).not.toContain("attacker.test");
     });
-
     test("keeps audit owner-scoped and administrator-only", async () => {
         const owner = await requestCommerce("/me/order/legal-acceptances?orderId=42", {
             userId: "buyer-17",
@@ -138,38 +111,22 @@ describe("commerce buyer legal acceptance routes", () => {
     });
 
     test("uses a supplied request correlation id", async () => {
-        setSuccessfulResponder();
+        consentResponder();
         const response = await requestCommerce("/me/order/payment/prepare", {
             userId: "buyer-17",
             correlationId,
             body: { orderId: 42, acceptedLegalDocumentVersionIds: [versionId] },
         });
-
         expect(response.status).toBe(200);
         expect(expectRpc("prepare_protected_payment").body.p_correlation_id).toBe(correlationId);
     });
-
-    test("rejects an invalid revision id before any backend or Delivery request", async () => {
-        const response = await requestCommerce("/me/order/payment/prepare", {
-            userId: "buyer-17",
-            body: { orderId: 42, acceptedLegalDocumentVersionIds: ["stale"] },
-        });
-
-        expect(response.status).toBe(409);
-        expect(await response.json()).toEqual({ error: "LEGAL_DOCUMENT_VERSION_CHANGED" });
-        expect(capturedFetches()).toHaveLength(0);
-    });
+    test.each([["stale"], ["3d341928-b30d-4af5-b918-eab9df624706"]])(
+        "rejects a non-hash revision before backend work: %s",
+        async (id) => {
+            const response = await prepare([id]);
+            expect(response.status).toBe(409);
+            expect(await response.json()).toEqual({ error: "LEGAL_DOCUMENT_VERSION_CHANGED" });
+            expect(capturedFetches()).toHaveLength(0);
+        },
+    );
 });
-
-function setSuccessfulResponder(overrides: Record<string, unknown> = {}): void {
-    setRestResponder((request) => {
-        if (request.url === snapshotUrl) {
-            return snapshotResponse();
-        }
-        const name = rpcName(request);
-        if (name === "get_buyer_legal_verification_context") {
-            return jsonResponse(verificationContext());
-        }
-        return jsonResponse(overrides[name] ?? { id: 1 });
-    });
-}
