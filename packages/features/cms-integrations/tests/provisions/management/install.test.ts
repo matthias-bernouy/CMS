@@ -102,3 +102,66 @@ test("upgrade retains an obsolete installation key granted by settings and remov
     expect(await secrets.get("MANAGED_SIGNING")).toBe("configured-value");
     expect(await secrets.get("UNUSED_GENERATED")).toBeNull();
 });
+
+test("upgrade prunes retired grants while another declared grant retains its shared key", async () => {
+    const installations = new InMemoryIntegrationInstallationRepository();
+    const secrets = new InMemorySecretStore();
+    const deps = {
+        sources: new InMemorySourceRepository(),
+        functions: new InMemoryFunctionRepository(),
+        secrets,
+        installations,
+    };
+    const legacy = {
+        ...definition,
+        generatedSecrets: [...definition.generatedSecrets!, { name: "retired", key: "RETIRED_KEY" }],
+    };
+    await runIntegrationInstallation({
+        mode: "create",
+        deps,
+        installations,
+        dto: { kind: legacy.kind, answers: {}, options: {} },
+        siteIntegrations: [legacy],
+    });
+    await secrets.set("MANAGED_SIGNING", "shared-configured-value");
+    await installations.replace({
+        ...(await installations.get(legacy.kind))!,
+        managementSecretRefs: {
+            key: "${MANAGED_SIGNING}",
+            retired: "${RETIRED_KEY}",
+        },
+    });
+    await installations.create({
+        id: "other-integration",
+        label: "Other",
+        definitionVersion: "1.0.0",
+        definitionSnapshot: { ...definition, kind: "other-integration" },
+        secretRefs: {},
+        secretInputs: [],
+        answersSnapshot: {},
+        managementSecretRefs: { key: "${MANAGED_SIGNING}" },
+    });
+    await runIntegrationInstallation({
+        mode: "upgrade",
+        deps,
+        installations,
+        integrationId: legacy.kind,
+        targetDefinition: {
+            ...legacy,
+            version: "1.1.0",
+            generatedSecrets: [],
+            management: {
+                ...legacy.management!,
+                generatedSecrets: [],
+                runtimeSecrets: {},
+                settings: {
+                    ...legacy.management!.settings!,
+                    fields: [],
+                },
+            },
+        },
+    });
+    expect((await installations.get(legacy.kind))?.managementSecretRefs).toEqual({});
+    expect(await secrets.get("MANAGED_SIGNING")).toBe("shared-configured-value");
+    expect(await secrets.get("RETIRED_KEY")).toBeNull();
+});

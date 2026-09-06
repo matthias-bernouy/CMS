@@ -10,6 +10,7 @@ import { withObsoleteArtifactCleanup } from "../artifactCleanup";
 import { reconcileChangedInstallation } from "./afterInstallation";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "../secretRefs";
+import { declaredManagementSecretRefs } from "../../security/management/secrets";
 import {
     assertIntegrationInstallationProvenance,
     depsWithPackageRoot,
@@ -312,6 +313,14 @@ async function commitSuccessfulRerun(
         secretRefs: nextSecretRefs,
         secretInputs,
         connectorBindings: connectorBindingsFromResult(definition, result, instanceIds, installation.connectorBindings),
+        ...(installation.managementSecretRefs
+            ? {
+                  managementSecretRefs: declaredManagementSecretRefs(
+                      definition.management,
+                      installation.managementSecretRefs,
+                  ),
+              }
+            : {}),
         connectorRuntimeTargets: connectorRuntimeTargetsFromResult(definition, result),
         ...(activeResources ? { activeResources } : {}),
         ...(!installation.packageDigest && resolvedPackage ? { packageDigest: resolvedPackage.digest } : {}),

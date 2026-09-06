@@ -1,4 +1,5 @@
 import { IntegrationRuntimeError } from "../../../errors";
+import { declaredManagementSecretRefs } from "../../../security/management/secrets";
 import { appendRun, successRun } from "../../execution/runs";
 import { sanitizeDefinitionSnapshot } from "../../snapshots";
 import type { IntegrationInstallation } from "../../../../interfaces/IntegrationInstallation";
@@ -102,6 +103,14 @@ export async function completeIntegrationMigration(
         patch: appendRun(installation, run, {
             status: "success",
             connectorBindings: bindings,
+            ...(installation.managementSecretRefs
+                ? {
+                      managementSecretRefs: declaredManagementSecretRefs(
+                          operation.targetDefinition.management,
+                          installation.managementSecretRefs,
+                      ),
+                  }
+                : {}),
             ...(importResult.artifacts.length
                 ? { artifacts: mergeMigrationArtifacts(installation.artifacts, importResult.artifacts) }
                 : {}),

@@ -46,7 +46,10 @@ is never used as resolved metadata.
 
 Only exact `${KEY}` values in declared secret-ref fields grant settings access.
 Grants are persisted as references, separately from installation-owned generated
-secret keys. Function responses cannot write selected user secrets. Generated
+secret keys. Function responses cannot write selected user secrets. Settings
+grants are filtered against the current manifest before invocation. Retired
+settings grants are removed after successful deployment while keys needed by
+another declared grant remain available in the vault. Generated
 writes require a name in `management.generatedSecrets` and an existing owned
 installation secret slot. Generated outputs stay server-side and remain
 available for retry after runtime synchronization fails. Installed generated

@@ -1,5 +1,6 @@
 import { IntegrationInputError } from "../errors";
 import { secretRefToKey } from "@bernouy/cms-secrets";
+import { declaredManagementSecretRefs } from "../security/management/secrets";
 import type { IntegrationImportDeps } from "../../interfaces/IntegrationImport";
 import type { IntegrationInstallationRepository } from "../../interfaces/IntegrationInstallationRepository";
 
@@ -36,7 +37,11 @@ export async function deleteObsoleteSecretRefs(
 ): Promise<void> {
     const active = new Set(Object.values(next));
     for (const installation of (await installations?.list()) ?? []) {
-        for (const ref of Object.values(installation.managementSecretRefs ?? {})) {
+        const grants = declaredManagementSecretRefs(
+            installation.definitionSnapshot?.management,
+            installation.managementSecretRefs ?? {},
+        );
+        for (const ref of Object.values(grants)) {
             const key = secretRefToKey(ref);
             if (key) {
                 active.add(key);

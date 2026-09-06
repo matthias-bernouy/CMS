@@ -94,3 +94,33 @@ test("leased settings mutation blocks rerun and source removal without invoking 
     ).rejects.toThrow("management operation");
     expect(() => assertSourceCanBeRemoved("managed", [installation])).toThrow("management operation");
 });
+
+test("current declarations fence retired and malformed grants from settings, health, and actions", async () => {
+    const { service, installations, secrets } = await fixture(async (_installation, _fn, payload, reader) => {
+        expect(payload.secretValues).toEqual({ "accounts.2.credentials.key": "selected-private-value" });
+        await expect(reader.get("OTHER_KEY")).rejects.toThrow("not granted");
+        return payload.operation === "health" ? report() : { values: {} };
+    });
+    const installed = (await installations.get(definition.kind))!;
+    installed.definitionSnapshot!.management!.settings!.fields = [
+        {
+            id: "accounts",
+            path: "accounts",
+            label: "Accounts",
+            type: "reorderable-list",
+            itemKey: "id",
+            fields: [{ id: "key", path: "credentials.key", label: "Key", type: "secret-ref" }],
+        },
+    ];
+    installed.managementSecretRefs = {
+        key: "${OTHER_KEY}",
+        "accounts.2.credentials.key": "${SELECTED_KEY}",
+        "accounts.__proto__.credentials.key": "${OTHER_KEY}",
+        "accounts.2.credentials.retired": "${OTHER_KEY}",
+    };
+    await installations.replace(installed);
+    expect((await service.health(definition.kind)).observation).toBe("valid");
+    await service.settings(definition.kind);
+    await service.action(definition.kind, "retry");
+    expect(await secrets.get("OTHER_KEY")).toBe("other-private-value");
+});

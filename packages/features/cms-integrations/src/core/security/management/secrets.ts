@@ -1,10 +1,44 @@
-import { dashboardSecretRefPaths } from "@bernouy/cms-dashboards";
+import { dashboardSecretRefPaths, isSafeDashboardPath } from "@bernouy/cms-dashboards";
 import { scopedSecretReader, secretKeyToRef, secretRefToKey, type SecretReader } from "@bernouy/cms-secrets";
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationManagement } from "../../../interfaces/Integration/management";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../errors";
 import type { IntegrationManagementDeps } from "./contracts";
 import { record } from "./report";
+
+export function declaredManagementSecretRefs(
+    management: IntegrationManagement | undefined,
+    refs: Record<string, string>,
+): Record<string, string> {
+    const fields = management?.settings?.fields ?? [];
+    return Object.fromEntries(
+        Object.entries(refs).filter(
+            ([path, ref]) =>
+                secretRefToKey(ref) &&
+                fields.some((field) => {
+                    if (!isSafeDashboardPath(field.path)) {
+                        return false;
+                    }
+                    if (field.type === "secret-ref") {
+                        return path === field.path;
+                    }
+                    if (field.type !== "reorderable-list" || !path.startsWith(`${field.path}.`)) {
+                        return false;
+                    }
+                    const [row, ...parts] = path.slice(field.path.length + 1).split(".");
+                    return (
+                        /^(0|[1-9][0-9]*)$/.test(row ?? "") &&
+                        field.fields.some(
+                            (nested) =>
+                                nested.type === "secret-ref" &&
+                                isSafeDashboardPath(nested.path) &&
+                                nested.path === parts.join("."),
+                        )
+                    );
+                }),
+        ),
+    );
+}
 
 export function settingSecretRefs(
     management: IntegrationManagement,
@@ -35,6 +69,7 @@ export async function managementSecrets(
     refs: Record<string, string>,
     allowMissing = false,
 ) {
+    refs = declaredManagementSecretRefs(installation.definitionSnapshot?.management, refs);
     const generated = installation.definitionSnapshot?.management?.generatedSecrets ?? [];
     const generatedRefs = Object.fromEntries(
         generated.map((name) => {

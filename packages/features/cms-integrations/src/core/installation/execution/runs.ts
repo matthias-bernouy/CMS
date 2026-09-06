@@ -20,6 +20,7 @@ export function appendRun(
             | "packageDigest"
             | "connectorBindings"
             | "connectorRuntimeTargets"
+            | "managementSecretRefs"
             | "activeResources"
         >
     >,
