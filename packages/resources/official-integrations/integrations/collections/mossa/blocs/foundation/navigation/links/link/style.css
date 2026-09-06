@@ -35,6 +35,11 @@
     --_mossa-link-hover-color: currentColor;
 }
 
+:host([tone="inherit-muted"]) {
+    --_mossa-link-color: color-mix(in srgb, currentColor 75%, transparent);
+    --_mossa-link-hover-color: currentColor;
+}
+
 :host([decoration="always"]) ::slotted(a) {
     text-decoration: underline;
 }

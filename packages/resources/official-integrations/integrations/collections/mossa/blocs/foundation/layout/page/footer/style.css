@@ -1,0 +1,71 @@
+:host {
+    --_mossa-footer-background: var(--ulvia-page-background);
+    --_mossa-footer-foreground: var(--ulvia-surface-text);
+    --_mossa-footer-muted: var(--ulvia-surface-muted-text);
+    --_mossa-footer-border: var(--ulvia-surface-border);
+    display: block;
+    background: var(--_mossa-footer-background);
+    color: var(--_mossa-footer-foreground);
+    font-family: var(--ulvia-font-body);
+}
+
+:host([surface="primary"]) {
+    --_mossa-footer-background: var(--ulvia-primary-base);
+    --_mossa-footer-foreground: var(--ulvia-primary-foreground);
+}
+
+:host([surface="secondary"]) {
+    --_mossa-footer-background: var(--ulvia-secondary-base);
+    --_mossa-footer-foreground: var(--ulvia-secondary-foreground);
+}
+
+:host([surface="primary"]),
+:host([surface="secondary"]) {
+    --_mossa-footer-muted: color-mix(in srgb, var(--_mossa-footer-foreground) 75%, transparent);
+    --_mossa-footer-border: color-mix(in srgb, var(--_mossa-footer-foreground) 12%, transparent);
+}
+
+[part="content"] {
+    box-sizing: border-box;
+    max-width: var(--ulvia-container-xl);
+    margin-inline: auto;
+    padding: calc(var(--ulvia-space-xl) + var(--ulvia-space-md)) clamp(1rem, 3vw, 3rem);
+}
+
+[part="navigation"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+    gap: var(--ulvia-space-xl);
+    font-size: .9rem;
+}
+
+::slotted([slot="navigation"]) {
+    min-width: 0;
+}
+
+[part="bottom"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ulvia-space-sm);
+    margin-top: var(--ulvia-space-2xl);
+    padding-top: var(--ulvia-space-md);
+    border-top: 1px solid var(--_mossa-footer-border);
+    font-size: .85rem;
+}
+
+::slotted([slot="copyright"]) {
+    color: var(--_mossa-footer-muted);
+}
+
+:host(:not(:has([slot="navigation"]))) [part="navigation"],
+:host(:not(:has([slot="copyright"], [slot="legal"]))) [part="bottom"] {
+    display: none;
+}
+
+:host(:not(:has([slot="navigation"]))) [part="bottom"] {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}

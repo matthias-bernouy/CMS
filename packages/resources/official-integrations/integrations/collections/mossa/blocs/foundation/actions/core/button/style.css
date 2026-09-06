@@ -137,7 +137,7 @@ slot[name="icon-end"] {
     --_mossa-tone-foreground: var(--ulvia-page-background);
     --_mossa-tone-muted: color-mix(in srgb, currentColor 14%, transparent);
     --_mossa-tone-contrasted: currentColor;
-    --_mossa-tone-border: currentColor;
+    --_mossa-tone-border: color-mix(in srgb, currentColor 20%, transparent);
     --_mossa-tone-focus: currentColor;
 }
 

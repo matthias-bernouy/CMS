@@ -167,7 +167,7 @@ describe("Mossa theme hygiene", () => {
         expect(editor).toContain('{ label: "Inherit", value: "inherit" }');
         expect(style).toContain(':host([tone="inherit"])');
         expect(style).toContain("--_mossa-tone-contrasted: currentColor");
-        expect(style).toContain("--_mossa-tone-border: currentColor");
+        expect(style).toContain("--_mossa-tone-border: color-mix(in srgb, currentColor 20%, transparent)");
     });
 });
 

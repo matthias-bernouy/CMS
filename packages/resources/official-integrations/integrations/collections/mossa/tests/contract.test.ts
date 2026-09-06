@@ -11,15 +11,15 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { parseTableData } from "../blocs/foundation/content/display/table/tableData";
 import { buildBloc, decodeDefaultContent, decodeSource } from "./source";
 
-describe("Mossa collection 1.1.1", () => {
+describe("Mossa collection 1.2.0", () => {
     test("publishes one site-neutral, fully namespaced catalogue", async () => {
         const { definitions, mossa } = await catalogue();
         const artifacts = blocArtifacts(mossa);
         const tags = artifacts.map(({ bloc }) => bloc.tag);
 
-        expect(mossa.version).toBe("1.1.1");
-        expect(mossa.resources).toHaveLength(95);
-        expect(artifacts).toHaveLength(95);
+        expect(mossa.version).toBe("1.2.0");
+        expect(mossa.resources).toHaveLength(96);
+        expect(artifacts).toHaveLength(96);
         expect(new Set(tags).size).toBe(tags.length);
         expect(tags.every((tag) => tag.startsWith("mossa-"))).toBe(true);
         expect(mossa.resources.every(({ id }) => id.startsWith("mossa/blocs/"))).toBe(true);

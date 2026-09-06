@@ -1,0 +1,10 @@
+{
+    "default-tag": "mossa-footer",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Footer",
+        "description": "Responsive footer with navigation groups, copyright, and legal links on a semantic surface."
+    }
+}

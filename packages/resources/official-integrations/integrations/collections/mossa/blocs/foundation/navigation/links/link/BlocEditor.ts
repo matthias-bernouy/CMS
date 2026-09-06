@@ -16,6 +16,7 @@ export class MossaLinkEditor extends Editor {
                             { label: "Accent", value: "accent" },
                             { label: "Muted", value: "muted" },
                             { label: "Inherit", value: "inherit" },
+                            { label: "Muted inherit", value: "inherit-muted" },
                         ],
                     },
                     {

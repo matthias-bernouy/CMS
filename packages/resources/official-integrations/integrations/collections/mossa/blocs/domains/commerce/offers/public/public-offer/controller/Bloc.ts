@@ -17,6 +17,10 @@ export class PublicOffer extends Component {
         "error-title",
         "image-fit",
         "locale",
+        "model-label",
+        "secure-payment-label",
+        "buyer-protection-label",
+        "tracked-delivery-label",
         "negotiate-label",
         "negotiate-url",
         "price-label",
@@ -151,7 +155,7 @@ export class PublicOffer extends Component {
     private renderSpecifications(offer: RecordValue): void {
         this.specifications.replaceChildren();
         const values: Array<[string, unknown, string?]> = [
-            ["Model", offer.product?.title],
+            [this.text("model-label", "Model"), offer.product?.title],
             ...variantSpecifications(offer.variant),
             ...sourceSpecifications(offer.specifications),
         ];
@@ -210,6 +214,16 @@ export class PublicOffer extends Component {
         this.priceLabel.textContent = this.text("price-label", "Seller price");
         this.valuationLabel.textContent = this.text("valuation-label", "Reference value");
         this.shippingMessage.textContent = this.text("shipping-message", "Pickup-point delivery available");
+        for (const [attribute, fallback] of [
+            ["secure-payment-label", "Secure payment"],
+            ["buyer-protection-label", "Buyer protection"],
+            ["tracked-delivery-label", "Tracked delivery"],
+        ]) {
+            this.querySelector(`[data-${attribute}]`)!.textContent = this.text(attribute!, fallback!);
+        }
+        if (this.offer) {
+            this.renderSpecifications(this.offer);
+        }
         this.mainImage.style.objectFit = this.getAttribute("image-fit") || "contain";
     }
 

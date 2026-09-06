@@ -94,6 +94,7 @@
         "resources/domains/account/profile/user-account-form.json",
         "resources/domains/account/profile/user-account-form-controller.json",
         "resources/foundation/navigation/menus/user-menu.json",
-        "resources/domains/commerce/offers/catalogue/valuation.json"
+        "resources/domains/commerce/offers/catalogue/valuation.json",
+        "resources/foundation/layout/page/footer.json"
     ]
 }

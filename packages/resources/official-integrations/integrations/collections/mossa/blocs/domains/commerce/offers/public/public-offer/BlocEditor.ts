@@ -7,6 +7,25 @@ export class PublicOfferEditor extends Editor {
                 kind: "self",
                 label: "Content",
                 settings: [
+                    { type: "text", label: "Model label", attribute: "model-label", defaultValue: "Model" },
+                    {
+                        type: "text",
+                        label: "Secure payment label",
+                        attribute: "secure-payment-label",
+                        defaultValue: "Secure payment",
+                    },
+                    {
+                        type: "text",
+                        label: "Buyer protection label",
+                        attribute: "buyer-protection-label",
+                        defaultValue: "Buyer protection",
+                    },
+                    {
+                        type: "text",
+                        label: "Tracked delivery label",
+                        attribute: "tracked-delivery-label",
+                        defaultValue: "Tracked delivery",
+                    },
                     { type: "text", label: "Price label", attribute: "price-label", defaultValue: "Seller price" },
                     {
                         type: "text",

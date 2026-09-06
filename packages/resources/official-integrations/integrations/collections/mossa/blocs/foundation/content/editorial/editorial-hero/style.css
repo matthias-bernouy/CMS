@@ -1,7 +1,7 @@
 :host {
     --_mossa-hero-bg:       var(--ulvia-secondary-base);
     --_mossa-hero-fg:       var(--ulvia-secondary-foreground);
-    --_mossa-hero-muted:    var(--ulvia-secondary-foreground);
+    --_mossa-hero-muted:    color-mix(in srgb, var(--ulvia-secondary-foreground) 75%, transparent);
     --_mossa-hero-eyebrow:  var(--ulvia-primary-base);
     --_mossa-hero-pad-y:    5rem;
     --_mossa-hero-pad-x:    1.5rem;

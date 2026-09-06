@@ -1,0 +1,11 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-footer",
+        "name": "Footer",
+        "group": "Layout",
+        "description": "Responsive navigation, copyright, and legal links on a semantic surface.",
+        "path": "blocs/foundation/layout/page/footer",
+        "view": "Bloc.ts"
+    }
+}

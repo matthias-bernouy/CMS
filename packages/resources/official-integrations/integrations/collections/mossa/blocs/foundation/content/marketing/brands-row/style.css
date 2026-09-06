@@ -39,7 +39,7 @@
     font-family: var(--ulvia-font-heading);
     font-weight: 700;
     font-size: 1.125rem;
-    color: var(--ulvia-surface-muted-text);
+    color: color-mix(in srgb, var(--ulvia-surface-muted-text) 50%, var(--ulvia-page-background));
     transition: color var(--ulvia-duration-normal) var(--_mossa-ease, ease-out);
 }
 

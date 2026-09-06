@@ -1,0 +1,33 @@
+{
+    "id": "mossa/blocs/footer",
+    "type": "bloc",
+    "artifact": "mossa-footer",
+    "category": "layout",
+    "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/stack",
+            "mossa/blocs/section-header",
+            "mossa/blocs/link"
+        ]
+    },
+    "theme": {
+        "contract": "ulvia-theme@3",
+        "required": [
+            "container-xl",
+            "font-body",
+            "page-background",
+            "primary-base",
+            "primary-foreground",
+            "secondary-base",
+            "secondary-foreground",
+            "space-2xl",
+            "space-md",
+            "space-sm",
+            "space-xl",
+            "surface-border",
+            "surface-muted-text",
+            "surface-text"
+        ]
+    }
+}
