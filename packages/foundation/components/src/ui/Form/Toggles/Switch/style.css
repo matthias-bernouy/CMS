@@ -30,6 +30,8 @@
 :host([color="warning"]) { --_on-bg: var(--warning-base); }
 
 .switch {
+  /* Keep the native focus target inside the visible switch's scroll container. */
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
