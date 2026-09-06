@@ -5,6 +5,7 @@ import {
 } from "@bernouy/cms-source-images/browser";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
+import { displayValue, metadataSpecifications, sourceSpecifications, variantSpecifications } from "./specifications";
 
 type RecordValue = Record<string, any>;
 
@@ -32,6 +33,8 @@ export class PublicOffer extends Component {
         "valuation-minimum-field",
     ];
     private offer: RecordValue | null = null;
+    private product: RecordValue | null = null;
+    private productSchema: RecordValue | null = null;
 
     constructor() {
         super({ css, template: template as unknown as string });
@@ -60,16 +63,23 @@ export class PublicOffer extends Component {
             throw new Error(this.text("error-message", "This offer is no longer available or does not exist."));
         }
         this.offer = await this.request(`/.cms/sources/commerce/offer?slug=${encodeURIComponent(this.slug)}`);
-        const product = this.offer.productId
+        this.product = this.offer.productId
             ? await this.request(
                   `/.cms/sources/commerce/product?id=${encodeURIComponent(String(this.offer.productId))}`,
               ).catch(() => null)
             : null;
-        this.renderOffer(this.offer, product?.metadata ?? this.offer.product?.metadata);
+        this.product ??= this.offer.product ?? null;
+        const category = this.product?.primaryCategory?.fullSlug;
+        this.productSchema = category
+            ? await this.request(
+                  `/.cms/sources/commerce/offerFilterSchema?category=${encodeURIComponent(category)}`,
+              ).catch(() => null)
+            : null;
+        this.renderOffer(this.offer);
         this.show("content");
     }
 
-    private renderOffer(offer: RecordValue, productMetadata: unknown): void {
+    private renderOffer(offer: RecordValue): void {
         this.titleElement.textContent = offer.title || offer.product?.title || "Offer";
         const description = String(offer.description || "").trim();
         this.descriptionElement.textContent = description;
@@ -85,13 +95,13 @@ export class PublicOffer extends Component {
         this.metaElement.textContent = meta;
         this.metaElement.hidden = !meta;
         this.priceElement.textContent = money(offer.acceptedPriceAmount, offer.currency, this.locale);
-        this.renderValuation(productMetadata);
+        this.renderValuation(this.product?.metadata);
         this.renderMedia(Array.isArray(offer.media) ? offer.media : [], offer.title);
         this.renderSpecifications(offer);
         this.buyButton.textContent = `${this.text("buy-label", "Buy")} · ${money(offer.acceptedPriceAmount, offer.currency, this.locale)}`;
         const buyUrl = this.getAttribute("buy-url")?.trim() || "";
-        const available = offer.availability === "available" && Boolean(buyUrl);
-        if (available) {
+        const available = offer.availability === "available";
+        if (available && buyUrl) {
             this.buyButton.setAttribute("href", this.url(buyUrl, offer));
             this.buyButton.removeAttribute("aria-disabled");
             this.buyButton.removeAttribute("tabindex");
@@ -102,10 +112,14 @@ export class PublicOffer extends Component {
         }
         const negotiateUrl = this.getAttribute("negotiate-url")?.trim() || "";
         this.negotiateButton.closest("mossa-button")?.toggleAttribute("hidden", !negotiateUrl);
-        if (negotiateUrl) {
+        if (available && negotiateUrl) {
             this.negotiateButton.setAttribute("href", this.url(negotiateUrl, offer));
+            this.negotiateButton.removeAttribute("aria-disabled");
+            this.negotiateButton.removeAttribute("tabindex");
         } else {
             this.negotiateButton.removeAttribute("href");
+            this.negotiateButton.setAttribute("aria-disabled", "true");
+            this.negotiateButton.setAttribute("tabindex", "-1");
         }
         this.negotiateButton.textContent = this.text("negotiate-label", "Make an offer");
     }
@@ -154,10 +168,18 @@ export class PublicOffer extends Component {
 
     private renderSpecifications(offer: RecordValue): void {
         this.specifications.replaceChildren();
+        const variantId = offer.variantId ?? offer.variant?.id;
+        const variants = Array.isArray(this.product?.variants) ? this.product.variants : [];
+        const variant =
+            variants.find((item) => variantId != null && String(item.id) === String(variantId)) ?? offer.variant;
         const values: Array<[string, unknown, string?]> = [
-            [this.text("model-label", "Model"), offer.product?.title],
-            ...variantSpecifications(offer.variant),
+            [this.text("model-label", "Model"), this.product?.title || offer.product?.title],
+            ...variantSpecifications(variant),
             ...sourceSpecifications(offer.specifications),
+            ...metadataSpecifications(this.product?.metadata, this.productSchema?.fields, [
+                this.getAttribute("valuation-minimum-field") || "valuationMinimum",
+                this.getAttribute("valuation-maximum-field") || "valuationMaximum",
+            ]),
         ];
         const seen = new Set<string>();
         for (const [label, value, unit] of values) {
@@ -408,55 +430,4 @@ function wholeMoney(amount: number, currency: string, locale: string): string {
         currency,
         maximumFractionDigits: 0,
     }).format(Math.round(amount));
-}
-function variantSpecifications(variant: unknown): Array<[string, unknown, string?]> {
-    if (!variant || typeof variant !== "object" || Array.isArray(variant)) {
-        return [];
-    }
-    const value = variant as RecordValue;
-    const options = Array.isArray(value.options) ? value.options : Array.isArray(value.choices) ? value.choices : [];
-    if (options.length) {
-        return options.flatMap((option) => {
-            if (!option || typeof option !== "object") {
-                return [];
-            }
-            const item = option as RecordValue;
-            const label = String(item.axisLabel || item.axisKey || "Option").trim();
-            const optionValue = String(item.valueLabel || item.valueKey || "").trim();
-            return optionValue ? [[label, optionValue] as [string, unknown, string?]] : [];
-        });
-    }
-    const title = String(value.title || "").trim();
-    return title ? [["Variant", title]] : [];
-}
-function sourceSpecifications(value: unknown): Array<[string, unknown, string?]> {
-    if (!Array.isArray(value)) {
-        return [];
-    }
-    return value.flatMap((entry) => {
-        if (!entry || typeof entry !== "object") {
-            return [];
-        }
-        const specification = entry as RecordValue;
-        const label = String(specification.label || "").trim();
-        const fieldValue = specification.value;
-        return label && fieldValue !== undefined
-            ? [[label, fieldValue, String(specification.unit || "").trim() || undefined]]
-            : [];
-    });
-}
-function displayValue(value: unknown, unit?: string): string {
-    if (Array.isArray(value)) {
-        return value.map((item) => displayValue(item)).join(", ");
-    }
-    if (typeof value === "boolean") {
-        return value ? "Oui" : "Non";
-    }
-    if (typeof value === "object" && value) {
-        return Object.values(value)
-            .map((item) => displayValue(item))
-            .join(" · ");
-    }
-    const text = String(value);
-    return unit && !text.toLowerCase().endsWith(unit.toLowerCase()) ? `${text} ${unit}` : text;
 }

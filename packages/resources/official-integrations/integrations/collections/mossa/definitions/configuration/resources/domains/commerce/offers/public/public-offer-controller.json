@@ -30,6 +30,17 @@
         {
             "source": "commerce",
             "sourceVersion": "^1.0.0",
+            "endpoint": "urn:commerce:offerFilterSchema",
+            "contractVersion": "^1.0.0",
+            "bindings": {
+                "input": {
+                    "params.category": "state.product.primaryCategory.fullSlug"
+                }
+            }
+        },
+        {
+            "source": "commerce",
+            "sourceVersion": "^1.0.0",
             "endpoint": "urn:commerce:publicOfferImage",
             "contractVersion": "^1.0.0",
             "bindings": {

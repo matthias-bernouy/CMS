@@ -3,7 +3,7 @@
     "type": "collection",
     "kind": "mossa",
     "label": "Mossa",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "category": "Block collections",
     "description": "A coherent, reusable block collection for sites powered by official Source contracts and the Ulvia token system.",
     "inputs": [],
