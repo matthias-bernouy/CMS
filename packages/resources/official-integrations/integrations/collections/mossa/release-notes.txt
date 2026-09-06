@@ -1,3 +1,5 @@
+Major release: public offer controllers now require the declared Commerce offerFilterSchema endpoint to display product specifications with public category labels and units. Existing installations must satisfy this endpoint contract before upgrading.
+
 Render public offer specifications from the loaded product and its declared public category schema, retaining labels, units, complete variant choices, and configured valuation exclusions. Keep explicit offer specifications when optional lookups fail. Disable negotiation as well as purchase for unavailable offers. Public offer titles inherit interface typography.
 
 Major release: article prose now requires font-heading and secondary-base tokens for theme typography and authored links. Articles retain their original markup. Forward configurable avatar hints through the account form.
