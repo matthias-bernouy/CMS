@@ -28,7 +28,8 @@
         "test:image-performance:browser": "bun run quality/image-performance/browser/run.ts",
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
-        "test": "bun test"
+        "test": "bun test",
+        "check:ui-contracts": "bun run quality/ui-contracts/check.ts"
     },
     "devDependencies": {
         "@bernouy/cms-analytics": "workspace:*",

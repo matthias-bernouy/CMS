@@ -23,6 +23,7 @@ export const ALL_CHECKS: CheckDefinition[] = [
         label: "Integration ownership",
         args: ["run", "quality/integration-ownership/check.ts"],
     },
+    { id: "ui-contracts", label: "UI binding contracts", args: ["run", "check:ui-contracts"] },
     { id: "repository-shape", label: "Repository shape guidance", args: ["run", "check:repository-shape"] },
     { id: "style", label: "Code style", args: ["run", "check:style"] },
     { id: "typecheck", label: "Workspace typecheck", args: ["run", "typecheck"] },

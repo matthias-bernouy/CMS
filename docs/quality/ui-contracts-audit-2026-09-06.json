@@ -1,0 +1,911 @@
+{
+    "schemaVersion": 1,
+    "scanned": {
+        "files": 3533,
+        "html": 341,
+        "scripts": 3192,
+        "browserScripts": 1070
+    },
+    "findings": [
+        {
+            "rule": "binding-core-owner",
+            "severity": "INFO",
+            "message": "wrapBindingCore produces the shared Delivery document shell.",
+            "recommendation": "Keep this activation root at the document boundary.",
+            "file": "packages/features/cms-content/src/interfaces/settings.ts",
+            "line": 110,
+            "column": 13,
+            "evidence": "return `<cms-binding-core>${content}</cms-binding-core>`;"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts",
+            "line": 50,
+            "column": 28,
+            "evidence": "fetch(`${basePath}/api/files?${params.toString()}`)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts",
+            "line": 88,
+            "column": 36,
+            "evidence": "fetch(`${this.basePath()}/api/page/links${published}`)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/media.ts",
+            "line": 71,
+            "column": 36,
+            "evidence": "fetch(detail.src)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "INFO",
+            "message": "fetch belongs to an explicit infrastructure boundary. The declarative cms-source transport executes binding requests.",
+            "recommendation": "Keep request execution inside this explicit runtime boundary; callers should use its supported contract.",
+            "file": "packages/foundation/components/src/binding/source/fetcher.ts",
+            "line": 31,
+            "column": 21,
+            "evidence": "fetch(url, { ...init, headers, signal })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "INFO",
+            "message": "fetch belongs to an explicit infrastructure boundary. The declarative form transport submits serialized binding state.",
+            "recommendation": "Keep request execution inside this explicit runtime boundary; callers should use its supported contract.",
+            "file": "packages/foundation/components/src/binding/submit/submitRequest.ts",
+            "line": 17,
+            "column": 32,
+            "evidence": "fetch(serialized.url, init)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/foundation/components/src/ui/DataDisplay/Dataviz/dataviz.ts",
+            "line": 10,
+            "column": 27,
+            "evidence": "fetch(buildRequestUrl(url), { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/foundation/components/src/ui/Form/Inputs/TokenInput/remoteOptions.ts",
+            "line": 57,
+            "column": 32,
+            "evidence": "fetch(url)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/foundation/components/src/ui/Form/Selection/TagSuggest/domain/api.ts",
+            "line": 14,
+            "column": 27,
+            "evidence": "fetch(url)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/account/onboarding/stripe-connect-onboarding/Bloc.ts",
+            "line": 723,
+            "column": 32,
+            "evidence": "fetch(`${STRIPE_V2_API}/core/account_tokens`, { method: \"POST\", headers: { authorization: `Bearer ${publishableKey}`, \"content-type\": \"application/json\", \"stripe-version\": STRIPE_V2_VERSION, }, body: JSON.stringify(paylo"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/account/onboarding/stripe-connect-onboarding/Bloc.ts",
+            "line": 773,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", ...init, headers: { accept: \"application/json\", ...(init.body ? { \"content-type\": \"application/json\" } : {}), ...headersObject(init.headers), }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/account/orders/order/Bloc.ts",
+            "line": 278,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", ...options, headers: { accept: \"application/json\", ...(options.body ? { \"content-type\": \"application/json\" } : {}), ...headers(options.headers), }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/account/orders/purchases/Bloc.ts",
+            "line": 251,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", headers: { accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/checkout/checkout/Bloc.ts",
+            "line": 813,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", ...options, headers: { accept: \"application/json\", ...(options.body ? { \"content-type\": \"application/json\" } : {}), ...headers(options.headers), }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/checkout/commerce-stripe-payment/Bloc.ts",
+            "line": 623,
+            "column": 32,
+            "evidence": "fetch(url, { credentials: \"include\", ...requestOptions, headers: { accept: \"application/json\", ...(options.body ? { \"content-type\": \"application/json\" } : {}), ...headersObject(options.headers), }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/checkout/service-withdrawal/Bloc.ts",
+            "line": 196,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", ...init, headers: { accept: \"application/json\", ...(init.body ? { \"content-type\": \"application/json\" } : {}), ...headers(init.headers), }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment/Bloc.ts",
+            "line": 195,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", ...init, headers: { accept: \"application/json\", ...(init.body ? { \"content-type\": \"application/json\" } : {}), ...headers(init.headers), }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/fulfillment/mondial-relay-picker/runtime/operations.ts",
+            "line": 115,
+            "column": 32,
+            "evidence": "fetch(url, { credentials: \"include\", ...requestOptions, headers: { accept: \"application/json\", ...(options.body ? { \"content-type\": \"application/json\" } : {}), ...headersObject(options.headers), }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/negotiation/commerce-negotiation-form/controller/Bloc.ts",
+            "line": 251,
+            "column": 32,
+            "evidence": "fetch(url, { credentials: \"include\", method: options.method || \"GET\", signal: options.signal, headers: { accept: \"application/json\", ...(options.body ? { \"content-type\": \"application/json\" } : {}), }, ...(options.body ? "
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/negotiation/commerce-negotiation-list/controller/Bloc.ts",
+            "line": 575,
+            "column": 32,
+            "evidence": "fetch(url, { credentials: \"include\", method: options.method || \"GET\", signal: options.signal, headers: { accept: \"application/json\", ...(options.body ? { \"content-type\": \"application/json\" } : {}), }, ...(options.body ? "
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/offers/catalogue/commerce-offer-filter/schema/schema-loader.ts",
+            "line": 9,
+            "column": 21,
+            "evidence": "fetch(url, { credentials: \"include\", headers: { accept: \"application/json\" }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/offers/catalogue/valuation/Bloc.ts",
+            "line": 186,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", headers: { accept: \"application/json\" }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/offers/details/commerce-sale-detail/Bloc.ts",
+            "line": 162,
+            "column": 28,
+            "evidence": "fetch(path, { credentials: \"include\", headers: { accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/offers/pricing/commerce-offer-price-form/controller/Bloc.ts",
+            "line": 668,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", ...init, headers: { accept: \"application/json\", ...(init.body ? { \"content-type\": \"application/json\" } : {}), ...headersObject(init.headers), }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/offers/pricing/commerce-offer-price-form/stripe-account-token.ts",
+            "line": 7,
+            "column": 28,
+            "evidence": "fetch(`${STRIPE_V2_API}/core/account_tokens`, { method: \"POST\", headers: { authorization: `Bearer ${publishableKey}`, \"content-type\": \"application/json\", \"stripe-version\": STRIPE_V2_VERSION, }, body: JSON.stringify({ con"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/offers/public/public-offer/controller/Bloc.ts",
+            "line": 265,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", headers: { accept: \"application/json\" }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/selling/sell/Bloc.ts",
+            "line": 642,
+            "column": 32,
+            "evidence": "fetch(path, { credentials: \"include\", ...init, headers: { accept: \"application/json\", ...(init.body && !(init.body instanceof FormData) ? { \"content-type\": \"application/json\" } : {}), ...(init.headers || {}), }, })"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "INFO",
+            "message": "Produces the isolated page editor frame document.",
+            "recommendation": "Keep this activation root at the document boundary.",
+            "file": "packages/surfaces/cms-control/src/api/editor/frame.get.ts",
+            "line": 84,
+            "column": 17,
+            "evidence": "return `<${CMS_BINDING_CORE_TAG} ${CMS_BINDING_ATTRIBUTES.bindingDisabled} ${forceAttr}=\"loading\">${composed}</${CMS_BINDING_CORE_TAG}>`;"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "INFO",
+            "message": "Produces the isolated page editor frame document.",
+            "recommendation": "Keep this activation root at the document boundary.",
+            "file": "packages/surfaces/cms-control/src/api/editor/frame.get.ts",
+            "line": 95,
+            "column": 17,
+            "evidence": "return `<${CMS_BINDING_CORE_TAG}${nextAttrs}>`;"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Actions/ProviderActions/ProviderActions.ts",
+            "line": 101,
+            "column": 31,
+            "evidence": "fetch(this._base, { method, headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(body), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Actions/UserActions/UserActions.ts",
+            "line": 61,
+            "column": 27,
+            "evidence": "fetch(this.url(action), this.request(action, sub))"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/ConfirmForm/ConfirmForm.ts",
+            "line": 64,
+            "column": 25,
+            "evidence": "fetch(url, { method })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/CredentialSelect/flows.ts",
+            "line": 14,
+            "column": 23,
+            "evidence": "fetch(`${api}/keys`, { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/CredentialSelect/flows.ts",
+            "line": 27,
+            "column": 23,
+            "evidence": "fetch(api, { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ key, value }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/PageSettings/PageCopySource.ts",
+            "line": 106,
+            "column": 36,
+            "evidence": "fetch(url, { headers: { Accept: \"application/json\" }, signal: request.signal, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/PageSettings/pagePathAvailability.ts",
+            "line": 33,
+            "column": 36,
+            "evidence": "fetch(url, { signal: request.signal, headers: { Accept: \"application/json\" }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/RoleSelect/RoleSelect.ts",
+            "line": 58,
+            "column": 31,
+            "evidence": "fetch(this._listUrl, { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/RoleSelect/RoleSelect.ts",
+            "line": 90,
+            "column": 31,
+            "evidence": "fetch(this._url, { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ sub: this._sub, role }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/SystemSettings/store.ts",
+            "line": 27,
+            "column": 36,
+            "evidence": "fetch(`${getMetaBasePath()}/api/system/settings`, { headers: { Accept: \"application/json\" }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Common/Tokens/TokenCreate.ts",
+            "line": 47,
+            "column": 31,
+            "evidence": "fetch(this._api, { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ name }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/DashboardWorkspace/api.ts",
+            "line": 13,
+            "column": 28,
+            "evidence": "fetch(route(path), { ...init, cache: \"no-store\", headers: { Accept: \"application/json\", ...(init.body ? { \"Content-Type\": \"application/json\" } : {}), ...init.headers, }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Layout/Analytics/api.ts",
+            "line": 144,
+            "column": 28,
+            "evidence": "fetch(`${getMetaBasePath()}/api/analytics/${endpoint}?${params}`, { headers: { Accept: \"application/json\" }, signal, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Layout/AnalyticsPrivacySettings/api.ts",
+            "line": 55,
+            "column": 28,
+            "evidence": "fetch(`${getMetaBasePath()}/api/${path}`, { ...init, headers: { Accept: \"application/json\", \"Content-Type\": \"application/json\", ...init.headers }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Layout/EndpointPerformance/api.ts",
+            "line": 77,
+            "column": 28,
+            "evidence": "fetch(endpointPerformanceApiUrl(query), { headers: { Accept: \"application/json\" }, signal, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Auth/LoginMethods/LoginMethods.ts",
+            "line": 22,
+            "column": 36,
+            "evidence": "fetch(`${base}/auth/methods`)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/api.ts",
+            "line": 119,
+            "column": 28,
+            "evidence": "fetch(url, { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/management.ts",
+            "line": 5,
+            "column": 28,
+            "evidence": "fetch(route(\"/api/integrations/installations\"))"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "ERROR",
+            "message": "A component creates a binding core outside a declared document owner.",
+            "recommendation": "Keep binding content in light DOM, including component-owned children, under the existing document core. Use official components and shared styles; do not add a private core or component stylesheet to light DOM.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/nav.html",
+            "line": 1,
+            "column": 1,
+            "evidence": "<cms-binding-core class=\"binding-source\">"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "ERROR",
+            "message": "A component creates a binding core outside a declared document owner.",
+            "recommendation": "Keep binding content in light DOM, including component-owned children, under the existing document core. Use official components and shared styles; do not add a private core or component stylesheet to light DOM.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mounting/mount.ts",
+            "line": 17,
+            "column": 41,
+            "evidence": "const core = document.createElement(\"cms-binding-core\");"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/source.ts",
+            "line": 11,
+            "column": 28,
+            "evidence": "fetch(sourceUrl(sourceId, ref, vars), { headers: { Accept: \"application/json\" }, signal: options.signal, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/source.ts",
+            "line": 41,
+            "column": 28,
+            "evidence": "fetch(sourceUrl(sourceId, ref, vars), { method, headers: { Accept: \"application/json\" }, body, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/source.ts",
+            "line": 74,
+            "column": 12,
+            "evidence": "fetch(sourceUrl(sourceId, ref, vars), { method, headers: body === undefined ? { Accept: accept } : { Accept: accept, \"Content-Type\": \"application/json\" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), })"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "ERROR",
+            "message": "A component creates a binding core outside a declared document owner.",
+            "recommendation": "Keep binding content in light DOM, including component-owned children, under the existing document core. Use official components and shared styles; do not add a private core or component stylesheet to light DOM.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/view/template.html",
+            "line": 2,
+            "column": 5,
+            "evidence": "<cms-binding-core class=\"binding-source\">"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Functions/api.ts",
+            "line": 27,
+            "column": 28,
+            "evidence": "fetch(route(`/api/functions/detail?id=${encodeURIComponent(id)}`), { headers: { Accept: \"application/json\" }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Functions/api.ts",
+            "line": 37,
+            "column": 28,
+            "evidence": "fetch(route(\"/api/functions/catalog\"), { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Functions/api.ts",
+            "line": 45,
+            "column": 28,
+            "evidence": "fetch(route(\"/api/functions/create\"), { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ definition }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Functions/api.ts",
+            "line": 67,
+            "column": 28,
+            "evidence": "fetch(route(\"/api/functions/execute\"), { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(payload), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Functions/api.ts",
+            "line": 95,
+            "column": 28,
+            "evidence": "fetch(url, { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Integrations/api.ts",
+            "line": 114,
+            "column": 28,
+            "evidence": "fetch(url)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Integrations/api.ts",
+            "line": 122,
+            "column": 28,
+            "evidence": "fetch(url, { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(body), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Integrations/management/api.ts",
+            "line": 11,
+            "column": 28,
+            "evidence": "fetch( url, body === undefined ? undefined : { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(body), }, )"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/api.ts",
+            "line": 27,
+            "column": 28,
+            "evidence": "fetch(route(\"/api/triggers\"), { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/api.ts",
+            "line": 39,
+            "column": 9,
+            "evidence": "fetch(route(\"/api/functions/catalog\"), { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/api.ts",
+            "line": 40,
+            "column": 9,
+            "evidence": "fetch(route(\"/api/functions\"), { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/api.ts",
+            "line": 55,
+            "column": 28,
+            "evidence": "fetch(route(\"/api/triggers/create\"), { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ definition, enabled }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/api.ts",
+            "line": 67,
+            "column": 28,
+            "evidence": "fetch(route(\"/api/triggers/enabled\"), { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ id, enabled }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/api.ts",
+            "line": 79,
+            "column": 28,
+            "evidence": "fetch(route(\"/api/triggers/run\"), { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ id }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/RoleEditor/RoleEditor.ts",
+            "line": 44,
+            "column": 31,
+            "evidence": "fetch(`${this._api}/editor?id=${encodeURIComponent(id)}`, { headers: { Accept: \"application/json\" }, })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/RoleEditor/RoleEditor.ts",
+            "line": 144,
+            "column": 31,
+            "evidence": "fetch(this._api, { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ id: this.data!.role.id, label: this.data!.role.label, grants }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Secrets/actions.ts",
+            "line": 16,
+            "column": 23,
+            "evidence": "fetch(api, { headers: { Accept: \"application/json\" } })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Secrets/actions.ts",
+            "line": 24,
+            "column": 23,
+            "evidence": "fetch(api, { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ key, value }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Secrets/actions.ts",
+            "line": 38,
+            "column": 23,
+            "evidence": "fetch(url, { method: \"DELETE\" })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/admin/Theme/editor/api.ts",
+            "line": 5,
+            "column": 28,
+            "evidence": "fetch(`${getMetaBasePath()}/api/system/settings`, { method: \"POST\", headers: { \"Content-Type\": \"application/json\", Accept: \"application/json\" }, body: JSON.stringify({ theme: settings }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/editorSystemV2/catalog.ts",
+            "line": 54,
+            "column": 32,
+            "evidence": "fetch(`${getMetaBasePath()}/api/bloc/catalogue`)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/editorSystemV2/documentLoad.ts",
+            "line": 10,
+            "column": 28,
+            "evidence": "fetch(`${getMetaBasePath()}/api/page/configDetail?id=${encodeURIComponent(pageId)}`)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "INFO",
+            "message": "fetch belongs to an explicit infrastructure boundary. The editor document lifecycle persists authored document changes.",
+            "recommendation": "Keep request execution inside this explicit runtime boundary; callers should use its supported contract.",
+            "file": "packages/surfaces/cms-control/src/components/editorSystemV2/documentMutations.ts",
+            "line": 5,
+            "column": 28,
+            "evidence": "fetch(`${getMetaBasePath()}/api/page/content`, { method: \"PUT\", headers: { \"Content-Type\": \"application/json\", }, body: JSON.stringify({ id: page.id, content, }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/editorSystemV2/shellSetup.ts",
+            "line": 49,
+            "column": 32,
+            "evidence": "fetch(`${getMetaBasePath()}/api/${path}`)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/editorSystemV2/siteBloc/siteBlocApi.ts",
+            "line": 78,
+            "column": 28,
+            "evidence": "fetch(url, init)"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/media/GridMedia/api/read.ts",
+            "line": 16,
+            "column": 23,
+            "evidence": "fetch(url.toString())"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/media/GridMedia/api/read.ts",
+            "line": 66,
+            "column": 27,
+            "evidence": "fetch(url.toString())"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/media/GridMedia/api/write.ts",
+            "line": 6,
+            "column": 23,
+            "evidence": "fetch(url.toString(), { method: \"PATCH\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ name: label }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/media/GridMedia/api/write.ts",
+            "line": 20,
+            "column": 23,
+            "evidence": "fetch(url.toString(), { method: \"DELETE\" })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/media/GridMedia/api/write.ts",
+            "line": 25,
+            "column": 23,
+            "evidence": "fetch(`${filesBase()}/folder`, { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify({ name: label, parentId: parent }), })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/media/GridMedia/api/write.ts",
+            "line": 56,
+            "column": 27,
+            "evidence": "fetch(`${filesBase()}/upload`, { method: \"POST\", body: form })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/media/GridMedia/api/write.ts",
+            "line": 75,
+            "column": 23,
+            "evidence": "fetch(`${filesBase()}/content`, { method: \"PUT\", body: form })"
+        },
+        {
+            "rule": "ui.network.http",
+            "severity": "WARNING",
+            "message": "fetch performs imperative browser HTTP work.",
+            "recommendation": "For UI data loading or form submission, consider declarative cms-source/form binding. Otherwise document the concrete lifecycle or transport requirement.",
+            "file": "packages/surfaces/cms-control/src/components/media/GridMedia/api/write.ts",
+            "line": 99,
+            "column": 23,
+            "evidence": "fetch(url.toString(), { method: \"PATCH\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(patch), })"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "INFO",
+            "message": "Produces standalone composition editor and preview documents.",
+            "recommendation": "Keep this activation root at the document boundary.",
+            "file": "packages/surfaces/cms-control/src/core/content/siteBloc/frames.ts",
+            "line": 55,
+            "column": 17,
+            "evidence": "return `<${CMS_BINDING_CORE_TAG}>${instance}</${CMS_BINDING_CORE_TAG}>`;"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "INFO",
+            "message": "Produces standalone composition editor and preview documents.",
+            "recommendation": "Keep this activation root at the document boundary.",
+            "file": "packages/surfaces/cms-control/src/core/content/siteBloc/frames.ts",
+            "line": 57,
+            "column": 13,
+            "evidence": "return `<${CMS_BINDING_CORE_TAG} ${CMS_BINDING_ATTRIBUTES.bindingDisabled} data-cms-editor-root>${instance}</${CMS_BINDING_CORE_TAG}>`;"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "INFO",
+            "message": "Owns the Control document and its page content.",
+            "recommendation": "Keep this activation root at the document boundary.",
+            "file": "packages/surfaces/cms-control/src/static/_template.html",
+            "line": 13,
+            "column": 5,
+            "evidence": "<cms-binding-core>"
+        },
+        {
+            "rule": "binding-core-owner",
+            "severity": "INFO",
+            "message": "Owns the separate editor chrome document.",
+            "recommendation": "Keep this activation root at the document boundary.",
+            "file": "packages/surfaces/cms-control/src/static/editor/_template.html",
+            "line": 30,
+            "column": 5,
+            "evidence": "<cms-binding-core>"
+        }
+    ]
+}
