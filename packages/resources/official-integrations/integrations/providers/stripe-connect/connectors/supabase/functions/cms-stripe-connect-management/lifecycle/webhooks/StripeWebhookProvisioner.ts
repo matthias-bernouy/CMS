@@ -40,6 +40,7 @@ export class StripeWebhookProvisioner implements IntegrationProvisioner {
                     owner: configuration.owner,
                     version: deployment.version ?? "unversioned",
                     existingSecret: context.existingOutputs[destination.name],
+                    existingResourceId: context.existingResourceIds?.[destination.name],
                     idempotencyKey: idempotencyKey(deployment, destination.name, destination.url),
                 };
                 const result =

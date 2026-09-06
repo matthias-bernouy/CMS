@@ -1,5 +1,6 @@
 import { localSimulation } from "./simulation.ts";
-import { type JsonRecord } from "../core/runtime.ts";
+import { HttpError, type JsonRecord } from "../core/runtime.ts";
+import { signingBinding, trustedSigningOutputs } from "./webhooks/signingBindings.ts";
 import { StripeWebhookProvisioner } from "./webhooks/StripeWebhookProvisioner.ts";
 import { StripeProvisioningClient } from "./webhooks/client.ts";
 import definitions from "./webhooks/destinations.json" with { type: "json" };
@@ -28,6 +29,7 @@ export async function reconcile(
     secrets: JsonRecord,
     generated: JsonRecord,
     operationId?: string,
+    existingResources: JsonRecord[] = [],
 ) {
     if (localSimulation(secrets)) {
         return {
@@ -48,14 +50,26 @@ export async function reconcile(
         };
     }
     const secretKey = validateCredentials(secrets);
-    await new StripeProvisioningClient(secretKey, fetch).form("/v1/account", "GET", definitions.v1ApiVersion);
-    const existingOutputs = Object.fromEntries(
-        Object.entries(generated).filter(
-            (entry): entry is [string, string] => typeof entry[1] === "string" && !entry[1].startsWith("pending_"),
-        ),
+    const account = await new StripeProvisioningClient(secretKey, fetch).form<{ id?: string }>(
+        "/v1/account",
+        "GET",
+        definitions.v1ApiVersion,
     );
-    return new StripeWebhookProvisioner().provision(
+    if (!account.id) {
+        throw new HttpError(502, "Stripe account identity could not be verified");
+    }
+    const result = await new StripeWebhookProvisioner().provision(
         { ...deployment(owner, version, secretKey), operationId },
-        { existingOutputs },
+        trustedSigningOutputs(existingResources, account.id, generated),
     );
+    return {
+        ...result,
+        resources: result.resources.map((resource, index) => {
+            const destination = definitions.destinations[index]!.name;
+            return {
+                ...resource,
+                signingSecret: signingBinding(account.id!, resource.id, destination, result.outputs[destination]!),
+            };
+        }),
+    };
 }

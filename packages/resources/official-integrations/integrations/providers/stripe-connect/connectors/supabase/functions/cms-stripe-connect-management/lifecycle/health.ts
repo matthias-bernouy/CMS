@@ -7,6 +7,7 @@ import { validateCredentials } from "./settings.ts";
 import { deployment } from "./reconcile.ts";
 import { StripeProvisioningClient } from "./webhooks/client.ts";
 import { parseStripeWebhookConfiguration } from "./webhooks/configuration.ts";
+import { signingBindingMatches } from "./webhooks/signingBindings.ts";
 
 type Check = {
     id: string;
@@ -53,7 +54,10 @@ export async function sourceHealth(owner: string, secrets: JsonRecord, generated
         const client = new StripeProvisioningClient(secretKey, fetch);
         const configuration = parseStripeWebhookConfiguration(deployment(owner, "health", secretKey));
         try {
-            await client.form("/v1/account", "GET", configuration.v1ApiVersion);
+            const account = await client.form<{ id?: string }>("/v1/account", "GET", configuration.v1ApiVersion);
+            if (!account.id) {
+                throw new Error("Stripe account identity could not be verified");
+            }
             checks.push({
                 id: "credentials",
                 status: "ok",
@@ -77,14 +81,22 @@ export async function sourceHealth(owner: string, secrets: JsonRecord, generated
                 const url =
                     destination.protocol === "v1" ? item?.url : (item?.webhook_endpoint as JsonRecord | undefined)?.url;
                 const events = item?.enabled_events as string[] | undefined;
+                const signingValid =
+                    typeof item?.id === "string" &&
+                    signingBindingMatches(
+                        settings.resources,
+                        account.id,
+                        item.id,
+                        destination.name,
+                        generated[destination.name],
+                    );
                 const valid =
                     owned.length === 1 &&
                     item?.status === "enabled" &&
                     url === destination.url &&
                     Array.isArray(events) &&
                     [...new Set(events)].sort().join(",") === destination.enabledEvents.slice().sort().join(",") &&
-                    typeof generated[destination.name] === "string" &&
-                    !String(generated[destination.name]).startsWith("pending_") &&
+                    signingValid &&
                     (destination.protocol !== "v1" || item.api_version === configuration.v1ApiVersion) &&
                     (destination.protocol !== "v2" ||
                         (item.event_payload === "thin" &&
@@ -97,11 +109,19 @@ export async function sourceHealth(owner: string, secrets: JsonRecord, generated
                                 .join(",") === destination.eventsFrom.slice().sort().join(",")));
                 checks.push({
                     id: destination.name,
-                    status: valid ? "ok" : "warning",
-                    code: valid ? "webhook_verified" : "webhook_configuration_drift",
-                    message: valid
-                        ? "Owned destination URL, status, events and signing secret verified."
-                        : "Owned webhook configuration needs reconciliation.",
+                    status: item && !signingValid ? "error" : valid ? "ok" : "warning",
+                    code:
+                        item && !signingValid
+                            ? "signing_secret_binding_unverified"
+                            : valid
+                              ? "webhook_verified"
+                              : "webhook_configuration_drift",
+                    message:
+                        item && !signingValid
+                            ? "The stored signing secret is not verified for this Stripe account and destination. Restore its matching secret before retrying."
+                            : valid
+                              ? "Owned destination URL, status and events verified; signing secret matches its stored provisioning receipt."
+                              : "Owned webhook configuration needs reconciliation.",
                     actionIds: valid ? [] : ["apply-settings"],
                 });
             }

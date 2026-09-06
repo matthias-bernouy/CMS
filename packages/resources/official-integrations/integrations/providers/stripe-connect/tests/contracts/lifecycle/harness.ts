@@ -18,6 +18,7 @@ export function harness() {
         resources: [],
     };
     const endpoints: RecordValue[] = [];
+    const provider = { accountId: "acct_test" };
     const requests: { url: string; method: string; body?: string }[] = [];
     (globalThis as any).Deno = { env: { get: (name: string) => env[name] } };
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -41,12 +42,16 @@ export function harness() {
             throw new Error("Unexpected external request");
         }
         if (url.pathname === "/v1/account") {
-            return Response.json({ id: "acct_test" });
+            return Response.json({ id: provider.accountId });
         }
         const v1 = url.pathname.startsWith("/v1/");
         const collection = v1 ? "/v1/webhook_endpoints" : "/v2/core/event_destinations";
         if (method === "GET") {
-            return Response.json({ data: endpoints.filter((value) => value.protocol === (v1 ? "v1" : "v2")) });
+            return Response.json({
+                data: endpoints.filter(
+                    (value) => value.protocol === (v1 ? "v1" : "v2") && value.accountId === provider.accountId,
+                ),
+            });
         }
         if (method === "DELETE") {
             const index = endpoints.findIndex((value) => url.pathname.endsWith(value.id));
@@ -65,7 +70,11 @@ export function harness() {
         }
         let endpoint = endpoints.find((value) => url.pathname.endsWith(value.id));
         if (url.pathname === collection) {
-            endpoint = { id: `${v1 ? "we" : "ed"}_${endpoints.length}`, protocol: v1 ? "v1" : "v2" };
+            endpoint = {
+                id: `${v1 ? "we" : "ed"}_${endpoints.length}`,
+                protocol: v1 ? "v1" : "v2",
+                accountId: provider.accountId,
+            };
             endpoints.push(endpoint);
         }
         if (!endpoint) {
@@ -85,6 +94,7 @@ export function harness() {
         row,
         env,
         endpoints,
+        provider,
         requests,
         secrets,
         generated,

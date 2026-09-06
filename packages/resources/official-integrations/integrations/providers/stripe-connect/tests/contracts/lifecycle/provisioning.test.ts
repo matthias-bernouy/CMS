@@ -113,6 +113,7 @@ describe("StripeWebhookProvisioner", () => {
 
             const result = await provisioner.provision(stripeWebhookDeployment([configuredEventSource]), {
                 existingOutputs,
+                existingResourceIds: { platform: "we_platform", connect: "we_connect", accountsV2: "ed_accounts" },
             });
 
             expect(result.outputs).toEqual(existingOutputs);

@@ -22,6 +22,7 @@ export async function provisionV1Webhook(
         version: string;
         apiVersion: string;
         existingSecret?: string;
+        existingResourceId?: string;
         idempotencyKey: string;
     },
 ): Promise<{ secret: string; resource: IntegrationProvisionResourceResult; created: boolean }> {
@@ -36,7 +37,7 @@ export async function provisionV1Webhook(
     }
     const endpoint = owned[0];
     if (endpoint) {
-        if (!options.existingSecret) {
+        if (!options.existingSecret || options.existingResourceId !== endpoint.id) {
             throw missingSecret(destination.name);
         }
         if (endpoint.api_version !== options.apiVersion) {
@@ -131,7 +132,7 @@ function endpointParams(
 
 function missingSecret(name: string): IntegrationRuntimeError {
     return new IntegrationRuntimeError(
-        `Stripe webhook "${name}" already exists but its signing secret is missing from the CMS secret store`,
+        `Stripe webhook "${name}" already exists but its signing secret is missing or does not match this endpoint`,
         409,
     );
 }

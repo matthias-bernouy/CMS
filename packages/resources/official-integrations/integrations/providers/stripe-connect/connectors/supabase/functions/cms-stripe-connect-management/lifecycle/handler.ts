@@ -4,6 +4,9 @@ import { readSettings, settingsResult, updateSettings } from "./store.ts";
 import { saveSettings } from "./settings.ts";
 import { sourceHealth } from "./health.ts";
 import { reconcile } from "./reconcile.ts";
+import { localSimulation } from "./simulation.ts";
+import { signingBindingsConfirmed } from "./webhooks/signingBindings.ts";
+import destinations from "./webhooks/destinations.json" with { type: "json" };
 
 export async function manageSource(request: Request): Promise<Response> {
     requireCmsRequest(request, false);
@@ -32,6 +35,19 @@ export async function manageSource(request: Request): Promise<Response> {
             if (current.saved_revision !== input.savedRevision || current.operation !== "pending_sync") {
                 throw new HttpError(409, "Apply revision changed");
             }
+            if (
+                !localSimulation(secrets) &&
+                !signingBindingsConfirmed(
+                    current.resources,
+                    generated,
+                    destinations.destinations.map(({ name }) => name),
+                )
+            ) {
+                throw new HttpError(
+                    409,
+                    "Signing secrets were not stored for the applied destinations; recover the matching secrets before confirmation",
+                );
+            }
             return json(
                 settingsResult(
                     await updateSettings(current, { applied_revision: current.saved_revision, operation: "idle" }),
@@ -56,7 +72,14 @@ async function apply(owner: string, version: string, secrets: JsonRecord, genera
         operation_started_at: new Date().toISOString(),
     });
     try {
-        const result = await reconcile(owner, version, secrets, generated, applying.operation_id ?? undefined);
+        const result = await reconcile(
+            owner,
+            version,
+            secrets,
+            generated,
+            applying.operation_id ?? undefined,
+            applying.resources,
+        );
         try {
             const next = await updateSettings(applying, { operation: "pending_sync", resources: result.resources });
             return { ...settingsResult(next), generatedSecrets: result.outputs };

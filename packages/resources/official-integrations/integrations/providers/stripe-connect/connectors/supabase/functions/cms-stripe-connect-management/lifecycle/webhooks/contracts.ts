@@ -13,7 +13,10 @@ export type IntegrationProvisionDeployment = {
     configuration: Record<string, IntegrationAnswerValue>;
     outputs: { name: string }[];
 };
-export type IntegrationProvisionContext = { existingOutputs: Record<string, string> };
+export type IntegrationProvisionContext = {
+    existingOutputs: Record<string, string>;
+    existingResourceIds?: Record<string, string>;
+};
 export interface IntegrationProvisioner {
     readonly provider: string;
 }

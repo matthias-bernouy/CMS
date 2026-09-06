@@ -55,7 +55,12 @@ function marketplaceTermsConfiguration(value: unknown): MarketplaceTermsConfigur
     ) {
         throw new HttpError(502, "Supabase returned an invalid marketplace terms configuration");
     }
-    const base = { mode: value.mode, version: value.version, hash: value.hash, updatedAt: value.updatedAt };
+    const base: Pick<MarketplaceTermsConfiguration, "mode" | "version" | "hash" | "updatedAt"> = {
+        mode: value.mode,
+        version: value.version,
+        hash: value.hash,
+        updatedAt: value.updatedAt,
+    };
     if (value.mode === "legacy") {
         return base;
     }
