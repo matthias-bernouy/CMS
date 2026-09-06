@@ -27,6 +27,7 @@ export function renderCollectionSettings(
     button.textContent = "Save active blocs";
     button.addEventListener("click", async () => {
         button.disabled = true;
+        status("Saving active blocs…");
         try {
             await rerunIntegrationInstallation(installation.id, undefined, selectedCollectionResources(selection));
             status("Active blocs saved.");

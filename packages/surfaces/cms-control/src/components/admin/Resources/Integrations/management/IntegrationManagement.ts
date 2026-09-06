@@ -7,6 +7,7 @@ import { renderHealth } from "./presentation/health";
 import { settingsDashboard } from "./dashboard";
 import { renderSettings } from "./settings";
 import { renderManagementShell } from "./presentation/shell";
+import { managementFeedback } from "./feedback";
 
 export class IntegrationManagementView extends HTMLElement {
     private installation?: IntegrationInstallationDetail;
@@ -14,12 +15,20 @@ export class IntegrationManagementView extends HTMLElement {
     private settings?: IntegrationSettingsResponse;
     private busy = false;
     private revision = 0;
+    private feedback?: ReturnType<typeof managementFeedback>;
     private panel = new URL(window.location.href).searchParams.get("panel") === "health" ? "health" : "connection";
     connectedCallback(): void {
+        this.feedback = managementFeedback(this, this.getAttribute("installation-id") ?? "", (message) => {
+            const status = this.querySelector("[data-management-status]");
+            if (status) {
+                status.textContent = message;
+            }
+        });
         void this.load();
     }
     disconnectedCallback(): void {
         this.revision += 1;
+        this.feedback?.disconnect();
     }
     private async load(): Promise<void> {
         const revision = ++this.revision;
@@ -57,6 +66,7 @@ export class IntegrationManagementView extends HTMLElement {
                 void this.showPanel();
             }
         });
+        this.feedback?.refresh();
     }
     private async showPanel(refresh = false): Promise<void> {
         const revision = ++this.revision;
@@ -154,10 +164,7 @@ export class IntegrationManagementView extends HTMLElement {
         this.toggleAttribute("aria-busy", busy);
     }
     private status(message: string): void {
-        const status = this.querySelector("[data-management-status]");
-        if (status) {
-            status.textContent = message;
-        }
+        this.feedback?.set(message);
     }
 }
 if (!customElements.get("cms-integration-management")) {
