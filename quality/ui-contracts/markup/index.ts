@@ -22,7 +22,7 @@ export function inspectMarkup(source: UiSource): UiFinding[] {
                     message: owner ?? "A component creates a binding core outside a declared document owner.",
                     recommendation: owner
                         ? "Keep this activation root at the document boundary."
-                        : "Move binding markup into the owning shell's light DOM; do not create a component-owned core.",
+                        : "Keep binding content in light DOM, including component-owned children, under the existing document core. Use official components and shared styles; do not add a private core or component stylesheet to light DOM.",
                 }),
             );
         }

@@ -47,8 +47,44 @@ cancellation and submissions support multipart forms and nested field paths.
 The ownership rule is a **CMS application policy**, not a restriction of the
 foundation engine. The engine supports isolated nested cores; that capability and
 its tests remain valid. Current Dashboard component cores are reported because
-they are component scopes inside an existing document. The runtime widget
-compiler needs an explicit ownership decision; it has no silent exemption.
+they are component scopes inside an existing document. Dynamic widget mounting
+is also a refactoring target; it does not justify a private core.
+
+## Component composition and styles
+
+A custom element may own and compose children in **light DOM**. Those children
+remain discoverable by the existing document core, so their `cms-source`,
+`cms-repeat`, and `cms-condition` bindings are valid. The markup does not all
+have to be inlined into the page file. Reusable component composition is an
+accepted architecture; being a custom element is not a binding boundary.
+
+Light-DOM composition components must not inject their own CSS into the
+document: no component `<style>`, stylesheet link, document-level adopted
+stylesheet, or imperative inline styling to recreate their presentation. They
+use official components and the admin's centrally owned shared styles and
+theme tokens. Prefixing selectors does not turn an injected stylesheet into
+encapsulated CSS or make it acceptable under this policy.
+
+Visual components may encapsulate their internal structure and CSS in Shadow
+DOM and expose slots for light-DOM content. Slotted content remains light DOM.
+Keep document-owned bindings there: the binding discovery code walks ordinary
+DOM descendants and does not enter a component's shadow root. Do not move
+those bindings behind Shadow DOM and add a private core to reactivate them.
+
+For Dashboard widgets, first use declarative repetition and conditional
+templates for the known widget types. Runtime data does not by itself require
+an imperative renderer. Recursive sections/tabs need an explicit composition
+strategy; assess that concrete requirement before adding a narrowly scoped
+extension. Do not use serialized JSON attributes and observers as a parallel
+data-passing mechanism between controllers and widgets.
+
+These composition and CSS rules guide review. The current scanner checks core
+creation, but does not prove light/shadow placement or detect every stylesheet
+injection or JSON handoff. Negative fixtures verify that valid light-DOM
+composition and encapsulated visual components are not rejected by the core
+ownership check.
+
+## Exceptions and review
 
 Document owners are listed with reasons in
 `quality/ui-contracts/markup/owners.ts`. HTTP infrastructure boundaries are listed

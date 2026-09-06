@@ -143,15 +143,15 @@ Paths below are repository-relative. Each row is one direct callsite. Shared rea
 
 ## Dashboard composition: current technical design versus approved target policy
 
-**CMS ownership policy:** only the application shell or an autonomous document owns a binding core. Under this policy, Dashboard navigation/view private cores and their hidden JSON bridges are **errors to refactor**, even though the existing runtime supports them. They are not runtime bugs, and technical compatibility is not final policy compliance. The runtime widget mount is an **exemption candidate requiring an explicit ownership decision**, with no silent allowlist.
+**CMS ownership policy:** only the application shell or an autonomous document owns a binding core. Under this policy, Dashboard navigation/view private cores and their hidden JSON bridges are **errors to refactor**, even though the existing runtime supports them. They are not runtime bugs, and technical compatibility is not final policy compliance. The runtime widget mount is also a **refactoring target**, not an exemption candidate merely because its widgets are dynamic. Components may compose light-DOM children under the existing document core without adding component CSS to the document; see the [composition policy](./ui-contracts.md#component-composition-and-styles).
 
 The current engine deliberately treats nested cores as independent owners: `packages/foundation/components/src/binding/core/attrs.ts:27` documents that boundary, `binding/runtime/discovery.ts` implements boundary-aware discovery, and the current foundation `AGENTS.md` says nested cores are isolated. This explains why the present Shadow DOM implementation works; it does not supersede the new user policy. Case-by-case evidence:
 
 1. **Definition view:** `packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/view/template.html:2` owns the view's source scope. `view/controller/DashboardViewController.ts:11` starts its bound source and at `:21` sets `/api/dashboards as dashboards`. Example/external modes skip this source. The controller observes the JSON handoff and compiles server-supplied widget definitions; it does not perform the list HTTP request itself. Nevertheless, this is a private component data scope, not an autonomous document: **target-policy ERROR**. Refactor source ownership to the document shell and replace the hidden JSON/MutationObserver bridge with declarative composition or an explicitly supported data handoff.
-2. **Navigation:** `packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/nav.html:1` activates binding in a separate component's markup and feeds the official `w13c-lateral-menu`. Independent Shadow DOM ownership explains its current technical role, but navigation is not a document: **target-policy ERROR**. The document shell should own the source and navigation composition. The additional imperative management-installation read at `navigation/management.ts:5` remains a migration candidate; a currently functioning core does not excuse this second data lifecycle.
-3. **Runtime widget mount:** `packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mounting/mount.ts:16` creates a binding core around widgets compiled from runtime Dashboard definitions, then replaces the current mount at `:21`. The source schema is known only at runtime, making this a compiler/activation boundary with a stronger technical case than the hidden JSON bridge. However, it still creates a core inside the application: **exemption candidate pending an explicit ownership decision**. Decide whether the mount is truly an autonomous document, or compile into the owning shell core. Do not silently exempt its file. `mountSource.ts:19` resolves source metadata and suppresses requests when required parameters are missing; `mountSource.ts:37` generates `cms-source`, loading/error states and source reload behavior. `mountSource.ts:60` creates row templates using `cms-repeat`. Detail/navigation/relation mounts reuse this pattern.
+2. **Navigation:** `packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/nav.html:1` activates binding in a separate component's markup and feeds the official `w13c-lateral-menu`. Independent Shadow DOM ownership explains its current technical role, but navigation is not a document: **target-policy ERROR**. The document core should own the source; navigation may be a reusable light-DOM composition component using shared styles. The additional imperative management-installation read at `navigation/management.ts:5` remains a migration candidate; a currently functioning core does not excuse this second data lifecycle.
+3. **Runtime widget mount:** `packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mounting/mount.ts:17` creates a private core around widgets and replaces the current mount at `:22`: **target-policy ERROR to refactor**. Prefer `cms-repeat` and `cms-condition` for the finite widget types. Recursive sections/tabs require a concrete composition strategy, not an automatic justification for imperative rendering. Component-owned light-DOM templates remain valid under the document core. The existing `mountSource.ts` already generates sources, loading/error conditions and row repetition, so these declarative responsibilities can be retained while removing the private core and repeated JSON attribute handoffs.
 
-Keep the narrow source lifetimes: missing selection must not trigger an invalid endpoint; creating a new item must not fetch a nonexistent resource; targeted detail refresh must not reload every dashboard. `runtime/mounting/detail.ts` handles new-resource and saved-result reuse, and per-detail reload events. A static rule should report all three current core locations under the target policy. Record the compiler/mount rationale separately for review; do not automatically allow it or arbitrary renderers that create cores.
+Keep the narrow source lifetimes: missing selection must not trigger an invalid endpoint; creating a new item must not fetch a nonexistent resource; targeted detail refresh must not reload every dashboard. `runtime/mounting/detail.ts` handles new-resource and saved-result reuse, and per-detail reload events. A static rule should report all three current core locations under the target policy. Preserve those behaviors when moving to declarative light-DOM composition; dynamic widget definitions do not justify a component-owned core.
 
 ## Recommended reconciliation and order
 
@@ -188,8 +188,9 @@ at `/tmp/cmscore-blocs-workspace-20260906`, without modifying it. Its totals are
 
 - `packages/surfaces/cms-control/src/components/admin/Resources/Blocs/view/library.html:1`:
   one additional **ERROR**. This component fragment creates a private core inside
-  the existing admin document. Move the binding markup into the document's
-  static light DOM; there is no document-boundary justification for this core.
+  the existing admin document. Keep the binding markup in the document's
+  light DOM, including reusable component children without injected component
+  CSS; there is no document-boundary justification for this core.
 - `packages/surfaces/cms-control/src/core/content/bloc/preview/document.ts:44`:
   one additional **INFO**. This creates a complete sandboxed preview document
   with its own HTML shell and disabled binding. It is an explicit document
@@ -212,3 +213,11 @@ Repository shape reports three new informational eight-entry directories:
 `quality/ui-contracts`, `markup`, and `network`. These preserve distinct parser,
 policy, discovery, reporting, and test responsibilities; no directory error or
 handwritten TypeScript file above 180 lines was introduced.
+
+The subsequent composition-policy clarification adds three regression tests for
+component-owned light DOM, encapsulated visual Shadow DOM with slots, and a
+private core incorrectly introduced in light DOM. This does not add automated
+CSS or JSON-handoff detection; those review rules are documented explicitly.
+The updated suite passes 48 tests (173 assertions). Before and after this
+clarification, `check:all` passes seven checks and fails only on the same three
+Dashboard core ownership errors; the inventory counts are unchanged.
