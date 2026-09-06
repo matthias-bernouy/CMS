@@ -55,5 +55,8 @@
             "artifacts/dashboards/commerce-stripe-payments-operations/definition.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "extensionOf": {
+        "kind": "commerce"
+    }
 }

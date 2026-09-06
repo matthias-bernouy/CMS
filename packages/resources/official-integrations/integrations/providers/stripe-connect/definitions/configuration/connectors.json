@@ -15,27 +15,19 @@
                 "manifest": "install/sql/schema.manifest.json"
             }
         ],
-    "functions": [
-      {
-        "name": "cms-stripe-connect",
-        "directory": "functions/cms-stripe-connect",
-        "configPath": "supabase.config.toml",
-        "secrets": {
-          "CMS_STRIPE_CONNECT_API_KEY": "{{generated.cmsApiKey}}",
-          "STRIPE_PUBLISHABLE_KEY": "{{answers.stripePublishableKey}}",
-          "STRIPE_SECRET_KEY": "{{connectorSecrets.stripeSecretKey}}",
-          "STRIPE_WEBHOOK_SECRET": "{{connectorSecrets.stripeWebhookSecret}}",
-          "STRIPE_CONNECT_WEBHOOK_SECRET": "{{connectorSecrets.stripeConnectWebhookSecret}}",
-          "STRIPE_CONNECT_V2_WEBHOOK_SECRET": "{{connectorSecrets.stripeConnectV2WebhookSecret}}",
-          "STRIPE_CONNECT_DEFAULT_COUNTRY": "{{answers.defaultCountry}}",
-          "STRIPE_CONNECT_DEFAULT_CURRENCY": "{{answers.defaultCurrency}}",
-          "STRIPE_CONNECT_SELLER_ACTIVITY_DESCRIPTION": "{{answers.sellerActivityDescription}}"
-        }
-      },
-      {
-        "name": "cms-stripe-connect-management",
-        "directory": "functions/cms-stripe-connect-management",
-        "configPath": "management.config.toml",
+        "functions": [
+            {
+                "name": "cms-stripe-connect",
+                "directory": "functions/cms-stripe-connect",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_STRIPE_CONNECT_API_KEY": "{{generated.cmsApiKey}}"
+                }
+            },
+            {
+                "name": "cms-stripe-connect-management",
+                "directory": "functions/cms-stripe-connect-management",
+                "configPath": "management.config.toml",
                 "secrets": {
                     "CMS_STRIPE_CONNECT_API_KEY": "{{generated.cmsApiKey}}"
                 },

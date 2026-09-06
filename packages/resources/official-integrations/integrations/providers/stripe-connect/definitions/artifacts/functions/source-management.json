@@ -1,0 +1,103 @@
+{
+    "type": "function",
+    "contractVersion": "1.0.0",
+    "function": {
+        "id": "manageStripeConnectSource",
+        "method": "POST",
+        "access": {
+            "mode": "system"
+        },
+        "meta": {
+            "name": "Manage Stripe Connect source"
+        },
+        "input": {
+            "body": {
+                "type": "object"
+            }
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "400",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "401",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "403",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "409",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "422",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "502",
+                "body": {
+                    "type": "object"
+                }
+            },
+            {
+                "status": "503",
+                "body": {
+                    "type": "object"
+                }
+            }
+        ],
+        "steps": [
+            {
+                "id": "result",
+                "call": {
+                    "source": "stripe-connect",
+                    "endpoint": "manageSource",
+                    "body": "$input.body",
+                    "onError": {
+                        "propagate": [
+                            {
+                                "sourceStatus": 400,
+                                "status": 400
+                            },
+                            {
+                                "sourceStatus": 403,
+                                "status": 403
+                            },
+                            {
+                                "sourceStatus": 409,
+                                "status": 409
+                            },
+                            {
+                                "sourceStatus": 422,
+                                "status": 422
+                            }
+                        ]
+                    }
+                }
+            }
+        ],
+        "return": {
+            "status": 200,
+            "body": "$steps.result"
+        }
+    }
+}

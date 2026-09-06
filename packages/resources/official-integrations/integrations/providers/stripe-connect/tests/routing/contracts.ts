@@ -57,9 +57,9 @@ export function registerStripeConnectRoutingContracts(createHarness: CreateRouti
             const direct = await harness.edgeRequest(new Request("https://project.supabase.co/health", { headers }));
 
             expect(marked.status).toBe(200);
-            expect(await responseBody(marked)).toEqual({ ok: true, stripeMode: "test" });
+            expect(await responseBody(marked)).toMatchObject({ schemaVersion: 1, status: "unknown" });
             expect(direct.status).toBe(200);
-            expect(await responseBody(direct)).toEqual({ ok: true, stripeMode: "test" });
+            expect(await responseBody(direct)).toMatchObject({ schemaVersion: 1, status: "unknown" });
             expect(harness.providerRequestCount()).toBe(0);
         });
 

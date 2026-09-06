@@ -1,6 +1,6 @@
 {
-    "id": "{{answers.id}}-templates",
-    "source": "{{answers.id}}",
+    "id": "emailer-templates",
+    "source": "emailer",
     "meta": {
         "name": "Templates",
         "icon": "mail"

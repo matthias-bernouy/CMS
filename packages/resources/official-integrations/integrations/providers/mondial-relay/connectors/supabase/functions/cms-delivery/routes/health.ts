@@ -1,25 +1,27 @@
-import { envDefault, envText, printableAscii } from "../env.ts";
+import { envText } from "../env.ts";
 import { HttpError, json, requireCmsRequest } from "../http.ts";
-import { mondialRelayConnectEndpoint } from "../provider/provider-endpoints.ts";
 import { getOne } from "../shipment/supabase/client.ts";
 
 export function health(request: Request): Response {
     requireCmsRequest(request);
-    const password = envText("MONDIAL_RELAY_CONNECT_PASSWORD");
+    const configured = [
+        "MONDIAL_RELAY_CONNECT_LOGIN",
+        "MONDIAL_RELAY_CONNECT_PASSWORD",
+        "MONDIAL_RELAY_TRACKING_PRIVATE_KEY",
+    ].every((name) => Boolean(envText(name)));
     return json({
-        ok: true,
-        mondialRelay: {
-            api: "connect-v2",
-            endpoint: mondialRelayConnectEndpoint(),
-            loginConfigured: envText("MONDIAL_RELAY_CONNECT_LOGIN").length > 0,
-            customerId: envText("MONDIAL_RELAY_CONNECT_CUSTOMER_ID"),
-            passwordConfigured: password.length > 0,
-            passwordLength: password.length,
-            passwordPrintableAscii: printableAscii(password),
-            widgetBrand: envDefault("MONDIAL_RELAY_WIDGET_BRAND", envText("MONDIAL_RELAY_CONNECT_CUSTOMER_ID")),
-            settingsSchema: "delivery",
-            settingsTable: "settings",
-        },
+        schemaVersion: 1,
+        status: configured ? "unknown" : "needs_configuration",
+        checkedAt: new Date().toISOString(),
+        checks: [
+            {
+                id: "connection",
+                status: configured ? "unknown" : "warning",
+                message: configured
+                    ? "Run Source Health to verify provider credentials."
+                    : "Configure the Mondial Relay connection in Source settings.",
+            },
+        ],
     });
 }
 

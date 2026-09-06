@@ -1,8 +1,8 @@
 {
     "type": "sourceOverlay",
     "overlay": {
-        "id": "{{answers.id}}-extra-fields",
-        "sourceId": "{{answers.id}}",
+        "id": "user-account-extra-fields",
+        "sourceId": "user-account",
         "label": "Extra fields",
         "sections": [
             {

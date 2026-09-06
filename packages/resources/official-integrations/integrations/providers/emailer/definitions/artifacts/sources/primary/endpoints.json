@@ -4,6 +4,7 @@
         "endpoints/templates/list-templates.json",
         "endpoints/settings/settings-management/root.json",
         "endpoints/templates/template-operations/root.json",
-        "endpoints/messages/message-queries.json"
+        "endpoints/messages/message-queries.json",
+        "endpoints/health/management.json"
     ]
 }

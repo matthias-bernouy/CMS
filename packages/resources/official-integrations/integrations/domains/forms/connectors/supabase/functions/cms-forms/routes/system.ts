@@ -6,8 +6,26 @@ export async function handleSystemRoute(route: string, request: Request): Promis
         if (request.method !== "GET") {
             return methodNotAllowed("GET");
         }
-        await rpcRecord("list_managed_forms", { p_limit: 1, p_offset: 0 });
-        return json({ ok: true });
+        let healthy = false;
+        try {
+            await rpcRecord("list_managed_forms", { p_limit: 1, p_offset: 0 });
+            healthy = true;
+        } catch {
+            /* Surface storage failure as a structured health check. */
+        }
+        return json({
+            schemaVersion: 1,
+            configuration: { savedRevision: null, appliedRevision: null },
+            status: healthy ? "ready" : "blocked",
+            checkedAt: new Date().toISOString(),
+            checks: [
+                {
+                    id: "storage",
+                    status: healthy ? "ok" : "error",
+                    message: healthy ? "Forms storage is reachable." : "Forms storage is unavailable.",
+                },
+            ],
+        });
     }
     if (route === "/system/retention") {
         if (request.method !== "POST") {

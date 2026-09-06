@@ -1,12 +1,12 @@
 {
   "type": "dashboard-view",
   "view": {
-        "id": "{{answers.id}}-subscriptions",
+        "id": "newsletter-subscriptions",
         "meta": {
             "name": "Newsletter",
             "icon": "mail"
         },
-        "source": "{{answers.id}}",
+        "source": "newsletter",
         "views": [
             {
                 "widget": "w-table",

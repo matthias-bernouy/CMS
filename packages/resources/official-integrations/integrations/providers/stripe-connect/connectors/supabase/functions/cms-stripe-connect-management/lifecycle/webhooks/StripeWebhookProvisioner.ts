@@ -71,7 +71,9 @@ export class StripeWebhookProvisioner implements IntegrationProvisioner {
 }
 
 function idempotencyKey(deployment: IntegrationProvisionDeployment, name: string, url: string): string {
-    const value = [deployment.integrationKind, deployment.version ?? "", name, url].join("\n");
+    const value = [deployment.integrationKind, deployment.version ?? "", deployment.operationId ?? "", name, url].join(
+        "\n",
+    );
     return `cmscore-webhook-${createHash("sha256").update(value).digest("hex")}`;
 }
 

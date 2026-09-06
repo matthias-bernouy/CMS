@@ -1,9 +1,1 @@
-[
-    {
-        "name": "id",
-        "label": "Source id",
-        "type": "text",
-        "required": true,
-        "defaultValue": "commerce-negotiation"
-    }
-]
+[]

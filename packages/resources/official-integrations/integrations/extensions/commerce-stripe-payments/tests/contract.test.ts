@@ -7,14 +7,13 @@ describe("commerce-stripe-payments 1.0.0", () => {
         await runIntegrationContract();
     });
 
-    test("resolves a non-default seller payout schedule into releases without a weekly hardcode", async () => {
+    test("reads the current seller payout schedule from provider settings instead of installation answers", async () => {
         const { releaseFn, releaseWorker } = await loadIntegrationContract("weekly:monday,thursday");
         const serialized = JSON.stringify({ releaseFn, releaseWorker });
 
-        expect(serialized).toContain('"payoutSchedule":"weekly:monday,thursday"');
-        expect(serialized).toContain(
-            '"payoutScheduleChangeId":{"$concat":["settlement-release:","$input.body.releaseAuthorizationId",":","$input.body.sellerRequiredMinimumBalanceAmount",":","$input.body.payoutDelayDays",":","weekly:monday,thursday"]}',
-        );
+        expect(serialized).toContain('"payoutSchedule":"$steps.providerConfiguration.sellerPayoutSchedule"');
+        expect(serialized).toContain('"endpoint":"getProviderConfiguration"');
+        expect(serialized).not.toContain("weekly:monday,thursday");
         expect(serialized).not.toContain('"interval":"weekly"');
         expect(serialized).not.toContain('"weeklyPayoutDays":["monday"]');
     });

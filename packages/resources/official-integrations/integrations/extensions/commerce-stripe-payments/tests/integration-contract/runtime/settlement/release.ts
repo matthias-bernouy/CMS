@@ -41,6 +41,9 @@ export async function assertSettlementRelease(
                 identities,
                 fetchImpl: async (input, init) => {
                     const request = new Request(input, init);
+                    if (request.url === "https://stripe.test/configuration") {
+                        return Response.json({ sellerPayoutSchedule });
+                    }
                     releaseCalls.push(new URL(request.url).pathname);
                     if (request.url.startsWith("https://stripe.test/payout/seller")) {
                         sellerPayoutBody = await request.json();

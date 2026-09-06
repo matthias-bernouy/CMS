@@ -8,6 +8,7 @@ export type StripeConnectRouteHandlers = {
     ingestConnectWebhook: RouteHandler;
     ingestConnectV2Webhook: RouteHandler;
     health: RouteHandler;
+    providerConfiguration: RouteHandler;
     connectConfig: RouteHandler;
     connectStatus: RouteHandler;
     connectWallet: RouteHandler;
@@ -60,6 +61,7 @@ const webhookRoutes: Readonly<Record<string, RouteDefinition>> = {
 
 const routes: Readonly<Record<string, RouteDefinition>> = {
     "/health": ["GET", "health"],
+    "/system/configuration": ["GET", "providerConfiguration"],
     "/connect/config": ["GET", "connectConfig"],
     "/connect/status": ["GET", "connectStatus"],
     "/connect/wallet": ["GET", "connectWallet"],
@@ -105,8 +107,10 @@ const routes: Readonly<Record<string, RouteDefinition>> = {
 export function serveStripeConnect(handlers: StripeConnectRouteHandlers): void {
     Deno.serve(async (request) => {
         try {
-            assertStripeKeyModeCoherence();
             const route = routePath(request);
+            if (route !== "/health" && request.method !== "OPTIONS") {
+                assertStripeKeyModeCoherence();
+            }
             const webhook = webhookRoutes[route];
             if (webhook) {
                 return await dispatchRoute(handlers, request, webhook);

@@ -75,7 +75,7 @@ describe("commerce negotiation 1.0.0", () => {
             },
             {
                 kind: "commerce-negotiation",
-                answers: { id: "commerce-negotiation" },
+                answers: {},
                 options: {},
             },
             [definition],

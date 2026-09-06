@@ -26,8 +26,113 @@
     "artifacts": {
         "$files": [
             "artifacts/sources/primary/definition.json",
-            "artifacts/dashboards/delivery/definition.json"
+            "artifacts/dashboards/delivery/definition.json",
+            "artifacts/functions/source-management.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "management": {
+        "schemaVersion": 1,
+        "health": {
+            "functionId": "manageMondialRelaySource"
+        },
+        "settings": {
+            "readFunctionId": "manageMondialRelaySource",
+            "saveFunctionId": "manageMondialRelaySource",
+            "applyFunctionId": "manageMondialRelaySource",
+            "fields": [
+                {
+                    "id": "mondialRelayConnectEndpoint",
+                    "path": "mondialRelayConnectEndpoint",
+                    "label": "Mondial Relay Connect endpoint",
+                    "type": "select",
+                    "required": true,
+                    "options": [
+                        {
+                            "label": "Sandbox",
+                            "value": "https://connect-api-sandbox.mondialrelay.com/api/shipment"
+                        },
+                        {
+                            "label": "Production",
+                            "value": "https://connect-api.mondialrelay.com/api/shipment"
+                        }
+                    ]
+                },
+                {
+                    "id": "mondialRelayConnectLogin",
+                    "path": "mondialRelayConnectLogin",
+                    "label": "Mondial Relay Connect login",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "id": "mondialRelayConnectPassword",
+                    "path": "mondialRelayConnectPassword",
+                    "label": "Mondial Relay Connect password",
+                    "type": "secret-ref",
+                    "required": true
+                },
+                {
+                    "id": "mondialRelayConnectCustomerId",
+                    "path": "mondialRelayConnectCustomerId",
+                    "label": "Mondial Relay Connect customer id",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "id": "mondialRelayTrackingEndpoint",
+                    "path": "mondialRelayTrackingEndpoint",
+                    "label": "Mondial Relay tracking WebService endpoint",
+                    "type": "select",
+                    "required": true,
+                    "options": [
+                        {
+                            "label": "Production WebService",
+                            "value": "https://api.mondialrelay.com/WebService.asmx"
+                        }
+                    ]
+                },
+                {
+                    "id": "mondialRelayTrackingBrand",
+                    "path": "mondialRelayTrackingBrand",
+                    "label": "Mondial Relay WebService brand",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "id": "mondialRelayTrackingPrivateKey",
+                    "path": "mondialRelayTrackingPrivateKey",
+                    "label": "Mondial Relay WebService private key",
+                    "type": "secret-ref",
+                    "required": true
+                }
+            ]
+        },
+        "runtimeSecrets": {
+            "MONDIAL_RELAY_CONNECT_ENDPOINT": {
+                "field": "mondialRelayConnectEndpoint"
+            },
+            "MONDIAL_RELAY_CONNECT_LOGIN": {
+                "field": "mondialRelayConnectLogin"
+            },
+            "MONDIAL_RELAY_CONNECT_PASSWORD": {
+                "field": "mondialRelayConnectPassword"
+            },
+            "MONDIAL_RELAY_CONNECT_CUSTOMER_ID": {
+                "field": "mondialRelayConnectCustomerId"
+            },
+            "MONDIAL_RELAY_WIDGET_BRAND": {
+                "field": "mondialRelayConnectCustomerId"
+            },
+            "MONDIAL_RELAY_TRACKING_ENDPOINT": {
+                "field": "mondialRelayTrackingEndpoint"
+            },
+            "MONDIAL_RELAY_TRACKING_BRAND": {
+                "field": "mondialRelayTrackingBrand"
+            },
+            "MONDIAL_RELAY_TRACKING_PRIVATE_KEY": {
+                "field": "mondialRelayTrackingPrivateKey"
+            }
+        }
+    }
 }

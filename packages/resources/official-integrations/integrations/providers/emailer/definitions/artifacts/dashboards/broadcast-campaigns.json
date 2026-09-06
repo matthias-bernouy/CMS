@@ -1,12 +1,12 @@
 {
   "type": "dashboard-view",
   "view": {
-        "id": "{{answers.id}}-broadcast-campaigns",
+        "id": "emailer-broadcast-campaigns",
         "meta": {
             "name": "Broadcast Campaigns",
             "icon": "send"
         },
-        "source": "{{answers.id}}-broadcast",
+        "source": "emailer-broadcast",
         "views": [
             {
                 "widget": "w-table",

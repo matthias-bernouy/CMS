@@ -23,17 +23,114 @@
     "generatedSecrets": {
         "$include": "configuration/generated-secrets.json"
     },
-    "provisions": {
-        "$include": "configuration/provisions.json"
-    },
     "connectors": {
         "$include": "configuration/connectors.json"
     },
     "artifacts": {
         "$files": [
             "artifacts/sources/primary/definition.json",
-            "artifacts/dashboards/marketplace-terms/root.json"
+            "artifacts/dashboards/marketplace-terms/root.json",
+            "artifacts/functions/source-management.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "management": {
+        "schemaVersion": 1,
+        "health": {
+            "functionId": "manageStripeConnectSource"
+        },
+        "settings": {
+            "readFunctionId": "manageStripeConnectSource",
+            "saveFunctionId": "manageStripeConnectSource",
+            "applyFunctionId": "manageStripeConnectSource",
+            "fields": [
+                {
+                    "id": "stripeSecretKey",
+                    "path": "stripeSecretKey",
+                    "label": "Stripe secret key",
+                    "type": "secret-ref",
+                    "required": true
+                },
+                {
+                    "id": "stripePublishableKey",
+                    "path": "stripePublishableKey",
+                    "label": "Stripe publishable key",
+                    "type": "secret-ref",
+                    "required": true
+                },
+                {
+                    "id": "defaultCountry",
+                    "path": "defaultCountry",
+                    "label": "Connected account country",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "id": "defaultCurrency",
+                    "path": "defaultCurrency",
+                    "label": "Payment currency",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "id": "sellerActivityDescription",
+                    "path": "sellerActivityDescription",
+                    "label": "Seller activity description",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "id": "sellerPayoutSchedule",
+                    "path": "sellerPayoutSchedule",
+                    "label": "Seller bank payout schedule",
+                    "type": "select",
+                    "required": true,
+                    "options": [
+                        {
+                            "label": "Daily",
+                            "value": "daily"
+                        },
+                        {
+                            "label": "Manual",
+                            "value": "manual"
+                        }
+                    ]
+                }
+            ]
+        },
+        "generatedSecrets": [
+            "stripeWebhookSecret",
+            "stripeConnectWebhookSecret",
+            "stripeConnectV2WebhookSecret"
+        ],
+        "runtimeSecrets": {
+            "STRIPE_SECRET_KEY": {
+                "field": "stripeSecretKey"
+            },
+            "STRIPE_PUBLISHABLE_KEY": {
+                "field": "stripePublishableKey"
+            },
+            "STRIPE_CONNECT_DEFAULT_COUNTRY": {
+                "field": "defaultCountry"
+            },
+            "STRIPE_CONNECT_DEFAULT_CURRENCY": {
+                "field": "defaultCurrency"
+            },
+            "STRIPE_CONNECT_SELLER_ACTIVITY_DESCRIPTION": {
+                "field": "sellerActivityDescription"
+            },
+            "STRIPE_WEBHOOK_SECRET": {
+                "generated": "stripeWebhookSecret"
+            },
+            "STRIPE_CONNECT_WEBHOOK_SECRET": {
+                "generated": "stripeConnectWebhookSecret"
+            },
+            "STRIPE_CONNECT_V2_WEBHOOK_SECRET": {
+                "generated": "stripeConnectV2WebhookSecret"
+            },
+            "STRIPE_CONNECT_SELLER_PAYOUT_SCHEDULE": {
+                "field": "sellerPayoutSchedule"
+            }
+        }
+    }
 }

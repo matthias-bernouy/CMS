@@ -3,6 +3,7 @@
     "transaction": "atomic",
     "entries": [
         { "file": "accounts-and-controls/schema-and-accounts.sql" },
+        { "file": "accounts-and-controls/source-settings.sql" },
         { "file": "accounts-and-controls/marketplace-terms-acceptances.sql" },
         { "file": "accounts-and-controls/platform-payout-controls.sql" },
         { "file": "accounts-and-controls/account-risk-and-payout-controls.sql" },

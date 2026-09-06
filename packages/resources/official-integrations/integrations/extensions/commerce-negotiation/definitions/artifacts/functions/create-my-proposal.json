@@ -120,7 +120,7 @@
             {
                 "id": "proposal",
                 "call": {
-                    "source": "{{answers.id}}",
+                    "source": "commerce-negotiation",
                     "endpoint": "createMyProposal",
                     "body": {
                         "offerId": "$steps.offer.offerId",

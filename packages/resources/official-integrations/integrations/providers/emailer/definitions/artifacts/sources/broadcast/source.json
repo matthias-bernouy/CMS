@@ -1,5 +1,5 @@
 {
-    "id": "{{answers.id}}-broadcast",
+    "id": "emailer-broadcast",
     "meta": {
         "name": "Newsletter Broadcast",
         "description": "Durable newsletter campaign queue backed by Supabase.",

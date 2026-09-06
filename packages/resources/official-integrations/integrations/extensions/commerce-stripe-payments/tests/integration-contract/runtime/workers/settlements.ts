@@ -24,6 +24,9 @@ export async function assertSettlementWorker(
                 identities,
                 fetchImpl: async (input, init) => {
                     const request = new Request(input, init);
+                    if (request.url === "https://stripe.test/configuration") {
+                        return Response.json({ sellerPayoutSchedule });
+                    }
                     releaseWorkerCalls.push(new URL(request.url).pathname);
                     if (request.url.includes("authorizeDueOrderReleases")) {
                         return Response.json({

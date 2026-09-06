@@ -1,3 +1,4 @@
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
@@ -48,6 +49,7 @@ export async function createHarness() {
 
     const result = await importIntegration(
         {
+            functions: new InMemoryFunctionRepository(),
             sources,
             secrets,
             roles,
@@ -56,7 +58,7 @@ export async function createHarness() {
             sourceOverlays,
             connectorDeployers: [deployer],
         },
-        { kind: "user-account", answers: { id: "user-account" }, options: {} },
+        { kind: "user-account", answers: {}, options: {} },
         [definition],
     );
     const functionSecrets = deployment?.functions[0]?.secrets ?? {};

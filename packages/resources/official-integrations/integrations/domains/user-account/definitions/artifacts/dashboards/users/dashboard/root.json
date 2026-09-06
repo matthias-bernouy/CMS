@@ -1,12 +1,12 @@
 {
-    "id": "{{answers.id}}-users",
+    "id": "user-account-users",
     "meta": {
         "name": "Users",
         "icon": {
             "path": "assets/users.svg"
         }
     },
-    "source": "{{answers.id}}",
+    "source": "user-account",
     "views": {
         "$include": "views/root.json"
     }

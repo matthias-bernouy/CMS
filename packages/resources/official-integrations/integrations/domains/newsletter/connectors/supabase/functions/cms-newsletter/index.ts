@@ -76,7 +76,25 @@ async function subscriptionRoute(request: Request): Promise<Response> {
 
 async function health(request: Request): Promise<Response> {
     requireCmsRequest(request);
-    return json({ ok: true });
+    let healthy = false;
+    try {
+        healthy = (await rest("subscriptions?select=email&limit=1", { method: "GET" })).ok;
+    } catch {
+        /* Return a structured storage failure. */
+    }
+    return json({
+        schemaVersion: 1,
+        configuration: { savedRevision: null, appliedRevision: null },
+        status: healthy ? "ready" : "blocked",
+        checkedAt: new Date().toISOString(),
+        checks: [
+            {
+                id: "storage",
+                status: healthy ? "ok" : "error",
+                message: healthy ? "Source storage is reachable." : "Source storage is unavailable.",
+            },
+        ],
+    });
 }
 
 async function listSubscriptions(request: Request): Promise<Response> {

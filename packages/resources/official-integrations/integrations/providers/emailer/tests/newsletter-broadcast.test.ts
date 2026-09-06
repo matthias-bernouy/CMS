@@ -46,7 +46,7 @@ describe("emailer newsletter broadcast 1.0.0", () => {
                 roles: new InMemoryRolesRepository(),
                 connectorDeployers: [deployer],
             },
-            { kind: "emailer", answers: { id: "emailer" }, options: {} },
+            { kind: "emailer", answers: {}, options: {} },
             [definition],
         );
         const fn = await functions.getFunction("sendNewsletterBroadcast");

@@ -26,9 +26,16 @@
             "artifacts/source-overlays/extra-fields.json",
             "artifacts/source-overlays/flat-metadata-fields.json",
             "artifacts/dashboards/fields/root.json",
-            "artifacts/dashboards/users/root.json"
+            "artifacts/dashboards/users/root.json",
+            "artifacts/functions/source-health.json"
         ]
     },
     "resources": [],
-    "type": "source"
+    "type": "source",
+    "management": {
+        "schemaVersion": 1,
+        "health": {
+            "functionId": "checkUserAccountHealth"
+        }
+    }
 }

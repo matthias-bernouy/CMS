@@ -1,5 +1,12 @@
 [
     {
+        "id": "providerConfiguration",
+        "call": {
+            "source": "{{dependencies.stripe.sourceId}}",
+            "endpoint": "getProviderConfiguration"
+        }
+    },
+    {
         "assert": {
             "condition": {
                 "all": [
@@ -56,10 +63,10 @@
                                     ":",
                                     "$item.payoutDelayDays",
                                     ":",
-                                    "{{answers.sellerPayoutSchedule}}"
+                                    "$steps.providerConfiguration.sellerPayoutSchedule"
                                 ]
                             },
-                            "payoutSchedule": "{{answers.sellerPayoutSchedule}}",
+                            "payoutSchedule": "$steps.providerConfiguration.sellerPayoutSchedule",
                             "minimumBalanceEur": "$item.sellerRequiredMinimumBalanceAmount",
                             "delayDaysOverride": "$item.payoutDelayDays",
                             "reason": "Commerce authorized settlement release"

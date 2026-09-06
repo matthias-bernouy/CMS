@@ -36,5 +36,8 @@
             "artifacts/functions/shipments/cancel-mondial-relay-shipment.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "extensionOf": {
+        "kind": "commerce"
+    }
 }

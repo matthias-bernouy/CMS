@@ -62,7 +62,7 @@
                     "path": "body.templateKey",
                     "label": "Template",
                     "control": "source-select",
-                    "source": "{{answers.id}}",
+                    "source": "emailer",
                     "endpoint": "listTemplates",
                     "params": {
                         "status": "active",
@@ -79,7 +79,7 @@
                     "seed": {
                         "type": "paths",
                         "dependsOn": "body.templateKey",
-                        "source": "{{answers.id}}",
+                        "source": "emailer",
                         "endpoint": "getTemplate",
                         "params": {
                             "key": "$body.templateKey"
@@ -113,7 +113,7 @@
                     {
                         "id": "message",
                         "call": {
-                            "source": "{{answers.id}}",
+                            "source": "emailer",
                             "endpoint": "sendTemplateEmail",
                             "body": {
                                 "key": "$input.body.templateKey",

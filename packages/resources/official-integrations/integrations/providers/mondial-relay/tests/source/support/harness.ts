@@ -1,3 +1,4 @@
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import {
     importIntegration,
     type IntegrationBlocArtifact,
@@ -47,6 +48,7 @@ export async function createHarness(options: HarnessOptions = {}) {
     }
     const result = await importIntegration(
         {
+            functions: new InMemoryFunctionRepository(),
             sources,
             secrets,
             roles,
@@ -61,12 +63,19 @@ export async function createHarness(options: HarnessOptions = {}) {
                 },
             },
         },
-        { kind: "mondial-relay", answers: integrationAnswers(), options: {} },
+        { kind: "mondial-relay", answers: {}, options: {} },
         [hydratedDefinition],
     );
     const functionSecrets = deployment?.functions[0]?.secrets ?? {};
     setActiveEnvironment({
         ...Object.fromEntries(Object.entries(functionSecrets).map(([key, value]) => [key, String(value)])),
+        MONDIAL_RELAY_CONNECT_ENDPOINT: integrationAnswers().mondialRelayConnectEndpoint!,
+        MONDIAL_RELAY_CONNECT_LOGIN: integrationAnswers().mondialRelayConnectLogin!,
+        MONDIAL_RELAY_CONNECT_PASSWORD: integrationAnswers().mondialRelayConnectPassword!,
+        MONDIAL_RELAY_CONNECT_CUSTOMER_ID: integrationAnswers().mondialRelayConnectCustomerId!,
+        MONDIAL_RELAY_TRACKING_ENDPOINT: integrationAnswers().mondialRelayTrackingEndpoint!,
+        MONDIAL_RELAY_TRACKING_BRAND: integrationAnswers().mondialRelayTrackingBrand!,
+        MONDIAL_RELAY_TRACKING_PRIVATE_KEY: integrationAnswers().mondialRelayTrackingPrivateKey!,
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SECRET_KEYS: JSON.stringify({
             default: "sb_secret_delivery_test",

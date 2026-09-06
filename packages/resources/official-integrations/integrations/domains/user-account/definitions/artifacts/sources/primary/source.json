@@ -1,5 +1,5 @@
 {
-    "id": "{{answers.id}}",
+    "id": "user-account",
     "meta": {
         "name": "User Personal Information",
         "description": "Supabase-backed personal information endpoints and dashboard reads.",

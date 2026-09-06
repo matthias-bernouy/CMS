@@ -18,5 +18,8 @@
             "artifacts/functions/get-relay-point-for-order.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "extensionOf": {
+        "kind": "commerce"
+    }
 }

@@ -191,7 +191,25 @@ Deno.serve(async (request) => {
 
 async function health(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
-    return json({ ok: true });
+    let healthy = false;
+    try {
+        healthy = (await rest("accounts?select=cms_user_id&limit=1", { method: "GET" })).ok;
+    } catch {
+        /* Return a structured storage failure. */
+    }
+    return json({
+        schemaVersion: 1,
+        configuration: { savedRevision: null, appliedRevision: null },
+        status: healthy ? "ready" : "blocked",
+        checkedAt: new Date().toISOString(),
+        checks: [
+            {
+                id: "storage",
+                status: healthy ? "ok" : "error",
+                message: healthy ? "Source storage is reachable." : "Source storage is unavailable.",
+            },
+        ],
+    });
 }
 
 async function getAccount(request: Request): Promise<Response> {

@@ -1,5 +1,5 @@
 {
-    "id": "{{answers.id}}",
+    "id": "stripe-connect",
     "meta": {
         "name": "Stripe Connect protected provider",
         "description": "Protected C2C Stripe provider commands and projections.",

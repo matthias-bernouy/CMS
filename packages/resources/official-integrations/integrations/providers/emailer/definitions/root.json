@@ -30,12 +30,86 @@
             "artifacts/functions/retry-newsletter-broadcast-failures.json",
             "artifacts/functions/send-newsletter-broadcast/root.json",
             "artifacts/dashboards/broadcast-campaigns.json",
-            "artifacts/dashboards/settings/root.json",
-            "artifacts/dashboards/templates/root.json"
+            "artifacts/dashboards/templates/root.json",
+            "artifacts/functions/source-management.json"
         ]
     },
     "dependencies": {
         "$include": "configuration/dependencies.json"
     },
-    "type": "source"
+    "type": "source",
+    "management": {
+        "schemaVersion": 1,
+        "health": {
+            "functionId": "manageEmailerSource"
+        },
+        "settings": {
+            "readFunctionId": "manageEmailerSource",
+            "saveFunctionId": "manageEmailerSource",
+            "applyFunctionId": "manageEmailerSource",
+            "fields": [
+                {
+                    "id": "smtpHost",
+                    "label": "SMTP host",
+                    "type": "text",
+                    "path": "smtpHost",
+                    "required": true
+                },
+                {
+                    "id": "smtpPort",
+                    "label": "SMTP port",
+                    "type": "text",
+                    "path": "smtpPort",
+                    "required": true
+                },
+                {
+                    "id": "smtpSecure",
+                    "label": "SMTP secure",
+                    "type": "select",
+                    "path": "smtpSecure",
+                    "options": [
+                        {
+                            "value": "false",
+                            "label": "No"
+                        },
+                        {
+                            "value": "true",
+                            "label": "Yes"
+                        }
+                    ]
+                },
+                {
+                    "id": "smtpUser",
+                    "label": "SMTP user",
+                    "type": "text",
+                    "path": "smtpUser",
+                    "required": true
+                },
+                {
+                    "id": "smtpPassword",
+                    "label": "SMTP password",
+                    "type": "secret-ref",
+                    "path": "smtpPassword"
+                },
+                {
+                    "id": "defaultFrom",
+                    "label": "Default from",
+                    "type": "text",
+                    "path": "defaultFrom",
+                    "required": true
+                },
+                {
+                    "id": "defaultReplyTo",
+                    "label": "Default reply-to",
+                    "type": "text",
+                    "path": "defaultReplyTo"
+                }
+            ]
+        },
+        "runtimeSecrets": {
+            "SMTP_PASSWORD": {
+                "field": "smtpPassword"
+            }
+        }
+    }
 }

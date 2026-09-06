@@ -1,3 +1,4 @@
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { afterAll, describe, expect, test } from "bun:test";
 import {
     importIntegration,
@@ -181,6 +182,7 @@ async function importNewsletter() {
 
     const result = await importIntegration(
         {
+            functions: new InMemoryFunctionRepository(),
             sources,
             secrets,
             roles,
@@ -194,7 +196,7 @@ async function importNewsletter() {
                 },
             },
         },
-        { kind: "newsletter", answers: { id: "newsletter" }, options: {} },
+        { kind: "newsletter", answers: {}, options: {} },
         [definition],
     );
 

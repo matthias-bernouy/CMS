@@ -55,6 +55,7 @@ export function starterDefinition(title: unknown): EditableDefinition {
     const formTitle = String(title ?? "Untitled form").trim() || "Untitled form";
     return {
         schemaVersion: 1,
+        configuration: { savedRevision: null, appliedRevision: null },
         title: formTitle,
         successMessage: "Your answers have been received.",
         steps: [

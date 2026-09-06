@@ -23,6 +23,7 @@
         "endpoints/admin/finance/disputes/stripe-dispute-evidence/root.json",
         "endpoints/admin/finance/disputes/accept-stripe-dispute.json",
         "endpoints/admin/reconciliation/provider-exception-management/root.json",
-        "endpoints/admin/operations/list-financial-operations/root.json"
+        "endpoints/admin/operations/list-financial-operations/root.json",
+        "endpoints/health/management.json"
     ]
 }

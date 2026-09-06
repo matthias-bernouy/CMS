@@ -1,10 +1,10 @@
 {
-    "id": "{{answers.id}}-delivery",
+    "id": "delivery-delivery",
     "meta": {
         "name": "Delivery",
         "icon": "truck"
     },
-    "source": "{{answers.id}}",
+    "source": "delivery",
     "views": {
         "$include": "views.json"
     }

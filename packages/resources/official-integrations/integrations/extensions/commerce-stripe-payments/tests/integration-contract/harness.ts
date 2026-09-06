@@ -46,7 +46,7 @@ export async function loadIntegrationContract(sellerPayoutSchedule = "daily") {
         },
         {
             kind: "commerce-stripe-payments",
-            answers: { sellerPayoutSchedule },
+            answers: {},
             options: {},
         },
         [definition],

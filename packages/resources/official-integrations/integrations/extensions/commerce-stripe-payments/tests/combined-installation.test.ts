@@ -89,27 +89,8 @@ describe("Commerce protected Stripe combined installation", () => {
             deps,
             installations,
         );
-        await install(
-            "stripe-connect",
-            {
-                id: "stripe-connect",
-                stripeSecretKey: "sk_test_combined_install",
-                stripePublishableKey: "pk_test_combined_install",
-                defaultCountry: "FR",
-                defaultCurrency: "eur",
-                sellerActivityDescription: "Second-hand marketplace test activity.",
-            },
-            definitions,
-            deps,
-            installations,
-        );
-        const linkingResult = await install(
-            "commerce-stripe-payments",
-            { sellerPayoutSchedule: "daily" },
-            definitions,
-            deps,
-            installations,
-        );
+        await install("stripe-connect", {}, definitions, deps, installations);
+        const linkingResult = await install("commerce-stripe-payments", {}, definitions, deps, installations);
 
         expect(
             deployments.map((deployment) => ({
@@ -188,6 +169,7 @@ describe("Commerce protected Stripe combined installation", () => {
             "getPaymentLegalRequirements",
             "getSellerSaleEnrollment",
             "getStripePaymentClientConfig",
+            "manageStripeConnectSource",
             "processDueOrderDeadlines",
             "reconcileProtectedPaymentSystems",
             "refreshMyProtectedPaymentCapability",

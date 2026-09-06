@@ -20,14 +20,13 @@ export function registerInstallationTest(): void {
         expect(broadcastSource).toBeTruthy();
         expect(validateSource(broadcastSource!)).toEqual([]);
         expect(templatesDashboard).toBeTruthy();
-        expect(settingsDashboard).toBeTruthy();
+        expect(settingsDashboard).toBeNull();
         expect(campaignsDashboard).toBeTruthy();
         expect(validateDashboard(templatesDashboard!, { source })).toEqual([]);
-        expect(validateDashboard(settingsDashboard!, { source })).toEqual([]);
         expect(validateDashboard(campaignsDashboard!, { source: broadcastSource })).toEqual([]);
         const templateDetail = templatesDashboard?.views.find((view) => view.id === "templateDetail");
         const settingsDetail = settingsDashboard?.views.find((view) => view.id === "emailerSettings");
-        if (templateDetail?.widget !== "w-detail" || settingsDetail?.widget !== "w-detail") {
+        if (templateDetail?.widget !== "w-detail") {
             throw new Error("emailer details not installed");
         }
         expect(templateDetail.actions?.find((action) => action.id === "saveTemplate")?.after).toEqual({
@@ -38,11 +37,8 @@ export function registerInstallationTest(): void {
         expect(templateDetail.actions?.find((action) => action.id === "archiveTemplate")?.after).toEqual({
             resource: "$result",
         });
-        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
-            resource: "$result",
-        });
         const dashboardJson = JSON.stringify(templatesDashboard);
-        const settingsJson = JSON.stringify(settingsDashboard);
+        const settingsJson = "";
         expect(dashboardJson).toContain("newTemplate");
         expect(dashboardJson).toContain("sendTestEmail");
         expect(dashboardJson).not.toContain("messagesTable");
@@ -54,7 +50,6 @@ export function registerInstallationTest(): void {
             sampleDataJson: "$field.sampleDataJson",
             metadata: "$resource.metadata",
         });
-        expect(settingsJson).toContain("emailerSettings");
         expect(harness.deployment?.dataApiSchemas).toEqual(["emailer", "broadcast"]);
         expect(
             harness.deployment?.schemas.map((schema) => ("manifest" in schema ? schema.manifest : schema.path)),

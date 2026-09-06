@@ -1,5 +1,5 @@
 {
-    "id": "{{answers.id}}",
+    "id": "commerce-negotiation",
     "meta": {
         "name": "Commerce negotiation",
         "description": "Bounded buyer price proposals for Commerce marketplace offers.",

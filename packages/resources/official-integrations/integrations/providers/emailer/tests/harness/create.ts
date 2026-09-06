@@ -117,9 +117,7 @@ async function importEmailer() {
         },
         {
             kind: "emailer",
-            answers: {
-                id: "emailer",
-            },
+            answers: {},
             options: {},
         },
         [definition],

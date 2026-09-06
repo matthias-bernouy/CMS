@@ -1,5 +1,5 @@
 {
-    "id": "{{answers.id}}",
+    "id": "emailer",
     "meta": {
         "name": "Emailer",
         "description": "Supabase-backed transactional email templates and system sends.",

@@ -1,9 +1,1 @@
-[
-    {
-        "name": "sellerPayoutSchedule",
-        "label": "Seller bank payout schedule",
-        "type": "text",
-        "required": true,
-        "defaultValue": "daily"
-    }
-]
+[]

@@ -1,5 +1,5 @@
 {
-    "id": "{{answers.id}}",
+    "id": "forms",
     "meta": {
         "name": "Forms",
         "description": "Published form definitions, submissions, and administrator workflows.",

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { StripeWebhookProvisioner } from "../../connectors/supabase/functions/cms-stripe-connect-management/lifecycle/webhooks/StripeWebhookProvisioner.ts";
+import { StripeWebhookProvisioner } from "../../../connectors/supabase/functions/cms-stripe-connect-management/lifecycle/webhooks/StripeWebhookProvisioner.ts";
 import { capturedRequest, json, stripeEndpoint, stripeWebhookDeployment } from "./provisioning-fixtures";
 
 describe("StripeWebhookProvisioner", () => {

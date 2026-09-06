@@ -21,15 +21,7 @@
                 "directory": "functions/cms-delivery",
                 "configPath": "supabase.config.toml",
                 "secrets": {
-                    "CMS_DELIVERY_API_KEY": "{{generated.cmsApiKey}}",
-                    "MONDIAL_RELAY_CONNECT_ENDPOINT": "{{answers.mondialRelayConnectEndpoint}}",
-                    "MONDIAL_RELAY_CONNECT_LOGIN": "{{answers.mondialRelayConnectLogin}}",
-                    "MONDIAL_RELAY_CONNECT_PASSWORD": "{{connectorSecrets.mondialRelayConnectPassword}}",
-                    "MONDIAL_RELAY_CONNECT_CUSTOMER_ID": "{{answers.mondialRelayConnectCustomerId}}",
-                    "MONDIAL_RELAY_WIDGET_BRAND": "{{answers.mondialRelayConnectCustomerId}}",
-                    "MONDIAL_RELAY_TRACKING_ENDPOINT": "{{answers.mondialRelayTrackingEndpoint}}",
-                    "MONDIAL_RELAY_TRACKING_BRAND": "{{answers.mondialRelayTrackingBrand}}",
-                    "MONDIAL_RELAY_TRACKING_PRIVATE_KEY": "{{connectorSecrets.mondialRelayTrackingPrivateKey}}"
+                    "CMS_DELIVERY_API_KEY": "{{generated.cmsApiKey}}"
                 }
             }
         ],
@@ -39,7 +31,7 @@
         "migration": {
             "install": {
                 "revision": 0,
-                "digest": "sha256:4c9e5e6fe54214e23aac5ce9e23dbba1706f50dba9c25850e53f788362906992",
+                "digest": "sha256:837ec2c832fc1fb2b6fc923a66ca1b98c0362a28a0b2c3187b90366855e70c28",
                 "coveredMigrations": []
             },
             "migrations": [],

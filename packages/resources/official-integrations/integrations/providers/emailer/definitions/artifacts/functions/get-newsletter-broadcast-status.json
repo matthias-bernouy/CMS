@@ -27,7 +27,7 @@
             {
                 "id": "campaign",
                 "call": {
-                    "source": "{{answers.id}}-broadcast",
+                    "source": "emailer-broadcast",
                     "endpoint": "getCampaign",
                     "params": {
                         "id": "$input.body.campaignId"

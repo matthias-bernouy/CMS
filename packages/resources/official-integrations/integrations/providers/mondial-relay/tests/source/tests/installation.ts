@@ -73,16 +73,7 @@ export function registerInstallationTests(): void {
         expect(dashboardJson).not.toContain('"path":"labelUrl"');
         expect(harness.deployment?.dataApiSchemas).toEqual(["delivery"]);
         const functionSecrets = harness.deployment?.functions[0]?.secrets ?? {};
-        expect(functionSecrets).toMatchObject({
-            MONDIAL_RELAY_CONNECT_ENDPOINT: connectEndpoint,
-            MONDIAL_RELAY_CONNECT_LOGIN: "connect-login",
-            MONDIAL_RELAY_CONNECT_PASSWORD: "connect-password",
-            MONDIAL_RELAY_CONNECT_CUSTOMER_ID: "TTMRSDBX",
-            MONDIAL_RELAY_WIDGET_BRAND: "TTMRSDBX",
-            MONDIAL_RELAY_TRACKING_ENDPOINT: trackingEndpoint,
-            MONDIAL_RELAY_TRACKING_BRAND: "BDTEST",
-            MONDIAL_RELAY_TRACKING_PRIVATE_KEY: "tracking-private-key",
-        });
+        expect(Object.keys(functionSecrets)).toEqual(["CMS_DELIVERY_API_KEY"]);
         expect(functionSecrets).not.toHaveProperty("MONDIAL_RELAY_SENDER_NAME");
         expect(functionSecrets).not.toHaveProperty("MONDIAL_RELAY_DEFAULT_MODE_COL");
         expect(harness.importedBlocs).toEqual([]);

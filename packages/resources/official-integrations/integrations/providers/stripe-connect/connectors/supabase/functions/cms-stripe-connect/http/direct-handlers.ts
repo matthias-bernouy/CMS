@@ -18,11 +18,12 @@ import { requestPaymentIntentCancellation } from "../routes/payments/cancellatio
 import { getProviderPayment, listProviderPayments } from "../routes/payments/dashboard.ts";
 import { acknowledgeCommerceProjection, failCommerceProjection } from "../routes/reconciliation/projections.ts";
 import { getProviderRefund, listProviderRefunds } from "../routes/refunds/dashboard.ts";
-import { connectConfig, health } from "../routes/system.ts";
+import { connectConfig, health, providerConfiguration } from "../routes/system.ts";
 import type { StripeConnectRouteHandlers } from "./router.ts";
 
 export const directStripeConnectHandlers = {
     health,
+    providerConfiguration,
     connectConfig,
     connectStatus,
     connectWallet,

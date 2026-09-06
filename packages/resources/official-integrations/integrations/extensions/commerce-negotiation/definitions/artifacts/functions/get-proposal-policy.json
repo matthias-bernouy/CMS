@@ -107,7 +107,7 @@
             {
                 "id": "policy",
                 "call": {
-                    "source": "{{answers.id}}",
+                    "source": "commerce-negotiation",
                     "endpoint": "getProposalPolicy",
                     "params": {
                         "offerId": "$steps.offer.offerId",

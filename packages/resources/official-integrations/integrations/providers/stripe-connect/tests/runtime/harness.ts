@@ -1,3 +1,4 @@
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import {
@@ -54,6 +55,7 @@ export async function createStripeConnectHarness() {
 
     const result = await importIntegration(
         {
+            functions: new InMemoryFunctionRepository(),
             sources,
             secrets,
             roles,
@@ -71,14 +73,7 @@ export async function createStripeConnectHarness() {
         },
         {
             kind: "stripe-connect",
-            answers: {
-                id: "stripe-connect",
-                stripeSecretKey: "sk_test_123",
-                stripePublishableKey: "pk_test_123",
-                defaultCountry: "FR",
-                defaultCurrency: "EUR",
-                sellerActivityDescription: "Sale of second-hand goods between individuals.",
-            },
+            answers: {},
             options: {},
         },
         [definition],
@@ -86,6 +81,14 @@ export async function createStripeConnectHarness() {
     const functionSecrets = deployment?.functions[0]?.secrets ?? {};
     setActiveEnvironment({
         ...Object.fromEntries(Object.entries(functionSecrets).map(([key, value]) => [key, String(value)])),
+        STRIPE_SECRET_KEY: "sk_test_123",
+        STRIPE_PUBLISHABLE_KEY: "pk_test_123",
+        STRIPE_WEBHOOK_SECRET: "whsec_test_123",
+        STRIPE_CONNECT_WEBHOOK_SECRET: "whsec_connect_test_456",
+        STRIPE_CONNECT_V2_WEBHOOK_SECRET: "whsec_connect_v2_test_789",
+        STRIPE_CONNECT_DEFAULT_COUNTRY: "FR",
+        STRIPE_CONNECT_DEFAULT_CURRENCY: "eur",
+        STRIPE_CONNECT_SELLER_ACTIVITY_DESCRIPTION: "Sale of second-hand goods between individuals.",
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SECRET_KEYS: JSON.stringify({ default: "supabase-secret-key" }),
     });

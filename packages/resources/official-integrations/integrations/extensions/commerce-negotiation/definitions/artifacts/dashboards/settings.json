@@ -1,8 +1,8 @@
 {
   "type": "dashboard-view",
   "view": {
-        "id": "{{answers.id}}-settings",
-        "source": "{{answers.id}}",
+        "id": "commerce-negotiation-settings",
+        "source": "commerce-negotiation",
         "meta": {
             "name": "Negotiation settings",
             "icon": {

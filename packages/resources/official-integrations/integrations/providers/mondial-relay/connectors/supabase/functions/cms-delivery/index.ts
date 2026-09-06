@@ -1,3 +1,4 @@
+import { manageSource } from "./routes/management/handler.ts";
 import { handleError, json, optionsResponse, routePath } from "./http.ts";
 import { health, migrationHealth } from "./routes/health.ts";
 import {
@@ -38,6 +39,9 @@ Deno.serve(async (request) => {
         }
 
         const route = routePath(request);
+        if (request.method === "POST" && route === "/source-management") {
+            return await manageSource(request);
+        }
         if (request.method === "GET" && route === "/health") {
             return health(request);
         }

@@ -113,3 +113,7 @@ create index if not exists emailer_messages_template_created_idx
 
 create index if not exists emailer_messages_status_created_idx
     on emailer.messages(status, created_at desc);
+
+alter table emailer.settings add column if not exists saved_revision text;
+alter table emailer.settings add column if not exists applied_revision text;
+alter table emailer.settings add column if not exists operation text not null default 'idle';

@@ -56,7 +56,7 @@ test("Forms 1.0.0 imports its source backend, dashboard views, and connector", a
             ],
             provisioners: [],
         },
-        { kind: "forms", answers: { id: "forms" }, options: {} },
+        { kind: "forms", answers: {}, options: {} },
         [definition as IntegrationDefinition],
     );
 
@@ -70,9 +70,11 @@ test("Forms 1.0.0 imports its source backend, dashboard views, and connector", a
         "source",
         "dashboard-view",
         "dashboard-view",
+        "function",
     ]);
     expect(result.artifacts.map((artifact) => artifact.type)).toEqual([
         "source",
+        "function",
         "dashboard-view",
         "dashboard-view",
         "dashboard",

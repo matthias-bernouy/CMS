@@ -1,4 +1,4 @@
-import type { IntegrationProvisionDeployment } from "../../connectors/supabase/functions/cms-stripe-connect-management/lifecycle/webhooks/contracts.ts";
+import type { IntegrationProvisionDeployment } from "../../../connectors/supabase/functions/cms-stripe-connect-management/lifecycle/webhooks/contracts.ts";
 
 export function stripeWebhookDeployment(
     eventsFrom: Array<"self" | "other_accounts"> = ["self"],

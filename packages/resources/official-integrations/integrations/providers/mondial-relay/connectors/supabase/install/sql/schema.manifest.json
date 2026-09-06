@@ -18,6 +18,7 @@
         { "file": "relay-selections/commands/reserve-shipment-creation.sql" },
         { "file": "relay-selections/access/reserve-shipment-creation-access.sql" },
         { "file": "settings/delivery-settings.sql" },
+        { "file": "settings/source-settings.sql" },
         { "file": "settings/read-relay-selection-setup-context.sql" },
         { "file": "tracking/shipment-events.sql" },
         { "file": "tracking/read-tracking-summary.sql" },

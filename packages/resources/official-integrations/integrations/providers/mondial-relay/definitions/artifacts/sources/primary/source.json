@@ -1,5 +1,5 @@
 {
-    "id": "{{answers.id}}",
+    "id": "delivery",
     "meta": {
         "name": "Mondial Relay Delivery",
         "description": "Supabase-backed protected shipment, label capability, tracking normalization, and reconciliation endpoints.",

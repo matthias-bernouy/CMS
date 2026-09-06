@@ -90,14 +90,22 @@ export function registerFoundationTests(): void {
         expect(serialized).not.toContain("mondial-relay-picker");
         expect(serialized).toContain("reconcileShipments");
         expect(serialized).toContain("recipientHandoffAt");
-        expect(definition?.inputs.find((input) => input.name === "mondialRelayConnectEndpoint")).toMatchObject({
+        expect(
+            (definition as any)?.management.settings.fields.find(
+                (input: any) => input.id === "mondialRelayConnectEndpoint",
+            ),
+        ).toMatchObject({
             type: "select",
             options: [
                 { label: "Sandbox", value: "https://connect-api-sandbox.mondialrelay.com/api/shipment" },
                 { label: "Production", value: "https://connect-api.mondialrelay.com/api/shipment" },
             ],
         });
-        expect(definition?.inputs.find((input) => input.name === "mondialRelayTrackingEndpoint")).toMatchObject({
+        expect(
+            (definition as any)?.management.settings.fields.find(
+                (input: any) => input.id === "mondialRelayTrackingEndpoint",
+            ),
+        ).toMatchObject({
             type: "select",
             options: [{ label: "Production WebService", value: "https://api.mondialrelay.com/WebService.asmx" }],
         });

@@ -27,8 +27,15 @@
         "$files": [
             "artifacts/sources/primary/definition.json",
             "artifacts/dashboards/forms/root.json",
-            "artifacts/dashboards/submissions/root.json"
+            "artifacts/dashboards/submissions/root.json",
+            "artifacts/functions/source-health.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "management": {
+        "schemaVersion": 1,
+        "health": {
+            "functionId": "checkFormsHealth"
+        }
+    }
 }

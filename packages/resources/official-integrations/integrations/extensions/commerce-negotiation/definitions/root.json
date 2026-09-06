@@ -29,5 +29,8 @@
             "artifacts/dashboards/settings.json"
         ]
     },
-    "type": "source"
+    "type": "source",
+    "extensionOf": {
+        "kind": "commerce"
+    }
 }

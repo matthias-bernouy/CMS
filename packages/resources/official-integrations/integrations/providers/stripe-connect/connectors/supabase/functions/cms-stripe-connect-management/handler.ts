@@ -1,3 +1,4 @@
+import { manageSource } from "./lifecycle/handler.ts";
 import { listSellerHeldPaymentCapabilities } from "./core/capabilities.ts";
 import { getMarketplaceTermsManagement, publishMarketplaceTermsManagement } from "./core/management.ts";
 import { handleError, json, optionsResponse, withMethod } from "./core/runtime.ts";
@@ -8,6 +9,9 @@ export async function handleMarketplaceTermsManagementRequest(request: Request):
             return optionsResponse();
         }
         const route = routePath(request);
+        if (route === "/source-management") {
+            return await withMethod(request, "POST", () => manageSource(request));
+        }
         if (route === "/marketplace-terms") {
             return await withMethod(request, "GET", () => getMarketplaceTermsManagement(request));
         }

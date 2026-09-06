@@ -1,12 +1,12 @@
 {
-    "id": "{{answers.id}}-fields",
+    "id": "user-account-fields",
     "meta": {
         "name": "Fields",
         "icon": {
             "path": "assets/fields.svg"
         }
     },
-    "source": "{{answers.id}}",
+    "source": "user-account",
     "views": {
         "$include": "views/root.json"
     }

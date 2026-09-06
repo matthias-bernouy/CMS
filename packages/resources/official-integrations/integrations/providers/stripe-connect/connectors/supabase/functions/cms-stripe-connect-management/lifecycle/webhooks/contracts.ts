@@ -9,6 +9,7 @@ export type IntegrationProvisionResourceResult = { type: string; id: string; act
 export type IntegrationProvisionDeployment = {
     integrationKind: string;
     version?: string;
+    operationId?: string;
     configuration: Record<string, IntegrationAnswerValue>;
     outputs: { name: string }[];
 };

@@ -1,6 +1,6 @@
 {
-    "id": "{{answers.id}}-proposals",
-    "source": "{{answers.id}}",
+    "id": "commerce-negotiation-proposals",
+    "source": "commerce-negotiation",
     "meta": {
         "name": "Price proposals",
         "icon": {

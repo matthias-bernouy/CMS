@@ -1,3 +1,4 @@
+import { createSourceManagement } from "./management.ts";
 type JsonRecord = Record<string, unknown>;
 
 type TemplateRow = {
@@ -39,6 +40,9 @@ type MessageRow = {
 };
 
 type SettingsRow = {
+    saved_revision?: string | null;
+    applied_revision?: string | null;
+    operation?: string;
     id: string;
     smtp_host: string | null;
     smtp_port: number | null;
@@ -68,6 +72,8 @@ type TokenDefinition = {
 };
 
 type EmailTransport = {
+    verify(): Promise<unknown>;
+    close?(): void;
     sendMail(input: {
         from: string;
         replyTo?: string;
@@ -133,6 +139,9 @@ const messageSelect = [
     "updated_at",
 ].join(",");
 const settingsSelect = [
+    "saved_revision",
+    "applied_revision",
+    "operation",
     "id",
     "smtp_host",
     "smtp_port",
@@ -145,6 +154,24 @@ const settingsSelect = [
     "updated_at",
 ].join(",");
 
+const manageSource = createSourceManagement({
+    authenticate: requireCmsRequest,
+    read: settingsRow,
+    rest,
+    values: (row) => publicSettings(row as SettingsRow | null),
+    patch: settingsPatch,
+    verify: async (row, password) => {
+        const transport = await emailTransport({ ...settingsFromRow(row as SettingsRow), smtpPassword: password });
+        try {
+            await transport.verify();
+        } finally {
+            transport.close?.();
+        }
+    },
+    fail: (status, message): never => {
+        throw new HttpError(status, message);
+    },
+});
 Deno.serve(async (request) => {
     try {
         if (request.method === "OPTIONS") {
@@ -152,6 +179,9 @@ Deno.serve(async (request) => {
         }
 
         const route = routePath(request);
+        if (route === "/source-management") {
+            return await withMethod(request, "POST", () => manageSource(request));
+        }
         if (route === "/health") {
             return await withMethod(request, "GET", () => health(request));
         }
@@ -214,7 +244,18 @@ async function templateRoute(request: Request): Promise<Response> {
 
 async function health(request: Request): Promise<Response> {
     requireCmsRequest(request);
-    return json({ ok: true });
+    return json({
+        schemaVersion: 1,
+        status: "unknown",
+        checkedAt: new Date().toISOString(),
+        checks: [
+            {
+                id: "smtp",
+                status: "unknown",
+                message: "Run Source Health to verify SMTP connection and authentication.",
+            },
+        ],
+    });
 }
 
 async function settings(request: Request): Promise<Response> {
@@ -224,9 +265,10 @@ async function settings(request: Request): Promise<Response> {
 
 async function updateSettings(request: Request): Promise<Response> {
     requireCmsRequest(request);
-    const patch = settingsPatch(await readJsonObject(request));
-    const row = await upsertSettingsRow(patch);
-    return json(publicSettings(row));
+    throw new HttpError(
+        409,
+        "Save SMTP settings through the Source Connection settings so credentials are validated and applied",
+    );
 }
 
 async function listTemplates(request: Request): Promise<Response> {
@@ -737,6 +779,9 @@ function settingsPatch(body: JsonRecord): JsonRecord {
         default_reply_to: optionalEmailValue(body.defaultReplyTo, "defaultReplyTo") ?? null,
     };
     const smtpPassword = optionalTextValue(body.smtpPassword, "smtpPassword", 1000);
+    if (smtpPassword && !/^\$\{[A-Za-z0-9_-]+\}$/.test(smtpPassword)) {
+        throw new HttpError(422, "Select an SMTP password secret reference");
+    }
     if (smtpPassword) {
         patch.smtp_password = smtpPassword;
     }
@@ -771,7 +816,11 @@ function templatePayload(body: JsonRecord): JsonRecord {
 }
 
 async function emailSettings(): Promise<EmailSettings> {
-    return settingsFromRow(await settingsRow());
+    const row = await settingsRow();
+    if (row?.saved_revision && row.saved_revision !== row.applied_revision) {
+        throw new HttpError(409, "Apply saved Emailer settings before sending messages");
+    }
+    return settingsFromRow(row);
 }
 
 function settingsFromRow(row: SettingsRow | null): EmailSettings {
@@ -780,7 +829,7 @@ function settingsFromRow(row: SettingsRow | null): EmailSettings {
         smtpPort: settingInteger(row?.smtp_port, "SMTP_PORT"),
         smtpSecure: settingBoolean(row?.smtp_secure, "SMTP_SECURE"),
         smtpUser: settingText(row?.smtp_user, "SMTP_USER"),
-        smtpPassword: settingText(row?.smtp_password, "SMTP_PASSWORD"),
+        smtpPassword: Deno.env.get("SMTP_PASSWORD") ?? "",
         defaultFrom: settingText(row?.default_from, "SMTP_FROM"),
         defaultReplyTo: settingText(row?.default_reply_to, "SMTP_REPLY_TO"),
     };
@@ -796,7 +845,7 @@ function publicSettings(row: SettingsRow | null): JsonRecord {
         smtpPort: settings.smtpPort === null ? "" : String(settings.smtpPort),
         smtpSecure: settings.smtpSecure ? "true" : "false",
         smtpUser: settings.smtpUser,
-        smtpPassword: "",
+        smtpPassword: /^\$\{[A-Za-z0-9_-]+\}$/.test(row?.smtp_password ?? "") ? row?.smtp_password : "",
         smtpPasswordConfigured: settings.smtpPassword ? "configured" : "missing",
         defaultFrom: settings.defaultFrom,
         defaultReplyTo: settings.defaultReplyTo,
@@ -913,6 +962,9 @@ async function emailTransport(settings: EmailSettings): Promise<EmailTransport> 
         throw new HttpError(500, "SMTP transport is not available");
     }
     return createTransport({
+        connectionTimeout: 15000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
         host: requiredSetting(settings.smtpHost, "SMTP host"),
         port: settings.smtpPort ?? missingSetting("SMTP port"),
         secure: settings.smtpSecure,

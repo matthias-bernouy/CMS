@@ -1,6 +1,6 @@
 {
-    "id": "{{answers.id}}-settings",
-    "source": "{{answers.id}}",
+    "id": "emailer-settings",
+    "source": "emailer",
     "meta": {
         "name": "Settings",
         "icon": "settings"
