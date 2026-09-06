@@ -77,8 +77,9 @@ All 24 pre-existing offers were preserved. The 13 active approved offers were
 already unavailable before migration; the public production home page showed the
 same empty-offers state during read-only comparison.
 
-Backups, migration journals, row hashes, and browser evidence remain under the
-local site's private `.ulvia/source-lifecycle-20260906/` directory. They are not
+Backups, migration journals, row hashes, and administration evidence remain under
+the local site's private `.ulvia/source-lifecycle-20260906/` directory. Public
+journey evidence and screenshots are in `.ulvia/review-20260906/`. These are not
 repository artifacts. Production received no mutation or deployment.
 
 During the migration, `CMS_SCHEDULED_TRIGGERS_ENABLED=false` prevented scheduled
