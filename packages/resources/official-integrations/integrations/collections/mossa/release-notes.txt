@@ -1,3 +1,5 @@
+Major release: existing accordion items now require the Ulvia space-sm token, and seller onboarding now requires secondary-foreground for readable buttons and balances. Themes must provide these tokens before upgrading; the strict theme contract has no fallback values.
+
 Add a responsive, theme-driven footer with navigation, copyright, and legal slots. Add muted inherited links and soften inherited outlined button borders. Restore secondary editorial subtitle contrast and make default accordion spacing smaller than the large size.
 
 Preserve accepted consent versions as an array when a context requires a single document. The consent field now uses explicit array form names, supported by the Binding Core serializer, while ordinary single-value fields remain scalars. Add one-document and multiple-document submission regression coverage.

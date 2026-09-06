@@ -11,13 +11,13 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { parseTableData } from "../blocs/foundation/content/display/table/tableData";
 import { buildBloc, decodeDefaultContent, decodeSource } from "./source";
 
-describe("Mossa collection 1.2.0", () => {
+describe("Mossa collection 2.0.0", () => {
     test("publishes one site-neutral, fully namespaced catalogue", async () => {
         const { definitions, mossa } = await catalogue();
         const artifacts = blocArtifacts(mossa);
         const tags = artifacts.map(({ bloc }) => bloc.tag);
 
-        expect(mossa.version).toBe("1.2.0");
+        expect(mossa.version).toBe("2.0.0");
         expect(mossa.resources).toHaveLength(96);
         expect(artifacts).toHaveLength(96);
         expect(new Set(tags).size).toBe(tags.length);
