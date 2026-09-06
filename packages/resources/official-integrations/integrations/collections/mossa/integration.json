@@ -5,11 +5,11 @@
     "label": "Mossa",
     "category": "Official blocks",
     "description": "The official reusable Mossa block collection, styled through the Ulvia token system.",
-    "stable": "4.0.0",
-    "latest": "4.0.0",
+    "stable": "4.1.0",
+    "latest": "4.1.0",
     "versions": [
         {
-            "version": "4.0.0",
+            "version": "4.1.0",
             "path": ".",
             "definition": "definition.json"
         }

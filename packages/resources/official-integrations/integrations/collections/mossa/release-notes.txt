@@ -1,3 +1,7 @@
+Add optional copy attributes for populated sales and purchases, offer metadata, and private-list pagination. Keep English defaults and existing pagination label attributes compatible; copy changes update loaded purchase cards without refetching.
+
+Use neutral tones for secondary list, negotiation, and withdrawal actions. Keep pagination controls on one row and show the existing proposal placeholder when an offer image cannot load.
+
 Major release: public offer controllers now require the declared Commerce offerFilterSchema endpoint to display product specifications with public category labels and units. Existing installations must satisfy this endpoint contract before upgrading.
 
 Render public offer specifications from the loaded product and its declared public category schema, retaining labels, units, complete variant choices, and configured valuation exclusions. Keep explicit offer specifications when optional lookups fail. Disable negotiation as well as purchase for unavailable offers. Public offer titles inherit interface typography.
