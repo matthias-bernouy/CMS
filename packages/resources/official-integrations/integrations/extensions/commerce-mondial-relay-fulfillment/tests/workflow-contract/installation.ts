@@ -8,7 +8,7 @@ import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { installationsForFulfillment, sourcesForFulfillment } from "./harness";
 
 export function registerInstallationTests(): void {
-    test.each(["1.0.0", "2.0.0"])("installs seller-only fulfillment with provider %s", async (providerVersion) => {
+    test.each(["1.0.0", "1.1.0"])("installs seller-only fulfillment with provider %s", async (providerVersion) => {
         const sources = await sourcesForFulfillment();
         const functions = new InMemoryFunctionRepository();
         const roles = new InMemoryRolesRepository();

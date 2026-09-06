@@ -97,7 +97,7 @@ describe("Commerce current seller identity contract", () => {
     test("keeps the identity lookup outside dynamic seller overlays", async () => {
         const definition = await loadIntegrationDefinition<any>(commerceDefinitionUrl);
         const sellerOverlay = definition.artifacts?.find(
-            (artifact: { overlay?: { id?: string } }) => artifact.overlay?.id === "{{answers.id}}-seller-custom-fields",
+            (artifact: { overlay?: { id?: string } }) => artifact.overlay?.id === "commerce-seller-custom-fields",
         )?.overlay;
         const outputEndpoints = sellerOverlay?.output?.map((output: { endpointId?: string }) => output.endpointId);
 

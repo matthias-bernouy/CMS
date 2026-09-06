@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "commerce-mondial-relay-fulfillment",
     "label": "Commerce Mondial Relay fulfillment",
-    "version": "1.1.0",
+    "version": "1.0.0",
     "category": "Delivery",
     "description": "Seller-only Mondial Relay 24R fulfillment with Commerce authorization and system reconciliation.",
     "inputs": [],

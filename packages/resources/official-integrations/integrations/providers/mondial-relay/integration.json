@@ -4,11 +4,11 @@
     "label": "Mondial Relay Delivery",
     "category": "Delivery",
     "description": "Create and reconcile single-parcel Mondial Relay 24R shipments with protected seller label access and normalized carrier facts.",
-    "stable": "2.0.0",
-    "latest": "2.0.0",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
     "versions": [
         {
-            "version": "2.0.0",
+            "version": "1.0.0",
             "path": ".",
             "definition": "definition.json"
         }

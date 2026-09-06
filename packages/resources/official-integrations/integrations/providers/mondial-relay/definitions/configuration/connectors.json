@@ -35,15 +35,7 @@
                 "coveredMigrations": []
             },
             "migrations": [],
-            "supportedSources": [
-                {
-                    "range": "1.0.0",
-                    "migrationRevision": 0,
-                    "legacyAdoption": {
-                        "$include": "compatibility/legacy-1.0.0.json"
-                    }
-                }
-            ],
+            "supportedSources": [],
             "cmsMediated": {
                 "strategy": "binding-switch",
                 "drainSeconds": 1,

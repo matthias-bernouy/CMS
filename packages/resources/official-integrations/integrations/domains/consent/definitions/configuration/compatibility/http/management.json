@@ -1,0 +1,73 @@
+[
+    {
+        "route": "/management",
+        "method": "POST",
+        "requiredInputs": [],
+        "requiredHeaders": [
+            "authorization",
+            "x-cms-user-id"
+        ],
+        "responses": [
+            {
+                "status": "200"
+            },
+            {
+                "status": "400"
+            },
+            {
+                "status": "409"
+            },
+            {
+                "status": "422"
+            },
+            {
+                "status": "503"
+            },
+            {
+                "status": "default"
+            }
+        ]
+    },
+    {
+        "route": "/operations/accept",
+        "method": "POST",
+        "requiredInputs": [
+            "contextKey",
+            "operationKey",
+            "cmsUserId",
+            "acceptedVersionIds",
+            "metadata"
+        ],
+        "requiredHeaders": [
+            "authorization"
+        ],
+        "responses": [
+            {
+                "status": "200"
+            },
+            {
+                "status": "default"
+            }
+        ]
+    },
+    {
+        "route": "/operations/receipt",
+        "method": "POST",
+        "requiredInputs": [
+            "contextKey",
+            "operationKey",
+            "cmsUserId"
+        ],
+        "requiredHeaders": [
+            "authorization"
+        ],
+        "responses": [
+            {
+                "status": "200"
+            },
+            {
+                "status": "default"
+            }
+        ]
+    }
+]

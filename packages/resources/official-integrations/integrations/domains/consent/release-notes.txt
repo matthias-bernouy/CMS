@@ -1,1 +1,1 @@
-Initial Consent release: publish the source-only consent configuration and acceptance lifecycle.
+Initial 1.0.0 release: publish source-owned consent contexts, versioned published document snapshots, account acceptance, and business-operation acceptance evidence. Source settings use published CMS page references; installation has no questionnaire. Legal document versions and acceptance hashes retain their independent evidence semantics.

@@ -1,1 +1,1 @@
-Initial Stripe Connect release: publish the source-only provider contracts, hardened synchronization, local simulator, and current database installation baseline.
+Initial 1.0.0 release: publish Stripe Connect payment and seller contracts with integration-owned Connection settings, credential validation, idempotent owned webhook reconciliation, saved and applied revisions, and structured health. Provider credentials remain scoped secret references. Installation succeeds before provider configuration; local provider simulation remains explicit.

@@ -39,7 +39,7 @@ export async function installedFunctions() {
 }
 
 export async function installationsForFulfillment(
-    providerVersion = "2.0.0",
+    providerVersion = "1.0.0",
 ): Promise<InMemoryIntegrationInstallationRepository> {
     const repository = new InMemoryIntegrationInstallationRepository();
     for (const [id, sourceId, definitionVersion] of [

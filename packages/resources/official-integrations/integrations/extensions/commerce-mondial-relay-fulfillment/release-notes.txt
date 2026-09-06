@@ -1,1 +1,1 @@
-Accept Mondial Relay provider versions 1 and 2 while preserving the existing delivery workflow contracts and resource ownership.
+Initial 1.0.0 release: compose Commerce and Mondial Relay 1.x with seller-scoped delivery contracts and workflow ownership attached to the Commerce Source. Installation has no questionnaire.

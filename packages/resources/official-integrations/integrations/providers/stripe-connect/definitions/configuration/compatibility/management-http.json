@@ -4,23 +4,96 @@
             "route": "/marketplace-terms",
             "method": "GET",
             "requiredInputs": [],
-            "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
-            "responses": [{ "status": "200" }, { "status": "default" }]
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
         },
         {
             "route": "/marketplace-terms/publish",
             "method": "POST",
-            "requiredInputs": ["expectedVersion", "documentKey", "label", "consentText", "publishedSnapshotUrl"],
-            "requiredHeaders": ["authorization", "x-cms-user-id", "x-cms-user-role"],
-            "responses": [{ "status": "200" }, { "status": "default" }]
+            "requiredInputs": [
+                "expectedVersion",
+                "documentKey",
+                "label",
+                "consentText",
+                "publishedSnapshotUrl"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
         },
         {
             "route": "/seller-capabilities",
             "method": "POST",
             "requiredInputs": [],
-            "requiredHeaders": ["authorization"],
-            "responses": [{ "status": "200" }, { "status": "default" }]
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "default"
+                }
+            ]
+        },
+        {
+            "route": "/source-management",
+            "method": "POST",
+            "requiredInputs": [
+                "operation",
+                "installationId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "401"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                },
+                {
+                    "status": "502"
+                },
+                {
+                    "status": "503"
+                }
+            ]
         }
     ],
-    "requiredSecrets": ["CMS_STRIPE_CONNECT_API_KEY"]
+    "requiredSecrets": [
+        "CMS_STRIPE_CONNECT_API_KEY"
+    ]
 }

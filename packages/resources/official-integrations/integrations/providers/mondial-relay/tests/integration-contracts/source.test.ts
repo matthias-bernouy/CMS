@@ -13,7 +13,7 @@ import { registerProviderErrorTests } from "../source/workflows/provider-errors.
 import { registerRecoveryTests } from "../source/workflows/recovery.ts";
 import { registerLabelValidationTests } from "../source/workflows/label-validation.ts";
 
-describe("mondial-relay 2.0.0 source", () => {
+describe("mondial-relay 1.0.0 source", () => {
     registerFoundationTests();
     registerInstallationTests();
     registerShipmentReadTests();

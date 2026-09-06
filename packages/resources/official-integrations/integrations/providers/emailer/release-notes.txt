@@ -1,1 +1,1 @@
-Initial Emailer release: publish the provider contracts and reusable operator views while dashboard composition remains CMS-owned.
+Initial 1.0.0 release: publish email templates, broadcast contracts, and source-owned SMTP Connection settings. Scoped password references are verified without sending mail; SMTP authentication is optional. Saved and applied revisions prevent sending with unapplied settings. Operator views remain composed by the CMS.

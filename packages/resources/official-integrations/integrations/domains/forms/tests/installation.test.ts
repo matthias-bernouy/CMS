@@ -12,10 +12,8 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
-import { readIntegrationPackageDirectory } from "@bernouy/cms-integration-packages/fs";
 
 const integrationsRoot = new URL("../../..", import.meta.url).pathname;
-const formsRoot = new URL("../", import.meta.url).pathname;
 
 test("Forms 1.0.0 imports its source backend, dashboard views, and connector", async () => {
     const definitions = new FsIntegrationDefinitionRepository(integrationsRoot);
@@ -82,22 +80,4 @@ test("Forms 1.0.0 imports its source backend, dashboard views, and connector", a
     expect((await dashboards.getAllDashboards()).map((dashboard) => dashboard.id)).toEqual(["forms"]);
     expect(deployment?.dataApiSchemas).toEqual(["forms"]);
     expect(deployment?.functions.map((fn) => fn.name)).toEqual(["cms-forms"]);
-});
-
-test("retains the Forms 1.0.0 verification against its immutable package", async () => {
-    const integrationPackage = await readIntegrationPackageDirectory({
-        root: formsRoot,
-        kind: "forms",
-        version: "1.0.0",
-        definition: "definition.json",
-        releaseNotes: "release-notes.txt",
-        excludeRootEntries: ["integration.json", "tests"],
-    });
-    const verification = await Bun.file(new URL("./verification/1.0.0.json", import.meta.url)).json();
-
-    expect(verification.target).toEqual({
-        kind: "forms",
-        version: "1.0.0",
-        packageDigest: integrationPackage.digest,
-    });
 });

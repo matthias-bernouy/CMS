@@ -7,7 +7,7 @@ import { InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
 import { relaySources } from "./sources";
 
 describe("Commerce Mondial Relay delivery installation", () => {
-    test.each(["1.0.0", "2.0.0"])("imports relay functions with provider %s", async (providerVersion) => {
+    test.each(["1.0.0", "1.1.0"])("imports relay functions with provider %s", async (providerVersion) => {
         const sources = await relaySources();
         const functions = new InMemoryFunctionRepository();
         const installations = new InMemoryIntegrationInstallationRepository();

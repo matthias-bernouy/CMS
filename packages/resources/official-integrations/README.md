@@ -2,13 +2,14 @@
 
 Authoring sources for official CmsCore integration resources.
 
-This package intentionally stores declarative resources only. Installation
-behavior belongs to `@bernouy/cms-integrations`.
+This package stores declarative resources and deployable connector source. Generic
+installation orchestration belongs to `@bernouy/cms-integrations`; provider
+configuration, reconciliation, and health belong to the integration.
 
 ## Layout
 
 ```text
-integrations/<kind>/
+integrations/<group>/<kind>/
 |-- integration.json
 |-- release-notes.txt
 |-- definition.json
@@ -32,7 +33,7 @@ runtime package, as are `tests/`.
 `definition.json` is the version entry point. It may contain the definition
 directly or declare a recursive bundle rooted under `definitions/`; resolution
 always produces one canonical installable definition whose `kind` and `version`
-match the root index and version directory.
+match the root index.
 
 Provider-specific deployment assets live under `connectors/<provider>/`.
 Supabase SQL units use explicit

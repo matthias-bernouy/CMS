@@ -1,1 +1,1 @@
-Initial Commerce release: publish the source-only commerce contracts, authenticated custom-field reads, and current offer and order read models.
+Initial 1.0.0 release: publish source-owned commerce settings, authenticated custom-field reads, and offer and order models. Buyer document requirements and immutable acceptance evidence belong to Consent; Commerce retains payment-operation references. Installation has no questionnaire.

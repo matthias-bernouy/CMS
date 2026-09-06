@@ -34,7 +34,7 @@ import {
 import { InMemoryTriggerRepository, validateTrigger } from "@bernouy/cms-triggers";
 import { stripeWebhookProvisioner } from "../../../../tests/helpers/stripeWebhookProvisioner";
 
-const INTEGRATION_KINDS = ["commerce", "stripe-connect", "commerce-stripe-payments"] as const;
+const INTEGRATION_KINDS = ["consent", "commerce", "stripe-connect", "commerce-stripe-payments"] as const;
 
 describe("Commerce protected Stripe combined installation", () => {
     test("installs the real dependency graph with compatible contracts and least-privilege access", async () => {
@@ -77,18 +77,13 @@ describe("Commerce protected Stripe combined installation", () => {
             connectorDeployers: [connectorDeployer],
             provisioners: [stripeWebhookProvisioner()],
             sourceExecutorDeps: {
-                fetchImpl: async (input) => afterInstallationResponse(new Request(input)),
+                fetchImpl: async (input, init) => afterInstallationResponse(new Request(input, init)),
                 resolveSecret: async () => "combined-install-cms-api-key",
             },
         };
 
-        await install(
-            "commerce",
-            { id: "commerce", buyerLegalEnabled: false, buyerLegalDocuments: [] },
-            definitions,
-            deps,
-            installations,
-        );
+        await install("consent", {}, definitions, deps, installations);
+        await install("commerce", {}, definitions, deps, installations);
         await install("stripe-connect", {}, definitions, deps, installations);
         const linkingResult = await install("commerce-stripe-payments", {}, definitions, deps, installations);
 
@@ -100,6 +95,12 @@ describe("Commerce protected Stripe combined installation", () => {
                 functions: deployment.functions.map((fn) => fn.name),
             })),
         ).toEqual([
+            {
+                integrationKind: "consent",
+                dataApiSchemas: ["consent"],
+                schemas: ["install/sql/schema.manifest.json"],
+                functions: ["cms-consent"],
+            },
             {
                 integrationKind: "commerce",
                 dataApiSchemas: ["commerce"],
@@ -125,7 +126,11 @@ describe("Commerce protected Stripe combined installation", () => {
         }
 
         const installedSources = await sources.getAllSources();
-        expect(installedSources.map((source) => source.urn).sort()).toEqual(["urn:commerce", "urn:stripe-connect"]);
+        expect(installedSources.map((source) => source.urn).sort()).toEqual([
+            "urn:commerce",
+            "urn:consent",
+            "urn:stripe-connect",
+        ]);
         for (const source of installedSources) {
             expect(validateSource(source)).toEqual([]);
         }
@@ -157,6 +162,7 @@ describe("Commerce protected Stripe combined installation", () => {
         const installedFunctions = await functions.getAllFunctions();
         expect(installedFunctions.map((fn) => fn.id).sort()).toEqual([
             "applyPlatformPayoutLiabilityDecrease",
+            "commitConsentAcceptance",
             "createPaymentForOrder",
             "createProtectedOrder",
             "dispatchDueProtectedSettlements",
@@ -169,11 +175,14 @@ describe("Commerce protected Stripe combined installation", () => {
             "getPaymentLegalRequirements",
             "getSellerSaleEnrollment",
             "getStripePaymentClientConfig",
+            "manageCommerce",
+            "manageConsent",
             "manageStripeConnectSource",
             "processDueOrderDeadlines",
             "reconcileProtectedPaymentSystems",
             "refreshMyProtectedPaymentCapability",
             "refreshPaymentForOrder",
+            "stageConsentAcceptance",
             "submitSellerOfferPrice",
         ]);
         for (const fn of installedFunctions) {
@@ -183,6 +192,8 @@ describe("Commerce protected Stripe combined installation", () => {
 
         const installedTriggers = await triggers.getAllTriggers();
         expect(installedTriggers.map((trigger) => trigger.id).sort()).toEqual([
+            "consent-commit-target",
+            "consent-stage-target",
             "execute-authorized-settlement-release",
             "execute-buyer-cancellation-refund",
             "execute-buyer-payment-cancellation",
@@ -205,7 +216,7 @@ describe("Commerce protected Stripe combined installation", () => {
             if (trigger.function) {
                 expect(await functions.getFunction(trigger.function.id)).not.toBeNull();
             }
-            if (trigger.event.kind === "endpoint") {
+            if (trigger.event.kind === "endpoint" && trigger.event.source !== "system-auth") {
                 expect(
                     await sources.getEndpoint(
                         makeEndpointUrn(trigger.event.source ?? "", trigger.event.endpoint ?? ""),
@@ -273,6 +284,8 @@ describe("Commerce protected Stripe combined installation", () => {
             "commerce-stripe-payments-operations",
             "commerce-taxonomy",
             "commerce-workflow",
+            "consent-acceptances",
+            "consent-contexts",
             "stripe-connect-marketplace-terms",
         ]);
         for (const dashboard of installedDashboards) {
@@ -331,7 +344,17 @@ describe("Commerce protected Stripe combined installation", () => {
     }, 60_000);
 });
 
-function afterInstallationResponse(request: Request): Response {
+async function afterInstallationResponse(request: Request): Promise<Response> {
+    if (request.url.includes("/cms-consent/context/bootstrap")) {
+        const { contextKey } = await request.json();
+        return Response.json({
+            contextKey,
+            enabled: false,
+            status: "inactive",
+            revision: "test-revision",
+            documents: [],
+        });
+    }
     if (request.url.includes("/cms-stripe-connect-management/seller-capabilities")) {
         return Response.json({
             readySellerCmsUserIds: [],
@@ -347,9 +370,6 @@ function afterInstallationResponse(request: Request): Response {
             readyCount: 0,
             notReadyCount: 0,
         });
-    }
-    if (request.url.includes("/cms-commerce/system/buyer-legal-documents/sync")) {
-        return Response.json({ enabled: false, documents: [] });
     }
     return Response.json({ error: `unexpected after-installation request: ${request.url}` }, { status: 500 });
 }

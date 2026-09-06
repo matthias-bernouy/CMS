@@ -4,11 +4,11 @@
     "label": "Commerce Mondial Relay fulfillment",
     "category": "Delivery",
     "description": "Create one seller-owned Mondial Relay 24R shipment from Commerce authorization and reconcile carrier events.",
-    "stable": "1.1.0",
-    "latest": "1.1.0",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
     "versions": [
         {
-            "version": "1.1.0",
+            "version": "1.0.0",
             "path": ".",
             "definition": "definition.json"
         }

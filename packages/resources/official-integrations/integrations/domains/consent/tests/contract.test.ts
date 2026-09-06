@@ -78,6 +78,24 @@ describe("Consent integration contract", () => {
             { method: "POST", route: "/context/sync", requiredInputs: [], requiredHeaders: ["authorization"] },
             { method: "GET", route: "/health", requiredInputs: [], requiredHeaders: ["authorization"] },
             {
+                method: "POST",
+                route: "/management",
+                requiredInputs: [],
+                requiredHeaders: ["authorization", "x-cms-user-id"],
+            },
+            {
+                method: "POST",
+                route: "/operations/accept",
+                requiredInputs: ["acceptedVersionIds", "cmsUserId", "contextKey", "metadata", "operationKey"],
+                requiredHeaders: ["authorization"],
+            },
+            {
+                method: "POST",
+                route: "/operations/receipt",
+                requiredInputs: ["cmsUserId", "contextKey", "operationKey"],
+                requiredHeaders: ["authorization"],
+            },
+            {
                 method: "GET",
                 route: "/requirements",
                 requiredInputs: ["context"],

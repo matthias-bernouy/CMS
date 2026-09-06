@@ -13,6 +13,9 @@ describe("official integration package protocol", () => {
         for (const indexPath of indexPaths) {
             const packageRoot = dirname(indexPath);
             const index = JSON.parse(await readFile(indexPath, "utf8")) as IntegrationIndex;
+            expect(index.stable).toBe("1.0.0");
+            expect(index.latest).toBe("1.0.0");
+            expect(index.versions.map((entry) => entry.version)).toEqual(["1.0.0"]);
             for (const entry of index.versions) {
                 const versionRoot = join(packageRoot, entry.path);
                 const definition = relative(versionRoot, join(packageRoot, entry.definition)).split(sep).join("/");
@@ -55,6 +58,8 @@ describe("official integration package protocol", () => {
 
 type IntegrationIndex = {
     kind: string;
+    stable: string;
+    latest: string;
     versions: Array<{ version: string; path: string; definition: string }>;
 };
 
