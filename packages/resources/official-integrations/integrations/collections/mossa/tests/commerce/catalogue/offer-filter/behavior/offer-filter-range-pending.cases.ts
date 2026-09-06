@@ -1,6 +1,12 @@
 import { expect, test } from "bun:test";
 import { primarySchema } from "../support/offer-filter-panel.fixtures";
-import { createBindingCore, defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
+import {
+    createBindingCore,
+    defineFilter,
+    filterTag,
+    settleLifecycle,
+    settleUntil,
+} from "../support/offer-filter-panel.harness";
 
 test("a local numeric edit wins over a pending URL reflection after another filter changes", async () => {
     await defineFilter();
@@ -27,7 +33,10 @@ test("a local numeric edit wins over a pending URL reflection after another filt
         expect(proxy.value).toBe("2022");
         expect(range.querySelector("output")?.textContent).toContain("2022");
         input.dispatchEvent(new Event("change", { bubbles: true }));
-        await settleLifecycle();
+        await settleUntil(
+            () => new URLSearchParams(location.search).get("filter_numeric_attribute:gte") === "2022",
+            1000,
+        );
         expect(new URLSearchParams(location.search).get("filter_numeric_attribute:gte")).toBe("2022");
 
         const slider = range.querySelector<HTMLInputElement>('[data-range-slider="maximum"]')!;
@@ -37,7 +46,10 @@ test("a local numeric edit wins over a pending URL reflection after another filt
         await settleLifecycle();
         expect(slider.value).toBe("2023");
         slider.dispatchEvent(new Event("change", { bubbles: true }));
-        await settleLifecycle();
+        await settleUntil(
+            () => new URLSearchParams(location.search).get("filter_numeric_attribute:lte") === "2023",
+            1000,
+        );
         expect(new URLSearchParams(location.search).get("filter_numeric_attribute:lte")).toBe("2023");
     } finally {
         core.remove();

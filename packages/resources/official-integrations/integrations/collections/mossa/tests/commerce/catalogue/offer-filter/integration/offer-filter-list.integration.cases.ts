@@ -134,6 +134,13 @@ describe("Commerce filter and offer list integration", () => {
             minimumSlider.dispatchEvent(new Event("input", { bubbles: true }));
             minimumSlider.dispatchEvent(new Event("change", { bubbles: true }));
 
+            await settleUntil(
+                () => new URLSearchParams(location.search).get("filter_numeric_attribute:gte") === "2023",
+                1000,
+            );
+            await settleUntil(
+                () => JSON.parse(sourceParams(list).get("filters") || "{}").numeric_attribute?.gte === 2023,
+            );
             expect(new URLSearchParams(location.search).get("filter_numeric_attribute:gte")).toBe("2023");
             expect(minimumControl.value).toBe("2023");
             expect(JSON.parse(sourceParams(list).get("filters") || "{}")).toEqual({
@@ -144,6 +151,8 @@ describe("Commerce filter and offer list integration", () => {
             minimumSlider.dispatchEvent(new Event("input", { bubbles: true }));
             minimumSlider.dispatchEvent(new Event("change", { bubbles: true }));
 
+            await settleUntil(() => !new URLSearchParams(location.search).has("filter_numeric_attribute:gte"), 1000);
+            await settleUntil(() => !sourceParams(list).has("filters"));
             expect(new URLSearchParams(location.search).has("filter_numeric_attribute:gte")).toBe(false);
             expect(sourceParams(list).has("filters")).toBe(false);
         } finally {
