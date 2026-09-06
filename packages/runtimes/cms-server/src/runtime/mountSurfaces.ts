@@ -51,6 +51,7 @@ export async function mountProductionSurfaces(
         ? createProductionRepositoryCatalogReader(integrations)
         : undefined;
     const scheduledTriggers = runtime.startWorkers({
+        enabled: env.CMS_SCHEDULED_TRIGGERS_ENABLED,
         functions: features.functions,
         sources: features.deliverySources,
         deps: { resolveSecret: features.resolveSecret, identities: features.identities },
@@ -172,7 +173,10 @@ export async function mountProductionSurfaces(
             relations: features.relations,
             functions: features.functions,
             triggers: features.triggers,
-            scheduledTriggers: { enabled: true, runNow: scheduledTriggers.runNow },
+            scheduledTriggers: {
+                enabled: env.CMS_SCHEDULED_TRIGGERS_ENABLED,
+                ...(env.CMS_SCHEDULED_TRIGGERS_ENABLED ? { runNow: scheduledTriggers.runNow } : {}),
+            },
             identities: features.identities,
             sourceOverlays: features.sourceOverlays,
             endpointPerformanceReports: features.endpointPerformanceReports,

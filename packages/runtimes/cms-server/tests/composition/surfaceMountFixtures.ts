@@ -15,6 +15,7 @@ export function surfaceMountFixtures() {
             ANALYTICS_TRUST_PROXY: false,
             ANALYTICS_TRUSTED_PROXY_VERIFIED: false,
             ENDPOINT_PERFORMANCE_ENABLED: true,
+            CMS_SCHEDULED_TRIGGERS_ENABLED: true,
             SOURCE_TIMING_SAMPLE_RATE: 0.01,
             SOURCE_SLOW_REQUEST_THRESHOLD_MS: 1_000,
             CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: true,

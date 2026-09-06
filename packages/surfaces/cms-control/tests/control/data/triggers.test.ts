@@ -108,7 +108,7 @@ describe("triggers API", () => {
         expect(response.status).toBe(501);
     });
 
-    test("lists schedule ownership and runs through the configured scheduler", async () => {
+    test.each([true, false])("respects scheduler availability %s", async (enabled) => {
         const triggers = new InMemoryTriggerRepository();
         await triggers.createTrigger({
             id: "scheduled-notifications",
@@ -118,15 +118,19 @@ describe("triggers API", () => {
             task: { id: "cms.notifications.dispatch" },
             scheduleState: { nextRunAt: "2026-07-23T12:00:00.000Z" },
         });
-        const runNow = async (id: string) => ({
-            triggerId: id,
-            runId: "manual-run",
-            status: "succeeded" as const,
-            durationMs: 5,
-        });
+        let manualRuns = 0;
+        const runNow = async (id: string) => {
+            manualRuns++;
+            return {
+                triggerId: id,
+                runId: "manual-run",
+                status: "succeeded" as const,
+                durationMs: 5,
+            };
+        };
         const cms = {
             triggers,
-            config: { scheduledTriggers: { enabled: true, runNow } },
+            config: { scheduledTriggers: { enabled, runNow } },
             configuredIntegrationInstallations: {
                 list: async () => [
                     {
@@ -151,10 +155,17 @@ describe("triggers API", () => {
         expect(await listed.json()).toEqual([
             expect.objectContaining({
                 id: "scheduled-notifications",
-                schedulerAvailable: true,
+                schedulerAvailable: enabled,
                 integration: { id: "commerce", label: "Commerce" },
             }),
         ]);
-        expect(await executed.json()).toMatchObject({ status: "succeeded", runId: "manual-run" });
+        expect(manualRuns).toBe(enabled ? 1 : 0);
+        expect(executed.status).toBe(enabled ? 200 : 503);
+        if (enabled) {
+            expect(await executed.json()).toMatchObject({ status: "succeeded", runId: "manual-run" });
+        } else {
+            expect(await executed.text()).toBe("scheduled trigger runner not available");
+        }
+        expect((await triggers.getTrigger("scheduled-notifications"))?.enabled).toBe(true);
     });
 });

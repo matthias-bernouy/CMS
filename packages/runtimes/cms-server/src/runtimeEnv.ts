@@ -39,6 +39,7 @@ export type RuntimeEnv = {
     ANALYTICS_TRUST_PROXY: boolean;
     ANALYTICS_TRUSTED_PROXY_VERIFIED: boolean;
     ENDPOINT_PERFORMANCE_ENABLED: boolean;
+    CMS_SCHEDULED_TRIGGERS_ENABLED: boolean;
     SOURCE_TIMING_SAMPLE_RATE: number;
     SOURCE_SLOW_REQUEST_THRESHOLD_MS: number;
     CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: boolean;
@@ -125,6 +126,11 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         ENDPOINT_PERFORMANCE_ENABLED: parseBoolean(
             source.ENDPOINT_PERFORMANCE_ENABLED,
             "ENDPOINT_PERFORMANCE_ENABLED",
+            true,
+        ),
+        CMS_SCHEDULED_TRIGGERS_ENABLED: parseBoolean(
+            source.CMS_SCHEDULED_TRIGGERS_ENABLED,
+            "CMS_SCHEDULED_TRIGGERS_ENABLED",
             true,
         ),
         SOURCE_TIMING_SAMPLE_RATE: parseBoundedNumber(

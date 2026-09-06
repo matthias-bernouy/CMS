@@ -4,7 +4,7 @@ import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../sr
 import { surfaceMountFixtures, waitFor } from "./surfaceMountFixtures";
 
 describe("production surface mounting", () => {
-    test("waits for Control before wiring and starting both public surfaces", async () => {
+    test.each([true, false])("mounts with scheduler enabled=%s", async (schedulerEnabled) => {
         const events: string[] = [];
         const starts: Array<[string, number]> = [];
         const logs: string[] = [];
@@ -109,6 +109,7 @@ describe("production surface mounting", () => {
             reportError() {},
         } as unknown as ProductionSurfaceRuntime;
         const options = surfaceMountFixtures();
+        options.env.CMS_SCHEDULED_TRIGGERS_ENABLED = schedulerEnabled;
 
         const mounting = mountProductionSurfaces(options as never, runtime);
         await waitFor(() => events.includes("control"));
@@ -136,13 +137,17 @@ describe("production surface mounting", () => {
                 passwordResetUrl: options.env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
                 allowSignup: false,
             },
-            scheduledTriggers: { enabled: true, runNow },
+            scheduledTriggers: { enabled: schedulerEnabled },
             endpointPerformanceReports: options.features.endpointPerformanceReports,
             sourceTelemetry: expect.any(Object),
             sourceTrustedConnectorTarget: expect.any(Function),
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
         expect(controlConfig.editorDataSources).toBeUndefined();
+        expect(controlConfig.scheduledTriggers).toEqual({
+            enabled: schedulerEnabled,
+            ...(schedulerEnabled ? { runNow } : {}),
+        });
         expect(repositoryConfig).toBeUndefined();
 
         expect(deliveryConfig).toMatchObject({
@@ -165,6 +170,7 @@ describe("production surface mounting", () => {
         });
         expect(deliveryConfig?.publicPageProviders).toBeUndefined();
         expect(workerOptions).toEqual({
+            enabled: schedulerEnabled,
             functions: options.features.functions,
             sources: options.features.deliverySources,
             deps: {

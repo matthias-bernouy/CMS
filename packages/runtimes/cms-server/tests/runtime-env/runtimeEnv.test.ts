@@ -26,6 +26,7 @@ describe("runtime env validation", () => {
         expect(env.ANALYTICS_TRUST_PROXY).toBe(false);
         expect(env.ANALYTICS_TRUSTED_PROXY_VERIFIED).toBe(false);
         expect(env.ENDPOINT_PERFORMANCE_ENABLED).toBe(true);
+        expect(env.CMS_SCHEDULED_TRIGGERS_ENABLED).toBe(true);
         expect(env.SOURCE_TIMING_SAMPLE_RATE).toBe(0.01);
         expect(env.SOURCE_SLOW_REQUEST_THRESHOLD_MS).toBe(1_000);
         expect(env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED).toBe(true);
@@ -39,6 +40,18 @@ describe("runtime env validation", () => {
                 ANALYTICS_TRUSTED_PROXY_VERIFIED: "true",
             }),
         ).toMatchObject({ ANALYTICS_TRUST_PROXY: true, ANALYTICS_TRUSTED_PROXY_VERIFIED: true });
+    });
+
+    test("accepts an explicit scheduler maintenance switch and rejects invalid booleans", () => {
+        expect(
+            readRuntimeEnv({ ...validEnv(), CMS_SCHEDULED_TRIGGERS_ENABLED: "false" }).CMS_SCHEDULED_TRIGGERS_ENABLED,
+        ).toBe(false);
+        expect(
+            readRuntimeEnv({ ...validEnv(), CMS_SCHEDULED_TRIGGERS_ENABLED: "true" }).CMS_SCHEDULED_TRIGGERS_ENABLED,
+        ).toBe(true);
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_SCHEDULED_TRIGGERS_ENABLED: "0" })).toThrow(
+            /CMS_SCHEDULED_TRIGGERS_ENABLED must be true or false/,
+        );
     });
 
     test.failing("parses listener hosts with wildcard production defaults", () => {
