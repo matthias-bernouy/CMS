@@ -92,7 +92,7 @@ describe("@bernouy/cms-integrations installation persistence", () => {
 
         expect(await secrets.get(key)).toBe("sk_old");
         const after = await installations.get("test-secret-source");
-        expect(after?.status).toBe("failed");
+        expect(after?.status).toBe("success");
     });
 });
 

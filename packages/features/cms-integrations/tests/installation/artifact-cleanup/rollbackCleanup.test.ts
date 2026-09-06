@@ -41,7 +41,7 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
         ).toBeUndefined();
         expect(await functions.getFunction("legacyFunction")).not.toBeNull();
         const installation = await installations.get("cleanup");
-        expect(installation?.status).toBe("failed");
+        expect(installation?.status).toBe("success");
         expect(installation?.artifacts.map((artifact) => [artifact.type, artifact.id])).toEqual([
             ["source", "urn:legacy-source"],
             ["function", "legacyFunction"],
@@ -82,7 +82,7 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
         ).rejects.toThrow(/bloc deletion is not supported/);
 
         const installation = await installations.get("bloc-cleanup");
-        expect(installation?.status).toBe("failed");
+        expect(installation?.status).toBe("success");
         expect(installation?.artifacts).toEqual([{ type: "bloc", id: "legacy-card", action: "created" }]);
     });
 
@@ -170,7 +170,7 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
         expect(await sources.getSource("urn:legacy-source")).not.toBeNull();
         expect((await sources.getSource("urn:hook-source"))?.endpoints[0]?.targetUrl).toEndWith("/1.0.0");
         const installation = await installations.get(current.kind);
-        expect(installation?.status).toBe("failed");
+        expect(installation?.status).toBe("success");
         expect(installation?.artifacts.map(({ id }) => id)).toEqual(["urn:hook-source", "urn:legacy-source"]);
     });
 });

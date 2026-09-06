@@ -1,4 +1,4 @@
-import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
+import type { SecretReader } from "cms-secrets/interfaces/SecretReader";
 import { secretRefToKey } from "./secretRef";
 
 /**
@@ -8,7 +8,7 @@ import { secretRefToKey } from "./secretRef";
  * clean failure (e.g. the gateway's 500 "secret introuvable") rather
  * than an unhandled throw.
  */
-export function createSecretResolver(secrets: SecretStore): (ref: string) => Promise<string | undefined> {
+export function createSecretResolver(secrets: SecretReader): (ref: string) => Promise<string | undefined> {
     return async (ref: string) => {
         try {
             return (await secrets.get(secretRefToKey(ref) ?? ref)) ?? undefined;

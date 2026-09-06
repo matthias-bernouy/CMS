@@ -1,7 +1,7 @@
 import { isSafeDashboardExpression, type DashboardAction } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../definition/values";
-import { requiredText } from "../common";
+import { requiredText, parseStringMap } from "../common";
 import { parseEndpointRef } from "./refs";
 import { parseVisibilityRule } from "./visibility";
 
@@ -31,6 +31,9 @@ function parseAction(value: unknown, name: string): DashboardAction {
             ? { placement: parseActionPlacement(value.placement, `${name}.placement`)! }
             : {}),
         ...(text(value.section) ? { section: text(value.section)! } : {}),
+        ...(value.management !== undefined
+            ? { management: parseManagementAction(value.management, `${name}.management`) }
+            : {}),
         ...(value.endpoint !== undefined ? { endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`) } : {}),
         ...(value.download !== undefined ? { download: parseActionDownload(value.download, `${name}.download`) } : {}),
         ...(isRecord(value.selection) ? { selection: parseSelection(value.selection) } : {}),
@@ -100,4 +103,15 @@ function parseActionPlacement(value: unknown, name: string): DashboardAction["pl
         return value;
     }
     throw new IntegrationInputError(name, "must be primary, secondary, or more");
+}
+
+function parseManagementAction(value: unknown, name: string): NonNullable<DashboardAction["management"]> {
+    if (!isRecord(value) || value.action !== "save-settings") {
+        throw new IntegrationInputError(name, "must declare save-settings management action");
+    }
+    return {
+        installationId: requiredText(value.installationId, `${name}.installationId`),
+        action: "save-settings",
+        ...(value.body !== undefined ? { body: parseStringMap(value.body, `${name}.body`) } : {}),
+    };
 }

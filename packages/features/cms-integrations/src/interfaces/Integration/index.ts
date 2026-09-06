@@ -1,12 +1,13 @@
-import type { DeclarativeArtifactTemplate } from "./IntegrationArtifacts";
+import type { IntegrationManagement } from "./management";
+import type { DeclarativeArtifactTemplate } from "../IntegrationArtifacts";
 import type { FunctionStep } from "@bernouy/cms-functions";
-import type { DeclarativeConnectorTemplate } from "./IntegrationConnectorDeployer";
+import type { DeclarativeConnectorTemplate } from "../IntegrationConnectorDeployer";
 import type {
     CollectionResource,
     CollectionResourceCategory,
     INTEGRATION_DEFINITION_SCHEMA_V1,
     INTEGRATION_DEFINITION_SCHEMA_V2,
-} from "./IntegrationResources";
+} from "../IntegrationResources";
 
 export type {
     DeclarativeArtifactTemplate,
@@ -19,7 +20,7 @@ export type {
     DeclarativeSourceArtifactTemplate,
     DeclarativeSourceOverlayArtifactTemplate,
     DeclarativeTriggerArtifactTemplate,
-} from "./IntegrationArtifacts";
+} from "../IntegrationArtifacts";
 export type {
     DeclarativeConnectorCompatibility,
     DeclarativeConnectorFunctionCompatibility,
@@ -38,8 +39,8 @@ export type {
     DeclarativeConnectorSchemaRelationKind,
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
-} from "./IntegrationConnectorDeployer";
-export { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES } from "./IntegrationConnectorDeployer";
+} from "../IntegrationConnectorDeployer";
+export { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES } from "../IntegrationConnectorDeployer";
 export type {
     DeclarativeConnectorDatabaseClockDefaultProjection,
     DeclarativeConnectorLegacyAdoptionBaseline,
@@ -54,7 +55,7 @@ export type {
     IntegrationMigrationChecksum,
     IntegrationMigrationHttpSmoke,
     IntegrationProviderDirectCutover,
-} from "./IntegrationConnectorDeployer";
+} from "../IntegrationConnectorDeployer";
 export {
     OBSERVED_SCHEMA_CONTRACT_V1,
     type ObservedSchemaColumnV1,
@@ -64,7 +65,7 @@ export {
     type ObservedSchemaNamespaceV1,
     type ObservedSchemaOwnerV1,
     type ObservedSchemaRelationV1,
-} from "./IntegrationConnectorDeployer";
+} from "../IntegrationConnectorDeployer";
 
 export type IntegrationIcon = { path: string };
 
@@ -223,6 +224,8 @@ type IntegrationDefinitionBase = {
     description?: string;
     icon?: IntegrationIcon;
     inputs: IntegrationInput[];
+    management?: IntegrationManagement;
+    extensionOf?: { kind: string };
     ui?: IntegrationUiDefinition;
     theme?: IntegrationThemeDefinition;
     security?: IntegrationSecurityDefinition;

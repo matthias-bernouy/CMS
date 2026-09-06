@@ -1,3 +1,4 @@
+import { parseManagement, parseExtension, validateManagement } from "./metadata/management";
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
 import { isExactIntegrationVersion } from "../../definitions/versioning";
 import {
@@ -31,6 +32,7 @@ import { parseCollectionCategories, parseCollectionResources } from "./resources
 
 export function assertDefinitionUsable(definition: IntegrationDefinition): void {
     validateDefinitionModel(definition);
+    validateManagement(definition);
     assertUniqueInputs(definition.inputs);
     assertSecretInputsUseStringValues(definition);
     assertPasswordInputsDeclareSecrets(definition);
@@ -89,11 +91,13 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     if (!label) {
         throw new MissingIntegrationParam("definition.label");
     }
-    if (!Array.isArray(value.inputs)) {
+    if (value.inputs !== undefined && !Array.isArray(value.inputs)) {
         throw new IntegrationInputError("definition.inputs", "must be an array");
     }
 
-    const inputs = value.inputs.map((input, index) => parseInput(input, `definition.inputs.${index}`));
+    const inputs = (Array.isArray(value.inputs) ? value.inputs : []).map((input, index) =>
+        parseInput(input, `definition.inputs.${index}`),
+    );
     assertUniqueInputs(inputs);
     const parsedDefinition = { kind, label, inputs };
     assertSecretInputsUseStringValues(parsedDefinition);
@@ -123,7 +127,11 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     const theme = parseThemeDefinition(value.theme, kind);
     const security = parseSecurityDefinition(value.security);
 
+    const management = parseManagement(value.management);
+    const extensionOf = parseExtension(value.extensionOf);
     const base = {
+        ...(management ? { management } : {}),
+        ...(extensionOf ? { extensionOf } : {}),
         kind,
         label,
         ...(version ? { version } : {}),
@@ -155,6 +163,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
             ),
         };
         validateDefinitionModel(definition, artifacts);
+        validateManagement(definition);
         return definition;
     }
     if (schema === INTEGRATION_DEFINITION_SCHEMA_V2 && type === "collection") {
@@ -169,6 +178,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
             resources: parseCollectionResources(value.resources, kind),
         };
         validateDefinitionModel(definition, artifacts);
+        validateManagement(definition);
         return definition;
     }
     return {
@@ -210,6 +220,13 @@ function validateDefinitionModel(
 ): void {
     if (definition.schema !== INTEGRATION_DEFINITION_SCHEMA_V2) {
         return;
+    }
+    if (
+        definition.extensionOf &&
+        (definition.extensionOf.kind === definition.kind ||
+            !definition.dependencies?.some(({ kind }) => kind === definition.extensionOf?.kind))
+    ) {
+        throw new IntegrationInputError("definition.extensionOf", "must reference a distinct declared dependency");
     }
     if (definition.type === "source") {
         const forbidden = parsedArtifacts.filter(

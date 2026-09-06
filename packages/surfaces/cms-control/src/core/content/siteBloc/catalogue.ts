@@ -18,7 +18,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
     const normalizedSearch = query.search?.trim().toLowerCase() ?? "";
 
     return records
-        .filter((record) => !record.artifact?.internal && record.artifact?.catalogue !== "inactive")
+        .filter((record) => !record.artifact?.internal)
         .map((record) => {
             const definition = record.siteDefinition;
             const metadata = definition?.draft ?? record.artifact;
@@ -40,6 +40,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
             const publishedTransitive = transitiveDependencies(publishedGraph, record.tag);
             return {
                 tag: record.tag,
+                active: record.artifact?.catalogue !== "inactive",
                 name: metadata?.name ?? record.tag,
                 group: metadata?.group ?? "",
                 description: metadata?.description ?? "",

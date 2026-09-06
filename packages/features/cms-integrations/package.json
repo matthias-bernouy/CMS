@@ -11,7 +11,6 @@
         "./fs": "./src/exports/fs.ts",
         "./http": "./src/exports/http.ts",
         "./supabase": "./src/exports/supabase.ts",
-        "./stripe": "./src/exports/stripe.ts",
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {

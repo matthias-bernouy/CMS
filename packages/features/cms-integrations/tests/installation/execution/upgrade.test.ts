@@ -137,7 +137,7 @@ function upgrade(context: InstalledContext, targetDefinition: IntegrationDefinit
 
 async function expectPreviousPin(context: InstalledContext): Promise<void> {
     const installation = await context.installations.get(context.installedDefinition.kind);
-    expect(installation?.status).toBe("failed");
+    expect(installation?.status).toBe("success");
     expect(installation?.definitionVersion).toBe("1.0.0");
     expect(installation?.definitionSnapshot?.version).toBe("1.0.0");
     expect((await context.sources.getSource("urn:rerun-source"))?.endpoints[0]?.targetUrl).toBe(

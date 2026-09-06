@@ -70,7 +70,7 @@ describe("@bernouy/cms-integrations afterInstallation failures", () => {
         ).rejects.toThrow(/afterInstallation/);
 
         const installation = await installations.get(definition.kind);
-        expect(installation?.status).toBe("failed");
+        expect(installation?.status).toBe("success");
         expect(installation?.answersSnapshot.enabled).toBe(false);
         expect(installation?.runs.map(({ status }) => status)).toEqual(["success", "failed"]);
         expect((await sources.getSource("urn:upgradable"))?.endpoints[0]?.targetUrl).toEndWith("/false");

@@ -15,7 +15,6 @@ import {
 import { FsIntegrationPackageCache } from "@bernouy/cms-integration-packages/fs";
 import { HttpIntegrationPackageSource } from "@bernouy/cms-integration-packages/http";
 import { FsIntegrationPackageResolver } from "@bernouy/cms-integrations/fs";
-import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { createProductionAuth } from "../src/runtime/auth";
@@ -139,7 +138,7 @@ describe("production runtime services", () => {
         expect(services.integrationConnectorBaselineAdopters[0]).toBeInstanceOf(
             ConfiguredSupabaseConnectorBaselineAdopter,
         );
-        expect(services.integrationProvisioners[0]).toBeInstanceOf(StripeWebhookProvisioner);
+        expect(services.integrationProvisioners).toEqual([]);
         expect(
             (
                 deployer as unknown as {

@@ -1,3 +1,5 @@
+import type { IntegrationConnectorBinding } from "../interfaces/IntegrationInstallation";
+import { SupabaseManagementClient } from "./supabase/SupabaseManagementClient";
 import type { SecretReader } from "@bernouy/cms-secrets";
 import { IntegrationRuntimeError } from "../core/errors";
 import type {
@@ -30,6 +32,28 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
     readonly provider = "supabase";
 
     constructor(private readonly config: ConfiguredSupabaseConnectorDeployerConfig) {}
+
+    async syncSecrets(binding: IntegrationConnectorBinding, values: Record<string, string>): Promise<void> {
+        const projectRef = await this.readProjectRef();
+        if (
+            binding.provider !== this.provider ||
+            binding.outputs.functionsBaseUrl !== this.functionsBaseUrl(projectRef)
+        ) {
+            throw new IntegrationRuntimeError("Installed connector does not match configured provider", 409);
+        }
+        const accessToken = await this.readAccessToken();
+        const client = new SupabaseManagementClient({
+            projectRef,
+            accessToken,
+            apiBaseUrl: (this.config.apiBaseUrl ?? "https://api.supabase.com").replace(/\/+$/, ""),
+            fetch: this.config.fetch ?? fetch,
+        });
+        try {
+            await client.setFunctionSecrets(Object.entries(values).map(([name, value]) => ({ name, value })));
+        } catch {
+            throw new IntegrationRuntimeError("Connector runtime secret synchronization failed", 502);
+        }
+    }
 
     async previewOutputs(): Promise<Record<string, string>> {
         const projectRef = await this.readProjectRef();

@@ -27,6 +27,8 @@ export type IntegrationCatalogueView = {
 export function buildIntegrationCatalogue(input: {
     definitions: IntegrationDefinition[];
     installations: Pick<IntegrationInstallation, "id">[];
+    scope?: "sources" | "collections";
+    parent?: string;
     query: string;
     category: string;
     basePath: string;
@@ -34,6 +36,13 @@ export function buildIntegrationCatalogue(input: {
     const installed = new Set(input.installations.map((installation) => installation.id));
     const available = input.definitions
         .filter((definition) => !installed.has(definition.kind))
+        .filter(
+            (definition) =>
+                !input.scope ||
+                (input.scope === "collections" ? definition.type === "collection" : definition.type === "source"),
+        )
+        .filter((definition) => !definition.extensionOf || installed.has(definition.extensionOf.kind))
+        .filter((definition) => !input.parent || definition.extensionOf?.kind === input.parent)
         .sort((left, right) => left.label.localeCompare(right.label));
     const categories = Array.from(new Set(available.map((definition) => categoryLabel(definition)))).sort();
     const query = input.query.trim().toLowerCase();
@@ -58,7 +67,7 @@ function catalogueItem(definition: IntegrationDefinition, basePath: string): Int
         label: definition.label,
         description: definition.description ?? "",
         category,
-        setupUrl: `${basePath}/admin/integrations?setup=${encodeURIComponent(definition.kind)}`,
+        setupUrl: `${basePath}/admin/${definition.type === "collection" ? "blocs" : "sources"}?setup=${encodeURIComponent(definition.kind)}`,
         iconHtml: iconHtml(definition, basePath),
         badges: badgeLabels([category, ...artifactLabels(definition)]),
     };

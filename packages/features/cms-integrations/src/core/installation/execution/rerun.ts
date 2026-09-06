@@ -163,6 +163,9 @@ function assertNoOrdinaryOperationInProgress(
     request: ExistingInstallationRequest,
     installation: IntegrationInstallation,
 ): void {
+    if (installation.managementLease && installation.managementLease.expiresAt.getTime() > Date.now()) {
+        throw new IntegrationRuntimeError("Integration management operation is in progress", 409);
+    }
     if (request.installations.compareAndSwapMigration && installation.status === "pending") {
         throw new IntegrationRuntimeError("integration installation has another operation in progress", 409);
     }
@@ -230,7 +233,7 @@ async function runExistingInstallation(
         await tryReplaceCurrentInstallation(
             request.installations,
             pending,
-            appendRun({ ...pending, pendingOperation: undefined }, run, { status: "failed" }),
+            appendRun({ ...installation, pendingOperation: undefined }, run, { status: installation.status }),
         );
         throw error;
     }
@@ -351,7 +354,9 @@ async function commitSuccessfulRerun(
                 await tryReplaceCurrentInstallation(
                     request.installations,
                     prepared,
-                    appendRun({ ...installation, pendingOperation: undefined }, failure, { status: "failed" }),
+                    appendRun({ ...installation, pendingOperation: undefined }, failure, {
+                        status: installation.pendingOperation?.sourceState.status ?? "failed",
+                    }),
                 );
                 throw error;
             }

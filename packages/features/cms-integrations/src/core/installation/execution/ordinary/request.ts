@@ -13,6 +13,9 @@ export async function buildRerunDto(
     body: Record<string, unknown>,
     siteIntegrations: IntegrationDefinition[],
 ): Promise<IntegrationImportDto> {
+    if (definition.management && body.answers !== undefined) {
+        throw new IntegrationInputError("answers", "integration settings must be changed through management");
+    }
     const rawAnswers = isRecord(body.answers)
         ? { ...installation.answersSnapshot, ...rerunAnswerOverrides(definition, installation, body.answers) }
         : { ...installation.answersSnapshot };

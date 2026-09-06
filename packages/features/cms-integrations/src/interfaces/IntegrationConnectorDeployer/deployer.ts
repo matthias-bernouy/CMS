@@ -1,3 +1,4 @@
+import type { IntegrationConnectorBinding } from "../IntegrationInstallation";
 import type { IntegrationAnswerValue, IntegrationDefinition } from "../Integration";
 import type { IntegrationConnectorMigrationDeployment } from "./migrations";
 
@@ -74,6 +75,7 @@ export type IntegrationConnectorDeployResult = {
 
 export interface IntegrationConnectorDeployer {
     provider: string;
+    syncSecrets?(binding: IntegrationConnectorBinding, values: Record<string, string>): Promise<void>;
     previewOutputs?(): Promise<Record<string, string>>;
     deploy(
         deployment: IntegrationConnectorDeployment,

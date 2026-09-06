@@ -23,6 +23,15 @@ export async function prepareDeclarativeIntegration(
     const secretInputNames = sensitiveInputs(definition);
     const inputSecretWrites = buildInputSecretWrites(definition.secrets ?? [], answers, secretInputNames);
     const generatedSecretWrites = buildGeneratedSecretWrites(definition.generatedSecrets ?? [], answers, true);
+    const installed = await deps.installations?.get(definition.kind);
+    for (const secret of generatedSecretWrites) {
+        if (installed?.secretRefs[secret.input] === secret.key) {
+            const existing = await deps.secrets.get(secret.key);
+            if (existing !== null) {
+                secret.value = existing;
+            }
+        }
+    }
     const initialSecretWrites = [...inputSecretWrites, ...generatedSecretWrites];
     const initialContext = contextForSecrets(
         answers,

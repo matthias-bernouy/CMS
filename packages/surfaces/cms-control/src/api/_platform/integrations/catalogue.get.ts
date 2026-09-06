@@ -9,6 +9,12 @@ export default async function getIntegrationCatalogue(req: Request, cms: Control
     return Response.json(
         buildIntegrationCatalogue({
             definitions,
+            ...(url.searchParams.get("scope") === "sources"
+                ? { scope: "sources" as const }
+                : url.searchParams.get("scope") === "collections"
+                  ? { scope: "collections" as const }
+                  : {}),
+            ...(url.searchParams.get("parent") ? { parent: url.searchParams.get("parent")! } : {}),
             installations,
             query: url.searchParams.get("q") ?? "",
             category: url.searchParams.get("category") ?? "",

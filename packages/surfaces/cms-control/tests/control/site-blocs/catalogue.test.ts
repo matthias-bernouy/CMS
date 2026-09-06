@@ -51,12 +51,16 @@ describe("site bloc catalogue", () => {
         expect(items[0]?.directDependencies).toEqual(["site-shell-controller"]);
     });
 
-    test("hides inactive collection resources without removing their renderable artifact", async () => {
+    test("lists inactive collection resources for management while keeping them out of the editor", async () => {
         const { cms, repository } = siteBlocHarness();
         await seedBloc(repository, "selected", { catalogue: "active" });
         await seedBloc(repository, "not-selected", { catalogue: "inactive" });
 
-        expect((await siteBlocCatalogue(cms)).map(({ tag }) => tag)).toEqual(["selected"]);
+        expect((await siteBlocCatalogue(cms)).map(({ tag, active }) => ({ tag, active }))).toEqual([
+            { tag: "not-selected", active: false },
+            { tag: "selected", active: true },
+        ]);
+        expect((await repository.getBlocsList()).map(({ id }) => id)).toEqual(["selected"]);
         expect(await repository.getBlocViewJS("not-selected")).toBeString();
     });
 

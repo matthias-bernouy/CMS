@@ -111,6 +111,8 @@ export type IntegrationPendingOperationSourceState = {
     answersSnapshot: Record<string, IntegrationAnswerValue>;
     secretRefs: Record<string, string>;
     secretInputs: string[];
+    managementSecretRefs?: Record<string, string>;
+    managementLease?: { id: string; expiresAt: Date };
     artifacts: IntegrationArtifactResult[];
     activeResources?: string[];
     runCount: number;
@@ -168,6 +170,8 @@ export type IntegrationInstallation = {
     answersSnapshot: Record<string, IntegrationAnswerValue>;
     secretRefs: Record<string, string>;
     secretInputs: string[];
+    managementSecretRefs?: Record<string, string>;
+    managementLease?: { id: string; expiresAt: Date };
     artifacts: IntegrationArtifactResult[];
     /** Exact active resource ids for collection installations. */
     activeResources?: string[];

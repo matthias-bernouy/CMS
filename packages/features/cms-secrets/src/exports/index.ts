@@ -30,3 +30,5 @@ export {
     secretRefToKey,
     secretRefGlobalPattern,
 } from "cms-secrets/core/secretRef";
+
+export { scopedSecretReader } from "../core/scopedSecretReader";

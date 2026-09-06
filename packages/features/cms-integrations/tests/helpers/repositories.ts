@@ -57,7 +57,11 @@ export class CreateFailingIntegrationInstallationRepository extends InMemoryInte
 
 export class SuccessReplaceFailingIntegrationInstallationRepository extends InMemoryIntegrationInstallationRepository {
     async replace(installation: IntegrationInstallation): Promise<IntegrationInstallation> {
-        if (installation.status === "success" && installation.runCount === 2) {
+        if (
+            installation.status === "success" &&
+            installation.runCount === 2 &&
+            installation.runs.at(-1)?.status === "success"
+        ) {
             throw new Error("installation replace failed");
         }
         return super.replace(installation);
@@ -67,7 +71,7 @@ export class SuccessReplaceFailingIntegrationInstallationRepository extends InMe
         expected: IntegrationInstallation,
         next: IntegrationInstallation,
     ): Promise<IntegrationInstallation | null> {
-        if (next.status === "success" && next.runCount === 2) {
+        if (next.status === "success" && next.runCount === 2 && next.runs.at(-1)?.status === "success") {
             throw new Error("installation replace failed");
         }
         return await super.compareAndSwapMigration(expected, next);

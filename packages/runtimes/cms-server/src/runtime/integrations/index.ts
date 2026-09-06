@@ -19,7 +19,6 @@ import {
     ConfiguredSupabaseConnectorMigrationAdapter,
     ConfiguredSupabaseFunctionMigrationHandler,
 } from "@bernouy/cms-integrations/supabase";
-import { StripeWebhookProvisioner } from "@bernouy/cms-integrations/stripe";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { HttpRepositoryCompatibilityReader } from "../../repositoryCatalog/compatibility/reader";
 import { DEFAULT_REPOSITORY_CATALOG_READER_LIMITS } from "../../repositoryCatalog/limits";
@@ -87,13 +86,7 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
     const integrationConnectorBaselineAdopters: IntegrationConnectorBaselineAdopter[] = [
         new ConfiguredSupabaseConnectorBaselineAdopter(supabaseMigrationConfig),
     ];
-    const integrationProvisioners: IntegrationProvisioner[] = [
-        new StripeWebhookProvisioner(
-            options.supabase?.stripeApiUrl
-                ? { apiBaseUrl: options.supabase.stripeApiUrl, allowInsecureLoopbackWebhooks: true }
-                : {},
-        ),
-    ];
+    const integrationProvisioners: IntegrationProvisioner[] = [];
     const publicRepositoryCompatibility = new HttpRepositoryCompatibilityReader({
         baseUrl: repositoryUrl,
         ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),

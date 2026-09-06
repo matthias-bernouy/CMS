@@ -83,7 +83,7 @@ describe("package provenance commit failures", () => {
         ).rejects.toThrow("connector deployment failed");
 
         const after = await context.installations.get(definition.kind);
-        expect(after?.status).toBe("failed");
+        expect(after?.status).toBe("success");
         expect(after?.runCount).toBe(2);
         expect(after?.definitionVersion).toBe(created.installation.definitionVersion);
         expect(after?.definitionSnapshot).toEqual(created.installation.definitionSnapshot);

@@ -121,7 +121,7 @@ describe("@bernouy/cms-integrations installation lifecycle", () => {
         ).rejects.toThrow(/cannot be changed/);
 
         const installation = await installations.get("test-secret-source");
-        expect(installation?.status).toBe("failed");
+        expect(installation?.status).toBe("success");
         expect(installation?.pendingOperation).toBeUndefined();
         expect(installation?.runCount).toBe(2);
         expect(installation?.runs.map((run) => run.status)).toEqual(["success", "failed"]);

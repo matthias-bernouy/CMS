@@ -158,7 +158,7 @@ describe("package-backed integration upgrades", () => {
         ).rejects.toThrow(/missing-source/);
 
         const after = await context.installations.get(installed.kind);
-        expect(after?.status).toBe("failed");
+        expect(after?.status).toBe("success");
         expect(after?.runCount).toBe(2);
         expect(after?.definitionVersion).toBe("1.0.0");
         expect(after?.definitionSnapshot?.version).toBe("1.0.0");

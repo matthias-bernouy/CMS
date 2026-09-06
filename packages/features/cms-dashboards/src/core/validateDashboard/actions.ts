@@ -32,8 +32,22 @@ export function validateAction(
             validateVisibility(action.visibleWhen, `${path}.visibleWhen`, errors, visibilityFieldIds);
         }
     }
-    if (!action.endpoint && !action.selection) {
-        errors.push(`${path} must declare endpoint or selection`);
+    if (!action.endpoint && !action.selection && !action.management) {
+        errors.push(`${path} must declare endpoint, management, or selection`);
+    }
+    if (action.management) {
+        validateRequiredId(`${path}.management.installationId`, action.management.installationId, errors);
+        if (action.management.action !== "save-settings" || action.endpoint || action.download) {
+            errors.push(`${path}.management requires save-settings and cannot declare endpoint or download`);
+        }
+        for (const expression of Object.values(action.management.body ?? {})) {
+            if (
+                expression.startsWith("$") &&
+                !isSafeDashboardExpression(expression, ["row", "resource", "field", "result"])
+            ) {
+                errors.push(`${path}.management.body must use safe expressions`);
+            }
+        }
     }
     if (action.endpoint) {
         validateEndpointRef(dashboard, action.endpoint, `${path}.endpoint`, source, errors);
@@ -50,8 +64,8 @@ export function validateAction(
         errors.push(`${path}.selection.opens references unknown widget "${action.selection.opens}"`);
     }
     if (action.after) {
-        if (!action.endpoint) {
-            errors.push(`${path}.after requires endpoint`);
+        if (!action.endpoint && !action.management) {
+            errors.push(`${path}.after requires endpoint or management`);
         }
         validateActionAfter(action, `${path}.after`, dashboard, errors, visibilityFieldIds !== undefined);
     }

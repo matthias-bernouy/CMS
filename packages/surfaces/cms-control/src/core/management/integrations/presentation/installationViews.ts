@@ -13,6 +13,12 @@ export function buildIntegrationInstallationView(
         id: installation.id,
         label: installation.label,
         definitionVersion: installation.definitionVersion,
+        integrationType: installation.definitionSnapshot?.type,
+        extensionOf: installation.definitionSnapshot?.extensionOf,
+        management: installation.definitionSnapshot?.management,
+        sourceIds: installation.artifacts.filter(({ type }) => type === "source").map(({ id }) => id),
+        activeResources: installation.activeResources,
+
         ...(installation.packageDigest ? { packageDigest: installation.packageDigest } : {}),
         status: installation.status,
         statusLabel: statusLabel(installation.status),

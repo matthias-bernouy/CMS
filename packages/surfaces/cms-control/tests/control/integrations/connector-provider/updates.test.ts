@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY } from "@bernouy/cms-integrations";
-import getConnectorProvider from "cms-control/api/_platform/integrations/connector-provider.get";
-import postConnectorProvider from "cms-control/api/_platform/integrations/connector-provider.post";
+import getConnectorProvider from "cms-control/api/_platform/integrations/_provider/connector-provider.get";
+import postConnectorProvider from "cms-control/api/_platform/integrations/_provider/connector-provider.post";
 import { fixture, jsonRequest } from "./support";
 
 describe("connector provider settings API", () => {

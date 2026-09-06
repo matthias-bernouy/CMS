@@ -51,7 +51,7 @@ describe("@bernouy/cms-integrations afterInstallation secret rollback", () => {
         ).rejects.toThrow(/afterInstallation/);
 
         const installation = await installations.get(definition.kind);
-        expect(installation?.status).toBe("failed");
+        expect(installation?.status).toBe("success");
         expect(installation?.answersSnapshot.environment).toBe("dev");
         expect(installation?.secretRefs.apiKey).toBe("TOKEN_DEV");
         expect(await secrets.get("TOKEN_DEV")).toBe("dev-secret");

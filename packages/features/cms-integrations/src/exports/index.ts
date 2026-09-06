@@ -300,3 +300,19 @@ export {
 } from "../core/security/csp";
 export { InMemoryIntegrationInstallationRepository } from "../default-implementation/installations/InMemoryIntegrationInstallationRepository";
 export { InMemoryIntegrationConnectorProviderRepository } from "../default-implementation/connector-providers/InMemoryIntegrationConnectorProviderRepository";
+
+export type {
+    IntegrationManagement,
+    IntegrationManagementActor,
+    IntegrationHealthCheckStatus,
+    IntegrationHealthOperation,
+    IntegrationHealthStatus,
+    IntegrationHealthReport,
+    IntegrationHealthEnvelope,
+    IntegrationSettingsResponse,
+    IntegrationManagementOperation,
+    IntegrationManagementInvocation,
+} from "../interfaces/Integration/management";
+export { IntegrationManagementService } from "../core/security/management/service";
+export type { IntegrationManagementDeps } from "../core/security/management/contracts";
+export { parseHealthReport } from "../core/security/management/report";
