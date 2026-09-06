@@ -17,6 +17,9 @@ layout and semantics.
 
 ## Choose A Starting Point
 
+- [Collection API](./collections.md) covers the library projection, site
+  compositions, managed availability, and collection updates.
+
 - [Create a Bloc](./authoring.md) covers folders, the manifest, runtime code,
   templates, default content, registration, and browser constraints.
 - [Expose Editing Capabilities](./editor.md) covers settings, slots, inline

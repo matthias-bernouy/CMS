@@ -45,6 +45,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
             const publishedTransitive = transitiveDependencies(publishedGraph, record.tag);
             return {
                 tag: record.tag,
+                ...(record.artifact?.thumbnail ? { thumbnail: record.artifact.thumbnail } : {}),
                 collectionId: definition ? (definition.collectionId ?? DEFAULT_SITE_BLOC_COLLECTION_ID) : null,
                 active: record.artifact?.catalogue !== "inactive",
                 name: metadata?.name ?? record.tag,

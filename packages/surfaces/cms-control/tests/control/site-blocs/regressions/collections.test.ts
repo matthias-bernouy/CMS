@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { ContentValidationError } from "@bernouy/cms-content";
 import getCollections from "cms-control/api/_content/bloc/collections/collections.get";
 import postCollection from "cms-control/api/_content/bloc/collections/collections.post";
-import getCatalogue from "cms-control/api/_content/bloc/catalogue.get";
+import getCatalogue from "cms-control/api/_content/bloc/_catalogue/catalogue.get";
 import postSiteBloc from "cms-control/api/_content/site-bloc/site-bloc.post";
 import { importSiteBlocDefinition } from "cms-control/core/content/siteBloc/cliImport";
 import { jsonRequest, seedBloc, siteBlocHarness, siteDefinition } from "../fixtures";

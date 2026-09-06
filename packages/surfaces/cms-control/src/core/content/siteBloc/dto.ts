@@ -1,11 +1,21 @@
+import { randomUUIDv7 } from "bun";
 import { ContentValidationError, type SiteBlocSnapshot } from "@bernouy/cms-content";
 import type { CreateSiteBlocInput, SaveSiteBlocInput } from "./service";
 
 export function parseCreateSiteBlocInput(body: Record<string, unknown>): CreateSiteBlocInput {
+    const name = requiredString(body.name, "name");
+    const slug =
+        name
+            .normalize("NFKD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "")
+            .slice(0, 60) || "composition";
     return {
-        tag: requiredString(body.tag, "tag").toLowerCase(),
+        tag: body.tag === undefined ? `site-${slug}-${randomUUIDv7()}` : requiredString(body.tag, "tag").toLowerCase(),
         ...(body.collectionId !== undefined ? { collectionId: requiredString(body.collectionId, "collectionId") } : {}),
-        name: requiredString(body.name, "name"),
+        name,
         group: optionalString(body.group, "group"),
         description: optionalString(body.description, "description"),
     };

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import getBlocCatalogue from "cms-control/api/_content/bloc/catalogue.get";
+import getBlocCatalogue from "cms-control/api/_content/bloc/_catalogue/catalogue.get";
 import { eligibleStructureTags } from "cms-control/components/editorSystemV2/siteBloc/siteBlocCatalog";
 import { siteBlocCatalogue } from "cms-control/core/content/siteBloc/catalogue";
 import { blocArtifact, seedBloc, seedPublishedSiteBloc, siteBlocHarness, siteSnapshot } from "./fixtures";
