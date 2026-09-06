@@ -360,6 +360,7 @@ describe("Mossa Commerce account offers", () => {
 
         expect(definition.dependencies).toEqual([
             { name: "emailer", kind: "emailer", optional: true, versionRange: "^1.0.0" },
+            { name: "consent", kind: "consent", versionRange: "^1.0.0" },
         ]);
         expect(compiledController.viewJS).toContain("window.p9r.Component");
         expect(runtimeSource).toContain('cms-repeat="items as offer"');
