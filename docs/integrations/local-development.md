@@ -62,6 +62,12 @@ selection installs no source, then activate a source-backed Mossa resource and
 confirm that only its transitive resource and source dependency closure is
 added.
 
+Open Sources to configure an installed provider's Connection settings. Select
+vault references and published pages through the generic fields, then Save.
+Save performs application and runtime synchronization; use Health to inspect
+readiness, freshness, and any declared recovery action. Installation success
+alone does not mean provider credentials have been configured.
+
 The complete current source set is `commerce`, `user-account`, `consent`,
 `forms`, `newsletter`, `emailer`, `stripe-connect`, `mondial-relay`,
 `commerce-negotiation`, `commerce-stripe-payments`,
@@ -82,7 +88,8 @@ A meaningful local acceptance pass should:
 4. load the page through Delivery and exercise its source-bound behavior;
 5. restart `ulvia dev` against the same data directory;
 6. prove the page, selection, installations, and business data survived;
-7. upgrade a source and prove its data and observable endpoint still work;
+7. upgrade a source and prove its saved settings, selected secret references,
+   applied runtime values, data, and observable endpoints still work;
 8. upgrade a collection and prove old selections remain exact and new
    resources remain inactive.
 

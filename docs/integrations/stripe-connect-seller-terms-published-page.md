@@ -5,9 +5,13 @@ agreement is no longer an installation answer of `commerce-stripe-payments`.
 An administrator publishes it from the Stripe Connect seller-terms dashboard.
 
 The dashboard accepts a stable document key, public label, exact consent
-statement, and CMS published-page snapshot URL. The management Edge Function
-downloads the public snapshot without forwarding CMS credentials, validates
-its URL and payload, verifies its digest, and archives the page.
+statement, and a CMS page selected through a `page-link` field. Its declared
+`publish-seller-terms` management action sends the selected path to Core. Core
+resolves the published page and supplies trusted `resolvedPages.page`; the
+integration checks that it matches the selected path. The management Edge
+Function downloads that public snapshot without forwarding CMS credentials,
+validates its URL and payload, verifies its digest, and archives the page.
+Operators do not paste snapshot URLs or supply their own resolved metadata.
 
 The archived revision is append-only. Its public version is
 `cms-page:<revision-sha256>` and its evidence hash is the SHA-256 digest of the
@@ -18,8 +22,8 @@ a composite foreign key and cannot be updated or deleted.
 Both generic seller entry points obtain the same
 `marketplaceTermsRequirement` from Stripe Connect:
 
-- `commerce-offer-price-form`;
-- `stripe-connect-onboarding`.
+- `mossa-commerce-offer-price-form`;
+- `mossa-stripe-connect-onboarding`.
 
 They render the server-returned consent statement and published page link,
 require an unchecked explicit checkbox, and submit the exact displayed version
@@ -54,7 +58,7 @@ Recommended rollout order:
 
 1. update the Stripe Connect provider integration;
 2. open the Stripe Connect seller-terms dashboard and publish the current CMS
-   page snapshot;
+   page using the published-page selector;
 3. install or update `commerce-stripe-payments`;
 4. verify `getConnectStatus.marketplaceTermsRequirement`;
 5. exercise both seller forms before enabling protected sales.
@@ -67,4 +71,5 @@ implicitly.
 The PostgreSQL and upgrade contracts verify fresh install, idempotent
 publication, concurrent-publish rejection, legacy compatibility, immutable
 evidence, forced RLS, private RPC grants, and preservation of a published page
-and seller acceptance across an upgrade from `1.0.0`.
+and seller acceptance. Historical upgrade claims require the exact released
+baseline and its verified package evidence.

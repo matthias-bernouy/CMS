@@ -5,7 +5,11 @@ artifacts; management invokes integration-owned functions after installation.
 Managed definitions have no installation inputs. The parser accepts an omitted
 `inputs` property and normalizes it to an empty array. Legacy input definitions
 remain readable for migration and immutable historical package verification.
-Undeclared answers are rejected before installation side effects.
+Undeclared answers are not persisted; the installation runner rejects
+undeclared answer fields in its input DTO.
+
+See the [authoring guide](../../../docs/integrations/management.md) for a
+manifest example and the complete settings, reference, and Health workflow.
 
 A definition may declare `management.schemaVersion: 1`, a health function,
 settings functions, and actions. Every referenced function must be an owned
@@ -49,8 +53,8 @@ Grants are persisted as references, separately from installation-owned generated
 secret keys. Function responses cannot write selected user secrets. Settings
 grants are filtered against the current manifest before invocation. Retired
 settings grants are removed after successful deployment while keys needed by
-another declared grant remain available in the vault. Generated
-writes require a name in `management.generatedSecrets` and an existing owned
+another declared grant remain available in the vault. Generated writes require
+a name in `management.generatedSecrets` and an existing owned
 installation secret slot. Generated outputs stay server-side and remain
 available for retry after runtime synchronization fails. Installed generated
 values are preserved during deployment reruns and upgrades.

@@ -26,6 +26,9 @@ implementation notes live in each package's `AGENTS.md`.
 - [Integration development](./integrations/README.md) documents local-first
   integration versioning, audits, upgrade fixtures, releases, and the remote
   publication contract.
+- [Integration settings and Health](./integrations/management.md) documents
+  integration-owned configuration, scoped references, declared actions, and
+  read-only health observations after installation.
 - [auth-system-source.md](./auth-system-source.md) documents the readonly
   system auth source exposed through `/.cms/sources/system-auth/*`.
 

@@ -23,6 +23,11 @@ installation answers. Legal documents, prices, consent policy, and similar
 mutable state are stored at runtime and changed through authenticated APIs or
 dashboard views.
 
+Official integrations install without a questionnaire. Their versioned
+`management` declaration binds registered functions for settings, Health, and
+actions. Save applies configuration through those functions; install and update
+preserve existing settings. See [Settings and Health](./management.md).
+
 The CMS owns the dashboard shell. A source may publish `dashboard-view`
 artifacts that operate its own data, endpoints, and overlays. This bounded
 operator declaration is not public-site rendering: the Source cannot publish a
@@ -43,6 +48,10 @@ The author repository currently supports exactly these source integrations:
 - extensions: `commerce-negotiation`, `commerce-stripe-payments`,
   `commerce-mondial-relay-delivery`, and
   `commerce-mondial-relay-fulfillment`.
+
+Extensions declare `extensionOf` and a compatible parent dependency. They remain
+`type: "source"` packages, but may add management functions and views without
+creating a separate CMS Source artifact.
 
 `emailer` remains part of the transitive closure for Commerce `builtin`
 notifications even when no page calls it directly.
@@ -94,8 +103,8 @@ Conformance rejects a missing Source, incompatible version, unknown endpoint,
 contract mismatch, or invalid binding path. Mossa's static audit also
 correlates every assembled artifact's fixed binding or imperative CMS Source
 access with one declaration, and forbids configurable Source prefixes,
-endpoint names, and function IDs. Its one retained installation alias is a
-validated single segment. This extra audit currently covers Mossa, not every
+endpoint names, and function IDs. Current official definitions use stable Source
+IDs and have no installation alias input. This extra audit covers Mossa, not every
 third-party or legacy collection.
 
 Provider identity is intentionally exact today. A bloc requiring an endpoint

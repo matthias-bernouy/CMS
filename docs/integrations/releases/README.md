@@ -39,6 +39,8 @@ Connection fields store secret references, resolved only for authorized server
 management calls. Integration code validates and applies changes; the CMS
 provides generic secret storage, runtime synchronization, and lifecycle UI.
 Saved and applied revisions distinguish persisted settings from active behavior.
+Declare capabilities through the versioned [settings and Health contract](../management.md).
+Save applies changes; install, rerun, and update preserve stored configuration.
 
 Keep package responsibilities strict: a `source` owns backend/data artifacts
 and operator views, while a collection owns blocs, bindings, and theme
@@ -54,7 +56,7 @@ happened to fail.
 | --- | --- | --- |
 | Patch | A compatible correction | Fix an implementation that violated the existing contract; strengthen a test without changing supported behavior |
 | Minor | An additive contract | Add an optional field, endpoint, dashboard view, function, or expand-only schema capability |
-| Major | A contract clients must change for | Remove or rename fields, add required input, narrow accepted behavior, or remove an endpoint |
+| Major | A contract clients must change for | Remove or rename fields, add a required endpoint input, narrow accepted behavior, or remove an endpoint |
 
 If an old test was wrong, first decide which behavior is the intended contract.
 Correcting the test alone does not force a major release. Changing behavior
@@ -191,6 +193,9 @@ third-party callback. Follow [Site acceptance with local data](../site-acceptanc
 - A theme-only collection has no bloc resource, artifact, or category.
 - Collection category labels do not repeat old package or collection names.
 - Mutable business state is runtime-owned and survives reinstall/reload.
+- Official installs have zero inputs; Connection changes use declared settings
+  functions and distinguish saved revisions from successfully applied revisions.
+- Health checks are read-only, and recovery invokes only declared actions.
 - Tests cover authorization, malformed input, retries, and concurrency.
 - Fixtures cover every immutable baseline and valuable business state.
 - Edge and SQL changes tolerate overlapping versions and restart safely.

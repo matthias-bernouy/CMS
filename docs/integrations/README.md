@@ -8,6 +8,9 @@ This section documents the supported workflow:
 
 - [Source and collection model](./model.md) defines ownership, resource
   selection, endpoint bindings, contracts, themes, and dependency closure.
+- [Settings and Health](./management.md) defines zero-input installation,
+  integration-owned configuration, scoped references, declared actions, and
+  the versioned Health report and observation contracts.
 - [Integration theme contracts](./themes.md) defines shared Ulvia tokens,
   collection hooks, private variables, and site-owned overrides.
 - [Creating a release](./releases/README.md) covers source layout, SemVer, audits,
