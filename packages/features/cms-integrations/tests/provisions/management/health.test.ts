@@ -2,6 +2,32 @@ import { describe, expect, test } from "bun:test";
 import { parseHealthReport } from "@bernouy/cms-integrations";
 import { fixture, report } from "./fixture";
 describe("integration health observations", () => {
+    test("forwards read actors and scopes cached, pending and stale observations to their identity and role", async () => {
+        const calls: Array<string | undefined> = [];
+        const { service } = await fixture(async (_installation, _fn, payload) => {
+            calls.push(payload.actor?.id);
+            if (payload.actor?.id !== "first" || payload.actor.role !== "admin") {
+                throw new Error("denied");
+            }
+            return payload.operation === "health" ? report() : { values: { configured: true } };
+        });
+        const first = { id: "first", role: "admin" };
+        expect(await service.settings("test-management", first)).toEqual({ values: { configured: true } });
+        const observations = await Promise.all([
+            service.health("test-management", false, first),
+            service.health("test-management", false, first),
+            service.health("test-management", false, { id: "second", role: "admin" }),
+        ]);
+        expect(observations[0]?.report?.status).toBe("ready");
+        expect(observations[1]).toEqual(observations[0]);
+        expect(observations[2]).toMatchObject({ observation: "unreachable", report: null });
+        expect(await service.health("test-management", false, { id: "first", role: "user" })).toMatchObject({
+            observation: "unreachable",
+            report: null,
+        });
+        expect(await service.health("test-management", false, first)).toEqual(observations[0]);
+        expect(calls).toEqual(["first", "first", "second", "first"]);
+    });
     test("deduplicates concurrent checks and keeps installation deployment state separate", async () => {
         let calls = 0;
         let release!: () => void;

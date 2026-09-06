@@ -1,27 +1,33 @@
 import { IntegrationRuntimeError } from "../../errors";
-import type { IntegrationHealthEnvelope } from "../../../interfaces/Integration/management";
+import type { IntegrationHealthEnvelope, IntegrationManagementActor } from "../../../interfaces/Integration/management";
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationManagementDeps } from "./contracts";
 import { invokeManagement } from "./invoke";
 import { parseHealthReport } from "./report";
 
-type Entry = { key: string; checked: number; envelope: IntegrationHealthEnvelope };
+type Entry = { key: string; installationId: string; checked: number; envelope: IntegrationHealthEnvelope };
 export class IntegrationHealthObserver {
     private generation = 0;
     private readonly cache = new Map<string, Entry>();
     private readonly pending = new Map<string, Promise<IntegrationHealthEnvelope>>();
     constructor(private readonly deps: IntegrationManagementDeps) {}
     invalidate(id: string): void {
-        const cached = this.cache.get(id);
-        if (cached) {
-            cached.checked = 0;
+        for (const cached of this.cache.values()) {
+            if (cached.installationId === id) {
+                cached.checked = 0;
+            }
         }
         this.generation++;
     }
-    async read(installation: IntegrationInstallation, refresh = false): Promise<IntegrationHealthEnvelope> {
+    async read(
+        installation: IntegrationInstallation,
+        refresh = false,
+        actor?: IntegrationManagementActor,
+    ): Promise<IntegrationHealthEnvelope> {
         const generation = this.generation;
-        const key = `${generation}:${installation.id}:${installation.updatedAt.toISOString()}:${installation.definitionVersion}`;
-        const cached = this.cache.get(installation.id);
+        const cacheKey = JSON.stringify([installation.id, actor?.id ?? null, actor?.role ?? null]);
+        const key = `${generation}:${cacheKey}:${installation.updatedAt.toISOString()}:${installation.definitionVersion}`;
+        const cached = this.cache.get(cacheKey);
         const ttl = this.deps.healthTtlMs ?? 30_000;
         if (!refresh && cached?.key === key && this.now().getTime() - cached.checked < ttl) {
             return structuredClone(cached.envelope);
@@ -30,13 +36,18 @@ export class IntegrationHealthObserver {
         if (pending) {
             return structuredClone(await pending);
         }
-        const promise = this.observe(installation, cached)
+        const promise = this.observe(installation, cached, actor)
             .then((envelope) => {
                 if (this.cache.size >= 1_000) {
                     this.cache.delete(this.cache.keys().next().value!);
                 }
                 if (generation === this.generation) {
-                    this.cache.set(installation.id, { key, checked: this.now().getTime(), envelope });
+                    this.cache.set(cacheKey, {
+                        key,
+                        installationId: installation.id,
+                        checked: this.now().getTime(),
+                        envelope,
+                    });
                 }
                 return envelope;
             })
@@ -50,6 +61,7 @@ export class IntegrationHealthObserver {
     private async observe(
         installation: IntegrationInstallation,
         cached: Entry | undefined,
+        actor?: IntegrationManagementActor,
     ): Promise<IntegrationHealthEnvelope> {
         const now = this.now();
         const envelope: IntegrationHealthEnvelope = {
@@ -71,9 +83,16 @@ export class IntegrationHealthObserver {
         let result: unknown;
         try {
             result = await Promise.race([
-                invokeManagement(this.deps, installation, management.health.functionId, "health").then(
-                    ({ public: value }) => value,
-                ),
+                invokeManagement(
+                    this.deps,
+                    installation,
+                    management.health.functionId,
+                    "health",
+                    {},
+                    undefined,
+                    false,
+                    actor,
+                ).then(({ public: value }) => value),
                 new Promise<never>((_, reject) => {
                     timer = setTimeout(
                         () => reject(new IntegrationRuntimeError("timeout", 504)),

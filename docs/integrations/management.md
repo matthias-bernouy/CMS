@@ -92,8 +92,9 @@ Control currently requires one destination for runtime secret synchronization.
 ## Scoped references and dashboard actions
 
 Function payloads contain `operation`, `installationId`, `definitionVersion`,
-`input`, `secretValues`, and `generatedSecretValues`. Mutations carry the verified
-administrator `actor`; declared actions also carry `actionId`. Do not accept an
+`input`, `secretValues`, and `generatedSecretValues`. Authenticated settings and
+Health reads, as well as mutations, carry the verified administrator `actor`;
+declared actions also carry `actionId`. Do not accept an
 administrator identity from browser-supplied input.
 
 A `secret-ref` stores an exact `${KEY}` reference, never the secret value.
@@ -171,7 +172,8 @@ report or `null`, and optional `reason`, `httpStatus`, and
 unreachable, invalid report, and unsupported capability. A valid report can be
 stale; an unreachable provider can retain the last valid report as stale evidence.
 
-Checks use a process-local 30-second cache, deduplicate concurrent requests, and
+Checks use a process-local 30-second cache scoped to the caller identity and role,
+deduplicate concurrent requests within that scope, and
 wait at most 10 seconds by default. Failed checks or settings mutations retain
 previous evidence with its original timestamp, revisions, and definition
 version. Consumers must show observation freshness alongside integration status.

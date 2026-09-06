@@ -19,16 +19,27 @@ export class IntegrationManagementService {
     constructor(private readonly deps: IntegrationManagementDeps) {
         this.observer = new IntegrationHealthObserver(deps);
     }
-    async health(id: string, refresh = false) {
-        return this.observer.read(await this.installation(id), refresh);
+    async health(id: string, refresh = false, actor?: IntegrationManagementActor) {
+        return this.observer.read(await this.installation(id), refresh, actor);
     }
-    async settings(id: string): Promise<unknown> {
+    async settings(id: string, actor?: IntegrationManagementActor): Promise<unknown> {
         const installation = await this.installation(id);
         const settings = installation.definitionSnapshot?.management?.settings;
         if (!settings) {
             throw new IntegrationRuntimeError("Integration settings are unavailable", 404);
         }
-        return (await invokeManagement(this.deps, installation, settings.readFunctionId, "read-settings")).public;
+        return (
+            await invokeManagement(
+                this.deps,
+                installation,
+                settings.readFunctionId,
+                "read-settings",
+                {},
+                undefined,
+                false,
+                actor,
+            )
+        ).public;
     }
     async saveSettings(
         id: string,

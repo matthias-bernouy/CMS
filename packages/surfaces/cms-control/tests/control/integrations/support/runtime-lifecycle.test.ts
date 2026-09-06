@@ -1,6 +1,56 @@
 import { expect, test } from "bun:test";
+import { InMemoryAuthentication } from "@bernouy/cms-auth";
+import getSettings from "cms-control/api/_platform/integrations/management/settings.get";
+import getHealth from "cms-control/api/_platform/integrations/management/health.get";
 import { integrationManagement } from "cms-control/core/management/integrations/installationActions/management/service";
 import { runtimeFixture } from "./runtimeFixture";
+
+test("management GET routes carry the verified admin through the registered function and computed Source headers", async () => {
+    const { cms, environment, load, run } = await runtimeFixture();
+    const newsletter = await load("newsletter", "domains");
+    await run("create", newsletter.definition, newsletter.root);
+    const emailer = await load("emailer", "providers");
+    await run("create", emailer.definition, emailer.root);
+    const source = await cms.sources.getSource("urn:emailer");
+    const endpoint = source.endpoints.find((item: { urn: string }) => item.urn === "urn:emailer:manageSource");
+    endpoint.headers.push(
+        { name: "x-cms-user-id", source: { from: "computed", ref: "userID" } },
+        { name: "x-cms-user-role", source: { from: "computed", ref: "userRole" } },
+    );
+    await cms.sources.updateSource(source);
+    cms.auth = new InMemoryAuthentication({ identifier: "verified-admin", role: "admin" });
+    const operations: string[] = [];
+    cms.sourceExecutorDeps.fetchImpl = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = new Request(input, init);
+        expect(request.headers.get("authorization")).toBe(`Bearer ${environment.CMS_EMAILER_API_KEY}`);
+        expect(request.headers.get("x-cms-user-id")).toBe("verified-admin");
+        expect(request.headers.get("x-cms-user-role")).toBe("admin");
+        const payload = await request.json();
+        expect(payload.actor).toEqual({ id: "verified-admin", role: "admin" });
+        operations.push(payload.operation);
+        return Response.json(
+            payload.operation === "health"
+                ? {
+                      schemaVersion: 1,
+                      status: "ready",
+                      checkedAt: new Date().toISOString(),
+                      configuration: { savedRevision: "1", appliedRevision: "1" },
+                      checks: [],
+                  }
+                : { values: { configured: true }, savedRevision: "1", appliedRevision: "1" },
+        );
+    };
+    const request = (endpoint: string) =>
+        new Request(`https://control.test/api/integrations/management/${endpoint}?id=emailer&actor=forged`, {
+            headers: { "x-cms-user-id": "forged", "x-cms-user-role": "user" },
+        });
+    expect(await (await getSettings(request("settings"), cms)).json()).toMatchObject({ values: { configured: true } });
+    expect(await (await getHealth(request("health"), cms)).json()).toMatchObject({
+        observation: "valid",
+        report: { status: "ready" },
+    });
+    expect(operations).toEqual(["read-settings", "health"]);
+});
 
 test("official ordinary connector install saves and applies settings, then preserves runtime values across deployments", async () => {
     const { cms, secrets, installations, environment, runtime, phases, load, run } = await runtimeFixture();
