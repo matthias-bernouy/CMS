@@ -1,4 +1,4 @@
-import type { IntegrationDefinition, IntegrationIcon } from "./Integration";
+import type { IntegrationDefinition, IntegrationIcon, IntegrationCover } from "./Integration";
 import type { IntegrationType } from "./IntegrationResources";
 
 export type IntegrationAsset = {
@@ -20,6 +20,7 @@ export type IntegrationDefinitionIndex = {
     label: string;
     type?: IntegrationType;
     icon?: IntegrationIcon;
+    cover?: IntegrationCover;
     category?: string;
     description?: string;
     stable?: string;

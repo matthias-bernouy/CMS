@@ -17,6 +17,7 @@ export type BlocListItemResponse = {
     name: string;
     group: string;
     description: string;
+    thumbnail?: TBloc["thumbnail"];
     compositionHTML?: string;
     internal?: boolean;
     nativeElement?: string;

@@ -1,3 +1,4 @@
+import type { PresentationImage } from "@bernouy/cms-content";
 import type { DashboardDefinition, DashboardViewDefinition } from "@bernouy/cms-dashboards";
 import type { FunctionDto } from "@bernouy/cms-functions";
 import type { CmsRelation, DashboardRelationProjection } from "@bernouy/cms-relations";
@@ -57,6 +58,7 @@ export type DeclarativeBlocArtifactTemplate = {
         description?: string;
         internal?: boolean;
         nativeElement?: string;
+        thumbnail?: PresentationImage;
         path?: string;
         view?: string;
         composition?: string;

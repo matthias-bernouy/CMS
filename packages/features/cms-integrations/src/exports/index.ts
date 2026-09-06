@@ -52,6 +52,7 @@ export type {
     IntegrationDefinition,
     IntegrationDependency,
     IntegrationIcon,
+    IntegrationCover,
     IntegrationInput,
     IntegrationInputOption,
     IntegrationObjectListField,

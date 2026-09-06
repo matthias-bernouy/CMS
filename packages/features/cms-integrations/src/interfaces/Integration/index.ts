@@ -1,3 +1,4 @@
+import type { PresentationImage } from "@bernouy/cms-content";
 import type { IntegrationManagement } from "./management";
 import type { DeclarativeArtifactTemplate } from "../IntegrationArtifacts";
 import type { FunctionStep } from "@bernouy/cms-functions";
@@ -68,6 +69,7 @@ export {
 } from "../IntegrationConnectorDeployer";
 
 export type IntegrationIcon = { path: string };
+export type IntegrationCover = PresentationImage;
 
 export type IntegrationAnswerValue =
     | string
@@ -223,6 +225,7 @@ type IntegrationDefinitionBase = {
     category?: string;
     description?: string;
     icon?: IntegrationIcon;
+    cover?: IntegrationCover;
     inputs: IntegrationInput[];
     management?: IntegrationManagement;
     extensionOf?: { kind: string };

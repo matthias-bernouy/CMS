@@ -3,6 +3,7 @@ import { ContentValidationError } from "cms-content/core/validation/errors";
 import { validateSiteBlocSnapshot } from "cms-content/core/validation/blocs/snapshot";
 import { isValidCustomElementTag } from "cms-content/core/validation/predicates";
 import { isPlatformManagedNativeElementTag } from "cms-content/core/validation/blocs/nativeHtml";
+import { parsePresentationImage } from "cms-content/core/validation/documents/presentationImage";
 import type { BlocOwnership, SiteBlocDefinition, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
 
 export function validateBlocWrite(value: TBlocWrite): TBloc {
@@ -13,6 +14,9 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
         validateOwnership(value.ownership);
     }
     const bloc = normalizeBlocWrite(value);
+    if (bloc.thumbnail !== undefined) {
+        bloc.thumbnail = parsePresentationImage(bloc.thumbnail);
+    }
     if (bloc.catalogue !== undefined && bloc.catalogue !== "active" && bloc.catalogue !== "inactive") {
         throw new ContentValidationError("catalogue", "expected active or inactive");
     }

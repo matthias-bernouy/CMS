@@ -15,6 +15,8 @@ export type TBloc = {
     name: string;
     group: string;
     description: string;
+    /** Optional authored image under the immutable package's assets/ directory. */
+    thumbnail?: PresentationImage;
     /** Inactive collection resources remain renderable but are hidden from the authoring catalogue. */
     catalogue?: "active" | "inactive";
     /** Internal behavior component omitted from the authoring catalogue. */
@@ -37,6 +39,8 @@ export type TBloc = {
      */
     source?: Record<string, string>;
 };
+
+export type PresentationImage = { path: string; alt?: string };
 
 /**
  * Backward-compatible write shape. Existing importers that predate explicit

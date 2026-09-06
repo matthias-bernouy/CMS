@@ -1,3 +1,4 @@
+import type { PresentationImage } from "@bernouy/cms-content";
 import type {
     DashboardAssignmentRepository,
     DashboardRepository,
@@ -158,6 +159,7 @@ export type IntegrationBlocArtifact = {
     catalogue?: "active" | "inactive";
     internal?: boolean;
     nativeElement?: string;
+    thumbnail?: PresentationImage;
     viewPath?: string;
     viewJS?: string;
     compositionHTML?: string;

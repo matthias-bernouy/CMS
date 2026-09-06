@@ -12,6 +12,7 @@ export type {
     BlocOwnership,
     BlocRecord,
     SiteBlocCollection,
+    PresentationImage,
     SiteBlocDefinition,
     SiteBlocNode,
     SiteBlocSlot,
@@ -19,6 +20,12 @@ export type {
     TBloc,
     TBlocWrite,
 } from "cms-content/interfaces/blocs";
+export {
+    parsePresentationImage,
+    presentationImageContentType,
+    isPresentationImageBytes,
+    blocThumbnailFromSource,
+} from "cms-content/core/validation/documents/presentationImage";
 export type { PageIndexingConfiguration, TPage, TPageRef } from "cms-content/interfaces/pages";
 export type { SiteOrganizationAddress, SiteOrganizationSettings, TSystem } from "cms-content/interfaces/settings";
 export type {
