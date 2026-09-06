@@ -1,3 +1,5 @@
+import { translateWalletMessage, walletCopy, walletMessages } from "./copy";
+
 const STRIPE_JS_URL = "https://js.stripe.com/v3/";
 const STRIPE_V2_API = "https://api.stripe.com/v2";
 const STRIPE_V2_VERSION = "2026-06-24.dahlia";
@@ -16,6 +18,7 @@ let stripeJsLoader = null;
 class StripeConnectOnboarding extends HTMLElement {
     static get observedAttributes() {
         return [
+            ...Object.keys(walletMessages),
             "title",
             "copy",
             "activation-title",
@@ -97,7 +100,7 @@ class StripeConnectOnboarding extends HTMLElement {
             <style>
                 :host {
                     --_mossa-wallet-accent: var(--ulvia-secondary-base);
-                    --_mossa-wallet-accent-text: var(--ulvia-secondary-contrasted);
+                    --_mossa-wallet-accent-text: var(--ulvia-secondary-foreground);
                     display: block;
                     color: currentColor;
                     font: inherit;
@@ -289,7 +292,7 @@ class StripeConnectOnboarding extends HTMLElement {
                     </label>
                     <label class="check">
                         <input type="checkbox" name="paymentTermsAccepted" autocomplete="off" required>
-                        <span>I accept the <slot name="payment-terms"></slot>.</span>
+                        <span><span data-payment-consent-prefix></span><slot name="payment-terms"></slot><span data-payment-consent-suffix></span></span>
                     </label>
                     <div class="security">
                         <span aria-hidden="true">🔒</span>
@@ -320,8 +323,16 @@ class StripeConnectOnboarding extends HTMLElement {
     }
 
     syncPresentation() {
+        this.loadingPanel.setAttribute("aria-label", walletCopy(this, "loading-label"));
+        for (const [selector, name] of [
+            ["[data-terms-unavailable-title]", "terms-unavailable-title"],
+            ["[data-payment-consent-prefix]", "payment-consent-prefix"],
+            ["[data-payment-consent-suffix]", "payment-consent-suffix"],
+        ]) {
+            this.root.querySelector(selector).textContent = walletCopy(this, name);
+        }
         this.setText("[data-title]", "title", "Seller account");
-        this.setText("[data-eyebrow]", "eyebrow", "Versements");
+        this.setText("[data-eyebrow]", "eyebrow", "Payouts");
         this.setText("[data-copy]", "copy", "Activate and monitor your seller account to receive sale payouts.");
         this.setText("[data-activation-title]", "activation-title", "Activate my seller account");
         this.setText(
@@ -437,13 +448,16 @@ class StripeConnectOnboarding extends HTMLElement {
         this.setStatus("Checking your profile…", "idle");
         try {
             const profile = await this.requestAccountSource("getAccount");
-            const missing = missingProfileFields(profile);
+            const missing = missingProfileFields(profile, this);
             if (missing.length) {
                 this.profile = null;
                 this.activationPanel.hidden = true;
                 this.form.hidden = true;
                 this.missingPanel.hidden = false;
-                this.missingCopy.textContent = `Complete the following information: ${missing.join(", ")}.`;
+                this.missingCopy.textContent = walletCopy(this, "missing-profile-message").replace(
+                    "{fields}",
+                    missing.join(", "),
+                );
                 this.setStatus("Complete your profile before activating payouts.", "error");
                 return;
             }
@@ -689,7 +703,7 @@ class StripeConnectOnboarding extends HTMLElement {
 
     setStatus(message, state) {
         this.status.hidden = !message;
-        this.status.textContent = message;
+        this.status.textContent = translateWalletMessage(this, message);
         this.status.dataset.state = state;
     }
 
@@ -850,18 +864,20 @@ class StripeConnectOnboarding extends HTMLElement {
 }
 
 const profileFields = [
-    { property: "givenName", label: "first name" },
-    { property: "surname", label: "last name" },
-    { property: "birthDate", label: "birth date" },
-    { property: "phone", label: "phone number" },
-    { property: "addressLine1", label: "address" },
-    { property: "postalCode", label: "postal code" },
-    { property: "city", label: "city" },
-    { property: "countryCode", label: "country" },
+    { property: "givenName", label: "profile-given-name-label" },
+    { property: "surname", label: "profile-surname-label" },
+    { property: "birthDate", label: "profile-birth-date-label" },
+    { property: "phone", label: "profile-phone-label" },
+    { property: "addressLine1", label: "profile-address-label" },
+    { property: "postalCode", label: "profile-postal-code-label" },
+    { property: "city", label: "profile-city-label" },
+    { property: "countryCode", label: "profile-country-label" },
 ];
 
-function missingProfileFields(profile) {
-    return profileFields.filter((field) => !text(profile?.[field.property])).map((field) => field.label);
+function missingProfileFields(profile, host) {
+    return profileFields
+        .filter((field) => !text(profile?.[field.property]))
+        .map((field) => walletCopy(host, field.label));
 }
 
 function normalizedProfile(profile) {

@@ -17,6 +17,7 @@ export class MossaChipGroupEditor extends Editor {
                     },
                     { type: "text", label: "Name", attribute: "name" },
                     { type: "text", label: "Default value", attribute: "value" },
+                    { type: "text", label: "Unchecked value", attribute: "unchecked-value" },
                 ],
             },
             {

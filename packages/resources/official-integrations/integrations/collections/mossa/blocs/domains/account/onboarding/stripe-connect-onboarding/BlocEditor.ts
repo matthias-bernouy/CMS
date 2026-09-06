@@ -1,8 +1,19 @@
 import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
+import { walletMessages } from "./copy";
 
 export class StripeConnectOnboardingEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
+            {
+                kind: "self",
+                label: "Status and validation messages",
+                settings: Object.entries(walletMessages).map(([attribute, defaultValue]) => ({
+                    type: "text" as const,
+                    label: attribute.replaceAll("-", " "),
+                    attribute,
+                    defaultValue,
+                })),
+            },
             {
                 kind: "self",
                 label: "Regional settings",

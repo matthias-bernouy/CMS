@@ -2,7 +2,16 @@ import { mossaColorSchemeCss } from "./colorSchemes";
 
 class MossaChipGroup extends HTMLElement {
     static formAssociated = true;
-    static observedAttributes = ["accessible-label", "disabled", "label", "mode", "name", "required", "value"];
+    static observedAttributes = [
+        "accessible-label",
+        "disabled",
+        "label",
+        "mode",
+        "name",
+        "required",
+        "unchecked-value",
+        "value",
+    ];
 
     constructor() {
         super();
@@ -232,8 +241,10 @@ class MossaChipGroup extends HTMLElement {
 
     updateFormValue() {
         const values = this.selectedValues();
-        if (this.disabled || !this.name || values.length === 0) {
+        if (this.disabled || !this.name) {
             this.internals.setFormValue(null);
+        } else if (values.length === 0) {
+            this.internals.setFormValue(this.getAttribute("unchecked-value"));
         } else if (this.multiple) {
             const data = new FormData();
             for (const value of values) {
