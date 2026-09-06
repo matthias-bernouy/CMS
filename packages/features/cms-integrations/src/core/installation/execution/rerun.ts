@@ -33,7 +33,11 @@ import {
     tryReplaceCurrentInstallation,
 } from "./ordinary/claim";
 import { assertUpgradePreservesDependentRanges } from "./upgradeDependencies";
-import { connectorBindingsFromResult, connectorInstanceIds } from "../migration/adoption/installationBindings";
+import {
+    connectorBindingsFromResult,
+    connectorInstanceIds,
+    connectorRuntimeTargetsFromResult,
+} from "../migration/adoption/installationBindings";
 import { runDurableMigrationUpgrade } from "../migration/engine";
 import { resolveCollectionSelection } from "../../resources/selection";
 import { assertCollectionConformance } from "../../resources/conformance";
@@ -308,6 +312,7 @@ async function commitSuccessfulRerun(
         secretRefs: nextSecretRefs,
         secretInputs,
         connectorBindings: connectorBindingsFromResult(definition, result, instanceIds, installation.connectorBindings),
+        connectorRuntimeTargets: connectorRuntimeTargetsFromResult(definition, result),
         ...(activeResources ? { activeResources } : {}),
         ...(!installation.packageDigest && resolvedPackage ? { packageDigest: resolvedPackage.digest } : {}),
         ...(request.mode === "upgrade"
@@ -328,7 +333,12 @@ async function commitSuccessfulRerun(
             if (!request.installations.compareAndSwapMigration) {
                 const saved = await request.installations.replace({ ...next, pendingOperation: undefined });
                 await reconcileChangedInstallation(request.deps, request.installations, saved.id);
-                await deleteObsoleteSecretRefs(request.deps.secrets, installation.secretRefs, saved.secretRefs);
+                await deleteObsoleteSecretRefs(
+                    request.deps.secrets,
+                    installation.secretRefs,
+                    saved.secretRefs,
+                    request.installations,
+                );
                 return { installation: saved, run };
             }
             const prepared = await replaceCurrentInstallation(request.installations, installation, {
@@ -347,7 +357,12 @@ async function commitSuccessfulRerun(
                     ...next,
                     pendingOperation: undefined,
                 });
-                await deleteObsoleteSecretRefs(request.deps.secrets, installation.secretRefs, saved.secretRefs);
+                await deleteObsoleteSecretRefs(
+                    request.deps.secrets,
+                    installation.secretRefs,
+                    saved.secretRefs,
+                    request.installations,
+                );
                 return { installation: saved, run };
             } catch (error) {
                 const failure = failedRun(installation.runCount + 1, startedAt, error);

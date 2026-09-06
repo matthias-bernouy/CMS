@@ -72,6 +72,20 @@ export async function prepareDeclarativeIntegration(
             },
             deps.connectorInstanceIds,
         );
+        const runtimeOwners = (await deps.installations?.list()) ?? [];
+        const preserveSecrets = [
+            ...new Set([
+                ...runtimeOwners.flatMap((owner) =>
+                    Object.keys(owner.definitionSnapshot?.management?.runtimeSecrets ?? {}),
+                ),
+                ...(installed ? Object.keys(definition.management?.runtimeSecrets ?? {}) : []),
+            ]),
+        ];
+        for (const deployment of deployments) {
+            if (preserveSecrets.length) {
+                deployment.preserveSecrets = preserveSecrets;
+            }
+        }
         return { baseContext, deployments, provisions, secretWrites };
     } catch (error) {
         await provisions.rollback();

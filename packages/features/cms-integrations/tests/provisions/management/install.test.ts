@@ -56,3 +56,49 @@ test("undeclared answers cannot reach installation persistence", async () => {
     expect(await installations.list()).toEqual([]);
     expect(await secrets.listKeys()).toEqual([]);
 });
+
+test("upgrade retains an obsolete installation key granted by settings and removes unreferenced keys", async () => {
+    const installations = new InMemoryIntegrationInstallationRepository();
+    const secrets = new InMemorySecretStore();
+    const deps = {
+        sources: new InMemorySourceRepository(),
+        functions: new InMemoryFunctionRepository(),
+        secrets,
+        installations,
+    };
+    const legacy = {
+        ...definition,
+        generatedSecrets: [...definition.generatedSecrets!, { name: "unused", key: "UNUSED_GENERATED" }],
+    };
+    await runIntegrationInstallation({
+        mode: "create",
+        deps,
+        installations,
+        dto: { kind: legacy.kind, answers: {}, options: {} },
+        siteIntegrations: [legacy],
+    });
+    await secrets.set("MANAGED_SIGNING", "configured-value");
+    await installations.replace({
+        ...(await installations.get(legacy.kind))!,
+        managementSecretRefs: { key: "${MANAGED_SIGNING}" },
+    });
+    await runIntegrationInstallation({
+        mode: "upgrade",
+        deps,
+        installations,
+        integrationId: legacy.kind,
+        targetDefinition: {
+            ...legacy,
+            version: "1.1.0",
+            generatedSecrets: [],
+            management: {
+                ...legacy.management!,
+                generatedSecrets: [],
+                runtimeSecrets: { API_KEY: { field: "key" } },
+            },
+        },
+    });
+    expect((await installations.get(legacy.kind))?.secretRefs).toEqual({});
+    expect(await secrets.get("MANAGED_SIGNING")).toBe("configured-value");
+    expect(await secrets.get("UNUSED_GENERATED")).toBeNull();
+});

@@ -11,7 +11,11 @@ import { successRun } from "./execution/runs";
 import { depsWithPackageRoot, resolveCreatePackage } from "./packages";
 import { assertSecretKeysAvailable } from "./secretRefs";
 import { installationLabel, sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
-import { connectorBindingsFromResult, connectorInstanceIds } from "./migration/adoption/installationBindings";
+import {
+    connectorBindingsFromResult,
+    connectorInstanceIds,
+    connectorRuntimeTargetsFromResult,
+} from "./migration/adoption/installationBindings";
 import type {
     RunIntegrationInstallationCreateRequest,
     RunIntegrationInstallationResult,
@@ -73,6 +77,7 @@ export async function runCreate(
                 ...(Object.keys(instanceIds).length
                     ? { connectorBindings: connectorBindingsFromResult(importDefinition, result, instanceIds) }
                     : {}),
+                connectorRuntimeTargets: connectorRuntimeTargetsFromResult(importDefinition, result),
                 status: "success",
                 artifacts: result.artifacts,
                 ...(selection ? { activeResources: selection.activeResources } : {}),

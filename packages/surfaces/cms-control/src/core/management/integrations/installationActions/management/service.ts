@@ -86,10 +86,17 @@ export function integrationManagement(cms: ControlCms): IntegrationManagementSer
             return value;
         },
         async syncRuntimeSecrets(installation, values) {
-            const bindings = Object.values(installation.connectorBindings ?? {});
+            const ordinaryTargets =
+                installation.connectorRuntimeTargets ??
+                installation.runs
+                    .findLast((run) => run.status === "success")
+                    ?.connectors?.filter((connector) => !connector.lineageId)
+                    .map((connector) => ({ provider: connector.provider, outputs: connector.outputs ?? {} })) ??
+                [];
+            const bindings = [...Object.values(installation.connectorBindings ?? {}), ...ordinaryTargets];
             if (bindings.length !== 1) {
                 throw new IntegrationRuntimeError(
-                    "Runtime secret sync requires exactly one installed connector binding",
+                    "Runtime secret sync requires exactly one installed connector target",
                     409,
                 );
             }

@@ -3,6 +3,14 @@ import type { IntegrationDefinition } from "../../../../interfaces/Integration";
 import type { IntegrationImportResult } from "../../../../interfaces/IntegrationImport";
 import type { IntegrationConnectorBinding } from "../../../../interfaces/IntegrationInstallation";
 
+export function connectorRuntimeTargetsFromResult(definition: IntegrationDefinition, result: IntegrationImportResult) {
+    return (result.connectors ?? []).flatMap((connector, index) =>
+        definition.connectors?.[index]?.migration
+            ? []
+            : [{ provider: connector.provider, outputs: { ...(connector.outputs ?? {}) } }],
+    );
+}
+
 export function connectorInstanceIds(
     definition: IntegrationDefinition,
     existing: Record<string, IntegrationConnectorBinding> = {},

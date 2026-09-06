@@ -1,4 +1,4 @@
-import type { IntegrationConnectorBinding } from "../interfaces/IntegrationInstallation";
+import type { IntegrationConnectorRuntimeTarget } from "../interfaces/IntegrationInstallation";
 import { SupabaseManagementClient } from "./supabase/SupabaseManagementClient";
 import type { SecretReader } from "@bernouy/cms-secrets";
 import { IntegrationRuntimeError } from "../core/errors";
@@ -33,7 +33,7 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
 
     constructor(private readonly config: ConfiguredSupabaseConnectorDeployerConfig) {}
 
-    async syncSecrets(binding: IntegrationConnectorBinding, values: Record<string, string>): Promise<void> {
+    async syncSecrets(binding: IntegrationConnectorRuntimeTarget, values: Record<string, string>): Promise<void> {
         const projectRef = await this.readProjectRef();
         if (
             binding.provider !== this.provider ||

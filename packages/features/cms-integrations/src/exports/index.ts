@@ -165,6 +165,7 @@ export type {
     IntegrationInstallation,
     IntegrationInstallationStatus,
     IntegrationConnectorBinding,
+    IntegrationConnectorRuntimeTarget,
     IntegrationConnectorBaselineAdoptionAudit,
     IntegrationMigrationCompensationJournal,
     IntegrationMigrationJournalEntry,

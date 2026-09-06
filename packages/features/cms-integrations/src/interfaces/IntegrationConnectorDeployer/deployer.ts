@@ -1,4 +1,4 @@
-import type { IntegrationConnectorBinding } from "../IntegrationInstallation";
+import type { IntegrationConnectorRuntimeTarget } from "../IntegrationInstallation";
 import type { IntegrationAnswerValue, IntegrationDefinition } from "../Integration";
 import type { IntegrationConnectorMigrationDeployment } from "./migrations";
 
@@ -46,6 +46,8 @@ export type IntegrationConnectorDeployment = {
     dataApiSchemas: string[];
     schemas: IntegrationConnectorSchemaDeployment[];
     functions: IntegrationConnectorFunctionDeployment[];
+    /** Runtime variables owned by saved configuration; deployment must not overwrite them. */
+    preserveSecrets?: string[];
 };
 
 export type IntegrationConnectorDeployContext = {
@@ -75,7 +77,7 @@ export type IntegrationConnectorDeployResult = {
 
 export interface IntegrationConnectorDeployer {
     provider: string;
-    syncSecrets?(binding: IntegrationConnectorBinding, values: Record<string, string>): Promise<void>;
+    syncSecrets?(binding: IntegrationConnectorRuntimeTarget, values: Record<string, string>): Promise<void>;
     previewOutputs?(): Promise<Record<string, string>>;
     deploy(
         deployment: IntegrationConnectorDeployment,

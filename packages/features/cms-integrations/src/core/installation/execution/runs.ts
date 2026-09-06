@@ -19,6 +19,7 @@ export function appendRun(
             | "definitionSnapshot"
             | "packageDigest"
             | "connectorBindings"
+            | "connectorRuntimeTargets"
             | "activeResources"
         >
     >,

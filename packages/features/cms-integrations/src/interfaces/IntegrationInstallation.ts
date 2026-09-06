@@ -7,6 +7,11 @@ import type {
 
 export type IntegrationInstallationStatus = "success" | "failed" | "pending";
 
+export type IntegrationConnectorRuntimeTarget = {
+    provider: string;
+    outputs: Record<string, string>;
+};
+
 export type IntegrationConnectorBinding = {
     connectorKey: string;
     provider: string;
@@ -159,6 +164,8 @@ export type IntegrationInstallation = {
     definitionSnapshot?: IntegrationDefinition;
     packageDigest?: string;
     connectorBindings?: Record<string, IntegrationConnectorBinding>;
+    /** Deployment destinations for connectors without a migration lineage. */
+    connectorRuntimeTargets?: IntegrationConnectorRuntimeTarget[];
     connectorBaselineAdoptions?: IntegrationConnectorBaselineAdoptionAudit[];
     migrationOperation?: IntegrationMigrationOperation;
     pendingOperation?: IntegrationPendingOperation;

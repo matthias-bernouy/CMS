@@ -147,6 +147,7 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
     ): Promise<void> {
         const mergedSecrets = { ...this.resolveFunctionSecrets(deployment, fn, context), ...(fn.secrets ?? {}) };
         const secrets = Object.entries(mergedSecrets)
+            .filter(([name]) => !deployment.preserveSecrets?.includes(name))
             .filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)
             .map(([name, value]) => ({ name, value }));
         if (secrets.length) {
