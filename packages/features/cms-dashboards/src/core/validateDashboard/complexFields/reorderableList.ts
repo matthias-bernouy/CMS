@@ -35,13 +35,20 @@ export function validateReorderableListField(
             errors.push(`${itemPath}.label is required`);
         }
         validateRequiredPath("path", itemField.path, itemPath, errors);
+        if (itemField.type === "page-link") {
+            for (const key of ["publishedOnly", "allowExternal", "allowMedia"] as const) {
+                if (itemField[key] !== undefined && typeof itemField[key] !== "boolean") {
+                    errors.push(`${itemPath}.${key} must be a boolean`);
+                }
+            }
+        }
         if (itemField.type === "media") {
             validateMediaDefinition(itemField, itemPath, dashboard, source, errors);
         } else {
             validateNestedEditor(
                 itemField,
                 itemPath,
-                ["text", "checkbox", "select", "combobox"],
+                ["text", "checkbox", "select", "combobox", "secret-ref", "page-link"],
                 dashboard,
                 source,
                 errors,

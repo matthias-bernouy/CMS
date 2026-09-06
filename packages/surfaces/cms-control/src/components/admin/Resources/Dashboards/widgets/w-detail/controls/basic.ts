@@ -1,10 +1,16 @@
 import type { WDetailField, WDetailFieldValue } from "../types";
 import { parseMajorUnits } from "../../../runtime/mapping/money";
+import { createReferenceEditor } from "./editors";
 import { badge, image, readonlyValue } from "./display";
 import { combobox, moneyInput, numberInput, select, textInput, textarea, tokenInput } from "./inputFields";
 import { bindFieldControl, isTokenControl, isValueControl, type ValueControl } from "./shared";
 
 export function createBasicControl(field: WDetailField): HTMLElement {
+    if (field.input === "secret-ref" || field.input === "page-link") {
+        const control = createReferenceEditor({ ...field, type: field.input }, field.value);
+        bindFieldControl(control, field);
+        return control;
+    }
     if (field.input === "number") {
         return numberInput(field);
     }
@@ -42,7 +48,18 @@ export function createBasicControl(field: WDetailField): HTMLElement {
 }
 
 export function fieldUsesBasicInternalLabel(field: WDetailField): boolean {
-    return ["text", "number", "money", "textarea", "select", "cms-user", "combobox", "tokens"].includes(field.input);
+    return [
+        "text",
+        "number",
+        "money",
+        "textarea",
+        "select",
+        "cms-user",
+        "combobox",
+        "tokens",
+        "secret-ref",
+        "page-link",
+    ].includes(field.input);
 }
 
 export function readBasicControlValue(field: WDetailField, control: HTMLElement): WDetailFieldValue {

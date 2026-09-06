@@ -26436,6 +26436,15 @@ w13c-lateral-menu-item {
       ...field2.placeholder ? { placeholder: field2.placeholder } : {},
       ...field2.secondary ? { secondary: true } : {}
     };
+    if (field2.type === "page-link") {
+      return {
+        ...base,
+        type: field2.type,
+        publishedOnly: field2.publishedOnly,
+        allowExternal: field2.allowExternal,
+        allowMedia: field2.allowMedia
+      };
+    }
     const type = field2.type ?? "text";
     if (type === "select") {
       return { ...base, type, options: (field2.options ?? []).map(optionData) };
@@ -26474,6 +26483,18 @@ w13c-lateral-menu-item {
       ...field2.required ? { required: true } : {},
       ..."placeholder" in field2 && field2.placeholder ? { placeholder: field2.placeholder } : {}
     };
+    if (field2.type === "secret-ref" || field2.type === "page-link") {
+      return {
+        ...base,
+        input: field2.type,
+        value: textValue(value2),
+        ...field2.type === "page-link" ? {
+          publishedOnly: field2.publishedOnly,
+          allowExternal: field2.allowExternal,
+          allowMedia: field2.allowMedia
+        } : {}
+      };
+    }
     if (field2.type === "number") {
       return {
         ...base,
@@ -27844,6 +27865,1619 @@ button {
     return value2.filter((item) => Boolean(item) && typeof item === "object" && ("url" in item));
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
+  var template_default10 = `<div class="page-link">
+    <div class="head">
+        <span class="label"></span>
+        <span class="hint"></span>
+    </div>
+    <div class="tabs" role="tablist"></div>
+    <div class="panel page-panel">
+        <input class="search" type="search" placeholder="Search pages" />
+        <div class="picker" hidden>
+            <div class="page-list" role="listbox"></div>
+            <div class="empty" hidden>No pages found</div>
+        </div>
+    </div>
+    <div class="panel external-panel" hidden>
+        <input class="external-input" type="url" placeholder="https://example.com" />
+    </div>
+    <div class="panel media-panel" hidden>
+        <button class="file-button" type="button">
+            <span class="file-preview" aria-hidden="true"></span>
+            <span class="file-copy">
+                <strong class="file-title">Choose file</strong>
+                <code class="file-value">No file selected</code>
+            </span>
+            <span class="file-action">Change</span>
+        </button>
+    </div>
+    <div class="target">
+        <span class="icon">↗</span>
+        <span class="copy">
+            <strong></strong>
+            <code></code>
+        </span>
+    </div>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-1.css
+  var part_1_default = `:host {
+    display: block;
+}
+
+:host([disabled]) {
+    cursor: not-allowed;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.page-link {
+    display: grid;
+    gap: 7px;
+}
+
+.head {
+    display: grid;
+    gap: 2px;
+}
+
+.label {
+    color: var(--editor-v2-label);
+    font-size: 12px;
+    font-weight: 720;
+}
+
+.hint {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.tabs {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    padding: 3px;
+}
+
+.tabs:empty {
+    display: none;
+}
+
+.tabs[hidden] {
+    display: none;
+}
+
+button {
+    font: inherit;
+}
+
+.tabs button {
+    flex: 1;
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.tabs button[aria-selected="true"] {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+
+.panel {
+    display: grid;
+    gap: 6px;
+}
+
+.panel[hidden] {
+    display: none;
+}
+
+.page-panel {
+    position: relative;
+}
+
+.search,
+.external-input {
+    width: 100%;
+    min-height: 32px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    padding: 0 10px;
+}
+
+.file-button {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--editor-v2-border) 76%, transparent);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-text);
+    padding: 8px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.file-button:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 32%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 4%, var(--editor-v2-surface));
+}
+
+.file-preview {
+    display: grid;
+    overflow: hidden;
+    place-items: center;
+    width: 100%;
+    min-height: 112px;
+    aspect-ratio: 16 / 9;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--editor-v2-accent) 10%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+    font-size: 18px;
+}
+
+.file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.file-copy {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.file-title,
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-2.css
+  var part_2_default = `.file-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-value[hidden] {
+    display: none;
+}
+
+.file-action {
+    justify-self: start;
+    color: var(--editor-v2-accent);
+    font-size: 11px;
+    font-weight: 720;
+}
+
+.search:focus,
+.external-input:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 46%, var(--editor-v2-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 10%, transparent);
+}
+
+.picker {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    overflow: hidden;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+    box-shadow: 0 12px 28px rgba(16, 24, 21, .14);
+}
+
+.picker[hidden] {
+    display: none;
+}
+
+.page-list {
+    display: grid;
+    max-height: 184px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.page-option {
+    display: grid;
+    gap: 2px;
+    min-height: 34px;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-text);
+    padding: 6px 7px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.page-option:hover {
+    background: color-mix(in srgb, var(--editor-v2-accent) 4%, var(--editor-v2-surface));
+}
+
+.page-option[aria-selected="true"] {
+    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+}
+
+.page-title {
+    overflow: hidden;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 720;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page-path {
+    overflow: hidden;
+    min-width: 0;
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.empty {
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    padding: 10px 11px;
+}
+
+.target {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 34px;
+    border: 1px solid color-mix(in srgb, var(--editor-v2-border) 76%, transparent);
+    border-radius: 7px;
+    background: var(--editor-v2-surface-muted);
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.target[hidden] {
+    display: none;
+}
+
+.icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--editor-v2-accent) 12%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+    font-size: 12px;
+}
+
+.copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+strong {
+    overflow: hidden;
+    color: var(--editor-v2-text);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+code {
+    overflow: hidden;
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-3.css
+  var part_3_default = `
+:host([disabled]) button,
+:host([disabled]) input,
+:host([disabled]) .target {
+    opacity: .62;
+    cursor: not-allowed;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
+  var styles_default4 = [String(part_1_default), String(part_2_default), String(part_3_default)].join("");
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
+  function allowedLinkModes(options) {
+    const modes = [];
+    if (options.allowPage) {
+      modes.push("page");
+    }
+    if (options.allowExternal) {
+      modes.push("external");
+    }
+    if (options.allowMedia) {
+      modes.push("media");
+    }
+    return modes;
+  }
+  function modeForLinkValue(value2, options) {
+    if (value2 && isMediaLink(value2)) {
+      return "media";
+    }
+    if (value2 && isExternalLink(value2)) {
+      return "external";
+    }
+    if (!options.allowPage && !options.allowExternal && options.allowMedia) {
+      return "media";
+    }
+    if (!options.allowPage && options.allowExternal) {
+      return "external";
+    }
+    return "page";
+  }
+  function isExternalLink(value2) {
+    return /^[a-z][a-z0-9+.-]*:/i.test(value2) || value2.startsWith("//");
+  }
+  function isMediaLink(value2) {
+    return value2.includes("/.cms/files/by-id/");
+  }
+  function isImageMediaLink(value2) {
+    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value2) || value2.includes("/.cms/files/by-id/");
+  }
+  function mediaDisplayName(value2, isImage2, mediaLabel = "") {
+    if (mediaLabel) {
+      return mediaLabel;
+    }
+    if (value2.includes("/.cms/files/by-id/")) {
+      return isImage2 ? "Image" : "Selected file";
+    }
+    const clean = value2.split(/[?#]/, 1)[0] ?? value2;
+    const segment = clean.split("/").filter(Boolean).at(-1);
+    if (!segment) {
+      return "File";
+    }
+    try {
+      return decodeURIComponent(segment);
+    } catch {
+      return segment;
+    }
+  }
+  function mediaSelectionLabel(isImage2) {
+    return isImage2 ? "Image" : "File selected";
+  }
+  function linkSummaryFallback(mode) {
+    if (mode === "external") {
+      return "External URL";
+    }
+    if (mode === "media") {
+      return "File";
+    }
+    return "Internal page";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkMediaView.ts
+  function renderPageLinkPanels(input) {
+    const { elements } = input;
+    elements.pagePanel.hidden = input.mode !== "page" || !input.allowPage;
+    elements.externalPanel.hidden = input.mode !== "external" || !input.allowExternal;
+    elements.mediaPanel.hidden = input.mode !== "media" || !input.allowMedia;
+    elements.searchInput.disabled = input.disabled;
+    elements.externalInput.disabled = input.disabled;
+    elements.fileButton.disabled = input.disabled;
+    elements.picker.hidden = !input.pickerOpen || elements.pagePanel.hidden;
+    if (input.mode === "external") {
+      elements.externalInput.value = input.value;
+    }
+    renderPageLinkMedia(elements, input.mode, input.value, input.mediaLabel);
+  }
+  function renderPageLinkMedia(elements, mode, value2, mediaLabel) {
+    const hasValue = mode === "media" && value2 !== "";
+    const isImage2 = hasValue && isImageMediaLink(value2);
+    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value2, isImage2, mediaLabel) : "Choose file";
+    elements.fileValue.textContent = hasValue ? mediaSelectionLabel(isImage2) : "No file selected";
+    elements.fileValue.toggleAttribute("hidden", hasValue && isImage2);
+    elements.fileAction.textContent = hasValue ? "Change" : "Choose";
+    elements.filePreview.replaceChildren();
+    elements.filePreview.dataset.kind = isImage2 ? "image" : "file";
+    if (isImage2) {
+      const image = document.createElement("img");
+      image.src = value2;
+      image.alt = "";
+      image.loading = "lazy";
+      elements.filePreview.append(image);
+      return;
+    }
+    elements.filePreview.textContent = "↗";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkNavigationView.ts
+  function renderPageLinkTabs(input) {
+    input.elements.tabs.replaceChildren();
+    if (input.allowedModes.length <= 1) {
+      input.elements.tabs.hidden = true;
+      return;
+    }
+    input.elements.tabs.hidden = false;
+    for (const mode of input.allowedModes) {
+      input.elements.tabs.append(modeTab(mode, input.mode, input.disabled, input.onMode));
+    }
+  }
+  function renderPageLinkPages(input) {
+    input.elements.pageList.replaceChildren();
+    input.elements.picker.hidden = !input.pickerOpen || input.elements.pagePanel.hidden;
+    const query5 = input.query.trim().toLowerCase();
+    const pages = input.pages.filter((page) => !query5 || page.title.toLowerCase().includes(query5) || page.path.toLowerCase().includes(query5));
+    input.elements.empty.hidden = !input.pickerOpen || pages.length > 0;
+    for (const page of pages) {
+      const button = document.createElement("button");
+      button.className = "page-option";
+      button.type = "button";
+      button.ariaSelected = String(page.path === input.value);
+      button.disabled = input.disabled;
+      button.addEventListener("click", () => {
+        if (!input.disabled) {
+          input.onSelect(page.path);
+        }
+      });
+      const title = document.createElement("span");
+      title.className = "page-title";
+      title.textContent = page.title;
+      const path = document.createElement("span");
+      path.className = "page-path";
+      path.textContent = page.path;
+      button.append(title, path);
+      input.elements.pageList.append(button);
+    }
+  }
+  function renderPageLinkSummary(elements, pages, mode, value2) {
+    const page = pages.find((candidate) => candidate.path === value2);
+    elements.summaryTitle.textContent = page?.title ?? (value2 ? linkSummaryFallback(mode) : "No link selected");
+    elements.summaryValue.textContent = value2 || "Choose a target";
+    elements.target.hidden = !value2 || mode === "media";
+  }
+  function modeTab(mode, activeMode, disabled, onMode) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.role = "tab";
+    button.textContent = mode === "page" ? "Page" : mode === "external" ? "External" : "Media";
+    button.ariaSelected = String(activeMode === mode);
+    button.disabled = disabled;
+    button.addEventListener("click", () => {
+      if (!disabled) {
+        onMode(mode);
+      }
+    });
+    return button;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
+  function queryPageLinkElements(root) {
+    const query5 = (selector) => root.querySelector(selector);
+    return {
+      empty: query5(".empty"),
+      externalInput: query5(".external-input"),
+      externalPanel: query5(".external-panel"),
+      fileAction: query5(".file-action"),
+      fileButton: query5(".file-button"),
+      filePreview: query5(".file-preview"),
+      fileTitle: query5(".file-title"),
+      fileValue: query5(".file-value"),
+      hint: query5(".hint"),
+      label: query5(".label"),
+      mediaPanel: query5(".media-panel"),
+      pageList: query5(".page-list"),
+      pagePanel: query5(".page-panel"),
+      picker: query5(".picker"),
+      searchInput: query5(".search"),
+      summaryTitle: query5(".target strong"),
+      summaryValue: query5(".target code"),
+      tabs: query5(".tabs"),
+      target: query5(".target")
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
+  var template_default11 = `<div class="backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
+        <header class="top">
+            <div>
+                <h2 id="files-title">Choose file</h2>
+                <p>Select a file from the CMS library.</p>
+            </div>
+            <button class="icon-button close" type="button" aria-label="Close">×</button>
+        </header>
+
+        <div class="toolbar">
+            <nav class="breadcrumb" aria-label="Current folder"></nav>
+            <input class="search" type="search" placeholder="Search files" />
+        </div>
+
+        <div class="grid" role="listbox"></div>
+        <div class="empty" hidden>No files found</div>
+
+        <footer class="footer">
+            <div class="selection">
+                <strong>No file selected</strong>
+                <code>Choose a file</code>
+            </div>
+            <div class="actions">
+                <button class="secondary cancel" type="button">Cancel</button>
+                <button class="primary select" type="button" disabled>Select file</button>
+            </div>
+        </footer>
+    </section>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-1.css
+  var part_1_default2 = `:host {
+    color: var(--editor-v2-text, #111);
+    font: 12px/1.35 system-ui, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.backdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: start center;
+    overflow: auto;
+    background: rgba(16, 24, 21, .34);
+    padding: 72px 24px 24px;
+}
+
+.backdrop[hidden] {
+    display: none;
+}
+
+.modal {
+    display: grid;
+    grid-template-rows: auto auto minmax(180px, 1fr) auto;
+    width: min(940px, calc(100vw - 48px));
+    max-height: min(760px, calc(100vh - 96px));
+    overflow: hidden;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 8px;
+    background: var(--editor-v2-surface, #fff);
+    box-shadow: 0 24px 70px rgba(16, 24, 21, .22);
+}
+
+.top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 16px 18px;
+}
+
+h2,
+p {
+    margin: 0;
+}
+
+h2 {
+    font-size: 15px;
+    font-weight: 760;
+}
+
+p {
+    margin-top: 3px;
+    color: var(--editor-v2-muted, #708078);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+.icon-button {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    background: var(--editor-v2-surface, #fff);
+    cursor: pointer;
+}
+
+.toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 10px;
+    align-items: center;
+    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 10px 12px;
+}
+
+.breadcrumb {
+    display: flex;
+    min-width: 0;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.breadcrumb button {
+    min-width: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted, #708078);
+    cursor: pointer;
+    font-weight: 650;
+    padding: 5px 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.breadcrumb button:hover,
+.breadcrumb button[aria-current="page"] {
+    background: var(--editor-v2-surface-muted, #f5f7f6);
+    color: var(--editor-v2-text, #111);
+}
+
+.search {
+    min-height: 32px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    outline: none;
+    padding: 0 10px;
+}
+
+.search:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 46%, var(--editor-v2-border, #d7ddd9));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent, #176b58) 10%, transparent);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    align-content: start;
+    gap: 10px;
+    justify-items: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-2.css
+  var part_2_default2 = `.item {
+    display: grid;
+    grid-template-rows: 108px auto;
+    gap: 8px;
+    width: 100%;
+    max-width: 180px;
+    min-height: 168px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    background: var(--editor-v2-surface, #fff);
+    color: var(--editor-v2-text, #111);
+    cursor: pointer;
+    padding: 8px;
+    text-align: left;
+}
+
+.item:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 34%, var(--editor-v2-border, #d7ddd9));
+    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 4%, var(--editor-v2-surface, #fff));
+}
+
+.item[aria-selected="true"] {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 66%, var(--editor-v2-border, #d7ddd9));
+    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 8%, var(--editor-v2-surface, #fff));
+}
+
+.preview {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    width: 100%;
+    height: 108px;
+    border-radius: 6px;
+    background: var(--editor-v2-surface-muted, #f5f7f6);
+    color: var(--editor-v2-accent, #176b58);
+}
+
+.preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview svg {
+    width: 46px;
+    height: 46px;
+    fill: color-mix(in srgb, var(--editor-v2-accent, #176b58) 72%, var(--editor-v2-text, #111));
+    opacity: .9;
+}
+
+.item[data-type="folder"] .preview {
+    background: color-mix(in srgb, #e2b45c 16%, var(--editor-v2-surface-muted, #f5f7f6));
+    color: #9a6a10;
+}
+
+.item[data-type="folder"] .preview svg {
+    fill: currentColor;
+}
+
+.item[data-type="pdf"] .preview {
+    background: color-mix(in srgb, #c84d4d 12%, var(--editor-v2-surface-muted, #f5f7f6));
+    color: #9d3030;
+}
+
+.preview text {
+    fill: currentColor;
+    font: 700 5px system-ui, sans-serif;
+}
+
+.copy {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+}
+
+.name,
+.meta,
+.selection strong,
+.selection code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.name {
+    font-weight: 720;
+}
+
+.meta,
+.selection code {
+    color: var(--editor-v2-muted, #708078);
+    font-size: 11px;
+}
+
+.empty {
+    color: var(--editor-v2-muted, #708078);
+    padding: 18px;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 12px;
+}
+
+.selection {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+}
+
+.secondary,
+.primary {
+    min-height: 32px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 720;
+    padding: 0 12px;
+}
+
+.secondary {
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    background: var(--editor-v2-surface, #fff);
+    color: var(--editor-v2-text, #111);
+}
+
+.primary {
+    border: 1px solid var(--editor-v2-accent, #176b58);
+    background: var(--editor-v2-accent, #176b58);
+    color: #fff;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-3.css
+  var part_3_default2 = `.primary:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+    .toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .modal {
+        width: calc(100vw - 24px);
+    }
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
+  var styles_default5 = [String(part_1_default2), String(part_2_default2), String(part_3_default2)].join(`
+`);
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
+  async function loadFilesPage(basePath3, folder, accept) {
+    const params = new URLSearchParams;
+    if (folder) {
+      params.set("parentId", folder);
+    }
+    params.set("accept", accept.join(","));
+    params.set("sortBy", "name");
+    params.set("limit", "10000");
+    const response = await fetch(`${basePath3}/api/files?${params.toString()}`);
+    if (!response.ok) {
+      return [];
+    }
+    return (await response.json()).items;
+  }
+  function fileUrl(basePath3, id2) {
+    return `${basePath3}/.cms/files/by-id/${encodeURIComponent(id2)}`;
+  }
+  function isCmsFileSource(value2) {
+    return value2.startsWith("/") && !value2.startsWith("//") && !/[\u0000-\u0020\u007F]/.test(value2) && /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value2);
+  }
+  function fileDetail(basePath3, item) {
+    return {
+      id: item.id,
+      label: item.name,
+      src: fileUrl(basePath3, item.id),
+      mimeType: item.mimeType
+    };
+  }
+  function fileKind(item) {
+    if (item.mimeType?.startsWith("image/")) {
+      return "image";
+    }
+    if (item.mimeType?.includes("pdf")) {
+      return "pdf";
+    }
+    return "file";
+  }
+  function matchesFileAccept(item, accept) {
+    if (!accept || accept.length === 0) {
+      return true;
+    }
+    const mimeType = item.mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+    if (accept.includes("image") && mimeType.startsWith("image/")) {
+      return true;
+    }
+    if (accept.includes("svg") && mimeType === "image/svg+xml") {
+      return true;
+    }
+    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") {
+      return true;
+    }
+    if (accept.includes("video") && mimeType.startsWith("video/")) {
+      return true;
+    }
+    if (accept.includes("audio") && mimeType.startsWith("audio/")) {
+      return true;
+    }
+    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) {
+      return true;
+    }
+    return false;
+  }
+  function fileMeta(item) {
+    const parts = [item.mimeType ?? "File"];
+    if (typeof item.size === "number") {
+      parts.push(formatFileSize(item.size));
+    }
+    return parts.join(" · ");
+  }
+  function formatFileSize(size) {
+    if (size < 1024) {
+      return `${size} B`;
+    }
+    if (size < 1024 * 1024) {
+      return `${Math.round(size / 1024)} KB`;
+    }
+    return `${(size / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
+  function queryFilesCenterElements(root) {
+    const query5 = (selector) => root.querySelector(selector);
+    return {
+      backdrop: query5(".backdrop"),
+      breadcrumb: query5(".breadcrumb"),
+      cancelButton: query5(".cancel"),
+      closeButton: query5(".close"),
+      empty: query5(".empty"),
+      grid: query5(".grid"),
+      searchInput: query5(".search"),
+      selectButton: query5(".select"),
+      selectionTitle: query5(".selection strong"),
+      selectionValue: query5(".selection code")
+    };
+  }
+  function wireFilesCenterElements(elements, callbacks) {
+    elements.closeButton.addEventListener("click", callbacks.close);
+    elements.cancelButton.addEventListener("click", callbacks.close);
+    elements.backdrop.addEventListener("click", (event) => {
+      if (event.target === elements.backdrop) {
+        callbacks.close();
+      }
+    });
+    elements.selectButton.addEventListener("click", callbacks.confirm);
+    elements.searchInput.addEventListener("input", callbacks.search);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterList.ts
+  function renderFilesBreadcrumb(container, trail, onOpen) {
+    container.replaceChildren();
+    trail.forEach((entry, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = entry.label;
+      button.ariaCurrent = index === trail.length - 1 ? "page" : null;
+      button.addEventListener("click", () => onOpen(entry, index));
+      container.append(button);
+    });
+  }
+  function renderFilesList(input) {
+    input.grid.replaceChildren();
+    const query5 = input.query.trim().toLowerCase();
+    const items = input.items.filter((item) => {
+      if (item.type === "file" && !matchesFileAccept(item, input.fileAccept)) {
+        return false;
+      }
+      return !query5 || item.name.toLowerCase().includes(query5);
+    });
+    input.empty.hidden = items.length > 0;
+    for (const item of items) {
+      const button = document.createElement("button");
+      button.className = "item";
+      button.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
+      button.type = "button";
+      button.ariaSelected = String(input.isSelected(item));
+      button.addEventListener("click", () => {
+        if (item.type === "folder") {
+          input.onOpenFolder(item);
+          return;
+        }
+        input.onSelectFile(item);
+      });
+      button.addEventListener("dblclick", () => {
+        if (item.type === "file" && !input.multiple) {
+          input.onConfirm();
+        }
+      });
+      button.append(renderFilePreview(item, input.basePath), renderFileCopy(item));
+      input.grid.append(button);
+    }
+  }
+  function renderFileCopy(item) {
+    const copy = document.createElement("span");
+    copy.className = "copy";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = item.name;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
+    copy.append(name, meta);
+    return copy;
+  }
+  function renderFilePreview(item, basePath3) {
+    const preview = document.createElement("span");
+    preview.className = "preview";
+    if (item.type === "folder") {
+      preview.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.8A2.8 2.8 0 0 1 5.8 4h4.1l2 2H18.2A2.8 2.8 0 0 1 21 8.8v8.4a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.2Z"/></svg>`;
+      return preview;
+    }
+    if (item.mimeType?.startsWith("image/")) {
+      const image = document.createElement("img");
+      image.alt = "";
+      image.loading = "lazy";
+      image.src = fileUrl(basePath3, item.id);
+      preview.append(image);
+      return preview;
+    }
+    preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
+    return preview;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterSelection.ts
+  function renderFilesSelection(elements, selection) {
+    if (selection.multiple) {
+      const count = selection.selectedMany.length;
+      elements.selectButton.disabled = count === 0;
+      elements.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
+      elements.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
+      elements.selectionValue.textContent = selection.maxSelection ? `Up to ${selection.maxSelection} files` : "Choose files";
+      return;
+    }
+    elements.selectButton.disabled = !selection.selected;
+    elements.selectButton.textContent = "Select file";
+    elements.selectionTitle.textContent = selection.selected?.name ?? "No file selected";
+    elements.selectionValue.textContent = selection.selected ? fileMeta(selection.selected) : "Choose a file";
+  }
+  function toggleSelectedFile(item, selection) {
+    if (!selection.multiple) {
+      return item;
+    }
+    const existingIndex = selection.selectedMany.findIndex((selected2) => selected2.id === item.id);
+    if (existingIndex >= 0) {
+      selection.selectedMany.splice(existingIndex, 1);
+      return selection.selected;
+    }
+    if (!selection.maxSelection || selection.selectedMany.length < selection.maxSelection) {
+      selection.selectedMany.push(item);
+    }
+    return selection.selected;
+  }
+  function isFileSelected(item, selection) {
+    return selection.multiple ? selection.selectedMany.some((selected2) => selected2.id === item.id) : selection.selected?.id === item.id;
+  }
+  function dispatchFilesSelection(host, basePath3, selection) {
+    if (selection.multiple) {
+      if (selection.selectedMany.length === 0) {
+        return false;
+      }
+      host.dispatchEvent(new CustomEvent("select-files", {
+        bubbles: true,
+        composed: true,
+        detail: { files: selection.selectedMany.map((file) => fileDetail(basePath3, file)) }
+      }));
+      return true;
+    }
+    if (!selection.selected) {
+      return false;
+    }
+    host.dispatchEvent(new CustomEvent("select-file", {
+      bubbles: true,
+      composed: true,
+      detail: fileDetail(basePath3, selection.selected)
+    }));
+    return true;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
+  var template = document.createElement("template");
+  template.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default11)}`;
+
+  class FilesCenter extends HTMLElement {
+    _folder = null;
+    _trail = [{ id: null, label: "Files" }];
+    _items = [];
+    _selected = null;
+    _selectedMany = [];
+    _wired = false;
+    _accept = ["folder", "file"];
+    _fileAccept = null;
+    _multiple = false;
+    _maxSelection = null;
+    elements;
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template.content.cloneNode(true));
+      this.elements = queryFilesCenterElements(shadowRoot);
+    }
+    connectedCallback() {
+      this._wire();
+    }
+    show(options = {}) {
+      this._wire();
+      this._accept = options.accept ?? ["folder", "file"];
+      this._fileAccept = options.fileAccept ?? null;
+      this._multiple = options.multiple === true;
+      this._maxSelection = typeof options.maxSelection === "number" ? Math.max(1, options.maxSelection) : null;
+      this._folder = null;
+      this._trail = [{ id: null, label: "Files" }];
+      this._selected = null;
+      this._selectedMany = [];
+      this.elements.searchInput.value = "";
+      this.elements.backdrop.hidden = false;
+      this._load();
+    }
+    _wire() {
+      if (this._wired) {
+        return;
+      }
+      this._wired = true;
+      wireFilesCenterElements(this.elements, {
+        close: () => this._close(),
+        confirm: () => this._confirm(),
+        search: () => this._renderItems()
+      });
+    }
+    async _load() {
+      this._selected = null;
+      this._updateSelection();
+      this._items = await loadFilesPage(this._basePath(), this._folder, this._accept);
+      this._render();
+    }
+    _render() {
+      this._renderBreadcrumb();
+      this._renderItems();
+      this._updateSelection();
+    }
+    _renderBreadcrumb() {
+      renderFilesBreadcrumb(this.elements.breadcrumb, this._trail, (entry, index) => {
+        this._folder = entry.id;
+        this._trail = this._trail.slice(0, index + 1);
+        this._load();
+      });
+    }
+    _renderItems() {
+      renderFilesList({
+        basePath: this._basePath(),
+        empty: this.elements.empty,
+        fileAccept: this._fileAccept,
+        grid: this.elements.grid,
+        isSelected: (item) => this._isSelected(item),
+        items: this._items,
+        multiple: this._multiple,
+        onConfirm: () => this._confirm(),
+        onOpenFolder: (item) => this._openFolder(item),
+        onSelectFile: (item) => {
+          this._selectFile(item);
+          this._renderItems();
+          this._updateSelection();
+        },
+        query: this.elements.searchInput.value
+      });
+    }
+    _openFolder(item) {
+      this._folder = item.id;
+      this._trail.push({ id: item.id, label: item.name });
+      this.elements.searchInput.value = "";
+      this._load();
+    }
+    _updateSelection() {
+      renderFilesSelection(this.elements, this._selection());
+    }
+    _confirm() {
+      if (dispatchFilesSelection(this, this._basePath(), this._selection())) {
+        this._close();
+      }
+    }
+    _selectFile(item) {
+      this._selected = toggleSelectedFile(item, this._selection());
+    }
+    _isSelected(item) {
+      return isFileSelected(item, this._selection());
+    }
+    _close() {
+      this.elements.backdrop.hidden = true;
+      this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+    }
+    _basePath() {
+      return document.querySelector('meta[name="basePath"]')?.content ?? "";
+    }
+    _selection() {
+      return {
+        maxSelection: this._maxSelection,
+        multiple: this._multiple,
+        selected: this._selected,
+        selectedMany: this._selectedMany
+      };
+    }
+  }
+  if (!customElements.get("cms-editor-v2-files-center")) {
+    customElements.define("cms-editor-v2-files-center", FilesCenter);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkMediaPicker.ts
+  function openPageLinkMediaPicker(onSelect, accept) {
+    const center = new FilesCenter;
+    const cleanup = () => center.remove();
+    center.addEventListener("close", cleanup, { once: true });
+    center.addEventListener("select-file", (event) => {
+      const detail = event.detail;
+      if (detail?.src && isCmsFileSource(detail.src) && matchesMediaDetail(detail, accept)) {
+        onSelect(detail.src, detail.label);
+      }
+    }, { once: true });
+    document.body.append(center);
+    center.show({ accept: ["folder", "file"], fileAccept: accept });
+  }
+  function matchesMediaDetail(detail, accept) {
+    return matchesFileAccept({
+      id: detail.id,
+      name: detail.label,
+      parentId: null,
+      type: "file",
+      mimeType: detail.mimeType
+    }, accept ?? null);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts
+  class PageLinkState extends HTMLElement {
+    pages = [];
+    mode = "page";
+    currentValue = "";
+    loaded = false;
+    wired = false;
+    pickerOpen = false;
+    reflectingValue = false;
+    mediaLabel = "";
+    elements;
+    constructor(template2) {
+      super();
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template2.content.cloneNode(true));
+      this.elements = queryPageLinkElements(shadowRoot);
+    }
+    static get observedAttributes() {
+      return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
+    }
+    attributeChangedCallback() {
+      if (!this.shadowRoot || this.reflectingValue) {
+        return;
+      }
+      this.syncFromAttributes();
+      this.render();
+    }
+    get value() {
+      return this.currentValue;
+    }
+    set value(value2) {
+      this.currentValue = value2;
+      this.reflectValue(value2);
+      this.render();
+    }
+    syncFromAttributes() {
+      this.currentValue = this.getAttribute("value") ?? "";
+      this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
+    }
+    setValue(value2) {
+      if (!isSafeNavigationalUrl(value2)) {
+        return;
+      }
+      this.currentValue = value2;
+      this.reflectValue(value2);
+      this.renderPages();
+      this.renderSummary();
+      this.renderMediaFile();
+      this.dispatchEvent(new CustomEvent("input", {
+        bubbles: true,
+        composed: true,
+        detail: { value: value2 }
+      }));
+    }
+    openPicker() {
+      if (this.disabled || this.mode !== "page") {
+        return;
+      }
+      this.pickerOpen = true;
+      this.renderPages();
+    }
+    closePicker() {
+      this.pickerOpen = false;
+      this.renderPages();
+    }
+    openFilesCenter() {
+      if (this.disabled) {
+        return;
+      }
+      openPageLinkMediaPicker((source2, label2) => {
+        this.mode = "media";
+        this.mediaLabel = label2;
+        this.setValue(source2);
+      }, this.mediaAccept());
+    }
+    renderMediaFile() {
+      renderPageLinkMedia(this.elements, this.mode, this.currentValue, this.mediaLabel);
+    }
+    allowedModes() {
+      return allowedLinkModes(this.modeOptions());
+    }
+    allowPage() {
+      return this.getAttribute("allow-page") !== "false";
+    }
+    allowExternal() {
+      return this.getAttribute("allow-external") !== "false";
+    }
+    allowMedia() {
+      return this.getAttribute("allow-media") !== "false";
+    }
+    mediaAccept() {
+      const allowed = new Set(["image", "bitmap", "svg", "video", "audio", "document"]);
+      const values = (this.getAttribute("media-accept") ?? "").split(",").map((value2) => value2.trim()).filter((value2) => allowed.has(value2));
+      return values.length > 0 ? values : undefined;
+    }
+    basePath() {
+      return document.querySelector('meta[name="basePath"]')?.content ?? "";
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    modeOptions() {
+      return {
+        allowPage: this.allowPage(),
+        allowExternal: this.allowExternal(),
+        allowMedia: this.allowMedia()
+      };
+    }
+    reflectValue(value2) {
+      this.reflectingValue = true;
+      this.setAttribute("value", value2);
+      this.reflectingValue = false;
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts
+  class PageLinkController extends PageLinkState {
+    constructor(template2) {
+      super(template2);
+    }
+    connectedCallback() {
+      this.syncFromAttributes();
+      this.wire();
+      this.loadPages();
+      this.render();
+    }
+    render() {
+      this.elements.label.textContent = this.getAttribute("label") ?? "Link";
+      this.elements.hint.textContent = this.getAttribute("hint") ?? "";
+      this.elements.hint.toggleAttribute("hidden", !this.elements.hint.textContent);
+      this.renderTabs();
+      this.renderPanels();
+      this.renderPages();
+      this.renderSummary();
+    }
+    renderPages() {
+      renderPageLinkPages({
+        disabled: this.disabled,
+        elements: this.elements,
+        onSelect: (value2) => {
+          this.setValue(value2);
+          this.elements.searchInput.value = "";
+          this.closePicker();
+        },
+        pages: this.pages,
+        pickerOpen: this.pickerOpen,
+        query: this.elements.searchInput.value,
+        value: this.currentValue
+      });
+    }
+    renderSummary() {
+      renderPageLinkSummary(this.elements, this.pages, this.mode, this.currentValue);
+    }
+    wire() {
+      if (this.wired) {
+        return;
+      }
+      this.wired = true;
+      this.elements.searchInput.addEventListener("focus", () => this.openPicker());
+      this.elements.searchInput.addEventListener("click", () => this.openPicker());
+      this.elements.searchInput.addEventListener("input", () => {
+        this.pickerOpen = true;
+        this.renderPages();
+      });
+      this.elements.externalInput.addEventListener("input", () => {
+        if (!this.disabled) {
+          this.setValue(this.elements.externalInput.value);
+        }
+      });
+      this.elements.fileButton.addEventListener("click", () => this.openFilesCenter());
+      this.elements.pagePanel.addEventListener("focusout", () => {
+        setTimeout(() => {
+          if (this.shadowRoot?.activeElement && this.elements.pagePanel.contains(this.shadowRoot.activeElement)) {
+            return;
+          }
+          this.closePicker();
+        }, 0);
+      });
+      this.elements.target.addEventListener("click", () => {
+        if (!this.disabled && this.mode === "page") {
+          this.elements.searchInput.focus();
+          this.openPicker();
+        }
+      });
+    }
+    async loadPages() {
+      if (this.loaded || !this.allowPage()) {
+        return;
+      }
+      this.loaded = true;
+      try {
+        const published = this.getAttribute("published-only") === "true" ? "?visible=published" : "";
+        const response = await fetch(`${this.basePath()}/api/page/links${published}`);
+        if (!response.ok) {
+          return;
+        }
+        this.pages = await response.json();
+        this.renderPages();
+        this.renderSummary();
+      } catch {
+        this.pages = [];
+        this.renderPages();
+      }
+    }
+    renderTabs() {
+      renderPageLinkTabs({
+        allowedModes: this.allowedModes(),
+        disabled: this.disabled,
+        elements: this.elements,
+        mode: this.mode,
+        onMode: (mode) => {
+          this.mode = mode;
+          if (mode !== "page") {
+            this.pickerOpen = false;
+          }
+          if (mode === "external") {
+            this.elements.externalInput.value = this.currentValue;
+          }
+          this.render();
+        }
+      });
+    }
+    renderPanels() {
+      renderPageLinkPanels({
+        allowExternal: this.allowExternal(),
+        allowMedia: this.allowMedia(),
+        allowPage: this.allowPage(),
+        disabled: this.disabled,
+        elements: this.elements,
+        mediaLabel: this.mediaLabel,
+        mode: this.mode,
+        pickerOpen: this.pickerOpen,
+        value: this.currentValue
+      });
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
+  var template2 = document.createElement("template");
+  template2.innerHTML = `<style>${String(styles_default4)}</style>${String(template_default10)}`;
+
+  class PageLink extends PageLinkController {
+    constructor() {
+      super(template2);
+    }
+  }
+  if (!customElements.get("cms-editor-v2-page-link")) {
+    customElements.define("cms-editor-v2-page-link", PageLink);
+  }
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/shared.ts
+  function bindFieldControl(control, field2) {
+    control.dataset.fieldControl = field2.id;
+  }
+  function applyRemoteLookupMetadata(control, field2) {
+    if (field2.lookupKey) {
+      control.dataset.lookupTarget = field2.lookupKey;
+    }
+    control.toggleAttribute("remote-search", field2.remoteSearch === true);
+    control.toggleAttribute("remote-pagination", field2.remotePagination === true);
+    control.toggleAttribute("loading", field2.lookupLoading === true);
+    control.toggleAttribute("has-more", field2.lookupHasMore === true);
+  }
+  function optionElement(option2, value2) {
+    const element = document.createElement("option");
+    element.value = option2.value;
+    element.textContent = option2.label;
+    element.selected = option2.value === value2;
+    return element;
+  }
+  function selectOptionElements(options, value2) {
+    const elements = options.map((option2) => optionElement(option2, value2));
+    if (value2 !== "" || options.some((option2) => option2.value === "")) {
+      return elements;
+    }
+    const placeholder = optionElement({ label: "Select an option", value: "" }, value2);
+    placeholder.disabled = true;
+    return [placeholder, ...elements];
+  }
+  function isValueControl(control) {
+    return "value" in control && typeof control.value === "string";
+  }
+  function isTokenControl(control) {
+    return isValueControl(control) && "values" in control && Array.isArray(control.values);
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
+  function createTableEditor(column, value2) {
+    if (column.editable !== true) {
+      throw new Error("Cannot create an editor for a readonly column");
+    }
+    const control = column.type === "select" ? selectEditor(column, value2) : column.type === "combobox" ? comboboxEditor(column, value2) : column.type === "tokens" ? tokensEditor(value2) : textEditor(value2);
+    control.dataset.tableColumn = column.key;
+    control.setAttribute("aria-label", column.label);
+    return control;
+  }
+  function readTableEditor(column, control) {
+    if (column.editable !== true) {
+      return;
+    }
+    if (column.type === "tokens") {
+      return isTokenControl(control) ? [...control.values] : [];
+    }
+    return isValueControl(control) ? control.value : "";
+  }
+  function textEditor(value2) {
+    const input = document.createElement("p9r-input");
+    const text4 = textValue2(value2);
+    input.setAttribute("value", text4);
+    input.value = text4;
+    return input;
+  }
+  function selectEditor(column, value2) {
+    const input = document.createElement("p9r-select");
+    const text4 = textValue2(value2);
+    input.setAttribute("value", text4);
+    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text4)));
+    return input;
+  }
+  function comboboxEditor(column, value2) {
+    const input = document.createElement("p9r-combobox");
+    const text4 = textValue2(value2);
+    input.setAttribute("value", text4);
+    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text4)));
+    applyRemoteLookupMetadata(input, column);
+    input.value = text4;
+    return input;
+  }
+  function tokensEditor(value2) {
+    const input = document.createElement("p9r-token-input");
+    const values = Array.isArray(value2) ? value2.map(textValue2).filter(Boolean) : [];
+    input.setAttribute("value", values.join(","));
+    input.setAttribute("creatable", "");
+    return input;
+  }
+  function textValue2(value2) {
+    return value2 === null || value2 === undefined ? "" : String(value2);
+  }
+  function createReferenceEditor(field2, value2) {
+    const control = document.createElement(field2.type === "secret-ref" ? "cms-credential-select" : "cms-editor-v2-page-link");
+    control.setAttribute("label", field2.label);
+    control.setAttribute("value", textValue2(value2));
+    if (field2.type === "page-link") {
+      control.setAttribute("allow-external", String(field2.allowExternal === true));
+      control.setAttribute("allow-media", String(field2.allowMedia === true));
+      control.setAttribute("published-only", String(field2.publishedOnly === true));
+      control.addEventListener("input", () => control.dispatchEvent(new Event("change", { bubbles: true, composed: true })));
+    } else {
+      const base = document.querySelector('meta[name="basePath"]')?.content ?? "";
+      control.setAttribute("api", `${base}/api/secrets`);
+    }
+    return control;
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/display.ts
   function badge2(value2) {
     const element = document.createElement("span");
@@ -27891,42 +29525,6 @@ button {
       list.append(entry);
     }
     return list;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/shared.ts
-  function bindFieldControl(control, field2) {
-    control.dataset.fieldControl = field2.id;
-  }
-  function applyRemoteLookupMetadata(control, field2) {
-    if (field2.lookupKey) {
-      control.dataset.lookupTarget = field2.lookupKey;
-    }
-    control.toggleAttribute("remote-search", field2.remoteSearch === true);
-    control.toggleAttribute("remote-pagination", field2.remotePagination === true);
-    control.toggleAttribute("loading", field2.lookupLoading === true);
-    control.toggleAttribute("has-more", field2.lookupHasMore === true);
-  }
-  function optionElement(option2, value2) {
-    const element = document.createElement("option");
-    element.value = option2.value;
-    element.textContent = option2.label;
-    element.selected = option2.value === value2;
-    return element;
-  }
-  function selectOptionElements(options, value2) {
-    const elements = options.map((option2) => optionElement(option2, value2));
-    if (value2 !== "" || options.some((option2) => option2.value === "")) {
-      return elements;
-    }
-    const placeholder = optionElement({ label: "Select an option", value: "" }, value2);
-    placeholder.disabled = true;
-    return [placeholder, ...elements];
-  }
-  function isValueControl(control) {
-    return "value" in control && typeof control.value === "string";
-  }
-  function isTokenControl(control) {
-    return isValueControl(control) && "values" in control && Array.isArray(control.values);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/inputFields.ts
@@ -28051,6 +29649,11 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/basic.ts
   function createBasicControl(field2) {
+    if (field2.input === "secret-ref" || field2.input === "page-link") {
+      const control = createReferenceEditor({ ...field2, type: field2.input }, field2.value);
+      bindFieldControl(control, field2);
+      return control;
+    }
     if (field2.input === "number") {
       return numberInput(field2);
     }
@@ -28087,7 +29690,18 @@ button {
     return textInput(field2);
   }
   function fieldUsesBasicInternalLabel(field2) {
-    return ["text", "number", "money", "textarea", "select", "cms-user", "combobox", "tokens"].includes(field2.input);
+    return [
+      "text",
+      "number",
+      "money",
+      "textarea",
+      "select",
+      "cms-user",
+      "combobox",
+      "tokens",
+      "secret-ref",
+      "page-link"
+    ].includes(field2.input);
   }
   function readBasicControlValue(field2, control) {
     if (field2.input === "chips") {
@@ -28299,11 +29913,11 @@ button {
     const input = document.createElement("p9r-input");
     input.setAttribute("label", definition.label);
     input.setAttribute("type", definition.type === "number" ? "number" : "text");
-    input.setAttribute("value", textValue2(value2));
+    input.setAttribute("value", textValue3(value2));
     if (definition.required) {
       input.setAttribute("required", "");
     }
-    input.value = textValue2(value2);
+    input.value = textValue3(value2);
     return input;
   }
   function schemaCheckbox(definition, value2) {
@@ -28319,7 +29933,7 @@ button {
   }
   function schemaSelect(definition, value2) {
     const input = document.createElement("p9r-select");
-    const selected2 = textValue2(value2);
+    const selected2 = textValue3(value2);
     input.setAttribute("label", definition.label);
     input.setAttribute("value", selected2);
     if (definition.required) {
@@ -28344,7 +29958,7 @@ button {
     message.textContent = status === "error" ? "Dynamic fields are temporarily unavailable. Existing values are preserved." : status === "empty" ? "No dynamic fields are configured." : "Loading dynamic fields…";
     return message;
   }
-  function textValue2(value2) {
+  function textValue3(value2) {
     return value2 === null || value2 === undefined ? "" : String(value2);
   }
 
@@ -28373,6 +29987,9 @@ button {
     return "value" in control ? String(control.value ?? "") : "";
   }
   function fieldControl(field2, value2) {
+    if (field2.type === "secret-ref" || field2.type === "page-link") {
+      return createReferenceEditor({ ...field2, type: field2.type }, value2);
+    }
     if (field2.type === "media") {
       const control2 = document.createElement("cms-dashboard-w-media-field");
       const resolved = valueAtValue(value2);
@@ -28777,7 +30394,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/template.html
-  var template_default10 = `<section class="reorderable-list">
+  var template_default12 = `<section class="reorderable-list">
     <div class="header" data-header></div>
     <div class="rows" data-rows></div>
     <button class="add" data-add type="button"></button>
@@ -28789,7 +30406,7 @@ button {
     value = emptyData();
     draggingIndex = null;
     constructor() {
-      super({ css: style_default8, template: template_default10 });
+      super({ css: style_default8, template: template_default12 });
     }
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this.onClick);
@@ -28923,59 +30540,6 @@ button {
   }
   if (!customElements.get("cms-dashboard-w-reorderable-list")) {
     customElements.define("cms-dashboard-w-reorderable-list", DashboardWReorderableList);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
-  function createTableEditor(column, value2) {
-    if (column.editable !== true) {
-      throw new Error("Cannot create an editor for a readonly column");
-    }
-    const control = column.type === "select" ? selectEditor(column, value2) : column.type === "combobox" ? comboboxEditor(column, value2) : column.type === "tokens" ? tokensEditor(value2) : textEditor(value2);
-    control.dataset.tableColumn = column.key;
-    control.setAttribute("aria-label", column.label);
-    return control;
-  }
-  function readTableEditor(column, control) {
-    if (column.editable !== true) {
-      return;
-    }
-    if (column.type === "tokens") {
-      return isTokenControl(control) ? [...control.values] : [];
-    }
-    return isValueControl(control) ? control.value : "";
-  }
-  function textEditor(value2) {
-    const input = document.createElement("p9r-input");
-    const text4 = textValue3(value2);
-    input.setAttribute("value", text4);
-    input.value = text4;
-    return input;
-  }
-  function selectEditor(column, value2) {
-    const input = document.createElement("p9r-select");
-    const text4 = textValue3(value2);
-    input.setAttribute("value", text4);
-    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text4)));
-    return input;
-  }
-  function comboboxEditor(column, value2) {
-    const input = document.createElement("p9r-combobox");
-    const text4 = textValue3(value2);
-    input.setAttribute("value", text4);
-    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text4)));
-    applyRemoteLookupMetadata(input, column);
-    input.value = text4;
-    return input;
-  }
-  function tokensEditor(value2) {
-    const input = document.createElement("p9r-token-input");
-    const values = Array.isArray(value2) ? value2.map(textValue3).filter(Boolean) : [];
-    input.setAttribute("value", values.join(","));
-    input.setAttribute("creatable", "");
-    return input;
-  }
-  function textValue3(value2) {
-    return value2 === null || value2 === undefined ? "" : String(value2);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table.ts
@@ -31004,7 +32568,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/template.html
-  var template_default11 = `<cms-shell-detail>
+  var template_default13 = `<cms-shell-detail>
     <button type="button" slot="back" data-back aria-label="Back to table">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="4" y="5" width="16" height="14" rx="2"></rect>
@@ -31045,7 +32609,7 @@ p9r-token-input {
     mode = "bound";
     bindingRevision = 0;
     constructor() {
-      super({ css: styles, template: template_default11 });
+      super({ css: styles, template: template_default13 });
       this.runtime = createDetailRuntime(this, this.shadowRoot, {
         data: () => this.value,
         setData: (value2) => {
@@ -31162,8 +32726,8 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/WCell.ts
-  var template = document.createElement("template");
-  template.innerHTML = `
+  var template3 = document.createElement("template");
+  template3.innerHTML = `
     <style>
         :host {
             display: block;
@@ -31232,7 +32796,7 @@ p9r-token-input {
     }
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template3.content.cloneNode(true));
     }
     connectedCallback() {
       this.render();
@@ -31266,8 +32830,8 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/WRow.ts
-  var template2 = document.createElement("template");
-  template2.innerHTML = `
+  var template4 = document.createElement("template");
+  template4.innerHTML = `
     <style>
         :host {
             display: block;
@@ -31337,7 +32901,7 @@ p9r-token-input {
     };
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template2.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
     }
     connectedCallback() {
       this.shadowRoot?.querySelector("[data-check]")?.setAttribute("aria-label", `Select row ${this.rowKey}`);
@@ -31621,7 +33185,7 @@ slot {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default12 = `<section class="w-table-shell">
+  var template_default14 = `<section class="w-table-shell">
     <header class="w-table-header" data-header>
         <div>
             <h3 data-title></h3>
@@ -31659,7 +33223,7 @@ slot {
     value = { title: "", actions: [], columns: [], filters: [], filterValues: {}, rows: [] };
     selectedRow = "";
     constructor() {
-      super({ css: style_default10, template: template_default12 });
+      super({ css: style_default10, template: template_default14 });
     }
     set data(value2) {
       this.value = value2;
@@ -32728,8 +34292,8 @@ slot {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationItem.ts
-  var template3 = document.createElement("template");
-  template3.innerHTML = `
+  var template5 = document.createElement("template");
+  template5.innerHTML = `
     <style>
         :host { display: block; color: #10231c; }
         .item { display: flex; align-items: center; gap: 10px; min-height: 62px; padding: 0 16px; border-top: 1px solid #e8ecea; }
@@ -32762,7 +34326,7 @@ slot {
     }
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template3.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template5.content.cloneNode(true));
     }
     connectedCallback() {
       this.shadowRoot.querySelector(".item")?.addEventListener("click", this.onClick);
@@ -32905,7 +34469,7 @@ slot { display: contents; }
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/template.html
-  var template_default13 = `<section class="navigation-list-shell">
+  var template_default15 = `<section class="navigation-list-shell">
     <header class="navigation-list-header" data-header>
         <h3 data-title></h3>
         <div class="navigation-list-actions" data-actions></div>
@@ -32922,7 +34486,7 @@ slot { display: contents; }
     value = null;
     dragging = null;
     constructor() {
-      super({ css: style_default11, template: template_default13 });
+      super({ css: style_default11, template: template_default15 });
     }
     static get observedAttributes() {
       return ["data-config-json"];
@@ -33259,8 +34823,8 @@ slot { display: contents; }
     detailResource = new DetailResourceState;
     dashboardFilterState = new Map;
     definitionsReloadGeneration = 0;
-    constructor(css, template4) {
-      super({ css, template: template4 });
+    constructor(css, template6) {
+      super({ css, template: template6 });
     }
     disconnectState() {
       this.definitionsReloadGeneration += 1;
@@ -33807,7 +35371,7 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/view/template.html
-  var template_default14 = `<main class="content">
+  var template_default16 = `<main class="content">
     <cms-binding-core class="binding-source">
         <span data-dashboard-list-source hidden>
             <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
@@ -33844,7 +35408,7 @@ p {
 
   class DashboardView extends DashboardViewController {
     constructor() {
-      super(styles2, template_default14);
+      super(styles2, template_default16);
       configureDashboardBindingFilters();
     }
     connectedCallback() {
@@ -34140,7 +35704,7 @@ w13c-lateral-menu {
 `;
 
   // src/components/admin/DashboardWorkspace/nav/template.html
-  var template_default15 = `<div class="dashboard-switcher" data-dashboard-switcher-container hidden></div>
+  var template_default17 = `<div class="dashboard-switcher" data-dashboard-switcher-container hidden></div>
 <div class="dashboard-profile" data-dashboard-profile-container hidden></div>
 <w13c-lateral-menu aria-label="Dashboard navigation" data-operator-navigation hidden>
     <span slot="header" data-level-heading hidden></span>
@@ -34151,7 +35715,7 @@ w13c-lateral-menu {
   class CmsDashboardNav extends l2 {
     selectedId = "";
     constructor() {
-      super({ css: style_default12, template: template_default15 });
+      super({ css: style_default12, template: template_default17 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -34543,7 +36107,7 @@ slot[name="profile"]::slotted(*) {
 `;
 
   // src/components/admin/DashboardWorkspace/workspace/template.html
-  var template_default16 = `<section class="workspace">
+  var template_default18 = `<section class="workspace">
     <div class="message" data-message>Loading dashboard…</div>
     <div data-content hidden>
         <span class="dashboard-icon" data-dashboard-icon hidden></span>
@@ -34661,7 +36225,7 @@ slot[name="profile"]::slotted(*) {
     session = null;
     generation = 0;
     constructor() {
-      super({ css: `${base_default3}${navigation_default}`, template: template_default16 });
+      super({ css: `${base_default3}${navigation_default}`, template: template_default18 });
     }
     disconnectWorkspace() {
       this.generation += 1;
@@ -37632,7 +39196,7 @@ p9r-modal {
 `;
 
   // src/components/admin/DashboardWorkspace/configuration/template.html
-  var template_default17 = `<div data-navigation-editor></div>
+  var template_default19 = `<div data-navigation-editor></div>
 
 <p9r-modal data-navigation-item-dialog aria-label="Navigation item settings">
     <span slot="title">Navigation item settings</span>
@@ -37667,7 +39231,7 @@ p9r-modal {
     views = [];
     internals = this.attachInternals();
     constructor() {
-      super({ css: `${style_default13}${navigation_default}`, template: template_default17 });
+      super({ css: `${style_default13}${navigation_default}`, template: template_default19 });
     }
     attributeChangedCallback() {
       if (this.isConnected) {
@@ -39497,7 +41061,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Functions/create/styles/index.ts
-  var styles_default4 = [layout_default2, mapping_default, controls_default2, steps_default].join(`
+  var styles_default6 = [layout_default2, mapping_default, controls_default2, steps_default].join(`
 `);
 
   // src/components/admin/Resources/Functions/create/templates/aside.html
@@ -39733,15 +41297,15 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Functions/create/templates/index.ts
   var templateHtml = [general_default, input_default, workflow_default, return_default, aside_default].join("");
   function appendCreateTemplate(shell) {
-    const template4 = document.createElement("template");
-    template4.innerHTML = templateHtml;
-    shell.append(template4.content.cloneNode(true));
+    const template6 = document.createElement("template");
+    template6.innerHTML = templateHtml;
+    shell.append(template6.content.cloneNode(true));
   }
 
   // src/components/admin/Resources/Functions/create/editor/shell.ts
   function renderCreateShell(host, state2) {
     const style = document.createElement("style");
-    style.textContent = styles_default4;
+    style.textContent = styles_default6;
     if (state2) {
       const message = document.createElement("div");
       message.className = "state";
@@ -40024,7 +41588,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/template.html
-  var template_default18 = `<div class="integrations-root">
+  var template_default20 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
         <div data-installations-source cms-reload-on="integration:updated">
             <template>
@@ -40419,7 +41983,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/fields/index.ts
-  function renderFields(root, template4, definition, answers = {}, options2 = {}) {
+  function renderFields(root, template6, definition, answers = {}, options2 = {}) {
     root.replaceChildren();
     if (!definition.inputs.length) {
       const empty2 = document.createElement("p");
@@ -40431,7 +41995,7 @@ details[open] > summary > .chevron {
     let pageLinks;
     const loadPageLinks = definition.inputs.some((input2) => input2.type === "object-list" && input2.fields.some((field3) => field3.type === "page-link")) ? () => pageLinks ??= getPageLinks() : undefined;
     for (const input2 of definition.inputs) {
-      root.append(inputRow(template4, input2, answers[input2.name], loadPageLinks, options2));
+      root.append(inputRow(template6, input2, answers[input2.name], loadPageLinks, options2));
     }
   }
   function collectReconfigureAnswers(root, definition, secretInputs, savedAnswers) {
@@ -40447,7 +42011,7 @@ details[open] > summary > .chevron {
     }
     return answers;
   }
-  function inputRow(template4, input2, answer, loadPageLinks, options2 = {}) {
+  function inputRow(template6, input2, answer, loadPageLinks, options2 = {}) {
     const displayedAnswer = options2.mode === "reconfigure" ? reconfigureAnswer(input2, answer, options2.secretInputs ?? []) : answer;
     if (input2.type === "object-list") {
       const row2 = document.createElement("section");
@@ -40461,7 +42025,7 @@ details[open] > summary > .chevron {
       }
       return row2;
     }
-    const row = template4.content.firstElementChild.cloneNode(true);
+    const row = template6.content.firstElementChild.cloneNode(true);
     row.querySelector("[data-label]").textContent = input2.label;
     row.querySelector("[data-hint]").textContent = hint(input2, options2);
     row.querySelector("[data-control]").append(valueControl(input2, displayedAnswer));
@@ -41955,7 +43519,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default5 = [base_default4, browser_default2, detail_default2, reconfigure_default, setup_default2, states_default2, responsive_default].join(`
+  var styles_default7 = [base_default4, browser_default2, detail_default2, reconfigure_default, setup_default2, states_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
@@ -42080,9 +43644,9 @@ button[slot="back"]:disabled {
     onPopState = () => this.renderAll();
     mountTemplate() {
       const style = document.createElement("style");
-      style.textContent = styles_default5;
+      style.textContent = styles_default7;
       const body = document.createElement("template");
-      body.innerHTML = template_default18;
+      body.innerHTML = template_default20;
       this.replaceChildren(style, body.content.cloneNode(true));
     }
   }
@@ -42091,7 +43655,7 @@ button[slot="back"]:disabled {
   }
 
   // src/components/admin/Resources/Triggers/template.html
-  var template_default19 = `<section class="triggers-surface">
+  var template_default21 = `<section class="triggers-surface">
     <div data-state="loading" class="state">Loading triggers...</div>
     <div data-state="error" class="state" hidden>Failed to load triggers.</div>
     <div data-state="empty" class="state" hidden>No triggers installed.</div>
@@ -42350,7 +43914,7 @@ button.run:disabled {
       const style = document.createElement("style");
       style.textContent = style_default15;
       const body = document.createElement("template");
-      body.innerHTML = template_default19;
+      body.innerHTML = template_default21;
       this.replaceChildren(style, body.content.cloneNode(true));
       this.rows = this.querySelector("[data-role='rows']");
     }
@@ -42912,7 +44476,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/index.ts
-  var styles_default6 = [layout_default3, mapping_default2, controls_default3, feedback_default].join(`
+  var styles_default8 = [layout_default3, mapping_default2, controls_default3, feedback_default].join(`
 `);
 
   // src/components/admin/Resources/Triggers/create/templates/aside.html
@@ -43145,15 +44709,15 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Triggers/create/templates/index.ts
   var templateHtml2 = [event_default, condition_default, function_default, aside_default2].join("");
   function appendCreateTemplate2(shell) {
-    const template4 = document.createElement("template");
-    template4.innerHTML = templateHtml2;
-    shell.append(template4.content.cloneNode(true));
+    const template6 = document.createElement("template");
+    template6.innerHTML = templateHtml2;
+    shell.append(template6.content.cloneNode(true));
   }
 
   // src/components/admin/Resources/Triggers/create/view.ts
   function renderState(host, text5) {
     const style = document.createElement("style");
-    style.textContent = styles_default6;
+    style.textContent = styles_default8;
     const state2 = document.createElement("div");
     state2.className = "state";
     state2.textContent = text5;
@@ -43161,7 +44725,7 @@ details[open] > summary > .chevron {
   }
   function renderShell(host) {
     const style = document.createElement("style");
-    style.textContent = styles_default6;
+    style.textContent = styles_default8;
     const shell = document.createElement("cms-shell-detail");
     shell.className = "create-shell";
     appendCreateTemplate2(shell);
@@ -43357,7 +44921,7 @@ details[open] > summary > .chevron {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default20 = `<header class="topbar">
+  var template_default22 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -43408,7 +44972,7 @@ details[open] > summary > .chevron {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/part-1.css
-  var part_1_default = `:host {
+  var part_1_default3 = `:host {
     display: block;
     min-width: 0;
     border-bottom: 1px solid var(--editor-v2-border);
@@ -43548,7 +45112,7 @@ button {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/part-2.css
-  var part_2_default = `.view-reload {
+  var part_2_default3 = `.view-reload {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -43668,7 +45232,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts
-  var styles_default7 = [String(part_1_default), String(part_2_default)].join(`
+  var styles_default9 = [String(part_1_default3), String(part_2_default3)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts
@@ -43728,8 +45292,8 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
-  var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default20)}`;
+  var template6 = document.createElement("template");
+  template6.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default22)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -43737,7 +45301,7 @@ button:hover {
     _sourceState = "loading";
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template6.content.cloneNode(true));
     }
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this._onClick);
@@ -43858,7 +45422,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default21 = `<aside class="panel">
+  var template_default23 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -43973,13 +45537,13 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
-  var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default16)}</style>${String(template_default21)}`;
+  var template7 = document.createElement("template");
+  template7.innerHTML = `<style>${String(style_default16)}</style>${String(template_default23)}`;
 
   class Panel extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template5.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template7.content.cloneNode(true));
     }
     connectedCallback() {
       this._syncHeaderVisibility();
@@ -44600,7 +46164,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default22 = `<div class="backdrop" hidden>
+  var template_default24 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -44631,7 +46195,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/part-1.css
-  var part_1_default2 = `:host {
+  var part_1_default4 = `:host {
     display: contents;
 }
 
@@ -44778,7 +46342,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/part-2.css
-  var part_2_default2 = `.provider:hover {
+  var part_2_default4 = `.provider:hover {
     background: var(--editor-v2-surface);
     color: var(--editor-v2-text);
 }
@@ -44924,7 +46488,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/part-3.css
-  var part_3_default = `.details p {
+  var part_3_default3 = `.details p {
     margin: 0;
     color: var(--editor-v2-muted);
     font-size: 12px;
@@ -45138,12 +46702,12 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts
-  var styles_default8 = [String(part_1_default2), String(part_2_default2), String(part_3_default), String(part_4_default)].join(`
+  var styles_default10 = [String(part_1_default4), String(part_2_default4), String(part_3_default3), String(part_4_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
-  var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default22)}`;
+  var template8 = document.createElement("template");
+  template8.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default24)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -45157,7 +46721,7 @@ h2 {
     constructor() {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template6.content.cloneNode(true));
+      shadowRoot.append(template8.content.cloneNode(true));
       this.elements = queryDataSourcePickerElements(shadowRoot);
     }
     connectedCallback() {
@@ -45267,7 +46831,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default23 = `<div class="backdrop" hidden>
+  var template_default25 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -45689,8 +47253,8 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
-  var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default17)}</style>${String(template_default23)}`;
+  var template9 = document.createElement("template");
+  template9.innerHTML = `<style>${String(style_default17)}</style>${String(template_default25)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -45704,7 +47268,7 @@ textarea { min-height: 92px; resize: vertical; }
     constructor() {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template7.content.cloneNode(true));
+      shadowRoot.append(template9.content.cloneNode(true));
       this.elements = queryConditionPickerElements(shadowRoot);
       this.elements.closeButton.addEventListener("click", this.close);
       this.elements.backdrop.addEventListener("click", this.onBackdropClick);
@@ -45883,7 +47447,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default24 = `<div class="backdrop" hidden>
+  var template_default26 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -45913,7 +47477,7 @@ textarea { min-height: 92px; resize: vertical; }
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/part-1.css
-  var part_1_default3 = `:host {
+  var part_1_default5 = `:host {
     display: contents;
 }
 
@@ -46057,7 +47621,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/part-2.css
-  var part_2_default3 = `.sidebar {
+  var part_2_default5 = `.sidebar {
     display: grid;
     align-content: start;
     gap: 18px;
@@ -46205,7 +47769,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/part-3.css
-  var part_3_default2 = `.details {
+  var part_3_default4 = `.details {
     display: grid;
     align-content: start;
     gap: 12px;
@@ -46311,7 +47875,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts
-  var styles_default9 = [String(part_1_default3), String(part_2_default3), String(part_3_default2)].join(`
+  var styles_default11 = [String(part_1_default5), String(part_2_default5), String(part_3_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
@@ -46607,8 +48171,8 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
-  var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default24)}`;
+  var template10 = document.createElement("template");
+  template10.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default26)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -46620,7 +48184,7 @@ dd {
     constructor() {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template8.content.cloneNode(true));
+      shadowRoot.append(template10.content.cloneNode(true));
       this.elements = queryBlockPickerElements(shadowRoot);
     }
     connectedCallback() {
@@ -48437,7 +50001,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default25 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default27 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
@@ -48613,15 +50177,15 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
-  var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${[style_default18, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default25)}`;
+  var template11 = document.createElement("template");
+  template11.innerHTML = `<style>${[style_default18, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default27)}`;
 
   class StructureTree extends HTMLElement {
     controller;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template9.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template11.content.cloneNode(true));
       this.controller = new StructureTreeController(this);
     }
     connectedCallback() {
@@ -48654,7 +50218,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default26 = `<main class="canvas">
+  var template_default28 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -48773,8 +50337,8 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
-  var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(style_default19)}</style>${String(template_default26)}`;
+  var template12 = document.createElement("template");
+  template12.innerHTML = `<style>${String(style_default19)}</style>${String(template_default28)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -48798,7 +50362,7 @@ iframe {
     }
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template10.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template12.content.cloneNode(true));
     }
     connectedCallback() {
       this.editorFrame.addEventListener("load", this.onFrameLoad);
@@ -48915,7 +50479,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default27 = `<section class="section">
+  var template_default29 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -48994,13 +50558,13 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/fieldElement.ts
   function createFieldTemplate(templateHtml3, componentCss) {
-    const template11 = document.createElement("template");
-    template11.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml3)}`;
-    return template11;
+    const template13 = document.createElement("template");
+    template13.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml3)}`;
+    return template13;
   }
-  function attachFieldShadow(host, template11) {
+  function attachFieldShadow(host, template13) {
     const root = host.attachShadow({ mode: "open" });
-    root.append(template11.content.cloneNode(true));
+    root.append(template13.content.cloneNode(true));
     return root;
   }
   function syncFieldCopy(host) {
@@ -49016,7 +50580,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template11 = createFieldTemplate(template_default27, style_default20);
+  var template13 = createFieldTemplate(template_default29, style_default20);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -49025,7 +50589,7 @@ iframe {
     };
     constructor() {
       super();
-      attachFieldShadow(this, template11);
+      attachFieldShadow(this, template13);
     }
     connectedCallback() {
       this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
@@ -49040,7 +50604,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default28 = `<div class="field">
+  var template_default30 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -49498,7 +51062,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template12 = createFieldTemplate(template_default28, `${String(style_default21)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default30, `${String(style_default21)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -49513,7 +51077,7 @@ input:disabled {
     });
     constructor() {
       super();
-      attachFieldShadow(this, template12);
+      attachFieldShadow(this, template14);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -49558,7 +51122,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default29 = `<div class="field">
+  var template_default31 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -49651,7 +51215,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template13 = createFieldTemplate(template_default29, `${String(style_default22)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default31, `${String(style_default22)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -49666,7 +51230,7 @@ textarea:disabled {
     });
     constructor() {
       super();
-      attachFieldShadow(this, template13);
+      attachFieldShadow(this, template15);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -50086,7 +51650,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default30 = `<div class="field">
+  var template_default32 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -50103,7 +51667,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/part-1.css
-  var part_1_default4 = `:host {
+  var part_1_default6 = `:host {
     display: block;
 }
 
@@ -50250,7 +51814,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/part-2.css
-  var part_2_default4 = `.data-search:focus {
+  var part_2_default6 = `.data-search:focus {
     border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
 }
@@ -50337,12 +51901,12 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts
-  var styles_default10 = [String(part_1_default4), String(part_2_default4)].join(`
+  var styles_default12 = [String(part_1_default6), String(part_2_default6)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
-  var template14 = document.createElement("template");
-  template14.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default30)}`;
+  var template16 = document.createElement("template");
+  template16.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default32)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -50361,7 +51925,7 @@ textarea:disabled {
     });
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template14.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template16.content.cloneNode(true));
     }
     connectedCallback() {
       this.label.textContent = this.getAttribute("label") ?? "";
@@ -50475,7 +52039,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default31 = `<label class="field">
+  var template_default33 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -50587,12 +52151,12 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template15 = createFieldTemplate(template_default31, style_default23);
+  var template17 = createFieldTemplate(template_default33, style_default23);
 
   class Select extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template15);
+      attachFieldShadow(this, template17);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -50624,7 +52188,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default32 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default34 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -50747,12 +52311,12 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template16 = createFieldTemplate(template_default32, style_default24);
+  var template18 = createFieldTemplate(template_default34, style_default24);
 
   class Toggle extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template16);
+      attachFieldShadow(this, template18);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -50764,7 +52328,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default33 = `<div class="segmented">
+  var template_default35 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
@@ -50816,1525 +52380,16 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template17 = createFieldTemplate(template_default33, style_default25);
+  var template19 = createFieldTemplate(template_default35, style_default25);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template17);
+      attachFieldShadow(this, template19);
     }
   }
   if (!customElements.get("cms-editor-v2-segmented-control")) {
     customElements.define("cms-editor-v2-segmented-control", SegmentedControl);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default34 = `<div class="page-link">
-    <div class="head">
-        <span class="label"></span>
-        <span class="hint"></span>
-    </div>
-    <div class="tabs" role="tablist"></div>
-    <div class="panel page-panel">
-        <input class="search" type="search" placeholder="Search pages" />
-        <div class="picker" hidden>
-            <div class="page-list" role="listbox"></div>
-            <div class="empty" hidden>No pages found</div>
-        </div>
-    </div>
-    <div class="panel external-panel" hidden>
-        <input class="external-input" type="url" placeholder="https://example.com" />
-    </div>
-    <div class="panel media-panel" hidden>
-        <button class="file-button" type="button">
-            <span class="file-preview" aria-hidden="true"></span>
-            <span class="file-copy">
-                <strong class="file-title">Choose file</strong>
-                <code class="file-value">No file selected</code>
-            </span>
-            <span class="file-action">Change</span>
-        </button>
-    </div>
-    <div class="target">
-        <span class="icon">↗</span>
-        <span class="copy">
-            <strong></strong>
-            <code></code>
-        </span>
-    </div>
-</div>
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-1.css
-  var part_1_default5 = `:host {
-    display: block;
-}
-
-:host([disabled]) {
-    cursor: not-allowed;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.page-link {
-    display: grid;
-    gap: 7px;
-}
-
-.head {
-    display: grid;
-    gap: 2px;
-}
-
-.label {
-    color: var(--editor-v2-label);
-    font-size: 12px;
-    font-weight: 720;
-}
-
-.hint {
-    color: var(--editor-v2-muted);
-    font-size: 11px;
-    line-height: 1.35;
-}
-
-.tabs {
-    display: flex;
-    gap: 2px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
-    padding: 3px;
-}
-
-.tabs:empty {
-    display: none;
-}
-
-.tabs[hidden] {
-    display: none;
-}
-
-button {
-    font: inherit;
-}
-
-.tabs button {
-    flex: 1;
-    min-height: 28px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--editor-v2-muted);
-    font-size: 12px;
-    font-weight: 650;
-}
-
-.tabs button[aria-selected="true"] {
-    background: var(--editor-v2-surface);
-    color: var(--editor-v2-text);
-    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
-}
-
-.panel {
-    display: grid;
-    gap: 6px;
-}
-
-.panel[hidden] {
-    display: none;
-}
-
-.page-panel {
-    position: relative;
-}
-
-.search,
-.external-input {
-    width: 100%;
-    min-height: 32px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 7px;
-    background: var(--editor-v2-surface);
-    color: var(--editor-v2-text);
-    font: inherit;
-    font-size: 12px;
-    outline: none;
-    padding: 0 10px;
-}
-
-.file-button {
-    display: grid;
-    gap: 8px;
-    width: 100%;
-    border: 1px solid color-mix(in srgb, var(--editor-v2-border) 76%, transparent);
-    border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
-    color: var(--editor-v2-text);
-    padding: 8px;
-    cursor: pointer;
-    text-align: left;
-}
-
-.file-button:hover {
-    border-color: color-mix(in srgb, var(--editor-v2-accent) 32%, var(--editor-v2-border));
-    background: color-mix(in srgb, var(--editor-v2-accent) 4%, var(--editor-v2-surface));
-}
-
-.file-preview {
-    display: grid;
-    overflow: hidden;
-    place-items: center;
-    width: 100%;
-    min-height: 112px;
-    aspect-ratio: 16 / 9;
-    border-radius: 7px;
-    background: color-mix(in srgb, var(--editor-v2-accent) 10%, var(--editor-v2-surface));
-    color: var(--editor-v2-accent);
-    font-size: 18px;
-}
-
-.file-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-}
-
-.file-copy {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-}
-
-.file-title,
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-2.css
-  var part_2_default5 = `.file-value {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.file-value[hidden] {
-    display: none;
-}
-
-.file-action {
-    justify-self: start;
-    color: var(--editor-v2-accent);
-    font-size: 11px;
-    font-weight: 720;
-}
-
-.search:focus,
-.external-input:focus {
-    border-color: color-mix(in srgb, var(--editor-v2-accent) 46%, var(--editor-v2-border));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 10%, transparent);
-}
-
-.picker {
-    position: absolute;
-    z-index: 20;
-    top: calc(100% + 4px);
-    right: 0;
-    left: 0;
-    overflow: hidden;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 8px;
-    background: var(--editor-v2-surface);
-    box-shadow: 0 12px 28px rgba(16, 24, 21, .14);
-}
-
-.picker[hidden] {
-    display: none;
-}
-
-.page-list {
-    display: grid;
-    max-height: 184px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 4px;
-}
-
-.page-option {
-    display: grid;
-    gap: 2px;
-    min-height: 34px;
-    width: 100%;
-    min-width: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--editor-v2-text);
-    padding: 6px 7px;
-    text-align: left;
-    cursor: pointer;
-}
-
-.page-option:hover {
-    background: color-mix(in srgb, var(--editor-v2-accent) 4%, var(--editor-v2-surface));
-}
-
-.page-option[aria-selected="true"] {
-    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
-    color: var(--editor-v2-accent);
-}
-
-.page-title {
-    overflow: hidden;
-    min-width: 0;
-    font-size: 12px;
-    font-weight: 720;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.page-path {
-    overflow: hidden;
-    min-width: 0;
-    color: var(--editor-v2-muted);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.empty {
-    color: var(--editor-v2-muted);
-    font-size: 12px;
-    padding: 10px 11px;
-}
-
-.target {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 34px;
-    border: 1px solid color-mix(in srgb, var(--editor-v2-border) 76%, transparent);
-    border-radius: 7px;
-    background: var(--editor-v2-surface-muted);
-    padding: 6px 8px;
-    cursor: pointer;
-}
-
-.target[hidden] {
-    display: none;
-}
-
-.icon {
-    display: grid;
-    flex: 0 0 auto;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--editor-v2-accent) 12%, var(--editor-v2-surface));
-    color: var(--editor-v2-accent);
-    font-size: 12px;
-}
-
-.copy {
-    min-width: 0;
-    display: grid;
-    gap: 2px;
-}
-
-strong {
-    overflow: hidden;
-    color: var(--editor-v2-text);
-    font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-code {
-    overflow: hidden;
-    color: var(--editor-v2-muted);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-3.css
-  var part_3_default3 = `
-:host([disabled]) button,
-:host([disabled]) input,
-:host([disabled]) .target {
-    opacity: .62;
-    cursor: not-allowed;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
-  var styles_default11 = [String(part_1_default5), String(part_2_default5), String(part_3_default3)].join("");
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
-  function allowedLinkModes(options2) {
-    const modes = [];
-    if (options2.allowPage) {
-      modes.push("page");
-    }
-    if (options2.allowExternal) {
-      modes.push("external");
-    }
-    if (options2.allowMedia) {
-      modes.push("media");
-    }
-    return modes;
-  }
-  function modeForLinkValue(value3, options2) {
-    if (value3 && isMediaLink(value3)) {
-      return "media";
-    }
-    if (value3 && isExternalLink(value3)) {
-      return "external";
-    }
-    if (!options2.allowPage && !options2.allowExternal && options2.allowMedia) {
-      return "media";
-    }
-    if (!options2.allowPage && options2.allowExternal) {
-      return "external";
-    }
-    return "page";
-  }
-  function isExternalLink(value3) {
-    return /^[a-z][a-z0-9+.-]*:/i.test(value3) || value3.startsWith("//");
-  }
-  function isMediaLink(value3) {
-    return value3.includes("/.cms/files/by-id/");
-  }
-  function isImageMediaLink(value3) {
-    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value3) || value3.includes("/.cms/files/by-id/");
-  }
-  function mediaDisplayName(value3, isImage2, mediaLabel = "") {
-    if (mediaLabel) {
-      return mediaLabel;
-    }
-    if (value3.includes("/.cms/files/by-id/")) {
-      return isImage2 ? "Image" : "Selected file";
-    }
-    const clean = value3.split(/[?#]/, 1)[0] ?? value3;
-    const segment = clean.split("/").filter(Boolean).at(-1);
-    if (!segment) {
-      return "File";
-    }
-    try {
-      return decodeURIComponent(segment);
-    } catch {
-      return segment;
-    }
-  }
-  function mediaSelectionLabel(isImage2) {
-    return isImage2 ? "Image" : "File selected";
-  }
-  function linkSummaryFallback(mode) {
-    if (mode === "external") {
-      return "External URL";
-    }
-    if (mode === "media") {
-      return "File";
-    }
-    return "Internal page";
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkMediaView.ts
-  function renderPageLinkPanels(input3) {
-    const { elements } = input3;
-    elements.pagePanel.hidden = input3.mode !== "page" || !input3.allowPage;
-    elements.externalPanel.hidden = input3.mode !== "external" || !input3.allowExternal;
-    elements.mediaPanel.hidden = input3.mode !== "media" || !input3.allowMedia;
-    elements.searchInput.disabled = input3.disabled;
-    elements.externalInput.disabled = input3.disabled;
-    elements.fileButton.disabled = input3.disabled;
-    elements.picker.hidden = !input3.pickerOpen || elements.pagePanel.hidden;
-    if (input3.mode === "external") {
-      elements.externalInput.value = input3.value;
-    }
-    renderPageLinkMedia(elements, input3.mode, input3.value, input3.mediaLabel);
-  }
-  function renderPageLinkMedia(elements, mode, value3, mediaLabel) {
-    const hasValue = mode === "media" && value3 !== "";
-    const isImage2 = hasValue && isImageMediaLink(value3);
-    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value3, isImage2, mediaLabel) : "Choose file";
-    elements.fileValue.textContent = hasValue ? mediaSelectionLabel(isImage2) : "No file selected";
-    elements.fileValue.toggleAttribute("hidden", hasValue && isImage2);
-    elements.fileAction.textContent = hasValue ? "Change" : "Choose";
-    elements.filePreview.replaceChildren();
-    elements.filePreview.dataset.kind = isImage2 ? "image" : "file";
-    if (isImage2) {
-      const image2 = document.createElement("img");
-      image2.src = value3;
-      image2.alt = "";
-      image2.loading = "lazy";
-      elements.filePreview.append(image2);
-      return;
-    }
-    elements.filePreview.textContent = "↗";
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkNavigationView.ts
-  function renderPageLinkTabs(input3) {
-    input3.elements.tabs.replaceChildren();
-    if (input3.allowedModes.length <= 1) {
-      input3.elements.tabs.hidden = true;
-      return;
-    }
-    input3.elements.tabs.hidden = false;
-    for (const mode of input3.allowedModes) {
-      input3.elements.tabs.append(modeTab(mode, input3.mode, input3.disabled, input3.onMode));
-    }
-  }
-  function renderPageLinkPages(input3) {
-    input3.elements.pageList.replaceChildren();
-    input3.elements.picker.hidden = !input3.pickerOpen || input3.elements.pagePanel.hidden;
-    const query7 = input3.query.trim().toLowerCase();
-    const pages = input3.pages.filter((page) => !query7 || page.title.toLowerCase().includes(query7) || page.path.toLowerCase().includes(query7));
-    input3.elements.empty.hidden = !input3.pickerOpen || pages.length > 0;
-    for (const page of pages) {
-      const button2 = document.createElement("button");
-      button2.className = "page-option";
-      button2.type = "button";
-      button2.ariaSelected = String(page.path === input3.value);
-      button2.disabled = input3.disabled;
-      button2.addEventListener("click", () => {
-        if (!input3.disabled) {
-          input3.onSelect(page.path);
-        }
-      });
-      const title2 = document.createElement("span");
-      title2.className = "page-title";
-      title2.textContent = page.title;
-      const path = document.createElement("span");
-      path.className = "page-path";
-      path.textContent = page.path;
-      button2.append(title2, path);
-      input3.elements.pageList.append(button2);
-    }
-  }
-  function renderPageLinkSummary(elements, pages, mode, value3) {
-    const page = pages.find((candidate) => candidate.path === value3);
-    elements.summaryTitle.textContent = page?.title ?? (value3 ? linkSummaryFallback(mode) : "No link selected");
-    elements.summaryValue.textContent = value3 || "Choose a target";
-    elements.target.hidden = !value3 || mode === "media";
-  }
-  function modeTab(mode, activeMode, disabled, onMode) {
-    const button2 = document.createElement("button");
-    button2.type = "button";
-    button2.role = "tab";
-    button2.textContent = mode === "page" ? "Page" : mode === "external" ? "External" : "Media";
-    button2.ariaSelected = String(activeMode === mode);
-    button2.disabled = disabled;
-    button2.addEventListener("click", () => {
-      if (!disabled) {
-        onMode(mode);
-      }
-    });
-    return button2;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
-  function queryPageLinkElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
-    return {
-      empty: query7(".empty"),
-      externalInput: query7(".external-input"),
-      externalPanel: query7(".external-panel"),
-      fileAction: query7(".file-action"),
-      fileButton: query7(".file-button"),
-      filePreview: query7(".file-preview"),
-      fileTitle: query7(".file-title"),
-      fileValue: query7(".file-value"),
-      hint: query7(".hint"),
-      label: query7(".label"),
-      mediaPanel: query7(".media-panel"),
-      pageList: query7(".page-list"),
-      pagePanel: query7(".page-panel"),
-      picker: query7(".picker"),
-      searchInput: query7(".search"),
-      summaryTitle: query7(".target strong"),
-      summaryValue: query7(".target code"),
-      tabs: query7(".tabs"),
-      target: query7(".target")
-    };
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default35 = `<div class="backdrop" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
-        <header class="top">
-            <div>
-                <h2 id="files-title">Choose file</h2>
-                <p>Select a file from the CMS library.</p>
-            </div>
-            <button class="icon-button close" type="button" aria-label="Close">×</button>
-        </header>
-
-        <div class="toolbar">
-            <nav class="breadcrumb" aria-label="Current folder"></nav>
-            <input class="search" type="search" placeholder="Search files" />
-        </div>
-
-        <div class="grid" role="listbox"></div>
-        <div class="empty" hidden>No files found</div>
-
-        <footer class="footer">
-            <div class="selection">
-                <strong>No file selected</strong>
-                <code>Choose a file</code>
-            </div>
-            <div class="actions">
-                <button class="secondary cancel" type="button">Cancel</button>
-                <button class="primary select" type="button" disabled>Select file</button>
-            </div>
-        </footer>
-    </section>
-</div>
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-1.css
-  var part_1_default6 = `:host {
-    color: var(--editor-v2-text, #111);
-    font: 12px/1.35 system-ui, sans-serif;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.backdrop {
-    position: fixed;
-    z-index: 1000;
-    inset: 0;
-    display: grid;
-    place-items: start center;
-    overflow: auto;
-    background: rgba(16, 24, 21, .34);
-    padding: 72px 24px 24px;
-}
-
-.backdrop[hidden] {
-    display: none;
-}
-
-.modal {
-    display: grid;
-    grid-template-rows: auto auto minmax(180px, 1fr) auto;
-    width: min(940px, calc(100vw - 48px));
-    max-height: min(760px, calc(100vh - 96px));
-    overflow: hidden;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 8px;
-    background: var(--editor-v2-surface, #fff);
-    box-shadow: 0 24px 70px rgba(16, 24, 21, .22);
-}
-
-.top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 16px 18px;
-}
-
-h2,
-p {
-    margin: 0;
-}
-
-h2 {
-    font-size: 15px;
-    font-weight: 760;
-}
-
-p {
-    margin-top: 3px;
-    color: var(--editor-v2-muted, #708078);
-}
-
-button,
-input {
-    font: inherit;
-}
-
-.icon-button {
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    background: var(--editor-v2-surface, #fff);
-    cursor: pointer;
-}
-
-.toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 240px;
-    gap: 10px;
-    align-items: center;
-    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 10px 12px;
-}
-
-.breadcrumb {
-    display: flex;
-    min-width: 0;
-    gap: 4px;
-    overflow: hidden;
-}
-
-.breadcrumb button {
-    min-width: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--editor-v2-muted, #708078);
-    cursor: pointer;
-    font-weight: 650;
-    padding: 5px 7px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.breadcrumb button:hover,
-.breadcrumb button[aria-current="page"] {
-    background: var(--editor-v2-surface-muted, #f5f7f6);
-    color: var(--editor-v2-text, #111);
-}
-
-.search {
-    min-height: 32px;
-    min-width: 0;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    outline: none;
-    padding: 0 10px;
-}
-
-.search:focus {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 46%, var(--editor-v2-border, #d7ddd9));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent, #176b58) 10%, transparent);
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    align-content: start;
-    gap: 10px;
-    justify-items: center;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 12px;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-2.css
-  var part_2_default6 = `.item {
-    display: grid;
-    grid-template-rows: 108px auto;
-    gap: 8px;
-    width: 100%;
-    max-width: 180px;
-    min-height: 168px;
-    min-width: 0;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    background: var(--editor-v2-surface, #fff);
-    color: var(--editor-v2-text, #111);
-    cursor: pointer;
-    padding: 8px;
-    text-align: left;
-}
-
-.item:hover {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 34%, var(--editor-v2-border, #d7ddd9));
-    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 4%, var(--editor-v2-surface, #fff));
-}
-
-.item[aria-selected="true"] {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 66%, var(--editor-v2-border, #d7ddd9));
-    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 8%, var(--editor-v2-surface, #fff));
-}
-
-.preview {
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    width: 100%;
-    height: 108px;
-    border-radius: 6px;
-    background: var(--editor-v2-surface-muted, #f5f7f6);
-    color: var(--editor-v2-accent, #176b58);
-}
-
-.preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.preview svg {
-    width: 46px;
-    height: 46px;
-    fill: color-mix(in srgb, var(--editor-v2-accent, #176b58) 72%, var(--editor-v2-text, #111));
-    opacity: .9;
-}
-
-.item[data-type="folder"] .preview {
-    background: color-mix(in srgb, #e2b45c 16%, var(--editor-v2-surface-muted, #f5f7f6));
-    color: #9a6a10;
-}
-
-.item[data-type="folder"] .preview svg {
-    fill: currentColor;
-}
-
-.item[data-type="pdf"] .preview {
-    background: color-mix(in srgb, #c84d4d 12%, var(--editor-v2-surface-muted, #f5f7f6));
-    color: #9d3030;
-}
-
-.preview text {
-    fill: currentColor;
-    font: 700 5px system-ui, sans-serif;
-}
-
-.copy {
-    display: grid;
-    min-width: 0;
-    gap: 1px;
-}
-
-.name,
-.meta,
-.selection strong,
-.selection code {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.name {
-    font-weight: 720;
-}
-
-.meta,
-.selection code {
-    color: var(--editor-v2-muted, #708078);
-    font-size: 11px;
-}
-
-.empty {
-    color: var(--editor-v2-muted, #708078);
-    padding: 18px;
-}
-
-.footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    border-top: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 12px;
-}
-
-.selection {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-}
-
-.actions {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 8px;
-}
-
-.secondary,
-.primary {
-    min-height: 32px;
-    border-radius: 7px;
-    cursor: pointer;
-    font-weight: 720;
-    padding: 0 12px;
-}
-
-.secondary {
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    background: var(--editor-v2-surface, #fff);
-    color: var(--editor-v2-text, #111);
-}
-
-.primary {
-    border: 1px solid var(--editor-v2-accent, #176b58);
-    background: var(--editor-v2-accent, #176b58);
-    color: #fff;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-3.css
-  var part_3_default4 = `.primary:disabled {
-    opacity: .45;
-    cursor: not-allowed;
-}
-
-@media (max-width: 720px) {
-    .toolbar {
-        grid-template-columns: 1fr;
-    }
-
-    .modal {
-        width: calc(100vw - 24px);
-    }
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
-  var styles_default12 = [String(part_1_default6), String(part_2_default6), String(part_3_default4)].join(`
-`);
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
-  async function loadFilesPage(basePath5, folder, accept) {
-    const params = new URLSearchParams;
-    if (folder) {
-      params.set("parentId", folder);
-    }
-    params.set("accept", accept.join(","));
-    params.set("sortBy", "name");
-    params.set("limit", "10000");
-    const response = await fetch(`${basePath5}/api/files?${params.toString()}`);
-    if (!response.ok) {
-      return [];
-    }
-    return (await response.json()).items;
-  }
-  function fileUrl(basePath5, id2) {
-    return `${basePath5}/.cms/files/by-id/${encodeURIComponent(id2)}`;
-  }
-  function isCmsFileSource(value3) {
-    return value3.startsWith("/") && !value3.startsWith("//") && !/[\u0000-\u0020\u007F]/.test(value3) && /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value3);
-  }
-  function fileDetail(basePath5, item) {
-    return {
-      id: item.id,
-      label: item.name,
-      src: fileUrl(basePath5, item.id),
-      mimeType: item.mimeType
-    };
-  }
-  function fileKind(item) {
-    if (item.mimeType?.startsWith("image/")) {
-      return "image";
-    }
-    if (item.mimeType?.includes("pdf")) {
-      return "pdf";
-    }
-    return "file";
-  }
-  function matchesFileAccept(item, accept) {
-    if (!accept || accept.length === 0) {
-      return true;
-    }
-    const mimeType = item.mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
-    if (accept.includes("image") && mimeType.startsWith("image/")) {
-      return true;
-    }
-    if (accept.includes("svg") && mimeType === "image/svg+xml") {
-      return true;
-    }
-    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") {
-      return true;
-    }
-    if (accept.includes("video") && mimeType.startsWith("video/")) {
-      return true;
-    }
-    if (accept.includes("audio") && mimeType.startsWith("audio/")) {
-      return true;
-    }
-    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) {
-      return true;
-    }
-    return false;
-  }
-  function fileMeta(item) {
-    const parts = [item.mimeType ?? "File"];
-    if (typeof item.size === "number") {
-      parts.push(formatFileSize(item.size));
-    }
-    return parts.join(" · ");
-  }
-  function formatFileSize(size) {
-    if (size < 1024) {
-      return `${size} B`;
-    }
-    if (size < 1024 * 1024) {
-      return `${Math.round(size / 1024)} KB`;
-    }
-    return `${(size / 1024 / 1024).toFixed(1)} MB`;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
-  function queryFilesCenterElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
-    return {
-      backdrop: query7(".backdrop"),
-      breadcrumb: query7(".breadcrumb"),
-      cancelButton: query7(".cancel"),
-      closeButton: query7(".close"),
-      empty: query7(".empty"),
-      grid: query7(".grid"),
-      searchInput: query7(".search"),
-      selectButton: query7(".select"),
-      selectionTitle: query7(".selection strong"),
-      selectionValue: query7(".selection code")
-    };
-  }
-  function wireFilesCenterElements(elements, callbacks) {
-    elements.closeButton.addEventListener("click", callbacks.close);
-    elements.cancelButton.addEventListener("click", callbacks.close);
-    elements.backdrop.addEventListener("click", (event) => {
-      if (event.target === elements.backdrop) {
-        callbacks.close();
-      }
-    });
-    elements.selectButton.addEventListener("click", callbacks.confirm);
-    elements.searchInput.addEventListener("input", callbacks.search);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterList.ts
-  function renderFilesBreadcrumb(container, trail, onOpen) {
-    container.replaceChildren();
-    trail.forEach((entry, index) => {
-      const button2 = document.createElement("button");
-      button2.type = "button";
-      button2.textContent = entry.label;
-      button2.ariaCurrent = index === trail.length - 1 ? "page" : null;
-      button2.addEventListener("click", () => onOpen(entry, index));
-      container.append(button2);
-    });
-  }
-  function renderFilesList(input3) {
-    input3.grid.replaceChildren();
-    const query7 = input3.query.trim().toLowerCase();
-    const items = input3.items.filter((item) => {
-      if (item.type === "file" && !matchesFileAccept(item, input3.fileAccept)) {
-        return false;
-      }
-      return !query7 || item.name.toLowerCase().includes(query7);
-    });
-    input3.empty.hidden = items.length > 0;
-    for (const item of items) {
-      const button2 = document.createElement("button");
-      button2.className = "item";
-      button2.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
-      button2.type = "button";
-      button2.ariaSelected = String(input3.isSelected(item));
-      button2.addEventListener("click", () => {
-        if (item.type === "folder") {
-          input3.onOpenFolder(item);
-          return;
-        }
-        input3.onSelectFile(item);
-      });
-      button2.addEventListener("dblclick", () => {
-        if (item.type === "file" && !input3.multiple) {
-          input3.onConfirm();
-        }
-      });
-      button2.append(renderFilePreview(item, input3.basePath), renderFileCopy(item));
-      input3.grid.append(button2);
-    }
-  }
-  function renderFileCopy(item) {
-    const copy = document.createElement("span");
-    copy.className = "copy";
-    const name = document.createElement("span");
-    name.className = "name";
-    name.textContent = item.name;
-    const meta = document.createElement("span");
-    meta.className = "meta";
-    meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
-    copy.append(name, meta);
-    return copy;
-  }
-  function renderFilePreview(item, basePath5) {
-    const preview = document.createElement("span");
-    preview.className = "preview";
-    if (item.type === "folder") {
-      preview.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.8A2.8 2.8 0 0 1 5.8 4h4.1l2 2H18.2A2.8 2.8 0 0 1 21 8.8v8.4a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.2Z"/></svg>`;
-      return preview;
-    }
-    if (item.mimeType?.startsWith("image/")) {
-      const image2 = document.createElement("img");
-      image2.alt = "";
-      image2.loading = "lazy";
-      image2.src = fileUrl(basePath5, item.id);
-      preview.append(image2);
-      return preview;
-    }
-    preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
-    return preview;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterSelection.ts
-  function renderFilesSelection(elements, selection) {
-    if (selection.multiple) {
-      const count = selection.selectedMany.length;
-      elements.selectButton.disabled = count === 0;
-      elements.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
-      elements.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
-      elements.selectionValue.textContent = selection.maxSelection ? `Up to ${selection.maxSelection} files` : "Choose files";
-      return;
-    }
-    elements.selectButton.disabled = !selection.selected;
-    elements.selectButton.textContent = "Select file";
-    elements.selectionTitle.textContent = selection.selected?.name ?? "No file selected";
-    elements.selectionValue.textContent = selection.selected ? fileMeta(selection.selected) : "Choose a file";
-  }
-  function toggleSelectedFile(item, selection) {
-    if (!selection.multiple) {
-      return item;
-    }
-    const existingIndex = selection.selectedMany.findIndex((selected2) => selected2.id === item.id);
-    if (existingIndex >= 0) {
-      selection.selectedMany.splice(existingIndex, 1);
-      return selection.selected;
-    }
-    if (!selection.maxSelection || selection.selectedMany.length < selection.maxSelection) {
-      selection.selectedMany.push(item);
-    }
-    return selection.selected;
-  }
-  function isFileSelected(item, selection) {
-    return selection.multiple ? selection.selectedMany.some((selected2) => selected2.id === item.id) : selection.selected?.id === item.id;
-  }
-  function dispatchFilesSelection(host, basePath5, selection) {
-    if (selection.multiple) {
-      if (selection.selectedMany.length === 0) {
-        return false;
-      }
-      host.dispatchEvent(new CustomEvent("select-files", {
-        bubbles: true,
-        composed: true,
-        detail: { files: selection.selectedMany.map((file) => fileDetail(basePath5, file)) }
-      }));
-      return true;
-    }
-    if (!selection.selected) {
-      return false;
-    }
-    host.dispatchEvent(new CustomEvent("select-file", {
-      bubbles: true,
-      composed: true,
-      detail: fileDetail(basePath5, selection.selected)
-    }));
-    return true;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
-  var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default35)}`;
-
-  class FilesCenter extends HTMLElement {
-    _folder = null;
-    _trail = [{ id: null, label: "Files" }];
-    _items = [];
-    _selected = null;
-    _selectedMany = [];
-    _wired = false;
-    _accept = ["folder", "file"];
-    _fileAccept = null;
-    _multiple = false;
-    _maxSelection = null;
-    elements;
-    constructor() {
-      super();
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template18.content.cloneNode(true));
-      this.elements = queryFilesCenterElements(shadowRoot);
-    }
-    connectedCallback() {
-      this._wire();
-    }
-    show(options2 = {}) {
-      this._wire();
-      this._accept = options2.accept ?? ["folder", "file"];
-      this._fileAccept = options2.fileAccept ?? null;
-      this._multiple = options2.multiple === true;
-      this._maxSelection = typeof options2.maxSelection === "number" ? Math.max(1, options2.maxSelection) : null;
-      this._folder = null;
-      this._trail = [{ id: null, label: "Files" }];
-      this._selected = null;
-      this._selectedMany = [];
-      this.elements.searchInput.value = "";
-      this.elements.backdrop.hidden = false;
-      this._load();
-    }
-    _wire() {
-      if (this._wired) {
-        return;
-      }
-      this._wired = true;
-      wireFilesCenterElements(this.elements, {
-        close: () => this._close(),
-        confirm: () => this._confirm(),
-        search: () => this._renderItems()
-      });
-    }
-    async _load() {
-      this._selected = null;
-      this._updateSelection();
-      this._items = await loadFilesPage(this._basePath(), this._folder, this._accept);
-      this._render();
-    }
-    _render() {
-      this._renderBreadcrumb();
-      this._renderItems();
-      this._updateSelection();
-    }
-    _renderBreadcrumb() {
-      renderFilesBreadcrumb(this.elements.breadcrumb, this._trail, (entry, index) => {
-        this._folder = entry.id;
-        this._trail = this._trail.slice(0, index + 1);
-        this._load();
-      });
-    }
-    _renderItems() {
-      renderFilesList({
-        basePath: this._basePath(),
-        empty: this.elements.empty,
-        fileAccept: this._fileAccept,
-        grid: this.elements.grid,
-        isSelected: (item) => this._isSelected(item),
-        items: this._items,
-        multiple: this._multiple,
-        onConfirm: () => this._confirm(),
-        onOpenFolder: (item) => this._openFolder(item),
-        onSelectFile: (item) => {
-          this._selectFile(item);
-          this._renderItems();
-          this._updateSelection();
-        },
-        query: this.elements.searchInput.value
-      });
-    }
-    _openFolder(item) {
-      this._folder = item.id;
-      this._trail.push({ id: item.id, label: item.name });
-      this.elements.searchInput.value = "";
-      this._load();
-    }
-    _updateSelection() {
-      renderFilesSelection(this.elements, this._selection());
-    }
-    _confirm() {
-      if (dispatchFilesSelection(this, this._basePath(), this._selection())) {
-        this._close();
-      }
-    }
-    _selectFile(item) {
-      this._selected = toggleSelectedFile(item, this._selection());
-    }
-    _isSelected(item) {
-      return isFileSelected(item, this._selection());
-    }
-    _close() {
-      this.elements.backdrop.hidden = true;
-      this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    }
-    _basePath() {
-      return document.querySelector('meta[name="basePath"]')?.content ?? "";
-    }
-    _selection() {
-      return {
-        maxSelection: this._maxSelection,
-        multiple: this._multiple,
-        selected: this._selected,
-        selectedMany: this._selectedMany
-      };
-    }
-  }
-  if (!customElements.get("cms-editor-v2-files-center")) {
-    customElements.define("cms-editor-v2-files-center", FilesCenter);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkMediaPicker.ts
-  function openPageLinkMediaPicker(onSelect, accept) {
-    const center = new FilesCenter;
-    const cleanup = () => center.remove();
-    center.addEventListener("close", cleanup, { once: true });
-    center.addEventListener("select-file", (event) => {
-      const detail = event.detail;
-      if (detail?.src && isCmsFileSource(detail.src) && matchesMediaDetail(detail, accept)) {
-        onSelect(detail.src, detail.label);
-      }
-    }, { once: true });
-    document.body.append(center);
-    center.show({ accept: ["folder", "file"], fileAccept: accept });
-  }
-  function matchesMediaDetail(detail, accept) {
-    return matchesFileAccept({
-      id: detail.id,
-      name: detail.label,
-      parentId: null,
-      type: "file",
-      mimeType: detail.mimeType
-    }, accept ?? null);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts
-  class PageLinkState extends HTMLElement {
-    pages = [];
-    mode = "page";
-    currentValue = "";
-    loaded = false;
-    wired = false;
-    pickerOpen = false;
-    reflectingValue = false;
-    mediaLabel = "";
-    elements;
-    constructor(template19) {
-      super();
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template19.content.cloneNode(true));
-      this.elements = queryPageLinkElements(shadowRoot);
-    }
-    static get observedAttributes() {
-      return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
-    }
-    attributeChangedCallback() {
-      if (!this.shadowRoot || this.reflectingValue) {
-        return;
-      }
-      this.syncFromAttributes();
-      this.render();
-    }
-    get value() {
-      return this.currentValue;
-    }
-    set value(value3) {
-      this.currentValue = value3;
-      this.reflectValue(value3);
-      this.render();
-    }
-    syncFromAttributes() {
-      this.currentValue = this.getAttribute("value") ?? "";
-      this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
-    }
-    setValue(value3) {
-      if (!isSafeNavigationalUrl(value3)) {
-        return;
-      }
-      this.currentValue = value3;
-      this.reflectValue(value3);
-      this.renderPages();
-      this.renderSummary();
-      this.renderMediaFile();
-      this.dispatchEvent(new CustomEvent("input", {
-        bubbles: true,
-        composed: true,
-        detail: { value: value3 }
-      }));
-    }
-    openPicker() {
-      if (this.disabled || this.mode !== "page") {
-        return;
-      }
-      this.pickerOpen = true;
-      this.renderPages();
-    }
-    closePicker() {
-      this.pickerOpen = false;
-      this.renderPages();
-    }
-    openFilesCenter() {
-      if (this.disabled) {
-        return;
-      }
-      openPageLinkMediaPicker((source2, label3) => {
-        this.mode = "media";
-        this.mediaLabel = label3;
-        this.setValue(source2);
-      }, this.mediaAccept());
-    }
-    renderMediaFile() {
-      renderPageLinkMedia(this.elements, this.mode, this.currentValue, this.mediaLabel);
-    }
-    allowedModes() {
-      return allowedLinkModes(this.modeOptions());
-    }
-    allowPage() {
-      return this.getAttribute("allow-page") !== "false";
-    }
-    allowExternal() {
-      return this.getAttribute("allow-external") !== "false";
-    }
-    allowMedia() {
-      return this.getAttribute("allow-media") !== "false";
-    }
-    mediaAccept() {
-      const allowed = new Set(["image", "bitmap", "svg", "video", "audio", "document"]);
-      const values = (this.getAttribute("media-accept") ?? "").split(",").map((value3) => value3.trim()).filter((value3) => allowed.has(value3));
-      return values.length > 0 ? values : undefined;
-    }
-    basePath() {
-      return document.querySelector('meta[name="basePath"]')?.content ?? "";
-    }
-    get disabled() {
-      return this.hasAttribute("disabled");
-    }
-    modeOptions() {
-      return {
-        allowPage: this.allowPage(),
-        allowExternal: this.allowExternal(),
-        allowMedia: this.allowMedia()
-      };
-    }
-    reflectValue(value3) {
-      this.reflectingValue = true;
-      this.setAttribute("value", value3);
-      this.reflectingValue = false;
-    }
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts
-  class PageLinkController extends PageLinkState {
-    constructor(template19) {
-      super(template19);
-    }
-    connectedCallback() {
-      this.syncFromAttributes();
-      this.wire();
-      this.loadPages();
-      this.render();
-    }
-    render() {
-      this.elements.label.textContent = this.getAttribute("label") ?? "Link";
-      this.elements.hint.textContent = this.getAttribute("hint") ?? "";
-      this.elements.hint.toggleAttribute("hidden", !this.elements.hint.textContent);
-      this.renderTabs();
-      this.renderPanels();
-      this.renderPages();
-      this.renderSummary();
-    }
-    renderPages() {
-      renderPageLinkPages({
-        disabled: this.disabled,
-        elements: this.elements,
-        onSelect: (value3) => {
-          this.setValue(value3);
-          this.elements.searchInput.value = "";
-          this.closePicker();
-        },
-        pages: this.pages,
-        pickerOpen: this.pickerOpen,
-        query: this.elements.searchInput.value,
-        value: this.currentValue
-      });
-    }
-    renderSummary() {
-      renderPageLinkSummary(this.elements, this.pages, this.mode, this.currentValue);
-    }
-    wire() {
-      if (this.wired) {
-        return;
-      }
-      this.wired = true;
-      this.elements.searchInput.addEventListener("focus", () => this.openPicker());
-      this.elements.searchInput.addEventListener("click", () => this.openPicker());
-      this.elements.searchInput.addEventListener("input", () => {
-        this.pickerOpen = true;
-        this.renderPages();
-      });
-      this.elements.externalInput.addEventListener("input", () => {
-        if (!this.disabled) {
-          this.setValue(this.elements.externalInput.value);
-        }
-      });
-      this.elements.fileButton.addEventListener("click", () => this.openFilesCenter());
-      this.elements.pagePanel.addEventListener("focusout", () => {
-        setTimeout(() => {
-          if (this.shadowRoot?.activeElement && this.elements.pagePanel.contains(this.shadowRoot.activeElement)) {
-            return;
-          }
-          this.closePicker();
-        }, 0);
-      });
-      this.elements.target.addEventListener("click", () => {
-        if (!this.disabled && this.mode === "page") {
-          this.elements.searchInput.focus();
-          this.openPicker();
-        }
-      });
-    }
-    async loadPages() {
-      if (this.loaded || !this.allowPage()) {
-        return;
-      }
-      this.loaded = true;
-      try {
-        const response = await fetch(`${this.basePath()}/api/page/links`);
-        if (!response.ok) {
-          return;
-        }
-        this.pages = await response.json();
-        this.renderPages();
-        this.renderSummary();
-      } catch {
-        this.pages = [];
-        this.renderPages();
-      }
-    }
-    renderTabs() {
-      renderPageLinkTabs({
-        allowedModes: this.allowedModes(),
-        disabled: this.disabled,
-        elements: this.elements,
-        mode: this.mode,
-        onMode: (mode) => {
-          this.mode = mode;
-          if (mode !== "page") {
-            this.pickerOpen = false;
-          }
-          if (mode === "external") {
-            this.elements.externalInput.value = this.currentValue;
-          }
-          this.render();
-        }
-      });
-    }
-    renderPanels() {
-      renderPageLinkPanels({
-        allowExternal: this.allowExternal(),
-        allowMedia: this.allowMedia(),
-        allowPage: this.allowPage(),
-        disabled: this.disabled,
-        elements: this.elements,
-        mediaLabel: this.mediaLabel,
-        mode: this.mode,
-        pickerOpen: this.pickerOpen,
-        value: this.currentValue
-      });
-    }
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
-  var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default34)}`;
-
-  class PageLink extends PageLinkController {
-    constructor() {
-      super(template19);
-    }
-  }
-  if (!customElements.get("cms-editor-v2-page-link")) {
-    customElements.define("cms-editor-v2-page-link", PageLink);
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/endpointBinding.ts

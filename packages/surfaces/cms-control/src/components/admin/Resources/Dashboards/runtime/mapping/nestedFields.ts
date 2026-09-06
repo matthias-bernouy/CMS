@@ -49,6 +49,15 @@ export function reorderableField(
         ...(field.placeholder ? { placeholder: field.placeholder } : {}),
         ...(field.secondary ? { secondary: true } : {}),
     };
+    if (field.type === "page-link") {
+        return {
+            ...base,
+            type: field.type,
+            publishedOnly: field.publishedOnly,
+            allowExternal: field.allowExternal,
+            allowMedia: field.allowMedia,
+        };
+    }
     const type = field.type ?? "text";
     if (type === "select") {
         return { ...base, type, options: (field.options ?? []).map(optionData) };

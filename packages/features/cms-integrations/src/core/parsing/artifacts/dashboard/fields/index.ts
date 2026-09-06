@@ -9,6 +9,7 @@ import { isRecord, text } from "../../../definition/values";
 import { optionalBoolean, optionalFiniteNumber, optionalText, requiredText } from "../../common";
 import { parseReorderableListField, parseTableField } from "./complexFields";
 import { parseMediaField, parseReadonlyFormat } from "./mediaFields";
+import { parsePageLinkOptions } from "./nestedEditors";
 import { parseSchemaField } from "./schemaField";
 import { parseLookup, parseOptions } from "../refs";
 import { parseVisibilityRule } from "../visibility";
@@ -62,8 +63,11 @@ function parseField(value: unknown, name: string): DashboardField {
         ...(required ? { required } : {}),
     };
     const type = requiredText(value.type, `${name}.type`);
-    if (type === "text" || type === "cms-user") {
+    if (type === "text" || type === "cms-user" || type === "secret-ref") {
         return { ...base, type, ...placeholder(value, name) };
+    }
+    if (type === "page-link") {
+        return { ...base, type, ...placeholder(value, name), ...parsePageLinkOptions(value, name) };
     }
     if (type === "number") {
         return parseNumberField(base, value, name);

@@ -6,7 +6,10 @@ export type ReorderableListItemField = {
     id: string;
     label: string;
     path: string;
-    type?: "text" | "checkbox" | "select" | "combobox" | "media";
+    type?: "text" | "checkbox" | "select" | "combobox" | "media" | "secret-ref" | "page-link";
+    publishedOnly?: boolean;
+    allowExternal?: boolean;
+    allowMedia?: boolean;
     options?: Array<{ label: string; value: string }>;
     required?: boolean;
     placeholder?: string;

@@ -38,6 +38,12 @@ export type DashboardFieldBase = {
     visibleWhen?: DashboardVisibilityRule;
 };
 
+export type DashboardPageLinkOptions = {
+    publishedOnly?: boolean;
+    allowExternal?: boolean;
+    allowMedia?: boolean;
+};
+
 export type DashboardSelectableField = {
     options?: DashboardOption[];
     lookup?: DashboardLookupRef;
@@ -57,6 +63,8 @@ export type DashboardReorderableListItemField = DashboardReorderableListItemFiel
     (
         | { type?: "text"; options?: never; lookup?: never }
         | { type: "checkbox"; options?: never; lookup?: never }
+        | { type: "secret-ref"; options?: never; lookup?: never }
+        | ({ type: "page-link"; options?: never; lookup?: never } & DashboardPageLinkOptions)
         | { type: "select"; options: DashboardOption[]; lookup?: never }
         | { type: "combobox"; options?: DashboardOption[]; lookup?: DashboardEmbeddedLookupRef }
         | {
@@ -80,6 +88,8 @@ export type DashboardSchemaExclusion = {
 export type DashboardField =
     | (DashboardFieldBase & { type: "text"; placeholder?: string })
     | (DashboardFieldBase & { type: "cms-user"; placeholder?: string })
+    | (DashboardFieldBase & { type: "secret-ref"; placeholder?: string })
+    | (DashboardFieldBase & { type: "page-link"; placeholder?: string } & DashboardPageLinkOptions)
     | (DashboardFieldBase & {
           type: "number";
           placeholder?: string;

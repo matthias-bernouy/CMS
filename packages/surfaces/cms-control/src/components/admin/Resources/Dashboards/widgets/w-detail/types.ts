@@ -39,6 +39,9 @@ export type WDetailSchemaDefinition = {
     type: "string" | "number" | "boolean";
     required?: boolean;
     unit?: string;
+    publishedOnly?: boolean;
+    allowExternal?: boolean;
+    allowMedia?: boolean;
     options?: WDetailOption[];
 };
 
@@ -58,7 +61,8 @@ type WDetailReorderableListFieldBase = {
 
 export type WDetailReorderableListField = WDetailReorderableListFieldBase &
     (
-        | { type: "text" | "checkbox" | "media"; options?: never }
+        | { type: "text" | "checkbox" | "media" | "secret-ref"; options?: never }
+        | { type: "page-link"; options?: never; publishedOnly?: boolean; allowExternal?: boolean; allowMedia?: boolean }
         | { type: "select"; options: WDetailOption[] }
         | { type: "combobox"; options: WDetailOption[] }
     );
@@ -84,6 +88,8 @@ export type WDetailField = {
         | "textarea"
         | "select"
         | "cms-user"
+        | "secret-ref"
+        | "page-link"
         | "combobox"
         | "tokens"
         | "chips"
@@ -94,6 +100,9 @@ export type WDetailField = {
         | "image"
         | "readonly"
         | "badge";
+    publishedOnly?: boolean;
+    allowExternal?: boolean;
+    allowMedia?: boolean;
     options?: WDetailOption[];
     columns?: WDetailTableColumn[];
     derive?: WDetailTableDerive;

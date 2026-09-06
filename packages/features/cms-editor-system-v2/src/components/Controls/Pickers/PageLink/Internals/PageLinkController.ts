@@ -84,7 +84,8 @@ export class PageLinkController extends PageLinkState {
         }
         this.loaded = true;
         try {
-            const response = await fetch(`${this.basePath()}/api/page/links`);
+            const published = this.getAttribute("published-only") === "true" ? "?visible=published" : "";
+            const response = await fetch(`${this.basePath()}/api/page/links${published}`);
             if (!response.ok) {
                 return;
             }

@@ -1,4 +1,5 @@
 import { IntegrationInputError } from "../../../../errors";
+import { optionalBoolean } from "../../common";
 import { parseEmbeddedLookup, parseOptions } from "../refs";
 
 export function parseNestedEditor(
@@ -36,7 +37,22 @@ export function parseNestedEditor(
     }
     return {
         ...(explicitType ? { type } : {}),
+        ...(type === "page-link" ? parsePageLinkOptions(value, name) : {}),
         ...(options ? { options } : {}),
         ...(lookup ? { lookup } : {}),
     };
+}
+
+export function parsePageLinkOptions(
+    value: Record<string, unknown>,
+    name: string,
+): { publishedOnly?: boolean; allowExternal?: boolean; allowMedia?: boolean } {
+    const options: { publishedOnly?: boolean; allowExternal?: boolean; allowMedia?: boolean } = {};
+    for (const key of ["publishedOnly", "allowExternal", "allowMedia"] as const) {
+        const parsed = optionalBoolean(value[key], `${name}.${key}`);
+        if (parsed !== undefined) {
+            options[key] = parsed;
+        }
+    }
+    return options;
 }

@@ -34,6 +34,20 @@ export function detailField(
         ...(field.required ? { required: true } : {}),
         ...("placeholder" in field && field.placeholder ? { placeholder: field.placeholder } : {}),
     };
+    if (field.type === "secret-ref" || field.type === "page-link") {
+        return {
+            ...base,
+            input: field.type,
+            value: textValue(value),
+            ...(field.type === "page-link"
+                ? {
+                      publishedOnly: field.publishedOnly,
+                      allowExternal: field.allowExternal,
+                      allowMedia: field.allowMedia,
+                  }
+                : {}),
+        };
+    }
     if (field.type === "number") {
         return {
             ...base,

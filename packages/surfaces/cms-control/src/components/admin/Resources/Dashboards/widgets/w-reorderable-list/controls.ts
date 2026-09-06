@@ -1,3 +1,4 @@
+import { createReferenceEditor } from "../w-detail/controls/editors";
 import { valueAt } from "../../runtime/expressions";
 import "../w-media-field/WMediaField";
 import type { DashboardMediaItem } from "../w-media-field/types";
@@ -35,6 +36,9 @@ export function readItemControl(control: HTMLElement): string | boolean {
 }
 
 function fieldControl(field: ReorderableListItemField, value: unknown): HTMLElement {
+    if (field.type === "secret-ref" || field.type === "page-link") {
+        return createReferenceEditor({ ...field, type: field.type }, value);
+    }
     if (field.type === "media") {
         const control = document.createElement("cms-dashboard-w-media-field") as HTMLElement & {
             items: DashboardMediaItem[];

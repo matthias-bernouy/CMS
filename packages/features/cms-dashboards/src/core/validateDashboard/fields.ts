@@ -60,8 +60,16 @@ export function validateField(
     switch (field.type) {
         case "text":
         case "cms-user":
+        case "secret-ref":
         case "checkbox":
         case "readonly":
+            break;
+        case "page-link":
+            for (const key of ["publishedOnly", "allowExternal", "allowMedia"] as const) {
+                if (field[key] !== undefined && typeof field[key] !== "boolean") {
+                    errors.push(`${path}.${key} must be a boolean`);
+                }
+            }
             break;
         case "number":
             validateNumberField(field, path, errors);

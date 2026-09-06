@@ -115,7 +115,15 @@ function parseReorderableFields(value: unknown, name: string): DashboardReordera
         const required = optionalBoolean(entry.required, `${path}.required`);
         const placeholder = optionalText(entry.placeholder, `${path}.placeholder`);
         const secondary = optionalBoolean(entry.secondary, `${path}.secondary`);
-        const editor = parseNestedEditor(entry, path, ["text", "checkbox", "select", "combobox", "media"]);
+        const editor = parseNestedEditor(entry, path, [
+            "text",
+            "checkbox",
+            "select",
+            "combobox",
+            "media",
+            "secret-ref",
+            "page-link",
+        ]);
         if (editor.type === "media") {
             return parseNestedMediaField(entry, path, {
                 id,

@@ -86,6 +86,8 @@ export {
 } from "../core/dashboardVisibility";
 export {
     dashboardPathSegments,
+    dashboardSecretRefPaths,
+    dashboardReferenceFieldPaths,
     isSafeDashboardExpression,
     isSafeDashboardPath,
 } from "../core/dashboardPaths";

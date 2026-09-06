@@ -1,3 +1,5 @@
+import "@bernouy/cms-editor-system-v2/page-link";
+import "cms-control/components/admin/Common/CredentialSelect/CredentialSelect";
 import type { WDetailTableColumn } from "../types";
 import {
     applyRemoteLookupMetadata,
@@ -71,4 +73,33 @@ function tokensEditor(value: unknown): TokenControl {
 
 function textValue(value: unknown): string {
     return value === null || value === undefined ? "" : String(value);
+}
+
+export function createReferenceEditor(
+    field: {
+        type: "secret-ref" | "page-link";
+        label: string;
+        publishedOnly?: boolean;
+        allowExternal?: boolean;
+        allowMedia?: boolean;
+    },
+    value: unknown,
+): ValueControl {
+    const control = document.createElement(
+        field.type === "secret-ref" ? "cms-credential-select" : "cms-editor-v2-page-link",
+    ) as ValueControl;
+    control.setAttribute("label", field.label);
+    control.setAttribute("value", textValue(value));
+    if (field.type === "page-link") {
+        control.setAttribute("allow-external", String(field.allowExternal === true));
+        control.setAttribute("allow-media", String(field.allowMedia === true));
+        control.setAttribute("published-only", String(field.publishedOnly === true));
+        control.addEventListener("input", () =>
+            control.dispatchEvent(new Event("change", { bubbles: true, composed: true })),
+        );
+    } else {
+        const base = document.querySelector<HTMLMetaElement>('meta[name="basePath"]')?.content ?? "";
+        control.setAttribute("api", `${base}/api/secrets`);
+    }
+    return control;
 }
