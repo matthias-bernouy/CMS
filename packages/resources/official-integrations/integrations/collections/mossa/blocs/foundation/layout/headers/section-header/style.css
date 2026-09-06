@@ -89,7 +89,8 @@
     font-size: clamp(1.25rem, 2.5vw, 1.75rem);
 }
 :host([size="lg"]) ::slotted([slot="title"]) {
-    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.15;
 }
 
 :host([tone="inherit"]) {

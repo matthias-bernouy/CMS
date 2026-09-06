@@ -40,9 +40,9 @@
 ::slotted([slot="title"]) {
     margin: 0;
     font-family: var(--ulvia-font-heading);
-    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 700;
-    line-height: 1.05;
+    line-height: 1.15;
     letter-spacing: -0.02em;
     color: var(--_mossa-hero-fg);
 }
