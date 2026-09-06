@@ -4,7 +4,7 @@ import { sourceUrl } from "./runtime/sourceSpec";
 
 /** Space-separated event names in this attribute re-run the source. */
 export const RELOAD_ATTR = "cms-reload-on";
-/** Always-listened global event; dispatching it reloads every live source. */
+/** Refreshes automatic sources; form-triggered sources require an explicit event. */
 export const RELOAD_EVENT = "cms-source:reload";
 
 export type SourceEventCallbacks = {
@@ -21,12 +21,12 @@ export function sourceTrigger(source: Element): SourceTrigger {
 
 export function listenSourceEvents(source: Element, callbacks: SourceEventCallbacks): () => void {
     const doc = source.ownerDocument;
-    const reloadEvents = [RELOAD_EVENT, ...namedReloadEvents(source)];
+    const trigger = sourceTrigger(source);
+    const reloadEvents = new Set([...(trigger === "auto" ? [RELOAD_EVENT] : []), ...namedReloadEvents(source)]);
     for (const eventName of reloadEvents) {
         doc.addEventListener(eventName, callbacks.onReload);
     }
 
-    const trigger = sourceTrigger(source);
     if (trigger === "submit" || trigger === "change") {
         const form = asOwnerForm(source) ?? source.closest("form");
         const eventName = trigger === "submit" ? "submit" : "change";

@@ -76,6 +76,10 @@ Supported Source methods are `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and
 `HEAD`. Let the endpoint contract and editor source picker produce advanced
 body mappings instead of hand-authoring opaque JSON where possible.
 
+The global `cms-source:reload` event refreshes automatic Sources only; it does
+not submit forms. `cms-reload-on="event-name"` opts a Source into an explicit
+reload channel, including when its trigger is `submit` or `change`.
+
 The native form editor offers a required endpoint picker, `GET`, `POST`, `PUT`,
 `PATCH`, and `DELETE`, an internal-page redirect, reset-on-success, and
 autocomplete. It never exposes `action`, `onsubmit`, or arbitrary attributes.

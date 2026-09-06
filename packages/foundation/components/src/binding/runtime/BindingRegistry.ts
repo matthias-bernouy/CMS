@@ -3,6 +3,7 @@ import type { FilterMap } from "../core/interpolate";
 import { PageStateSync } from "../params/PageStateSync";
 import { ParamSync } from "../params/ParamSync";
 import { Source } from "../source/Source";
+import { sourceTrigger } from "../source/sourceEvents";
 import type { SourceStatusValue } from "../source/presentation/sourceStatus";
 import { sourceUrl } from "../source/runtime/sourceSpec";
 import { sourceStatusScope } from "./sourceStatusScope";
@@ -48,7 +49,9 @@ export class BindingRegistry {
         }
         const existing = this.sources.get(element);
         if (existing) {
-            void existing.run({ onlyIfUrlChanged: true });
+            if (sourceTrigger(element) === "auto") {
+                void existing.run({ onlyIfUrlChanged: true });
+            }
         } else {
             this.registerSource(element);
         }
