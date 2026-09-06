@@ -1,9 +1,9 @@
 create table if not exists delivery.source_settings (
-    id text primary key check (id = 'default'),
+    id text primary key constraint source_settings_id_check check (id = 'default'),
     "values" jsonb not null default '{}'::jsonb,
     saved_revision text,
     applied_revision text,
-    operation text not null default 'idle' check (operation in ('idle', 'applying', 'pending_sync', 'failed')),
+    operation text not null default 'idle' constraint source_settings_operation_check check (operation in ('idle', 'applying', 'pending_sync', 'failed')),
     resources jsonb not null default '[]'::jsonb
 );
 alter table delivery.source_settings enable row level security;
