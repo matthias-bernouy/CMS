@@ -1,4 +1,9 @@
-<p9r-alert type="info" role="status" cms-condition="!dashboardData &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error &amp;&amp; !$source.refreshError">Loading data…</p9r-alert>
+<p9r-skeleton
+    shape="rect"
+    role="status"
+    aria-label="Loading data"
+    cms-condition="!dashboardData &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error &amp;&amp; !$source.refreshError"
+></p9r-skeleton>
 <p9r-alert type="error" cms-condition="$source.error || $source.refreshError" role="alert">
     <p>Unable to load this data. {{ $source.message }}</p>
     <p9r-button type="button" variant="outlined" data-dashboard-source-retry>Retry</p9r-button>

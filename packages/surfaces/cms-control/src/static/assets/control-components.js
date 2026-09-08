@@ -11221,6 +11221,86 @@ p {
       return [this._quickActionsSlot, this._moreActionsSlot].filter((t) => t !== null);
     }
   }
+  var ks = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
+`;
+  var Es = `:host {
+  display: block;
+
+  --_bg: var(--bg-base, #f1f5f9);
+  --_highlight: var(--border-light, #e5e7eb);
+  --_radius: 6px;
+  --_height: 1em;
+  --_width: 100%;
+}
+
+:host([shape="circle"]) {
+  --_radius: 50%;
+  --_height: 2.5rem;
+  --_width: 2.5rem;
+  display: inline-block;
+}
+
+:host([shape="rect"]) {
+  --_radius: 8px;
+  --_height: 8rem;
+}
+
+:host([shape="text"]) {
+  --_height: 0.85em;
+  --_radius: 4px;
+}
+
+.skeleton {
+  width: var(--_width);
+  height: var(--_height);
+  border-radius: var(--_radius);
+  background: linear-gradient(90deg, var(--_bg) 0%, var(--_highlight) 50%, var(--_bg) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--_bg);
+  }
+}
+`;
+
+  class As extends d {
+    static get observedAttributes() {
+      return ["width", "height"];
+    }
+    constructor() {
+      super({ css: Es, template: ks });
+    }
+    connectedCallback() {
+      this._syncSize();
+    }
+    attributeChangedCallback(t, e, i) {
+      if (t === "width" || t === "height")
+        this._syncSize();
+    }
+    _syncSize() {
+      let t = this.getAttribute("width"), e = this.getAttribute("height");
+      if (t !== null)
+        this.style.setProperty("--_width", this._normalize(t));
+      else
+        this.style.removeProperty("--_width");
+      if (e !== null)
+        this.style.setProperty("--_height", this._normalize(e));
+      else
+        this.style.removeProperty("--_height");
+    }
+    _normalize(t) {
+      return /^\d+(\.\d+)?$/.test(t) ? `${t}px` : t;
+    }
+  }
   var Is = `:host {
   display: flex;
   flex: 1;
@@ -37086,7 +37166,12 @@ slot { display: contents; }
   }
 
   // src/static/admin/_content/sources/_runtime/source-states.html
-  var source_states_default = `<p9r-alert type="info" role="status" cms-condition="!dashboardData &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error &amp;&amp; !$source.refreshError">Loading data…</p9r-alert>
+  var source_states_default = `<p9r-skeleton
+    shape="rect"
+    role="status"
+    aria-label="Loading data"
+    cms-condition="!dashboardData &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error &amp;&amp; !$source.refreshError"
+></p9r-skeleton>
 <p9r-alert type="error" cms-condition="$source.error || $source.refreshError" role="alert">
     <p>Unable to load this data. {{ $source.message }}</p>
     <p9r-button type="button" variant="outlined" data-dashboard-source-retry>Retry</p9r-button>
@@ -66477,6 +66562,7 @@ dialog::backdrop {
   define("p9r-select", Ln);
   define("p9r-photo-album", Ua);
   define("p9r-segmented-switch", Dn);
+  define("p9r-skeleton", As);
   define("p9r-stack", Oa);
   define("p9r-tab-panel", hl);
   define("p9r-table", qs);

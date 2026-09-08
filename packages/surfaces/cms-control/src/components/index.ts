@@ -26,6 +26,7 @@ import {
     P9rSelect,
     PhotoAlbum,
     SegmentedSwitch,
+    Skeleton,
     Stack,
     TabPanel,
     Table,
@@ -93,6 +94,7 @@ define("p9r-money-input", MoneyInput);
 define("p9r-select", P9rSelect);
 define("p9r-photo-album", PhotoAlbum);
 define("p9r-segmented-switch", SegmentedSwitch);
+define("p9r-skeleton", Skeleton);
 define("p9r-stack", Stack);
 define("p9r-tab-panel", TabPanel);
 define("p9r-table", Table);
