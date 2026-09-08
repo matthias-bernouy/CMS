@@ -1,10 +1,10 @@
 -- Upload sessions belong to an authenticated CMS administrator, before the resource exists.
 create table if not exists commerce.media_upload_sessions (
     id uuid primary key,
-    owner_id text not null check (btrim(owner_id) <> ''),
-    resource_kind text not null check (resource_kind in ('product', 'offer')),
+    owner_id text not null constraint media_upload_sessions_owner_not_blank check (btrim(owner_id) <> ''),
+    resource_kind text not null constraint media_upload_sessions_resource_kind_valid check (resource_kind in ('product', 'offer')),
     offer_id bigint references commerce.offers(id) on delete restrict,
-    check ((resource_kind = 'product' and offer_id is null) or (resource_kind = 'offer' and product_id is null)),
+    constraint media_upload_sessions_target_valid check ((resource_kind = 'product' and offer_id is null) or (resource_kind = 'offer' and product_id is null)),
     product_id bigint references commerce.products(id) on delete restrict,
     expires_at timestamptz not null default now() + interval '24 hours'
 );
@@ -12,7 +12,7 @@ create index if not exists media_upload_sessions_owner_idx on commerce.media_upl
 create table if not exists commerce.media_uploads (
     media_id bigint primary key references commerce.media(id) on delete restrict,
     session_id uuid not null references commerce.media_upload_sessions(id) on delete restrict,
-    state text not null default 'uploading' check (state in ('uploading', 'ready', 'deleting')),
+    state text not null default 'uploading' constraint media_uploads_state_valid check (state in ('uploading', 'ready', 'deleting')),
     expires_at timestamptz not null default now() + interval '24 hours'
 );
 create index if not exists media_uploads_session_idx on commerce.media_uploads(session_id, media_id);
