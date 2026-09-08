@@ -1,0 +1,16 @@
+[
+    {
+        "status": "200",
+        "body": {
+            "type": "object",
+            "properties": {
+                "sellerPayoutSchedule": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "sellerPayoutSchedule"
+            ]
+        }
+    }
+]

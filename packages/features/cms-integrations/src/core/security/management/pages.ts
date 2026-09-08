@@ -1,22 +1,14 @@
 import { dashboardReferenceFieldPaths, evaluateDashboardVisibility } from "@bernouy/cms-dashboards";
-import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import type { IntegrationResolvedPage } from "../../../interfaces/IntegrationImport";
 import { IntegrationInputError } from "../../errors";
-import type { IntegrationManagementDeps } from "./contracts";
-import { record } from "./report";
+import type { IntegrationRuntimeDeps } from "./contracts";
 import { readPath } from "./secrets";
 
 export async function resolveManagementPages(
-    deps: IntegrationManagementDeps,
-    installation: IntegrationInstallation,
-    input: Record<string, unknown>,
-    actionId?: string,
+    deps: Pick<IntegrationRuntimeDeps, "resolvePublishedPage">,
+    fields: import("@bernouy/cms-dashboards").DashboardField[],
+    values: Record<string, unknown>,
 ): Promise<Record<string, IntegrationResolvedPage>> {
-    const values = record(input.values) ? input.values : input;
-    const management = installation.definitionSnapshot?.management;
-    const fields =
-        (actionId ? management?.actions?.find(({ id }) => id === actionId)?.fields : management?.settings?.fields) ??
-        [];
     const visibleFields = fields.filter((field) =>
         evaluateDashboardVisibility(field.visibleWhen, (expression) => {
             if (expression.startsWith("$resource.")) {

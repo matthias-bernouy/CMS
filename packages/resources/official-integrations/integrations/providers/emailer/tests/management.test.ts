@@ -117,11 +117,21 @@ test.each([
 
 test("Emailer Connection fields allow anonymous SMTP configuration", async () => {
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("emailer");
-    const fields = definition?.management?.settings?.fields ?? [];
+    const artifact = definition?.artifacts.find(
+        (artifact) => artifact.type === "dashboard-view" && artifact.view.id === "emailer-connection",
+    );
+    if (artifact?.type !== "dashboard-view") {
+        throw new Error("Missing view");
+    }
+    const detail = artifact.view.view.widgets[0]!;
+    if (detail.widget !== "w-detail") {
+        throw new Error("Missing detail");
+    }
+    const fields = detail.main.flatMap((section) => ("fields" in section ? section.fields : []));
     const username = fields.find((field) => field.id === "smtpUser");
     const password = fields.find((field) => field.id === "smtpPassword");
-    expect(username).toMatchObject({ type: "text", path: "smtpUser" });
+    expect(username).toMatchObject({ type: "text", path: "values.smtpUser", name: "smtpUser" });
     expect(username?.required).not.toBe(true);
-    expect(password).toMatchObject({ type: "secret-ref", path: "smtpPassword" });
+    expect(password).toMatchObject({ type: "secret-ref", path: "values.smtpPassword", name: "smtpPassword" });
     expect(password?.required).not.toBe(true);
 });

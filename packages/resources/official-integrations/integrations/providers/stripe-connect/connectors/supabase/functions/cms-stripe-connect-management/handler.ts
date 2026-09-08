@@ -1,3 +1,4 @@
+import { connectionHandler } from "./connection.ts";
 import { manageSource } from "./lifecycle/handler.ts";
 import { listSellerHeldPaymentCapabilities } from "./core/capabilities.ts";
 import { getMarketplaceTermsManagement, publishMarketplaceTermsManagement } from "./core/management.ts";
@@ -9,6 +10,9 @@ export async function handleMarketplaceTermsManagementRequest(request: Request):
             return optionsResponse();
         }
         const route = routePath(request);
+        if (route === "/connection" || route === "/connection/retry") {
+            return await connectionHandler(manageSource)(request);
+        }
         if (route === "/source-management") {
             return await withMethod(request, "POST", () => manageSource(request));
         }

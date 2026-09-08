@@ -99,11 +99,12 @@ test("connection saves lock the form through rereading and retain selection and 
             expect(fixture.settings().values.country).toBe("BE");
             expect(fixture.settings().values.notes).toBe("Notes before saving");
             expect(
-                fixture.requests.filter((request) => request === "GET /api/integrations/management/settings"),
+                fixture.requests.filter((request) => request === "GET /.cms/sources/service/getConnection"),
             ).toHaveLength(2);
             await country.fill("de");
             const saved = page.waitForResponse(
-                (response) => response.request().method() === "POST" && response.url().includes("/management/settings"),
+                (response) =>
+                    response.request().method() === "POST" && response.url().includes("/service/saveConnection"),
             );
             await save.click();
             await saved;

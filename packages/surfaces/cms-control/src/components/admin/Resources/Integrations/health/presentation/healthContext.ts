@@ -7,9 +7,7 @@ export function healthContext(management: IntegrationManagement) {
     const actions = new Map(
         (management.actions ?? []).map((action) => [action.id, { id: action.id, label: action.label }]),
     );
-    if (management.settings?.applyFunctionId && !actions.has("apply-settings")) {
-        actions.set("apply-settings", { id: "apply-settings", label: "Apply configuration" });
-    }
+
     let checks: Check[] = [];
     let steps: Step[] = [];
     return (health: IntegrationHealthEnvelope | undefined) => {

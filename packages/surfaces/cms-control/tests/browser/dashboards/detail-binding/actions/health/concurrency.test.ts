@@ -22,13 +22,18 @@ test("action completion supersedes an older Health refresh", async () => {
             ).text(),
         );
         await page.goto(healthPage);
-        const repair = page.getByRole("button", { name: "Repair connection", exact: true });
+        const repair = page
+            .locator("[data-health-content]")
+            .getByRole("button", { name: "Repair connection", exact: true });
         await repair.waitFor();
         releaseAction = fixture.holdAction();
         await repair.click();
+        await page.locator("p9r-modal[open]").getByRole("button", { name: "Repair connection", exact: true }).click();
         releaseRead = fixture.holdRead();
         const olderRead = page.waitForRequest((request) => request.url().includes("/management/health"));
-        await page.getByRole("button", { name: "Refresh health", exact: true }).click();
+        await page
+            .getByRole("button", { name: "Refresh health", exact: true })
+            .evaluate((node) => (node as HTMLElement).click());
         await olderRead;
         const freshRead = page.waitForRequest((request) => request.url().includes("/management/health"));
         releaseAction();

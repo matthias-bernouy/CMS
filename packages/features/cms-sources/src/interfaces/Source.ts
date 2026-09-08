@@ -141,6 +141,8 @@ export type SourceEndpoint = {
     contractVersion?: string;
     method: HTTPMethod;
     targetUrl: string; // e.g. "https://api.example.com/v1/users/{id}"
+    /** Enable the installed integration context and bounded server-side effects. */
+    integrationContext?: true;
     timeoutMs?: number; // bounded upstream timeout; defaults to 15 seconds
     access?: SourceEndpointAccess;
     effects?: SourceEndpointEffects;

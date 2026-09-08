@@ -34,7 +34,7 @@ test("health distinguishes stale ready observations and exposes registered recov
                     id: "webhooks",
                     status: "warning",
                     message: "Webhooks need updating",
-                    actionIds: ["apply-settings", "unknown-action"],
+                    actionIds: ["repair", "unknown-action"],
                 },
             ],
             operation: { id: "apply-2", status: "running", steps: [{ id: "webhooks", status: "pending" }] },
@@ -45,7 +45,7 @@ test("health distinguishes stale ready observations and exposes registered recov
         "stripe",
         {
             schemaVersion: 1,
-            settings: { readFunctionId: "read", saveFunctionId: "save", applyFunctionId: "apply", fields: [] },
+            actions: [{ id: "repair", label: "Repair", functionId: "repair" }],
         },
         (id) => calls.push(id),
     );
@@ -56,13 +56,13 @@ test("health distinguishes stale ready observations and exposes registered recov
     expect(root.textContent).toContain("apply-2: running");
     expect(root.querySelectorAll("[data-health-action]")).toHaveLength(1);
     root.querySelector<HTMLButtonElement>("[data-health-action]")!.click();
-    expect(calls).toEqual(["apply-settings"]);
+    expect(calls).toEqual(["repair"]);
     setSourceData(view.element, { ...health, freshness: "unavailable", report: null });
     expect(root.textContent).not.toContain("ready");
     expect(root.textContent).toContain("No valid service observation");
 });
 
-test("management settings save sends the expected revision", async () => {
+test("management actions send only their declared input", async () => {
     const requests: Array<{ url: string; body: unknown }> = [];
     globalThis.fetch = (async (input, init) => {
         requests.push({ url: String(input), body: JSON.parse(String(init?.body)) });
@@ -72,11 +72,11 @@ test("management settings save sends the expected revision", async () => {
             appliedRevision: "3",
         });
     }) as typeof fetch;
-    await managementRequest("commerce", "settings", { values: { country: "FR" }, expectedRevision: "2" });
+    await managementRequest("commerce", "action", { actionId: "repair", input: { reason: "Retry" } });
     expect(requests).toEqual([
         {
-            url: "/api/integrations/management/settings?id=commerce",
-            body: { values: { country: "FR" }, expectedRevision: "2" },
+            url: "/api/integrations/management/action?id=commerce",
+            body: { actionId: "repair", input: { reason: "Retry" } },
         },
     ]);
 });

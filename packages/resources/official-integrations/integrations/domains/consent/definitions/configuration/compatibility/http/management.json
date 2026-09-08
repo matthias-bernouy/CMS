@@ -69,5 +69,36 @@
                 "status": "default"
             }
         ]
+    },
+    {
+        "route": "/context-policy",
+        "method": "POST",
+        "requiredInputs": [
+            "values"
+        ],
+        "requiredHeaders": [
+            "authorization",
+            "x-cms-user-id"
+        ],
+        "responses": [
+            {
+                "status": "200"
+            },
+            {
+                "status": "400"
+            },
+            {
+                "status": "409"
+            },
+            {
+                "status": "422"
+            },
+            {
+                "status": "503"
+            },
+            {
+                "status": "default"
+            }
+        ]
     }
 ]

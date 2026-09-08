@@ -315,10 +315,7 @@ async function commitSuccessfulRerun(
         connectorBindings: connectorBindingsFromResult(definition, result, instanceIds, installation.connectorBindings),
         ...(installation.managementSecretRefs
             ? {
-                  managementSecretRefs: declaredManagementSecretRefs(
-                      definition.management,
-                      installation.managementSecretRefs,
-                  ),
+                  managementSecretRefs: declaredManagementSecretRefs(definition, installation.managementSecretRefs),
               }
             : {}),
         connectorRuntimeTargets: connectorRuntimeTargetsFromResult(definition, result),

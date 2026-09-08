@@ -200,14 +200,10 @@ test("accepts monetary action fields with resource currency and decimal rules", 
     expect(parsed).toMatchObject({ actions: [{ form: { fields: [field] } }] });
 });
 
-test("integration view parsing retains native management targets and rejects mixed transports", () => {
+test("integration view parsing rejects removed settings targets", () => {
     const target = { management: { installationId: "emailer", operation: "settings" } };
-    const widget = detail({ source: target, save: { ...target, valuesPath: "values" } });
-    expect(parseWidget(widget, "detail")).toMatchObject({ source: target, save: { ...target, valuesPath: "values" } });
-    expect(() => parseWidget(detail({ source: { ...target, endpoint: "getSettings" } }), "detail")).toThrow(
-        "cannot be combined",
-    );
-    expect(() => parseWidget(detail({ save: { ...target, params: {} } }), "detail")).toThrow("not supported");
+    expect(() => parseWidget(detail({ source: target }), "detail")).toThrow("named action");
+    expect(() => parseWidget(detail({ save: target }), "detail")).toThrow("named action");
 });
 
 test("preserves explicit navigation identities and rejects invalid paths", () => {

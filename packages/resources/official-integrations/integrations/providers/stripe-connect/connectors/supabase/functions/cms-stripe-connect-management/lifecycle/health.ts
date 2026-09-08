@@ -122,7 +122,6 @@ export async function sourceHealth(owner: string, secrets: JsonRecord, generated
                             : valid
                               ? "Owned destination URL, status and events verified; signing secret matches its stored provisioning receipt."
                               : "Owned webhook configuration needs reconciliation.",
-                    actionIds: valid ? [] : ["apply-settings"],
                 });
             }
         } catch {
@@ -140,7 +139,6 @@ export async function sourceHealth(owner: string, secrets: JsonRecord, generated
             status: "warning",
             code: "settings_not_applied",
             message: "Saved settings have not finished applying.",
-            actionIds: ["apply-settings"],
         });
     }
     const status = checks.some((c) => c.status === "error")

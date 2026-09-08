@@ -4,13 +4,16 @@ import { stageAcceptance, commitAcceptance } from "./routes/acceptances.ts";
 import { listAcceptances } from "./routes/audit.ts";
 import { bootstrapContext, getContext, listContexts, publishContext, syncContext } from "./routes/configuration.ts";
 import { getRequirements } from "./routes/requirements.ts";
-import { manageConsent } from "./routes/management.ts";
+import { manageConsent, publishPolicy } from "./routes/management.ts";
 import { getOperationAcceptance, recordOperationAcceptance } from "./routes/operations.ts";
 
 export async function handleConsentRequest(request: Request): Promise<Response> {
     try {
         requireCmsRequest(request);
         const route = routePath(request);
+        if (route === "/context-policy") {
+            return await withMethod(request, "POST", () => publishPolicy(request));
+        }
         if (route === "/management") {
             return await withMethod(request, "POST", () => manageConsent(request));
         }

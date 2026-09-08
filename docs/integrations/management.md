@@ -1,88 +1,31 @@
-# Integration-owned settings and Health
+# Integration-owned views, references and Health
 
-Installation deploys capabilities. Configuration changes run through the
-integration's own registered functions. Official definitions have zero
-installation inputs; omit `inputs` or use `[]`. Use stable Source IDs rather
-than asking for an instance alias. Legacy inputs remain readable for historical
-verification and migration, not as a new authoring pattern.
+Installation deploys capabilities. Settings are ordinary integration-owned views
+and Source endpoints. There is no `management.settings` contract, generated
+settings view, settings HTTP route, or Core-selected save/apply workflow.
+Official integrations remain at version `1.0.0` and have no installation inputs.
 
 ## Ownership
 
 | Owner | Responsibility |
 | --- | --- |
-| Integration | Settings validation, persistence, revision checks, provider reconciliation, truthful Health checks, and recovery actions |
-| `@bernouy/cms-integrations` | Manifest validation, function invocation, scoped secret delivery, published-page resolution, mutation leases, and Health observations |
-| `@bernouy/cms-control` | Administrator authentication, generic routes, the global Health workspace, and native dashboard forms |
-| Runtime and connector adapter | Compose storage and provider adapters; synchronize declared runtime variables to the installed destination |
+| Integration | Views, defaults, validation, persistence, revisions, provider reconciliation and recovery |
+| Core | Native forms and binding, authentication, scoped references, infrastructure effects and installation leases |
+| Connector adapter | Synchronize granted environment variables to the installed connector destination |
+| Health | Observe services and expose declared maintenance actions, deployment sync and version upgrades |
 
-Core contains no provider-specific provisioning policy. An extension declares
-`extensionOf: { "kind": "commerce" }` and a matching dependency with its supported
-version range. It may register management functions without a Source artifact.
-
-## Declare capabilities
-
-The following is a definition fragment. Every referenced function must also be
-an owned `function` artifact with method `POST` and `access.mode: "system"`.
+A view reads through an ordinary endpoint and submits its native form to another
+endpoint. Their paths and response formats belong to the integration. A revision
+field is optional at the view-contract level; integrations that need optimistic
+concurrency declare it explicitly. Core does not impose a settings response shape.
 
 ```json
 {
-  "management": {
-    "schemaVersion": 1,
-    "health": { "functionId": "manageExample" },
-    "settings": {
-      "readFunctionId": "manageExample",
-      "saveFunctionId": "manageExample",
-      "applyFunctionId": "manageExample",
-      "fields": [
-        { "id": "apiKey", "label": "API key", "path": "apiKey", "type": "secret-ref" }
-      ]
-    },
-    "runtimeSecrets": { "EXAMPLE_API_KEY": { "field": "apiKey" } },
-    "actions": [{
-      "id": "publish-document",
-      "label": "Publish document",
-      "functionId": "manageExample",
-      "fields": [{ "id": "page", "label": "Page", "path": "page", "type": "page-link", "publishedOnly": true }]
-    }]
-  }
-}
-```
-
-Settings and action fields reuse `DashboardField` from `@bernouy/cms-dashboards`;
-there is no second settings-field language. Set `settings.dashboardId` to the
-integration-owned dashboard view containing its settings. Emailer, Stripe Connect
-and Mondial Relay declare Connection views; Commerce and Consent retain their
-existing business settings views. Definitions without a settings dashboard can
-expose their declared fields through a generated native Connection view under
-their own Source (or their parent's Source for source-less extensions).
-Actions reference declared IDs, never arbitrary URLs or scripts.
-
-## Admin navigation and native forms
-
-`/admin/health` is the main-navigation entry between Settings and AI Assistant.
-It observes installations independently; an unavailable or stale report never
-means healthy. The single page contains a global ready/installed count and compact
-disclosures for checks, declared recovery actions, sync and explicit version
-upgrades. There is no separate detail page or activity log; audit history is
-reserved for a future Audit surface. Settings links lead back to Sources.
-Check upgrades and Upgrade all open a review of exact eligible versions before
-any mutation. Batch upgrades run sequentially and stop on failure; completed
-upgrades remain applied. Recheck releases before retrying. Health reads do not
-apply configuration. Site-wide checks beyond installed integrations are not
-implemented yet.
-
-Sources contains ordinary integration views, including Connection views with
-`secret-ref` and `page-link` controls. It no longer embeds the installation shell
-or its Settings/Health tabs. Technical operations live in Health.
-
-A detail can read and save through the management service using an explicit
-request target instead of a Source endpoint:
-
-```json
-{
-  "source": { "management": { "installationId": "emailer", "operation": "settings" } },
+  "widget": "w-detail",
+  "id": "connection",
+  "source": { "endpoint": "getConnection" },
   "save": {
-    "management": { "installationId": "emailer", "operation": "settings" },
+    "endpoint": "saveConnection",
     "label": "Save settings",
     "valuesPath": "values",
     "hiddenFields": [
@@ -91,145 +34,134 @@ request target instead of a Source endpoint:
   },
   "main": [{
     "id": "connection", "title": "Connection",
-    "fields": [{ "id": "smtpHost", "label": "SMTP host", "type": "text", "path": "values.smtpHost", "name": "smtpHost" }]
+    "fields": [{ "id": "apiKey", "label": "API key", "type": "secret-ref", "path": "values.apiKey", "name": "apiKey" }]
   }]
 }
 ```
 
-The shared form submits editable values and the loaded revision, locks through
-the mutation and targeted GET, and retains mounted fields. A missing initial
-revision is normalized to `null` by the settings HTTP route. The integration
-owns patch semantics for undeclared properties; they are not copied into hidden
-JSON inputs. The settings target cannot mix `endpoint`, `sourceId`, `params` or
-`body`. It always uses the administrator-protected management service, preserving
-secret grants, actor identity, page resolution, leases and apply behavior.
-Management views cannot be delegated through published operator dashboards.
+Save uses the existing binding contract: submit typed editable values, lock during
+submission and the targeted reload, and preserve mounted controls. Independent
+operations use their own action forms. Core adds no second rendering engine.
 
-## Save, apply, and retry
+## Server-side references and effects
 
-Control protects all four routes with administrator authentication:
+An ordinary admin POST JSON endpoint can declare `integrationContext: true`.
+Control verifies that the endpoint belongs to exactly one installed integration.
+It reads reference declarations from that integration's installed dashboard views,
+matching the form's source and endpoint. `name` determines the submitted field
+path when present; otherwise `path` does. `valuesPath` selects the submitted values.
+There is no duplicate settings field schema in the manifest.
 
-| Method and route | Request |
-| --- | --- |
-| `GET /api/integrations/management/settings?id=<installation>` | Read integration-owned settings |
-| `POST /api/integrations/management/settings?id=<installation>` | `{ "values": { ... }, "expectedRevision": null }` |
-| `GET /api/integrations/management/health?id=<installation>` | Optional `refresh=true` bypasses the cached result |
-| `POST /api/integrations/management/action?id=<installation>` | `{ "actionId": "publish-document", "input": { ... } }` |
-
-Revisions are opaque strings or `null`, not incrementing Core counters. Normal
-settings results contain `values`, `savedRevision`, and `appliedRevision`.
-An existing context dashboard may send its flat input object instead.
-
-Save invokes `save-settings`, persists the explicitly selected secret grants,
-and, when `applyFunctionId` is declared, immediately invokes `apply-settings`.
-Core stores authorized generated outputs, synchronizes `runtimeSecrets`, then
-calls the same apply function with `operation: "confirm-apply"` and the saved
-revision. The integration confirms its applied revision only after those steps
-succeed. The reserved `apply-settings` action retries an incomplete application.
-There is no deployment reconfiguration step or separate normal Apply button.
-
-A failed apply keeps saved settings and the last applied revision observable.
-It does not turn a successful installation into a failed deployment. Providers
-must enforce revision conflicts and idempotent retries themselves. A durable
-60-second installation lease, renewed every 20 seconds, excludes concurrent
-management mutations and deployment; it is not a transaction across systems.
-
-Install, rerun, and upgrade must preserve runtime business rows. Core preserves
-existing owned generated values and protects installed integrations' managed
-runtime variable names from deployment bootstrap writes, including deployments
-sharing a provider project. Ordinary connector destinations are persisted as
-`connectorRuntimeTargets`; migration-aware connectors retain lineage bindings.
-Control currently requires one destination for runtime secret synchronization.
-
-## Scoped references and dashboard actions
-
-Function payloads contain `operation`, `installationId`, `definitionVersion`,
-`input`, `secretValues`, and `generatedSecretValues`. Authenticated settings and
-Health reads, as well as mutations, carry the verified administrator `actor`;
-declared actions also carry `actionId`. Do not accept an
-administrator identity from browser-supplied input.
-
-A `secret-ref` stores an exact `${KEY}` reference, never the secret value.
-Only current declared settings slots grant access, including dotted paths in
-reorderable-list rows. Raw values reach the authenticated server invocation;
-the integration must not persist, log, or return them. Missing vault values are
-omitted during Health and settings reads so configuration remains repairable;
-mutating operations require their selected references to resolve.
-
-Grants and owned generated keys are separate. Only names declared in
-`management.generatedSecrets` may produce generated outputs, and each must
-already have an owned installation slot. Generated writes are accepted only from
-application, not from settings reads, Health, or other actions. `runtimeSecrets`
-maps to a settings field or `{ "generated": "slotName" }`. Persisted outputs remain available when
-a later runtime synchronization fails. Provider-specific receipts must make
-partial persistence and external-resource recovery safe.
-
-Every invocation filters retired grants against the current manifest. Successful
-reruns/upgrades prune them; migrations defer permanent pruning until completion
-so an abort can restore the source definition. Removing a grant does not delete
-a user-selected vault key. Cleanup of obsolete installation-owned keys retains
-any key still needed by another currently declared grant.
-
-A `page-link` selects a CMS page path. Core resolves it to published metadata in
-`resolvedPages`, keyed by dotted field path, including list rows. Missing or
-unpublished pages fail resolution. Parent-field visibility can exclude inactive
-groups from page resolution; it does not revoke secret grants. External and
-media references are accepted only when the field explicitly allows them and
-do not receive a published-page snapshot. Action resolution uses only that
-action's declared fields; action fields grant no additional secret access.
-
-Existing dashboard actions dispatch through either of these bindings:
-
-```json
-[
-  { "management": { "installationId": "example", "action": "save-settings", "body": { "page": "$field.page" } } },
-  { "management": { "installationId": "example", "action": "action", "actionId": "publish-document", "body": { "page": "$field.page" } } }
-]
-```
-
-The UI resolves body expressions and unwraps the returned `values` for dashboard
-resource updates. Snapshot URLs or metadata supplied inside `input` do not
-replace Core's trusted `resolvedPages` envelope.
-
-## Health report and observation
-
-A Health function must inspect state without deploying, saving settings,
-creating provider resources, sending mail, or writing secrets. Core never
-performs apply/sync from a Health read. The integration returns this report
-shape with a real check timestamp and stable check IDs:
+The browser sends references such as `${SMTP_PASSWORD}`, never secret values.
+The server rejects a client-supplied `_cms` property and adds its own context:
 
 ```json
 {
-  "schemaVersion": 1,
-  "status": "needs_configuration",
-  "checkedAt": "2026-09-06T12:00:00.000Z",
-  "configuration": { "savedRevision": "revision-a", "appliedRevision": null },
-  "checks": [{ "id": "configuration", "status": "warning", "code": "settings_not_applied", "actionIds": ["apply-settings"] }]
+  "values": { "apiKey": "${PROVIDER_KEY}" },
+  "_cms": {
+    "installationId": "example",
+    "definitionVersion": "1.0.0",
+    "actor": { "id": "verified-admin", "role": "admin" },
+    "secretValues": { "apiKey": "server-resolved-value" },
+    "generatedSecretValues": {},
+    "resolvedPages": {}
+  }
 }
 ```
 
-Overall status is `needs_configuration`, `ready`, `degraded`, `blocked`, or
-`unknown`. Individual checks use `ok`, `warning`, `error`, or `unknown`; optional
-`code`, `message`, and declared `actionIds` explain evidence and recovery.
-Reports may include an actual operation with `running`, `succeeded`, or `failed`
-status and steps with `pending`, `running`,
-`succeeded`, or `failed` states. Do not invent progress for an observation.
-Health revisions are nonempty strings of at most 200 characters or `null`.
+Only declared `secret-ref` fields grant access, including list-row paths. Clearing
+a reference or removing a list row revokes that grant without deleting the vault
+key. Unrelated forms retain their grants. Current view declarations filter retired
+or malformed grants before resolution. Health tolerates missing vault entries so
+it can diagnose configuration; mutating endpoints require selected keys to resolve.
+Ordinary GET endpoints read the integration's persisted references without needing
+raw secret values. Never log, persist or return the resolved secret values.
 
-The Core envelope keeps deployment status separate from report status:
-`observation` is `valid`, `unreachable`, `invalid_report`, or `unsupported`;
-`freshness` is `fresh`, `stale`, or `unavailable`. It carries `observedAt`, the
-report or `null`, and optional `reason`, `httpStatus`, and
-`reportDefinitionVersion`. Reasons distinguish timeout, unauthorized, forbidden,
-unreachable, invalid report, and unsupported capability. A valid report can be
-stale; an unreachable provider can retain the last valid report as stale evidence.
+`page-link` fields resolve to trusted published metadata in `_cms.resolvedPages`,
+keyed by submitted dotted path, including list rows. Missing/unpublished pages are
+rejected. Field visibility can exclude disabled groups. Explicitly permitted
+external/media references do not receive published snapshots. Browser-supplied
+snapshot metadata cannot replace the trusted context.
 
-Checks use a process-local 30-second cache scoped to the caller identity and role,
-deduplicate concurrent requests within that scope, and
-wait at most 10 seconds by default. Failed checks or settings mutations retain
-previous evidence with its original timestamp, revisions, and definition
-version. Consumers must show observation freshness alongside integration status.
+An endpoint may request infrastructure effects in a private response property:
 
-See the [published package contracts](../../packages/features/cms-integrations/README.md)
-and [management types](../../packages/features/cms-integrations/src/interfaces/Integration/management.ts)
-for the exact API and invocation types.
+```json
+{
+  "values": { "apiKey": "${PROVIDER_KEY}" },
+  "savedRevision": "integration-owned-revision",
+  "_cms": {
+    "rememberSecrets": true,
+    "generatedSecrets": { "webhookSigning": "new-provider-secret" },
+    "syncRuntime": true,
+    "continue": { "phase": "acknowledge", "revision": "integration-owned-revision" }
+  }
+}
+```
+
+All effects are optional. `rememberSecrets` retains the validated references for
+later operations and Health. Generated output names must be granted in
+`management.generatedSecrets` and have an owned installation secret slot.
+`management.runtimeSecrets` maps environment names to `{ "field": "apiKey" }`
+or `{ "generated": "webhookSigning" }`. Field mappings must name view fields;
+non-secret values come from the endpoint result's `values` object. These are
+technical grants, not settings orchestration metadata.
+
+After executing requested effects, `continue` invokes the same endpoint with the
+original form body and refreshed `_cms` context, adding `_cms.continuation`.
+Core does not interpret phase names, revisions, provider state or retry policy.
+The integration decides whether another invocation is needed. There are at most
+four invocations; continuation objects are limited to 4 KiB. The endpoint output
+contract must preserve `_cms` until the server interceptor consumes it. Control
+strips this property and redacts resolved/generated secret values before returning
+the public result to the browser. Failed responses execute no effects.
+
+Emailer, Mondial Relay and Stripe Connect own their persist/reconcile/acknowledge
+sequence in `/connection`. Their separate `/connection/retry` operation resumes
+application from the saved revision and is exposed in their Connection view.
+Consent publishes through its ordinary policy endpoint using resolved page
+snapshots. Commerce retains its business settings endpoints.
+
+## Failure and deployment boundaries
+
+A renewable 60-second installation lease excludes concurrent mutations and
+deployment. Losing the lease fences secret writes and synchronization. This is
+not a transaction across the integration database, secret store and provider.
+Generated values remain available after failed synchronization. Integrations must
+persist recovery state and implement idempotent provider operations; a failed
+application must not acknowledge the revision as applied.
+
+Install, rerun and upgrade preserve business rows and existing generated secrets.
+They protect installed runtime variable names from bootstrap overwrites, including
+other deployments to the same project. Ordinary installations retain
+`connectorRuntimeTargets`; migration-aware connectors retain lineage bindings.
+Control currently requires exactly one installed target for secret synchronization.
+The integration-context adapter is mounted on Control's admin Source proxy;
+operator/public endpoints cannot opt into it.
+
+## Health
+
+`management` retains `schemaVersion: 1`, optional `health: { functionId }`, explicit
+`actions`, and technical generated/runtime secret grants. Referenced functions must
+be owned system POST functions. Health exposes no settings destination or implicit
+Apply action. Its administrator routes are:
+
+- `GET /api/integrations/management/health?id=<installation>&refresh=true`
+- `POST /api/integrations/management/action?id=<installation>` with `{actionId, input}`
+
+`/admin/health` sits between Settings and AI Assistant. It shows aggregate readiness
+and independent integration observations, checks, declared actions, deployment sync
+and reviewed upgrades. Settings remain in Sources. Logs belong to a future Audit
+surface; site-wide checks beyond installed integrations are not implemented yet.
+
+Health functions are read-only. Reports contain `schemaVersion`, `status`,
+`checkedAt`, `configuration`, and `checks`. Overall statuses are
+`needs_configuration`, `ready`, `degraded`, `blocked`, or `unknown`; check statuses
+are `ok`, `warning`, `error`, or `unknown`. Optional check `actionIds` must refer to
+explicit declarations. Configuration revisions are opaque strings or null.
+Optional operation progress must describe real integration-owned work.
+
+The observation envelope distinguishes `valid`, `unreachable`, `invalid_report`,
+and `unsupported`, with `fresh`, `stale`, or `unavailable` evidence. It can retain
+an older valid report after a failure. The process-local cache is scoped to caller
+identity/role, deduplicates reads, defaults to 30 seconds, and bounds a check to
+10 seconds. Installation mutation timestamps invalidate cached observations.

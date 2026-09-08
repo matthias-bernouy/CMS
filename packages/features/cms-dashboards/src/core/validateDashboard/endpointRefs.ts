@@ -74,8 +74,8 @@ export function validateEndpointRef(
         validateRequiredId(`${path}.management.installationId`, ref.management.installationId, errors);
         if (ref.management.operation === "action") {
             validateRequiredId(`${path}.management.actionId`, ref.management.actionId, errors);
-        } else if (ref.management.operation !== "settings" || ref.management.actionId !== undefined) {
-            errors.push(`${path}.management must declare settings or a named action`);
+        } else {
+            errors.push(`${path}.management must declare a named action`);
         }
         for (const key of ["endpoint", "sourceId", "params", "body"]) {
             if (Object.hasOwn(ref, key)) {

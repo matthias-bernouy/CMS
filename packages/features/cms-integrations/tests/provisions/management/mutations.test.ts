@@ -1,29 +1,33 @@
+import { endpointFixture } from "./support/endpoint";
 import { describe, expect, test } from "bun:test";
 import { IntegrationManagementService } from "@bernouy/cms-integrations";
-import { fixture } from "./fixture";
-describe("integration settings mutations", () => {
-    test("grants explicit refs, preserves ownership, synchronizes then confirms apply", async () => {
+import { fixture } from "./support/fixture";
+
+describe("integration-owned source mutations", () => {
+    test("the endpoint owns continuation, grants, runtime synchronization and acknowledgement", async () => {
         const phases: string[] = [];
-        let values: Record<string, unknown> = {};
         let sync: Record<string, string> = {};
-        const { service, installations, secrets } = await fixture(
-            async (_installation, _fn, payload, reader) => {
-                phases.push(payload.operation);
-                await expect(reader.get("OTHER_KEY")).rejects.toThrow("not granted");
-                if (payload.operation === "save-settings") {
-                    values = payload.input.values as Record<string, unknown>;
-                    expect(payload.secretValues.key).toBe("selected-private-value");
-                    return { values, savedRevision: "2", appliedRevision: null };
+        const { write, installations, secrets } = await endpointFixture(
+            async ({ values, _cms }) => {
+                expect(_cms.secretValues).toEqual({ key: "selected-private-value" });
+                expect(JSON.stringify(_cms)).not.toContain("other-private-value");
+                const phase = _cms.continuation?.phase ?? "persist";
+                phases.push(phase);
+                if (phase === "persist") {
+                    return { values, _cms: { rememberSecrets: true, continue: { phase: "connect" } } };
                 }
-                if (payload.operation === "apply-settings") {
+                if (phase === "connect") {
                     return {
                         values,
-                        savedRevision: "2",
-                        appliedRevision: null,
-                        generatedSecrets: { signing: "new-signing" },
+                        _cms: {
+                            generatedSecrets: { signing: "new-signing" },
+                            syncRuntime: true,
+                            continue: { phase: "acknowledge" },
+                        },
                     };
                 }
                 expect(sync.SIGNING_KEY).toBe("new-signing");
+                expect(_cms.generatedSecretValues.signing).toBe("new-signing");
                 return { values, savedRevision: "2", appliedRevision: "2" };
             },
             {
@@ -33,20 +37,20 @@ describe("integration settings mutations", () => {
                 },
             },
         );
-        const result = await service.saveSettings("test-management", {
-            values: { key: "${SELECTED_KEY}" },
-            expectedRevision: null,
-        });
-        expect(phases).toEqual(["save-settings", "apply-settings", "sync", "confirm-apply"]);
+        const result = await write({ values: { key: "${SELECTED_KEY}" } });
+        expect(result.status).toBe(200);
+        expect(phases).toEqual(["persist", "connect", "sync", "acknowledge"]);
         expect(sync).toEqual({ API_KEY: "selected-private-value", SIGNING_KEY: "new-signing" });
         expect(JSON.stringify(result)).not.toContain("new-signing");
         expect(await secrets.get("SELECTED_KEY")).toBe("selected-private-value");
-        const installed = await installations.get("test-management");
-        expect(installed?.status).toBe("success");
-        expect(installed?.managementLease).toBeUndefined();
-        expect(installed?.secretRefs).toEqual({ signing: "MANAGED_SIGNING" });
+        expect(await installations.get("test-management")).toMatchObject({
+            status: "success",
+            managementSecretRefs: { key: "${SELECTED_KEY}" },
+            secretRefs: { signing: "MANAGED_SIGNING" },
+        });
+        expect((await installations.get("test-management"))?.managementLease).toBeUndefined();
     });
-    test("durable lease rejects other service instances and releases after a failed apply", async () => {
+    test("durable lease rejects another service and releases after failure", async () => {
         let release!: () => void;
         const gate = new Promise<void>((resolve) => {
             release = resolve;
@@ -66,14 +70,19 @@ describe("integration settings mutations", () => {
         deps.invoke = async () => ({ ok: true });
         expect(await service.action("test-management", "retry")).toEqual({ ok: true });
     });
-    test("runtime sync failure keeps owned generated outputs available for retry and does not confirm", async () => {
-        let confirm = false;
-        const { service, secrets } = await fixture(
-            async (_installation, _fn, payload) => {
-                if (payload.operation === "confirm-apply") {
-                    confirm = true;
-                }
-                return { values: { key: "value" }, savedRevision: "3", generatedSecrets: { signing: "retry-signing" } };
+    test("sync failure retains generated outputs for retry and never acknowledges success", async () => {
+        let calls = 0;
+        const { write, secrets } = await endpointFixture(
+            () => {
+                calls++;
+                return {
+                    values: { key: "value" },
+                    _cms: {
+                        generatedSecrets: { signing: "retry-signing" },
+                        syncRuntime: true,
+                        continue: { phase: "acknowledge" },
+                    },
+                };
             },
             {
                 syncRuntimeSecrets: async () => {
@@ -81,21 +90,17 @@ describe("integration settings mutations", () => {
                 },
             },
         );
-        await expect(service.action("test-management", "apply-settings")).rejects.toThrow("synchronization failed");
-        expect(confirm).toBe(false);
+        await expect(write({ values: {} })).rejects.toThrow("synchronization failed");
+        expect(calls).toBe(1);
         expect(await secrets.get("MANAGED_SIGNING")).toBe("retry-signing");
     });
-    test("expired invocation is fenced before generated writes or runtime synchronization", async () => {
+    test("expired invocation is fenced before generated writes or synchronization", async () => {
         let time = new Date();
         let synchronized = false;
-        const { service, secrets } = await fixture(
-            async () => {
+        const { write, secrets } = await endpointFixture(
+            () => {
                 time = new Date(time.getTime() + 61000);
-                return {
-                    values: { key: "value" },
-                    savedRevision: "2",
-                    generatedSecrets: { signing: "unauthorized-stale" },
-                };
+                return { _cms: { generatedSecrets: { signing: "stale" }, syncRuntime: true } };
             },
             {
                 now: () => time,
@@ -104,7 +109,7 @@ describe("integration settings mutations", () => {
                 },
             },
         );
-        await expect(service.action("test-management", "apply-settings")).rejects.toThrow("fenced");
+        await expect(write({ values: {} })).rejects.toThrow("fenced");
         expect(synchronized).toBe(false);
         expect(await secrets.get("MANAGED_SIGNING")).toBe("old-signing");
     });

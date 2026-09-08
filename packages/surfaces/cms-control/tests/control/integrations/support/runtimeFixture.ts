@@ -1,3 +1,6 @@
+import { integrationEndpointInterceptor } from "cms-control/core/admin/control/sourceProxy/integration";
+import { executeEndpoint } from "@bernouy/cms-sources";
+import { createSecretResolver } from "@bernouy/cms-secrets";
 import { expect } from "bun:test";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemoryDashboardAssignmentRepository } from "@bernouy/cms-dashboards";
@@ -14,6 +17,14 @@ import { integrationInstallationDeps } from "cms-control/core/management/integra
 import { makeCms } from "./helpers";
 
 export async function runtimeFixture() {
+    const { connectionHandler } = (await import(
+        resolve(
+            import.meta.dir,
+            "../../../../../../resources/official-integrations/integrations/providers/emailer/connectors/supabase/functions/cms-emailer/connection.ts",
+        )
+    )) as {
+        connectionHandler(handler: (request: Request) => Promise<Response>): (request: Request) => Promise<Response>;
+    };
     const { cms, secrets, integrationInstallations: installations } = makeCms([]);
     cms.roles = new InMemoryRolesRepository();
     cms.dashboardAssignments = new InMemoryDashboardAssignmentRepository();
@@ -50,6 +61,19 @@ export async function runtimeFixture() {
     cms.sourceExecutorDeps = {
         fetchImpl: async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = new Request(input, init);
+            if (
+                new URL(request.url).pathname.endsWith("/connection") ||
+                new URL(request.url).pathname.endsWith("/connection/retry")
+            ) {
+                return connectionHandler(async (inner) =>
+                    cms.sourceExecutorDeps.fetchImpl(
+                        new Request(
+                            "https://project-one.supabase.co/functions/v1/cms-emailer/source-management",
+                            inner,
+                        ),
+                    ),
+                )(request);
+            }
             expect(request.url).toBe("https://project-one.supabase.co/functions/v1/cms-emailer/source-management");
             expect(request.headers.get("authorization")).toBe(`Bearer ${environment.CMS_EMAILER_API_KEY}`);
             const payload = (await request.json()) as Record<string, any>;
@@ -121,5 +145,28 @@ export async function runtimeFixture() {
                 })
               : runIntegrationInstallation({ ...common, mode, integrationId: definition.kind });
     }
-    return { cms, secrets, installations, environment, runtime, phases, load, run };
+    async function connection(body?: Record<string, unknown>, retry = false) {
+        const id = body === undefined ? "getConnection" : retry ? "retryConnection" : "saveConnection";
+        const source = await cms.sources.getSource("urn:emailer");
+        const endpoint = source.endpoints.find((candidate: { urn: string }) => candidate.urn === `urn:emailer:${id}`)!;
+        const request = new Request(`https://control.test/.cms/sources/emailer/${id}`, {
+            method: body === undefined ? "GET" : "POST",
+            headers: { "content-type": "application/json" },
+            ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        });
+        const response = await integrationEndpointInterceptor(
+            { ...cms, configuration: { integrationConnectorDeployers: cms.integrationConnectorDeployers } },
+            async () => ({ identifier: "verified-admin", role: "admin" }),
+        )(endpoint, request, (candidate) =>
+            executeEndpoint(endpoint, candidate, {
+                ...cms.sourceExecutorDeps,
+                resolveSecret: createSecretResolver(secrets),
+                resolveContext: async () => ({ userID: "verified-admin", userRole: "admin" }),
+            }),
+        );
+        const result = await response.json();
+        expect(response.status).toBe(200);
+        return result;
+    }
+    return { cms, secrets, installations, environment, runtime, phases, load, run, connection };
 }

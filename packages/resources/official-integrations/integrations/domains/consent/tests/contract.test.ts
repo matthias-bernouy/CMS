@@ -36,6 +36,7 @@ describe("Consent integration contract", () => {
             ["manageIntegration", { mode: "system" }],
             ["recordOperationAcceptance", { mode: "system" }],
             ["getOperationAcceptance", { mode: "system" }],
+            ["publishConsentPolicy", { mode: "admin" }],
         ]);
 
         const httpContract = definition?.connectors?.[0]?.functions?.[0]?.compatibility?.http;
@@ -69,6 +70,12 @@ describe("Consent integration contract", () => {
                 requiredHeaders: ["authorization", "x-cms-user-id"],
             },
             { method: "GET", route: "/admin/contexts", requiredInputs: [], requiredHeaders: ["authorization"] },
+            {
+                method: "POST",
+                route: "/context-policy",
+                requiredInputs: ["values"],
+                requiredHeaders: ["authorization", "x-cms-user-id"],
+            },
             {
                 method: "POST",
                 route: "/context/bootstrap",
@@ -178,7 +185,7 @@ describe("Consent integration contract", () => {
         expect(JSON.stringify(afterInstallation)).not.toContain("documents");
         expect(dashboard).toMatchObject({ type: "dashboard-view" });
         expect(detail[0]).toMatchObject({ widget: "w-detail", id: "consentContext" });
-        expect(detail[0].save.management).toEqual({ installationId: "consent", operation: "settings" });
+        expect(detail[0].save.endpoint).toBe("publishConsentPolicy");
         expect(detail[0].save.valuesPath).toBe("values");
         expect(detail[0].save.hiddenFields).toContainEqual({
             name: "expectedRevision",

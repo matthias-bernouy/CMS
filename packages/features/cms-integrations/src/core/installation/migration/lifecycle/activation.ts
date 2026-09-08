@@ -106,7 +106,7 @@ export async function completeIntegrationMigration(
             ...(installation.managementSecretRefs
                 ? {
                       managementSecretRefs: declaredManagementSecretRefs(
-                          operation.targetDefinition.management,
+                          operation.targetDefinition,
                           installation.managementSecretRefs,
                       ),
                   }

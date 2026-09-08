@@ -44044,18 +44044,10 @@ details[open] > summary > .chevron {
     if (!installation) {
       return;
     }
-    const settings = installation.management?.settings;
-    if (settings?.fields.length || settings?.dashboardId) {
-      const view = document.createElement("cms-dashboards-admin");
-      view.setAttribute("embedded", "");
-      view.setAttribute("dashboard-id", settings.dashboardId ?? `integration-${installation.id}-settings`);
-      root.replaceChildren(view);
-    } else {
-      const link = document.createElement("a");
-      link.href = route("/admin/health");
-      link.textContent = "View integration health";
-      root.replaceChildren(link);
-    }
+    const link = document.createElement("a");
+    link.href = route("/admin/sources");
+    link.textContent = "Open sources";
+    root.replaceChildren(link);
   }
   function renderLinkedResources(root, host, definition) {
     const dependencies = definition?.dependencies ?? [];
@@ -45467,9 +45459,6 @@ details[open] svg { transform: rotate(180deg); }
   // src/components/admin/Resources/Integrations/health/presentation/healthContext.ts
   function healthContext(management) {
     const actions = new Map((management.actions ?? []).map((action) => [action.id, { id: action.id, label: action.label }]));
-    if (management.settings?.applyFunctionId && !actions.has("apply-settings")) {
-      actions.set("apply-settings", { id: "apply-settings", label: "Apply configuration" });
-    }
     let checks = [];
     let steps = [];
     return (health) => {
@@ -45622,13 +45611,6 @@ details[open] svg { transform: rotate(180deg); }
   function healthActions(root, id2, management) {
     const forms = new Map;
     const actions = [...management.actions ?? []];
-    if (management.settings?.applyFunctionId && !actions.some((action) => action.id === "apply-settings")) {
-      actions.push({
-        id: "apply-settings",
-        label: "Apply configuration",
-        functionId: management.settings.applyFunctionId
-      });
-    }
     for (const action of actions) {
       const modal = formPart("modal");
       modal.id = formId();
@@ -45671,7 +45653,6 @@ details[open] svg { transform: rotate(180deg); }
     <p9r-alert cms-condition="$source.error || $source.refreshError" type="error" role="alert">{{ $source.message }}<p9r-button variant="outlined" type="button" data-health-retry-installation>Retry</p9r-button></p9r-alert>
     <div data-health-content></div>
     <p9r-stack gap="md" trim>
-        <a data-settings-link cms-condition="healthSettingsHref" href="{{ healthSettingsHref }}">Open settings</a>
         <p9r-stack direction="row" wrap align-items="center" gap="sm" trim data-health-actions></p9r-stack>
         <form data-sync-form cms-source-trigger="submit" cms-source-method="POST" cms-source-serialization="typed-json" cms-source-inherit-query="false" cms-source-success-reset="false">
             <p9r-button type="submit" variant="outlined">Run sync</p9r-button>
@@ -45716,12 +45697,7 @@ details[open] svg { transform: rotate(180deg); }
       this.querySelector("[data-upgrade-panel]").dataset.integrationId = id2;
       jd(this, () => {
         const installation = et(this);
-        const settings = installation?.definition?.management?.settings;
-        const dashboard = settings?.dashboardId ?? (settings?.fields.length ? `integration-${id2}-settings` : undefined);
-        return {
-          healthHasActions: Boolean(installation?.definition?.management?.actions?.length || settings?.applyFunctionId),
-          healthSettingsHref: dashboard ? route(`/admin/sources?dashboard=${encodeURIComponent(dashboard)}&source=${encodeURIComponent(installation?.settingsSourceId ?? installation?.sourceIds?.[0] ?? "")}`) : ""
-        };
+        return { healthHasActions: Boolean(installation?.definition?.management?.actions?.length) };
       });
       this.stop = pb(this, (state2) => {
         const installation = state2.data;

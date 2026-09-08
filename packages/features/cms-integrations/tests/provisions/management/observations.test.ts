@@ -1,28 +1,21 @@
+import { endpointFixture } from "./support/endpoint";
 import { expect, test } from "bun:test";
 import {
-    IntegrationManagementError,
     IntegrationRuntimeError,
     runIntegrationInstallation,
     assertSourceCanBeRemoved,
 } from "@bernouy/cms-integrations";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import { definition, fixture, report } from "./fixture";
-test("deleted selected keys remain diagnosable and replaceable while apply stays strict", async () => {
-    const { service, installations } = await fixture(
-        async (_installation, _fn, payload) => {
-            if (payload.operation === "health") {
-                expect(payload.secretValues).toEqual({});
-                return { ...report(), status: "needs_configuration" };
-            }
-            if (payload.operation === "read-settings") {
-                expect(payload.secretValues).toEqual({});
-                return { values: { key: "${DELETED_KEY}" }, savedRevision: "1", appliedRevision: "1" };
-            }
-            expect(payload.secretValues.key).toBe("selected-private-value");
-            return { values: { key: "${SELECTED_KEY}" }, savedRevision: "2", appliedRevision: "2" };
-        },
-        { syncRuntimeSecrets: async () => {} },
-    );
+import { definition, fixture, report } from "./support/fixture";
+test("deleted selected keys remain diagnosable and replaceable while writes stay strict", async () => {
+    const { service, installations, write, deps } = await endpointFixture(({ _cms }) => {
+        expect(_cms.secretValues.key).toBe("selected-private-value");
+        return { _cms: { rememberSecrets: true }, savedRevision: "2" };
+    });
+    deps.invoke = async (_installation, _fn, payload) => {
+        expect(payload.secretValues).toEqual({});
+        return { ...report(), status: "needs_configuration" };
+    };
     await installations.replace({
         ...(await installations.get(definition.kind))!,
         managementSecretRefs: { key: "${DELETED_KEY}" },
@@ -31,32 +24,24 @@ test("deleted selected keys remain diagnosable and replaceable while apply stays
         observation: "valid",
         report: { status: "needs_configuration" },
     });
-    expect(await service.settings(definition.kind)).toMatchObject({ values: { key: "${DELETED_KEY}" } });
-    await expect(service.action(definition.kind, "apply-settings")).rejects.toThrow("Granted secret is unavailable");
-    expect(
-        await service.saveSettings(definition.kind, { values: { key: "${SELECTED_KEY}" }, expectedRevision: "1" }),
-    ).toMatchObject({ values: { key: "${SELECTED_KEY}" }, appliedRevision: "2" });
+    await expect(write({ values: {} })).rejects.toThrow("Granted secret is unavailable");
+    expect((await write({ values: { key: "${SELECTED_KEY}" } })).body).toEqual({ savedRevision: "2" });
 });
-test("failed settings save retains stale health evidence and a safe revision conflict", async () => {
+test("failed source save invalidates cached health without losing stale evidence or conflict details", async () => {
     let fail = false;
-    const { service } = await fixture(async (_installation, _fn, payload) => {
-        if (payload.operation === "save-settings") {
-            throw new IntegrationManagementError(
-                "Revision changed; reload settings",
-                409,
-                "settings_revision_conflict",
-            );
-        }
+    const { service, write, deps } = await endpointFixture(() =>
+        Response.json({ error: "Revision changed; reload", code: "revision_conflict" }, { status: 409 }),
+    );
+    deps.invoke = async () => {
         if (fail) {
             throw new IntegrationRuntimeError("provider denied", 401);
         }
         return report();
-    });
+    };
     await service.health(definition.kind);
-    await expect(service.saveSettings(definition.kind, { values: {} })).rejects.toMatchObject({
+    expect(await write({ values: {} })).toEqual({
         status: 409,
-        publicCode: "settings_revision_conflict",
-        message: "Revision changed; reload settings",
+        body: { error: "Revision changed; reload", code: "revision_conflict" },
     });
     fail = true;
     expect(await service.health(definition.kind)).toMatchObject({
@@ -64,7 +49,7 @@ test("failed settings save retains stale health evidence and a safe revision con
         observation: "unreachable",
         reason: "unauthorized",
         httpStatus: 401,
-        report: { status: "ready", configuration: { savedRevision: "1" } },
+        report: { status: "ready" },
     });
 });
 test("successful non-object health response is invalid rather than unreachable", async () => {
@@ -102,14 +87,25 @@ test("current declarations fence retired and malformed grants from settings, hea
         return payload.operation === "health" ? report() : { values: {} };
     });
     const installed = (await installations.get(definition.kind))!;
-    installed.definitionSnapshot!.management!.settings!.fields = [
+    const view = installed.definitionSnapshot!.artifacts!.find((artifact) => artifact.type === "dashboard-view")!;
+    if (view.type !== "dashboard-view" || view.view.view.widgets[0]!.widget !== "w-detail") {
+        throw new Error("Missing detail");
+    }
+    const detail = view.view.view.widgets[0]!;
+    detail.main = [
         {
-            id: "accounts",
-            path: "accounts",
-            label: "Accounts",
-            type: "reorderable-list",
-            itemKey: "id",
-            fields: [{ id: "key", path: "credentials.key", label: "Key", type: "secret-ref" }],
+            id: "keys",
+            title: "Keys",
+            fields: [
+                {
+                    id: "accounts",
+                    path: "accounts",
+                    label: "Accounts",
+                    type: "reorderable-list",
+                    itemKey: "id",
+                    fields: [{ id: "key", path: "credentials.key", label: "Key", type: "secret-ref" }],
+                },
+            ],
         },
     ];
     installed.managementSecretRefs = {
@@ -120,7 +116,6 @@ test("current declarations fence retired and malformed grants from settings, hea
     };
     await installations.replace(installed);
     expect((await service.health(definition.kind)).observation).toBe("valid");
-    await service.settings(definition.kind);
     await service.action(definition.kind, "retry");
     expect(await secrets.get("OTHER_KEY")).toBe("other-private-value");
 });

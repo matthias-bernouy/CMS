@@ -1,3 +1,4 @@
+import { integrationEndpointInterceptor } from "./integration";
 import type { Subject } from "@bernouy/cms-auth";
 import { RequestScopedFunctionRepository, withFunctionsSource, type FunctionRepository } from "@bernouy/cms-functions";
 import { RequestScopedIdentityService } from "@bernouy/cms-identities/requestScope";
@@ -87,6 +88,7 @@ export function createControlSourceRequestScope(
             : undefined;
     const interceptEndpoint = composeSourceEndpointInterceptors(
         triggerInterceptor,
+        integrationEndpointInterceptor(state, resolveSubject),
         configuration.sourceImageInterceptor,
     );
 

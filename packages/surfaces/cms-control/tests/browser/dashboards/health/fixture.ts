@@ -1,20 +1,10 @@
 import type { Page } from "playwright";
 import { mountShell } from "../workspace/detail-shell/fixture";
-import { appendIntegrationSettings } from "cms-control/core/admin/dashboards/presentation/integrationSettings";
-import type { DashboardSourceGroup } from "cms-control/api/_platform/dashboards.get";
+import { connectionGroups } from "./connectionView";
 
 export const management = {
     schemaVersion: 1,
     health: { functionId: "health" },
-    settings: {
-        readFunctionId: "read",
-        saveFunctionId: "save",
-        applyFunctionId: "apply",
-        fields: [
-            { id: "country", path: "market.country", label: "Country", type: "text", required: true },
-            { id: "key", path: "apiKey", label: "API key", type: "secret-ref" },
-        ],
-    },
     actions: [
         {
             id: "repair",
@@ -53,28 +43,17 @@ export const health = {
                 id: "connection",
                 status: "warning",
                 message: "Configuration needs applying",
-                actionIds: ["repair", "apply-settings"],
+                actionIds: ["repair"],
             },
         ],
     },
 };
 
 export async function mountHealthFixture(page: Page, content: string, healthDelay = 0) {
-    const groups: DashboardSourceGroup[] = [
-        {
-            source: {
-                id: "service",
-                urn: "urn:service",
-                name: "Service",
-                dashboardCount: 0,
-                endpointCount: 0,
-                readonly: false,
-            },
-            endpoints: [],
-            dashboards: [],
-        },
-    ];
-    appendIntegrationSettings(groups, [installation as never]);
+    const groups = connectionGroups([
+        { id: "country", path: "market.country", label: "Country", type: "text", required: true },
+        { id: "key", path: "apiKey", label: "API key", type: "secret-ref" },
+    ]);
     const state = {
         settingsReads: 0,
         definitionsReads: 0,
@@ -99,7 +78,7 @@ export async function mountHealthFixture(page: Page, content: string, healthDela
                     ? installation
                     : [installation, { ...installation, id: "slow", label: "Slow service" }],
             });
-        } else if (url.pathname.endsWith("/settings")) {
+        } else if (url.pathname.endsWith("/getConnection") || url.pathname.endsWith("/saveConnection")) {
             if (method === "POST") {
                 const body = route.request().postDataJSON();
                 state.writes.push({ path: url.pathname, body });

@@ -1,0 +1,143 @@
+[
+    {
+        "endpointId": "getProviderConfiguration",
+        "method": "GET",
+        "access": {
+            "mode": "system"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/system/configuration",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": {
+            "$include": "output.json"
+        }
+    },
+    {
+        "endpointId": "getConnection",
+        "method": "GET",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect-management/connection",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "output": {
+            "$include": "output.json"
+        },
+        "timeoutMs": 120000
+    },
+    {
+        "endpointId": "saveConnection",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect-management/connection",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "output": {
+            "$include": "output.json"
+        },
+        "timeoutMs": 120000,
+        "integrationContext": true,
+        "body": {
+            "type": "object"
+        }
+    },
+    {
+        "endpointId": "retryConnection",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect-management/connection/retry",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
+                }
+            }
+        ],
+        "output": {
+            "$include": "output.json"
+        },
+        "timeoutMs": 120000,
+        "integrationContext": true,
+        "body": {
+            "type": "object"
+        }
+    }
+]

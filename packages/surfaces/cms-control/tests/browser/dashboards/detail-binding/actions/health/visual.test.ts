@@ -49,7 +49,7 @@ test("Health preserves observation, recovery actions and operation presentation 
                     await page.goto(healthPage);
                     await page.getByText("Observed version: 1.0.0", { exact: true }).waitFor();
                     const readyMs = performance.now() - start;
-                    const content = page.locator("[data-management-content]");
+                    const content = page.locator("[data-health-content]");
                     const positions = await content.locator("button, h3, p, [data-check-id]").evaluateAll((nodes) =>
                         nodes.map((node) => {
                             const box = node.getBoundingClientRect();
@@ -73,10 +73,10 @@ test("Health preserves observation, recovery actions and operation presentation 
                                 .isVisible(),
                         ).toBe(true);
                     } else {
-                        expect(await content.getByRole("button").count()).toBe(3);
-                        expect(await page.getByRole("button", { name: "Repair connection", exact: true }).count()).toBe(
-                            1,
-                        );
+                        expect(await content.getByRole("button").count()).toBe(2);
+                        expect(
+                            await content.getByRole("button", { name: "Repair connection", exact: true }).count(),
+                        ).toBe(1);
                         expect(await page.getByText("Operation apply-2: running", { exact: true }).isVisible()).toBe(
                             true,
                         );

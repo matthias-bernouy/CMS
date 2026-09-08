@@ -1,3 +1,4 @@
+import { connectionHandler } from "./connection.ts";
 import { createSourceManagement } from "./management.ts";
 type JsonRecord = Record<string, unknown>;
 
@@ -179,6 +180,9 @@ Deno.serve(async (request) => {
         }
 
         const route = routePath(request);
+        if (route === "/connection" || route === "/connection/retry") {
+            return await connectionHandler(manageSource)(request);
+        }
         if (route === "/source-management") {
             return await withMethod(request, "POST", () => manageSource(request));
         }

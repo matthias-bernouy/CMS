@@ -44,7 +44,7 @@ test("integration connection fields preserve their presentation, canonical saves
                 expect(await field.inputValue()).toBe("be");
                 const saved = page.waitForResponse(
                     (response) =>
-                        response.url().includes("/management/settings") &&
+                        response.url().includes("/service/saveConnection") &&
                         response.request().method() === "POST" &&
                         response.status() === 200,
                 );

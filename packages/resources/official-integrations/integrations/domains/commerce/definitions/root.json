@@ -48,12 +48,6 @@
         "schemaVersion": 1,
         "health": {
             "functionId": "manageCommerce"
-        },
-        "settings": {
-            "readFunctionId": "manageCommerce",
-            "saveFunctionId": "manageCommerce",
-            "dashboardId": "commerce-configuration",
-            "fields": []
         }
     }
 }

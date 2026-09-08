@@ -19,6 +19,7 @@
         "endpoints/system/reconciliation/delivery-projection-reconciliation/root.json",
         "endpoints/admin/reconciliation/shipment-projection-exceptions/root.json",
         "endpoints/tracking/tracking-and-labels/root.json",
-        "endpoints/health/management.json"
+        "endpoints/health/management.json",
+        "endpoints/connection/root.json"
     ]
 }

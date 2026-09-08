@@ -38,7 +38,7 @@ export async function deleteObsoleteSecretRefs(
     const active = new Set(Object.values(next));
     for (const installation of (await installations?.list()) ?? []) {
         const grants = declaredManagementSecretRefs(
-            installation.definitionSnapshot?.management,
+            installation.definitionSnapshot,
             installation.managementSecretRefs ?? {},
         );
         for (const ref of Object.values(grants)) {

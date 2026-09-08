@@ -1,4 +1,4 @@
-import { appendIntegrationSettings } from "cms-control/core/admin/dashboards/presentation/integrationSettings";
+import { connectionGroups } from "../../../health/connectionView";
 import type { Page } from "playwright";
 
 export async function installConnectionRoutes(page: Page, bundle: string, styles: string, long = false) {
@@ -11,7 +11,6 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
     };
     let failure = false;
     let readFailure = false;
-    let needsApply = false;
     const actions: string[] = [];
     let pendingSave: Promise<void> | undefined;
     await page.route("http://cms.test/**", async (route) => {
@@ -25,78 +24,43 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
         } else if (request.resourceType() === "document") {
             await route.fulfill({
                 contentType: "text/html",
-                body: '<!doctype html><head><meta charset="utf-8"><link rel="stylesheet" href="/style.css"><script src="/control.js"></script></head><body><cms-binding-core><w13c-fixed-admin-layout><cms-dashboards-admin embedded dashboard-id="integration-service-settings"></cms-dashboards-admin></w13c-fixed-admin-layout></cms-binding-core></body>',
+                body: '<!doctype html><head><meta charset="utf-8"><link rel="stylesheet" href="/style.css"><script src="/control.js"></script></head><body><cms-binding-core><w13c-fixed-admin-layout><cms-dashboards-admin embedded dashboard-id="service-connection"></cms-dashboards-admin></w13c-fixed-admin-layout></cms-binding-core></body>',
             });
         } else if (path === "/api/integrations/installations" || path === "/api/dashboards") {
-            const installation = {
-                id: "service",
-                label: "Service",
-                integrationType: "source",
-                status: "success",
-                definition: {
-                    kind: "service",
-                    label: "Service",
-                    inputs: [],
-                    management: {
-                        schemaVersion: 1,
-                        settings: {
-                            ...(needsApply ? { applyFunctionId: "apply" } : {}),
-                            readFunctionId: "read",
-                            saveFunctionId: "save",
-                            fields: [
-                                { id: "country", label: "Country", path: "country", type: "text", required: true },
-                                {
-                                    id: "mode",
-                                    label: "Mode",
-                                    path: "mode",
-                                    type: "select",
-                                    options: [
-                                        { value: "test", label: "Test" },
-                                        { value: "live", label: "Live" },
-                                    ],
-                                },
-                                { id: "enabled", label: "Enabled", path: "enabled", type: "checkbox" },
-                                ...(long
-                                    ? Array.from({ length: 24 }, (_, index) => ({
-                                          id: `extra${index}`,
-                                          label: `Extra ${index}`,
-                                          path: `extra${index}`,
-                                          type: "text",
-                                      }))
-                                    : []),
-                                { id: "notes", label: "Notes", path: "notes", type: "textarea" },
-                            ],
-                        },
-                    },
-                },
-            };
-            if (path === "/api/dashboards") {
-                const groups = [
-                    {
-                        source: {
-                            id: "service",
-                            urn: "urn:service",
-                            name: "Service",
-                            dashboardCount: 0,
-                            endpointCount: 0,
-                            readonly: false,
-                        },
-                        endpoints: [],
-                        dashboards: [],
-                    },
-                ];
-                appendIntegrationSettings(groups, [
-                    {
-                        ...installation,
-                        artifacts: [{ type: "source", id: "service" }],
-                        definitionSnapshot: installation.definition,
-                    } as never,
-                ]);
-                await route.fulfill({ json: groups });
-            } else {
-                await route.fulfill({ json: installation });
-            }
-        } else if (path === "/api/integrations/management/settings") {
+            await route.fulfill({
+                json:
+                    path === "/api/dashboards"
+                        ? connectionGroups([
+                              { id: "country", label: "Country", path: "country", type: "text", required: true },
+                              {
+                                  id: "mode",
+                                  label: "Mode",
+                                  path: "mode",
+                                  type: "select",
+                                  options: [
+                                      { value: "test", label: "Test" },
+                                      { value: "live", label: "Live" },
+                                  ],
+                              },
+                              { id: "enabled", label: "Enabled", path: "enabled", type: "checkbox" },
+                              ...(long
+                                  ? Array.from({ length: 24 }, (_, index) => ({
+                                        id: `extra${index}`,
+                                        label: `Extra ${index}`,
+                                        path: `extra${index}`,
+                                        type: "text" as const,
+                                    }))
+                                  : []),
+                              { id: "notes", label: "Notes", path: "notes", type: "textarea" },
+                          ])
+                        : {
+                              id: "service",
+                              label: "Service",
+                              status: "success",
+                              definition: { kind: "service", management: { schemaVersion: 1 } },
+                          },
+            });
+        } else if (path === "/.cms/sources/service/getConnection" || path === "/.cms/sources/service/saveConnection") {
             if (request.method() === "GET" && readFailure) {
                 readFailure = false;
                 await route.fulfill({ status: 503, json: { error: "Settings are temporarily unavailable." } });
@@ -145,10 +109,6 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
         writes,
         requests,
         actions,
-        requireApply() {
-            needsApply = true;
-            settings.appliedRevision = "v0";
-        },
         holdSave() {
             let release!: () => void;
             pendingSave = new Promise<void>((resolve) => {

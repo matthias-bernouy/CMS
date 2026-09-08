@@ -2,7 +2,7 @@ import type { Page } from "playwright";
 import type { IntegrationHealthEnvelope } from "@bernouy/cms-integrations";
 import { installConnectionRoutes } from "../connection/fixture";
 
-export const healthPage = "http://cms.test/admin/sources?integration=service&panel=health";
+export const healthPage = "http://cms.test/admin/health?integration=service";
 export function initialHealth(): IntegrationHealthEnvelope {
     return {
         schemaVersion: 1,
@@ -23,7 +23,7 @@ export function initialHealth(): IntegrationHealthEnvelope {
                     id: "hooks",
                     status: "warning",
                     message: "Webhooks need updating",
-                    actionIds: ["apply-settings", "repair", "unknown"],
+                    actionIds: ["repair", "unknown"],
                 },
                 { id: "connection", status: "ok", code: "connected" },
             ],
@@ -33,6 +33,12 @@ export function initialHealth(): IntegrationHealthEnvelope {
 }
 export async function installHealthRoutes(page: Page, bundle: string, styles: string) {
     const connection = await installConnectionRoutes(page, bundle, styles);
+    await page.route("http://cms.test/admin/health?*", (route) =>
+        route.fulfill({
+            contentType: "text/html",
+            body: '<!doctype html><head><meta charset="utf-8"><link rel="stylesheet" href="/style.css"><script src="/control.js"></script></head><body><cms-binding-core><w13c-fixed-admin-layout><cms-health-operations installation-id="service"></cms-health-operations></w13c-fixed-admin-layout></cms-binding-core></body>',
+        }),
+    );
     const state = {
         health: initialHealth() as IntegrationHealthEnvelope | null,
         reads: [] as string[],
@@ -56,12 +62,6 @@ export async function installHealthRoutes(page: Page, bundle: string, styles: st
                     management: {
                         schemaVersion: 1,
                         health: { functionId: "health" },
-                        settings: {
-                            readFunctionId: "read",
-                            saveFunctionId: "save",
-                            applyFunctionId: "apply",
-                            fields: [],
-                        },
                         actions: [{ id: "repair", label: "Repair connection", functionId: "repair" }],
                     },
                 },

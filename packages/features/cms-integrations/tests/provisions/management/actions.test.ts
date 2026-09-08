@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { parseIntegrationDefinition } from "@bernouy/cms-integrations";
 import { parseActions } from "cms-integrations/core/parsing/artifacts/dashboard/actions";
-import { definition, fixture } from "./fixture";
+import { definition, fixture } from "./support/fixture";
 
 const fields = [{ id: "page", label: "Published page", path: "page", type: "page-link" as const, publishedOnly: true }];
 test("declared action fields resolve only their own published page references", async () => {
@@ -32,9 +32,12 @@ test("declared action fields resolve only their own published page references", 
         { id: "publish", label: "Publish", functionId: "manage", fields },
         { id: "retry", label: "Retry", functionId: "manage" },
     ];
-    installed.definitionSnapshot!.management!.settings!.fields = [
-        { id: "settingsPage", label: "Settings", path: "settingsPage", type: "page-link" },
-    ];
+    installed.definitionSnapshot!.management!.actions!.push({
+        id: "other",
+        label: "Other",
+        functionId: "manage",
+        fields: [{ id: "settingsPage", label: "Settings", path: "settingsPage", type: "page-link" }],
+    });
     await installations.replace(installed);
     expect(
         await service.action(

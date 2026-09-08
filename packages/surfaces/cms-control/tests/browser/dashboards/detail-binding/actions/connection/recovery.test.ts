@@ -24,7 +24,7 @@ test("connection read retries and a detached save cannot overwrite the newly sel
         const country = page.locator('[data-field-control="country"] input');
         await country.fill("be");
         expect(
-            fixture.requests.filter((request) => request === "GET /api/integrations/management/settings"),
+            fixture.requests.filter((request) => request === "GET /.cms/sources/service/getConnection"),
         ).toHaveLength(2);
         const release = fixture.holdSave();
         await page.getByRole("button", { name: "Save settings", exact: true }).click();
@@ -56,7 +56,7 @@ test("an empty connection response shows a recoverable state instead of loading 
         const page = await browser.newPage();
         page.setDefaultTimeout(5000);
         const fixture = await installConnectionRoutes(page, bundle, styles);
-        await page.route("**/api/integrations/management/settings?*", (route) => route.fulfill({ json: null }), {
+        await page.route("**/.cms/sources/service/getConnection*", (route) => route.fulfill({ json: null }), {
             times: 1,
         });
         await page.goto("http://cms.test/admin/sources?integration=service");

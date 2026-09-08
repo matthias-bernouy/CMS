@@ -29,7 +29,7 @@ export async function manageSource(request: Request): Promise<Response> {
         case "save-settings":
             return json(await saveSettings(input));
         case "apply-settings":
-            return json(await apply(owner, String(body.definitionVersion), secrets, generated));
+            return json(await apply(owner, String(body.definitionVersion), secrets, generated, input.savedRevision));
         case "confirm-apply": {
             const current = await readSettings();
             if (current.saved_revision !== input.savedRevision || current.operation !== "pending_sync") {
@@ -58,8 +58,17 @@ export async function manageSource(request: Request): Promise<Response> {
             throw new HttpError(400, "Unsupported management operation");
     }
 }
-async function apply(owner: string, version: string, secrets: JsonRecord, generated: JsonRecord) {
+async function apply(
+    owner: string,
+    version: string,
+    secrets: JsonRecord,
+    generated: JsonRecord,
+    expectedRevision?: unknown,
+) {
     const current = await readSettings();
+    if (expectedRevision !== undefined && expectedRevision !== current.saved_revision) {
+        throw new HttpError(409, "Connection revision changed");
+    }
     if (!current.saved_revision) {
         throw new HttpError(422, "Save Connection settings first");
     }

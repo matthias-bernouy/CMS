@@ -13,33 +13,38 @@ test("Health recovery retries without replacing its action or issuing duplicate 
     const browser = await chromium.launch();
     let releaseAction: (() => void) | undefined;
     try {
-        const page = await browser.newPage();
+        const page = await browser.newPage({ reducedMotion: "reduce" });
         page.setDefaultTimeout(5000);
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
         const fixture = await installHealthRoutes(page, bundle, styles);
         await page.goto(healthPage);
-        const repair = page.getByRole("button", { name: "Repair connection", exact: true });
+        const repair = page
+            .locator("[data-health-content]")
+            .getByRole("button", { name: "Repair connection", exact: true });
         await repair.waitFor();
         const original = await repair.elementHandle();
-        const position = await repair.boundingBox();
+        await repair.click();
+        const submit = page.locator("p9r-modal[open]").getByRole("button", { name: "Repair connection", exact: true });
+        const position = await submit.boundingBox();
         fixture.failAction();
         releaseAction = fixture.holdAction();
-        await repair.dblclick();
+        await submit.dblclick();
         expect(fixture.actions).toEqual(["repair"]);
-        expect(await repair.boundingBox()).toEqual(position);
-        expect(await repair.evaluate((node) => node.matches(":focus"))).toBe(true);
+        expect(await submit.boundingBox()).toEqual(position);
+        expect(await submit.evaluate((node) => node.matches(":focus"))).toBe(true);
         releaseAction();
-        await page.getByRole("status").filter({ hasText: "Repair temporarily unavailable" }).waitFor();
+        await page.getByRole("alert").filter({ hasText: "Repair temporarily unavailable" }).waitFor();
         expect(fixture.reads).toHaveLength(1);
         expect(await original!.evaluate((node) => node.isConnected)).toBe(true);
         const refreshed = page.waitForResponse(
             (response) => response.url().includes("/management/health") && response.ok(),
         );
-        await repair.click();
+        await submit.click();
         await refreshed;
         await page.getByText("The saved configuration is applied.", { exact: true }).waitFor();
         expect(await original!.evaluate((node) => node.isConnected)).toBe(true);
+        expect(await page.locator("p9r-modal[open]").count()).toBe(0);
         expect(await repair.evaluate((node) => node.matches(":focus"))).toBe(true);
         expect(fixture.actions).toEqual(["repair", "repair"]);
         expect(fixture.reads).toHaveLength(2);
@@ -52,18 +57,18 @@ test("Health recovery retries without replacing its action or issuing duplicate 
     }
 }, 20000);
 
-test("a late Health observation cannot replace Connection after tab navigation", async () => {
+test("a late Health observation cannot replace Connection after navigation to Sources", async () => {
     const browser = await chromium.launch();
     let release: (() => void) | undefined;
     try {
-        const page = await browser.newPage();
+        const page = await browser.newPage({ reducedMotion: "reduce" });
         page.setDefaultTimeout(5000);
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
         const fixture = await installHealthRoutes(page, bundle, styles);
         release = fixture.holdRead();
         await page.goto(healthPage);
-        await page.getByRole("button", { name: "Connection", exact: true }).click();
+        await page.goto("http://cms.test/admin/sources?integration=service");
         await page.getByRole("button", { name: "Save settings", exact: true }).waitFor();
         release();
         await page.evaluate(
@@ -82,7 +87,7 @@ test("a late Health observation cannot replace Connection after tab navigation",
 test("Health retries initial failures and empty observations without applying configuration", async () => {
     const browser = await chromium.launch();
     try {
-        const page = await browser.newPage();
+        const page = await browser.newPage({ reducedMotion: "reduce" });
         page.setDefaultTimeout(5000);
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));

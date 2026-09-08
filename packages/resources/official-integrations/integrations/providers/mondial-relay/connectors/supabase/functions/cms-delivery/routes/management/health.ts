@@ -84,7 +84,6 @@ export async function sourceHealth(secrets: JsonRecord) {
             status: "warning",
             code: "settings_not_applied",
             message: "Apply saved Connection settings.",
-            actionIds: ["apply-settings"],
         });
         if (status !== "blocked") {
             status = "needs_configuration";

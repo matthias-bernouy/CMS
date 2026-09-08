@@ -11,6 +11,7 @@
         "endpoints/admin/list-acceptances.json",
         "endpoints/health/health.json",
         "endpoints/health/management.json",
-        "endpoints/system/operations.json"
+        "endpoints/system/operations.json",
+        "endpoints/policy/root.json"
     ]
 }

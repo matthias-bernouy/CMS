@@ -194,7 +194,8 @@ creates a session and returns `{ sessionId, media }`. Later uploads reuse the
 session. Save receives ordered media IDs and the scalar session reference.
 Integrations own attachment, expiry and cleanup; see [Commerce media](./commerce-media.md).
 
-Connection views can use the explicit admin-only management settings target; see
+Connection views use ordinary Source reads and saves. Endpoints that need scoped
+references can opt into the admin-only integration context; see
 [Integration management](./management.md). The service retains revision checks,
 secret grants and integration-owned configuration application.
 

@@ -91,9 +91,10 @@ export function registerFoundationTests(): void {
         expect(serialized).toContain("reconcileShipments");
         expect(serialized).toContain("recipientHandoffAt");
         expect(
-            (definition as any)?.management.settings.fields.find(
-                (input: any) => input.id === "mondialRelayConnectEndpoint",
-            ),
+            (definition as any)?.artifacts
+                .find((artifact: any) => artifact.type === "dashboard-view" && artifact.view.id.endsWith("-connection"))
+                .view.view.widgets[0].main.flatMap((section: any) => section.fields)
+                .find((input: any) => input.id === "mondialRelayConnectEndpoint"),
         ).toMatchObject({
             type: "select",
             options: [
@@ -102,9 +103,10 @@ export function registerFoundationTests(): void {
             ],
         });
         expect(
-            (definition as any)?.management.settings.fields.find(
-                (input: any) => input.id === "mondialRelayTrackingEndpoint",
-            ),
+            (definition as any)?.artifacts
+                .find((artifact: any) => artifact.type === "dashboard-view" && artifact.view.id.endsWith("-connection"))
+                .view.view.widgets[0].main.flatMap((section: any) => section.fields)
+                .find((input: any) => input.id === "mondialRelayTrackingEndpoint"),
         ).toMatchObject({
             type: "select",
             options: [{ label: "Production WebService", value: "https://api.mondialrelay.com/WebService.asmx" }],

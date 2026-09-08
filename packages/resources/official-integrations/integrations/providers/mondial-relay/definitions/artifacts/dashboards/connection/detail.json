@@ -2,20 +2,13 @@
     "widget": "w-detail",
     "id": "connection",
     "source": {
-        "management": {
-            "installationId": "mondial-relay",
-            "operation": "settings"
-        }
+        "endpoint": "getConnection"
     },
     "title": {
         "path": "label",
         "fallback": "Settings"
     },
     "save": {
-        "management": {
-            "installationId": "mondial-relay",
-            "operation": "settings"
-        },
         "label": "Save settings",
         "valuesPath": "values",
         "hiddenFields": [
@@ -25,7 +18,8 @@
                 "type": "string",
                 "empty": "omit"
             }
-        ]
+        ],
+        "endpoint": "saveConnection"
     },
     "main": [
         {
@@ -33,6 +27,23 @@
             "title": "Connection",
             "fields": {
                 "$include": "fields.json"
+            }
+        }
+    ],
+    "actions": [
+        {
+            "id": "retryConnection",
+            "label": "Retry connection",
+            "placement": "secondary",
+            "form": {
+                "endpoint": "retryConnection",
+                "hiddenFields": [
+                    {
+                        "name": "expectedRevision",
+                        "type": "string",
+                        "value": "$resource.savedRevision"
+                    }
+                ]
             }
         }
     ]

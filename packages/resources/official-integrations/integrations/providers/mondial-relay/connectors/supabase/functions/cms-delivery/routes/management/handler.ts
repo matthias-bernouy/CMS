@@ -17,6 +17,9 @@ export async function manageSource(request: Request): Promise<Response> {
             return json(await saveSettings(input));
         case "apply-settings": {
             const current = await readSettings();
+            if (input.savedRevision !== undefined && input.savedRevision !== current.saved_revision) {
+                throw new HttpError(409, "Connection revision changed");
+            }
             if (!current.saved_revision || !configured(current.values, secrets)) {
                 throw new HttpError(422, "Complete Connection settings before applying");
             }

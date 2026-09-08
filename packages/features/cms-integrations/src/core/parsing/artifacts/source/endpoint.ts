@@ -24,6 +24,15 @@ export function parseEndpointTemplate(value: unknown, name: string): SourceEndpo
     if (!Array.isArray(value.params)) {
         throw new IntegrationInputError(`${name}.params`, "must be an array");
     }
+    if (value.integrationContext !== undefined && value.integrationContext !== true) {
+        throw new IntegrationInputError(`${name}.integrationContext`, "must be true when provided");
+    }
+    if (
+        value.integrationContext &&
+        (value.method !== "POST" || !isRecord(value.access) || value.access.mode !== "admin")
+    ) {
+        throw new IntegrationInputError(`${name}.integrationContext`, "requires an admin POST endpoint");
+    }
     const responseKind = parseResponseKind(value.responseKind, `${name}.responseKind`);
     const timeoutMs = parseTimeoutMs(value.timeoutMs, `${name}.timeoutMs`);
     return {
@@ -31,6 +40,7 @@ export function parseEndpointTemplate(value: unknown, name: string): SourceEndpo
         ...(text(value.contractVersion) ? { contractVersion: text(value.contractVersion)! } : {}),
         method: method as SourceEndpointDto["method"],
         targetUrl,
+        ...(value.integrationContext ? { integrationContext: true as const } : {}),
         ...(timeoutMs !== undefined ? { timeoutMs } : {}),
         ...(value.access !== undefined ? { access: parseAccessTemplate(value.access, `${name}.access`) } : {}),
         ...(value.effects !== undefined ? { effects: parseEndpointEffects(value.effects, `${name}.effects`) } : {}),

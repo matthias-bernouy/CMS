@@ -1,4 +1,3 @@
-import "../../Dashboards/view/DashboardView";
 import { route, integrationRouteUrl } from "../api";
 import type { IntegrationBrowserHost, IntegrationDefinition } from "../model";
 
@@ -8,18 +7,10 @@ export function renderDetail(host: IntegrationBrowserHost): void {
     if (!installation) {
         return;
     }
-    const settings = installation.management?.settings;
-    if (settings?.fields.length || settings?.dashboardId) {
-        const view = document.createElement("cms-dashboards-admin");
-        view.setAttribute("embedded", "");
-        view.setAttribute("dashboard-id", settings.dashboardId ?? `integration-${installation.id}-settings`);
-        root.replaceChildren(view);
-    } else {
-        const link = document.createElement("a");
-        link.href = route("/admin/health");
-        link.textContent = "View integration health";
-        root.replaceChildren(link);
-    }
+    const link = document.createElement("a");
+    link.href = route("/admin/sources");
+    link.textContent = "Open sources";
+    root.replaceChildren(link);
 }
 
 export function renderLinkedResources(

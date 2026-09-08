@@ -312,7 +312,6 @@ export type {
     IntegrationHealthStatus,
     IntegrationHealthReport,
     IntegrationHealthEnvelope,
-    IntegrationSettingsResponse,
     IntegrationManagementOperation,
     IntegrationManagementInvocation,
 } from "../interfaces/Integration/management";
@@ -321,3 +320,8 @@ export type { IntegrationManagementDeps } from "../core/security/management/cont
 export { parseHealthReport } from "../core/security/management/report";
 
 export { updateCollectionAvailability } from "../core/resources/availability";
+
+export { executeIntegrationEndpoint } from "../core/security/endpoint/execute";
+export type { IntegrationRuntimeDeps } from "../core/security/management/contracts";
+
+export type { IntegrationEndpointContext, IntegrationEndpointEffects } from "../interfaces/Integration/endpoint";

@@ -68,11 +68,6 @@ test.each(["consent", "commerce"])(
             ],
             operation: { id: "apply-1", status: "running", steps: [{ id: "settings", status: "pending" }] },
         };
-        const settings = {
-            values: { enabled: true, nested: { field: "preserved" } },
-            savedRevision: "revision-1",
-            appliedRevision: null,
-        };
         const operations: string[] = [];
         const service = new IntegrationManagementService({
             installations,
@@ -98,7 +93,7 @@ test.each(["consent", "commerce"])(
                                 const inputBody = await request.json();
                                 operations.push(inputBody.operation);
                                 return Response.json({
-                                    ...(inputBody.operation === "health" ? health : settings),
+                                    ...health,
                                     undeclaredDiagnostic: "must not escape the source projection",
                                 });
                             },
@@ -117,7 +112,38 @@ test.each(["consent", "commerce"])(
             freshness: "fresh",
             report: health,
         });
-        expect(await service.settings(kind, actor)).toEqual(settings);
-        expect(operations).toEqual(["health", "read-settings"]);
+        expect(operations).toEqual(["health"]);
+    },
+);
+
+test.each(["emailer", "mondial-relay", "stripe-connect"])(
+    "%s declares its own connection view and ordinary endpoints",
+    async (kind) => {
+        const definition = (await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(kind))!;
+        expect(definition.management).not.toHaveProperty("settings");
+        const view = definition.artifacts!.find(
+            (artifact) => artifact.type === "dashboard-view" && artifact.view.id.endsWith("-connection"),
+        );
+        if (view?.type !== "dashboard-view") {
+            throw new Error("Missing connection view");
+        }
+        const detail = view.view.view.widgets[0]!;
+        expect(detail).toMatchObject({
+            widget: "w-detail",
+            source: { endpoint: "getConnection" },
+            save: { endpoint: "saveConnection", valuesPath: "values" },
+        });
+        expect(JSON.stringify(detail)).not.toContain('"management"');
+        const source = definition.artifacts!.find(
+            (artifact) => artifact.type === "source" && artifact.source.id === view.view.source,
+        );
+        if (source?.type !== "source") {
+            throw new Error("Missing source");
+        }
+        expect(source.source.endpoints.find((endpoint) => endpoint.endpointId === "saveConnection")).toMatchObject({
+            method: "POST",
+            integrationContext: true,
+            access: { mode: "admin" },
+        });
     },
 );

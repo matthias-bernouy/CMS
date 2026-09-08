@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { publishedPageResolver } from "cms-control/core/management/integrations/publishedPageResolver";
+import { publishedPageResolver } from "cms-control/core/management/integrations/runtime/publishedPageResolver";
 import type { TPage } from "@bernouy/cms-content";
 
 const page: TPage = {

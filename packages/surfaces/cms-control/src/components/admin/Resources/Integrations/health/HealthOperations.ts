@@ -41,19 +41,7 @@ class HealthOperations extends HTMLElement {
         this.querySelector<HTMLElement>("[data-upgrade-panel]")!.dataset.integrationId = id;
         setSourceContext(this, () => {
             const installation = readSourceData(this) as IntegrationInstallationDetail | undefined;
-            const settings = installation?.definition?.management?.settings;
-            const dashboard =
-                settings?.dashboardId ?? (settings?.fields.length ? `integration-${id}-settings` : undefined);
-            return {
-                healthHasActions: Boolean(
-                    installation?.definition?.management?.actions?.length || settings?.applyFunctionId,
-                ),
-                healthSettingsHref: dashboard
-                    ? route(
-                          `/admin/sources?dashboard=${encodeURIComponent(dashboard)}&source=${encodeURIComponent(installation?.settingsSourceId ?? installation?.sourceIds?.[0] ?? "")}`,
-                      )
-                    : "",
-            };
+            return { healthHasActions: Boolean(installation?.definition?.management?.actions?.length) };
         });
         this.stop = observeSource(this, (state) => {
             const installation = state.data as IntegrationInstallationDetail | undefined;

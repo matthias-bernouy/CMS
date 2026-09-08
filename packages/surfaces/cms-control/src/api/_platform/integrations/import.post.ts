@@ -2,7 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { importBlocArtifact } from "cms-control/core/content/bloc/importBlocArtifact";
 import { deleteIntegrationBlocArtifact } from "cms-control/core/content/bloc/deleteIntegrationBlocArtifact";
 import { definitionsForImport } from "cms-control/core/management/integrations/definitions";
-import { publishedPageResolver } from "cms-control/core/management/integrations/publishedPageResolver";
+import { publishedPageResolver } from "cms-control/core/management/integrations/runtime/publishedPageResolver";
 import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 import {
     type IntegrationImportDeps,

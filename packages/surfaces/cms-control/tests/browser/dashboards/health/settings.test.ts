@@ -14,7 +14,7 @@ test("connection Save sends native nested values and revision, preserves nodes, 
     try {
         const { state, errors } = await mountHealthFixture(
             page,
-            '<cms-dashboards-admin embedded dashboard-id="integration-service-settings"></cms-dashboards-admin>',
+            '<cms-dashboards-admin embedded dashboard-id="service-connection"></cms-dashboards-admin>',
         );
         const field = page.locator('p9r-input[data-field-control="country"] input');
         await field.waitFor();
@@ -39,7 +39,7 @@ test("connection Save sends native nested values and revision, preserves nodes, 
         );
         expect(state.writes).toEqual([
             {
-                path: "/api/integrations/management/settings",
+                path: "/.cms/sources/service/saveConnection",
                 body: { expectedRevision: "r1", values: { market: { country: "BE" }, apiKey: "${TEST_KEY}" } },
             },
         ]);

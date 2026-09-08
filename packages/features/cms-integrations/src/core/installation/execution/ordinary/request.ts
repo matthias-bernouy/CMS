@@ -14,7 +14,7 @@ export async function buildRerunDto(
     siteIntegrations: IntegrationDefinition[],
 ): Promise<IntegrationImportDto> {
     if (definition.management && body.answers !== undefined) {
-        throw new IntegrationInputError("answers", "integration settings must be changed through management");
+        throw new IntegrationInputError("answers", "integration settings must be changed through source views");
     }
     const rawAnswers = isRecord(body.answers)
         ? { ...installation.answersSnapshot, ...rerunAnswerOverrides(definition, installation, body.answers) }

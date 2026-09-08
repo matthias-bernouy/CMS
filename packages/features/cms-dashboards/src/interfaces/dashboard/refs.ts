@@ -10,10 +10,7 @@ export type DashboardRequestTarget =
     | { endpoint: string; management?: never }
     | {
           endpoint?: never;
-          management: { installationId: string } & (
-              | { operation: "settings"; actionId?: never }
-              | { operation: "action"; actionId: string }
-          );
+          management: { installationId: string; operation: "action"; actionId: string };
       };
 
 export type DashboardEndpointRef = DashboardRequestTarget & {

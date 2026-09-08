@@ -100,6 +100,9 @@ function endpointDtoToEndpoint(sourceId: string, e: SourceEndpointDto, authority
         method: e.method,
         targetUrl: e.targetUrl,
     };
+    if (e.integrationContext !== undefined) {
+        endpoint.integrationContext = e.integrationContext;
+    }
     if (e.timeoutMs !== undefined) {
         endpoint.timeoutMs = e.timeoutMs;
     }
@@ -150,6 +153,7 @@ function endpointToDto(endpoint: SourceEndpoint): SourceEndpointDto {
         ...(endpoint.contractVersion ? { contractVersion: endpoint.contractVersion } : {}),
         method: endpoint.method,
         targetUrl: endpoint.targetUrl,
+        ...(endpoint.integrationContext ? { integrationContext: true as const } : {}),
         ...(endpoint.timeoutMs !== undefined ? { timeoutMs: endpoint.timeoutMs } : {}),
         ...(endpoint.access !== undefined ? { access: endpoint.access } : {}),
         ...(endpoint.effects !== undefined ? { effects: endpoint.effects } : {}),

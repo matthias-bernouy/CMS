@@ -121,7 +121,8 @@ test("integration management views cannot be published as delegated operator cap
         {
             widget: "w-detail",
             id: "connection",
-            source: { management: { installationId: "service", operation: "settings" } },
+            source: { endpoint: "read" },
+            save: { management: { installationId: "service", operation: "action", actionId: "repair" } },
             main: [],
         },
     ];

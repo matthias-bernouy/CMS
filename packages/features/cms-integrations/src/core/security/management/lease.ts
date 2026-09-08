@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
 import { IntegrationRuntimeError, MissingIntegrationInstallationError } from "../../errors";
-import type { IntegrationManagementDeps } from "./contracts";
+import type { IntegrationRuntimeDeps } from "./contracts";
 const LEASE_MS = 60_000;
 
 export async function withManagementLease<T>(
-    deps: IntegrationManagementDeps,
+    deps: IntegrationRuntimeDeps,
     id: string,
     operation: (installation: IntegrationInstallation) => Promise<T>,
 ): Promise<T> {
@@ -71,7 +71,7 @@ export async function withManagementLease<T>(
     }
 }
 export async function verifyManagementLease(
-    deps: IntegrationManagementDeps,
+    deps: IntegrationRuntimeDeps,
     installation: IntegrationInstallation,
 ): Promise<IntegrationInstallation> {
     if (!installation.managementLease) {
@@ -89,10 +89,10 @@ export async function verifyManagementLease(
     }
     return current;
 }
-export function nextTime(deps: IntegrationManagementDeps, installation: IntegrationInstallation): Date {
+export function nextTime(deps: IntegrationRuntimeDeps, installation: IntegrationInstallation): Date {
     return new Date(Math.max(now(deps).getTime(), installation.updatedAt.getTime() + 1));
 }
-function now(deps: IntegrationManagementDeps): Date {
+function now(deps: IntegrationRuntimeDeps): Date {
     return deps.now?.() ?? new Date();
 }
 function conflict(): never {

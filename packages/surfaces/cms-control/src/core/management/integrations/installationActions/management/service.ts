@@ -1,4 +1,5 @@
-import { publishedPageResolver } from "cms-control/core/management/integrations/publishedPageResolver";
+import { syncIntegrationRuntimeSecrets } from "../../runtime/runtimeSecrets";
+import { publishedPageResolver } from "cms-control/core/management/integrations/runtime/publishedPageResolver";
 import { executeFunction } from "@bernouy/cms-functions";
 import {
     IntegrationManagementService,
@@ -85,30 +86,8 @@ export function integrationManagement(cms: ControlCms): IntegrationManagementSer
             }
             return value;
         },
-        async syncRuntimeSecrets(installation, values) {
-            const ordinaryTargets =
-                installation.connectorRuntimeTargets ??
-                installation.runs
-                    .findLast((run) => run.status === "success")
-                    ?.connectors?.filter((connector) => !connector.lineageId)
-                    .map((connector) => ({ provider: connector.provider, outputs: connector.outputs ?? {} })) ??
-                [];
-            const bindings = [...Object.values(installation.connectorBindings ?? {}), ...ordinaryTargets];
-            if (bindings.length !== 1) {
-                throw new IntegrationRuntimeError(
-                    "Runtime secret sync requires exactly one installed connector target",
-                    409,
-                );
-            }
-            const binding = bindings[0]!;
-            const deployer = Object.values(cms.integrationConnectorDeployers ?? {}).find(
-                ({ provider }) => provider === binding.provider,
-            );
-            if (!deployer?.syncSecrets) {
-                throw new IntegrationRuntimeError("Connector runtime secret synchronization is unavailable", 503);
-            }
-            await deployer.syncSecrets(binding, values);
-        },
+        syncRuntimeSecrets: (installation, values) =>
+            syncIntegrationRuntimeSecrets(cms.integrationConnectorDeployers, installation, values),
     });
     services.set(cms, service);
     return service;

@@ -1,0 +1,79 @@
+[
+    {
+        "endpointId": "getConnection",
+        "method": "GET",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/connection",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": {
+            "$include": "output.json"
+        },
+        "timeoutMs": 120000
+    },
+    {
+        "endpointId": "saveConnection",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/connection",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": {
+            "$include": "output.json"
+        },
+        "timeoutMs": 120000,
+        "integrationContext": true,
+        "body": {
+            "type": "object"
+        }
+    },
+    {
+        "endpointId": "retryConnection",
+        "method": "POST",
+        "access": {
+            "mode": "admin"
+        },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/connection/retry",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            }
+        ],
+        "output": {
+            "$include": "output.json"
+        },
+        "timeoutMs": 120000,
+        "integrationContext": true,
+        "body": {
+            "type": "object"
+        }
+    }
+]

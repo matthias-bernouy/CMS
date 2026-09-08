@@ -85,40 +85,5 @@
             }
         ],
         "timeoutMs": 120000
-    },
-    {
-        "endpointId": "getProviderConfiguration",
-        "method": "GET",
-        "access": {
-            "mode": "system"
-        },
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/system/configuration",
-        "params": [],
-        "headers": [
-            {
-                "name": "authorization",
-                "source": {
-                    "from": "secret",
-                    "ref": "{{secrets.cmsApiKey}}",
-                    "prefix": "Bearer "
-                }
-            }
-        ],
-        "output": [
-            {
-                "status": "200",
-                "body": {
-                    "type": "object",
-                    "properties": {
-                        "sellerPayoutSchedule": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "sellerPayoutSchedule"
-                    ]
-                }
-            }
-        ]
     }
 ]

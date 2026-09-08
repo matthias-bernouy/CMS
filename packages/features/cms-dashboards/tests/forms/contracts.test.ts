@@ -138,8 +138,10 @@ test("creation omits empty identity but validates response identity and staging 
 
 test("native management targets are explicit and cannot mix arbitrary source endpoints or bodies", () => {
     const { dashboard, detail, source } = fixture();
-    detail.source = { management: { installationId: "provider", operation: "settings" } };
-    detail.save = { management: { installationId: "provider", operation: "settings" }, valuesPath: "values" };
+    detail.save = {
+        management: { installationId: "provider", operation: "action", actionId: "publish" },
+        valuesPath: "input",
+    };
     expect(validateDashboard(dashboard, { source })).toEqual([]);
     for (const invalid of [
         { endpoint: "updateProduct" },

@@ -22,6 +22,7 @@ export function canonicalizeSourceDto(dto: SourceDto): CanonicalSourceDto {
             endpointId: endpoint.endpointId,
             method: endpoint.method,
             targetUrl: endpoint.targetUrl,
+            ...(endpoint.integrationContext ? { integrationContext: true as const } : {}),
             ...(endpoint.timeoutMs !== undefined ? { timeoutMs: endpoint.timeoutMs } : {}),
             ...(endpoint.access !== undefined ? { access: endpoint.access } : {}),
             ...(endpoint.effects !== undefined ? { effects: endpoint.effects } : {}),
@@ -62,6 +63,7 @@ function assignEndpoint(flat: SourceFlatDto, endpoint: SourceEndpointDto, index:
     flat[`${prefix}.endpointId`] = endpoint.endpointId;
     flat[`${prefix}.method`] = endpoint.method;
     flat[`${prefix}.targetUrl`] = endpoint.targetUrl;
+    assignOptional(flat, `${prefix}.integrationContext`, endpoint.integrationContext, String);
     assignOptional(flat, `${prefix}.timeoutMs`, endpoint.timeoutMs, String);
     assignOptional(flat, `${prefix}.access`, endpoint.access, JSON.stringify);
     assignOptional(flat, `${prefix}.effects`, endpoint.effects, JSON.stringify);

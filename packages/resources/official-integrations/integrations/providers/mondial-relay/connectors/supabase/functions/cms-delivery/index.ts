@@ -1,3 +1,4 @@
+import { connectionHandler } from "./connection.ts";
 import { manageSource } from "./routes/management/handler.ts";
 import { handleError, json, optionsResponse, routePath } from "./http.ts";
 import { health, migrationHealth } from "./routes/health.ts";
@@ -39,6 +40,9 @@ Deno.serve(async (request) => {
         }
 
         const route = routePath(request);
+        if (route === "/connection" || route === "/connection/retry") {
+            return await connectionHandler(manageSource)(request);
+        }
         if (request.method === "POST" && route === "/source-management") {
             return await manageSource(request);
         }

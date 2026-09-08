@@ -55,9 +55,9 @@ afterEach(() => {
 afterAll(() => {
     (globalThis as { Deno?: unknown }).Deno = originalDeno;
 });
-function management(body: unknown, admin = "admin-42"): Promise<Response> {
+function publish(body: unknown, admin = "admin-42"): Promise<Response> {
     return handleConsentRequest(
-        new Request("https://edge.test/cms-consent/management", {
+        new Request("https://edge.test/cms-consent/context-policy", {
             method: "POST",
             headers: {
                 authorization: "Bearer consent-key",
@@ -70,16 +70,14 @@ function management(body: unknown, admin = "admin-42"): Promise<Response> {
 }
 describe("Consent settings published page boundary", () => {
     test("publishes the resolved CMS page and optimistic revision, ignoring a browser snapshot URL", async () => {
-        const response = await management({
-            operation: "save-settings",
-            input: {
-                ...input,
-                values: {
-                    ...input.values,
-                    documents: [{ ...document, publishedSnapshotUrl: "https://attacker.test" }],
-                },
+        const response = await publish({
+            ...input,
+
+            values: {
+                ...input.values,
+                documents: [{ ...document, publishedSnapshotUrl: "https://attacker.test" }],
             },
-            resolvedPages,
+            _cms: { resolvedPages },
         });
         expect(response.status).toBe(200);
         expect(await response.json()).toMatchObject({
@@ -104,15 +102,15 @@ describe("Consent settings published page boundary", () => {
     test.each([undefined, {}, { "documents.0.page": { path: "/other", publishedSnapshotUrl: snapshotUrl } }])(
         "requires a matching trusted resolver selection: %j",
         async (pages) => {
-            const response = await management({ operation: "save-settings", input, resolvedPages: pages });
+            const response = await publish({ ...input, _cms: { resolvedPages: pages } });
             expect(response.status).toBe(422);
             expect(calls).toHaveLength(0);
         },
     );
     test("creates an inactive policy from defaults without fetching a page", async () => {
-        const response = await management({
-            operation: "save-settings",
-            input: { expectedRevision: "new", values: { contextKey: "draft_policy", enabled: false } },
+        const response = await publish({
+            expectedRevision: "new",
+            values: { contextKey: "draft_policy", enabled: false },
         });
         expect(response.status).toBe(200);
         expect(calls).toHaveLength(1);
@@ -120,12 +118,12 @@ describe("Consent settings published page boundary", () => {
         expect(await calls[0]!.json()).toMatchObject({ p_context_key: "draft_policy", p_expected_revision: "new" });
     });
     test("rejects incomplete settings instead of implicitly disabling a policy", async () => {
-        const response = await management({ operation: "save-settings", input: { ...input, values: {} } });
+        const response = await publish({ operation: "save-settings", input: { ...input, values: {} } });
         expect(response.status).toBe(400);
         expect(calls).toHaveLength(0);
     });
     test("requires administrator identity before network work", async () => {
-        expect((await management({ operation: "save-settings", input, resolvedPages }, "")).status).toBe(401);
+        expect((await publish({ ...input, _cms: { resolvedPages } }, "")).status).toBe(401);
         expect(calls).toHaveLength(0);
     });
     test("preserves revision conflicts and does not report settings as applied", async () => {
@@ -134,14 +132,14 @@ describe("Consent settings published page boundary", () => {
             String(resource).includes("/rpc/")
                 ? Response.json({ message: "conflict: CONSENT_CONTEXT_REVISION_CHANGED" }, { status: 400 })
                 : fetch(resource, init);
-        const response = await management({ operation: "save-settings", input, resolvedPages });
+        const response = await publish({ ...input, _cms: { resolvedPages } });
         expect(response.status).toBe(409);
         expect(await response.json()).toEqual({ error: "CONSENT_CONTEXT_REVISION_CHANGED" });
     });
     test("disables an existing policy without requiring its page to remain published", async () => {
-        const response = await management({
-            operation: "save-settings",
-            input: { ...input, values: { ...input.values, enabled: false } },
+        const response = await publish({
+            ...input,
+            values: { ...input.values, enabled: false },
         });
         expect(response.status).toBe(200);
         expect(calls).toHaveLength(1);

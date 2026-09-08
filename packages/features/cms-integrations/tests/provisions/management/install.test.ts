@@ -3,13 +3,15 @@ import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemoryIntegrationInstallationRepository, runIntegrationInstallation } from "@bernouy/cms-integrations";
-import { definition } from "./fixture";
+import { InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
+import { definition } from "./support/fixture";
 
 test("install needs no answers and rerun/upgrade preserve configured generated secret values", async () => {
     const installations = new InMemoryIntegrationInstallationRepository();
     const secrets = new InMemorySecretStore();
     const deps = {
         sources: new InMemorySourceRepository(),
+        dashboardViews: new InMemoryDashboardViewRepository(),
         functions: new InMemoryFunctionRepository(),
         secrets,
         installations,
@@ -40,6 +42,7 @@ test("undeclared answers cannot reach installation persistence", async () => {
     const secrets = new InMemorySecretStore();
     const deps = {
         sources: new InMemorySourceRepository(),
+        dashboardViews: new InMemoryDashboardViewRepository(),
         functions: new InMemoryFunctionRepository(),
         secrets,
         installations,
@@ -62,6 +65,7 @@ test("upgrade retains an obsolete installation key granted by settings and remov
     const secrets = new InMemorySecretStore();
     const deps = {
         sources: new InMemorySourceRepository(),
+        dashboardViews: new InMemoryDashboardViewRepository(),
         functions: new InMemoryFunctionRepository(),
         secrets,
         installations,
@@ -108,6 +112,7 @@ test("upgrade prunes retired grants while another declared grant retains its sha
     const secrets = new InMemorySecretStore();
     const deps = {
         sources: new InMemorySourceRepository(),
+        dashboardViews: new InMemoryDashboardViewRepository(),
         functions: new InMemoryFunctionRepository(),
         secrets,
         installations,
@@ -149,15 +154,12 @@ test("upgrade prunes retired grants while another declared grant retains its sha
         targetDefinition: {
             ...legacy,
             version: "1.1.0",
+            artifacts: legacy.artifacts!.filter((artifact) => artifact.type !== "dashboard-view"),
             generatedSecrets: [],
             management: {
                 ...legacy.management!,
                 generatedSecrets: [],
                 runtimeSecrets: {},
-                settings: {
-                    ...legacy.management!.settings!,
-                    fields: [],
-                },
             },
         },
     });

@@ -11,13 +11,6 @@ export type IntegrationHealthOperation = {
 export type IntegrationManagement = {
     schemaVersion: 1;
     health?: { functionId: string };
-    settings?: {
-        readFunctionId: string;
-        saveFunctionId: string;
-        applyFunctionId?: string;
-        fields: DashboardField[];
-        dashboardId?: string;
-    };
     actions?: Array<{ id: string; label: string; functionId: string; fields?: DashboardField[] }>;
     /** Existing owned generated-secret slots allowed for management reads and writes. */
     generatedSecrets?: string[];
@@ -49,18 +42,7 @@ export type IntegrationHealthEnvelope = {
     observation: "valid" | "unreachable" | "invalid_report" | "unsupported";
     report: IntegrationHealthReport | null;
 };
-export type IntegrationSettingsResponse = {
-    values: Record<string, unknown>;
-    savedRevision: string | null;
-    appliedRevision: string | null;
-};
-export type IntegrationManagementOperation =
-    | "health"
-    | "read-settings"
-    | "save-settings"
-    | "apply-settings"
-    | "confirm-apply"
-    | "action";
+export type IntegrationManagementOperation = "health" | "action";
 export type IntegrationManagementInvocation = {
     operation: IntegrationManagementOperation;
     actor?: IntegrationManagementActor;

@@ -34,66 +34,6 @@
         "health": {
             "functionId": "manageStripeConnectSource"
         },
-        "settings": {
-            "readFunctionId": "manageStripeConnectSource",
-            "saveFunctionId": "manageStripeConnectSource",
-            "applyFunctionId": "manageStripeConnectSource",
-            "fields": [
-                {
-                    "id": "stripeSecretKey",
-                    "path": "stripeSecretKey",
-                    "label": "Stripe secret key",
-                    "type": "secret-ref",
-                    "required": true
-                },
-                {
-                    "id": "stripePublishableKey",
-                    "path": "stripePublishableKey",
-                    "label": "Stripe publishable key",
-                    "type": "secret-ref",
-                    "required": true
-                },
-                {
-                    "id": "defaultCountry",
-                    "path": "defaultCountry",
-                    "label": "Connected account country",
-                    "type": "text",
-                    "required": true
-                },
-                {
-                    "id": "defaultCurrency",
-                    "path": "defaultCurrency",
-                    "label": "Payment currency",
-                    "type": "text",
-                    "required": true
-                },
-                {
-                    "id": "sellerActivityDescription",
-                    "path": "sellerActivityDescription",
-                    "label": "Seller activity description",
-                    "type": "text",
-                    "required": true
-                },
-                {
-                    "id": "sellerPayoutSchedule",
-                    "path": "sellerPayoutSchedule",
-                    "label": "Seller bank payout schedule",
-                    "type": "select",
-                    "required": true,
-                    "options": [
-                        {
-                            "label": "Daily",
-                            "value": "daily"
-                        },
-                        {
-                            "label": "Manual",
-                            "value": "manual"
-                        }
-                    ]
-                }
-            ],
-            "dashboardId": "stripe-connect-connection"
-        },
         "generatedSecrets": [
             "stripeWebhookSecret",
             "stripeConnectWebhookSecret",

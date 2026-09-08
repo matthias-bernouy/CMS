@@ -37,14 +37,6 @@
         "schemaVersion": 1,
         "health": {
             "functionId": "manageConsent"
-        },
-        "settings": {
-            "readFunctionId": "manageConsent",
-            "saveFunctionId": "manageConsent",
-            "fields": {
-                "$include": "artifacts/dashboards/contexts/fields.json"
-            },
-            "dashboardId": "consent-contexts"
         }
     }
 }

@@ -2,7 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { importBlocArtifact } from "cms-control/core/content/bloc/importBlocArtifact";
 import { deleteIntegrationBlocArtifact } from "cms-control/core/content/bloc/deleteIntegrationBlocArtifact";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
-import { publishedPageResolver } from "cms-control/core/management/integrations/publishedPageResolver";
+import { publishedPageResolver } from "cms-control/core/management/integrations/runtime/publishedPageResolver";
 import {
     assertCollectionConformance,
     IntegrationInputError,

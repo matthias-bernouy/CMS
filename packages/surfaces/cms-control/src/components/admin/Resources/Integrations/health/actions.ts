@@ -8,13 +8,6 @@ import { route } from "../api";
 export function healthActions(root: HTMLElement, id: string, management: IntegrationManagement) {
     const forms = new Map<string, { form: HTMLFormElement; modal: HTMLElement }>();
     const actions = [...(management.actions ?? [])];
-    if (management.settings?.applyFunctionId && !actions.some((action) => action.id === "apply-settings")) {
-        actions.push({
-            id: "apply-settings",
-            label: "Apply configuration",
-            functionId: management.settings.applyFunctionId,
-        });
-    }
     for (const action of actions) {
         const modal = formPart<HTMLElement>("modal");
         modal.id = formId();

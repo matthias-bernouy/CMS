@@ -3,7 +3,6 @@
     <p9r-alert cms-condition="$source.error || $source.refreshError" type="error" role="alert">{{ $source.message }}<p9r-button variant="outlined" type="button" data-health-retry-installation>Retry</p9r-button></p9r-alert>
     <div data-health-content></div>
     <p9r-stack gap="md" trim>
-        <a data-settings-link cms-condition="healthSettingsHref" href="{{ healthSettingsHref }}">Open settings</a>
         <p9r-stack direction="row" wrap align-items="center" gap="sm" trim data-health-actions></p9r-stack>
         <form data-sync-form cms-source-trigger="submit" cms-source-method="POST" cms-source-serialization="typed-json" cms-source-inherit-query="false" cms-source-success-reset="false">
             <p9r-button type="submit" variant="outlined">Run sync</p9r-button>

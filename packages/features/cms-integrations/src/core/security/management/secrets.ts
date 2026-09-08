@@ -1,16 +1,24 @@
 import { dashboardSecretRefPaths, isSafeDashboardPath } from "@bernouy/cms-dashboards";
 import { scopedSecretReader, secretKeyToRef, secretRefToKey, type SecretReader } from "@bernouy/cms-secrets";
 import type { IntegrationInstallation } from "../../../interfaces/IntegrationInstallation";
-import type { IntegrationManagement } from "../../../interfaces/Integration/management";
+import type { IntegrationDefinition } from "../../../interfaces/Integration";
+import type { DashboardField } from "@bernouy/cms-dashboards";
+import { integrationReferenceFields } from "../endpoint/fields";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../errors";
-import type { IntegrationManagementDeps } from "./contracts";
+import type { IntegrationRuntimeDeps } from "./contracts";
 import { record } from "./report";
 
 export function declaredManagementSecretRefs(
-    management: IntegrationManagement | undefined,
+    definition: IntegrationDefinition | undefined,
     refs: Record<string, string>,
 ): Record<string, string> {
-    const fields = management?.settings?.fields ?? [];
+    return declaredFieldSecretRefs(integrationReferenceFields(definition), refs);
+}
+
+export function declaredFieldSecretRefs(
+    fields: DashboardField[],
+    refs: Record<string, string>,
+): Record<string, string> {
     return Object.fromEntries(
         Object.entries(refs).filter(
             ([path, ref]) =>
@@ -41,11 +49,11 @@ export function declaredManagementSecretRefs(
 }
 
 export function settingSecretRefs(
-    management: IntegrationManagement,
+    fields: DashboardField[],
     input: Record<string, unknown>,
     previous: Record<string, string>,
 ): Record<string, string> {
-    const paths = dashboardSecretRefPaths(management.settings?.fields ?? [], input);
+    const paths = dashboardSecretRefPaths(fields, input);
     const result = Object.fromEntries(Object.entries(previous).filter(([path]) => paths.includes(path)));
     for (const path of paths) {
         const value = readPath(input, path);
@@ -64,12 +72,12 @@ export function settingSecretRefs(
     return result;
 }
 export async function managementSecrets(
-    deps: IntegrationManagementDeps,
+    deps: IntegrationRuntimeDeps,
     installation: IntegrationInstallation,
     refs: Record<string, string>,
     allowMissing = false,
 ) {
-    refs = declaredManagementSecretRefs(installation.definitionSnapshot?.management, refs);
+    refs = declaredManagementSecretRefs(installation.definitionSnapshot, refs);
     const generated = installation.definitionSnapshot?.management?.generatedSecrets ?? [];
     const generatedRefs = Object.fromEntries(
         generated.map((name) => {
@@ -116,7 +124,7 @@ async function resolve(
     return Object.fromEntries(entries.flat());
 }
 export async function saveGeneratedSecrets(
-    deps: IntegrationManagementDeps,
+    deps: IntegrationRuntimeDeps,
     installation: IntegrationInstallation,
     response: Record<string, unknown>,
 ): Promise<string[]> {

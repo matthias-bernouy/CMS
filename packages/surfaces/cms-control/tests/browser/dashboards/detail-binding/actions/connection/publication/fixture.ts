@@ -73,7 +73,10 @@ export async function mountPublication(page: Page, kind: "consent" | "stripe-con
                     },
                 ],
             });
-        } else if (path.startsWith("/api/integrations/management/") && request.method() === "POST") {
+        } else if (
+            (path.startsWith("/api/integrations/management/") || path.endsWith("/publishConsentPolicy")) &&
+            request.method() === "POST"
+        ) {
             const body = request.postDataJSON();
             writes.push({ path, body });
             if (state.delay) {

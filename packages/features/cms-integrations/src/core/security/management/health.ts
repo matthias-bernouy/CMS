@@ -83,16 +83,7 @@ export class IntegrationHealthObserver {
         let result: unknown;
         try {
             result = await Promise.race([
-                invokeManagement(
-                    this.deps,
-                    installation,
-                    management.health.functionId,
-                    "health",
-                    {},
-                    undefined,
-                    false,
-                    actor,
-                ).then(({ public: value }) => value),
+                invokeManagement(this.deps, installation, management.health.functionId, "health", {}, actor),
                 new Promise<never>((_, reject) => {
                     timer = setTimeout(
                         () => reject(new IntegrationRuntimeError("timeout", 504)),
@@ -121,10 +112,7 @@ export class IntegrationHealthObserver {
             }
         }
         try {
-            const actions = [
-                ...(management.actions ?? []).map(({ id }) => id),
-                ...(management.settings?.applyFunctionId ? ["apply-settings"] : []),
-            ];
+            const actions = [...(management.actions ?? []).map(({ id }) => id)];
             const report = parseHealthReport(result, actions, now);
             return {
                 ...envelope,

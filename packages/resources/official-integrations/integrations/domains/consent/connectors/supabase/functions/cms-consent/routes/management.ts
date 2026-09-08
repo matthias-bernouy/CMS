@@ -1,25 +1,21 @@
 import { HttpError } from "../core/errors.ts";
 import { json } from "../core/http.ts";
-import { contextKey, isRecord, readJsonObject } from "../core/records.ts";
+import { isRecord, readJsonObject } from "../core/records.ts";
 import { rpc } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
 import { publishContext } from "./configuration.ts";
 
 export async function manageConsent(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
-    const input = isRecord(body.input) ? body.input : {};
     if (body.operation === "health") {
         return health();
     }
-    if (body.operation === "read-settings") {
-        const values = await rpc<JsonRecord>("consent_context_management_projection", {
-            p_context_key: contextKey(input.contextKey ?? "signup"),
-        });
-        return settingsResponse(values);
-    }
-    if (body.operation !== "save-settings") {
-        throw new HttpError(400, "unsupported Consent management operation");
-    }
+    throw new HttpError(400, "unsupported Consent management operation");
+}
+
+export async function publishPolicy(request: Request): Promise<Response> {
+    const input = await readJsonObject(request);
+    const context = isRecord(input._cms) ? input._cms : {};
     if (!isRecord(input.values) || typeof input.values.enabled !== "boolean") {
         throw new HttpError(400, "Consent settings require values with a boolean enabled field");
     }
@@ -28,7 +24,7 @@ export async function manageConsent(request: Request): Promise<Response> {
         contextKey: input.contextKey ?? input.values.contextKey,
         expectedRevision: input.expectedRevision,
     };
-    const documents = resolveDocuments(values.documents, body.resolvedPages, values.enabled === true);
+    const documents = resolveDocuments(values.documents, context.resolvedPages, values.enabled === true);
     const response = await publishContext(
         new Request(request.url, {
             method: "POST",

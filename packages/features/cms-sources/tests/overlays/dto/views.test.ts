@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     sourceDtoToSource,
+    validateSource,
     sourceToCanonicalDto,
     sourceToDto,
     sourceToFlatDto,
@@ -117,4 +118,32 @@ describe("source DTO canonical views", () => {
             ],
         });
     });
+});
+
+test("integration context survives Source persistence and stays restricted to admin JSON writes", () => {
+    const source = sourceDtoToSource({
+        id: "provider",
+        meta: { name: "Provider" },
+        endpoints: [
+            {
+                endpointId: "save",
+                method: "POST",
+                targetUrl: "https://provider.test/connection",
+                access: { mode: "admin" },
+                integrationContext: true,
+                params: [],
+                body: { type: "object" },
+                output: [{ status: "200", body: { type: "object" } }],
+            },
+        ],
+    });
+    expect(validateSource(source)).toEqual([]);
+    expect(sourceToDto(source).endpoints[0]!.integrationContext).toBe(true);
+    expect(sourceToCanonicalDto(source).endpoints[0]!.integrationContext).toBe(true);
+    expect(sourceToFlatDto(source)["endpoints.0.integrationContext"]).toBe("true");
+    for (const patch of [{ method: "GET" }, { access: { mode: "public" } }, { responseKind: "file" }]) {
+        const changed = structuredClone(source);
+        Object.assign(changed.endpoints[0]!, patch);
+        expect(validateSource(changed).some((error) => error.includes("integrationContext"))).toBe(true);
+    }
 });

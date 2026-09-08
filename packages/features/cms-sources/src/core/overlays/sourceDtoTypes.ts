@@ -32,6 +32,8 @@ export type SourceEndpointDto = {
     contractVersion?: string;
     method: HTTPMethod;
     targetUrl: string;
+    /** Enable the installed integration context and bounded server-side effects. */
+    integrationContext?: true;
     timeoutMs?: number;
     access?: SourceEndpointAccess;
     effects?: SourceEndpointEffects;

@@ -140,10 +140,6 @@
         ],
         "create": {},
         "save": {
-            "management": {
-                "installationId": "consent",
-                "operation": "settings"
-            },
             "valuesPath": "values",
             "idPath": "values.contextKey",
             "label": "Publish configuration",
@@ -160,7 +156,8 @@
                     "type": "string",
                     "value": "$resource.revision"
                 }
-            ]
+            ],
+            "endpoint": "publishConsentPolicy"
         }
     }
 ]

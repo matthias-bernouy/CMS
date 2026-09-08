@@ -28,6 +28,15 @@ export function validateEndpoint(
     if (endpoint.contractVersion !== undefined && !EXACT_CONTRACT_VERSION.test(endpoint.contractVersion)) {
         errors.push(`invalid contractVersion for "${endpoint.urn}": expected an exact SemVer version`);
     }
+    if (
+        endpoint.integrationContext !== undefined &&
+        (endpoint.integrationContext !== true ||
+            endpoint.method !== "POST" ||
+            endpoint.access?.mode !== "admin" ||
+            endpoint.responseKind === "file")
+    ) {
+        errors.push(`integrationContext requires an admin JSON POST endpoint for "${endpoint.urn}"`);
+    }
     validateTimeout(endpoint, errors);
     validateAccess(endpoint, errors);
     const target = validateSourceTargetUrl(endpoint.targetUrl, targetOptions);

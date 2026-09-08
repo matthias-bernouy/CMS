@@ -61,6 +61,13 @@ export function createSourceManagement(deps: Dependencies) {
             await update({ applied_revision: row.saved_revision, operation: "idle" });
             return Response.json(result());
         }
+        if (
+            body.operation === "apply-settings" &&
+            input.savedRevision !== undefined &&
+            input.savedRevision !== row.saved_revision
+        ) {
+            deps.fail(409, "Emailer connection revision changed");
+        }
         const password = typeof secrets.smtpPassword === "string" ? secrets.smtpPassword : "";
         let status = "needs_configuration";
         let check = {
@@ -111,8 +118,7 @@ export function createSourceManagement(deps: Dependencies) {
                 id: "configuration",
                 status: "warning",
                 code: "settings_not_applied",
-                message: "Apply the saved SMTP settings.",
-                actionIds: ["apply-settings"],
+                message: "Save or retry the Connection settings.",
             });
         }
         return Response.json({
