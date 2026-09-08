@@ -130,7 +130,8 @@ test("a failed panel save retains its draft and fixed actions, then retries succ
         const before = await geometry(panel);
         const input = await panel.locator('[name="name"] input').elementHandle();
         await panel.getByRole("button", { name: "Save brand", exact: true }).click();
-        await panel.locator('[data-detail-save] p9r-alert[role="alert"]').waitFor();
+        await page.locator("p9r-toast").filter({ hasText: "Slug already used" }).waitFor();
+        expect(await panel.locator('[data-detail-save] p9r-alert[role="alert"]').count()).toBe(0);
         expect((await geometry(panel)).footer).toBe(before.footer);
         expect(await input!.evaluate((node) => node.isConnected)).toBe(true);
         expect(await panel.locator('[name="name"] input').inputValue()).toBe("Retry brand");

@@ -34187,7 +34187,9 @@ slot {
             <p9r-stack slot="main" gap="md" trim data-form-main></p9r-stack>
             <p9r-stack slot="aside" gap="md" trim data-form-aside></p9r-stack>
         </cms-shell-detail-body>
-        <p9r-alert cms-condition="$source.error" type="error" role="alert">{{ $source.message }}</p9r-alert>
+        <p9r-toast-stack position="bottom-right">
+            <p9r-toast cms-condition="$source.error" type="error" role="alert">{{ $source.message }}</p9r-toast>
+        </p9r-toast-stack>
     </form>
 </template>
 <template data-form-part="submit"><p9r-button type="submit" color="primary" variant="filled"></p9r-button></template>
@@ -34196,7 +34198,9 @@ slot {
         <span slot="title"></span>
         <form cms-source-trigger="submit" cms-source-inherit-query="false" cms-source-serialization="typed-json" cms-source-success-reset="false">
             <p9r-stack gap="md" data-operation-fields></p9r-stack>
-            <p9r-alert cms-condition="$source.error" type="error" role="alert">{{ $source.message }}</p9r-alert>
+            <p9r-toast-stack position="bottom-right">
+                <p9r-toast cms-condition="$source.error" type="error" role="alert">{{ $source.message }}</p9r-toast>
+            </p9r-toast-stack>
         </form>
     </p9r-modal>
 </template>

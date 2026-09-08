@@ -23,7 +23,10 @@ test("creation errors preserve inputs and retry uses the same technical creation
         await title.fill("Retained creation");
         const node = await title.elementHandle();
         await page.getByRole("button", { name: "Save product", exact: true }).click();
-        await page.locator('[data-detail-save] p9r-alert[role="alert"]').waitFor();
+        const toast = page.locator("p9r-toast").filter({ hasText: "Slug already used" });
+        await toast.waitFor();
+        expect(await toast.count()).toBe(1);
+        expect(await page.locator('[data-detail-save] p9r-alert[role="alert"]').count()).toBe(0);
         expect(await title.inputValue()).toBe("Retained creation");
         expect(await node!.evaluate((node) => node.isConnected)).toBe(true);
         expect(state.creates).toHaveLength(0);
