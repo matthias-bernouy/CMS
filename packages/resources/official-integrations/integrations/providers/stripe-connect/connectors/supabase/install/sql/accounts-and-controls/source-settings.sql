@@ -3,7 +3,7 @@ create table if not exists stripe_connect.source_settings (
     "values" jsonb not null default '{}'::jsonb,
     saved_revision text,
     applied_revision text,
-    operation text not null default 'idle' constraint source_settings_operation_check check (operation in ('idle', 'applying', 'pending_sync', 'failed')),
+    operation text not null default 'idle' constraint source_settings_operation_check check (operation in ('idle', 'applying', 'failed')),
     operation_id text,
     operation_started_at timestamptz,
     resources jsonb not null default '[]'::jsonb

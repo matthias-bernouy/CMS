@@ -169,15 +169,6 @@ export async function sourceHealth(owner: string, secrets: JsonRecord, generated
                                 ? "succeeded"
                                 : "pending",
                 },
-                {
-                    id: "runtime_sync",
-                    status:
-                        settings.operation === "pending_sync"
-                            ? "running"
-                            : settings.applied_revision === settings.saved_revision && settings.applied_revision
-                              ? "succeeded"
-                              : "pending",
-                },
             ],
         },
         checks,

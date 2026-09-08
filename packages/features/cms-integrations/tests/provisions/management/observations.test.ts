@@ -10,7 +10,7 @@ import { definition, fixture, report } from "./support/fixture";
 test("deleted selected keys remain diagnosable and replaceable while writes stay strict", async () => {
     const { service, installations, write, deps } = await endpointFixture(({ _cms }) => {
         expect(_cms.secretValues.key).toBe("selected-private-value");
-        return { _cms: { rememberSecrets: true }, savedRevision: "2" };
+        return { savedRevision: "2" };
     });
     deps.invoke = async (_installation, _fn, payload) => {
         expect(payload.secretValues).toEqual({});

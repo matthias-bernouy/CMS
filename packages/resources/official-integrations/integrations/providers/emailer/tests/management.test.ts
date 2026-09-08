@@ -3,7 +3,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { createSourceManagement } from "../connectors/supabase/functions/cms-emailer/management.ts";
 
-test("Emailer verifies credentials without persisting values and confirms after sync", async () => {
+test("Emailer verifies and persists a Connection revision synchronously", async () => {
     const row: Record<string, unknown> = {
         id: "default",
         saved_revision: null,
@@ -42,15 +42,11 @@ test("Emailer verifies credentials without persisting values and confirms after 
             }),
         );
     const saved = await (
-        await call("save-settings", { expectedRevision: null, values: { smtpPassword: "${SMTP}" } })
+        await call("save-connection", { expectedRevision: null, values: { smtpPassword: "${SMTP}" } })
     ).json();
-    expect(saved.appliedRevision).toBeNull();
-    const applied = await (await call("apply-settings")).json();
     expect(verified).toBe(1);
-    expect(applied.appliedRevision).toBeNull();
+    expect(saved.appliedRevision).toBe(saved.savedRevision);
     expect(JSON.stringify(row)).not.toContain("scoped-password");
-    const confirmed = await (await call("confirm-apply", { savedRevision: saved.savedRevision })).json();
-    expect(confirmed.appliedRevision).toBe(saved.savedRevision);
     expect((await (await call("health")).json()).status).toBe("ready");
 });
 
@@ -100,15 +96,13 @@ test.each([
                 body: JSON.stringify({ operation, input, secretValues: { smtpPassword: password } }),
             }),
         );
-    const saved = await (await call("save-settings", { expectedRevision: null, values: {} })).json();
-    expect(saved.savedRevision).toBeString();
     if (!allowed) {
-        await expect(call("apply-settings")).rejects.toThrow("422:");
+        await expect(call("save-connection", { expectedRevision: null, values: {} })).rejects.toThrow("422:");
         expect(verified).toBe(0);
         return;
     }
-    await call("apply-settings");
-    await call("confirm-apply", { savedRevision: saved.savedRevision });
+    const saved = await (await call("save-connection", { expectedRevision: null, values: {} })).json();
+    expect(saved.appliedRevision).toBe(saved.savedRevision);
     const health = await (await call("health")).json();
     expect(health.status).toBe("ready");
     expect(health.checks[0].code).toBe("smtp_connected");

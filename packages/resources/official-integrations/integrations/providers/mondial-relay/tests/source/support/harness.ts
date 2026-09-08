@@ -123,6 +123,7 @@ export async function createHarness(options: HarnessOptions = {}) {
             return await handler(request);
         },
         settingsRow: () => state.settingRow,
+        sourceSettingsRow: () => state.sourceSettingsRow,
         async sourceFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
             try {
                 const request = requestFromFetchInput(input, init);

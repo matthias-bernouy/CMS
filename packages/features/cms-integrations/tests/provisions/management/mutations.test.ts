@@ -4,31 +4,20 @@ import { IntegrationManagementService } from "@bernouy/cms-integrations";
 import { fixture } from "./support/fixture";
 
 describe("integration-owned source mutations", () => {
-    test("the endpoint owns continuation, grants, runtime synchronization and acknowledgement", async () => {
+    test("one endpoint call owns persistence while Core completes declared infrastructure work", async () => {
         const phases: string[] = [];
         let sync: Record<string, string> = {};
         const { write, installations, secrets } = await endpointFixture(
             async ({ values, _cms }) => {
                 expect(_cms.secretValues).toEqual({ key: "selected-private-value" });
                 expect(JSON.stringify(_cms)).not.toContain("other-private-value");
-                const phase = _cms.continuation?.phase ?? "persist";
-                phases.push(phase);
-                if (phase === "persist") {
-                    return { values, _cms: { rememberSecrets: true, continue: { phase: "connect" } } };
-                }
-                if (phase === "connect") {
-                    return {
-                        values,
-                        _cms: {
-                            generatedSecrets: { signing: "new-signing" },
-                            syncRuntime: true,
-                            continue: { phase: "acknowledge" },
-                        },
-                    };
-                }
-                expect(sync.SIGNING_KEY).toBe("new-signing");
-                expect(_cms.generatedSecretValues.signing).toBe("new-signing");
-                return { values, savedRevision: "2", appliedRevision: "2" };
+                phases.push("endpoint");
+                return {
+                    values,
+                    savedRevision: "2",
+                    appliedRevision: "2",
+                    generatedSecrets: { signing: "new-signing" },
+                };
             },
             {
                 syncRuntimeSecrets: async (_installation, values) => {
@@ -39,7 +28,7 @@ describe("integration-owned source mutations", () => {
         );
         const result = await write({ values: { key: "${SELECTED_KEY}" } });
         expect(result.status).toBe(200);
-        expect(phases).toEqual(["persist", "connect", "sync", "acknowledge"]);
+        expect(phases).toEqual(["endpoint", "sync"]);
         expect(sync).toEqual({ API_KEY: "selected-private-value", SIGNING_KEY: "new-signing" });
         expect(JSON.stringify(result)).not.toContain("new-signing");
         expect(await secrets.get("SELECTED_KEY")).toBe("selected-private-value");
@@ -70,18 +59,14 @@ describe("integration-owned source mutations", () => {
         deps.invoke = async () => ({ ok: true });
         expect(await service.action("test-management", "retry")).toEqual({ ok: true });
     });
-    test("sync failure retains generated outputs for retry and never acknowledges success", async () => {
+    test("sync failure retains generated outputs for a later retry", async () => {
         let calls = 0;
         const { write, secrets } = await endpointFixture(
             () => {
                 calls++;
                 return {
                     values: { key: "value" },
-                    _cms: {
-                        generatedSecrets: { signing: "retry-signing" },
-                        syncRuntime: true,
-                        continue: { phase: "acknowledge" },
-                    },
+                    generatedSecrets: { signing: "retry-signing" },
                 };
             },
             {
@@ -100,7 +85,7 @@ describe("integration-owned source mutations", () => {
         const { write, secrets } = await endpointFixture(
             () => {
                 time = new Date(time.getTime() + 61000);
-                return { _cms: { generatedSecrets: { signing: "stale" }, syncRuntime: true } };
+                return { generatedSecrets: { signing: "stale" } };
             },
             {
                 now: () => time,

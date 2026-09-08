@@ -86,8 +86,8 @@ test("ordinary Stripe connection save recovers failed runtime sync through its o
                 values: { stripeSecretKey: "${STRIPE_KEY}", stripePublishableKey: "${STRIPE_PUBLIC_KEY}" },
             }),
         ).rejects.toThrow("synchronization failed");
-        expect(provider.row.operation).toBe("pending_sync");
-        expect(provider.row.applied_revision).toBeNull();
+        expect(provider.row.operation).toBe("idle");
+        expect(provider.row.applied_revision).toBe(provider.row.saved_revision);
         expect(provider.endpoints).toHaveLength(3);
         failSync = false;
         expect((await call("retryConnection", { expectedRevision: "stale" })).status).toBe(409);

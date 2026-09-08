@@ -5,7 +5,7 @@ export type Settings = {
     values: JsonRecord;
     saved_revision: string | null;
     applied_revision: string | null;
-    operation: "idle" | "applying" | "pending_sync" | "failed";
+    operation: "idle" | "applying" | "failed";
     resources: JsonRecord[];
     operation_id?: string | null;
     operation_started_at?: string | null;

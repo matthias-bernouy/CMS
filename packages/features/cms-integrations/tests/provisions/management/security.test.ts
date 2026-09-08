@@ -39,9 +39,7 @@ describe("integration endpoint authorization", () => {
     test("strips private context and echoed secrets and rejects replacing a selected secret", async () => {
         let bad = false;
         const { write, secrets } = await endpointFixture(({ _cms }) =>
-            bad
-                ? { _cms: { generatedSecrets: { key: "replace-user-secret" } } }
-                : { echo: _cms.secretValues.key, _cms: { rememberSecrets: true } },
+            bad ? { generatedSecrets: { key: "replace-user-secret" } } : { echo: _cms.secretValues.key },
         );
         expect(await write({ values: { key: "${SELECTED_KEY}" } })).toEqual({
             status: 200,
@@ -102,7 +100,7 @@ describe("integration endpoint authorization", () => {
         expect(resolutions).toBe(1);
     });
     test("clearing list rows revokes their grants without deleting stored keys", async () => {
-        const context = await endpointFixture(() => ({ _cms: { rememberSecrets: true } }));
+        const context = await endpointFixture(() => ({}));
         await context.fields([
             {
                 id: "accounts",
@@ -122,21 +120,21 @@ describe("integration endpoint authorization", () => {
         expect((await context.installations.get(definition.kind))?.managementSecretRefs).toEqual({});
         expect(await context.secrets.get("OTHER_KEY")).toBe("other-private-value");
     });
-    test("continuations are bounded and failed responses never execute effects", async () => {
+    test("response commands are rejected and failed responses never complete infrastructure work", async () => {
         let calls = 0;
         const context = await endpointFixture(() => {
             calls++;
             return { _cms: { continue: { again: true } } };
         });
-        await expect(context.write({ values: {} })).rejects.toThrow("continuation limit");
-        expect(calls).toBe(4);
+        await expect(context.write({ values: {} })).rejects.toThrow("cannot contain server context");
+        expect(calls).toBe(1);
         const failed = await endpointFixture(() =>
-            Response.json(
-                { error: "conflict", _cms: { generatedSecrets: { signing: "must-not-write" } } },
-                { status: 409 },
-            ),
+            Response.json({ error: "conflict", generatedSecrets: { signing: "must-not-write" } }, { status: 409 }),
         );
-        expect(await failed.write({ values: {} })).toEqual({ status: 409, body: { error: "conflict" } });
+        expect(await failed.write({ values: {} })).toEqual({
+            status: 409,
+            body: { error: "conflict" },
+        });
         expect(await failed.secrets.get("MANAGED_SIGNING")).toBe("old-signing");
     });
 });

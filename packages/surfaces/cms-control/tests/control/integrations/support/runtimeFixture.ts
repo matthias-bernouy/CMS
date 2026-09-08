@@ -78,16 +78,11 @@ export async function runtimeFixture() {
             expect(request.headers.get("authorization")).toBe(`Bearer ${environment.CMS_EMAILER_API_KEY}`);
             const payload = (await request.json()) as Record<string, any>;
             phases.push(payload.operation);
-            if (payload.operation === "save-settings") {
+            if (payload.operation === "save-connection") {
                 expect(payload.input.expectedRevision).toBe(savedRevision);
+                expect(payload.secretValues).toEqual({ smtpPassword: "selected-smtp-password" });
                 settings = payload.input.values;
                 savedRevision = "saved-1";
-            }
-            if (payload.operation === "apply-settings") {
-                expect(payload.secretValues).toEqual({ smtpPassword: "selected-smtp-password" });
-            }
-            if (payload.operation === "confirm-apply") {
-                expect(environment[runtime.passwordName]).toBe("selected-smtp-password");
                 appliedRevision = savedRevision;
             }
             return Response.json({ values: settings, savedRevision, appliedRevision });

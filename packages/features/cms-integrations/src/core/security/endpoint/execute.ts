@@ -14,9 +14,9 @@ import {
 import { resolveManagementPages } from "../management/pages";
 import { record } from "../management/report";
 import { integrationFormFields } from "./fields";
-import { applyIntegrationEffects } from "./effects";
+import { completeIntegrationEndpoint } from "./completion";
 
-/** A normal source operation owns its workflow. The host supplies scoped context and infrastructure effects. */
+/** A normal source operation owns its workflow. The host supplies scoped context and completes host-owned work. */
 export async function executeIntegrationEndpoint(
     deps: IntegrationRuntimeDeps,
     endpoint: SourceEndpoint,
@@ -82,57 +82,45 @@ export async function executeIntegrationEndpoint(
             refs = { ...Object.fromEntries(Object.entries(refs).filter(([key]) => !granted.has(key))), ...selected };
             Object.assign(pages, await resolveManagementPages(deps, form.fields, values));
         }
-        let continuation: IntegrationEndpointContext["continuation"];
-        const redacted: string[] = [];
-        for (let step = 0; step < 4; step++) {
-            const secrets = await managementSecrets(deps, installation, refs);
-            redacted.push(...Object.values(secrets.secretValues), ...Object.values(secrets.generatedSecretValues));
-            const response = await next(
-                new Request(request.url, {
-                    method: request.method,
-                    headers: request.headers,
-                    body: JSON.stringify({
-                        ...body,
-                        _cms: {
-                            installationId: installation.id,
-                            definitionVersion: installation.definitionVersion,
-                            actor,
-                            secretValues: secrets.secretValues,
-                            generatedSecretValues: secrets.generatedSecretValues,
-                            resolvedPages: pages,
-                            ...(continuation === undefined ? {} : { continuation }),
-                        } satisfies IntegrationEndpointContext,
-                    }),
+        const secrets = await managementSecrets(deps, installation, refs);
+        const redacted = [...Object.values(secrets.secretValues), ...Object.values(secrets.generatedSecretValues)];
+        const response = await next(
+            new Request(request.url, {
+                method: request.method,
+                headers: request.headers,
+                body: JSON.stringify({
+                    ...body,
+                    _cms: {
+                        installationId: installation.id,
+                        definitionVersion: installation.definitionVersion,
+                        actor,
+                        secretValues: secrets.secretValues,
+                        generatedSecretValues: secrets.generatedSecretValues,
+                        resolvedPages: pages,
+                    } satisfies IntegrationEndpointContext,
                 }),
-            );
-            const output = await response.text();
-            if (output.length > 1_000_000) {
-                throw new IntegrationRuntimeError("Integration response is too large", 502);
-            }
-            let result: unknown;
-            try {
-                result = JSON.parse(output);
-            } catch {
-                throw new IntegrationRuntimeError("Invalid integration response", 502);
-            }
-            if (!record(result)) {
-                throw new IntegrationRuntimeError("Invalid integration response", 502);
-            }
-            const { _cms, ...data } = result;
-            if (!response.ok || _cms === undefined) {
-                return Response.json(publicResult(data, redacted), { status: response.status });
-            }
-            if (!record(_cms)) {
-                throw new IntegrationRuntimeError("Invalid integration effects", 502);
-            }
-            redacted.push(
-                ...(await applyIntegrationEffects(deps, installation, _cms, data, refs, secrets.secretValues)),
-            );
-            if (_cms.continue === undefined) {
-                return Response.json(publicResult(data, redacted), { status: response.status });
-            }
-            continuation = _cms.continue as Record<string, unknown>;
+            }),
+        );
+        const output = await response.text();
+        if (output.length > 1_000_000) {
+            throw new IntegrationRuntimeError("Integration response is too large", 502);
         }
-        throw new IntegrationRuntimeError("Integration continuation limit exceeded", 502);
+        let result: unknown;
+        try {
+            result = JSON.parse(output);
+        } catch {
+            throw new IntegrationRuntimeError("Invalid integration response", 502);
+        }
+        if (!record(result)) {
+            throw new IntegrationRuntimeError("Invalid integration response", 502);
+        }
+        if (!response.ok) {
+            return Response.json(publicResult(result, redacted), { status: response.status });
+        }
+        if (Object.hasOwn(result, "_cms")) {
+            throw new IntegrationRuntimeError("Integration responses cannot contain server context", 502);
+        }
+        redacted.push(...(await completeIntegrationEndpoint(deps, installation, result, refs, secrets.secretValues)));
+        return Response.json(publicResult(result, redacted), { status: response.status });
     });
 }

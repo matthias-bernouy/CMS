@@ -12,6 +12,7 @@ import { registerSettingsTests } from "../source/workflows/settings.ts";
 import { registerProviderErrorTests } from "../source/workflows/provider-errors.ts";
 import { registerRecoveryTests } from "../source/workflows/recovery.ts";
 import { registerLabelValidationTests } from "../source/workflows/label-validation.ts";
+import { registerConnectionTests } from "../source/workflows/connection.ts";
 
 describe("mondial-relay 1.0.0 source", () => {
     registerFoundationTests();
@@ -27,4 +28,5 @@ describe("mondial-relay 1.0.0 source", () => {
     registerProviderErrorTests();
     registerRecoveryTests();
     registerLabelValidationTests();
+    registerConnectionTests();
 });

@@ -1,12 +1,9 @@
 import { publishSellerTermsAction } from "./seller-terms.ts";
 import { HttpError, isRecord, json, readJsonObject, requireCmsRequest, type JsonRecord } from "../core/runtime.ts";
-import { readSettings, settingsResult, updateSettings } from "./store.ts";
-import { saveSettings } from "./settings.ts";
+import { readSettings, settingsResult, updateSettings, type Settings } from "./store.ts";
+import { connectionValues, validateCredentials } from "./settings.ts";
 import { sourceHealth } from "./health.ts";
 import { reconcile } from "./reconcile.ts";
-import { localSimulation } from "./simulation.ts";
-import { signingBindingsConfirmed } from "./webhooks/signingBindings.ts";
-import destinations from "./webhooks/destinations.json" with { type: "json" };
 
 export async function manageSource(request: Request): Promise<Response> {
     requireCmsRequest(request, false);
@@ -24,33 +21,42 @@ export async function manageSource(request: Request): Promise<Response> {
     switch (body.operation) {
         case "health":
             return json(await sourceHealth(owner, secrets, generated));
-        case "read-settings":
+        case "read-connection":
             return json(settingsResult(await readSettings()));
-        case "save-settings":
-            return json(await saveSettings(input));
-        case "apply-settings":
-            return json(await apply(owner, String(body.definitionVersion), secrets, generated, input.savedRevision));
-        case "confirm-apply": {
+        case "save-connection": {
             const current = await readSettings();
-            if (current.saved_revision !== input.savedRevision || current.operation !== "pending_sync") {
-                throw new HttpError(409, "Apply revision changed");
+            if (input.expectedRevision !== current.saved_revision) {
+                throw new HttpError(409, "Settings revision changed");
             }
-            if (
-                !localSimulation(secrets) &&
-                !signingBindingsConfirmed(
-                    current.resources,
-                    generated,
-                    destinations.destinations.map(({ name }) => name),
-                )
-            ) {
-                throw new HttpError(
-                    409,
-                    "Signing secrets were not stored for the applied destinations; recover the matching secrets before confirmation",
-                );
-            }
+            const values = connectionValues(input);
+            validateCredentials(secrets);
             return json(
-                settingsResult(
-                    await updateSettings(current, { applied_revision: current.saved_revision, operation: "idle" }),
+                await apply(
+                    owner,
+                    String(body.definitionVersion),
+                    secrets,
+                    generated,
+                    current,
+                    values,
+                    crypto.randomUUID(),
+                ),
+            );
+        }
+        case "retry-connection": {
+            const current = await readSettings();
+            if (!current.saved_revision || input.expectedRevision !== current.saved_revision) {
+                throw new HttpError(409, "Connection revision changed");
+            }
+            validateCredentials(secrets);
+            return json(
+                await apply(
+                    owner,
+                    String(body.definitionVersion),
+                    secrets,
+                    generated,
+                    current,
+                    current.values,
+                    current.saved_revision,
                 ),
             );
         }
@@ -63,15 +69,10 @@ async function apply(
     version: string,
     secrets: JsonRecord,
     generated: JsonRecord,
-    expectedRevision?: unknown,
+    current: Settings,
+    values: JsonRecord,
+    revision: string,
 ) {
-    const current = await readSettings();
-    if (expectedRevision !== undefined && expectedRevision !== current.saved_revision) {
-        throw new HttpError(409, "Connection revision changed");
-    }
-    if (!current.saved_revision) {
-        throw new HttpError(422, "Save Connection settings first");
-    }
     if (current.operation === "applying" && Date.now() - Date.parse(current.operation_started_at ?? "") < 300000) {
         throw new HttpError(409, "Settings are already applying");
     }
@@ -90,14 +91,22 @@ async function apply(
             applying.resources,
         );
         try {
-            const next = await updateSettings(applying, { operation: "pending_sync", resources: result.resources });
+            const next = await updateSettings(applying, {
+                values,
+                saved_revision: revision,
+                applied_revision: revision,
+                operation: "idle",
+                operation_id: null,
+                operation_started_at: null,
+                resources: result.resources,
+            });
             return { ...settingsResult(next), generatedSecrets: result.outputs };
         } catch (error) {
             await result.rollback();
             throw error;
         }
     } catch {
-        await updateSettings(applying, { operation: "failed" });
+        await updateSettings(applying, { operation: "failed", operation_started_at: null });
         throw new HttpError(
             502,
             "Stripe configuration could not be applied. Check credentials and owned webhook state, then retry.",

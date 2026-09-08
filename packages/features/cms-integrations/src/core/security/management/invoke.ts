@@ -77,7 +77,7 @@ export async function invokeManagement(
         throw new IntegrationRuntimeError("Invalid integration management response", 502);
     }
     if (result.generatedSecrets !== undefined || result._cms !== undefined) {
-        throw new IntegrationRuntimeError("Infrastructure effects require an integration Source endpoint", 502);
+        throw new IntegrationRuntimeError("Infrastructure completion requires an integration Source endpoint", 502);
     }
     return publicResult(result, [
         ...Object.values(secrets.secretValues),

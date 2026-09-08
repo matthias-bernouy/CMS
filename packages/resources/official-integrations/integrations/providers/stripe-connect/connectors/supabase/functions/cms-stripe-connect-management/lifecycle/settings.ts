@@ -1,5 +1,4 @@
 import { HttpError, isRecord, type JsonRecord } from "../core/runtime.ts";
-import { readSettings, settingsResult, updateSettings } from "./store.ts";
 
 const defaults = {
     sellerPayoutSchedule: "daily",
@@ -8,14 +7,7 @@ const defaults = {
     sellerActivityDescription: "Sale of second-hand goods between individuals through an online marketplace.",
 };
 const fields = ["stripeSecretKey", "stripePublishableKey", ...Object.keys(defaults)];
-export async function saveSettings(input: JsonRecord) {
-    const current = await readSettings();
-    if (current.operation === "applying" || current.operation === "pending_sync") {
-        throw new HttpError(409, "Finish applying the saved settings before saving again");
-    }
-    if (input.expectedRevision !== current.saved_revision) {
-        throw new HttpError(409, "Settings revision changed");
-    }
+export function connectionValues(input: JsonRecord): JsonRecord {
     const values = isRecord(input.values) ? input.values : input;
     const next: JsonRecord = { ...defaults };
     for (const key of Object.keys(values)) {
@@ -46,9 +38,7 @@ export async function saveSettings(input: JsonRecord) {
     ) {
         throw new HttpError(422, "Unsupported country, currency, or empty activity description");
     }
-    return settingsResult(
-        await updateSettings(current, { values: next, saved_revision: crypto.randomUUID(), operation: "idle" }),
-    );
+    return next;
 }
 export function validateCredentials(secrets: JsonRecord): string {
     const secret = String(secrets.stripeSecretKey ?? "");

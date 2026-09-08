@@ -27,6 +27,7 @@ export type HarnessState = {
     relaySelections: JsonRecord[];
     deliveryQuotes: JsonRecord[];
     settingRow: JsonRecord;
+    sourceSettingsRow: JsonRecord;
     connectRequestXml: string;
     connectRequestCount: number;
     connectRequestRedirect: string;
@@ -50,6 +51,13 @@ export function createHarnessState(): HarnessState {
         relaySelections: [],
         deliveryQuotes: [defaultDeliveryQuoteRow()],
         settingRow: defaultSettingsRow(),
+        sourceSettingsRow: {
+            id: "default",
+            values: {},
+            saved_revision: null,
+            applied_revision: null,
+            operation: "idle",
+        },
         connectRequestXml: "",
         connectRequestCount: 0,
         connectRequestRedirect: "",

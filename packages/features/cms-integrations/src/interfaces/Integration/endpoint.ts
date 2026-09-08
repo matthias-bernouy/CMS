@@ -9,13 +9,4 @@ export type IntegrationEndpointContext = {
     secretValues: Record<string, string>;
     generatedSecretValues: Record<string, string>;
     resolvedPages: Record<string, IntegrationResolvedPage>;
-    continuation?: Record<string, unknown>;
-};
-
-/** Private `_cms` result consumed by the server, never exposed to browser binding. */
-export type IntegrationEndpointEffects = {
-    rememberSecrets?: true;
-    generatedSecrets?: Record<string, string>;
-    syncRuntime?: true;
-    continue?: Record<string, unknown>;
 };

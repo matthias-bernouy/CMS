@@ -6,8 +6,8 @@ operations; the integration owns persistence, revisions, provider reconciliation
 and recovery. There is no `management.settings` contract or generated settings UI.
 
 See the [authoring guide](../../../docs/integrations/management.md) for the Source
-`integrationContext` contract, reference fields, private infrastructure effects,
-failure boundaries and Health reports.
+`integrationContext` contract, reference fields, host completion, failure boundaries
+and Health reports.
 
 Definitions may declare `management.schemaVersion: 1`, a Health function, explicit
 maintenance actions, generated-secret grants and runtime environment mappings.
@@ -28,10 +28,11 @@ and provider idempotency.
 
 Secret fields live in installed views. The browser submits an exact `${KEY}`
 reference. An admin Source endpoint that requests `integrationContext` receives
-server-resolved values and published-page snapshots in `_cms`. It can explicitly
-request retaining references, storing granted generated outputs, synchronizing
-runtime variables and continuing the same endpoint operation. Core strips private
-context and redacts secret values before returning the public result.
+server-resolved values and published-page snapshots in `_cms`. The integration
+completes persistence and provider reconciliation in that single call. After a
+successful response, Core retains references, stores granted generated outputs and
+synchronizes declared runtime variables. Core never reinvokes the endpoint, strips
+private outputs and redacts secret values from the public result.
 
 Health observations keep deployment status, service status and freshness separate.
 The last valid report remains available as stale evidence after a failed check.

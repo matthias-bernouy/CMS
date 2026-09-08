@@ -10,7 +10,7 @@ Official integrations remain at version `1.0.0` and have no installation inputs.
 | Owner | Responsibility |
 | --- | --- |
 | Integration | Views, defaults, validation, persistence, revisions, provider reconciliation and recovery |
-| Core | Native forms and binding, authentication, scoped references, infrastructure effects and installation leases |
+| Core | Native forms and binding, authentication, scoped references, host-owned secret/runtime completion and installation leases |
 | Connector adapter | Synchronize granted environment variables to the installed connector destination |
 | Health | Observe services and expose declared maintenance actions, deployment sync and version upgrades |
 
@@ -43,7 +43,7 @@ Save uses the existing binding contract: submit typed editable values, lock duri
 submission and the targeted reload, and preserve mounted controls. Independent
 operations use their own action forms. Core adds no second rendering engine.
 
-## Server-side references and effects
+## Server-side references and completion
 
 An ordinary admin POST JSON endpoint can declare `integrationContext: true`.
 Control verifies that the endpoint belongs to exactly one installed integration.
@@ -83,41 +83,38 @@ rejected. Field visibility can exclude disabled groups. Explicitly permitted
 external/media references do not receive published snapshots. Browser-supplied
 snapshot metadata cannot replace the trusted context.
 
-An endpoint may request infrastructure effects in a private response property:
+The integration completes validation, persistence and provider reconciliation
+before returning. A successful response may include granted generated secrets:
 
 ```json
 {
   "values": { "apiKey": "${PROVIDER_KEY}" },
   "savedRevision": "integration-owned-revision",
-  "_cms": {
-    "rememberSecrets": true,
-    "generatedSecrets": { "webhookSigning": "new-provider-secret" },
-    "syncRuntime": true,
-    "continue": { "phase": "acknowledge", "revision": "integration-owned-revision" }
-  }
+  "appliedRevision": "integration-owned-revision",
+  "generatedSecrets": { "webhookSigning": "new-provider-secret" }
 }
 ```
 
-All effects are optional. `rememberSecrets` retains the validated references for
-later operations and Health. Generated output names must be granted in
+Core automatically retains the submitted references for later operations and
+Health after a successful response. Generated output names must be granted in
 `management.generatedSecrets` and have an owned installation secret slot.
 `management.runtimeSecrets` maps environment names to `{ "field": "apiKey" }`
 or `{ "generated": "webhookSigning" }`. Field mappings must name view fields;
 non-secret values come from the endpoint result's `values` object. These are
 technical grants, not settings orchestration metadata.
 
-After executing requested effects, `continue` invokes the same endpoint with the
-original form body and refreshed `_cms` context, adding `_cms.continuation`.
-Core does not interpret phase names, revisions, provider state or retry policy.
-The integration decides whether another invocation is needed. There are at most
-four invocations; continuation objects are limited to 4 KiB. The endpoint output
-contract must preserve `_cms` until the server interceptor consumes it. Control
-strips this property and redacts resolved/generated secret values before returning
-the public result to the browser. Failed responses execute no effects.
+Core stores granted generated values and synchronizes declared runtime mappings
+without a command from the integration. It never interprets revisions, provider
+state or retry policy and never reinvokes the endpoint. A response containing
+`_cms` is rejected because that property is server-owned. Control removes generated
+secret outputs and redacts resolved/generated values before returning the public
+result to the browser. Failed responses do not retain references, write generated
+secrets or synchronize the runtime.
 
-Emailer, Mondial Relay and Stripe Connect own their persist/reconcile/acknowledge
-sequence in `/connection`. Their separate `/connection/retry` operation resumes
-application from the saved revision and is exposed in their Connection view.
+Emailer, Mondial Relay and Stripe Connect synchronously persist and reconcile in
+`/connection`. Their separate `/connection/retry` operation repeats the
+integration-owned verification or reconciliation idempotently and also retries
+host runtime synchronization. It is exposed in their Connection view.
 Consent publishes through its ordinary policy endpoint using resolved page
 snapshots. Commerce retains its business settings endpoints.
 
@@ -126,9 +123,11 @@ snapshots. Commerce retains its business settings endpoints.
 A renewable 60-second installation lease excludes concurrent mutations and
 deployment. Losing the lease fences secret writes and synchronization. This is
 not a transaction across the integration database, secret store and provider.
-Generated values remain available after failed synchronization. Integrations must
-persist recovery state and implement idempotent provider operations; a failed
-application must not acknowledge the revision as applied.
+Generated values and selected references remain available after failed runtime
+synchronization because they are stored first. Integrations must expose truthful
+operation state and implement idempotent provider reconciliation. Their applied
+revision represents integration persistence and provider state; connector runtime
+deployment remains a separate host-owned Health concern.
 
 Install, rerun and upgrade preserve business rows and existing generated secrets.
 They protect installed runtime variable names from bootstrap overwrites, including

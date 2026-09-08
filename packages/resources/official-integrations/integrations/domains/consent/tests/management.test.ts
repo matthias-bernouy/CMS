@@ -117,8 +117,8 @@ describe("Consent settings published page boundary", () => {
         expect(calls[0]!.url).toEndWith("/rpc/publish_consent_context");
         expect(await calls[0]!.json()).toMatchObject({ p_context_key: "draft_policy", p_expected_revision: "new" });
     });
-    test("rejects incomplete settings instead of implicitly disabling a policy", async () => {
-        const response = await publish({ operation: "save-settings", input: { ...input, values: {} } });
+    test("rejects incomplete values instead of implicitly disabling a policy", async () => {
+        const response = await publish({ values: {} });
         expect(response.status).toBe(400);
         expect(calls).toHaveLength(0);
     });

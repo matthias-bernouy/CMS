@@ -6,7 +6,10 @@ export async function endpointFixture(
     handler: (body: Record<string, any>) => unknown | Promise<unknown>,
     extra: Partial<IntegrationManagementDeps> = {},
 ) {
-    const context = await fixture(async () => report(), extra);
+    const context = await fixture(async () => report(), {
+        syncRuntimeSecrets: async () => {},
+        ...extra,
+    });
     const artifact = definition.artifacts!.find((artifact) => artifact.type === "source")!;
     if (artifact.type !== "source") {
         throw new Error("Missing source");
@@ -41,6 +44,7 @@ export async function endpointFixture(
             }
             detail.main = [{ id: "connection", title: "Connection", fields }];
             detail.save!.valuesPath = valuesPath;
+            installation.definitionSnapshot!.management!.runtimeSecrets = {};
             await context.installations.replace(installation);
         },
     };

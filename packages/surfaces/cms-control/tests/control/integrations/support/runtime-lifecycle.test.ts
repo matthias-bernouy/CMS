@@ -72,7 +72,7 @@ test("official ordinary connector install saves and applies settings, then prese
     };
     const result = await connection({ values, expectedRevision: null });
     expect(result).toMatchObject({ values, savedRevision: "saved-1", appliedRevision: "saved-1" });
-    expect(phases).toEqual(["save-settings", "apply-settings", "sync", "confirm-apply"]);
+    expect(phases).toEqual(["save-connection", "sync"]);
     expect(JSON.stringify(result)).not.toContain("selected-smtp-password");
     await run("rerun", emailer.definition, emailer.root);
     await run("upgrade", { ...emailer.definition, version: "1.1.0" }, emailer.root);

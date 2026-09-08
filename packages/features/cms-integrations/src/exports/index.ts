@@ -324,4 +324,4 @@ export { updateCollectionAvailability } from "../core/resources/availability";
 export { executeIntegrationEndpoint } from "../core/security/endpoint/execute";
 export type { IntegrationRuntimeDeps } from "../core/security/management/contracts";
 
-export type { IntegrationEndpointContext, IntegrationEndpointEffects } from "../interfaces/Integration/endpoint";
+export type { IntegrationEndpointContext } from "../interfaces/Integration/endpoint";
