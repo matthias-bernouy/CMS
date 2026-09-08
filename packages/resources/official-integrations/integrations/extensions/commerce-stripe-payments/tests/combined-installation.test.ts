@@ -286,6 +286,7 @@ describe("Commerce protected Stripe combined installation", () => {
             "commerce-workflow",
             "consent-acceptances",
             "consent-contexts",
+            "stripe-connect-connection",
             "stripe-connect-marketplace-terms",
         ]);
         for (const dashboard of installedDashboards) {
@@ -297,6 +298,7 @@ describe("Commerce protected Stripe combined installation", () => {
         expect(await dashboardViews.getView("stripe-connect-marketplace-terms")).toBeTruthy();
         expect(installedViews.filter((view) => view.source === "stripe-connect").map((view) => view.id)).toEqual([
             "stripe-connect-marketplace-terms",
+            "stripe-connect-connection",
         ]);
 
         const operationsView = await dashboardViews.getView("commerce-stripe-payments-operations");
