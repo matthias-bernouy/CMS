@@ -67,6 +67,7 @@ export const proposalProjection = {
     checkoutExpiresAt: null,
     consumedAt: null,
     orderId: null,
+    orderPublicId: null,
     createdAt: "2026-07-20T12:00:00Z",
     updatedAt: "2026-07-22T12:00:00Z",
 };
