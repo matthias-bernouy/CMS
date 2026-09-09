@@ -15,6 +15,7 @@
         "tsconfig.json"
     ],
     "dependencies": {
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-integration-packages": "workspace:*",
         "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*"

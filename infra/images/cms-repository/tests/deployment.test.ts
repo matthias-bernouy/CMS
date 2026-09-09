@@ -9,6 +9,9 @@ const dockerfileSource = readFileSync(resolve(imageRoot, "Dockerfile"), "utf8");
 const runtimeManifest = JSON.parse(
     readFileSync(resolve(imageRoot, "../../../packages/runtimes/cms-repository-server/package.json"), "utf8"),
 ) as { dependencies?: Record<string, string> };
+const registryManifest = JSON.parse(
+    readFileSync(resolve(imageRoot, "../../../packages/features/cms-integration-registry/package.json"), "utf8"),
+) as { dependencies?: Record<string, string> };
 const envExampleSource = readFileSync(resolve(imageRoot, ".env.example"), "utf8");
 const hubOverrideSource = readFileSync(resolve(imageRoot, "repository-hub.override.yml"), "utf8");
 const cmsComposeSource = readFileSync(resolve(imageRoot, "../cms/compose.yml"), "utf8");
@@ -28,6 +31,7 @@ describe("repository image", () => {
         }
         expect(dockerfileSource).toContain("--filter=@bernouy/cms-repository-server");
         expect(runtimeManifest.dependencies?.["@bernouy/cms-integration-packages"]).toBe("workspace:*");
+        expect(registryManifest.dependencies?.["@bernouy/cms-content"]).toBe("workspace:*");
         expect(dockerfileSource).toContain("USER bun");
         expect(dockerfileSource).toContain("/var/lib/cms-repository/registry");
         expect(dockerfileSource).not.toMatch(/CMS_REPOSITORY_(?:(?:MANAGEMENT|MAINTENANCE)_)?TOKEN=/);
