@@ -9,7 +9,7 @@
 
 export type { Runner, RouteHandler, Middleware } from "http-runner/interfaces/Runner";
 export type { RequestTimingClock, RequestTimingSnapshot } from "http-runner/interfaces/RequestObservability";
-export { BunRunner } from "http-runner/default-implementation/BunRunner";
+export { BunRunner, type BunRunnerOptions } from "http-runner/default-implementation/BunRunner";
 export { getRequestIP, setRequestIP } from "http-runner/core/request/ip";
 export {
     ClientAddressUnavailableError,

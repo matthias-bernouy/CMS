@@ -92,7 +92,7 @@ export async function startProductionRepositoryServer(source: RepositoryRuntimeE
         startServer: () =>
             startRepositoryServer({
                 publicRunner: new BunRunner(),
-                managementRunner: new BunRunner(),
+                managementRunner: new BunRunner({ idleTimeoutSeconds: 255 }),
                 publicPort: env.publicPort,
                 managementPort: env.managementPort,
                 catalog,

@@ -4,6 +4,10 @@ import { dispatchBunRunnerRequest, type RegisteredDefaultEndpoint, type Register
 import { stopServerGracefully } from "./gracefulServerStop";
 import { normalizePath, urlJoin } from "./runnerPaths";
 
+export type BunRunnerOptions = Readonly<{
+    idleTimeoutSeconds?: number;
+}>;
+
 export class BunRunner implements Runner {
     basePath: string = "/";
 
@@ -12,6 +16,8 @@ export class BunRunner implements Runner {
     private globalMiddlewares: Middleware[] = [];
 
     private server?: ReturnType<typeof Bun.serve>;
+
+    constructor(private readonly options: BunRunnerOptions = {}) {}
 
     /** The bound TCP port once `start()` has run (the OS-assigned one when
      *  started with `0`), or `undefined` before start / after stop. */
@@ -131,6 +137,7 @@ export class BunRunner implements Runner {
 
         this.server = Bun.serve({
             port,
+            ...(this.options.idleTimeoutSeconds === undefined ? {} : { idleTimeout: this.options.idleTimeoutSeconds }),
             fetch: (request, server) =>
                 dispatchBunRunnerRequest(request, server, self.routes, self.defaultEndpoints, self.globalMiddlewares),
         });

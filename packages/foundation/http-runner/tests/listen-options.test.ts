@@ -5,9 +5,13 @@ import { stopServerGracefully } from "../src/default-implementation/gracefulServ
 type CapturedServeOptions = {
     port?: unknown;
     hostname?: unknown;
+    idleTimeout?: unknown;
 };
 
-function captureServeOptions(start: (runner: BunRunner) => void): CapturedServeOptions {
+function captureServeOptions(
+    start: (runner: BunRunner) => void,
+    runner: BunRunner = new BunRunner(),
+): CapturedServeOptions {
     let captured: CapturedServeOptions | undefined;
     const serve = spyOn(Bun, "serve").mockImplementation((options: CapturedServeOptions) => {
         captured = options;
@@ -17,8 +21,6 @@ function captureServeOptions(start: (runner: BunRunner) => void): CapturedServeO
         } as unknown as ReturnType<typeof Bun.serve>;
     });
     const log = spyOn(console, "log").mockImplementation(() => {});
-    const runner = new BunRunner();
-
     try {
         start(runner);
         runner.stop();
@@ -38,6 +40,12 @@ describe("BunRunner listen options", () => {
         const options = captureServeOptions((runner) => runner.start(4123));
 
         expect(options.port).toBe(4123);
+    });
+
+    test("forwards an explicit idle timeout to Bun", () => {
+        const options = captureServeOptions((runner) => runner.start(4123), new BunRunner({ idleTimeoutSeconds: 255 }));
+
+        expect(options.idleTimeout).toBe(255);
     });
 
     test("graceful stop waits for an active request before closing", async () => {
