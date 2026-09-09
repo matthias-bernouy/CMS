@@ -87,6 +87,8 @@ export const fulfillmentCopy: Record<string, string> = {
     "sale-label": "Sale",
     "handoff-declared-label": "Handoff declared",
     "carrier-scan-pending-message": "Waiting for the carrier's first scan.",
+    "review-label": "Review required",
+    "review-message": "Shipping is temporarily paused while this sale is reviewed. Contact support if you need help.",
     "creating-message": "Creating the shipping label…",
     "action-error-message": "The delivery service is temporarily unavailable. Try again shortly.",
     "status-creating-label": "Creation in progress",

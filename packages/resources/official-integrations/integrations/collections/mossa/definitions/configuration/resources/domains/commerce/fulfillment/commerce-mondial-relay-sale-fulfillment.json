@@ -6,7 +6,7 @@
     "endpoints": [
         {
             "source": "commerce-mondial-relay-fulfillment",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": "^1.1.0",
             "endpoint": "urn:system-functions:createShipmentForMySale",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -17,9 +17,9 @@
         },
         {
             "source": "commerce-mondial-relay-fulfillment",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": "^1.1.0",
             "endpoint": "urn:system-functions:declareShipmentHandoffForMySale",
-            "contractVersion": "^1.0.0",
+            "contractVersion": "^1.1.0",
             "bindings": {
                 "input": {
                     "body.orderId": "state.declareShipmentHandoffForMySale.orderId"
@@ -28,9 +28,9 @@
         },
         {
             "source": "commerce-mondial-relay-fulfillment",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": "^1.1.0",
             "endpoint": "urn:system-functions:getShipmentForMySale",
-            "contractVersion": "^1.0.0",
+            "contractVersion": "^1.1.0",
             "bindings": {
                 "input": {
                     "params.orderId": "state.getShipmentForMySale.orderId"
@@ -39,9 +39,9 @@
         },
         {
             "source": "commerce-mondial-relay-fulfillment",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": "^1.1.0",
             "endpoint": "urn:system-functions:requestShipmentLabelForMySale",
-            "contractVersion": "^1.0.0",
+            "contractVersion": "^1.1.0",
             "bindings": {
                 "input": {
                     "body.orderId": "state.requestShipmentLabelForMySale.orderId"

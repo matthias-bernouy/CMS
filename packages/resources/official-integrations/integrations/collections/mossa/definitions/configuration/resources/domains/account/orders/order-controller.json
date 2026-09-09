@@ -42,7 +42,7 @@
         },
         {
             "source": "commerce-mondial-relay-fulfillment",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": "^1.1.0",
             "endpoint": "urn:system-functions:getShipmentForOrder",
             "contractVersion": "^1.0.0",
             "bindings": { "input": { "params.orderId": "route.orderId" } }

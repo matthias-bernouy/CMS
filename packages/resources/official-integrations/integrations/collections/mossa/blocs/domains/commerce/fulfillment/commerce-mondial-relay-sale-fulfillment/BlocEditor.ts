@@ -64,6 +64,12 @@ export class CommerceMondialRelaySaleFulfillmentEditor extends Editor {
                 accepts: [{ kind: "any-component" }],
                 max: 1,
             },
+            {
+                label: "Review action",
+                slot: "review-action",
+                accepts: [{ kind: "any-component" }],
+                max: 1,
+            },
         ];
     }
 }

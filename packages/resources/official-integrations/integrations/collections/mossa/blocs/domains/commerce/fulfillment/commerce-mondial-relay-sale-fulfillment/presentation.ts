@@ -18,19 +18,21 @@ export const presentationAttributes = [
 
 export function fulfillmentPresentation(host: HTMLElement, value: unknown): Record<string, unknown> {
     const result = record(value) || {};
+    const actions = record(result.actions) || {};
     const shipments = Array.isArray(result.shipments) ? result.shipments : [];
     const shipment = record(shipments[0]);
     const status = String(shipment?.status || "");
     const handoffDeclared = Boolean(shipment?.sellerHandoffDeclaredAt);
     const carrierAccepted = Boolean(shipment?.carrierAcceptedAt);
     const awaitingCarrierScan = status === "label_ready" && handoffDeclared && !carrierAccepted;
+    const requiresReview = actions.requiresReview === true;
     const text = (name: string, fallback: string): string => host.getAttribute(name)?.trim() || fallback;
 
     return {
         actionErrorMessage: text("action-error-message", fulfillmentCopy["action-error-message"]),
-        canCreate: !shipment || status === "failed",
-        canDeclareHandoff: status === "label_ready" && !handoffDeclared && !carrierAccepted,
-        canDownloadLabel: status === "label_ready" && !carrierAccepted,
+        canCreate: actions.canCreateShipment === true && (!shipment || status === "failed"),
+        canDeclareHandoff: actions.canDeclareHandoff === true,
+        canDownloadLabel: actions.canDownloadLabel === true,
         cardDensity: text("card-density", "regular"),
         copy: text("copy", "Prepare the label, then track the parcel."),
         createLabel: text(
@@ -53,11 +55,15 @@ export function fulfillmentPresentation(host: HTMLElement, value: unknown): Reco
         orderReference: String(
             result.orderNumber || result.orderPublicId || text("sale-label", fulfillmentCopy["sale-label"]),
         ),
+        requiresReview,
+        reviewMessage: text("review-message", fulfillmentCopy["review-message"]),
         showOrderReference: host.getAttribute("show-order-reference") !== "false",
-        statusLabel: awaitingCarrierScan
-            ? text("handoff-declared-label", fulfillmentCopy["handoff-declared-label"])
-            : statusLabel(status, text),
-        statusTone: fulfillmentTone(status, awaitingCarrierScan),
+        statusLabel: requiresReview
+            ? text("review-label", fulfillmentCopy["review-label"])
+            : awaitingCarrierScan
+              ? text("handoff-declared-label", fulfillmentCopy["handoff-declared-label"])
+              : statusLabel(status, text),
+        statusTone: fulfillmentTone(status, awaitingCarrierScan || requiresReview),
         statusTitle: text("status-label", fulfillmentCopy["status-label"]),
         title: text("title", "Sale shipment"),
         trackingLabel: text("tracking-label", "Track parcel"),

@@ -29,6 +29,7 @@
                     <strong>{{ presentation.expeditionNumber }}</strong>
                 </mossa-info-row>
                 <p>{{ presentation.latestEventLabel }}</p>
+                <p role="status" cms-condition="presentation.requiresReview">{{ presentation.reviewMessage }}</p>
             </mossa-stack>
 
             <mossa-stack slot="actions" direction="row" wrap="true" gap="xs" align-items="center">
@@ -52,6 +53,7 @@
                         <a href="{{ presentation.trackingUrl }}" rel="noopener noreferrer" target="_blank">{{ presentation.trackingLabel }}</a>
                     </mossa-button>
                 </slot>
+                <slot name="review-action" cms-condition="presentation.requiresReview"></slot>
             </mossa-stack>
         </mossa-surface-card>
     </section>
