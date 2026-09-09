@@ -114,7 +114,7 @@ describe("site bloc draft validation", () => {
         );
     });
 
-    test("rejects private binding tags and attributes before persistence", async () => {
+    test("persists declarative structure bindings but rejects a nested binding core", async () => {
         const { cms, repository } = siteBlocHarness();
         await seedBloc(repository, "basic-card");
         await seedBloc(repository, "cms-binding-core");
@@ -133,13 +133,14 @@ describe("site bloc draft validation", () => {
             structure: [{ kind: "bloc", tag: "cms-binding-core", attributes: {}, children: [] }],
         });
 
-        await expect(saveSiteBloc(cms, "site-private-binding", saveInput(withAttribute))).rejects.toBeInstanceOf(
+        const saved = await saveSiteBloc(cms, "site-private-binding", saveInput(withAttribute));
+        expect(saved.draft.structure[0]).toEqual(
+            expect.objectContaining({ attributes: { "cms-source": "/api/private" } }),
+        );
+        await expect(saveSiteBloc(cms, "site-private-binding", saveInput(withBindingCore, 2))).rejects.toBeInstanceOf(
             ContentValidationError,
         );
-        await expect(saveSiteBloc(cms, "site-private-binding", saveInput(withBindingCore))).rejects.toBeInstanceOf(
-            ContentValidationError,
-        );
-        expect((await repository.getBlocRecord("site-private-binding"))?.siteDefinition?.draftRevision).toBe(1);
+        expect((await repository.getBlocRecord("site-private-binding"))?.siteDefinition?.draftRevision).toBe(2);
     });
 
     test("hardens the private structure before persisting it", async () => {

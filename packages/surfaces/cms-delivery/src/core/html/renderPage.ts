@@ -113,16 +113,7 @@ export async function renderPage(
     defineMetaTags(document, head, page, settings, ctx.faviconUrl, metadata);
     definePageStructuredData(document, head, settings, metadata);
     buildStylesheetLink(document, head, assets);
-    buildScriptTags(document, head, assets);
-
-    // System bloc: load the data-binding runtime only when the page uses the
-    // activation root. Pages are wrapped by default for now.
-    if (hasBindingCore) {
-        const bindingCoreScript = document.createElement("script");
-        bindingCoreScript.setAttribute("defer", "");
-        bindingCoreScript.setAttribute("src", assets.bindingCoreUrl);
-        head.appendChild(bindingCoreScript);
-    }
+    buildScriptTags(document, head, assets, { includeBindingCore: hasBindingCore });
 
     // Stamp every by-id media URL with `?v=<contentHash>` (cache bust), expand
     // raster <img>s whose variants are ready into responsive srcsets, and collect

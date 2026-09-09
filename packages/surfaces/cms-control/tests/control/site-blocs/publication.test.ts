@@ -95,7 +95,7 @@ describe("site bloc publication", () => {
             {
                 kind: "bloc",
                 tag: "basic-section",
-                attributes: { "cms-source": "/private" },
+                attributes: { "cms-source": "https://example.com/private" },
                 children: [{ kind: "slot", slotId: "body" }],
             },
         ];

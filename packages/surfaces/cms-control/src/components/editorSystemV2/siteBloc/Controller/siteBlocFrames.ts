@@ -31,9 +31,9 @@ export class SiteBlocFrames {
         const catalogs = createSiteBlocCatalogs(baseCatalog, catalogue, definition);
         this.view.shell.setCatalog(catalogs.structure);
         this.view.shell.setEditingPolicy({
-            bindings: false,
-            conditions: false,
-            repeats: false,
+            bindings: true,
+            conditions: true,
+            repeats: true,
             looseMedia: false,
             canInsertTag: (tag, entry) => this.canInsertStructureTag(catalogs.structureTags, tag, entry),
         });

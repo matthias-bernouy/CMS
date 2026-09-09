@@ -4,7 +4,14 @@ import {
     isSiteBlocNativeAttributeAllowed,
     isSiteBlocNativeStructureTag,
 } from "cms-content/core/validation/blocs/nativeHtml";
+import {
+    isCmsBindingAttribute,
+    nativeBindingAttributeIssue,
+    nativeBindingElementIssue,
+    nativeFormBindingIssue,
+} from "cms-content/core/validation/blocs/nativeBindings";
 import { nativeAttributeSetIssue } from "cms-content/core/validation/blocs/nativeAttributeValues";
+import { CMS_BINDING_RUNTIME_ATTRIBUTES } from "cms-content/interfaces/Editor/BindingSyntax";
 import type { SiteBlocNode } from "cms-content/interfaces/blocs";
 
 export function validateNativeSiteBlocNode(
@@ -25,7 +32,11 @@ export function validateNativeSiteBlocNode(
     if (["strong", "em", "code"].includes(node.tag) && !directCustomChild && !parentTagSupportsRichText(parentTag)) {
         throw new ContentValidationError(field, `native <${node.tag}> is only allowed inside rich text`);
     }
+    const staticAttributes: Record<string, string> = {};
     for (const [attribute, value] of Object.entries(node.attributes)) {
+        if (isCmsBindingAttribute(attribute)) {
+            continue;
+        }
         if (attribute !== attribute.toLowerCase() || !isSiteBlocNativeAttributeAllowed(node.tag, attribute)) {
             throw new ContentValidationError(field, `attribute "${attribute}" is not allowed on native <${node.tag}>`);
         }
@@ -35,10 +46,40 @@ export function validateNativeSiteBlocNode(
         ) {
             throw new ContentValidationError(field, "native slot placement must target a named custom-element slot");
         }
+        staticAttributes[attribute] = value;
     }
-    const valueIssue = nativeAttributeSetIssue(node.tag, node.attributes);
+    const valueIssue = nativeAttributeSetIssue(node.tag, staticAttributes);
     if (valueIssue) {
         throw new ContentValidationError(field, valueIssue);
+    }
+    if (node.tag === "form") {
+        const formIssue = nativeFormBindingIssue(node.attributes);
+        if (formIssue) {
+            throw new ContentValidationError(field, formIssue);
+        }
+    }
+}
+
+export function validateSiteBlocBindingAttributes(node: Extract<SiteBlocNode, { kind: "bloc" }>, field: string): void {
+    const elementIssue = nativeBindingElementIssue(node.tag, node.attributes);
+    if (elementIssue) {
+        throw new ContentValidationError(field, elementIssue);
+    }
+    for (const [attribute, value] of Object.entries(node.attributes)) {
+        const normalized = attribute.toLowerCase();
+        if (normalized === CMS_BINDING_RUNTIME_ATTRIBUTES.ready) {
+            throw new ContentValidationError(field, "CMS runtime binding state cannot be persisted");
+        }
+        if (!isCmsBindingAttribute(attribute)) {
+            continue;
+        }
+        if (attribute !== normalized) {
+            throw new ContentValidationError(field, `CMS binding attribute "${attribute}" must be lower-case`);
+        }
+        const issue = nativeBindingAttributeIssue(attribute, value);
+        if (issue) {
+            throw new ContentValidationError(field, issue);
+        }
     }
 }
 

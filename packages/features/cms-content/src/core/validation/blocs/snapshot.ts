@@ -2,7 +2,11 @@ import { ContentValidationError } from "cms-content/core/validation/errors";
 import { isValidCustomElementTag } from "cms-content/core/validation/predicates";
 import { validateSiteBlocDefaultContent } from "cms-content/core/validation/documents/nativeContent";
 import { isSiteBlocNativeStructureTag } from "cms-content/core/validation/blocs/nativeHtml";
-import { isSiteBlocStructureTag, validateNativeSiteBlocNode } from "cms-content/core/validation/blocs/nativeStructure";
+import {
+    isSiteBlocStructureTag,
+    validateNativeSiteBlocNode,
+    validateSiteBlocBindingAttributes,
+} from "cms-content/core/validation/blocs/nativeStructure";
 import type { SiteBlocNode, SiteBlocSlot, SiteBlocSnapshot } from "cms-content/interfaces/blocs";
 
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
@@ -142,6 +146,7 @@ function validateNode(
     if (!Array.isArray(node.children)) {
         throw new ContentValidationError(field, "children array expected");
     }
+    validateSiteBlocBindingAttributes(node, field);
     if (isSiteBlocNativeStructureTag(node.tag)) {
         validateNativeSiteBlocNode(node, field, parentTag);
     }

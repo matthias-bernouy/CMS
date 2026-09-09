@@ -9,6 +9,10 @@ const INFRASTRUCTURE: Readonly<Record<string, string>> = {
         "The declarative form transport submits serialized binding state.",
     "packages/surfaces/cms-control/src/components/editorSystemV2/documentMutations.ts":
         "The editor document lifecycle persists authored document changes.",
+    "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/account/onboarding/stripe-connect-onboarding/Bloc.ts":
+        "The provider widget exchanges identity data directly for a single-use Stripe account token.",
+    "packages/resources/official-integrations/integrations/collections/mossa/blocs/domains/commerce/offers/pricing/commerce-offer-price-form/stripe-account-token.ts":
+        "The provider adapter exchanges identity data directly for a single-use Stripe account token.",
 };
 
 export function networkPolicy(

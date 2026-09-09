@@ -58,6 +58,12 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     if (name === CMS_BINDING_ATTRIBUTES.sourceBody) {
         return isTypedSourceBody(value) ? null : "CMS source body must be a typed parameter map";
     }
+    if (name === CMS_BINDING_ATTRIBUTES.sourceDelay) {
+        const delay = Number(value);
+        return /^\d+$/.test(value) && Number.isSafeInteger(delay) && delay <= 5000
+            ? null
+            : "CMS source delay must be an integer between 0 and 5000 milliseconds";
+    }
     if (name === CMS_BINDING_ATTRIBUTES.sourceId) {
         return SOURCE_ID.test(value) ? null : "CMS source id must be a safe identifier";
     }
@@ -125,8 +131,12 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
     if (!method || !FORM_METHODS.has(method)) {
         return "native forms require a controlled CMS source method";
     }
-    if (attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] !== "submit") {
-        return 'native forms require cms-source-trigger="submit"';
+    const trigger = attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger];
+    if (trigger !== "submit" && trigger !== "change") {
+        return 'native forms require cms-source-trigger="submit" or "change"';
+    }
+    if (attributes[CMS_BINDING_ATTRIBUTES.sourceDelay] !== undefined && trigger !== "change") {
+        return 'CMS source delay requires cms-source-trigger="change"';
     }
     if (attributes[CMS_BINDING_ATTRIBUTES.sourceSerialization] !== undefined && method === "GET") {
         return "CMS typed-json serialization requires a request-body form method";
@@ -135,6 +145,7 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
         CMS_BINDING_ATTRIBUTES.sourceSerialization,
         CMS_BINDING_ATTRIBUTES.sourceSuccessReload,
         CMS_BINDING_ATTRIBUTES.sourceBody,
+        CMS_BINDING_ATTRIBUTES.sourceDelay,
         CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
         CMS_BINDING_ATTRIBUTES.sourceId,
         CMS_BINDING_ATTRIBUTES.sourcePublish,

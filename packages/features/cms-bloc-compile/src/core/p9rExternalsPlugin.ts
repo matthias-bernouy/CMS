@@ -37,7 +37,7 @@ export const p9rExternalsPlugin: BunPlugin = {
     setup(build) {
         build.onResolve(
             {
-                filter: /^@bernouy\/(?:components\/base|cms(?:-control)?\/component|cms-content\/editor|cms(?:-control)?\/editor|cms-source-images\/browser)$/,
+                filter: /^@bernouy\/(?:components\/(?:base|binding)|cms(?:-control)?\/component|cms-content\/editor|cms(?:-control)?\/editor|cms-source-images\/browser)$/,
             },
             (args) => ({ path: args.path, namespace: "p9r-extern" }),
         );
@@ -52,6 +52,19 @@ export const p9rExternalsPlugin: BunPlugin = {
                         "export const clearResponsiveSourceImageAttributes = window.p9r.clearResponsiveSourceImageAttributes;",
                         "export const clearResponsiveSourceImageElement = window.p9r.clearResponsiveSourceImageElement;",
                         "export const syncResponsiveSourceImageElement = window.p9r.syncResponsiveSourceImageElement;",
+                    ].join("\n"),
+                    loader: "js",
+                };
+            }
+            if (args.path === "@bernouy/components/binding") {
+                return {
+                    contents: [
+                        "export const observeSource = window.p9r.observeSource;",
+                        "export const readSourceData = window.p9r.readSourceData;",
+                        "export const refreshSourceContext = window.p9r.refreshSourceContext;",
+                        "export const setSourceContext = window.p9r.setSourceContext;",
+                        "export const sourceFormRequest = window.p9r.sourceFormRequest;",
+                        "export const SourceFormError = window.p9r.SourceFormError;",
                     ].join("\n"),
                     loader: "js",
                 };
@@ -79,6 +92,7 @@ export const p9rExternalsPlugin: BunPlugin = {
                     `    repeat: "cms-repeat",\n` +
                     `    source: "cms-source",\n` +
                     `    sourceBody: "cms-source-body",\n` +
+                    `    sourceDelay: "cms-source-delay",\n` +
                     `    sourceInheritQuery: "cms-source-inherit-query",\n` +
                     `    sourceId: "cms-source-id",\n` +
                     `    sourceMethod: "cms-source-method",\n` +
@@ -95,7 +109,7 @@ export const p9rExternalsPlugin: BunPlugin = {
                     `export const CMS_SOURCE_STATUS_SCOPE = "$source";\n` +
                     `export const CMS_SOURCES_STATUS_SCOPE = "$sources";\n` +
                     `export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"];\n` +
-                    `export const CMS_SOURCE_TRIGGERS = ["auto", "submit"];\n` +
+                    `export const CMS_SOURCE_TRIGGERS = ["auto", "submit", "change"];\n` +
                     `export const Editor = window.p9rEditor.Editor;\n` +
                     `export const registerEditor = (props) => window.p9rEditor.registerEditor({\n` +
                     `    ...props,\n` +

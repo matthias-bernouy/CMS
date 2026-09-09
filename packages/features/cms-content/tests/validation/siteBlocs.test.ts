@@ -79,6 +79,52 @@ describe("site bloc validation", () => {
         ).toThrow(ContentValidationError);
     });
 
+    test("accepts validated bindings in the light-DOM site bloc structure", () => {
+        const valid = validateSiteBlocSnapshot(
+            siteBlocSnapshot({
+                structure: [
+                    {
+                        kind: "bloc",
+                        tag: "site-results",
+                        attributes: {
+                            "cms-source": "/.cms/sources/catalog/search?q=#{query} as results",
+                            "cms-source-id": "catalogResults",
+                        },
+                        children: [
+                            {
+                                kind: "bloc",
+                                tag: "section",
+                                attributes: { "cms-condition": "results.items" },
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            }),
+            "site-feature-panel",
+        );
+
+        expect(valid.structure).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    attributes: expect.objectContaining({
+                        "cms-source": "/.cms/sources/catalog/search?q=#{query} as results",
+                    }),
+                }),
+            ]),
+        );
+        for (const attributes of [{ "cms-source": "https://example.com/private" }, { "cms-ready": "" }]) {
+            expect(() =>
+                validateSiteBlocSnapshot(
+                    siteBlocSnapshot({
+                        structure: [{ kind: "bloc", tag: "site-results", attributes, children: [] }],
+                    }),
+                    "site-feature-panel",
+                ),
+            ).toThrow(ContentValidationError);
+        }
+    });
+
     test("rejects unknown slots, duplicate ids, self references, and invalid public names", () => {
         expect(() =>
             validateSiteBlocSnapshot(siteBlocSnapshot({ structure: [{ kind: "slot", slotId: "missing" }] })),
@@ -225,7 +271,37 @@ describe("site bloc validation", () => {
         expect(valid.defaultContent).toContain('cms-source-success-redirect-param="returnTo"');
     });
 
-    test("rejects native forms from binding-free private structure", () => {
+    test("allows controlled CMS forms in the site bloc structure", () => {
+        const form = {
+            kind: "bloc" as const,
+            tag: "form",
+            attributes: {
+                "cms-source": "/.cms/sources/system-auth/logout as logout",
+                "cms-source-method": "POST",
+                "cms-source-trigger": "submit",
+                "cms-source-success-redirect": "/login",
+            },
+            children: [],
+        };
+
+        const valid = validateSiteBlocSnapshot(
+            siteBlocSnapshot({
+                structure: [form],
+            }),
+            "site-feature-panel",
+        );
+        expect(valid.structure).toEqual([form]);
+        const autosaveForm = {
+            ...form,
+            attributes: {
+                ...form.attributes,
+                "cms-source-trigger": "change",
+                "cms-source-delay": "650",
+            },
+        };
+        expect(
+            validateSiteBlocSnapshot(siteBlocSnapshot({ structure: [autosaveForm] }), "site-feature-panel").structure,
+        ).toEqual([autosaveForm]);
         expect(() =>
             validateSiteBlocSnapshot(
                 siteBlocSnapshot({
@@ -233,7 +309,7 @@ describe("site bloc validation", () => {
                 }),
                 "site-feature-panel",
             ),
-        ).toThrow(/invalid bloc tag "form"/);
+        ).toThrow(/declared CMS source endpoint/);
     });
 
     test("enforces native list children in private structure", () => {

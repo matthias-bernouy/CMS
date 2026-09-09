@@ -35,6 +35,47 @@ describe("Source — submit trigger lifecycle", () => {
         runtime.stop();
     });
 
+    test("change-triggered forms debounce edits and submit the latest queued values", async () => {
+        const bodies: string[] = [];
+        let releaseFirst: (() => void) | undefined;
+        globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+            bodies.push(String(init?.body));
+            if (bodies.length === 1) {
+                await new Promise<void>((resolve) => {
+                    releaseFirst = resolve;
+                });
+            }
+            return new Response(JSON.stringify({ ok: true }), {
+                headers: { "content-type": "application/json" },
+            });
+        }) as typeof fetch;
+
+        const root = el(`
+            <form cms-source="/api/preferences as result" cms-source-trigger="change" cms-source-delay="20" cms-source-method="POST" cms-source-success-reset="false">
+                <input name="club" value="initial">
+            </form>
+        `) as HTMLFormElement;
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        const input = root.querySelector<HTMLInputElement>("input")!;
+
+        input.value = "first";
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitFor(() => bodies.length === 1);
+        input.value = "second";
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        input.value = "latest";
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        releaseFirst?.();
+        await waitFor(() => bodies.length === 2);
+
+        expect(JSON.parse(bodies[0]!)).toEqual({ club: "first" });
+        expect(JSON.parse(bodies[1]!)).toEqual({ club: "latest" });
+        runtime.stop();
+    });
+
     test("submit-triggered sources wait for the parent form submit", async () => {
         let calls = 0;
         const urls: string[] = [];

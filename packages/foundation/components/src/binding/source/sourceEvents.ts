@@ -1,4 +1,10 @@
-import { SOURCE_ATTR, SOURCE_TRIGGER_ATTR, isSourceTrigger, type SourceTrigger } from "../core/attrs";
+import {
+    SOURCE_ATTR,
+    SOURCE_DELAY_ATTR,
+    SOURCE_TRIGGER_ATTR,
+    isSourceTrigger,
+    type SourceTrigger,
+} from "../core/attrs";
 import { listenReactiveUrlChanges } from "./runtime/reactiveUrl";
 import { sourceUrl } from "./runtime/sourceSpec";
 
@@ -35,13 +41,31 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
     if (trigger === "submit" || trigger === "change") {
         const form = asOwnerForm(source) ?? source.closest("form");
         const eventName = trigger === "submit" ? "submit" : "change";
-        const listener = trigger === "submit" ? callbacks.onSubmit : callbacks.onChange;
-        form?.addEventListener(eventName, listener as EventListener);
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        const onChange = (event: Event) => {
+            const delay = sourceDelay(source);
+            if (delay === 0) {
+                callbacks.onChange(event);
+                return;
+            }
+            if (timer !== null) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(() => {
+                timer = null;
+                callbacks.onChange(event);
+            }, delay);
+        };
+        const listener = (trigger === "submit" ? callbacks.onSubmit : onChange) as EventListener;
+        form?.addEventListener(eventName, listener);
         return () => {
             for (const eventName of reloadEvents) {
                 doc.removeEventListener(eventName, onReload);
             }
-            form?.removeEventListener(eventName, listener as EventListener);
+            form?.removeEventListener(eventName, listener);
+            if (timer !== null) {
+                clearTimeout(timer);
+            }
         };
     }
 
@@ -56,6 +80,11 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
         }
         stopUrlListeners();
     };
+}
+
+function sourceDelay(source: Element): number {
+    const value = Number(source.getAttribute(SOURCE_DELAY_ATTR));
+    return Number.isSafeInteger(value) && value >= 0 && value <= 5000 ? value : 0;
 }
 
 function asOwnerForm(source: Element): HTMLFormElement | null {

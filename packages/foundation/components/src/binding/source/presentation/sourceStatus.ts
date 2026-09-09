@@ -6,6 +6,7 @@ export type SourceStatusValue = {
     loaded: boolean;
     empty: boolean;
     error: boolean;
+    data?: unknown;
     refreshing?: boolean;
     refreshError?: boolean;
     status?: unknown;
@@ -35,6 +36,7 @@ export function statusValue(state: SourceState, value: unknown): SourceStatusVal
         loaded: state === "loaded",
         empty: state === "empty",
         error: state === "error",
+        ...(state === "loaded" || state === "empty" ? { data: value } : {}),
         status: isStatusObject(value) ? value.status : undefined,
         message: isStatusObject(value) ? value.message : undefined,
     };

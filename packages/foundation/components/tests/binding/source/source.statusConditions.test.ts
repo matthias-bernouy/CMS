@@ -103,7 +103,7 @@ describe("Source — source status conditions", () => {
     test("explicit source status conditions can target an outer nested source", async () => {
         globalThis.fetch = (async (url: string) => {
             if (url === "/outer") {
-                return res(200, JSON.stringify({ innerUrl: "/inner" }));
+                return res(200, JSON.stringify({ innerUrl: "/inner", label: "Parent data" }));
             }
             if (url === "/inner") {
                 return res(200, JSON.stringify({ name: "Nested" }));
@@ -115,6 +115,7 @@ describe("Source — source status conditions", () => {
                 <section cms-source="/outer" cms-source-id="outer">
                     <section cms-source="{{ innerUrl }}" cms-source-id="inner">
                         <p class="outer-loaded" cms-condition="$sources.outer.loaded">Outer {{ $sources.outer.loaded }}</p>
+                        <p class="outer-data">{{ $sources.outer.data.label }}</p>
                         <p class="inner-loaded" cms-condition="$sources.inner.loaded">Inner {{ name }}</p>
                     </section>
                 </section>
@@ -127,6 +128,7 @@ describe("Source — source status conditions", () => {
         await waitFor(() => text(root.querySelector(".inner-loaded")) === "Inner Nested");
 
         expect(text(root.querySelector(".outer-loaded"))).toBe("Outer true");
+        expect(text(root.querySelector(".outer-data"))).toBe("Parent data");
         runtime.stop();
     });
 

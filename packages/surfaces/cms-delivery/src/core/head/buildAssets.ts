@@ -19,7 +19,10 @@ export function buildAssetPreloads(
     stylePreload.setAttribute("href", assets.styleUrl);
     head.appendChild(stylePreload);
 
-    const scriptUrls = options.includeBindingCore ? [...assets.scriptUrls, assets.bindingCoreUrl] : assets.scriptUrls;
+    const [componentUrl, ...blocUrls] = assets.scriptUrls;
+    const scriptUrls = options.includeBindingCore
+        ? [...(componentUrl ? [componentUrl] : []), assets.bindingCoreUrl, ...blocUrls]
+        : assets.scriptUrls;
     for (const src of new Set(scriptUrls)) {
         const preload = document.createElement("link");
         preload.setAttribute("rel", "preload");

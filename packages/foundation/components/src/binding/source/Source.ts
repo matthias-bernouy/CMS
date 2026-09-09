@@ -41,6 +41,7 @@ export class Source {
     private pendingRefresh: { url: string; promise: Promise<boolean> } | null = null;
     private dataUrl: string | null = null;
     private selectionEpoch = 0;
+    private pendingChange = false;
     private lastUrl: string | null = null;
     private status: SourceStatusValue = {
         loading: false,
@@ -76,9 +77,19 @@ export class Source {
     private readonly onChange = () => {
         const form = ownerForm(this.el, this.el.ownerDocument) ?? this.el.closest("form");
         const valid = typeof form?.reportValidity === "function" ? form.reportValidity() : true;
-        if (valid && this.el.isConnected) {
-            void this.run();
+        if (!valid || !this.el.isConnected) {
+            return;
         }
+        if (this.transaction?.locked) {
+            this.pendingChange = true;
+            return;
+        }
+        void this.run().finally(() => {
+            if (this.pendingChange) {
+                this.pendingChange = false;
+                this.onChange();
+            }
+        });
     };
 
     constructor(
@@ -254,6 +265,7 @@ export class Source {
                     return false;
                 }
                 this.abort = null;
+                rememberSourceData(this.el, result);
                 this.presenter.result(spec.alias, result);
                 this.afterRender();
                 this.submission!.complete(result, spec.alias);

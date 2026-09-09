@@ -18,6 +18,9 @@ GlobalRegistrator.register({
     url: "http://localhost:4999/cms/admin/editor",
 });
 
+const { observeSource, readSourceData, refreshSourceContext, setSourceContext, sourceFormRequest, SourceFormError } =
+    await import("@bernouy/components/binding");
+
 // happy-dom does not implement `attachInternals()` yet. Several w13c inputs
 // rely on `formAssociated = true` and call `attachInternals()` in their
 // constructor — polyfill a no-op stub so they can be instantiated in tests.
@@ -43,4 +46,11 @@ if (!(HTMLElement.prototype as any).attachInternals) {
 (globalThis as any).AbortController = BunAbortController;
 (globalThis as any).AbortSignal = BunAbortSignal;
 
-(globalThis as any).p9r = {};
+(globalThis as any).p9r = {
+    observeSource,
+    readSourceData,
+    refreshSourceContext,
+    setSourceContext,
+    sourceFormRequest,
+    SourceFormError,
+};

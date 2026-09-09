@@ -1,4 +1,12 @@
 import { Component } from "@bernouy/components/base";
+import {
+    observeSource,
+    readSourceData,
+    refreshSourceContext,
+    setSourceContext,
+    sourceFormRequest,
+    SourceFormError,
+} from "@bernouy/components/binding";
 import { SOURCE_IMAGE_WIDTHS } from "@bernouy/cms-source-images/browser";
 import {
     createResponsiveSourceImageBrowserApi,
@@ -9,6 +17,12 @@ const sourceImages = createResponsiveSourceImageBrowserApi({ public: false, priv
 
 (window as any).p9r = {
     Component,
+    observeSource,
+    readSourceData,
+    refreshSourceContext,
+    setSourceContext,
+    sourceFormRequest,
+    SourceFormError,
     SOURCE_IMAGE_WIDTHS,
     ...sourceImages,
 };

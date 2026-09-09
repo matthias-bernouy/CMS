@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { SiteBlocDefinition } from "@bernouy/cms-content";
+import type { Shell } from "@bernouy/cms-editor-system-v2";
 import { BrowserWindow, GlobalWindow } from "happy-dom";
 import "cms-control/components/editorSystemV2/siteBloc/SiteBlocBuilder";
 
@@ -56,9 +57,10 @@ describe("site bloc builder", () => {
         const builder = document.createElement("cms-site-bloc-builder");
         builder.setAttribute("bloc-id", "site-card");
         document.body.append(builder);
-        const shell = builder.shadowRoot!.querySelector("cms-editor-shell")!;
+        const shell = builder.shadowRoot!.querySelector("cms-editor-shell") as Shell;
         const topBar = shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!;
         await waitFor(() => topBar.shadowRoot?.querySelector(".name")?.textContent === "Site card");
+        expect(shell.editingPolicy).toMatchObject({ bindings: true, conditions: true, repeats: true });
         const toolbarButton = (selector: string) => topBar.shadowRoot!.querySelector<HTMLButtonElement>(selector)!;
         const canvas = shell.shadowRoot!.querySelector("cms-editor-v2-canvas")!;
         const initialEditorUrl = canvas.getAttribute("editor-frame-url");

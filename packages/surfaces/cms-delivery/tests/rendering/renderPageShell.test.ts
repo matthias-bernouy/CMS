@@ -33,8 +33,8 @@ function makeCtx(): RenderContext {
             componentUrl: "/.cms/assets/component.js?v=c",
             bindingCoreUrl: BINDING_CORE_URL,
             styleUrl: "/.cms/style?v=s",
-            blocUrls: [],
-            scriptUrls: ["/.cms/assets/component.js?v=c"],
+            blocUrls: ["/.cms/blocs/example.js?v=b"],
+            scriptUrls: ["/.cms/assets/component.js?v=c", "/.cms/blocs/example.js?v=b"],
         }),
         faviconUrl: "/favicon.ico",
         headInjectors: [],
@@ -65,6 +65,12 @@ describe("renderPage — binding core wrapper", () => {
         expect(html).toContain("[cms-source]:not([cms-ready]){visibility:hidden}");
         expect(html).not.toContain("body{visibility:hidden}");
         expect(html).toContain(BINDING_CORE_URL);
+        const { document } = parseHTML(html);
+        expect(Array.from(document.querySelectorAll("script[src]"), (script) => script.getAttribute("src"))).toEqual([
+            "/.cms/assets/component.js?v=c",
+            BINDING_CORE_URL,
+            "/.cms/blocs/example.js?v=b",
+        ]);
     });
 
     test("includes CSP origins declared by successful integration installations", async () => {

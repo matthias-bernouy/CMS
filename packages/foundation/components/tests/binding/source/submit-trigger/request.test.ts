@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { CMS_SOURCE_SUCCESS_EVENT, type FormSubmitResult } from "../../../../binding";
+import {
+    CMS_SOURCE_SUCCESS_EVENT,
+    readSourceData,
+    type FormSubmitResult,
+    sourceFormRequest,
+    SourceFormError,
+} from "../../../../binding";
 import { BindingRuntime } from "../../../../src/binding/runtime/BindingRuntime";
 import { el, resetDom, settle, text, waitFor } from "../../testUtils";
 
@@ -60,6 +66,7 @@ describe("Source — submit request", () => {
         expect(captured.init?.body).toBe(JSON.stringify({ email: "ada@example.com" }));
         expect(events.source?.status).toBe(201);
         expect(events.form?.status).toBe(201);
+        expect(readSourceData(root)).toMatchObject({ ok: true, status: 201, body: { id: "42" } });
         expect(root.querySelector("input")).toBe(input);
         expect(input.value).toBe("");
         runtime.stop();
@@ -99,5 +106,59 @@ describe("Source — submit request", () => {
             subscribed: "true",
         });
         runtime.stop();
+    });
+
+    test("programmatic requests submit the declarative source form through binding events", async () => {
+        const host = el('<div><form cms-source-id="save" cms-ready></form></div>');
+        const form = host.querySelector("form")!;
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            expect(form.querySelector<HTMLInputElement>('[name="name"]')?.value).toBe("Ada");
+            expect(form.querySelector('[name="count"]')?.getAttribute("cms-form-value-type")).toBe("number");
+            expect(form.querySelector('[name="enabled"]')?.getAttribute("cms-form-value-type")).toBe("boolean");
+            expect(form.querySelectorAll('[name="tags[]"]')).toHaveLength(2);
+            expect(form.querySelector('[name="profile[city]"]')).not.toBeNull();
+            form.dispatchEvent(
+                new CustomEvent("cms-source:success", {
+                    bubbles: true,
+                    detail: { ok: true, status: 200, statusText: "OK", body: { saved: true }, message: "", form },
+                }),
+            );
+        });
+
+        await expect(
+            sourceFormRequest(host, "save", {
+                name: "Ada",
+                count: 2,
+                enabled: false,
+                tags: ["binding", "cms"],
+                profile: { city: "Paris" },
+            }),
+        ).resolves.toEqual({ saved: true });
+    });
+
+    test("programmatic requests expose declarative source failures", async () => {
+        const host = el('<div><form cms-source-id="save" cms-ready></form></div>');
+        const form = host.querySelector("form")!;
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            form.dispatchEvent(
+                new CustomEvent("cms-source:failed", {
+                    bubbles: true,
+                    detail: {
+                        ok: false,
+                        status: 422,
+                        statusText: "Unprocessable Content",
+                        body: { error: "Invalid profile" },
+                        message: "",
+                        form,
+                    },
+                }),
+            );
+        });
+
+        const error = await sourceFormRequest(host, "save").catch((reason) => reason);
+        expect(error).toBeInstanceOf(SourceFormError);
+        expect(error).toMatchObject({ message: "Invalid profile", status: 422, body: { error: "Invalid profile" } });
     });
 });

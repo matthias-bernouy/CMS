@@ -32,6 +32,30 @@ async function waitFor(p: () => boolean, tries = 40) {
 }
 
 describe("ParamSync — seed from param on start", () => {
+    test("preserves the authored control value when the param is absent", () => {
+        const el = input({ "cms-param-sync": "status", value: "all" });
+        const ps = new ParamSync(el);
+        ps.start();
+
+        expect(el.value).toBe("all");
+        ps.dispose();
+    });
+
+    test("restores the authored control value when navigation removes the param", async () => {
+        location.href = "http://localhost/?status=draft";
+        const el = input({ "cms-param-sync": "status", value: "all" });
+        const ps = new ParamSync(el);
+        ps.start();
+        expect(el.value).toBe("draft");
+
+        location.href = "http://localhost/";
+        document.dispatchEvent(new Event(PARAMS_CHANGE_EVENT));
+        await waitFor(() => el.value === "all");
+
+        expect(el.value).toBe("all");
+        ps.dispose();
+    });
+
     test("populates the control from an existing param", () => {
         location.href = "http://localhost/admin/pages?search=hello";
         const el = input({ "cms-param-sync": "search" });
@@ -48,6 +72,36 @@ describe("ParamSync — seed from param on start", () => {
         ps.start();
 
         expect(el.value).toBe("300");
+        ps.dispose();
+    });
+
+    test("waits for a custom control definition before assigning its value", async () => {
+        location.href = "http://localhost/?priceMax=175";
+        const tag = "param-sync-late-control";
+        const el = document.createElement(tag) as HTMLElement & { value: string };
+        el.setAttribute("cms-param-sync", "priceMax");
+        document.body.appendChild(el);
+        const ps = new ParamSync(el);
+        ps.start();
+
+        expect(Object.hasOwn(el, "value")).toBe(false);
+        customElements.define(
+            tag,
+            class extends HTMLElement {
+                private current = "";
+
+                get value(): string {
+                    return this.current;
+                }
+
+                set value(value: string) {
+                    this.current = value;
+                }
+            },
+        );
+
+        await waitFor(() => el.value === "175");
+        expect(el.value).toBe("175");
         ps.dispose();
     });
 });

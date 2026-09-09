@@ -7,6 +7,8 @@ describe("delivery system runtime asset", () => {
         const source = new TextDecoder().decode(entry.raw);
 
         expect(source).toContain("cms-binding-core");
+        expect(source).toContain("setSourceContext");
+        expect(source).toContain("sourceFormRequest");
         expect(source).not.toContain("cms-signup-legal-consent");
         expect(source).not.toContain("cms-login-methods");
         expect(source).not.toContain("node:crypto");

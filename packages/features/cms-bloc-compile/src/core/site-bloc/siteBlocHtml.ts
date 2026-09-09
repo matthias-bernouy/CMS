@@ -1,13 +1,11 @@
-import {
-    CMS_BINDING_ATTRIBUTES,
-    CMS_BINDING_CORE_TAG,
-    CMS_BINDING_RUNTIME_ATTRIBUTES,
-} from "@bernouy/cms-content/editor";
+import { CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES } from "@bernouy/cms-content/editor";
 import {
     COMPOSITION_CONTROLLER_ATTRIBUTE,
+    isCmsBindingAttribute,
     isSiteBlocNativeAttributeAllowed,
     isSiteBlocNativeStructureTag,
     isValidCustomElementTag,
+    nativeBindingAttributeIssue,
     validateNativeSiteBlocNode,
     validateSiteBlocDefaultContent,
     type SiteBlocNode,
@@ -19,10 +17,7 @@ const TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const ATTRIBUTE = /^[A-Za-z_:][A-Za-z0-9_.:-]*$/;
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
-const BINDING_ATTRIBUTES = new Set<string>([
-    ...Object.values(CMS_BINDING_ATTRIBUTES),
-    ...Object.values(CMS_BINDING_RUNTIME_ATTRIBUTES),
-]);
+const BINDING_RUNTIME_ATTRIBUTES = new Set<string>(Object.values(CMS_BINDING_RUNTIME_ATTRIBUTES));
 const VOID_TAGS = new Set([
     "area",
     "base",
@@ -120,8 +115,18 @@ function serializeAttribute(tag: string, name: string, value: string): string {
         throw new Error(`Invalid site bloc attribute name "${name}"`);
     }
     const normalized = name.toLowerCase();
-    if (normalized === "style" || normalized.startsWith("on") || BINDING_ATTRIBUTES.has(normalized)) {
-        throw new Error(`Site bloc attribute "${name}" is forbidden in the private structure`);
+    if (normalized === "style" || normalized.startsWith("on") || BINDING_RUNTIME_ATTRIBUTES.has(normalized)) {
+        throw new Error(`Site bloc attribute "${name}" is forbidden in the site bloc structure`);
+    }
+    if (isCmsBindingAttribute(normalized)) {
+        if (name !== normalized) {
+            throw new Error(`CMS binding attribute "${name}" must be lower-case`);
+        }
+        const issue = nativeBindingAttributeIssue(normalized, value);
+        if (issue) {
+            throw new Error(issue);
+        }
+        return ` ${normalized}="${escapeBindingAttribute(value)}"`;
     }
     if (
         isSiteBlocNativeStructureTag(tag) &&
@@ -165,6 +170,10 @@ function escapeText(value: string): string {
 
 function escapeAttribute(value: string): string {
     assertStaticValue(value, "attribute value");
+    return escapeText(value).replaceAll('"', "&quot;");
+}
+
+function escapeBindingAttribute(value: string): string {
     return escapeText(value).replaceAll('"', "&quot;");
 }
 

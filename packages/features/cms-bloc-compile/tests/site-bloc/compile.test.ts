@@ -45,7 +45,7 @@ describe("generated site bloc compilation", () => {
         expect(bloc.source).toEqual(encoded);
     });
 
-    test("rejects invalid slot placeholders and authored private behavior", () => {
+    test("accepts declarative bindings and rejects unsafe site bloc behavior", () => {
         const base = definition();
         expect(() =>
             generateSiteBlocSourceBundle(base, {
@@ -63,22 +63,43 @@ describe("generated site bloc compilation", () => {
                 structure: [{ kind: "slot", slotId: "title" }],
             }),
         ).toThrow('Site bloc slot "content" has no placeholder');
-        expect(() =>
-            generateSiteBlocSourceBundle(base, {
-                ...base.draft,
-                structure: [
-                    {
-                        kind: "bloc",
-                        tag: "basic-container",
-                        attributes: { "cms-source": "/api/items" },
-                        children: [
-                            { kind: "slot", slotId: "title" },
-                            { kind: "slot", slotId: "content" },
-                        ],
+        const bound = generateSiteBlocSourceBundle(base, {
+            ...base.draft,
+            structure: [
+                {
+                    kind: "bloc",
+                    tag: "basic-container",
+                    attributes: {
+                        "cms-source": "/api/items?query=#{query} as items",
+                        "cms-source-id": "items",
                     },
-                ],
-            }),
-        ).toThrow('attribute "cms-source" is forbidden');
+                    children: [
+                        { kind: "slot", slotId: "title" },
+                        { kind: "slot", slotId: "content" },
+                    ],
+                },
+            ],
+        });
+        expect(bound["template.html"]).toContain('cms-source="/api/items?query=#{query} as items"');
+
+        for (const attributes of [{ "cms-source": "https://example.com/items" }, { "cms-ready": "" }]) {
+            expect(() =>
+                generateSiteBlocSourceBundle(base, {
+                    ...base.draft,
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "basic-container",
+                            attributes,
+                            children: [
+                                { kind: "slot", slotId: "title" },
+                                { kind: "slot", slotId: "content" },
+                            ],
+                        },
+                    ],
+                }),
+            ).toThrow();
+        }
 
         for (const [name, value] of [
             ["style", "color: red"],

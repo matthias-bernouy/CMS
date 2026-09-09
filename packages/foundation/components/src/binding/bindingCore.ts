@@ -56,6 +56,8 @@ export type { FormSubmitResult } from "./submit/formSubmit";
 export { readSourceData, setSourceData } from "./source/values";
 export { reloadSource } from "./source/runtime/refresh/registry";
 export { setSourceContext, refreshSourceContext, type SourceContext } from "./source/presentation/sourceContext";
+export { observeSource, type SourceObservation } from "./source/runtime/observation";
+export { sourceFormRequest, SourceFormError } from "./source/runtime/formRequest";
 
 /** Filter set passed to every source's interpolation. Empty until a host wires
  *  one in via `setBindingFilters` (the concrete filters are a later step). */

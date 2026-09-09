@@ -29,7 +29,10 @@ export class ParamSync {
     private timer: ReturnType<typeof setTimeout> | null = null;
     private reflectTimer: ReturnType<typeof setTimeout> | null = null;
     private last: string | null = null;
+    private defaultValue: string | null = null;
     private reflecting = false;
+    private active = false;
+    private waitingForDefinition = false;
     private childObserver: MutationObserver | null = null;
     private readonly onInput = () => this.schedule();
     private readonly onChange = () => this.write();
@@ -53,6 +56,7 @@ export class ParamSync {
             console.warn(`${PARAM_SYNC_ATTR}: no key — set ${PARAM_SYNC_ATTR}="<param>" or a name attribute`, this.el);
             return;
         }
+        this.active = true;
         this.reflect();
         this.el.addEventListener("input", this.onInput);
         this.el.addEventListener("change", this.onChange);
@@ -64,6 +68,7 @@ export class ParamSync {
     }
 
     dispose(): void {
+        this.active = false;
         this.el.removeEventListener("input", this.onInput);
         this.el.removeEventListener("change", this.onChange);
         document.removeEventListener(PARAMS_CHANGE_EVENT, this.onParams);
@@ -91,10 +96,14 @@ export class ParamSync {
      * so recording the intended value would wrongly dedupe a later real pick.
      */
     private reflect(): void {
+        if (!this.controlIsDefined()) {
+            return;
+        }
         if (this.timer) {
             return; // a debounced local edit is in flight — let it win
         }
-        const v = currentParams().get(this.key) ?? "";
+        this.defaultValue ??= this.currentValue();
+        const v = currentParams().get(this.key) ?? this.defaultValue;
         const el = this.el as HTMLInputElement;
         if (el.type === "checkbox") {
             const checked = v !== "" && v === (el.value || "true");
@@ -109,6 +118,24 @@ export class ParamSync {
             });
         }
         this.last = this.currentValue();
+    }
+
+    private controlIsDefined(): boolean {
+        const tag = this.el.localName;
+        const registry = this.el.ownerDocument.defaultView?.customElements;
+        if (!tag.includes("-") || !registry || registry.get(tag)) {
+            return true;
+        }
+        if (!this.waitingForDefinition) {
+            this.waitingForDefinition = true;
+            void registry.whenDefined(tag).then(() => {
+                this.waitingForDefinition = false;
+                if (this.active) {
+                    this.reflect();
+                }
+            });
+        }
+        return false;
     }
 
     private set(apply: () => void): void {

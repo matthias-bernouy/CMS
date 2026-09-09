@@ -1,5 +1,22 @@
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
-import { BindingCore } from "@bernouy/components/binding";
+import {
+    BindingCore,
+    observeSource,
+    readSourceData,
+    refreshSourceContext,
+    setSourceContext,
+    sourceFormRequest,
+    SourceFormError,
+} from "@bernouy/components/binding";
+
+Object.assign(((window as any).p9r ??= {}), {
+    observeSource,
+    readSourceData,
+    refreshSourceContext,
+    setSourceContext,
+    sourceFormRequest,
+    SourceFormError,
+});
 
 /**
  * Delivery-runtime registration for runtime-owned system blocs.
