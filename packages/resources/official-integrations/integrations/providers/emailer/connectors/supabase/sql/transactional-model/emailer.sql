@@ -97,6 +97,11 @@ create table if not exists emailer.settings (
     )
 );
 
+-- An idempotent reinstall starts with FORCE RLS from the previous successful
+-- bundle. Release it for the singleton seed; the final access file restores it
+-- before this atomic bundle commits.
+alter table emailer.settings no force row level security;
+
 insert into emailer.settings (id)
 values ('default')
 on conflict (id) do nothing;
