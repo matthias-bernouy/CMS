@@ -42,6 +42,12 @@ export function registerStaticRecoverySourceScenario(): void {
 
         expect(schema).toContain("stripe_connect.seller_recovery_exposures");
         expect(schema).toContain("stripe_connect.transfer_recovery_requests");
+        expect(schema.indexOf("no force row level security")).toBeLessThan(
+            schema.indexOf("insert into stripe_connect.platform_payout_controls"),
+        );
+        expect(schema.lastIndexOf("force row level security")).toBeGreaterThan(
+            schema.indexOf("insert into stripe_connect.platform_payout_controls"),
+        );
         expect(schema).toContain("reserve_transfer_recovery");
         expect(schema).toContain("exit when v_index >= 23");
         expect(schema).toContain("outstanding_debt_amount bigint not null default 0");

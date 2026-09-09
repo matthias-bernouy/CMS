@@ -2,6 +2,25 @@
 
 create schema if not exists stripe_connect;
 
+-- A successful prior installation leaves every protected table under FORCE
+-- RLS. Release it only for the package-owned tables that this atomic bundle may
+-- seed or backfill; the final access step restores FORCE RLS before commit.
+do $$
+declare v_table text;
+begin
+    foreach v_table in array array[
+        'accounts', 'marketplace_terms_versions', 'marketplace_terms_configuration', 'marketplace_terms_acceptances', 'platform_payout_controls', 'payments', 'payment_lifecycle_guards', 'payment_events', 'financial_operations',
+        'commerce_projection_outbox', 'commerce_projection_interventions', 'transfers', 'transfer_recovery_requests', 'transfer_reversals', 'seller_recovery_exposures', 'refunds', 'stripe_disputes',
+        'stripe_dispute_evidence', 'irreversible_dispute_action_approvals',
+        'stripe_events', 'payout_events',
+        'reconciliation_runs', 'provider_exceptions'
+    ] loop
+        if to_regclass(format('%I.%I', 'stripe_connect', v_table)) is not null then
+            execute format('alter table stripe_connect.%I no force row level security', v_table);
+        end if;
+    end loop;
+end $$;
+
 revoke all on schema stripe_connect from public;
 revoke all on schema stripe_connect from anon;
 revoke all on schema stripe_connect from authenticated;
