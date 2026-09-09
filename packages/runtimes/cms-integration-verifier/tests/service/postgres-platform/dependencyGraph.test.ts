@@ -55,6 +55,40 @@ describe("PostgreSQL dependency matrix graph", () => {
 
         expect(buildDependencyMatrixPlans(candidate, [])).toEqual([]);
     });
+
+    test("orders dependencies declared by collection resources", () => {
+        const candidate = candidatePackage({
+            schema: "cms.integration.definition.v2",
+            type: "collection",
+            kind: "candidate",
+            label: "candidate",
+            version: "1.0.0",
+            inputs: [],
+            resourceCategories: [{ id: "content", label: "Content" }],
+            resources: [
+                {
+                    id: "candidate/blocs/card",
+                    type: "bloc",
+                    artifact: "candidate-card",
+                    category: "content",
+                    endpoints: [
+                        {
+                            source: "commerce",
+                            sourceVersion: "^1.0.0",
+                            endpoint: "urn:commerce:listOffers",
+                            contractVersion: "^1.0.0",
+                        },
+                    ],
+                },
+            ],
+        });
+        const packages = [loaded("commerce", "1.0.0", "minimum"), loaded("commerce", "1.1.0", "stable")];
+
+        expect(buildDependencyMatrixPlans(candidate, packages).map((plan) => plan.packages[0]?.kind)).toEqual([
+            "commerce",
+            "commerce",
+        ]);
+    });
 });
 
 function dependency(kind: string, versionRange: string) {

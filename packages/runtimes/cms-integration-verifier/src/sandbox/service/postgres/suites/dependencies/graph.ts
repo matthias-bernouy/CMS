@@ -1,4 +1,8 @@
-import { integrationVersionSatisfies, type IntegrationDefinition } from "@bernouy/cms-integrations";
+import {
+    integrationRuntimeDependencies,
+    integrationVersionSatisfies,
+    type IntegrationDefinition,
+} from "@bernouy/cms-integrations";
 import type { DependencyMatrixPlan, LoadedCandidatePackage, LoadedDependencyPackage } from "./types";
 
 export function buildDependencyMatrixPlans(
@@ -56,14 +60,11 @@ function visitDefinition(
     visited: Set<string>,
     ordered: LoadedDependencyPackage[],
 ): void {
-    for (const dependency of [...(definition.dependencies ?? [])].toSorted((left, right) =>
+    for (const dependency of integrationRuntimeDependencies(definition).toSorted((left, right) =>
         left.kind < right.kind ? -1 : left.kind > right.kind ? 1 : 0,
     )) {
         const selected = byKind.get(dependency.kind);
         if (!selected) {
-            if (dependency.optional) {
-                continue;
-            }
             throw new TypeError(`Dependency ${selection} matrix omits required ${dependency.kind}`);
         }
         if (dependency.versionRange && !integrationVersionSatisfies(selected.version, dependency.versionRange)) {
