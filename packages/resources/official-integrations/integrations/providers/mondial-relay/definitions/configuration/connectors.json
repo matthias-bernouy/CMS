@@ -36,7 +36,7 @@
         "migration": {
             "install": {
                 "revision": 0,
-                "digest": "sha256:05e1175ae1302ab7bbf6f26d21ce72fe64ff1e2bdcaf3f43617768e890b3a365",
+                "digest": "sha256:5b7d1285ca33ceabb88e0cf9dc2d206ac2b57d4f21231fbada5173168cd3639a",
                 "coveredMigrations": []
             },
             "migrations": [],
