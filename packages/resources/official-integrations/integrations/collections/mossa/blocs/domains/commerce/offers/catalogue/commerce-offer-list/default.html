@@ -40,7 +40,7 @@
                 stretch
                 cms-repeat="presentation.items as offer"
             >
-                <a slot="navigation" href="/offers/{{ offer.slug | urlencode }}" aria-label="View {{ offer.title }}"></a>
+                <a slot="navigation" href="#" aria-label="View {{ offer.title }}"></a>
                 <img
                     slot="media"
                     src="/.cms/sources/commerce/publicOfferImage?id={{ offer.mainImageMediaId | urlencode }}"

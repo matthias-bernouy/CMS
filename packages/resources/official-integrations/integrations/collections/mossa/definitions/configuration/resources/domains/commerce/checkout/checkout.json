@@ -126,9 +126,7 @@
             "radius-control",
             "secondary-base",
             "secondary-foreground",
-            "shadow-lg",
             "subtle-background",
-            "surface-background",
             "surface-border",
             "surface-muted-text",
             "surface-text"

@@ -13,6 +13,7 @@
     "theme": {
         "contract": "ulvia-theme@3",
         "required": [
+            "font-body",
             "font-heading",
             "surface-muted-text",
             "surface-text"
