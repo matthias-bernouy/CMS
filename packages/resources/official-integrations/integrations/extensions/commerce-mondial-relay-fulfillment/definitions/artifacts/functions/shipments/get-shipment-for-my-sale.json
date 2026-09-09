@@ -8,7 +8,7 @@
         },
         "meta": {
             "name": "Get shipment for my sale",
-            "description": "Return a sanitized shipment projection after Commerce resolves seller ownership."
+            "description": "Return a sanitized shipment projection with seller actions authorized by Commerce."
         },
         "input": {
             "params": {
@@ -27,10 +27,10 @@
         ],
         "steps": [
             {
-                "id": "sale",
+                "id": "shippingActions",
                 "call": {
                     "source": "{{dependencies.commerce.sourceId}}",
-                    "endpoint": "getOrderFulfillmentSellerContext",
+                    "endpoint": "getOrderShippingActionsSellerContext",
                     "params": {
                         "orderId": "$input.params.orderId"
                     }
@@ -42,7 +42,7 @@
                     "source": "{{dependencies.delivery.sourceId}}",
                     "endpoint": "shipmentForExternalOrder",
                     "params": {
-                        "externalOrderId": "$steps.sale.publicId"
+                        "externalOrderId": "$steps.shippingActions.publicId"
                     }
                 }
             },
@@ -80,12 +80,21 @@
         "return": {
             "status": 200,
             "body": {
-                "orderId": "$steps.sale.id",
-                "orderPublicId": "$steps.sale.publicId",
-                "orderNumber": "$steps.sale.orderNumber",
+                "orderId": "$steps.shippingActions.id",
+                "orderPublicId": "$steps.shippingActions.publicId",
+                "orderNumber": "$steps.shippingActions.orderNumber",
+                "actions": {
+                    "canCreateShipment": "$steps.shippingActions.canCreateShipment",
+                    "canDownloadLabel": "$steps.shippingActions.canDownloadLabel",
+                    "canDeclareHandoff": "$steps.shippingActions.canDeclareHandoff",
+                    "requiresReview": "$steps.shippingActions.requiresReview",
+                    "reviewReason": "$steps.shippingActions.reviewReason",
+                    "fulfillmentStatus": "$steps.shippingActions.fulfillmentStatus",
+                    "settlementStatus": "$steps.shippingActions.settlementStatus"
+                },
                 "shipments": "$steps.details"
             }
         }
     },
-    "contractVersion": "1.0.0"
+    "contractVersion": "1.1.0"
 }

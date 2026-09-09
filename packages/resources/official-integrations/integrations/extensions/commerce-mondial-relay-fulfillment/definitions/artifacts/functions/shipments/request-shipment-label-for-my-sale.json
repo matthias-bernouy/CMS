@@ -33,10 +33,10 @@
         ],
         "steps": [
             {
-                "id": "labelContext",
+                "id": "shippingActions",
                 "call": {
                     "source": "{{dependencies.commerce.sourceId}}",
-                    "endpoint": "getOrderLabelSellerContext",
+                    "endpoint": "getOrderShippingActionsSellerContext",
                     "params": {
                         "orderId": "$input.body.orderId"
                     }
@@ -48,13 +48,13 @@
                         "all": [
                             {
                                 "equals": [
-                                    "$steps.labelContext.allowed",
+                                    "$steps.shippingActions.canDownloadLabel",
                                     true
                                 ]
                             },
                             {
                                 "equals": [
-                                    "$steps.labelContext.sellerCmsUserId",
+                                    "$steps.shippingActions.sellerCmsUserId",
                                     "$ctx.user.id"
                                 ]
                             }
@@ -72,7 +72,7 @@
                     "source": "{{dependencies.delivery.sourceId}}",
                     "endpoint": "issueLabelAccess",
                     "body": {
-                        "externalOrderId": "$steps.labelContext.publicId",
+                        "externalOrderId": "$steps.shippingActions.publicId",
                         "sellerCmsUserId": "$ctx.user.id"
                     }
                 }
@@ -91,5 +91,5 @@
             }
         }
     },
-    "contractVersion": "1.0.0"
+    "contractVersion": "1.1.0"
 }

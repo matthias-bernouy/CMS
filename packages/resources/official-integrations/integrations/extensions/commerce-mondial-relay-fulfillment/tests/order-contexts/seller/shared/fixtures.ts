@@ -16,10 +16,33 @@ export const sellerSale = {
     financialTerms: { financialTermsHash: "private-financial-hash" },
 };
 
+export const shippingActions = {
+    ...sellerSale,
+    sellerCmsUserId: sellerId,
+    orderStatus: "active",
+    fulfillmentStatus: "label_created",
+    settlementStatus: "held",
+    blockingReason: null,
+    reviewReason: null,
+    canCreateShipment: true,
+    canDownloadLabel: true,
+    canDeclareHandoff: true,
+    requiresReview: false,
+};
+
 export const sellerTrackingResponse = {
     orderId: sellerSale.id,
     orderPublicId,
     orderNumber: sellerSale.orderNumber,
+    actions: {
+        canCreateShipment: true,
+        canDownloadLabel: true,
+        canDeclareHandoff: true,
+        requiresReview: false,
+        reviewReason: null,
+        fulfillmentStatus: "label_created",
+        settlementStatus: "held",
+    },
     shipments: [
         {
             id: shipment.id,
@@ -48,11 +71,7 @@ export const sellerTrackingResponse = {
 };
 
 export const labelAuthorization = {
-    allowed: true,
-    orderId: sellerSale.id,
-    orderPublicId,
-    sellerCmsUserId: sellerId,
-    fulfillmentStatus: "label_created",
+    ...shippingActions,
     providerReference: "12345678",
 };
 

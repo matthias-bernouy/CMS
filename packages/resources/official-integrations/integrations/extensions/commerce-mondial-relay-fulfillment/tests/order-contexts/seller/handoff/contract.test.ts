@@ -55,7 +55,7 @@ describe("seller shipment handoff contract", () => {
         ).toEqual([
             {
                 method: "GET",
-                path: "/sellerContext",
+                path: "/shippingActions",
                 params: { orderId: "42" },
                 body: undefined,
                 userId: sellerId,
@@ -135,7 +135,7 @@ function expectedProjectionBody() {
 }
 
 function expectedPaths(): string[] {
-    return ["/sellerContext", "/declareSellerHandoff", "/recordFulfillment"];
+    return ["/shippingActions", "/declareSellerHandoff", "/recordFulfillment"];
 }
 
 function withoutUndefined(value: Record<string, unknown>) {

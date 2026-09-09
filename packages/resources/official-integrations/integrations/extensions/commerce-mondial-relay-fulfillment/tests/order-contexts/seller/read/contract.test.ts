@@ -14,7 +14,7 @@ describe("seller shipment read contract", () => {
         expect(response.status).toBe(200);
         const body = await response.json();
         expect(body).toEqual(sellerTrackingResponse);
-        expect(Object.keys(body)).toEqual(["orderId", "orderPublicId", "orderNumber", "shipments"]);
+        expect(Object.keys(body)).toEqual(["orderId", "orderPublicId", "orderNumber", "actions", "shipments"]);
         expect(Object.keys(body.shipments[0])).toEqual([
             "id",
             "expeditionNumber",
@@ -45,7 +45,7 @@ describe("seller shipment read contract", () => {
                 call.userId,
             ]),
         ).toEqual([
-            ["GET", "/sellerContext", { orderId: "42" }, sellerId],
+            ["GET", "/shippingActions", { orderId: "42" }, sellerId],
             [
                 "GET",
                 "/shipmentForExternalOrder",
@@ -82,9 +82,10 @@ describe("seller shipment read contract", () => {
             orderId: 42,
             orderPublicId,
             orderNumber: "CO-42",
+            actions: sellerTrackingResponse.actions,
             shipments: [],
         });
-        expect(calls.map((call) => call.url.pathname)).toEqual(["/sellerContext", "/shipmentForExternalOrder"]);
+        expect(calls.map((call) => call.url.pathname)).toEqual(["/shippingActions", "/shipmentForExternalOrder"]);
     });
 
     test("preserves nulls while omitting absent optional shipment fields", async () => {
@@ -112,7 +113,7 @@ describe("seller shipment read contract", () => {
         expect(first.response.status).toBe(200);
         expect(second.response.status).toBe(200);
         for (const calls of [first.calls, second.calls]) {
-            expect(calls.map((call) => call.url.pathname)).toEqual(["/sellerContext", "/shipmentForExternalOrder"]);
+            expect(calls.map((call) => call.url.pathname)).toEqual(["/shippingActions", "/shipmentForExternalOrder"]);
         }
     });
 

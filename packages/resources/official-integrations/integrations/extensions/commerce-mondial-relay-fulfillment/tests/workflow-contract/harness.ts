@@ -43,7 +43,7 @@ export async function installationsForFulfillment(
 ): Promise<InMemoryIntegrationInstallationRepository> {
     const repository = new InMemoryIntegrationInstallationRepository();
     for (const [id, sourceId, definitionVersion] of [
-        ["commerce", "commerce", "1.0.0"],
+        ["commerce", "commerce", "1.1.0"],
         ["mondial-relay", "delivery", providerVersion],
     ] as const) {
         await repository.create({

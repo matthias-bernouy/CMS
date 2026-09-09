@@ -33,12 +33,36 @@
         ],
         "steps": [
             {
-                "id": "sale",
+                "id": "shippingActions",
                 "call": {
                     "source": "{{dependencies.commerce.sourceId}}",
-                    "endpoint": "getOrderFulfillmentSellerContext",
+                    "endpoint": "getOrderShippingActionsSellerContext",
                     "params": {
                         "orderId": "$input.body.orderId"
+                    }
+                }
+            },
+            {
+                "assert": {
+                    "condition": {
+                        "all": [
+                            {
+                                "equals": [
+                                    "$steps.shippingActions.canDeclareHandoff",
+                                    true
+                                ]
+                            },
+                            {
+                                "equals": [
+                                    "$steps.shippingActions.sellerCmsUserId",
+                                    "$ctx.user.id"
+                                ]
+                            }
+                        ]
+                    },
+                    "failure": {
+                        "status": 409,
+                        "error": "Commerce has not authorized shipment handoff"
                     }
                 }
             },
@@ -48,7 +72,7 @@
                     "source": "{{dependencies.delivery.sourceId}}",
                     "endpoint": "declareSellerHandoff",
                     "body": {
-                        "externalOrderId": "$steps.sale.publicId"
+                        "externalOrderId": "$steps.shippingActions.publicId"
                     }
                 }
             },
@@ -58,7 +82,7 @@
                     "source": "{{dependencies.commerce.sourceId}}",
                     "endpoint": "recordOrderFulfillment",
                     "body": {
-                        "orderPublicId": "$steps.sale.publicId",
+                        "orderPublicId": "$steps.shippingActions.publicId",
                         "providerEventId": {
                             "$concat": [
                                 "mondial-relay|",
@@ -83,5 +107,5 @@
             }
         }
     },
-    "contractVersion": "1.0.0"
+    "contractVersion": "1.1.0"
 }

@@ -2,15 +2,15 @@ import { makeEndpointUrn, type SourceEndpoint } from "@bernouy/cms-sources";
 import { boolean, computedUserHeader, number, object, text } from "../../shared/shapes";
 
 export function sellerCommerceEndpoints(): SourceEndpoint[] {
-    return [sellerContext(), labelSellerContext(), recordFulfillment()];
+    return [shippingActionsContext(), recordFulfillment()];
 }
 
-function sellerContext(): SourceEndpoint {
+function shippingActionsContext(): SourceEndpoint {
     return {
-        urn: makeEndpointUrn("commerce", "getOrderFulfillmentSellerContext"),
+        urn: makeEndpointUrn("commerce", "getOrderShippingActionsSellerContext"),
         method: "GET",
         access: { mode: "system" },
-        targetUrl: "https://commerce.test/sellerContext",
+        targetUrl: "https://commerce.test/shippingActions",
         headers: computedUserHeader(),
         input: {
             params: [{ name: "orderId", in: "query", schema: text() }],
@@ -18,42 +18,35 @@ function sellerContext(): SourceEndpoint {
         output: [
             {
                 status: "200",
-                body: object({
-                    id: number(),
-                    publicId: text(),
-                    orderNumber: text(),
-                }),
-            },
-        ],
-    };
-}
-
-function labelSellerContext(): SourceEndpoint {
-    return {
-        urn: makeEndpointUrn("commerce", "getOrderLabelSellerContext"),
-        method: "GET",
-        access: { mode: "system" },
-        targetUrl: "https://commerce.test/labelSellerContext",
-        headers: computedUserHeader(),
-        input: {
-            params: [
-                {
-                    name: "orderId",
-                    in: "query",
-                    schema: text(),
-                },
-            ],
-        },
-        output: [
-            {
-                status: "200",
                 body: object(
                     {
+                        id: number(),
                         publicId: text(),
-                        allowed: boolean(),
+                        orderNumber: text(),
                         sellerCmsUserId: text(),
+                        orderStatus: text(),
+                        fulfillmentStatus: text(),
+                        settlementStatus: text(),
+                        blockingReason: text(true),
+                        reviewReason: text(true),
+                        canCreateShipment: boolean(),
+                        canDownloadLabel: boolean(),
+                        canDeclareHandoff: boolean(),
+                        requiresReview: boolean(),
                     },
-                    ["publicId", "allowed", "sellerCmsUserId"],
+                    [
+                        "id",
+                        "publicId",
+                        "orderNumber",
+                        "sellerCmsUserId",
+                        "orderStatus",
+                        "fulfillmentStatus",
+                        "settlementStatus",
+                        "canCreateShipment",
+                        "canDownloadLabel",
+                        "canDeclareHandoff",
+                        "requiresReview",
+                    ],
                 ),
             },
         ],

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { expectGenericFailure } from "../../shared/harness";
-import { fulfillment, handoff, replayFulfillment, sellerSale } from "../shared/fixtures";
+import { fulfillment, handoff, replayFulfillment, sellerSale, shippingActions } from "../shared/fixtures";
 import { executeSellerFunction, sellerPostRequest } from "../shared/harness";
 import { sellerResponder } from "../shared/responders";
 const functionId = "declareShipmentHandoffForMySale";
@@ -37,13 +37,13 @@ describe("seller shipment handoff boundaries", () => {
         ] as const) {
             const result = await executeSellerFunction(functionId, incoming, sellerResponder({ sale: upstream }));
             await expectGenericFailure(result.response);
-            expect(result.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext"]);
+            expect(result.calls.map((call) => call.url.pathname)).toEqual(["/shippingActions"]);
         }
     });
 
     test("lets Delivery reject a missing Commerce order public id", async () => {
         const fallback = sellerResponder({
-            sale: { ...sellerSale, publicId: undefined },
+            sale: { ...shippingActions, publicId: undefined },
         });
         const result = await executeSellerFunction(functionId, request({ orderId: "42" }), (outgoing) =>
             new URL(outgoing.url).pathname === "/declareSellerHandoff"
@@ -52,8 +52,29 @@ describe("seller shipment handoff boundaries", () => {
         );
 
         await expectGenericFailure(result.response);
-        expect(result.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext", "/declareSellerHandoff"]);
+        expect(result.calls.map((call) => call.url.pathname)).toEqual(["/shippingActions", "/declareSellerHandoff"]);
         expect(result.calls[1]?.body).toEqual({});
+    });
+
+    test("stops before Delivery when Commerce blocks the handoff", async () => {
+        const result = await executeSellerFunction(
+            functionId,
+            request({ orderId: "42" }),
+            sellerResponder({
+                sale: {
+                    ...shippingActions,
+                    canDeclareHandoff: false,
+                    requiresReview: true,
+                    reviewReason: "fulfillment_reconciliation_required",
+                },
+            }),
+        );
+
+        expect(result.response.status).toBe(409);
+        expect(await result.response.json()).toEqual({
+            error: "Commerce has not authorized shipment handoff",
+        });
+        expect(result.calls.map((call) => call.url.pathname)).toEqual(["/shippingActions"]);
     });
 
     test("redacts Delivery failures at the second call", async () => {
@@ -68,7 +89,10 @@ describe("seller shipment handoff boundaries", () => {
             );
 
             await expectGenericFailure(result.response);
-            expect(result.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext", "/declareSellerHandoff"]);
+            expect(result.calls.map((call) => call.url.pathname)).toEqual([
+                "/shippingActions",
+                "/declareSellerHandoff",
+            ]);
         }
     });
 
@@ -157,7 +181,7 @@ function expectedEventId(): string {
 }
 
 function expectedPaths(): string[] {
-    return ["/sellerContext", "/declareSellerHandoff", "/recordFulfillment"];
+    return ["/shippingActions", "/declareSellerHandoff", "/recordFulfillment"];
 }
 
 function withoutUndefined(value: Record<string, unknown>) {

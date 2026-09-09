@@ -39,7 +39,17 @@ describe("seller shipment label contract", () => {
             sellerResponder({
                 authorization: {
                     publicId: orderPublicId,
-                    allowed: labelAuthorization.allowed,
+                    canDownloadLabel: labelAuthorization.canDownloadLabel,
+                    canDeclareHandoff: true,
+                    canCreateShipment: true,
+                    requiresReview: false,
+                    orderStatus: "active",
+                    fulfillmentStatus: "label_created",
+                    settlementStatus: "held",
+                    blockingReason: null,
+                    reviewReason: null,
+                    id: 42,
+                    orderNumber: "CO-42",
                     sellerCmsUserId: sellerId,
                     shippingAddress: {
                         recipient: "Private Buyer",
@@ -81,7 +91,7 @@ describe("seller shipment label contract", () => {
             })),
         ).toEqual([
             {
-                target: "/labelSellerContext?orderId=42",
+                target: "/shippingActions?orderId=42",
                 method: "GET",
                 body: undefined,
                 userId: sellerId,

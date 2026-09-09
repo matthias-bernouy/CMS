@@ -1,5 +1,5 @@
 import { shipment } from "../../shared/fixtures";
-import { fulfillment, handoff, labelAuthorization, labelCapability, sellerSale } from "./fixtures";
+import { fulfillment, handoff, labelCapability, shippingActions } from "./fixtures";
 
 type Reply = unknown | Response;
 
@@ -15,21 +15,11 @@ export type SellerReplies = {
 export function sellerResponder(replies: SellerReplies = {}): (request: Request) => Response {
     return (request) => {
         const pathname = new URL(request.url).pathname;
-        if (pathname === "/sellerContext") {
-            return response(replies.sale ?? sellerSale);
+        if (pathname === "/shippingActions") {
+            return response(replies.authorization ?? replies.sale ?? shippingActions);
         }
         if (pathname === "/shipmentForExternalOrder") {
             return response(replies.shipments ?? { items: [shipment] });
-        }
-        if (pathname === "/labelSellerContext") {
-            return response(
-                replies.authorization ??
-                    replies.sale ?? {
-                        publicId: sellerSale.publicId,
-                        allowed: labelAuthorization.allowed,
-                        sellerCmsUserId: labelAuthorization.sellerCmsUserId,
-                    },
-            );
         }
         if (pathname === "/issueLabelAccess") {
             return response(replies.capability ?? labelCapability, 201);

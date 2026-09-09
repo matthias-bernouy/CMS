@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { shipment } from "../../shared/fixtures";
 import { expectGenericFailure } from "../../shared/harness";
-import { orderPublicId, sellerSale, sellerTrackingResponse } from "../shared/fixtures";
+import { orderPublicId, sellerSale, sellerTrackingResponse, shippingActions } from "../shared/fixtures";
 import { executeSellerFunction, sellerGetRequest } from "../shared/harness";
 import { sellerResponder } from "../shared/responders";
 
@@ -29,7 +29,7 @@ describe("seller shipment read boundaries", () => {
             const { response, calls } = await execute(request, responder);
 
             await expectGenericFailure(response);
-            expect(calls.map((call) => call.url.pathname)).toEqual(["/sellerContext"]);
+            expect(calls.map((call) => call.url.pathname)).toEqual(["/shippingActions"]);
             expect(calls[0]?.url.searchParams.get("orderId")).toBe(orderId || null);
         }
     });
@@ -47,10 +47,10 @@ describe("seller shipment read boundaries", () => {
         const delivery = await executeRead(sellerResponder({ shipments: failure() }));
 
         await expectGenericFailure(commerce.response);
-        expect(commerce.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext"]);
+        expect(commerce.calls.map((call) => call.url.pathname)).toEqual(["/shippingActions"]);
         await expectGenericFailure(delivery.response);
         expect(delivery.calls.map((call) => call.url.pathname)).toEqual([
-            "/sellerContext",
+            "/shippingActions",
             "/shipmentForExternalOrder",
         ]);
     });
@@ -58,17 +58,17 @@ describe("seller shipment read boundaries", () => {
     test("preserves incomplete Commerce context behavior", async () => {
         const missingId = await executeRead(
             sellerResponder({
-                sale: { ...sellerSale, id: undefined },
+                sale: { ...shippingActions, id: undefined },
             }),
         );
         const missingNumber = await executeRead(
             sellerResponder({
-                sale: { ...sellerSale, orderNumber: undefined },
+                sale: { ...shippingActions, orderNumber: undefined },
             }),
         );
         const missingPublicId = await executeRead(
             sellerResponder({
-                sale: { ...sellerSale, publicId: undefined },
+                sale: { ...shippingActions, publicId: undefined },
             }),
         );
 
@@ -77,6 +77,7 @@ describe("seller shipment read boundaries", () => {
         expect(withoutId).toEqual({
             orderPublicId,
             orderNumber: sellerSale.orderNumber,
+            actions: sellerTrackingResponse.actions,
             shipments: sellerTrackingResponse.shipments,
         });
         expect(Object.hasOwn(withoutId, "orderId")).toBe(false);
@@ -85,7 +86,7 @@ describe("seller shipment read boundaries", () => {
         expect(Object.hasOwn(withoutNumber, "orderNumber")).toBe(false);
         expect(withoutNumber.orderId).toBe(sellerSale.id);
         await expectGenericFailure(missingPublicId.response);
-        expect(missingPublicId.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext"]);
+        expect(missingPublicId.calls.map((call) => call.url.pathname)).toEqual(["/shippingActions"]);
     });
 
     test("fails closed on malformed Commerce and Delivery responses", async () => {
@@ -102,10 +103,10 @@ describe("seller shipment read boundaries", () => {
         const missingItems = await executeRead(sellerResponder({ shipments: {} }));
 
         await expectGenericFailure(malformedSale.response);
-        expect(malformedSale.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext"]);
+        expect(malformedSale.calls.map((call) => call.url.pathname)).toEqual(["/shippingActions"]);
         await expectGenericFailure(malformedItems.response);
         expect(malformedItems.calls.map((call) => call.url.pathname)).toEqual([
-            "/sellerContext",
+            "/shippingActions",
             "/shipmentForExternalOrder",
         ]);
         expect(missingItems.response.status).toBe(400);
@@ -123,7 +124,7 @@ describe("seller shipment read boundaries", () => {
 
         expect(response.status).toBe(403);
         expect(await response.json()).toEqual({ error: "Forbidden" });
-        expect(calls.map((call) => call.url.pathname)).toEqual(["/sellerContext", "/shipmentForExternalOrder"]);
+        expect(calls.map((call) => call.url.pathname)).toEqual(["/shippingActions", "/shipmentForExternalOrder"]);
     });
 
     test("keeps the single-shipment limit as a local 400 response", async () => {
@@ -142,7 +143,7 @@ describe("seller shipment read boundaries", () => {
         expect(await response.json()).toEqual({
             error: 'forEach "details" exceeds max items',
         });
-        expect(calls.map((call) => call.url.pathname)).toEqual(["/sellerContext", "/shipmentForExternalOrder"]);
+        expect(calls.map((call) => call.url.pathname)).toEqual(["/shippingActions", "/shipmentForExternalOrder"]);
     });
 });
 

@@ -1,1 +1,1 @@
-Initial 1.0.0 release: compose Commerce and Mondial Relay 1.x with seller-scoped delivery contracts and workflow ownership attached to the Commerce Source. Installation has no questionnaire.
+1.1.0: derive seller shipment actions from Commerce authorization, expose manual-review state to presentation blocks, and reject handoff mutations before calling Delivery when Commerce has blocked the order.
