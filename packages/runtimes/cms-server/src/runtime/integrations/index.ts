@@ -21,6 +21,7 @@ import {
 } from "@bernouy/cms-integrations/supabase";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { HttpRepositoryCompatibilityReader } from "../../repositoryCatalog/compatibility/reader";
+import { HttpRepositorySchemaBaselineReader } from "../../repositoryCatalog/compatibility/schemaBaselineReader";
 import { DEFAULT_REPOSITORY_CATALOG_READER_LIMITS } from "../../repositoryCatalog/limits";
 import { HttpRepositoryReleaseReader } from "../../repositoryCatalog/release/reader";
 import { HttpRepositoryVerificationBundleReader } from "../../repositoryCatalog/release/bundleReader";
@@ -91,6 +92,10 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
         baseUrl: repositoryUrl,
         ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
     });
+    const publicRepositorySchemaBaselines = new HttpRepositorySchemaBaselineReader({
+        baseUrl: repositoryUrl,
+        ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
+    });
     const upgradeReleaseReader = new HttpRepositoryReleaseReader({
         baseUrl: repositoryUrl,
         ...(options.definitionFetch ? { fetch: options.definitionFetch } : {}),
@@ -110,6 +115,7 @@ export function createProductionIntegrationServices(options: IntegrationServiceO
     return {
         repositoryUrl,
         publicRepositoryCompatibility,
+        publicRepositorySchemaBaselines,
         publicRepositoryReleases: upgradeReleaseReader,
         publicRepositoryVerificationBundles,
         integrationUpgradeReleases,

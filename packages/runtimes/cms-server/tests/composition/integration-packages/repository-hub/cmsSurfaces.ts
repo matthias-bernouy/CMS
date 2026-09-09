@@ -21,6 +21,7 @@ import {
     HttpRepositoryCatalogReader,
     HttpRepositoryCompatibilityReader,
     HttpRepositoryReleaseReader,
+    HttpRepositorySchemaBaselineReader,
     HttpRepositoryVerificationBundleReader,
 } from "../../../../src/repositoryCatalog";
 import { HttpRepositoryManagementGateway } from "../../../../src/runtime/repository";
@@ -94,6 +95,9 @@ export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promi
         timeoutMs: 10_000,
         maxResponseBytes: DEFAULT_INTEGRATION_PACKAGE_LIMITS.maxDocumentBytes,
     });
+    const publicSchemaBaselines = new HttpRepositorySchemaBaselineReader({
+        baseUrl: origins.publicRepositoryBaseUrl,
+    });
     const repositoryCatalog = new HttpRepositoryCatalogReader({
         catalog: publicCatalog,
         baseUrl: origins.publicRepositoryBaseUrl,
@@ -106,6 +110,7 @@ export async function startRepositoryHubSurfaces(origins: SurfaceOrigins): Promi
             integrationCompatibility: publicCompatibility,
             integrationProjectedReleases: publicReleases,
             integrationVerificationBundles: publicVerificationBundles,
+            integrationSchemaBaselines: publicSchemaBaselines,
             integrationPackages: publicPackages,
             packageDownloadProtection: { clientAddressPolicy: { mode: "disabled" } },
         });

@@ -6,6 +6,10 @@ export {
     HttpRepositoryCompatibilityReader,
     type HttpRepositoryCompatibilityReaderConfig,
 } from "./compatibility/reader";
+export {
+    HttpRepositorySchemaBaselineReader,
+    type HttpRepositorySchemaBaselineReaderConfig,
+} from "./compatibility/schemaBaselineReader";
 export { HttpRepositoryReleaseReader, type HttpRepositoryReleaseReaderConfig } from "./release/reader";
 export {
     HttpRepositoryVerificationBundleReader,

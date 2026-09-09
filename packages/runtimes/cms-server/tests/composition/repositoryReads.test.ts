@@ -17,6 +17,7 @@ describe("production repository read composition", () => {
             integrationProjectedCompatibility: fixture.integrations.publicRepositoryCompatibility,
             integrationProjectedReleases: fixture.integrations.publicRepositoryReleases,
             integrationVerificationBundles: fixture.integrations.publicRepositoryVerificationBundles,
+            integrationSchemaBaselines: fixture.integrations.publicRepositorySchemaBaselines,
             packageDownloadProtection: {
                 clientAddressPolicy: { mode: "trusted-proxy", trustedProxyHops: 2 },
                 rateLimiter: fixture.core.repositoryPackageDownloadRateLimit,
@@ -62,6 +63,7 @@ function dependencies() {
             publicRepositoryCompatibility: { list: async () => null },
             publicRepositoryReleases: { get: async () => null },
             publicRepositoryVerificationBundles: { get: async () => null },
+            publicRepositorySchemaBaselines: { listForPackage: async () => [] },
         },
         core: { repositoryPackageDownloadRateLimit: { hit: async () => ({ allowed: true }), reset: async () => {} } },
         logs: [] as string[],

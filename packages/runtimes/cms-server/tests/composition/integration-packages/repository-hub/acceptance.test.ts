@@ -47,7 +47,11 @@ describe("repository hub CMS process acceptance", () => {
         expect(releaseResponse.status).toBe(200);
         expect(releaseResponse.headers.get("access-control-allow-origin")).toBe("*");
         const releaseText = await releaseResponse.text();
-        const release = JSON.parse(releaseText) as { verificationDigest: string; verification: { origin: string } };
+        const release = JSON.parse(releaseText) as {
+            packageDigest: string;
+            verificationDigest: string;
+            verification: { origin: string };
+        };
         expect(release.verification).toMatchObject({ origin: "legacy-backfill" });
         expect(release.verificationDigest).toMatch(/^[a-f0-9]{64}$/);
         const verificationResponse = await fetch(
@@ -62,6 +66,11 @@ describe("repository hub CMS process acceptance", () => {
             schema: "cms.integration.verification.v1",
             target: { kind: "commerce", version: "1.0.0" },
         });
+        const schemaBaselinesResponse = await fetch(
+            `${cms.deliveryOrigin}/.cms/repository/api/integrations/schema-baselines?kind=commerce&version=1.0.0&packageDigest=${release.packageDigest}`,
+        );
+        expect(schemaBaselinesResponse.status).toBe(200);
+        expect(await schemaBaselinesResponse.json()).toEqual([]);
         expect((await fetch(`${cms.deliveryOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
         expect((await fetch(`${repository.publicOrigin}/.cms/repository-management/api/status`)).status).toBe(404);
         expect((await fetch(`${repository.managementOrigin}/.cms/repository/api/integrations`)).status).toBe(404);

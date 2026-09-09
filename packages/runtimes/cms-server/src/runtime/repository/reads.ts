@@ -5,6 +5,7 @@ import type {
     PublicPackageDownloadProtection,
     RepositoryProjectedCompatibilityReader,
     RepositoryProjectedReleaseReader,
+    RepositorySchemaBaselineReader,
     RepositoryVerificationBundleReader,
 } from "@bernouy/cms-repository";
 import type { RuntimeEnv } from "../../runtimeEnv";
@@ -21,6 +22,7 @@ export function productionRepositoryReadConfig(
         | "integrationPackageSource"
         | "publicRepositoryCompatibility"
         | "publicRepositoryReleases"
+        | "publicRepositorySchemaBaselines"
         | "publicRepositoryVerificationBundles"
     >,
     core: Pick<CoreStores, "repositoryPackageDownloadRateLimit">,
@@ -31,6 +33,7 @@ export function productionRepositoryReadConfig(
     integrationProjectedCompatibility?: RepositoryProjectedCompatibilityReader;
     integrationProjectedReleases?: RepositoryProjectedReleaseReader;
     integrationVerificationBundles?: RepositoryVerificationBundleReader;
+    integrationSchemaBaselines?: RepositorySchemaBaselineReader;
     packageDownloadProtection: PublicPackageDownloadProtection;
 } {
     const clientAddressPolicy = policyFromEnv(env);
@@ -40,6 +43,7 @@ export function productionRepositoryReadConfig(
         integrationProjectedCompatibility: integrations.publicRepositoryCompatibility,
         integrationProjectedReleases: integrations.publicRepositoryReleases,
         integrationVerificationBundles: integrations.publicRepositoryVerificationBundles,
+        integrationSchemaBaselines: integrations.publicRepositorySchemaBaselines,
     };
     if (clientAddressPolicy.mode === "disabled") {
         report(JSON.stringify({ level: "warn", event: "repository.package_download_limiter_disabled" }));
