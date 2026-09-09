@@ -134,6 +134,10 @@ describe("local integration repository", () => {
         expect((await definitions.list())[0]).toMatchObject({ kind: "demo", versions: ["1.0.0"] });
         expect(await definitions.get("demo", "1.0.0")).toEqual(integrationDefinition());
         expect((await packages.getPackage("demo", "1.0.0"))?.digest).toBe(resolved.digest);
+        const metadata = await fetchImpl(`${baseUrl}/api/integrations/package?kind=demo&version=1.0.0`, {
+            method: "HEAD",
+        });
+        expect(metadata.headers.get("etag")).toBe(`"${resolved.digest}"`);
     });
 });
 

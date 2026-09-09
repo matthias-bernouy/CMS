@@ -83,6 +83,7 @@ async function integrationResponse(
                 ...commonHeaders(),
                 "content-length": String(resolved.canonicalBytes.byteLength),
                 "content-type": "application/json",
+                etag: `"${resolved.digest}"`,
                 [INTEGRATION_PACKAGE_DIGEST_HEADER]: resolved.digest,
             },
         });
