@@ -42,6 +42,8 @@ export const expectedEndpointUrns = [
     "urn:commerce:getOrderFulfillmentSellerContext",
     "urn:commerce:getOrderShipmentCreationSellerContext",
     "urn:commerce:getOrderLabelSellerContext",
+    "urn:commerce:getOrderShippingActionsSellerContext",
+    "urn:commerce:reopenOrderShippingWindow",
     "urn:commerce:prepareProtectedPayment",
     "urn:commerce:getBuyerLegalRequirements",
     "urn:commerce:getMyBuyerLegalAcceptanceAudit",

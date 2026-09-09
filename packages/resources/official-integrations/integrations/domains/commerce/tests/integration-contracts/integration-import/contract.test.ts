@@ -29,7 +29,7 @@ import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { connectorDeployer, installedConsent } from "./setup";
 import { installCommerceTestEnvironment, supabaseUrl } from "../../harness";
 installCommerceTestEnvironment();
-describe("commerce 1.0.0 contract", () => {
+describe("commerce 1.1.0 contract", () => {
     test("loads and imports the official Commerce contract", async () => {
         const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const catalog = await repository.list();
@@ -88,7 +88,7 @@ describe("commerce 1.0.0 contract", () => {
         const functionSecrets = deployment?.functions[0]?.secrets ?? {};
 
         expect(catalog.map((entry) => entry.kind)).toContain("commerce");
-        expect(definition).toMatchObject({ kind: "commerce", version: "1.0.0", type: "source" });
+        expect(definition).toMatchObject({ kind: "commerce", version: "1.1.0", type: "source" });
         expect(definition.dependencies).toEqual([
             { name: "emailer", kind: "emailer", optional: true, versionRange: "^1.0.0" },
             { name: "consent", kind: "consent", versionRange: "^1.0.0" },
@@ -111,7 +111,7 @@ describe("commerce 1.0.0 contract", () => {
         expect(result.artifacts).not.toContainEqual(
             expect.objectContaining({ type: "dashboard-view", id: "commerce-dashboard" }),
         );
-        expect(endpointUrns).toHaveLength(180);
+        expect(endpointUrns).toHaveLength(182);
         expect(endpointUrns).toEqual(
             expect.arrayContaining(["urn:commerce:stageProductImage", "urn:commerce:discardStagedProductImages"]),
         );
@@ -138,6 +138,8 @@ describe("commerce 1.0.0 contract", () => {
             "urn:commerce:getOrderFulfillmentSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/fulfillment/seller-context`,
             "urn:commerce:getOrderShipmentCreationSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/shipment-creation/seller-context`,
             "urn:commerce:getOrderLabelSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/label/seller-context`,
+            "urn:commerce:getOrderShippingActionsSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/shipping/actions/seller-context`,
+            "urn:commerce:reopenOrderShippingWindow": `${supabaseUrl}/functions/v1/cms-commerce/admin/order/shipping-window/reopen`,
             "urn:commerce:getOrderDeliverySetupContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/delivery-setup-context`,
             "urn:commerce:getOrderDeliverySelectionContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/delivery-selection-context`,
             "urn:commerce:createOrder": `${supabaseUrl}/functions/v1/cms-commerce/me/orders`,

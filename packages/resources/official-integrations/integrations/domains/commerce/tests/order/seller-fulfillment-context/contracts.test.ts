@@ -65,7 +65,7 @@ describe("commerce seller fulfillment contexts", () => {
             }),
         );
 
-        const response = await requestCommerce(scenarios[2]!.route, {
+        const response = await requestCommerce(scenarios[3]!.route, {
             userId: sellerCmsUserId,
         });
 

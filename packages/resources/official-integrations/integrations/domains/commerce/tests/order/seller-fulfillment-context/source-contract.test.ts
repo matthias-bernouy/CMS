@@ -23,7 +23,7 @@ type Endpoint = {
 };
 
 describe("commerce seller fulfillment Source contexts", () => {
-    test("declares three exact service-only actor-scoped projections", async () => {
+    test("declares four exact service-only actor-scoped projections", async () => {
         const endpoints = await sourceEndpoints();
         const contracts = [
             {
@@ -37,6 +37,38 @@ describe("commerce seller fulfillment Source contexts", () => {
                 path: "/cms-commerce/system/order/label/seller-context",
                 fields: ["publicId", "allowed", "sellerCmsUserId"],
                 required: ["publicId", "allowed", "sellerCmsUserId"],
+            },
+            {
+                id: "getOrderShippingActionsSellerContext",
+                path: "/cms-commerce/system/order/shipping/actions/seller-context",
+                fields: [
+                    "id",
+                    "publicId",
+                    "orderNumber",
+                    "sellerCmsUserId",
+                    "orderStatus",
+                    "fulfillmentStatus",
+                    "settlementStatus",
+                    "blockingReason",
+                    "reviewReason",
+                    "canCreateShipment",
+                    "canDownloadLabel",
+                    "canDeclareHandoff",
+                    "requiresReview",
+                ],
+                required: [
+                    "id",
+                    "publicId",
+                    "orderNumber",
+                    "sellerCmsUserId",
+                    "orderStatus",
+                    "fulfillmentStatus",
+                    "settlementStatus",
+                    "canCreateShipment",
+                    "canDownloadLabel",
+                    "canDeclareHandoff",
+                    "requiresReview",
+                ],
             },
             {
                 id: "getOrderShipmentCreationSellerContext",
@@ -87,6 +119,11 @@ describe("commerce seller fulfillment Source contexts", () => {
         });
         const creation = endpoints.find((item) => item.endpointId === "getOrderShipmentCreationSellerContext");
         expect(creation?.output?.[0]?.body?.properties?.sellerId?.semantic).toEqual({
+            kind: "user-id",
+            authority: "cms",
+        });
+        const actions = endpoints.find((item) => item.endpointId === "getOrderShippingActionsSellerContext");
+        expect(actions?.output?.[0]?.body?.properties?.sellerCmsUserId?.semantic).toEqual({
             kind: "user-id",
             authority: "cms",
         });

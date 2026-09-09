@@ -33,6 +33,7 @@ import {
     getOrderDeliverySetupContext,
     getOrderFulfillmentSellerContext,
     getOrderLabelSellerContext,
+    getOrderShippingActionsSellerContext,
     getOrderShipmentCreationSellerContext,
 } from "../routes/order/read-model/contexts/index.ts";
 import { getOfferNegotiationContext } from "../routes/offer/read-model/contexts.ts";
@@ -80,6 +81,9 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
     }
     if (route === "/system/order/label/seller-context") {
         return request.method === "GET" ? await getOrderLabelSellerContext(request) : methodNotAllowed("GET");
+    }
+    if (route === "/system/order/shipping/actions/seller-context") {
+        return request.method === "GET" ? await getOrderShippingActionsSellerContext(request) : methodNotAllowed("GET");
     }
     if (route === "/system/offer/negotiation-context") {
         return request.method === "GET" ? await getOfferNegotiationContext(request) : methodNotAllowed("GET");

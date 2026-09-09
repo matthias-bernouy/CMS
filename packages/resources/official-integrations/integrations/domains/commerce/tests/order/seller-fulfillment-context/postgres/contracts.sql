@@ -12,6 +12,7 @@ declare
     order_public_id constant uuid :=
         '00000000-0000-4000-8000-000000000042';
     fulfillment jsonb;
+    reopening jsonb;
 begin
     fulfillment := commerce.get_order_fulfillment_seller_context(
         target_order_id, actor
@@ -32,6 +33,10 @@ begin
         target_order_id, order_public_id, actor, true,
         'initial projection changed'
     );
+    perform pg_temp.assert_seller_shipping_actions(
+        target_order_id, actor, true, true, false,
+        'initial actions changed'
+    );
 
     if commerce.get_order_fulfillment_seller_context(
         target_order_id, '  ' || actor || '  '
@@ -39,6 +44,11 @@ begin
        or commerce.get_order_label_seller_context(
            target_order_id, '  ' || actor || '  '
        ) is distinct from commerce.get_order_label_seller_context(
+           target_order_id, actor
+       )
+       or commerce.get_order_shipping_actions_seller_context(
+           target_order_id, '  ' || actor || '  '
+       ) is distinct from commerce.get_order_shipping_actions_seller_context(
            target_order_id, actor
        ) then
         raise exception 'seller fulfillment context: actor trimming changed';
@@ -59,6 +69,12 @@ begin
        or commerce.get_order_label_seller_context(
            empty_order_id, actor
        ) is distinct from '{"state":"not_found"}'::jsonb
+       or commerce.get_order_shipping_actions_seller_context(
+           target_order_id, 'order-read-seller-18'
+       ) is distinct from '{"state":"not_found"}'::jsonb
+       or commerce.get_order_shipping_actions_seller_context(
+           9007199254740991, actor
+       ) is distinct from '{"state":"not_found"}'::jsonb
        or commerce.get_order_fulfillment_seller_context(null, actor)
         is distinct from '{"state":"not_found"}'::jsonb
        or commerce.get_order_label_seller_context(null, actor)
@@ -73,7 +89,14 @@ begin
        or commerce.get_order_label_seller_context(target_order_id, null)
         is distinct from '{"state":"identity_required"}'::jsonb
        or commerce.get_order_label_seller_context(target_order_id, '  ')
-        is distinct from '{"state":"identity_required"}'::jsonb then
+        is distinct from '{"state":"identity_required"}'::jsonb
+       or commerce.get_order_shipping_actions_seller_context(
+           target_order_id, null
+       ) is distinct from '{"state":"identity_required"}'::jsonb
+       or commerce.get_order_shipping_actions_seller_context(
+           target_order_id, '  '
+       ) is distinct from '{"state":"identity_required"}'::jsonb
+       then
         raise exception 'seller fulfillment context: identity boundary changed';
     end if;
 
@@ -134,6 +157,51 @@ begin
     perform pg_temp.assert_seller_label_context(
         target_order_id, order_public_id, actor, true,
         'failed refund must allow'
+    );
+
+    update commerce.order_fulfillments as fulfillment_row
+    set status = 'manual_review',
+        blocking_reason = 'scan_grace_elapsed_without_carrier_acceptance'
+    where fulfillment_row.order_id = target_order_id;
+    update commerce.order_settlements as settlement
+    set status = 'manual_review',
+        manual_review_reason = 'fulfillment_reconciliation_required'
+    where settlement.order_id = target_order_id;
+    perform pg_temp.assert_seller_label_context(
+        target_order_id, order_public_id, actor, false,
+        'manual review must deny label access'
+    );
+    perform pg_temp.assert_seller_shipping_actions(
+        target_order_id, actor, false, false, true,
+        'manual review must deny seller shipping actions'
+    );
+
+    reopening := commerce.reopen_order_shipping_window(
+        order_public_id,
+        'admin-fulfillment-review',
+        'carrier evidence reviewed'
+    );
+    if reopening->>'fulfillmentStatus' <> 'label_created'
+       or reopening->>'settlementStatus' <> 'held'
+       or (reopening->>'sellerHandoffDeadline')::timestamptz <= now()
+       or (reopening->>'scanGraceDeadline')::timestamptz
+            <= (reopening->>'sellerHandoffDeadline')::timestamptz
+       or not exists (
+            select 1 from commerce.audit_events event
+            where event.order_id = target_order_id
+              and event.event_type = 'shipping_window_reopened'
+              and event.actor_kind = 'admin'
+              and event.actor_id = 'admin-fulfillment-review'
+       ) then
+        raise exception 'shipping window reopening changed: %', reopening;
+    end if;
+    perform pg_temp.assert_seller_label_context(
+        target_order_id, order_public_id, actor, true,
+        'audited reopening must restore label access'
+    );
+    perform pg_temp.assert_seller_shipping_actions(
+        target_order_id, actor, true, true, false,
+        'audited reopening must restore seller shipping actions'
     );
 
     update commerce.orders as order_row set status = 'completed'

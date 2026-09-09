@@ -2,7 +2,7 @@
     "schema": "cms.integration.definition.v2",
     "kind": "commerce",
     "label": "Commerce",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "category": "Commerce",
     "description": "Run a catalogue, marketplace, orders, and replaceable buyer notifications from one Supabase-backed commerce model.",
     "icon": {

@@ -14,6 +14,40 @@
     "status": {
         "path": "status"
     },
+    "actions": [
+        {
+            "id": "reopenShippingWindow",
+            "label": "Reopen shipping window",
+            "tone": "secondary",
+            "placement": "more",
+            "form": {
+                "endpoint": "reopenOrderShippingWindow",
+                "hiddenFields": [
+                    {
+                        "name": "orderPublicId",
+                        "value": "$resource.publicId",
+                        "type": "string"
+                    }
+                ],
+                "fields": [
+                    {
+                        "id": "reason",
+                        "name": "reason",
+                        "label": "Reopening reason",
+                        "path": "fulfillmentReviewReason",
+                        "type": "textarea",
+                        "rows": 3,
+                        "required": true
+                    }
+                ],
+                "confirm": "Reopen the seller shipping window for this order?"
+            },
+            "visibleWhen": {
+                "value": "$resource.fulfillment.blockingReason",
+                "equals": "scan_grace_elapsed_without_carrier_acceptance"
+            }
+        }
+    ],
     "main": [
         {
             "id": "orderSummary",
@@ -63,6 +97,38 @@
                     "path": "statusMessage",
                     "type": "textarea",
                     "rows": 3
+                }
+            ]
+        },
+        {
+            "id": "fulfillmentReview",
+            "title": "Fulfillment review",
+            "fields": [
+                {
+                    "id": "fulfillmentStatus",
+                    "label": "Fulfillment status",
+                    "path": "fulfillment.status",
+                    "type": "readonly",
+                    "format": "badge"
+                },
+                {
+                    "id": "fulfillmentBlockingReason",
+                    "label": "Blocking reason",
+                    "path": "fulfillment.blockingReason",
+                    "type": "readonly"
+                },
+                {
+                    "id": "settlementStatus",
+                    "label": "Settlement status",
+                    "path": "settlement.status",
+                    "type": "readonly",
+                    "format": "badge"
+                },
+                {
+                    "id": "settlementReviewReason",
+                    "label": "Settlement review reason",
+                    "path": "settlement.manualReviewReason",
+                    "type": "readonly"
                 }
             ]
         },

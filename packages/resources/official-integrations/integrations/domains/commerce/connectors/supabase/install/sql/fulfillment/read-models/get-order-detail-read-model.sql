@@ -202,6 +202,7 @@ begin
                     'total_transferred_amount', settlement.total_transferred_amount,
                     'total_reversed_amount', settlement.total_reversed_amount,
                     'seller_reserve_liability_remaining_amount', settlement.seller_reserve_liability_remaining_amount,
+                    'manual_review_reason', settlement.manual_review_reason,
                     'version', settlement.version
                 )
                 from commerce.order_settlements settlement
@@ -393,6 +394,7 @@ begin
                     'total_reversed_amount', settlement.total_reversed_amount,
                     'total_refunded_amount', settlement.total_refunded_amount,
                     'seller_reserve_liability_remaining_amount', settlement.seller_reserve_liability_remaining_amount,
+                    'manual_review_reason', settlement.manual_review_reason,
                     'version', settlement.version
                 )
                 from commerce.order_settlements settlement

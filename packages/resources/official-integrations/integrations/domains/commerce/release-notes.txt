@@ -1,1 +1,1 @@
-Initial 1.0.0 release: publish source-owned commerce settings, authenticated custom-field reads, and offer and order models. Buyer document requirements and immutable acceptance evidence belong to Consent; Commerce retains payment-operation references. Installation has no questionnaire.
+1.1.0: publish authoritative seller shipping actions, block labels and handoff while fulfillment or settlement is under review, and add an audited administrator command for reopening eligible shipping windows.

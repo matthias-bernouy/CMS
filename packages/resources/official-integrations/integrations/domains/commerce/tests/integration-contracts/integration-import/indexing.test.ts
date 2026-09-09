@@ -10,18 +10,18 @@ import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { connectorDeployer, installedConsent } from "./setup";
 
-describe("commerce 1.0.0 indexing contract", () => {
+describe("commerce 1.1.0 indexing contract", () => {
     test("publishes the current source as the sole authored release", async () => {
         const index = await repository().getIndex("commerce");
 
-        expect(index).toMatchObject({ stable: "1.0.0", latest: "1.0.0", type: "source" });
-        expect(index?.versions).toEqual([{ version: "1.0.0", path: ".", definition: "definition.json" }]);
+        expect(index).toMatchObject({ stable: "1.1.0", latest: "1.1.0", type: "source" });
+        expect(index?.versions).toEqual([{ version: "1.1.0", path: ".", definition: "definition.json" }]);
     });
 
     test("imports product and offer strategies for id and slug identities", async () => {
-        const definition = await repository().get("commerce", "1.0.0");
+        const definition = await repository().get("commerce", "1.1.0");
         if (!definition) {
-            throw new Error("commerce 1.0.0 definition not found");
+            throw new Error("commerce 1.1.0 definition not found");
         }
         const sources = new InMemorySourceRepository();
 
@@ -39,7 +39,7 @@ describe("commerce 1.0.0 indexing contract", () => {
                 connectorDeployers: [connectorDeployer(() => {})],
                 connectorInstanceIds: { primary: "commerce-test-primary" },
             },
-            { kind: "commerce", version: "1.0.0", answers: {}, options: {} },
+            { kind: "commerce", version: "1.1.0", answers: {}, options: {} },
             [definition],
         );
 

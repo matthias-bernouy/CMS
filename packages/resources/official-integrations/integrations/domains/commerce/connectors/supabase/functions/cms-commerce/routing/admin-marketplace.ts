@@ -35,6 +35,7 @@ import { authorizeOrderRelease } from "../routes/order/payment/settlements.ts";
 import { authorizePlatformPayoutLiabilityDecrease } from "../routes/order/payment/financials.ts";
 import { getAdminBuyerLegalAcceptanceAudit } from "../routes/order/payment/legal.ts";
 import { recoverOrderShipmentCreation } from "../routes/order/fulfillment.ts";
+import { reopenOrderShippingWindow } from "../routes/order/shipping-review.ts";
 import { getSeller, listSellers, reviewSeller } from "../routes/seller/index.ts";
 import { handleAdminServiceWithdrawalRoute } from "./service-withdrawals.ts";
 
@@ -162,6 +163,10 @@ export async function handleAdminMarketplaceRoute(route: string, request: Reques
     if (route === "/admin/order/shipment-creation/recover") {
         requireCmsAdmin(request);
         return request.method === "POST" ? await recoverOrderShipmentCreation(request) : methodNotAllowed("POST");
+    }
+    if (route === "/admin/order/shipping-window/reopen") {
+        requireCmsAdmin(request);
+        return request.method === "POST" ? await reopenOrderShippingWindow(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/commerce-exceptions") {
         requireCmsAdmin(request);

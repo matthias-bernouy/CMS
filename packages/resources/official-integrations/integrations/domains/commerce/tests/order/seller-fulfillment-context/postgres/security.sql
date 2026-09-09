@@ -6,7 +6,8 @@ begin
     foreach signature in array array[
         'commerce.get_order_fulfillment_seller_context(bigint,text)',
         'commerce.get_order_shipment_creation_seller_context(bigint,text)',
-        'commerce.get_order_label_seller_context(bigint,text)'
+        'commerce.get_order_label_seller_context(bigint,text)',
+        'commerce.get_order_shipping_actions_seller_context(bigint,text)'
     ] loop
         target := to_regprocedure(signature);
         if target is null then

@@ -1,5 +1,7 @@
 update commerce.order_fulfillments
-set status = 'label_created', provider_reference = '12345678'
+set status = 'label_created',
+    provider_reference = '12345678',
+    payment_confirmed_at = '2026-07-17 12:04+00'
 where order_id = :order_42_id;
 
 insert into commerce.shipment_creation_operations (

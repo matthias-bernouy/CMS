@@ -131,6 +131,24 @@ describe("commerce protected C2C claims and refunds", () => {
         });
     });
 
+    test("reopens an eligible shipping window as an audited admin action", async () => {
+        const response = await requestCommerce("/admin/order/shipping-window/reopen", {
+            userId: "admin-12",
+            userRole: "admin",
+            body: {
+                orderPublicId: "order-public-42",
+                reason: "carrier evidence reviewed",
+            },
+        });
+
+        expect(response.status).toBe(200);
+        expect(expectSingleRpc("reopen_order_shipping_window").body).toEqual({
+            p_order_public_id: "order-public-42",
+            p_actor_id: "admin-12",
+            p_reason: "carrier evidence reviewed",
+        });
+    });
+
     test("keeps cancellation identity server-derived", async () => {
         const response = await requestCommerce("/me/sale/cancel", {
             userId: "seller-4",

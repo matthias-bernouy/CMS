@@ -29,7 +29,7 @@ export async function installedConsent(): Promise<InMemoryIntegrationInstallatio
     await installations.create({
         id: "consent",
         label: "Consent",
-        definitionVersion: "1.0.0",
+        definitionVersion: "1.1.0",
         status: "success",
         answersSnapshot: {},
         secretRefs: {},

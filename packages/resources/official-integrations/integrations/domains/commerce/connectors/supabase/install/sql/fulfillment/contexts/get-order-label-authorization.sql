@@ -12,7 +12,10 @@ as $$
 select jsonb_build_object(
     'allowed', order_row.status = 'active'
         and fulfillment.status in ('label_created', 'seller_handoff_declared')
+        and fulfillment.blocking_reason is null
         and creation.status = 'succeeded'
+        and settlement.status = 'held'
+        and settlement.manual_review_reason is null
         and not exists (select 1 from commerce.order_cancellation_requests request
             where request.order_id = order_row.id and request.status not in ('rejected', 'completed'))
         and not exists (select 1 from commerce.refund_requests request
@@ -25,5 +28,6 @@ from commerce.orders order_row
 join commerce.sellers seller on seller.id = order_row.seller_id
 join commerce.order_fulfillments fulfillment on fulfillment.order_id = order_row.id
 join commerce.shipment_creation_operations creation on creation.order_id = order_row.id
+join commerce.order_settlements settlement on settlement.order_id = order_row.id
 where order_row.public_id = p_order_public_id and seller.cms_user_id = p_seller_cms_user_id;
 $$;

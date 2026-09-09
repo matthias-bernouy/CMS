@@ -1,0 +1,57 @@
+[
+    {
+        "endpointId": "reopenOrderShippingWindow",
+        "method": "POST",
+        "access": { "mode": "admin" },
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/shipping-window/reopen",
+        "params": [],
+        "headers": [
+            {
+                "name": "authorization",
+                "source": {
+                    "from": "secret",
+                    "ref": "{{secrets.cmsApiKey}}",
+                    "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": { "from": "computed", "ref": "userID" }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": { "from": "computed", "ref": "userRole" }
+            }
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "orderPublicId": { "type": "string" },
+                "reason": { "type": "string" }
+            },
+            "required": ["orderPublicId", "reason"]
+        },
+        "output": [
+            {
+                "status": "200",
+                "body": {
+                    "type": "object",
+                    "properties": {
+                        "orderPublicId": { "type": "string" },
+                        "fulfillmentStatus": { "type": "string" },
+                        "settlementStatus": { "type": "string" },
+                        "sellerHandoffDeadline": { "type": "string" },
+                        "scanGraceDeadline": { "type": "string" }
+                    },
+                    "required": [
+                        "orderPublicId",
+                        "fulfillmentStatus",
+                        "settlementStatus",
+                        "sellerHandoffDeadline",
+                        "scanGraceDeadline"
+                    ]
+                }
+            }
+        ]
+    }
+]

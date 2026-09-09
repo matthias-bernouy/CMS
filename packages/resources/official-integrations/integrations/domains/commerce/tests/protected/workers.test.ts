@@ -6,7 +6,7 @@ import { loadSupabaseSchemaSql } from "../../../../../tests/helpers/supabaseSql"
 
 const integrationRoot = resolve(import.meta.dir, "../..");
 
-describe("commerce 1.0.0 protected workers", () => {
+describe("commerce 1.1.0 protected workers", () => {
     test("publishes a system-only bounded deadline command", async () => {
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
         if (!definition) {
