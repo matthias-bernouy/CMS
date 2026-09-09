@@ -129,6 +129,17 @@ export function registerFoundationTests(): void {
         expect(schema).toContain("tracking_next_attempt_at");
     });
 
+    test("seeds settings safely during an idempotent forced-RLS reinstall", async () => {
+        const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
+        const releaseForce = schema.indexOf("alter table delivery.settings no force row level security");
+        const seed = schema.indexOf("insert into delivery.settings (id)");
+        const restoreForce = schema.indexOf("alter table delivery.settings force row level security");
+
+        expect(releaseForce).toBeGreaterThanOrEqual(0);
+        expect(seed).toBeGreaterThan(releaseForce);
+        expect(restoreForce).toBeGreaterThan(seed);
+    });
+
     test("declares durable projection leases, bounded retries, and manual review", async () => {
         const schema = await loadSupabaseSchemaSql(integrationRoot, "install/sql/schema.manifest.json");
 

@@ -54,6 +54,11 @@ create table if not exists delivery.settings (
     constraint settings_connect_output_type_not_blank check (length(btrim(connect_output_type)) > 0)
 );
 
+-- Reinstallations start with FORCE RLS left enabled by the previous successful
+-- migration. The package owner must seed the singleton before the final access
+-- policy file restores FORCE RLS inside the same atomic bundle.
+alter table delivery.settings no force row level security;
+
 alter table delivery.settings
     add column if not exists default_shipping_amount bigint not null default 450;
 
