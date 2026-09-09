@@ -1,4 +1,8 @@
 export type { CollectionIntegrationDefinition } from "../interfaces/Integration";
+export {
+    integrationRuntimeDependencies,
+    type IntegrationRuntimeDependency,
+} from "../core/definitions/runtimeDependencies";
 export type {
     CollectionBlocResource,
     CollectionEndpointRequirement,

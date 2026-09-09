@@ -1,4 +1,5 @@
 import {
+    integrationRuntimeDependencies,
     integrationVersionSatisfies,
     isIntegrationDefinitionVersionInstallable,
     type IntegrationDefinitionVersion,
@@ -48,7 +49,7 @@ export async function resolveRequiredPackages(
     const resolved = new Map<string, LocalReleasePackage>();
     const visiting = new Set<string>();
     const visit = async (owner: LocalReleasePackage): Promise<void> => {
-        for (const dependency of requiredDependencies(owner.definition).sort((left, right) =>
+        for (const dependency of integrationRuntimeDependencies(owner.definition).toSorted((left, right) =>
             left.kind.localeCompare(right.kind),
         )) {
             const selected = await resolveDependency(dependency.kind, dependency.versionRange, local);
@@ -92,44 +93,6 @@ async function resolveDependency(
         );
     }
     return await loadLocalReleasePackage(record, local);
-}
-
-function requiredDependencies(definition: LocalReleasePackage["definition"]): Array<{
-    kind: string;
-    versionRange?: string;
-}> {
-    const declared = (definition.dependencies ?? []).filter((entry) => !entry.optional);
-    if (definition.schema !== "cms.integration.definition.v2" || definition.type !== "collection") {
-        return declared;
-    }
-    const sources = new Map<string, string>();
-    const collections = new Map<string, string>();
-    for (const endpoint of definition.resources.flatMap((resource) => resource.endpoints ?? [])) {
-        const existing = sources.get(endpoint.source);
-        if (existing && existing !== endpoint.sourceVersion) {
-            throw new Error(`Collection ${definition.kind} declares conflicting ranges for ${endpoint.source}`);
-        }
-        sources.set(endpoint.source, endpoint.sourceVersion);
-    }
-    for (const requirement of definition.resources.flatMap((resource) => resource.requires?.collections ?? [])) {
-        const existing = collections.get(requirement.kind);
-        if (existing && existing !== requirement.versionRange) {
-            throw new Error(`Collection ${definition.kind} declares conflicting ranges for ${requirement.kind}`);
-        }
-        collections.set(requirement.kind, requirement.versionRange);
-    }
-    for (const dependency of definition.theme?.dependencies ?? []) {
-        const existing = collections.get(dependency.kind);
-        if (existing && existing !== dependency.versionRange) {
-            throw new Error(`Collection ${definition.kind} declares conflicting ranges for ${dependency.kind}`);
-        }
-        collections.set(dependency.kind, dependency.versionRange);
-    }
-    return [
-        ...declared,
-        ...[...collections].map(([kind, versionRange]) => ({ kind, versionRange })),
-        ...[...sources].map(([kind, versionRange]) => ({ kind, versionRange })),
-    ];
 }
 
 function olderRecords(records: readonly LocalPackageRecord[], kind: string, version: string): LocalPackageRecord[] {

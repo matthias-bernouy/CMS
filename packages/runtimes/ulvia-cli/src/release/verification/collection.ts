@@ -60,7 +60,7 @@ export function verifyCollectionRelease(
         );
     }
     const scenarioCount = 1 + input.baselines.length;
-    log(`✓ collection upgrade verification passed for ${scenarioCount} scenario(s)`);
+    log(`✓ collection structural upgrade verification passed for ${scenarioCount} scenario(s)`);
     return { scenarioCount, resilienceScenarioCount: 0 };
 }
 

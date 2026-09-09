@@ -17,7 +17,7 @@ export class RuntimeLocalReleaseVerifier implements LocalReleaseVerifier {
             input.candidate.definition.schema === "cms.integration.definition.v2" &&
             input.candidate.definition.type === "collection"
         ) {
-            return verifyCollectionRelease(input, this.log);
+            verifyCollectionRelease(input, this.log);
         }
         const fixtures = input.candidate.verification
             ? await loadUpgradeFixtureSuiteFromVerification(input.candidate.verification.envelope)

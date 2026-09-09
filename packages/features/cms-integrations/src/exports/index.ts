@@ -230,6 +230,10 @@ export {
 } from "../core/parsing/parseIntegrationImportDto";
 export { parseIntegrationDefinition } from "../core/parsing/definition/definition";
 export { assertIntegrationBlocTagPublishable } from "../core/parsing/artifacts/bloc";
+export {
+    integrationRuntimeDependencies,
+    type IntegrationRuntimeDependency,
+} from "../core/definitions/runtimeDependencies";
 export { assertCollectionConformance } from "../core/resources/conformance";
 export { resolveCollectionDependencies } from "../core/resources/dependencySelection";
 export {

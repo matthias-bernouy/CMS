@@ -1,4 +1,5 @@
 import {
+    integrationRuntimeDependencies,
     integrationVersionSatisfies,
     isIntegrationDefinitionVersionInstallable,
     type IntegrationDefinition,
@@ -24,7 +25,7 @@ function visitDependencies(
     resolved: Map<string, AdmissionDependencyReferenceV1>,
     visiting: Set<string>,
 ): void {
-    for (const dependency of [...(definition.dependencies ?? [])].toSorted((left, right) =>
+    for (const dependency of integrationRuntimeDependencies(definition).toSorted((left, right) =>
         compareText(left.kind, right.kind),
     )) {
         const index = snapshot.getIndex(dependency.kind);
@@ -33,9 +34,6 @@ function visitDependencies(
             version: selectDependency(index, dependency.versionRange, selection),
         }));
         if (selected.some((entry) => !entry.version)) {
-            if (dependency.optional) {
-                continue;
-            }
             throw new FsIntegrationRegistryCandidateAdmissionPlanningError(
                 "dependency_unavailable",
                 `Required dependency ${dependency.kind}${dependency.versionRange ? ` ${dependency.versionRange}` : ""} has no exact minimum and stable resolution`,
@@ -94,14 +92,11 @@ function visitSelectedDependencies(
     resolved: Map<string, AdmissionDependencyReferenceV1>,
     visiting: Set<string>,
 ): void {
-    for (const dependency of [...(definition.dependencies ?? [])].toSorted((left, right) =>
+    for (const dependency of integrationRuntimeDependencies(definition).toSorted((left, right) =>
         compareText(left.kind, right.kind),
     )) {
         const version = selectDependency(snapshot.getIndex(dependency.kind), dependency.versionRange, selection);
         if (!version) {
-            if (dependency.optional) {
-                continue;
-            }
             throw new FsIntegrationRegistryCandidateAdmissionPlanningError(
                 "dependency_unavailable",
                 `Required transitive dependency ${dependency.kind}${dependency.versionRange ? ` ${dependency.versionRange}` : ""} has no ${selection} resolution`,

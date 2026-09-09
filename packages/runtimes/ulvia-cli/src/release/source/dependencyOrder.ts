@@ -1,4 +1,4 @@
-import { integrationVersionSatisfies } from "@bernouy/cms-integrations";
+import { integrationRuntimeDependencies, integrationVersionSatisfies } from "@bernouy/cms-integrations";
 import { readLocalReleaseSource } from ".";
 
 export async function orderLocalReleaseKinds(root: string, kinds: readonly string[]): Promise<readonly string[]> {
@@ -21,7 +21,7 @@ export async function orderLocalReleaseKinds(root: string, kinds: readonly strin
         }
         visiting.push(kind);
         const source = sources.get(kind)!;
-        const dependencies = authorDependencies(source.definition)
+        const dependencies = integrationRuntimeDependencies(source.definition)
             .filter((dependency) => sourceSatisfies(dependency, sources.get(dependency.kind)))
             .map((dependency) => dependency.kind)
             .sort((left, right) => left.localeCompare(right));
@@ -37,23 +37,6 @@ export async function orderLocalReleaseKinds(root: string, kinds: readonly strin
         visit(kind);
     }
     return ordered;
-}
-
-function authorDependencies(
-    definition: Awaited<ReturnType<typeof readLocalReleaseSource>>["definition"],
-): Array<{ kind: string; versionRange?: string }> {
-    const declared = (definition.dependencies ?? []).filter((dependency) => !dependency.optional);
-    if (definition.schema !== "cms.integration.definition.v2" || definition.type !== "collection") {
-        return declared;
-    }
-    const resourceDependencies = definition.resources.flatMap((resource) => [
-        ...(resource.endpoints ?? []).map((endpoint) => ({
-            kind: endpoint.source,
-            versionRange: endpoint.sourceVersion,
-        })),
-        ...(resource.requires?.collections ?? []).map(({ kind, versionRange }) => ({ kind, versionRange })),
-    ]);
-    return [...declared, ...(definition.theme?.dependencies ?? []), ...resourceDependencies];
 }
 
 function sourceSatisfies(

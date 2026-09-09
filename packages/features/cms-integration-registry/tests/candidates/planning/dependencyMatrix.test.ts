@@ -7,6 +7,63 @@ import { planningPolicy, validatingCandidate, verificationCandidate } from "./fi
 afterEach(cleanupRegistryFixtures);
 
 describe("candidate dependency admission matrix", () => {
+    test("pins implicit collection theme and endpoint dependencies", async () => {
+        const fixture = registryFixture();
+        const commerce = await publicationPackage("commerce", "1.0.0");
+        const tokens = await publicationPackage("tokens", "1.0.0");
+        await fixture.publisher.publish({ package: commerce });
+        await fixture.publisher.publish({ package: tokens });
+        const target = await publicationPackage("consumer", "1.0.0", {
+            schema: "cms.integration.definition.v2",
+            type: "collection",
+            theme: {
+                dependencies: [{ kind: "tokens", versionRange: "^1.0.0" }],
+                categories: [],
+            },
+            resourceCategories: [{ id: "commerce", label: "Commerce" }],
+            resources: [
+                {
+                    id: "consumer/blocs/card",
+                    type: "bloc",
+                    artifact: "consumer-card",
+                    category: "commerce",
+                    endpoints: [
+                        {
+                            source: "commerce",
+                            sourceVersion: "^1.0.0",
+                            endpoint: "urn:commerce:listOffers",
+                            contractVersion: "^1.0.0",
+                        },
+                    ],
+                },
+            ],
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: { tag: "consumer-card", name: "Card", compositionHTML: "<article></article>" },
+                },
+            ],
+        });
+        const candidate = await verificationCandidate(target);
+        const store = await validatingCandidate(fixture.root, "candidate-collection-dependencies", candidate);
+        const planner = new FsIntegrationRegistryCandidateAdmissionPlanner({
+            snapshots: fixture.snapshots,
+            mutations: fixture.mutations,
+            candidates: store,
+            reviewedSchemaBaselines: fixture.reviewedSchemaBaselines,
+            policy: await planningPolicy(),
+        });
+
+        const plan = await planner.plan({ candidateId: "candidate-collection-dependencies", candidate });
+
+        expect(plan.admission.dependencies).toEqual([
+            { selection: "minimum", kind: "commerce", version: "1.0.0", packageDigest: commerce.digest },
+            { selection: "minimum", kind: "tokens", version: "1.0.0", packageDigest: tokens.digest },
+            { selection: "stable", kind: "commerce", version: "1.0.0", packageDigest: commerce.digest },
+            { selection: "stable", kind: "tokens", version: "1.0.0", packageDigest: tokens.digest },
+        ]);
+    });
+
     test("pins distinct minimum and stable transitive graphs to their exact package digests", async () => {
         const fixture = registryFixture();
         const sharedMinimum = await publicationPackage("shared", "1.0.0");

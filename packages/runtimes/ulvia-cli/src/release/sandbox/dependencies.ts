@@ -1,4 +1,4 @@
-import { integrationVersionSatisfies } from "@bernouy/cms-integrations";
+import { integrationRuntimeDependencies, integrationVersionSatisfies } from "@bernouy/cms-integrations";
 import { compare, rcompare } from "semver";
 import type { LocalReleasePackage } from "../types";
 import type { ReleaseSandboxClient } from "./client";
@@ -11,10 +11,7 @@ export async function installRequiredDependencies(
     client: ReleaseSandboxClient,
     visiting = new Set<string>(),
 ): Promise<void> {
-    for (const dependency of owner.definition.dependencies ?? []) {
-        if (dependency.optional) {
-            continue;
-        }
+    for (const dependency of integrationRuntimeDependencies(owner.definition)) {
         const current = installed.get(dependency.kind);
         if (current && (!dependency.versionRange || integrationVersionSatisfies(current, dependency.versionRange))) {
             continue;
