@@ -52,10 +52,6 @@ function finiteNumber(value) {
     return Number.isFinite(number) ? number : null;
 }
 
-export function headersObject(headers) {
-    return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
-}
-
 export function errorMessage(error, copy = (name) => relayCopy[name]) {
     if (error instanceof HttpResponseError && error.status === 401) {
         return copy("login-message");

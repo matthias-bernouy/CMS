@@ -53,6 +53,17 @@ export class MossaResponsiveGridEditor extends Editor {
                         ],
                     },
                     {
+                        type: "select",
+                        label: "Column balance",
+                        attribute: "split",
+                        defaultValue: "equal",
+                        options: [
+                            { label: "Equal", value: "equal" },
+                            { label: "Wide first", value: "wide-start" },
+                            { label: "Wide last", value: "wide-end" },
+                        ],
+                    },
+                    {
                         type: "segmented",
                         label: "Gap",
                         attribute: "gap",

@@ -96,6 +96,16 @@ export class BlocEditor extends Editor {
                             { label: "Media overlay", value: "overlay" },
                         ],
                     },
+                    {
+                        type: "segmented",
+                        label: "Presentation",
+                        attribute: "presentation",
+                        defaultValue: "badge",
+                        options: [
+                            { label: "Badge", value: "badge" },
+                            { label: "Step", value: "step" },
+                        ],
+                    },
                 ],
             },
         ];

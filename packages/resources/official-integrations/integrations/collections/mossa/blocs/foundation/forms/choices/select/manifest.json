@@ -5,6 +5,6 @@
     "defaultContent": "./default.html",
     "meta": {
         "title": "Select",
-        "description": "Form-associated select with adaptive native and custom presentations."
+        "description": "Form-associated select with adaptive native, custom, and searchable presentations."
     }
 }

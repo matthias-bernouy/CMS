@@ -84,9 +84,11 @@ export class MossaSurfaceCard extends HTMLElement {
                     color: var(--_mossa-card-muted-color, var(--_mossa-card-muted));
                 }
 
-                :host(:not(:has([slot="media"]))) [part="media"],
-                :host(:not(:has([slot="title"], [slot="description"]))) [part="header"],
-                :host(:not(:has([slot="actions"]))) [part="actions"] { display: none; }
+                ::slotted([hidden]) { display: none !important; }
+
+                :host(:not(:has([slot="media"]:not([hidden])))) [part="media"],
+                :host(:not(:has([slot="title"]:not([hidden]), [slot="description"]:not([hidden])))) [part="header"],
+                :host(:not(:has([slot="actions"]:not([hidden])))) [part="actions"] { display: none; }
 
                 :host([appearance="filled"]) {
                     --_mossa-card-background: var(--_mossa-tone-base);

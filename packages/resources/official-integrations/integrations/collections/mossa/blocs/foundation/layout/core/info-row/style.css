@@ -46,8 +46,53 @@
     text-overflow: ellipsis;
 }
 
+:host(:not([has-icon])) .row {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+:host(:not([has-icon])) .icon {
+    display: none;
+}
+
 :host([variant="mono"]) .value {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-weight: 700;
     letter-spacing: 0.02em;
+}
+
+:host([density="compact"]) .row {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .65rem;
+}
+
+:host([density="compact"]) .icon {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0;
+    background: transparent;
+    color: var(--ulvia-surface-muted-text);
+    font-size: 1rem;
+}
+
+:host([density="compact"]) .text {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .75rem;
+    align-items: baseline;
+}
+
+:host([density="compact"]) .value {
+    text-align: end;
+}
+
+:host([density="compact"][value-align="start"]) .value {
+    text-align: start;
+}
+
+:host([density="compact"]) .eyebrow {
+    color: var(--ulvia-surface-muted-text);
+    font-size: .9rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
 }

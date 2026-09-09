@@ -1,24 +1,68 @@
-<mossa-commerce-offer-list locale="en-US" page-size="12" grid-min="md" grid-max="lg" grid-gap="md" grid-packing="fill" card-stretch="true">
-    <mossa-responsive-grid min="md" max="lg" gap="md" packing="fill" justify-items="stretch" data-offers-grid cms-condition="$source.loading">
-        <mossa-skeleton height="20rem" animation="wave" label="Loading offers"></mossa-skeleton>
-        <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-        <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-    </mossa-responsive-grid>
+<mossa-commerce-offer-list grid-min="md" grid-max="lg" grid-gap="md" grid-packing="fill">
+    <input name="mossaOfferOffset" cms-param-sync="mossaOfferOffset" type="hidden">
+    <input name="mossaOfferFilters" cms-page-state="mossaOfferFilters" type="hidden">
 
-    <mossa-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">Offers could not be loaded.</mossa-toast>
+    <section
+        cms-source-id="offers"
+        cms-source="/.cms/sources/commerce/offers?q=#{q}&amp;productId=#{productId}&amp;variantId=#{variantId}&amp;sellerId=#{sellerId}&amp;conditionCode=#{conditionCode}&amp;category=#{category}&amp;brand=#{brand}&amp;priceMin=#{priceMin}&amp;priceMax=#{priceMax}&amp;sort=#{sort}&amp;filters=@{mossaOfferFilters}&amp;limit=12&amp;offset=#{mossaOfferOffset} as data"
+    >
+        <mossa-responsive-grid
+            min="{{ presentation.gridMin }}"
+            max="{{ presentation.gridMax }}"
+            gap="{{ presentation.gridGap }}"
+            packing="{{ presentation.gridPacking }}"
+            justify-items="stretch"
+            cms-condition="$source.loading"
+        >
+            <mossa-skeleton height="20rem" animation="wave" label="Loading offers"></mossa-skeleton>
+            <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+            <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        </mossa-responsive-grid>
 
-    <mossa-surface-card appearance="outlined" cms-condition="$source.loaded && data.total == 0">
-        <strong slot="title">No offer available</strong>
-    </mossa-surface-card>
+        <mossa-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">Offers could not be loaded.</mossa-toast>
 
-    <mossa-responsive-grid min="md" max="lg" gap="md" packing="fill" justify-items="stretch" data-offers-grid cms-condition="$source.loaded && data.total > 0">
-        <mossa-commerce-offer-preview amount="{{ offer.acceptedPriceAmount }}" currency="{{ offer.currency }}" whole-unit-prices="{{ data.wholeUnitPrices }}" stretch data-offer-card cms-repeat="data.items as offer">
-            <a slot="navigation" data-offer-link data-offer-slug="{{ offer.slug }}" aria-label="View {{ offer.title }}"></a>
-            <img slot="media" src="/.cms/sources/commerce/publicOfferImage?id={{ offer.mainImageMediaId }}" data-source-image-access="public" data-source-width="{{ offer.mainImageWidth }}" data-source-height="{{ offer.mainImageHeight }}" alt="{{ offer.title }}" loading="lazy" decoding="async" cms-condition="offer.mainImageMediaId">
-            <span slot="title">{{ offer.title }}</span>
-            <span slot="description">{{ offer.description }}</span>
-        </mossa-commerce-offer-preview>
-    </mossa-responsive-grid>
+        <mossa-surface-card appearance="outlined" cms-condition="$source.loaded &amp;&amp; presentation.total == 0">
+            <strong slot="title">No offer available</strong>
+        </mossa-surface-card>
 
-    <mossa-pagination page="1" page-size="12" total="{{ data.total }}" cms-condition="$source.loaded && data.total > data.limit"></mossa-pagination>
+        <mossa-responsive-grid
+            min="{{ presentation.gridMin }}"
+            max="{{ presentation.gridMax }}"
+            gap="{{ presentation.gridGap }}"
+            packing="{{ presentation.gridPacking }}"
+            justify-items="stretch"
+            cms-condition="$source.loaded &amp;&amp; presentation.total &gt; 0"
+        >
+            <mossa-commerce-offer-preview
+                amount="{{ offer.acceptedPriceAmount }}"
+                currency="{{ offer.currency }}"
+                whole-unit-prices="{{ presentation.wholeUnitPrices }}"
+                stretch
+                cms-repeat="presentation.items as offer"
+            >
+                <a slot="navigation" href="/offers/{{ offer.slug | urlencode }}" aria-label="View {{ offer.title }}"></a>
+                <img
+                    slot="media"
+                    src="/.cms/sources/commerce/publicOfferImage?id={{ offer.mainImageMediaId | urlencode }}"
+                    data-cms-src="/.cms/sources/commerce/publicOfferImage?id={{ offer.mainImageMediaId | urlencode }}"
+                    data-source-image-access="public"
+                    data-source-width="{{ offer.mainImageWidth }}"
+                    data-source-height="{{ offer.mainImageHeight }}"
+                    alt="{{ offer.title }}"
+                    loading="lazy"
+                    decoding="async"
+                    cms-condition="offer.mainImageMediaId"
+                >
+                <span slot="title">{{ offer.title }}</span>
+                <span slot="description">{{ offer.description }}</span>
+            </mossa-commerce-offer-preview>
+        </mossa-responsive-grid>
+
+        <mossa-pagination
+            page="{{ presentation.page }}"
+            page-size="{{ presentation.pageSize }}"
+            total="{{ presentation.total }}"
+            cms-condition="$source.loaded &amp;&amp; presentation.total &gt; presentation.pageSize"
+        ></mossa-pagination>
+    </section>
 </mossa-commerce-offer-list>

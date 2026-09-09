@@ -1,109 +1,104 @@
-import { NumericRangeFilters } from "../range/range-controller";
-import { SchemaOfferFilters } from "../schema/schema";
+import { refreshSourceContext, setSourceContext, sourceFormRequest } from "@bernouy/components/binding";
+import { filterPresentation, presentationAttributes, projectSchema } from "./presentation";
 
 export class CommerceOfferFilter extends HTMLElement {
-    static observedAttributes = [
-        "category-param",
-        "schema-driven",
-        "show-brand",
-        "all-label",
-        "boolean-true-label",
-        "boolean-false-label",
-        "error-label",
-    ];
+    static observedAttributes = presentationAttributes;
 
-    constructor() {
-        super();
-        this.schemaFilters = null;
-        this.numericRangeFilters = null;
-        this.authoredTemplate = null;
-        this.schemaModeActive = false;
+    private requestCategory = "";
+    private requestPending = false;
+    private syncScheduled = false;
+
+    connectedCallback(): void {
+        this.style.display = "contents";
+        setSourceContext(this.source, (value) => ({
+            ...projectSchema(value, this),
+            presentation: {
+                ...filterPresentation(this),
+                matchesCategory: Boolean(this.category && this.category === this.requestCategory),
+            },
+        }));
+        this.categoryRoot?.addEventListener("change", this.onCategorySignal);
+        this.ownerDocument.addEventListener("cms-params:change", this.onCategorySignal);
+        this.ownerDocument.defaultView?.addEventListener("popstate", this.onCategorySignal);
+        this.updateSelectCategoryCopy();
+        this.scheduleSync();
     }
 
-    connectedCallback() {
-        if (this.schemaSource) {
-            this.append(this.schemaSource);
-        }
-        this.setAttribute("data-commerce-offer-filter", "");
-        if (this.hasAttribute("data-numeric-range")) {
-            this.style.display = "grid";
-            this.numericRangeFilters ||= new NumericRangeFilters(this);
-            this.numericRangeFilters.connect();
-            return;
-        }
-        if (!this.schemaDriven) {
-            this.style.display = "contents";
-            return;
-        }
-        this.activateSchemaMode();
+    disconnectedCallback(): void {
+        this.categoryRoot?.removeEventListener("change", this.onCategorySignal);
+        this.ownerDocument.removeEventListener("cms-params:change", this.onCategorySignal);
+        this.ownerDocument.defaultView?.removeEventListener("popstate", this.onCategorySignal);
     }
 
-    disconnectedCallback() {
-        if (this.hasAttribute("data-numeric-range")) {
-            this.numericRangeFilters?.disconnect();
-            return;
-        }
-        this.deactivateSchemaMode();
-    }
-
-    attributeChangedCallback(name) {
+    attributeChangedCallback(): void {
         if (!this.isConnected) {
             return;
         }
-        if (!this.schemaDriven) {
-            this.deactivateSchemaMode();
+        this.updateSelectCategoryCopy();
+        refreshSourceContext(this.source);
+    }
+
+    private readonly onCategorySignal = (): void => this.scheduleSync();
+
+    private scheduleSync(): void {
+        if (this.syncScheduled) {
             return;
         }
-        this.activateSchemaMode();
-        if (name !== "category-param" && name !== "schema-driven") {
-            this.schemaFilters.render();
-        }
-    }
-
-    activateSchemaMode() {
-        const source = this.schemaSource;
-        if (!this.schemaModeActive) {
-            this.authoredTemplate =
-                [...this.children].find(
-                    (child) => child.localName === "template" && child.hasAttribute("data-authored-filter-content"),
-                ) || this.ownerDocument.createElement("template");
-            if (!this.authoredTemplate.hasAttribute("data-authored-filter-content")) {
-                this.authoredTemplate.setAttribute("data-authored-filter-content", "");
-                this.authoredTemplate.content.append(...[...this.childNodes].filter((node) => node !== source));
-                this.insertBefore(this.authoredTemplate, source);
+        this.syncScheduled = true;
+        queueMicrotask(() => {
+            this.syncScheduled = false;
+            if (this.isConnected) {
+                void this.syncCategory();
             }
-            this.schemaModeActive = true;
+        });
+    }
+
+    private async syncCategory(): Promise<void> {
+        const category = this.category;
+        this.selectCategoryMessage.hidden = Boolean(category);
+        refreshSourceContext(this.source);
+        if (!category || this.requestPending || category === this.requestCategory) {
+            return;
         }
-        this.style.display = "block";
-        this.schemaFilters ||= new SchemaOfferFilters(this);
-        this.schemaFilters.connect();
-        this.schemaFilters.renderCurrent();
-    }
-
-    deactivateSchemaMode() {
-        this.schemaFilters?.disconnect();
-        this.removeAttribute("data-schema-category");
-        this.removeAttribute("data-schema-status");
-        if (this.schemaModeActive) {
-            const authoredContent = this.authoredTemplate?.content;
-            const source = this.schemaSource;
-            this.replaceChildren(...(authoredContent ? [authoredContent] : []), ...(source ? [source] : []));
-            this.authoredTemplate = null;
-            this.schemaModeActive = false;
+        this.requestPending = true;
+        this.requestCategory = category;
+        refreshSourceContext(this.source);
+        try {
+            await sourceFormRequest(this, "schema", { category });
+        } catch {
+            // Binding owns and renders the declarative source error state.
+        } finally {
+            this.requestPending = false;
+            refreshSourceContext(this.source);
+            if (this.category && this.category !== this.requestCategory) {
+                this.scheduleSync();
+            }
         }
-        this.style.display = "contents";
     }
 
-    managedParams() {
-        return this.schemaFilters?.managedParams() ?? [];
+    private updateSelectCategoryCopy(): void {
+        this.selectCategoryMessage.textContent =
+            this.getAttribute("select-category-label") || "Select a category to see its filters.";
     }
 
-    get schemaSource() {
-        return [...this.children].find((child) => child.hasAttribute("data-offer-filter-schema-source")) || null;
+    private get category(): string {
+        return this.categoryControl?.value.trim() || "";
     }
 
-    get schemaDriven() {
-        return this.hasAttribute("schema-driven") && this.getAttribute("schema-driven") !== "false";
+    private get categoryControl(): HTMLInputElement | null {
+        return this.categoryRoot?.querySelector<HTMLInputElement>('[cms-param-sync="category"]') || null;
+    }
+
+    private get categoryRoot(): HTMLElement | null {
+        return this.closest<HTMLElement>("mossa-category-filters");
+    }
+
+    private get selectCategoryMessage(): HTMLParagraphElement {
+        return this.querySelector<HTMLParagraphElement>(".select-category")!;
+    }
+
+    private get source(): HTMLFormElement {
+        return this.querySelector<HTMLFormElement>('[cms-source-id="schema"]')!;
     }
 }
 

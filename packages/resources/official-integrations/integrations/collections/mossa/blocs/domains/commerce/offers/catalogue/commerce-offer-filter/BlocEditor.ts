@@ -5,55 +5,30 @@ export class CommerceOfferFilterEditor extends Editor {
         return [
             {
                 kind: "self",
-                label: "Filter",
+                label: "Copy",
                 settings: [
-                    {
-                        type: "segmented",
-                        label: "Schema-driven panel",
-                        attribute: "schema-driven",
-                        defaultValue: "false",
-                        options: [
-                            { label: "Static field", value: "false" },
-                            { label: "Dynamic panel", value: "true" },
-                        ],
-                    },
-                    { type: "text", label: "Product field", attribute: "field" },
-                    {
-                        type: "select",
-                        label: "Operator",
-                        attribute: "operator",
-                        defaultValue: "eq",
-                        options: [
-                            { label: "Equals", value: "eq" },
-                            { label: "One of", value: "in" },
-                            { label: "Minimum", value: "gte" },
-                            { label: "Maximum", value: "lte" },
-                        ],
-                    },
-                    {
-                        type: "text",
-                        label: "Category URL parameter",
-                        attribute: "category-param",
-                        defaultValue: "category",
-                    },
-                ],
-            },
-            {
-                kind: "self",
-                label: "Filter copy",
-                settings: [
-                    { type: "text", label: "All options", attribute: "all-label", defaultValue: "All" },
-                    { type: "text", label: "True option", attribute: "boolean-true-label", defaultValue: "Yes" },
-                    { type: "text", label: "False option", attribute: "boolean-false-label", defaultValue: "No" },
-                    { type: "text", label: "Error message", attribute: "error-label" },
+                    text("Brand label", "brand-label", "Brand"),
+                    text("All brands", "brand-all-label", "All brands"),
+                    text("Select a category", "select-category-label", "Select a category to see its filters."),
+                    text("Advanced filters", "advanced-label", "Advanced filters"),
+                    text("All values", "all-label", "All"),
+                    text("Boolean true", "boolean-true-label", "Yes"),
+                    text("Boolean false", "boolean-false-label", "No"),
+                    text("Loading", "loading-label", "Loading filters…"),
+                    text("Empty", "empty-label", "No additional filters for this category."),
+                    text("Error", "error-label", "Filters for this category could not be loaded."),
                 ],
             },
         ];
     }
 
     protected override contentSlots(): ContentSlot[] {
-        return [{ label: "Filter control", accepts: [{ kind: "any-component" }] }];
+        return [{ label: "Additional filter controls", accepts: [{ kind: "any-component" }] }];
     }
+}
+
+function text(label: string, attribute: string, defaultValue: string) {
+    return { type: "text" as const, label, attribute, defaultValue };
 }
 
 registerEditor({ editor: CommerceOfferFilterEditor });

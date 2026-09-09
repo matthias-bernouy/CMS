@@ -1,6 +1,12 @@
-<mossa-stripe-connect-onboarding locale="en-US" payout-currency="USD">
-    <a slot="profile-link" data-profile-link href="#">Complete my profile</a>
-    <a slot="marketplace-activation-terms" data-marketplace-terms href="#" target="_blank" rel="noopener noreferrer">platform terms</a>
-    <a slot="payment-terms" data-payment-terms href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener noreferrer">payment service terms</a>
-    <a slot="marketplace-update-terms" data-marketplace-terms href="#" target="_blank" rel="noopener noreferrer">platform terms</a>
+<mossa-stripe-connect-onboarding payout-currency="USD">
+    <a slot="profile-link" href="#">Complete my profile</a>
+    <a slot="marketplace-activation-terms" href="#" target="_blank" rel="noopener noreferrer">platform terms</a>
+    <a slot="payment-terms" href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener noreferrer">payment service terms</a>
+    <a slot="marketplace-update-terms" href="#" target="_blank" rel="noopener noreferrer">platform terms</a>
+    <form hidden cms-source-id="connect-status" cms-source="/.cms/sources/stripe-connect/getConnectStatus" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="connect-account" cms-source="/.cms/sources/user-account/getAccount" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="connect-config" cms-source="/.cms/sources/stripe-connect/getConnectClientConfig" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="connect-wallet" cms-source="/.cms/sources/stripe-connect/getConnectWallet" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="connect-verification" cms-source="/.cms/sources/stripe-connect/submitConnectVerification" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
+    <form hidden cms-source-id="connect-enroll" cms-source="/.cms/sources/stripe-connect/enrollConnectSeller" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
 </mossa-stripe-connect-onboarding>

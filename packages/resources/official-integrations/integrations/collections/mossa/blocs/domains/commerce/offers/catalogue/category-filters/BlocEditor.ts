@@ -7,7 +7,6 @@ export class BlocEditor extends Editor {
                 kind: "self",
                 label: "Categories",
                 settings: [
-                    { type: "text", label: "URL parameter", attribute: "category-param", defaultValue: "category" },
                     {
                         type: "text",
                         label: "First category",

@@ -19,21 +19,12 @@
     "requires": {
         "resources": [
             "mossa/blocs/commerce-offer-filter-controller",
+            "mossa/blocs/input",
             "mossa/blocs/option",
-            "mossa/blocs/select"
+            "mossa/blocs/range-filter",
+            "mossa/blocs/select",
+            "mossa/blocs/stack"
         ]
     },
-    "defaultActive": false,
-    "theme": {
-        "contract": "ulvia-theme@3",
-        "required": [
-            "body-text",
-            "radius-control",
-            "secondary-base",
-            "shadow-sm",
-            "surface-background",
-            "surface-border",
-            "surface-muted-text"
-        ]
-    }
+    "defaultActive": false
 }

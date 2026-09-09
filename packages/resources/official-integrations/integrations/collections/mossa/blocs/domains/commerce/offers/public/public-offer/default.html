@@ -1,1 +1,12 @@
-<mossa-public-offer slug-param="slug" locale="en-US" valuation-minimum-field="valuationMinimum" valuation-maximum-field="valuationMaximum" valuation-currency="USD"></mossa-public-offer>
+<mossa-public-offer condition-tone="neutral" price-tone="primary" purchase-appearance="card" valuation-minimum-field="valuationMinimum" valuation-maximum-field="valuationMaximum" valuation-currency="USD">
+    <span slot="error-title">Offer not found</span><span slot="error-message">This offer is no longer available or does not exist.</span>
+    <span slot="product-error-title">Product unavailable</span><span slot="product-error-message">The product details could not be loaded.</span>
+    <a slot="back-link" href="/offers">Back to offers</a><span slot="model-label">Model</span>
+    <span slot="technical-details-label">Technical details</span>
+    <span slot="valuation-label">Reference value</span><span slot="price-label">Seller price</span>
+    <span slot="shipping-message">Pickup-point delivery available</span>
+    <a slot="buy-link" href="/checkout?offerId={{ presentation.offerId | urlencode }}">Buy · {{ presentation.priceAmount | minorCurrency(presentation.currency) }}</a>
+    <a slot="negotiate-link" href="/offers/{{ presentation.offerSlug | urlencode }}/negotiate">Make an offer</a>
+    <span slot="secure-payment-label">Secure payment</span>
+    <span slot="buyer-protection-label">Buyer protection</span><span slot="tracked-delivery-label">Tracked delivery</span>
+</mossa-public-offer>

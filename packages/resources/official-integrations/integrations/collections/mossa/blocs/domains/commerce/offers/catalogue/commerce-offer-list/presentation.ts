@@ -1,26 +1,44 @@
-import { setAttributeIfChanged } from "./helpers";
+type ObjectValue = Record<string, unknown>;
 
-export function syncOfferListPresentation(host) {
-    for (const grid of host.querySelectorAll("[data-offers-grid]")) {
-        setAttributeIfChanged(grid, "min", host.getAttribute("grid-min") || "md");
-        setAttributeIfChanged(grid, "max", host.getAttribute("grid-max") || "lg");
-        setAttributeIfChanged(grid, "gap", host.getAttribute("grid-gap") || "md");
-        setAttributeIfChanged(grid, "packing", host.getAttribute("grid-packing") || "fill");
-        setAttributeIfChanged(grid, "justify-items", "stretch");
-    }
+export const presentationAttributes = [
+    "grid-gap",
+    "grid-max",
+    "grid-min",
+    "grid-packing",
+    "page-size",
+    "scroll-on-page-change",
+];
 
-    const stretch = host.getAttribute("card-stretch") !== "false";
-    const offerUrl = host.getAttribute("offer-url")?.trim() || "";
-    const locale = host.getAttribute("locale")?.trim() || "en-US";
-    for (const card of host.querySelectorAll("[data-offer-card]")) {
-        card.toggleAttribute("stretch", stretch);
-        setAttributeIfChanged(card, "locale", locale);
-        const link = card.querySelector("[data-offer-link]");
-        const slug = link?.getAttribute("data-offer-slug") || "";
-        if (offerUrl && slug) {
-            setAttributeIfChanged(link, "href", offerUrl.replaceAll("{slug}", encodeURIComponent(slug)));
-        } else {
-            link?.removeAttribute("href");
-        }
-    }
+export function offerListPresentation(host: HTMLElement, value: unknown, offset: number): Record<string, unknown> {
+    const response = objectValue(value) || {};
+    const pageSize = positiveInteger(host.getAttribute("page-size"), 12);
+    return {
+        gridGap: host.getAttribute("grid-gap") || "md",
+        gridMax: host.getAttribute("grid-max") || "lg",
+        gridMin: host.getAttribute("grid-min") || "md",
+        gridPacking: host.getAttribute("grid-packing") || "fill",
+        items: objectValues(response.items),
+        page: Math.floor(offset / pageSize) + 1,
+        pageSize,
+        total: nonNegativeInteger(response.total),
+        wholeUnitPrices: response.wholeUnitPrices === true,
+    };
+}
+
+function positiveInteger(value: unknown, fallback: number): number {
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function objectValue(value: unknown): ObjectValue | null {
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as ObjectValue) : null;
+}
+
+function objectValues(value: unknown): ObjectValue[] {
+    return Array.isArray(value) ? value.map(objectValue).filter((item): item is ObjectValue => item !== null) : [];
+}
+
+function nonNegativeInteger(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : 0;
 }

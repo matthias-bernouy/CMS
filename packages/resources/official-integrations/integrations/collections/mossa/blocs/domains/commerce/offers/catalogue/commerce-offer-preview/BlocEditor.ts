@@ -10,13 +10,22 @@ export class CommerceOfferPreviewEditor extends Editor {
                 settings: [
                     { type: "text", label: "Amount in minor units", attribute: "amount" },
                     { type: "text", label: "Currency", attribute: "currency", defaultValue: "USD" },
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
                 ],
             },
             {
                 kind: "self",
                 label: "Layout",
                 settings: [
+                    {
+                        type: "segmented",
+                        label: "Direction",
+                        attribute: "layout",
+                        defaultValue: "vertical",
+                        options: [
+                            { label: "Vertical", value: "vertical" },
+                            { label: "Horizontal", value: "horizontal" },
+                        ],
+                    },
                     {
                         type: "segmented",
                         label: "Appearance",
@@ -66,6 +75,7 @@ export class CommerceOfferPreviewEditor extends Editor {
             { label: "Badges", slot: "badge", accepts: anyComponent },
             { label: "Eyebrow", slot: "eyebrow", max: 1, accepts: anyComponent },
             { label: "Title", slot: "title", max: 1, accepts: anyComponent },
+            { label: "Metadata", slot: "metadata", max: 1, accepts: anyComponent },
             { label: "Description", slot: "description", max: 1, accepts: anyComponent },
             { label: "Price", slot: "price", max: 1, accepts: anyComponent },
             { label: "Details", accepts: anyComponent },

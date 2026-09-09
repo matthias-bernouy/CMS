@@ -1,109 +1,140 @@
 <mossa-public-offer-controller data-p9r-composition-controller>
-    <form data-offer-source cms-source="/.cms/sources/commerce/offer" cms-source-trigger="submit" cms-source-method="GET">
-        <input data-offer-slug name="slug" type="hidden">
+    <section cms-source-id="offer" cms-source="/.cms/sources/commerce/offer?slug=#{slug} as offer">
+        <mossa-responsive-grid min="md" packing="fit" gap="lg" cms-condition="$source.loading">
+            <mossa-skeleton height="34rem" animation="wave" label="Loading offer"></mossa-skeleton>
+            <mossa-skeleton height="34rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+        </mossa-responsive-grid>
 
-        <div data-loading>
-            <mossa-responsive-grid min="md" packing="fit" gap="lg">
-                <mossa-skeleton height="34rem" animation="wave" label="Loading offer"></mossa-skeleton>
-                <mossa-skeleton height="34rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-            </mossa-responsive-grid>
-        </div>
-
-        <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
-            <strong slot="title" data-error-title>Offer not found</strong>
-            <span slot="description" data-error-message>This offer is no longer available or does not exist.</span>
+        <mossa-surface-card appearance="outlined" density="spacious" cms-condition="$source.error">
+            <strong slot="title"><slot name="error-title"></slot></strong>
+            <span slot="description"><slot name="error-message"></slot></span>
             <mossa-button slot="actions" appearance="outlined" tone="neutral">
-                <a data-back href="#">Back to offers</a>
+                <slot name="back-link"></slot>
             </mossa-button>
         </mossa-surface-card>
 
-        <mossa-stack data-content hidden gap="xl">
-            <mossa-offer-details balance="even" ratio="landscape" data-detail>
-                <img
-                    slot="main-media"
-                    data-main-image
-                    data-source-image-access="public"
-                    alt=""
-                    loading="eager"
-                    decoding="async"
-                >
-                <img
-                    slot="thumbnails"
-                    cms-repeat="media as item"
-                    data-media-id="{{ item.media.id }}"
-                    data-media-main="{{ item.isMain }}"
-                    data-source-width="{{ item.media.width }}"
-                    data-source-height="{{ item.media.height }}"
-                    alt="{{ item.media.alt }}"
-                    loading="lazy"
-                    decoding="async"
-                >
+        <div cms-condition="$source.loaded">
+            <section
+                cms-source-id="product"
+                cms-source="/.cms/sources/commerce/product?id={{ offer.productId | urlencode }} as product"
+            >
+                <mossa-skeleton height="34rem" animation="wave" label="Loading product" cms-condition="$source.loading"></mossa-skeleton>
+                <mossa-surface-card appearance="outlined" density="spacious" cms-condition="$source.error">
+                    <strong slot="title"><slot name="product-error-title"></slot></strong>
+                    <span slot="description"><slot name="product-error-message"></slot></span>
+                </mossa-surface-card>
 
-                <h1 slot="title" data-title></h1>
-                <p slot="meta" data-meta></p>
-                <mossa-condition slot="badge" data-condition></mossa-condition>
-                <p slot="description" data-description></p>
+                <mossa-stack gap="xl" cms-condition="$source.loaded">
+                    <mossa-offer-details balance="even" ratio="landscape" purchase-appearance="{{ presentation.purchaseAppearance }}">
+                        <img
+                            slot="main-media"
+                            class="offer-main-image"
+                            data-cms-src="/.cms/sources/commerce/publicOfferImage?id={{ presentation.mainMedia.id | urlencode }}"
+                            data-source-image-access="public"
+                            data-source-width="{{ presentation.mainMedia.width }}"
+                            data-source-height="{{ presentation.mainMedia.height }}"
+                            alt="{{ presentation.mainMedia.alt }}"
+                            loading="eager"
+                            decoding="async"
+                            cms-condition="presentation.mainMedia.id"
+                        >
+                        <img
+                            slot="thumbnails"
+                            class="offer-thumbnail"
+                            data-cms-src="/.cms/sources/commerce/publicOfferImage?id={{ item.media.id | urlencode }}"
+                            data-source-image-access="public"
+                            data-source-width="{{ item.media.width }}"
+                            data-source-height="{{ item.media.height }}"
+                            alt="{{ item.media.alt }}"
+                            aria-current="{{ item.selected }}"
+                            role="button"
+                            tabindex="0"
+                            loading="lazy"
+                            decoding="async"
+                            cms-repeat="presentation.media as item"
+                        >
 
-                <mossa-specifications slot="valuation" data-valuation>
-                    <mossa-specification emphasis="price">
-                        <span slot="label" data-valuation-label>Reference value</span>
-                        <span slot="value" data-valuation-value></span>
-                    </mossa-specification>
-                </mossa-specifications>
+                        <h1 slot="title">{{ presentation.title }}</h1>
+                        <p slot="meta" cms-condition="presentation.meta">{{ presentation.meta }}</p>
+                        <mossa-condition slot="badge" code="{{ presentation.conditionCode }}" label="{{ presentation.conditionLabel }}" tone="{{ presentation.conditionTone }}"></mossa-condition>
+                        <p slot="description" cms-condition="presentation.description">{{ presentation.description }}</p>
 
-                <mossa-specifications slot="price">
-                    <mossa-specification emphasis="price">
-                        <span slot="label" data-price-label>Seller price</span>
-                        <span slot="value" data-price></span>
-                    </mossa-specification>
-                </mossa-specifications>
+                        <mossa-specifications slot="price" variant="flat" tone="{{ presentation.priceTone }}">
+                            <mossa-specification emphasis="price">
+                                <span slot="label"><slot name="price-label"></slot></span>
+                                <span slot="value">{{ presentation.priceAmount | minorCurrency(presentation.currency) }}</span>
+                            </mossa-specification>
+                        </mossa-specifications>
 
-                <mossa-stack slot="specifications" gap="md">
-                    <mossa-specifications data-specifications></mossa-specifications>
+                        <mossa-specifications slot="valuation" variant="flat" cms-condition="presentation.hasValuation">
+                            <mossa-specification emphasis="reference">
+                                <span slot="label"><slot name="valuation-label"></slot></span>
+                                <span slot="value">
+                                    {{ presentation.valuationMinimumMinor | minorCurrency(presentation.valuationCurrency) }} –
+                                    {{ presentation.valuationMaximumMinor | minorCurrency(presentation.valuationCurrency) }}
+                                </span>
+                            </mossa-specification>
+                        </mossa-specifications>
+
+                        <mossa-meta slot="shipping">
+                            <slot name="shipping-message"></slot>
+                        </mossa-meta>
+
+                        <mossa-button slot="actions" appearance="filled" size="lg" width="full" cms-condition="presentation.availability == 'available'">
+                            <slot name="buy-link"></slot>
+                        </mossa-button>
+                        <mossa-button slot="actions" appearance="outlined" tone="neutral" size="lg" width="full" cms-condition="presentation.availability == 'available'">
+                            <slot name="negotiate-link"></slot>
+                        </mossa-button>
+
+                        <mossa-trust-item slot="trust" variant="compact">
+                            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="4" y="10" width="16" height="10" rx="2"></rect>
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                                <path d="M12 14v2"></path>
+                            </svg>
+                            <slot name="secure-payment-label"></slot>
+                        </mossa-trust-item>
+                        <mossa-trust-item slot="trust" variant="compact">
+                            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Z"></path>
+                                <path d="m9 12 2 2 4-4"></path>
+                            </svg>
+                            <slot name="buyer-protection-label"></slot>
+                        </mossa-trust-item>
+                        <mossa-trust-item slot="trust" variant="compact">
+                            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 6h11v11H3z"></path>
+                                <path d="M14 10h4l3 3v4h-7"></path>
+                                <circle cx="7" cy="18" r="2"></circle>
+                                <circle cx="18" cy="18" r="2"></circle>
+                            </svg>
+                            <slot name="tracked-delivery-label"></slot>
+                        </mossa-trust-item>
+
+                        <h2 slot="specifications-heading"><slot name="technical-details-label"></slot></h2>
+                        <section
+                            slot="specifications"
+                            cms-source-id="schema"
+                            cms-source="/.cms/sources/commerce/offerFilterSchema?category={{ product.primaryCategory.fullSlug | urlencode }} as schema"
+                        >
+                            <mossa-stack gap="md" cms-condition="$source.loaded">
+                                <mossa-specifications variant="grid-flat">
+                                    <mossa-specification cms-condition="presentation.modelTitle">
+                                        <span slot="label"><slot name="model-label"></slot></span>
+                                        <span slot="value">{{ presentation.modelTitle }}</span>
+                                    </mossa-specification>
+                                    <mossa-specification cms-repeat="presentation.specifications as specification">
+                                        <span slot="label">{{ specification.label }}</span>
+                                        <span slot="value">{{ specification.value }}</span>
+                                    </mossa-specification>
+                                </mossa-specifications>
+                            </mossa-stack>
+                        </section>
+                    </mossa-offer-details>
+
                 </mossa-stack>
-
-                <mossa-meta slot="shipping" data-shipping>
-                    <span slot="icon" aria-hidden="true">⌂</span>
-                    <span data-shipping-message>Pickup-point delivery available</span>
-                </mossa-meta>
-
-                <mossa-button slot="actions" appearance="filled" size="lg" width="full">
-                    <a data-buy>Buy</a>
-                </mossa-button>
-                <mossa-button slot="actions" appearance="outlined" tone="neutral" size="lg" width="full">
-                    <a data-negotiate>Make an offer</a>
-                </mossa-button>
-            </mossa-offer-details>
-
-            <mossa-responsive-grid min="sm" packing="fit" gap="sm">
-                <mossa-trust-item>
-                    <span slot="icon" aria-hidden="true">✓</span>
-                    <span data-secure-payment-label>Secure payment</span>
-                </mossa-trust-item>
-                <mossa-trust-item>
-                    <span slot="icon" aria-hidden="true">✓</span>
-                    <span data-buyer-protection-label>Buyer protection</span>
-                </mossa-trust-item>
-                <mossa-trust-item>
-                    <span slot="icon" aria-hidden="true">✓</span>
-                    <span data-tracked-delivery-label>Tracked delivery</span>
-                </mossa-trust-item>
-            </mossa-responsive-grid>
-        </mossa-stack>
-    </form>
-
-    <form data-product-source cms-source="/.cms/sources/commerce/product" cms-source-trigger="submit" cms-source-method="GET" hidden>
-        <input data-product-id name="id" type="hidden">
-    </form>
-    <form
-        data-schema-source
-        cms-source="/.cms/sources/commerce/offerFilterSchema"
-        cms-source-trigger="submit"
-        cms-source-method="GET"
-        hidden
-    >
-        <input data-schema-category name="category" type="hidden">
-    </form>
-
-    <mossa-toast data-toast role="status" aria-live="polite" position="top-right" duration="5000" hidden></mossa-toast>
+            </section>
+        </div>
+    </section>
 </mossa-public-offer-controller>

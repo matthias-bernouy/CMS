@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { Component } from "@bernouy/components/base";
+import { refreshSourceContext, setSourceContext } from "@bernouy/components/binding";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import {
@@ -461,6 +462,8 @@ async function defineList(): Promise<void> {
     const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
     (window as typeof window & { p9r?: unknown }).p9r = {
         Component,
+        refreshSourceContext,
+        setSourceContext,
     };
     try {
         new Function(compiled.viewJS)();

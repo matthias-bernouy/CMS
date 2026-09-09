@@ -1,6 +1,7 @@
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { expandCompositions } from "@bernouy/cms-content";
 import { Component } from "@bernouy/components/base";
+import { observeSource, readSourceData, refreshSourceContext, setSourceContext } from "@bernouy/components/binding";
 import {
     clearResponsiveSourceImageElement,
     syncResponsiveSourceImageElement,
@@ -70,6 +71,10 @@ async function loadRuntime(): Promise<void> {
     (window as typeof window & { p9r?: unknown }).p9r = {
         Component,
         clearResponsiveSourceImageElement,
+        observeSource,
+        readSourceData,
+        refreshSourceContext,
+        setSourceContext,
         syncResponsiveSourceImageElement,
     };
     try {

@@ -266,8 +266,6 @@ export class CommerceOfferPriceFormEditor extends Editor {
                 kind: "self",
                 label: "Data",
                 settings: [
-                    { type: "text", label: "Offer URL parameter", attribute: "offer-param", defaultValue: "id" },
-                    { type: "text", label: "Fixed offer ID", attribute: "offer-id" },
                     { type: "page-link", label: "Seller terms page", attribute: "seller-terms-url" },
                     {
                         type: "text",
@@ -281,7 +279,6 @@ export class CommerceOfferPriceFormEditor extends Editor {
                         attribute: "privacy-url",
                     },
                     { type: "page-link", label: "Success page", attribute: "success-url" },
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
                 ],
             },
         ];

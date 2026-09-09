@@ -127,9 +127,20 @@ class MossaInput extends HTMLElement {
         return this.serializeValue();
     }
     set value(value) {
+        const previous = this.serializeValue();
         this.input.value = this.dayFirstDate ? formatDayFirstDate(value) : value == null ? "" : String(value);
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
+        const current = this.serializeValue();
+        if (this.isConnected && current !== previous) {
+            this.dispatchEvent(
+                new CustomEvent("mossa-input:value-set", {
+                    detail: { value: current },
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
+        }
     }
     get name() {
         return this.getAttribute("name") || "";
@@ -212,12 +223,14 @@ class MossaInput extends HTMLElement {
         this.errorElement.hidden = !this.errorElement.textContent;
     }
 
-    onInput = () => {
+    onInput = (event) => {
+        event.stopPropagation();
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
         this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     };
-    onChange = () => {
+    onChange = (event) => {
+        event.stopPropagation();
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
         this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));

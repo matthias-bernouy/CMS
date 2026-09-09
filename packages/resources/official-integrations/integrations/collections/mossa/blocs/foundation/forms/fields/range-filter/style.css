@@ -67,7 +67,29 @@ input[type="range"] {
     margin: 0;
 }
 
+:host(:not([has-value-controls])) .values {
+    display: none;
+}
+
+.values {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ulvia-space-sm, 0.75rem);
+}
+
+.input-min {
+    z-index: var(--_mossa-min-z, 1);
+}
+
+.input-max {
+    z-index: 2;
+}
+
 :host([mode="max"]) .input-min {
+    display: none;
+}
+
+:host([mode="min"]) .input-max {
     display: none;
 }
 

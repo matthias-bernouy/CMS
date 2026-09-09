@@ -8,12 +8,12 @@
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    padding: 0.75rem 0;
+    padding: 0.65rem 0;
 }
 
 .label {
     color: var(--ulvia-surface-muted-text);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
 }
 
 .value {
@@ -24,7 +24,18 @@
 
 :host([emphasis="price"]) .value {
     font-family: var(--ulvia-font-heading);
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 700;
-    color: var(--ulvia-secondary-base);
+    color: var(--_mossa-price-accent, var(--ulvia-primary-base));
+}
+
+:host([emphasis="reference"]) .row {
+    padding: 0.35rem 0;
+}
+
+:host([emphasis="reference"]) .label,
+:host([emphasis="reference"]) .value {
+    color: var(--ulvia-surface-muted-text);
+    font-size: 0.85rem;
+    font-weight: 500;
 }

@@ -16,7 +16,6 @@ export class MondialRelayPicker extends OperationalPicker {
             "city",
             "country",
             "weight-grams",
-            "source-id",
             "title",
             "copy",
             "button-label",

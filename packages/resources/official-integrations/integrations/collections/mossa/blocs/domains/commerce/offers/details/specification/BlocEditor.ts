@@ -23,6 +23,10 @@ export class BlocEditor extends Editor {
                                 "label": "Price (prominent)",
                                 "value": "price",
                             },
+                            {
+                                "label": "Reference (subtle)",
+                                "value": "reference",
+                            },
                         ],
                     },
                 ],

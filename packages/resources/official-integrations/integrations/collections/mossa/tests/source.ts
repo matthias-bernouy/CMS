@@ -54,7 +54,7 @@ export async function buildBloc(artifact: DeclarativeBlocArtifactTemplate): Prom
         {
             native,
             ...(bloc.compositionHTML !== undefined ? { compositionHTML: bloc.compositionHTML } : {}),
-            ...(bloc.view ? { viewPath: bloc.view } : {}),
+            ...(bloc.view || bloc.source?.["Bloc.ts"] ? { viewPath: bloc.view ?? "Bloc.ts" } : {}),
             ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
         },
     );

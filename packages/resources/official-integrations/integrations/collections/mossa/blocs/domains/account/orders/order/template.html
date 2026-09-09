@@ -1,112 +1,121 @@
 <mossa-order-controller data-p9r-composition-controller>
-    <div data-loading>
-        <mossa-stack gap="md">
-            <mossa-skeleton height="7rem" animation="wave" label="Loading order"></mossa-skeleton>
+    <section cms-source-id="order" cms-source="/.cms/sources/commerce/myOrder?id=#{orderId} as order">
+        <mossa-stack gap="md" cms-condition="$source.loading">
+            <mossa-skeleton height="7rem" animation="wave" label="{{ presentation.loadingLabel }}"></mossa-skeleton>
             <mossa-skeleton height="18rem" animation="wave" aria-hidden="true"></mossa-skeleton>
             <mossa-responsive-grid min="md" gap="md">
                 <mossa-skeleton height="15rem" animation="wave" aria-hidden="true"></mossa-skeleton>
                 <mossa-skeleton height="15rem" animation="wave" aria-hidden="true"></mossa-skeleton>
             </mossa-responsive-grid>
         </mossa-stack>
-    </div>
 
-    <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
-        <strong slot="title">Order not found</strong>
-        <span slot="description" data-error-message></span>
-        <slot name="error-action" slot="actions"></slot>
-    </mossa-surface-card>
+        <mossa-surface-card appearance="outlined" density="spacious" cms-condition="$source.error">
+            <strong slot="title">{{ presentation.errorTitle }}</strong>
+            <span slot="description">{{ presentation.errorMessage }}</span>
+            <slot name="error-action" slot="actions"></slot>
+        </mossa-surface-card>
 
-    <mossa-stack data-content hidden gap="xl">
-        <mossa-section-header>
-            <div slot="title">
-                <span class="eyebrow" data-order-copy="order-eyebrow">ORDER</span>
-                <h1 data-order-number></h1>
-                <p data-order-date></p>
-            </div>
-            <mossa-badge slot="action" data-order-status></mossa-badge>
-        </mossa-section-header>
+        <mossa-stack gap="xl" cms-condition="$source.loaded">
+            <slot name="navigation"></slot>
+            <mossa-section-header size="sm">
+                <span slot="eyebrow">{{ presentation.orderEyebrow }}</span>
+                <h1 slot="title">{{ presentation.orderNumber }}</h1>
+                <p slot="subtitle">{{ presentation.orderDate }}</p>
+                <mossa-badge slot="action" tone="{{ presentation.orderStatusTone }}">{{ presentation.orderStatusLabel }}</mossa-badge>
+            </mossa-section-header>
 
-        <mossa-responsive-grid min="lg" packing="fit" gap="lg">
-            <mossa-stack gap="md">
-                <mossa-surface-card class="tracking-card" appearance="outlined" density="regular">
-                    <strong slot="title" data-delivery-title>Delivery tracking</strong>
-                    <span slot="description" data-delivery-description></span>
-
-                    <mossa-responsive-grid data-progress min="xs" packing="fit" gap="xs" aria-label="Delivery progress">
-                        <mossa-badge data-progress-step><span data-order-copy="progress-confirmed-label">Confirmed</span></mossa-badge>
-                        <mossa-badge data-progress-step><span data-order-copy="progress-prepared-label">Prepared</span></mossa-badge>
-                        <mossa-badge data-progress-step><span data-order-copy="progress-shipped-label">Shipped</span></mossa-badge>
-                        <mossa-badge data-progress-step><span data-order-copy="progress-pickup-label">At pickup point</span></mossa-badge>
-                    </mossa-responsive-grid>
-
-                    <mossa-stack gap="sm">
-                        <mossa-info-row>
-                            <span slot="icon" aria-hidden="true">◷</span>
-                            <span slot="label">Estimate</span>
-                            <span data-delivery-estimate></span>
-                        </mossa-info-row>
-                        <mossa-info-row data-latest-event hidden>
-                            <span slot="icon" aria-hidden="true">•</span>
-                            <strong data-latest-event-label></strong>
-                            <span data-latest-event-date></span>
-                        </mossa-info-row>
-                        <span class="tracking-number" data-tracking-number hidden></span>
-                    </mossa-stack>
-
-                    <slot name="tracking-action" slot="actions"></slot>
-                </mossa-surface-card>
-
-                <mossa-surface-card appearance="outlined" density="compact">
-                    <strong slot="title" data-order-copy="item-heading">Ordered item</strong>
-                    <mossa-commerce-offer-preview appearance="plain">
-                        <img
-                            slot="media"
-                            data-image
-                            data-source-image-access="public"
-                            loading="lazy"
-                            decoding="async"
-                            alt=""
-                            hidden
+            <mossa-responsive-grid min="lg" split="wide-start" gap="md">
+                <mossa-stack gap="md">
+                    <mossa-surface-card class="tracking-card" appearance="outlined" density="regular">
+                        <strong slot="title">{{ presentation.shipmentTitle }}</strong>
+                        <span slot="description">{{ presentation.shipmentDescription }}</span>
+                        <mossa-responsive-grid
+                            presentation="steps"
+                            tone="{{ presentation.progressTone }}"
+                            style="--_mossa-progress-count: 4; --_mossa-progress-width: {{ presentation.progressWidth }}"
+                            aria-label="{{ presentation.progressLabel }}"
                         >
-                        <strong slot="title" data-line-title></strong>
-                        <mossa-stack gap="xs">
-                            <span data-line-variant></span>
-                            <span data-line-condition></span>
+                            <mossa-badge
+                                presentation="step"
+                                tone="{{ step.tone }}"
+                                variant="{{ step.variant }}"
+                                aria-current="{{ step.current }}"
+                                cms-repeat="presentation.progress as step"
+                            ><span slot="leading">{{ step.number }}</span>{{ step.label }}</mossa-badge>
+                        </mossa-responsive-grid>
+                        <mossa-stack gap="sm">
+                            <mossa-info-row density="compact" value-align="start">
+                                <span slot="icon" aria-hidden="true">◷</span>
+                                <span slot="label">{{ presentation.estimateLabel }}</span>
+                                <span>{{ presentation.deliveryEstimate }}</span>
+                            </mossa-info-row>
+                            <mossa-info-row density="compact" value-align="start" cms-condition="presentation.latestEventLabel">
+                                <span slot="icon" aria-hidden="true">•</span>
+                                <strong>{{ presentation.latestEventLabel }}</strong>
+                                <time datetime="{{ presentation.latestEventAt }}">{{ presentation.latestEventAt | dateLong }}</time>
+                            </mossa-info-row>
+                            <span class="tracking-number" cms-condition="presentation.trackingNumber">{{ presentation.trackingNumberLabel }}</span>
                         </mossa-stack>
-                        <strong slot="price" data-line-price></strong>
-                    </mossa-commerce-offer-preview>
-                </mossa-surface-card>
-            </mossa-stack>
+                        <mossa-button slot="actions" appearance="filled" cms-condition="presentation.trackingUrl">
+                            <a href="{{ presentation.trackingUrl }}" target="_blank" rel="noopener noreferrer">{{ presentation.trackingActionLabel }}</a>
+                        </mossa-button>
+                    </mossa-surface-card>
 
-            <mossa-stack gap="md">
-                <mossa-surface-card appearance="outlined" density="compact">
-                    <strong slot="title" data-order-copy="summary-heading">Summary</strong>
-                    <mossa-stack gap="sm">
-                        <mossa-info-row><span slot="icon" aria-hidden="true">·</span><span slot="label" data-order-copy="item-label">Item</span><strong data-subtotal></strong></mossa-info-row>
-                        <mossa-info-row><span slot="icon" aria-hidden="true">·</span><span slot="label" data-order-copy="delivery-label">Delivery</span><strong data-shipping></strong></mossa-info-row>
-                        <mossa-info-row><span slot="icon" aria-hidden="true">·</span><span slot="label" data-order-copy="protection-label">Buyer protection</span><strong data-protection></strong></mossa-info-row>
-                        <mossa-info-row><span slot="icon" aria-hidden="true">=</span><span slot="label" data-order-copy="total-label">Total</span><strong data-total></strong></mossa-info-row>
-                        <mossa-badge data-payment-confirmation></mossa-badge>
-                    </mossa-stack>
-                    <slot name="resume-action"></slot>
-                </mossa-surface-card>
+                    <mossa-surface-card appearance="outlined" density="compact">
+                        <strong slot="title">{{ presentation.itemHeading }}</strong>
+                        <mossa-commerce-offer-preview appearance="plain" density="compact" layout="horizontal">
+                            <img
+                                slot="media"
+                                data-cms-src="{{ presentation.imageUrl }}"
+                                data-source-image-access="{{ presentation.imageAccess }}"
+                                data-source-width="{{ presentation.imageWidth }}"
+                                data-source-height="{{ presentation.imageHeight }}"
+                                alt="{{ presentation.lineTitle }}"
+                                loading="lazy"
+                                decoding="async"
+                                cms-condition="presentation.imageUrl"
+                            >
+                            <strong slot="title">{{ presentation.lineTitle }}</strong>
+                            <mossa-stack gap="xs">
+                                <span cms-condition="presentation.lineVariant">{{ presentation.lineVariant }}</span>
+                                <span cms-condition="presentation.lineCondition">{{ presentation.lineCondition }}</span>
+                            </mossa-stack>
+                            <strong slot="price">{{ presentation.lineAmount | minorCurrency(presentation.currency) }}</strong>
+                        </mossa-commerce-offer-preview>
+                    </mossa-surface-card>
+                </mossa-stack>
 
-                <mossa-surface-card appearance="outlined" density="compact">
-                    <strong slot="title" data-order-copy="relay-heading">Selected pickup point</strong>
-                    <mossa-stack gap="xs">
-                        <mossa-badge tone="secondary">Mondial Relay</mossa-badge>
-                        <strong data-relay-name></strong>
-                        <span data-relay-address></span>
-                        <mossa-badge data-relay-confirmation></mossa-badge>
-                    </mossa-stack>
-                </mossa-surface-card>
-            </mossa-stack>
-        </mossa-responsive-grid>
-    </mossa-stack>
+                <mossa-stack gap="md">
+                    <mossa-surface-card appearance="outlined" density="compact">
+                        <strong slot="title">{{ presentation.summaryHeading }}</strong>
+                        <mossa-stack gap="sm">
+                            <mossa-info-row density="compact"><span slot="label">{{ presentation.itemLabel }}</span><strong>{{ presentation.subtotalAmount | minorCurrency(presentation.currency) }}</strong></mossa-info-row>
+                            <mossa-info-row density="compact"><span slot="label">{{ presentation.deliveryLabel }}</span><strong>{{ presentation.shippingAmount | minorCurrency(presentation.currency) }}</strong></mossa-info-row>
+                            <mossa-info-row density="compact"><span slot="label">{{ presentation.protectionLabel }}</span><strong>{{ presentation.protectionAmount | minorCurrency(presentation.currency) }}</strong></mossa-info-row>
+                            <mossa-info-row density="compact"><span slot="label">{{ presentation.totalLabel }}</span><strong>{{ presentation.totalAmount | minorCurrency(presentation.currency) }}</strong></mossa-info-row>
+                            <mossa-badge tone="{{ presentation.paymentTone }}">{{ presentation.paymentLabel }}</mossa-badge>
+                        </mossa-stack>
+                        <mossa-button appearance="filled" width="full" cms-condition="presentation.resumeUrl">
+                            <a href="{{ presentation.resumeUrl }}">{{ presentation.resumeActionLabel }}</a>
+                        </mossa-button>
+                    </mossa-surface-card>
 
-    <form data-order-source cms-source="/.cms/sources/commerce/myOrder" cms-source-trigger="submit" cms-source-method="GET" hidden><input data-order-id name="id" type="hidden"></form>
-    <form data-payment-source cms-source="/.cms/sources/system-functions/getPaymentForOrder" cms-source-trigger="submit" cms-source-method="GET" hidden><input data-payment-id name="orderId" type="hidden"></form>
-    <form data-relay-source cms-source="/.cms/sources/system-functions/getRelayPointForOrder" cms-source-trigger="submit" cms-source-method="GET" hidden><input data-relay-id name="orderId" type="hidden"></form>
-    <form data-shipment-source cms-source="/.cms/sources/system-functions/getShipmentForOrder" cms-source-trigger="submit" cms-source-method="GET" hidden><input data-shipment-id name="orderId" type="hidden"></form>
-    <form data-offer-source cms-source="/.cms/sources/commerce/offer" cms-source-trigger="submit" cms-source-method="GET" hidden><input data-offer-id name="id" type="hidden"></form>
+                    <mossa-surface-card appearance="outlined" density="compact">
+                        <strong slot="title">{{ presentation.relayHeading }}</strong>
+                        <mossa-stack gap="xs">
+                            <mossa-badge tone="secondary">{{ presentation.relayProviderLabel }}</mossa-badge>
+                            <strong>{{ presentation.relayName }}</strong>
+                            <span>{{ presentation.relayAddress }}</span>
+                            <mossa-badge tone="{{ presentation.relayTone }}">{{ presentation.relayLabel }}</mossa-badge>
+                        </mossa-stack>
+                    </mossa-surface-card>
+                </mossa-stack>
+            </mossa-responsive-grid>
+
+            <section cms-source-id="offer" cms-source="/.cms/sources/commerce/offer?id={{ order.lines.0.offerId | urlencode }}" hidden></section>
+        </mossa-stack>
+    </section>
+    <section cms-source-id="payment" cms-source="/.cms/sources/system-functions/getPaymentForOrder?orderId=#{orderId}" hidden></section>
+    <section cms-source-id="relay" cms-source="/.cms/sources/system-functions/getRelayPointForOrder?orderId=#{orderId}" hidden></section>
+    <section cms-source-id="shipment" cms-source="/.cms/sources/system-functions/getShipmentForOrder?orderId=#{orderId}" hidden></section>
 </mossa-order-controller>

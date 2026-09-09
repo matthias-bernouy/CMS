@@ -8,10 +8,10 @@
         "contract": "ulvia-theme@3",
         "required": [
             "font-body",
-            "primary-contrasted",
             "radius-card",
-            "shadow-sm",
+            "subtle-background",
             "surface-background",
+            "surface-border",
             "surface-text"
         ]
     }

@@ -1,13 +1,98 @@
 <mossa-commerce-offer-filter-controller data-p9r-composition-controller>
     <slot></slot>
+    <p class="select-category" role="status">Select a category to see its filters.</p>
     <form
-        data-offer-filter-schema-source
+        cms-source-id="schema"
         cms-source="/.cms/sources/commerce/offerFilterSchema"
         cms-source-trigger="submit"
         cms-source-method="GET"
         cms-source-inherit-query="false"
-        hidden
+        cms-source-success-reset="false"
     >
-        <input data-schema-category-input name="category" type="hidden">
+        <p role="status" cms-condition="$source.loading &amp;&amp; presentation.matchesCategory">{{ presentation.loadingLabel }}</p>
+        <p role="alert" cms-condition="$source.error &amp;&amp; presentation.matchesCategory">{{ presentation.errorLabel }}</p>
+        <mossa-stack gap="md" cms-condition="$source.loaded &amp;&amp; presentation.matchesCategory">
+            <mossa-select
+                form="mossa-filter-controls"
+                name="brand"
+                cms-param-sync="brand"
+                label="{{ presentation.brandLabel }}"
+                tone="secondary"
+            >
+                <mossa-option value="">{{ presentation.brandAllLabel }}</mossa-option>
+                <mossa-option value="{{ brand.slug }}" cms-repeat="brands as brand">{{ brand.name }}</mossa-option>
+            </mossa-select>
+
+            <strong cms-condition="fields.0">{{ presentation.advancedLabel }}</strong>
+            <mossa-stack gap="sm" cms-repeat="fields as field">
+                <mossa-range-filter
+                    label="{{ field.label }}"
+                    min="{{ field.range.minimum }}"
+                    max="{{ field.range.maximum }}"
+                    step="{{ field.range.step }}"
+                    unit="{{ field.unit }}"
+                    mode="{{ field.rangeMode }}"
+                    cms-condition="field.type == 'number' &amp;&amp; field.range"
+                >
+                    <mossa-input
+                        slot="minimum"
+                        hidden
+                        form="mossa-filter-controls"
+                        name="{{ field.minimum }}"
+                        type="number"
+                        min="{{ field.range.minimum }}"
+                        max="{{ field.range.maximum }}"
+                        step="{{ field.range.step }}"
+                        cms-param-sync="{{ field.minimum }}"
+                        cms-condition="field.minimum"
+                    ></mossa-input>
+                    <mossa-input
+                        slot="maximum"
+                        hidden
+                        form="mossa-filter-controls"
+                        name="{{ field.maximum }}"
+                        type="number"
+                        min="{{ field.range.minimum }}"
+                        max="{{ field.range.maximum }}"
+                        step="{{ field.range.step }}"
+                        cms-param-sync="{{ field.maximum }}"
+                        cms-condition="field.maximum"
+                    ></mossa-input>
+                </mossa-range-filter>
+
+                <mossa-input
+                    form="mossa-filter-controls"
+                    label="{{ field.label }}"
+                    name="{{ field.value }}"
+                    type="number"
+                    step="any"
+                    cms-param-sync="{{ field.value }}"
+                    cms-condition="field.type == 'number' &amp;&amp; field.value"
+                    tone="secondary"
+                ></mossa-input>
+
+                <mossa-select form="mossa-filter-controls" label="{{ field.label }}" name="{{ field.value }}" cms-param-sync="{{ field.value }}" cms-form-value-type="boolean" cms-condition="field.type == 'boolean' &amp;&amp; field.value" tone="secondary">
+                    <mossa-option value="">{{ presentation.allLabel }} · {{ field.label }}</mossa-option>
+                    <mossa-option value="true">{{ presentation.booleanTrueLabel }}</mossa-option>
+                    <mossa-option value="false">{{ presentation.booleanFalseLabel }}</mossa-option>
+                </mossa-select>
+
+                <mossa-select form="mossa-filter-controls" label="{{ field.label }}" name="{{ field.value }}" cms-param-sync="{{ field.value }}" cms-condition="field.type != 'boolean' &amp;&amp; field.type != 'number' &amp;&amp; field.options.0 &amp;&amp; field.value" tone="secondary">
+                    <mossa-option value="">{{ presentation.allLabel }} · {{ field.label }}</mossa-option>
+                    <mossa-option value="{{ option }}" cms-repeat="field.options as option">{{ option }}</mossa-option>
+                </mossa-select>
+
+                <mossa-input
+                    form="mossa-filter-controls"
+                    label="{{ field.label }}"
+                    name="{{ field.value }}"
+                    type="text"
+                    cms-param-sync="{{ field.value }}"
+                    cms-condition="field.type != 'boolean' &amp;&amp; field.type != 'number' &amp;&amp; !field.options.0 &amp;&amp; field.value"
+                    tone="secondary"
+                ></mossa-input>
+            </mossa-stack>
+            <p role="status" cms-condition="!fields.0 &amp;&amp; !brands.0">{{ presentation.emptyLabel }}</p>
+        </mossa-stack>
     </form>
 </mossa-commerce-offer-filter-controller>

@@ -1,16 +1,6 @@
-import { Editor, registerEditor, type SegmentedSetting, type SettingSection } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
 import { accountFieldLabels, accountMessages } from "./copy";
-
-const visibility = (label: string, attribute: string): SegmentedSetting => ({
-    type: "segmented",
-    label,
-    attribute,
-    defaultValue: "true",
-    options: [
-        { label: "Show", value: "true" },
-        { label: "Hide", value: "false" },
-    ],
-});
+import { fieldStyleSection, notificationSection, visibility } from "./editorSections";
 
 export class UserAccountFormEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -20,6 +10,7 @@ export class UserAccountFormEditor extends Editor {
                 label: "Content",
                 settings: [{ type: "text", label: "Button label", attribute: "button-label", defaultValue: "Save" }],
             },
+            fieldStyleSection(),
             {
                 kind: "self",
                 label: "Identity fields",
@@ -27,6 +18,7 @@ export class UserAccountFormEditor extends Editor {
                     visibility("Given name", "show-given-name"),
                     visibility("Surname", "show-surname"),
                     visibility("Birth date", "show-birth-date"),
+                    visibility("Email address", "show-email"),
                 ],
             },
             {
@@ -51,85 +43,7 @@ export class UserAccountFormEditor extends Editor {
                     }),
                 ),
             },
-            {
-                kind: "self",
-                label: "Notifications",
-                settings: [
-                    {
-                        type: "select",
-                        label: "Position",
-                        attribute: "toast-position",
-                        defaultValue: "top-right",
-                        options: [
-                            { label: "Top right", value: "top-right" },
-                            { label: "Top left", value: "top-left" },
-                            { label: "Bottom right", value: "bottom-right" },
-                            { label: "Bottom left", value: "bottom-left" },
-                        ],
-                    },
-                    {
-                        type: "segmented",
-                        label: "Width",
-                        attribute: "toast-width",
-                        defaultValue: "auto",
-                        options: [
-                            { label: "Auto", value: "auto" },
-                            { label: "S", value: "sm" },
-                            { label: "M", value: "md" },
-                            { label: "L", value: "lg" },
-                            { label: "Full", value: "full" },
-                        ],
-                    },
-                    {
-                        type: "segmented",
-                        label: "Density",
-                        attribute: "toast-density",
-                        defaultValue: "regular",
-                        options: [
-                            { label: "Compact", value: "compact" },
-                            { label: "Regular", value: "regular" },
-                            { label: "Spacious", value: "spacious" },
-                        ],
-                    },
-                    {
-                        type: "segmented",
-                        label: "Radius",
-                        attribute: "toast-radius",
-                        defaultValue: "md",
-                        options: [
-                            { label: "None", value: "none" },
-                            { label: "S", value: "sm" },
-                            { label: "M", value: "md" },
-                            { label: "L", value: "lg" },
-                            { label: "Pill", value: "pill" },
-                        ],
-                    },
-                    {
-                        type: "segmented",
-                        label: "Shadow",
-                        attribute: "toast-shadow",
-                        defaultValue: "none",
-                        options: [
-                            { label: "None", value: "none" },
-                            { label: "S", value: "sm" },
-                            { label: "M", value: "md" },
-                            { label: "L", value: "lg" },
-                        ],
-                    },
-                    {
-                        type: "text",
-                        label: "Success duration",
-                        attribute: "success-toast-duration",
-                        defaultValue: "4500",
-                    },
-                    {
-                        type: "text",
-                        label: "Error duration",
-                        attribute: "error-toast-duration",
-                        defaultValue: "6000",
-                    },
-                ],
-            },
+            notificationSection(),
             {
                 kind: "self",
                 label: "Contact fields",

@@ -11,6 +11,7 @@
             "font-body",
             "secondary-base",
             "shadow-sm",
+            "space-sm",
             "surface-background",
             "surface-border",
             "surface-muted-text"

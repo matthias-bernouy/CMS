@@ -12,9 +12,22 @@
     "theme": {
         "contract": "ulvia-theme@3",
         "required": [
+            "danger-base",
+            "danger-muted",
+            "info-base",
+            "info-muted",
+            "primary-base",
+            "primary-muted",
             "radius-card",
+            "secondary-base",
+            "secondary-muted",
+            "subtle-background",
+            "success-base",
+            "success-muted",
             "surface-background",
-            "surface-border"
+            "surface-border",
+            "warning-base",
+            "warning-muted"
         ]
     }
 }

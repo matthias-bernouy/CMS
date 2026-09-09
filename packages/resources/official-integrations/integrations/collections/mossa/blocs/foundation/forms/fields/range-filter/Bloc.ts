@@ -1,6 +1,11 @@
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
+import { normalizeRangeValues, readNumericRange, serializeBoundary, type RangeValues } from "./range/values";
+import { readRangeMode, renderRange } from "./range/view";
+
+type BoundControl = HTMLElement & { value: string };
+type Bound = "minimum" | "maximum";
 
 export class Bloc extends Component {
     static observedAttributes = ["name", "min", "max", "step", "unit", "value-min", "value-max", "label", "mode"];
@@ -10,23 +15,40 @@ export class Bloc extends Component {
     }
 
     override connectedCallback(): void {
-        const minInput = this.shadowRoot!.querySelector(".input-min") as HTMLInputElement;
-        const maxInput = this.shadowRoot!.querySelector(".input-max") as HTMLInputElement;
-        minInput.addEventListener("input", this._onChange);
-        maxInput.addEventListener("input", this._onChange);
-        this._sync();
+        for (const input of [this.minimumHandle, this.maximumHandle]) {
+            input.addEventListener("input", this.onHandleEvent);
+            input.addEventListener("change", this.onHandleEvent);
+        }
+        for (const slot of this.shadowRoot!.querySelectorAll("slot")) {
+            slot.addEventListener("slotchange", this.onSlotChange);
+        }
+        this.addEventListener("input", this.onControlInput, true);
+        this.addEventListener("change", this.onControlChange, true);
+        this.addEventListener("mossa-input:value-set", this.onControlValueSet);
+        queueMicrotask(this.syncFromControls);
     }
 
     disconnectedCallback(): void {
-        const minInput = this.shadowRoot!.querySelector(".input-min") as HTMLInputElement;
-        const maxInput = this.shadowRoot!.querySelector(".input-max") as HTMLInputElement;
-        minInput?.removeEventListener("input", this._onChange);
-        maxInput?.removeEventListener("input", this._onChange);
+        for (const input of [this.minimumHandle, this.maximumHandle]) {
+            input.removeEventListener("input", this.onHandleEvent);
+            input.removeEventListener("change", this.onHandleEvent);
+        }
+        for (const slot of this.shadowRoot!.querySelectorAll("slot")) {
+            slot.removeEventListener("slotchange", this.onSlotChange);
+        }
+        this.removeEventListener("input", this.onControlInput, true);
+        this.removeEventListener("change", this.onControlChange, true);
+        this.removeEventListener("mossa-input:value-set", this.onControlValueSet);
     }
 
-    attributeChangedCallback() {
-        if (this.shadowRoot) {
-            this._sync();
+    attributeChangedCallback(name: string): void {
+        if (!this.isConnected) {
+            return;
+        }
+        if (["min", "max", "step", "mode"].includes(name)) {
+            this.syncFromControls();
+        } else {
+            this.render();
         }
     }
 
@@ -34,93 +56,155 @@ export class Bloc extends Component {
      *  serialize the current double-range as a single `"lo-hi"` string so
      *  it round-trips through a URLSearchParams entry. */
     get value(): string {
-        if (this.getAttribute("mode") === "max") {
-            return this.getAttribute("value-max") ?? "";
+        const range = readNumericRange(this);
+        const values = this.attributeValues(range);
+        if (this.mode === "max") {
+            return serializeBoundary(values.maximum, range.maximum);
         }
-        const lo = this.getAttribute("value-min") ?? "";
-        const hi = this.getAttribute("value-max") ?? "";
-        return `${lo}-${hi}`;
+        if (this.mode === "min") {
+            return serializeBoundary(values.minimum, range.minimum);
+        }
+        const minimum = serializeBoundary(values.minimum, range.minimum);
+        const maximum = serializeBoundary(values.maximum, range.maximum);
+        return minimum || maximum ? `${minimum}-${maximum}` : "";
     }
 
     /** Accept a `"lo-hi"` string back from URL sync / form.reset. Empty
      *  or malformed input snaps the host back to its declared min/max. */
     set value(v: string) {
-        const min = Number(this.getAttribute("min") ?? 0);
-        const max = Number(this.getAttribute("max") ?? 100);
-        if (this.getAttribute("mode") === "max") {
-            const requested = String(v ?? "").trim() === "" ? max : Number(v);
-            const hi = Number.isFinite(requested) ? Math.min(max, Math.max(min, requested)) : max;
-            this.setAttribute("value-min", String(min));
-            this.setAttribute("value-max", String(hi));
+        const range = readNumericRange(this);
+        if (this.mode === "max") {
+            this.applyValues(normalizeRangeValues(range.minimum, v, range));
             return;
         }
-        const parts = String(v ?? "").split("-");
-        const lo = parts.length === 2 && parts[0] !== "" ? Number(parts[0]) : min;
-        const hi = parts.length === 2 && parts[1] !== "" ? Number(parts[1]) : max;
-        this.setAttribute("value-min", String(lo));
-        this.setAttribute("value-max", String(hi));
+        if (this.mode === "min") {
+            this.applyValues(normalizeRangeValues(v, range.maximum, range));
+            return;
+        }
+        const match = /^\s*(-?(?:\d+(?:\.\d+)?|\.\d+)?)\s*-\s*(-?(?:\d+(?:\.\d+)?|\.\d+)?)\s*$/.exec(String(v ?? ""));
+        this.applyValues(normalizeRangeValues(match?.[1], match?.[2], range));
     }
 
-    private _onChange = () => {
-        const minInput = this.shadowRoot!.querySelector(".input-min") as HTMLInputElement;
-        const maxInput = this.shadowRoot!.querySelector(".input-max") as HTMLInputElement;
-        const singleMaximum = this.getAttribute("mode") === "max";
-        let lo = singleMaximum ? Number(this.getAttribute("min") ?? 0) : Number(minInput.value);
-        let hi = Number(maxInput.value);
-        if (lo > hi) {
-            [lo, hi] = [hi, lo];
+    private readonly onSlotChange = (): void => this.syncFromControls();
+
+    private readonly onControlInput = (event: Event): void => {
+        const bound = this.boundForControl(event.target);
+        if (bound) {
+            event.stopPropagation();
+            this.previewFromControls(bound);
         }
-        this.setAttribute("value-min", String(lo));
-        this.setAttribute("value-max", String(hi));
-        this._sync();
-        // `composed: true` so the event crosses any wrapping shadow boundary
-        // (e.g. when the slider is itself slotted into another bloc) — the
-        // host's `dispatchEvent` already originates in light DOM, but
-        // keeping it composed matches what other form inputs do.
-        this.dispatchEvent(
-            new CustomEvent("change", {
-                detail: { min: lo, max: hi },
-                bubbles: true,
-                composed: true,
-            }),
-        );
     };
 
-    private _sync() {
-        const root = this.shadowRoot!;
-        const min = Number(this.getAttribute("min") ?? 0);
-        const max = Number(this.getAttribute("max") ?? 100);
-        const step = Number(this.getAttribute("step") ?? 1);
-        const requestedLo = Math.min(max, Math.max(min, Number(this.getAttribute("value-min") ?? min)));
-        const requestedHi = Math.min(max, Math.max(min, Number(this.getAttribute("value-max") ?? max)));
-        const lo = Math.min(requestedLo, requestedHi);
-        const hi = Math.max(requestedLo, requestedHi);
-        const unit = this.getAttribute("unit") ?? "";
-        const label = this.getAttribute("label") ?? "";
-        const singleMaximum = this.getAttribute("mode") === "max";
+    private readonly onControlChange = (event: Event): void => {
+        const bound = this.boundForControl(event.target);
+        if (bound) {
+            this.syncFromControls(bound);
+        }
+    };
 
-        const minInput = root.querySelector(".input-min") as HTMLInputElement;
-        const maxInput = root.querySelector(".input-max") as HTMLInputElement;
-        const range = root.querySelector(".range") as HTMLElement;
-        const labelEl = root.querySelector(".label") as HTMLElement;
+    private readonly onControlValueSet = (event: Event): void => {
+        const bound = this.boundForControl(event.target);
+        if (bound) {
+            this.syncFromControls(bound);
+        }
+    };
 
-        minInput.min = String(min);
-        minInput.max = String(max);
-        minInput.step = String(step);
-        minInput.value = String(singleMaximum ? min : lo);
-        maxInput.min = String(min);
-        maxInput.max = String(max);
-        maxInput.step = String(step);
-        maxInput.value = String(hi);
+    private readonly onHandleEvent = (event: Event): void => {
+        event.stopPropagation();
+        const bound: Bound = event.currentTarget === this.minimumHandle ? "minimum" : "maximum";
+        const range = readNumericRange(this);
+        const values = normalizeRangeValues(this.minimumHandle.value, this.maximumHandle.value, range, bound);
+        this.applyValues(values);
+        const control = this.control(bound);
+        if (control) {
+            const boundary = bound === "minimum" ? range.minimum : range.maximum;
+            control.value = serializeBoundary(values[bound], boundary);
+            if (event.type === "change") {
+                control.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+            }
+        } else if (event.type === "change") {
+            this.dispatchEvent(
+                new CustomEvent("change", {
+                    detail: values,
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
+        }
+    };
 
-        const span = max - min || 1;
-        const left = (((singleMaximum ? min : lo) - min) / span) * 100;
-        const right = ((hi - min) / span) * 100;
-        range.style.setProperty("--_mossa-lo", left + "%");
-        range.style.setProperty("--_mossa-hi", right + "%");
+    private readonly syncFromControls = (changed?: Bound): void => {
+        const range = readNumericRange(this);
+        const minimumControl = this.control("minimum");
+        const maximumControl = this.control("maximum");
+        const hasControls = Boolean(minimumControl || maximumControl);
+        const minimum = hasControls ? minimumControl?.value : this.getAttribute("value-min");
+        const maximum = hasControls ? maximumControl?.value : this.getAttribute("value-max");
+        const values = normalizeRangeValues(minimum, maximum, range, changed);
+        this.applyValues(values);
+        this.toggleAttribute(
+            "has-value-controls",
+            Boolean((minimumControl && !minimumControl.hidden) || (maximumControl && !maximumControl.hidden)),
+        );
+        if (changed) {
+            const control = this.control(changed);
+            if (control) {
+                const boundary = changed === "minimum" ? range.minimum : range.maximum;
+                const normalized = serializeBoundary(values[changed], boundary);
+                if (control.value !== normalized) {
+                    control.value = normalized;
+                }
+            }
+        }
+    };
 
-        labelEl.textContent = singleMaximum
-            ? `${label ? label + " : " : ""}${hi}${unit}`
-            : `${label ? label + " : " : ""}${lo}${unit} — ${hi}${unit}`;
+    private previewFromControls(changed: Bound): void {
+        const range = readNumericRange(this);
+        const control = this.control(changed);
+        const raw = control?.value.trim() || "";
+        const candidate = Number(raw);
+        if (raw && (!Number.isFinite(candidate) || candidate < range.minimum || candidate > range.maximum)) {
+            return;
+        }
+        this.applyValues(
+            normalizeRangeValues(this.control("minimum")?.value, this.control("maximum")?.value, range, changed),
+        );
+    }
+
+    private applyValues(values: RangeValues): void {
+        this.setAttribute("value-min", String(values.minimum));
+        this.setAttribute("value-max", String(values.maximum));
+        this.render();
+    }
+
+    private render(): void {
+        const range = readNumericRange(this);
+        const values = this.attributeValues(range);
+        renderRange(this, this.shadowRoot!, values, range, this.mode);
+    }
+
+    private attributeValues(range = readNumericRange(this)): RangeValues {
+        return normalizeRangeValues(this.getAttribute("value-min"), this.getAttribute("value-max"), range);
+    }
+
+    private boundForControl(target: EventTarget | null): Bound | null {
+        return target === this.control("minimum") ? "minimum" : target === this.control("maximum") ? "maximum" : null;
+    }
+
+    private control(bound: Bound): BoundControl | null {
+        const control = this.querySelector<HTMLElement>(`[slot="${bound}"]`);
+        return control && "value" in control ? (control as BoundControl) : null;
+    }
+
+    private get mode() {
+        return readRangeMode(this);
+    }
+
+    private get minimumHandle(): HTMLInputElement {
+        return this.shadowRoot!.querySelector<HTMLInputElement>(".input-min")!;
+    }
+
+    private get maximumHandle(): HTMLInputElement {
+        return this.shadowRoot!.querySelector<HTMLInputElement>(".input-max")!;
     }
 }

@@ -16,6 +16,7 @@ export class BlocEditor extends Editor {
                         "defaultValue": "range",
                         "options": [
                             { "label": "Range", "value": "range" },
+                            { "label": "Minimum", "value": "min" },
                             { "label": "Maximum", "value": "max" },
                         ],
                     },

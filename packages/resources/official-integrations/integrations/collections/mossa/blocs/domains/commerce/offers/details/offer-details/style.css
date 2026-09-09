@@ -1,5 +1,6 @@
 :host {
-    --_mossa-detail-gap: 2.5rem;
+    --_mossa-detail-column-gap: clamp(2rem, 4vw, 3.25rem);
+    --_mossa-detail-row-gap: clamp(2rem, 3vw, 2.75rem);
     --_mossa-detail-left: 1fr;
     --_mossa-detail-right: 1fr;
     --_mossa-detail-media-ratio: 4 / 3;
@@ -11,7 +12,8 @@
 .layout {
     display: grid;
     grid-template-columns: minmax(0, var(--_mossa-detail-left)) minmax(0, var(--_mossa-detail-right));
-    gap: var(--_mossa-detail-gap);
+    column-gap: var(--_mossa-detail-column-gap);
+    row-gap: var(--_mossa-detail-row-gap);
     align-items: start;
 }
 
@@ -19,11 +21,78 @@
 .information {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
     min-width: 0;
 }
 
-.gallery { gap: 0.75rem; }
+.gallery {
+    gap: 0.625rem;
+}
+
+.information {
+    gap: 0;
+}
+
+.information ::slotted([slot="title"]),
+.information ::slotted([slot="meta"]),
+.information ::slotted([slot="description"]) {
+    margin: 0;
+}
+
+.information ::slotted([slot="title"]) {
+    line-height: 1.12;
+    text-wrap: balance;
+    margin-bottom: 0.6rem;
+}
+
+.identity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.identity ::slotted([slot="meta"]) {
+    color: var(--ulvia-surface-muted-text);
+}
+
+.identity ::slotted([slot="badge"]) {
+    flex: 0 0 auto;
+}
+
+.information ::slotted([slot="description"]) {
+    line-height: 1.55;
+    margin-bottom: 1.1rem;
+}
+
+.purchase {
+    display: grid;
+    min-width: 0;
+    padding: 0.9rem 1rem 1rem;
+    border: 1px solid var(--ulvia-surface-border);
+    border-radius: var(--ulvia-radius-card);
+    background: var(--ulvia-surface-background);
+}
+
+:host([purchase-appearance="flat"]) .purchase {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.purchase ::slotted([slot="price"]) {
+    margin-bottom: 0.2rem;
+}
+
+.purchase ::slotted([slot="valuation"]) {
+    margin-bottom: 0.65rem;
+}
+
+.purchase ::slotted([slot="shipping"]) {
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--ulvia-surface-border);
+}
 
 .main-media {
     aspect-ratio: var(--_mossa-detail-media-ratio);
@@ -41,20 +110,32 @@
 }
 
 .thumbnails {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(3.75rem, 14.5%);
+    gap: 0.625rem;
+    justify-content: start;
+    overflow-x: auto;
+    padding: 0.2rem 0.15rem 0.35rem;
+    scrollbar-width: thin;
 }
 
 .thumbnails ::slotted(*) {
-    width: 5.5rem;
-    height: 5.5rem;
-    flex: 0 0 5.5rem;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    border: 2px solid transparent;
+    box-sizing: border-box;
     border-radius: var(--ulvia-radius-card);
     background: var(--ulvia-subtle-background);
+    cursor: pointer;
 }
 
-.thumbnails ::slotted([data-active]) {
+.thumbnails ::slotted([aria-current="true"]) {
+    border-color: var(--ulvia-secondary-base);
+}
+
+.thumbnails ::slotted(:focus-visible) {
     outline: 2px solid var(--ulvia-secondary-base);
     outline-offset: 2px;
 }
@@ -62,8 +143,41 @@
 .actions {
     display: flex;
     flex-direction: column;
+    gap: 0.625rem;
+    margin-top: 0.8rem;
+}
+
+.trust {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.5rem;
-    margin-top: 0.5rem;
+    margin-top: 0.8rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--ulvia-surface-border);
+}
+
+.trust ::slotted(*) {
+    min-width: 0;
+}
+
+.technical {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    min-width: 0;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--ulvia-surface-border);
+}
+
+.technical ::slotted([slot="specifications-heading"]) {
+    margin: 0;
+    line-height: 1.2;
+}
+
+.technical ::slotted(*) {
+    display: block;
+    min-width: 0;
 }
 
 :host([balance="media-heavy"]) {
@@ -80,5 +194,16 @@
 :host([ratio="wide"]) { --_mossa-detail-media-ratio: 16 / 9; }
 
 @media (max-width: 880px) {
-    .layout { grid-template-columns: 1fr; }
+    .layout {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+        row-gap: 1.75rem;
+    }
+
+    .thumbnails { grid-auto-columns: minmax(3.75rem, 20%); }
+
+    .trust {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
 }

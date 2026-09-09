@@ -1,69 +1,61 @@
 import { purchaseText } from "./copy";
 
-export function syncPurchaseItems(host: HTMLElement): void {
-    for (const item of host.querySelectorAll<HTMLElement>("[data-purchase-item]")) {
-        syncIdentity(host, item);
-        syncStatus(host, item);
-        syncAmount(host, item);
-        syncLink(host, item);
-    }
+type ObjectValue = Record<string, unknown>;
+
+export function purchasePresentation(host: HTMLElement, value: unknown, offset: number): Record<string, unknown> {
+    const response = objectValue(value) || {};
+    return {
+        emptyDescription: purchaseText(host, "empty-description"),
+        emptyTitle: purchaseText(host, "empty-title"),
+        errorMessage: purchaseText(host, "error-message"),
+        errorTitle: purchaseText(host, "error-title"),
+        items: objectValues(response.items).map((order) => purchaseItem(host, order)),
+        loadingLabel: purchaseText(host, "loading-label"),
+        loginDescription: purchaseText(host, "login-description"),
+        loginTitle: purchaseText(host, "login-title"),
+        page: Math.floor(offset / 8) + 1,
+        paginationLabel: purchaseText(host, "pagination-label"),
+        paginationNextLabel: purchaseText(host, "pagination-next-label"),
+        paginationPreviousLabel: purchaseText(host, "pagination-previous-label"),
+        paginationSummary: purchaseText(host, "pagination-summary-template"),
+        total: nonNegativeInteger(response.total),
+    };
 }
 
-function syncIdentity(host: HTMLElement, item: HTMLElement): void {
-    const id = item.dataset.orderId || "";
-    const reference = item.dataset.orderNumber || purchaseText(host, "order-reference-template", { id });
-    const firstTitle = item.dataset.firstTitle?.trim() || "";
-    const lineCount = Number(item.dataset.lineCount);
+function purchaseItem(host: HTMLElement, order: ObjectValue): Record<string, unknown> {
+    const operation = objectValue(order.operation) || {};
+    const summary = objectValue(order.lineSummary) || {};
+    const count = nonNegativeInteger(summary.lineCount);
+    const firstTitle = String(summary.firstTitle || "").trim();
+    const reference = String(
+        order.orderNumber || purchaseText(host, "order-reference-template", { id: order.id || "" }),
+    );
+    const date = formatDate(order.createdAt, locale(host), purchaseText(host, "unknown-date-label"));
     const title =
-        firstTitle && Number.isSafeInteger(lineCount) && lineCount > 1
-            ? purchaseText(host, lineCount > 2 ? "other-items-template" : "other-item-template", {
+        firstTitle && count > 1
+            ? purchaseText(host, count > 2 ? "other-items-template" : "other-item-template", {
                   title: firstTitle,
-                  count: lineCount - 1,
+                  count: count - 1,
               })
             : firstTitle || reference;
-    setText(item.querySelector("[data-purchase-title]"), title);
-    const date = formatDate(
-        item.dataset.createdAt,
-        host.getAttribute("locale"),
-        purchaseText(host, "unknown-date-label"),
-    );
-    const placed = purchaseText(host, "placed-on-template", { date });
-    setText(item.querySelector("[data-purchase-meta]"), firstTitle ? `${reference} · ${placed}` : placed);
+    const status = orderStatus(order.status, operation);
+    return {
+        actionLabel: purchaseText(host, "order-action-label"),
+        actionUrl: routeUrl(host.getAttribute("order-url"), { orderId: order.id }),
+        currency: order.currency,
+        meta: purchaseText(host, "placed-on-template", { date }),
+        statusLabel: purchaseText(host, `label-${status.key}`),
+        statusTone: status.tone,
+        title,
+        totalAmount: order.totalAmount,
+        totalLabel: purchaseText(host, "total-label"),
+    };
 }
 
-function syncStatus(host: HTMLElement, item: HTMLElement): void {
-    const status = orderStatus(item.dataset);
-    const badge = item.querySelector("[data-purchase-status]");
-    setText(badge, purchaseText(host, `label-${status.key}`));
-    setAttribute(badge, "tone", status.tone);
-}
-
-function syncAmount(host: HTMLElement, item: HTMLElement): void {
-    setText(item.querySelector("[data-total-label]"), purchaseText(host, "total-label"));
-    setText(
-        item.querySelector("[data-total-value]"),
-        money(Number(item.dataset.totalAmount), item.dataset.currency, host.getAttribute("locale")),
-    );
-}
-
-function syncLink(host: HTMLElement, item: HTMLElement): void {
-    const wrapper = item.querySelector<HTMLElement>("[data-order-action]");
-    const link = wrapper?.querySelector("a");
-    const template = host.getAttribute("order-url")?.trim() || "";
-    const id = item.dataset.orderId || "";
-    wrapper?.toggleAttribute("hidden", !template || !id);
-    setText(link, host.getAttribute("order-action-label")?.trim() || "View order");
-    if (link && template && id) {
-        link.setAttribute("href", template.replaceAll("{orderId}", encodeURIComponent(id)));
-    } else {
-        link?.removeAttribute("href");
-    }
-}
-
-function orderStatus(data: DOMStringMap): { key: string; tone: string } {
-    const settlement = String(data.settlementStatus || "").toLowerCase();
-    const payment = String(data.paymentStatus || "").toLowerCase();
-    const claim = String(data.claimStatus || "").toLowerCase();
+function orderStatus(status: unknown, operation: ObjectValue): { key: string; tone: string } {
+    const settlement = String(operation.settlementStatus || "").toLowerCase();
+    const payment = String(operation.paymentStatus || "").toLowerCase();
+    const claim = String(operation.claimStatus || "").toLowerCase();
     if (settlement === "manual_review" || settlement === "blocked") {
         return { key: "review-required", tone: "danger" };
     }
@@ -74,10 +66,10 @@ function orderStatus(data: DOMStringMap): { key: string; tone: string } {
         return { key: "refund-in-progress", tone: "warning" };
     }
     if (settlement === "refunded" || settlement === "reversed" || payment === "refunded") {
-        return { key: "refunded", tone: "neutral" };
+        return { key: "refunded", tone: "info" };
     }
     if (payment === "partially_refunded") {
-        return { key: "partially-refunded", tone: "neutral" };
+        return { key: "partially-refunded", tone: "info" };
     }
     if (["failed", "cancelled", "canceled"].includes(payment)) {
         return { key: payment === "failed" ? "payment-failed" : "payment-cancelled", tone: "danger" };
@@ -85,7 +77,7 @@ function orderStatus(data: DOMStringMap): { key: string; tone: string } {
     if (["created", "requires_action", "requires_payment_method", "processing"].includes(payment)) {
         return { key: "payment-pending", tone: "warning" };
     }
-    return statusPresentation[data.orderStatus || ""] || { key: "unavailable", tone: "neutral" };
+    return statusPresentation[String(status)] || { key: "unavailable", tone: "info" };
 }
 
 const statusPresentation: Record<string, { key: string; tone: string }> = {
@@ -93,40 +85,38 @@ const statusPresentation: Record<string, { key: string; tone: string }> = {
     awaiting_payment: { key: "awaiting_payment", tone: "warning" },
     active: { key: "active", tone: "primary" },
     completed: { key: "completed", tone: "success" },
-    expired: { key: "expired", tone: "neutral" },
+    expired: { key: "expired", tone: "info" },
     cancellation_pending: { key: "cancellation_pending", tone: "warning" },
     cancelled: { key: "cancelled", tone: "danger" },
 };
 
-function money(amount: number, currency: unknown, locale: string | null): string {
-    if (!Number.isSafeInteger(amount)) {
-        return "—";
-    }
-    try {
-        return new Intl.NumberFormat(locale || "en-US", {
-            style: "currency",
-            currency: String(currency || "USD").toUpperCase(),
-        }).format(amount / 100);
-    } catch {
-        return "—";
-    }
-}
-
-function formatDate(value: unknown, locale: string | null, fallback: string): string {
-    const parsed = new Date(String(value || ""));
-    return Number.isNaN(parsed.getTime())
+function formatDate(value: unknown, language: string, fallback: string): string {
+    const date = new Date(String(value || ""));
+    return Number.isNaN(date.getTime())
         ? fallback
-        : new Intl.DateTimeFormat(locale || "en-US", { dateStyle: "long" }).format(parsed);
+        : new Intl.DateTimeFormat(language, { dateStyle: "long" }).format(date);
 }
 
-function setText(element: Element | null, value: string): void {
-    if (element && element.textContent !== value) {
-        element.textContent = value;
-    }
+function locale(host: HTMLElement): string {
+    return host.ownerDocument.documentElement.lang || host.ownerDocument.defaultView?.navigator.language || "en-US";
 }
 
-function setAttribute(element: Element | null, name: string, value: string): void {
-    if (element && element.getAttribute(name) !== value) {
-        element.setAttribute(name, value);
-    }
+function routeUrl(template: string | null, values: Record<string, unknown>): string {
+    return Object.entries(values).reduce(
+        (result, [key, value]) => result.replaceAll(`{${key}}`, encodeURIComponent(String(value ?? ""))),
+        template || "",
+    );
+}
+
+function objectValue(value: unknown): ObjectValue | null {
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as ObjectValue) : null;
+}
+
+function objectValues(value: unknown): ObjectValue[] {
+    return Array.isArray(value) ? value.map(objectValue).filter((item): item is ObjectValue => item !== null) : [];
+}
+
+function nonNegativeInteger(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : 0;
 }

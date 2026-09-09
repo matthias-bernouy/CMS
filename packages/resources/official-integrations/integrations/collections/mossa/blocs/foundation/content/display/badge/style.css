@@ -20,6 +20,7 @@
     --_mossa-badge-font-weight: 600;
 
     display: inline-flex;
+    max-width: 100%;
     vertical-align: middle;
     font-family: var(--ulvia-font-body);
     line-height: 1;
@@ -33,6 +34,7 @@
 }
 
 .badge {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     gap: var(--_mossa-badge-gap);
@@ -44,7 +46,9 @@
     font-size: var(--_mossa-badge-font-size);
     font-weight: var(--_mossa-badge-font-weight);
     letter-spacing: 0.01em;
-    white-space: nowrap;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .label ::slotted(*),
@@ -149,4 +153,42 @@
     --_mossa-badge-bg:     transparent;
     --_mossa-badge-fg:     var(--_mossa-badge-strong);
     --_mossa-badge-border: transparent;
+}
+
+:host([presentation="step"]) {
+    display: block;
+    min-width: 5rem;
+    text-align: center;
+}
+
+:host([presentation="step"]) .badge {
+    box-sizing: border-box;
+    flex-direction: column;
+    width: 100%;
+    padding: 0 .25rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--ulvia-surface-text);
+    gap: .5rem;
+    white-space: normal;
+}
+
+:host([presentation="step"]) .leading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--_mossa-badge-base);
+    border-radius: 50%;
+    background: var(--_mossa-badge-base);
+    color: var(--_mossa-badge-contrasted);
+}
+
+:host([presentation="step"][variant="ghost"]) .leading {
+    border-color: var(--ulvia-surface-border);
+    background: var(--ulvia-surface-background);
+    color: var(--ulvia-surface-muted-text);
 }

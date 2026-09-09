@@ -4,6 +4,11 @@
     "artifact": "mossa-user-menu",
     "category": "navigation",
     "defaultActive": false,
+    "requires": {
+        "resources": [
+            "mossa/blocs/menu-item"
+        ]
+    },
     "theme": {
         "contract": "ulvia-theme@3",
         "required": [

@@ -1,4 +1,4 @@
-import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 const visible = (label: string, attribute: string) => ({
     type: "segmented" as const,
     label,
@@ -44,6 +44,31 @@ export class CommerceNegotiationListEditor extends Editor {
                         label: "Status accessible label",
                         attribute: "status-label",
                         defaultValue: "Filter by status",
+                    },
+                    {
+                        type: "text",
+                        label: "Role accessible label",
+                        attribute: "role-label",
+                        defaultValue: "Proposal type",
+                    },
+                    { type: "text", label: "Loading", attribute: "loading-label", defaultValue: "Loading proposals" },
+                    {
+                        type: "text",
+                        label: "Unavailable title",
+                        attribute: "error-title",
+                        defaultValue: "Proposals unavailable",
+                    },
+                    {
+                        type: "text",
+                        label: "Unavailable image",
+                        attribute: "image-unavailable-label",
+                        defaultValue: "No photo available",
+                    },
+                    {
+                        type: "text",
+                        label: "Offer link",
+                        attribute: "offer-link-template",
+                        defaultValue: "View {title}",
                     },
                     {
                         type: "text",
@@ -137,18 +162,6 @@ export class CommerceNegotiationListEditor extends Editor {
                 settings: [
                     {
                         type: "select",
-                        label: "Initial view",
-                        attribute: "initial-role",
-                        defaultValue: "seller",
-                        options: [
-                            { label: "Combined", value: "all" },
-                            { label: "Received", value: "seller" },
-                            { label: "Sent", value: "buyer" },
-                        ],
-                    },
-                    { type: "text", label: "Page size", attribute: "page-size", defaultValue: "12" },
-                    {
-                        type: "select",
                         label: "Minimum card width",
                         attribute: "grid-min",
                         defaultValue: "md",
@@ -192,6 +205,16 @@ export class CommerceNegotiationListEditor extends Editor {
                         defaultValue: "compact",
                         options: ["compact", "regular", "spacious"].map((value) => ({ label: value, value })),
                     },
+                    {
+                        type: "segmented",
+                        label: "Card layout",
+                        attribute: "card-layout",
+                        defaultValue: "vertical",
+                        options: [
+                            { label: "Vertical", value: "vertical" },
+                            { label: "Horizontal", value: "horizontal" },
+                        ],
+                    },
                     visible("Header", "show-header"),
                     visible("Received/sent tabs", "show-role-tabs"),
                     visible("Reference price", "show-reference-price"),
@@ -201,49 +224,21 @@ export class CommerceNegotiationListEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Data",
+                label: "Navigation",
                 settings: [
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
-                    {
-                        type: "segmented",
-                        label: "Whole-unit prices",
-                        attribute: "whole-unit-prices",
-                        defaultValue: "false",
-                        options: [
-                            { label: "Yes", value: "true" },
-                            { label: "No", value: "false" },
-                        ],
-                    },
-                    {
-                        type: "segmented",
-                        label: "Synchronize URL",
-                        attribute: "sync-url",
-                        defaultValue: "true",
-                        options: [
-                            { label: "Yes", value: "true" },
-                            { label: "No", value: "false" },
-                        ],
-                    },
-                    { type: "text", label: "Role URL parameter", attribute: "role-param", defaultValue: "role" },
-                    { type: "text", label: "Status URL parameter", attribute: "status-param", defaultValue: "status" },
-                    { type: "text", label: "Page URL parameter", attribute: "page-param", defaultValue: "page" },
                     { type: "text", label: "Offer URL", attribute: "offer-url" },
-                    { type: "text", label: "Offer URL parameter", attribute: "offer-param", defaultValue: "slug" },
                     { type: "text", label: "Checkout URL", attribute: "checkout-url" },
-                    {
-                        type: "text",
-                        label: "Checkout agreement parameter",
-                        attribute: "checkout-param",
-                        defaultValue: "agreementId",
-                    },
-                    {
-                        type: "text",
-                        label: "Order URL",
-                        attribute: "order-url",
-                    },
-                    { type: "text", label: "Order URL parameter", attribute: "order-param", defaultValue: "orderId" },
+                    { type: "text", label: "Order URL", attribute: "order-url" },
                 ],
             },
+        ];
+    }
+
+    protected override contentSlots(): ContentSlot[] {
+        return [
+            { label: "Offer link", slot: "offer-navigation", accepts: [{ kind: "any-component" }], max: 1 },
+            { label: "Checkout action", slot: "checkout-action", accepts: [{ kind: "any-component" }], max: 1 },
+            { label: "Order action", slot: "order-action", accepts: [{ kind: "any-component" }], max: 1 },
         ];
     }
 }

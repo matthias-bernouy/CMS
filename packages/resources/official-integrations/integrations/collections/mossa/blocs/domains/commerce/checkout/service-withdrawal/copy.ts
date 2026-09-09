@@ -19,6 +19,7 @@ export const withdrawalCopy: Record<string, string> = {
     "date-label": "Date and time",
     "status-label": "Status",
     "download-label": "Download receipt",
+    "retry-label": "Try again",
     "order-reference-label": "Order {reference}",
     "select-order-message": "Select the related order.",
     "confirmation-required-message": "Explicitly confirm your request to continue.",

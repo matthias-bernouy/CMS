@@ -4,7 +4,7 @@
         "tag": "mossa-range-filter",
         "name": "Range filter",
         "group": "Forms",
-        "description": "Two-handle range slider for a min/max value pair, with live label.",
+        "description": "Numeric range slider with optional bound minimum and maximum controls.",
         "path": "blocs/foundation/forms/fields/range-filter",
         "view": "Bloc.ts"
     }

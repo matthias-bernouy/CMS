@@ -7,7 +7,7 @@
     "meta": {
         "author": "Be5 Solutions",
         "title": "Range filter",
-        "description": "Two-handle range slider for a min/max value pair, with live label.",
+        "description": "Numeric range slider with optional bound minimum and maximum controls.",
         "categories": [
             "forms"
         ]

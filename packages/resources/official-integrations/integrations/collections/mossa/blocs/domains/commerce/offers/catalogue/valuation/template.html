@@ -9,77 +9,64 @@
         <mossa-panel>
             <slot name="choose-model-label" slot="title"></slot>
             <mossa-stack gap="sm">
-                <mossa-search-input data-search size="lg">
+                <mossa-search-input cms-page-state="mossaValuationQuery" size="lg">
                     <slot name="search-accessible-label" slot="accessible-label"></slot>
                     <slot name="search-placeholder" slot="placeholder"></slot>
                     <slot name="clear-search-label" slot="clear-label"></slot>
                 </mossa-search-input>
+                <input cms-page-state="mossaValuationProduct" type="hidden">
 
-                <form
-                    data-products-source
-                    cms-source="/.cms/sources/commerce/products"
-                    cms-source-trigger="submit"
-                    cms-source-method="GET"
+                <section
+                    cms-source-id="products"
+                    cms-source="/.cms/sources/commerce/products?q=@{mossaValuationQuery}&amp;limit=20"
                 >
-                    <input data-search-query name="q" type="hidden">
-                    <input name="limit" value="20" type="hidden">
-                    <mossa-skeleton
-                        height="4rem"
-                        animation="wave"
-                        label="Searching the catalogue"
-                        cms-condition="$source.loading"
-                    ></mossa-skeleton>
+                    <mossa-skeleton height="4rem" animation="wave" label="Searching the catalogue" cms-condition="$source.loading"></mossa-skeleton>
+                    <p role="alert" cms-condition="$source.error"><slot name="unavailable-message"></slot></p>
+                    <p role="status" cms-condition="$source.empty"><slot name="no-model-message"></slot></p>
+                    <p role="status" cms-condition="$source.loaded &amp;&amp; total == 1">{{ total }} <slot name="model-count-one-message"></slot></p>
+                    <p role="status" cms-condition="$source.loaded &amp;&amp; total &gt; 1">{{ total }} <slot name="model-count-many-message"></slot></p>
+
                     <mossa-stack gap="xs" role="listbox" cms-condition="$source.loaded &amp;&amp; total &gt; 0">
                         <mossa-button appearance="ghost" width="full" cms-repeat="items as product">
-                            <button type="button" role="option" data-product-id="{{ product.id }}">
+                            <button type="button" role="option" value="{{ product.id }}">
                                 <strong>{{ product.title }}</strong>
                                 <small>{{ product.description }}</small>
                             </button>
                         </mossa-button>
                     </mossa-stack>
-                </form>
-                <p data-search-status role="status"></p>
+
+                    <section cms-condition="selectedProduct" aria-labelledby="valuation-title">
+                        <mossa-stack gap="lg">
+                            <mossa-section-header size="sm">
+                                <slot name="result-eyebrow" slot="eyebrow"></slot>
+                                <h2 slot="title" id="valuation-title">{{ selectedProduct.title }}</h2>
+                                <p slot="subtitle">{{ selectedProduct.description }}</p>
+                            </mossa-section-header>
+                            <mossa-surface-card appearance="outlined" density="spacious">
+                                <span slot="title"><slot name="reference-range-label"></slot></span>
+                                <strong cms-condition="selectedProduct.hasValuation">
+                                    {{ selectedProduct.minimumMinor | minorCurrency(selectedProduct.currency) }} –
+                                    {{ selectedProduct.maximumMinor | minorCurrency(selectedProduct.currency) }}
+                                </strong>
+                                <strong cms-condition="!selectedProduct.hasValuation"><slot name="range-pending-label"></slot></strong>
+                                <p cms-condition="selectedProduct.hasValuation"><slot name="range-description"></slot></p>
+                                <p cms-condition="!selectedProduct.hasValuation"><slot name="range-pending-description"></slot></p>
+                            </mossa-surface-card>
+                            <mossa-info-row>
+                                <span slot="icon" aria-hidden="true">i</span>
+                                <slot name="model-reference-label" slot="label"></slot>
+                                <slot name="model-reference-description"></slot>
+                            </mossa-info-row>
+                        </mossa-stack>
+                    </section>
+
+                    <mossa-empty-state variant="card" cms-condition="$source.loaded &amp;&amp; !selectedProduct">
+                        <span slot="icon" aria-hidden="true">⌕</span>
+                        <slot name="initial-title" slot="title"></slot>
+                        <slot name="initial-description" slot="description"></slot>
+                    </mossa-empty-state>
+                </section>
             </mossa-stack>
         </mossa-panel>
-
-        <section data-valuation-result hidden aria-labelledby="valuation-title">
-            <mossa-stack gap="lg">
-                <mossa-section-header size="sm">
-                    <slot name="result-eyebrow" slot="eyebrow"></slot>
-                    <h2 slot="title" id="valuation-title" data-product-title></h2>
-                    <p slot="subtitle" data-product-description></p>
-                </mossa-section-header>
-                <mossa-surface-card appearance="outlined" density="spacious">
-                    <span slot="title"><slot name="reference-range-label"></slot></span>
-                    <strong data-estimate></strong>
-                    <p data-detail></p>
-                </mossa-surface-card>
-                <mossa-info-row>
-                    <span slot="icon" aria-hidden="true">i</span>
-                    <slot name="model-reference-label" slot="label"></slot>
-                    <slot name="model-reference-description"></slot>
-                </mossa-info-row>
-            </mossa-stack>
-        </section>
-
-        <mossa-empty-state data-initial-state variant="card">
-            <span slot="icon" aria-hidden="true">⌕</span>
-            <slot name="initial-title" slot="title"></slot>
-            <slot name="initial-description" slot="description"></slot>
-        </mossa-empty-state>
     </mossa-stack>
-
-    <div hidden aria-hidden="true">
-        <span data-copy-source="start-typing-message"><slot name="start-typing-message"></slot></span>
-        <span data-copy-source="searching-message"><slot name="searching-message"></slot></span>
-        <span data-copy-source="model-count-one-message"><slot name="model-count-one-message"></slot></span>
-        <span data-copy-source="model-count-many-message"><slot name="model-count-many-message"></slot></span>
-        <span data-copy-source="no-model-message"><slot name="no-model-message"></slot></span>
-        <span data-copy-source="unavailable-message"><slot name="unavailable-message"></slot></span>
-        <span data-copy-source="selected-model-message"><slot name="selected-model-message"></slot></span>
-        <span data-copy-source="catalogue-product-label"><slot name="catalogue-product-label"></slot></span>
-        <span data-copy-source="range-pending-label"><slot name="range-pending-label"></slot></span>
-        <span data-copy-source="range-pending-description"><slot name="range-pending-description"></slot></span>
-        <span data-copy-source="range-description"><slot name="range-description"></slot></span>
-    </div>
 </mossa-valuation-controller>

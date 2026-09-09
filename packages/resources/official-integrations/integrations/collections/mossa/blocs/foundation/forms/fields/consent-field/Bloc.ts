@@ -3,7 +3,6 @@ import css from "./style.css" with { type: "text" };
 export class ConsentField extends HTMLElement {
     static formAssociated = true;
     static observedAttributes = [
-        "context-key",
         "appearance",
         "heading",
         "loading-label",
@@ -156,12 +155,6 @@ export class ConsentField extends HTMLElement {
     }
 
     sync() {
-        const context = encodeURIComponent(this.getAttribute("context-key")?.trim() || "signup");
-        setAttribute(
-            this,
-            "cms-source",
-            `/.cms/sources/consent/getRequirements?context=${context} as consentRequirements`,
-        );
         setCopy(this, "[data-consent-heading]", "heading", "Required terms");
         setCopy(this, "[data-consent-preview-heading]", "heading", "Required terms");
         setCopy(this, "[data-consent-loading]", "loading-label", "Loading terms…");
@@ -257,12 +250,6 @@ export class ConsentField extends HTMLElement {
 
 function visible(element) {
     return element instanceof HTMLElement && !element.hidden && getComputedStyle(element).display !== "none";
-}
-
-function setAttribute(element, name, value) {
-    if (element.getAttribute(name) !== value) {
-        element.setAttribute(name, value);
-    }
 }
 
 function setCopy(root, selector, attribute, fallback) {

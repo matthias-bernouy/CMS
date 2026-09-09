@@ -1,1 +1,13 @@
-<mossa-commerce-account-offers locale="en-US" grid-packing="fit" card-stretch="true" image-height="12rem" image-fit="cover" page-size="12"></mossa-commerce-account-offers>
+<mossa-commerce-account-offers grid-packing="fit" image-height="12rem" image-fit="cover">
+    <mossa-select slot="status-filter" cms-param-sync="commerceOfferStatus" accessible-label="Filter by status" value="all">
+        <mossa-option value="all" selected>All</mossa-option>
+        <mossa-option value="draft">Drafts</mossa-option>
+        <mossa-option value="action_required">Action required</mossa-option>
+        <mossa-option value="under_review">Under review</mossa-option>
+        <mossa-option value="online">Online</mossa-option>
+        <mossa-option value="paused">Paused</mossa-option>
+        <mossa-option value="rejected">Rejected</mossa-option>
+        <mossa-option value="archived">Archived</mossa-option>
+    </mossa-select>
+    <mossa-button slot="create-action"><a href="#">Create an offer</a></mossa-button>
+</mossa-commerce-account-offers>

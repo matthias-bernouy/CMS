@@ -38,34 +38,12 @@ export class CommerceOfferListEditor extends Editor {
                         defaultValue: "md",
                         options: ["none", "xs", "sm", "md", "lg", "xl"].map((value) => ({ label: value, value })),
                     },
-                    {
-                        type: "segmented",
-                        label: "Card height",
-                        attribute: "card-stretch",
-                        defaultValue: "true",
-                        options: [
-                            { label: "Content", value: "false" },
-                            { label: "Stretch", value: "true" },
-                        ],
-                    },
                 ],
             },
             {
                 kind: "self",
                 label: "Pagination",
                 settings: [
-                    { type: "text", label: "Items per page", attribute: "page-size", defaultValue: "12" },
-                    { type: "text", label: "Page URL parameter", attribute: "page-param", defaultValue: "page" },
-                    {
-                        type: "segmented",
-                        label: "Synchronize page with URL",
-                        attribute: "sync-url",
-                        defaultValue: "true",
-                        options: [
-                            { label: "Yes", value: "true" },
-                            { label: "No", value: "false" },
-                        ],
-                    },
                     {
                         type: "segmented",
                         label: "Scroll after page change",
@@ -77,43 +55,6 @@ export class CommerceOfferListEditor extends Editor {
                         ],
                     },
                 ],
-            },
-            {
-                kind: "self",
-                label: "Fixed filters",
-                settings: [
-                    { type: "text", label: "Category", attribute: "category" },
-                    { type: "text", label: "Brand", attribute: "brand" },
-                    { type: "text", label: "Product id", attribute: "product-id" },
-                    { type: "text", label: "Variant id", attribute: "variant-id" },
-                    { type: "text", label: "Seller id", attribute: "seller-id" },
-                    { type: "text", label: "Condition", attribute: "condition-code" },
-                    { type: "text", label: "Minimum price", attribute: "minimum-price" },
-                    { type: "text", label: "Maximum price", attribute: "maximum-price" },
-                    {
-                        type: "select",
-                        label: "Sort",
-                        attribute: "sort",
-                        options: [
-                            { label: "Most recent", value: "" },
-                            { label: "Price ascending", value: "price-asc" },
-                            { label: "Price descending", value: "price-desc" },
-                        ],
-                    },
-                ],
-            },
-            {
-                kind: "self",
-                label: "Data",
-                settings: [
-                    { type: "text", label: "Data alias", attribute: "data-alias", defaultValue: "data" },
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
-                ],
-            },
-            {
-                kind: "self",
-                label: "Navigation",
-                settings: [{ type: "text", label: "Offer URL pattern", attribute: "offer-url" }],
             },
         ];
     }

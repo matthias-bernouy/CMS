@@ -1,5 +1,13 @@
 import { Component } from "@bernouy/components/base";
-import { accountCopyAttributes, accountFields as fields, syncAccountCopy } from "../copy";
+import {
+    observeSource,
+    readSourceData,
+    refreshSourceContext,
+    setSourceContext,
+    type SourceObservation,
+} from "@bernouy/components/binding";
+import { accountCopyAttributes, accountFields } from "../copy";
+import { accountPresentation } from "../presentation";
 
 export class UserAccountForm extends Component {
     static observedAttributes = [
@@ -11,183 +19,115 @@ export class UserAccountForm extends Component {
         "toast-shadow",
         "success-toast-duration",
         "error-toast-duration",
+        "field-appearance",
+        "field-tone",
         ...accountCopyAttributes,
-        ...fields.map((field) => `show-${field}`),
+        ...accountFields.map((field) => `show-${field}`),
     ];
 
+    private avatarFileId = "";
+    private saveAfterAvatar = false;
+    private stopIdentity: (() => void) | null = null;
     constructor() {
         super({ css: ":host { display: contents; }", template: "<slot></slot>" });
-        this.avatarObserver = null;
-        this.saveAfterAvatar = false;
     }
 
-    connectedCallback() {
-        this.addEventListener("cms-source:success", this.onSourceSettled);
-        this.addEventListener("cms-source:failed", this.onSourceFailed);
-        this.addEventListener("submit", this.onSubmitCapture, true);
+    override connectedCallback(): void {
         super.connectedCallback();
-
-        const Observer = this.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
-        this.avatarObserver = new Observer(() =>
-            queueMicrotask(() => {
-                this.syncPresentation();
-                this.syncAvatarPreview();
-            }),
-        );
-        this.avatarObserver.observe(this, { childList: true, characterData: true, subtree: true });
-        this.sync();
+        setSourceContext(this.accountSource, (account) => ({
+            identity: readSourceData(this.identitySource),
+            presentation: accountPresentation(this, account, this.avatarFileId),
+        }));
+        this.stopIdentity = observeSource(this.identitySource, this.onIdentityState);
+        this.addEventListener("submit", this.onSubmit, true);
+        this.addEventListener("cms-source:success", this.onSourceSuccess as EventListener);
+        this.addEventListener("cms-source:failed", this.onSourceFailed as EventListener);
     }
 
-    disconnectedCallback() {
-        this.removeEventListener("cms-source:success", this.onSourceSettled);
-        this.removeEventListener("cms-source:failed", this.onSourceFailed);
-        this.removeEventListener("submit", this.onSubmitCapture, true);
-        this.avatarObserver?.disconnect();
-        this.avatarObserver = null;
+    disconnectedCallback(): void {
+        this.stopIdentity?.();
+        this.stopIdentity = null;
+        this.removeEventListener("submit", this.onSubmit, true);
+        this.removeEventListener("cms-source:success", this.onSourceSuccess as EventListener);
+        this.removeEventListener("cms-source:failed", this.onSourceFailed as EventListener);
     }
 
-    attributeChangedCallback() {
+    attributeChangedCallback(): void {
         if (this.isConnected) {
-            queueMicrotask(() => this.sync());
+            refreshSourceContext(this.accountSource);
         }
     }
 
-    sync() {
-        this.setAttributeIfChanged(
-            this.querySelector("[data-account-load]"),
-            "cms-source",
-            "/.cms/sources/user-account/getAccount",
-        );
-        this.setAttributeIfChanged(
-            this.querySelector("[data-account-form]"),
-            "cms-source",
-            "/.cms/sources/user-account/updateAccount as save",
-        );
-        this.setAttributeIfChanged(
-            this.querySelector("[data-avatar-form]"),
-            "cms-source",
-            "/.cms/sources/user-account/uploadAccountAvatar as avatar",
-        );
-        this.setAttributeIfChanged(this.querySelector('[data-account-field="birth-date"]'), "max", currentLocalDate());
-
-        this.setText("[data-account-button]", this.getAttribute("button-label") || "Save");
-        this.syncPresentation();
-
-        for (const field of fields) {
-            const element = this.querySelector(`[data-account-field="${field}"]`);
-            if (!element) {
-                continue;
-            }
-            const visible = this.getAttribute(`show-${field}`) !== "false";
-            element.hidden = !visible;
-            const control = element.matches?.("[name]") ? element : element.querySelector?.("[name]");
-            control?.toggleAttribute("disabled", !visible);
-        }
-        this.syncAvatarPreview();
-    }
-
-    syncPresentation() {
-        syncAccountCopy(this);
-        for (const toast of this.querySelectorAll("mossa-toast")) {
-            const kind = toast.getAttribute("data-toast-kind") === "success" ? "success" : "error";
-            this.setAttributeIfChanged(toast, "position", this.getAttribute("toast-position") || "top-right");
-            this.setAttributeIfChanged(toast, "width", this.getAttribute("toast-width") || "auto");
-            this.setAttributeIfChanged(toast, "density", this.getAttribute("toast-density") || "regular");
-            this.setAttributeIfChanged(toast, "radius", this.getAttribute("toast-radius") || "md");
-            this.setAttributeIfChanged(toast, "shadow", this.getAttribute("toast-shadow") || "none");
-            this.setAttributeIfChanged(
-                toast,
-                "duration",
-                this.getAttribute(`${kind}-toast-duration`) || (kind === "success" ? "4500" : "6000"),
-            );
-        }
-    }
-
-    setAttributeIfChanged(element, name, value) {
-        if (element && element.getAttribute(name) !== value) {
-            element.setAttribute(name, value);
-        }
-    }
-
-    setText(selector, value) {
-        const element = this.querySelector(selector);
-        if (element && element.textContent !== value) {
-            element.textContent = value;
-        }
-    }
-
-    syncAvatarPreview() {
-        const avatar = this.querySelector("[data-avatar-input]");
-        if (!avatar || avatar.hasSelection) {
+    private readonly onSubmit = (event: Event): void => {
+        const form = event.target instanceof HTMLFormElement ? event.target : null;
+        if (!form || form.getAttribute("cms-source-id") !== "save" || this.saveAfterAvatar) {
             return;
         }
-
-        const fileId = this.querySelector("[data-avatar-file-id]")?.textContent?.trim() || "";
-        if (fileId.includes("{{") || fileId.includes("}}")) {
+        const avatar = this.querySelector<HTMLElement & { files?: FileList }>("mossa-user-account-avatar");
+        if (!avatar?.files?.[0] || !form.reportValidity()) {
             return;
         }
-        if (!fileId) {
-            avatar.removeAttribute("src");
-            return;
-        }
-
-        this.setAttributeIfChanged(
-            avatar,
-            "src",
-            `/.cms/sources/user-account/getAccountAvatar?fileId=${encodeURIComponent(fileId)}`,
-        );
-    }
-
-    onSubmitCapture = (event) => {
-        const mainForm = this.querySelector("[data-account-form]");
-        if (event.target !== mainForm || this.saveAfterAvatar) {
-            return;
-        }
-
-        const file = this.querySelector("[data-avatar-input]")?.files?.[0];
-        if (!file) {
-            return;
-        }
-        if (typeof mainForm.reportValidity === "function" && !mainForm.reportValidity()) {
-            return;
-        }
-
         event.preventDefault();
         event.stopImmediatePropagation();
         this.saveAfterAvatar = true;
-        this.querySelector("[data-avatar-form]")?.requestSubmit();
+        this.avatarForm?.requestSubmit();
     };
 
-    onSourceSettled = (event) => {
-        if (event.target?.matches?.("[data-avatar-form]")) {
-            const fileId = event.detail?.body?.avatarFileId;
-            const value = this.querySelector("[data-avatar-file-id]");
-            if (value && typeof fileId === "string" && fileId) {
-                value.textContent = fileId;
-            }
-
-            if (this.saveAfterAvatar) {
-                this.saveAfterAvatar = false;
-                queueMicrotask(() => this.querySelector("[data-account-form]")?.requestSubmit());
-                return;
-            }
+    private readonly onSourceSuccess = (event: CustomEvent<{ body?: unknown }>): void => {
+        const source = event.target instanceof Element ? event.target.getAttribute("cms-source-id") : "";
+        if (source !== "avatar") {
+            return;
         }
-        queueMicrotask(() => this.sync());
+        const body = record(event.detail?.body);
+        this.avatarFileId = typeof body?.avatarFileId === "string" ? body.avatarFileId : "";
+        const avatarField = this.saveForm?.elements.namedItem("avatarFileId");
+        if (avatarField instanceof HTMLInputElement) {
+            avatarField.value = this.avatarFileId;
+        }
+        const avatar = this.querySelector<HTMLElement>("mossa-user-account-avatar");
+        if (avatar && this.avatarFileId) {
+            avatar.setAttribute(
+                "src",
+                `/.cms/sources/user-account/getAccountAvatar?fileId=${encodeURIComponent(this.avatarFileId)}`,
+            );
+        }
+        if (this.saveAfterAvatar) {
+            this.saveAfterAvatar = false;
+            queueMicrotask(() => this.saveForm?.requestSubmit());
+        }
     };
 
-    onSourceFailed = (event) => {
-        if (event.target?.matches?.("[data-avatar-form]")) {
+    private readonly onSourceFailed = (event: Event): void => {
+        if (event.target instanceof Element && event.target.getAttribute("cms-source-id") === "avatar") {
             this.saveAfterAvatar = false;
         }
-        queueMicrotask(() => this.syncPresentation());
     };
+
+    private readonly onIdentityState = (state: SourceObservation): void => {
+        if (!state.disposed) {
+            refreshSourceContext(this.accountSource);
+        }
+    };
+
+    private get accountSource(): HTMLElement {
+        return this.querySelector<HTMLElement>('[cms-source-id="account"]')!;
+    }
+
+    private get avatarForm(): HTMLFormElement | null {
+        return this.querySelector<HTMLFormElement>('[cms-source-id="avatar"]');
+    }
+
+    private get identitySource(): HTMLElement {
+        return this.querySelector<HTMLElement>('[cms-source-id="identity"]')!;
+    }
+
+    private get saveForm(): HTMLFormElement | null {
+        return this.querySelector<HTMLFormElement>('[cms-source-id="save"]');
+    }
 }
 
-function currentLocalDate(date = new Date()) {
-    const year = String(date.getFullYear()).padStart(4, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+function record(value: unknown): Record<string, unknown> | null {
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", UserAccountForm);

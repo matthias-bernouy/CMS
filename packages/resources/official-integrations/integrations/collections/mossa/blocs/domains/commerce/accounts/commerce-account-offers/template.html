@@ -1,51 +1,65 @@
 <mossa-commerce-account-offers-controller data-p9r-composition-controller>
-<mossa-stack gap="lg" data-offers-layout>
-    <mossa-stack direction="row" justify-content="space-between" align-items="end" wrap="true" gap="sm" data-offers-toolbar>
-        <mossa-select data-status-filter accessible-label="Filter by status" value="all">
-            <mossa-option value="all">All</mossa-option>
-            <mossa-option value="draft">Drafts</mossa-option>
-            <mossa-option value="action_required">Action required</mossa-option>
-            <mossa-option value="under_review">Under review</mossa-option>
-            <mossa-option value="online">Online</mossa-option>
-            <mossa-option value="paused">Paused</mossa-option>
-            <mossa-option value="rejected">Rejected</mossa-option>
-            <mossa-option value="archived">Archived</mossa-option>
-        </mossa-select>
-        <mossa-button><a data-create-button>Create an offer</a></mossa-button>
-    </mossa-stack>
+    <input name="commerceOfferOffset" cms-param-sync="commerceOfferOffset" type="hidden">
+    <mossa-stack gap="lg">
+        <mossa-stack direction="row" justify-content="space-between" align-items="end" wrap="true" gap="sm">
+            <slot name="status-filter"></slot>
+            <slot name="create-action"></slot>
+        </mossa-stack>
 
-    <section data-offers-source>
-        <mossa-responsive-grid min="md" max="xl" gap="md" cms-condition="$source.loading">
-            <mossa-skeleton height="20rem" animation="wave" label="Loading your offers"></mossa-skeleton>
-            <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-            <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-        </mossa-responsive-grid>
-
-        <mossa-toast data-error-toast tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Your offers could not be loaded.</mossa-toast>
-
-        <mossa-stack gap="lg" cms-condition="$source.loaded">
-            <mossa-surface-card appearance="outlined" density="regular" data-empty-state cms-condition="total == 0">
-                <strong slot="title" data-empty-title>No offers yet</strong>
-                <span slot="description" data-empty-message>Create your first offer to start selling.</span>
-            </mossa-surface-card>
-
-            <mossa-responsive-grid min="md" max="xl" gap="md" data-offers-grid cms-condition="total > 0">
-                <mossa-surface-card appearance="outlined" density="compact" data-offer-card cms-repeat="items as offer">
-                    <img slot="media" data-offer-image data-media-id="{{ offer.mainImageMediaId }}" data-source-width="{{ offer.mainImageWidth }}" data-source-height="{{ offer.mainImageHeight }}" alt="{{ offer.title }}" loading="lazy" decoding="async">
-                    <strong slot="title">{{ offer.title }}</strong>
-                    <span slot="description" data-offer-status="{{ offer.displayStatus }}"></span>
-                    <mossa-stack gap="xs">
-                        <strong data-offer-price data-display-amount="{{ offer.sellerDisplayPriceAmount }}" data-currency="{{ offer.currency }}"></strong>
-                        <small data-offer-updated data-date="{{ offer.updatedAt }}"></small>
-                    </mossa-stack>
-                    <mossa-button slot="actions" appearance="outlined" tone="neutral" size="sm">
-                        <a data-edit-button data-offer-id="{{ offer.id }}" data-offer-slug="{{ offer.slug }}" data-workflow-state="{{ offer.workflowState }}" data-publicly-visible="{{ offer.publiclyVisible }}">View</a>
-                    </mossa-button>
-                </mossa-surface-card>
+        <section
+            cms-source-id="offers"
+            cms-source="/.cms/sources/commerce/listMyOffers?status=#{commerceOfferStatus}&amp;limit=12&amp;offset=#{commerceOfferOffset}"
+        >
+            <mossa-responsive-grid min="md" max="xl" gap="md" cms-condition="$source.loading">
+                <mossa-skeleton height="20rem" animation="wave" label="Loading your offers"></mossa-skeleton>
+                <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+                <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
             </mossa-responsive-grid>
 
-            <mossa-pagination data-pagination page="1" page-size="12" total="{{ total }}" cms-condition="total > limit"></mossa-pagination>
-        </mossa-stack>
-    </section>
-</mossa-stack>
+            <mossa-toast tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">{{ presentation.errorMessage }}</mossa-toast>
+
+            <mossa-stack gap="lg" cms-condition="$source.loaded">
+                <mossa-surface-card appearance="outlined" density="regular" cms-condition="presentation.total == 0">
+                    <strong slot="title">{{ presentation.emptyTitle }}</strong>
+                    <span slot="description">{{ presentation.emptyMessage }}</span>
+                </mossa-surface-card>
+
+                <mossa-responsive-grid
+                    min="{{ presentation.gridMin }}"
+                    max="{{ presentation.gridMax }}"
+                    gap="{{ presentation.gridGap }}"
+                    packing="{{ presentation.gridPacking }}"
+                    cms-condition="presentation.total &gt; 0"
+                >
+                    <mossa-commerce-offer-preview appearance="outlined" density="compact" layout="{{ presentation.cardLayout }}" stretch cms-repeat="presentation.items as offer">
+                        <img
+                            slot="media"
+                            data-cms-src="{{ offer.imageUrl }}"
+                            data-source-width="{{ offer.mainImageWidth }}"
+                            data-source-height="{{ offer.mainImageHeight }}"
+                            alt="{{ offer.title }}"
+                            loading="lazy"
+                            decoding="async"
+                            cms-condition="presentation.showImage &amp;&amp; offer.imageUrl"
+                        >
+                        <mossa-badge slot="badge" tone="{{ offer.statusTone }}" variant="soft" cms-condition="presentation.showStatus">{{ offer.statusLabel }}</mossa-badge>
+                        <strong slot="title">{{ offer.title }}</strong>
+                        <small slot="metadata" cms-condition="presentation.showUpdatedAt &amp;&amp; offer.updatedLabel">{{ offer.updatedLabel }}</small>
+                        <strong slot="price" cms-condition="presentation.showPrice &amp;&amp; offer.hasPrice">{{ offer.sellerDisplayPriceAmount | minorCurrency(offer.currency) }}</strong>
+                        <strong slot="price" cms-condition="presentation.showPrice &amp;&amp; offer.showPendingPrice">{{ offer.pendingPriceLabel }}</strong>
+                        <mossa-button slot="action" appearance="outlined" tone="neutral" size="sm" cms-condition="offer.actionUrl">
+                            <a href="{{ offer.actionUrl }}">{{ offer.actionLabel }}</a>
+                        </mossa-button>
+                    </mossa-commerce-offer-preview>
+                </mossa-responsive-grid>
+
+                <mossa-pagination
+                    page="{{ presentation.page }}"
+                    page-size="12"
+                    total="{{ presentation.total }}"
+                    cms-condition="presentation.total &gt; 12"
+                ></mossa-pagination>
+            </mossa-stack>
+        </section>
+    </mossa-stack>
 </mossa-commerce-account-offers-controller>

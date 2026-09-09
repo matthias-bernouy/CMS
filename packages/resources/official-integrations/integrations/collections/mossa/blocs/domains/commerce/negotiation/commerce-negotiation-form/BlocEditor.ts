@@ -1,4 +1,4 @@
-import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
 export class CommerceNegotiationFormEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -54,6 +54,18 @@ export class CommerceNegotiationFormEditor extends Editor {
                         defaultValue: "You already submitted a proposal of {amount} for this offer.",
                     },
                     { type: "textarea", label: "Error message", attribute: "error-message" },
+                    {
+                        type: "textarea",
+                        label: "Sign-in message",
+                        attribute: "sign-in-message",
+                        defaultValue: "Sign in to submit a proposal for this offer.",
+                    },
+                    {
+                        type: "text",
+                        label: "Sign-in title",
+                        attribute: "sign-in-title",
+                        defaultValue: "Sign in to make a proposal",
+                    },
                     { type: "textarea", label: "Unavailable message", attribute: "unavailable-message" },
                     {
                         type: "textarea",
@@ -83,15 +95,11 @@ export class CommerceNegotiationFormEditor extends Editor {
                     },
                 ],
             },
-            {
-                kind: "self",
-                label: "Data",
-                settings: [
-                    { type: "text", label: "Offer id", attribute: "offer-id" },
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
-                ],
-            },
         ];
+    }
+
+    protected override contentSlots(): ContentSlot[] {
+        return [{ label: "Sign-in action", slot: "login-action", accepts: [{ kind: "any-component" }], max: 1 }];
     }
 }
 

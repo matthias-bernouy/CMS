@@ -5,11 +5,6 @@ export class ConsentFieldEditor extends Editor {
         return [
             {
                 kind: "self",
-                label: "Consent",
-                settings: [{ type: "text", label: "Context", attribute: "context-key", defaultValue: "signup" }],
-            },
-            {
-                kind: "self",
                 label: "Appearance",
                 settings: [
                     {

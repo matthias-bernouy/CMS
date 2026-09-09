@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { createBlocUsageResolver, expandCompositions } from "@bernouy/cms-content";
 import { Component } from "@bernouy/components/base";
+import { refreshSourceContext, setSourceContext } from "@bernouy/components/binding";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { declaredBlocViewSources } from "../../../../../tests/helpers/blocArtifactSource";
@@ -123,7 +124,11 @@ describe("Mossa user-account form", () => {
         ]);
 
         const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
-        (window as typeof window & { p9r?: unknown }).p9r = { Component };
+        (window as typeof window & { p9r?: unknown }).p9r = {
+            Component,
+            refreshSourceContext,
+            setSourceContext,
+        };
         try {
             new Function(controller.viewJS)();
             document.body.innerHTML = "<mossa-user-account-form></mossa-user-account-form>";

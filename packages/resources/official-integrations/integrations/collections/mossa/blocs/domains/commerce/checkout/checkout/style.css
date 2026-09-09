@@ -7,40 +7,6 @@
 h1 { margin: 0; font: inherit; font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 800; }
 .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(17rem, .8fr); gap: 1.5rem; align-items: start; }
 main, aside, .fields, .metadata-fields { display: grid; gap: 1rem; }
-.metadata-lookup { position: relative; min-width: 0; }
-.metadata-lookup-results {
-    position: absolute;
-    z-index: 10;
-    top: calc(100% + .25rem);
-    right: 0;
-    left: 0;
-    max-height: 18rem;
-    overflow: auto;
-    box-sizing: border-box;
-    padding: .35rem;
-    border: 1px solid var(--_mossa-checkout-border, var(--ulvia-surface-border));
-    border-radius: var(--ulvia-radius-control);
-    background: var(--_mossa-checkout-background, var(--ulvia-surface-background));
-    box-shadow: var(--ulvia-shadow-lg);
-}
-.metadata-lookup-results button {
-    display: block;
-    width: 100%;
-    min-height: 2.75rem;
-    box-sizing: border-box;
-    padding: .65rem .75rem;
-    border: 0;
-    border-radius: calc(var(--ulvia-radius-control) - .15rem);
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
-.metadata-lookup-results button:hover,
-.metadata-lookup-results button[aria-selected='true'] { background: var(--ulvia-subtle-background); }
-.metadata-lookup-results button:focus-visible { outline: 2px solid var(--_mossa-checkout-accent, var(--ulvia-secondary-base)); outline-offset: -2px; }
-.metadata-lookup-empty { margin: 0; padding: .65rem .75rem; color: var(--ulvia-surface-muted-text); }
 aside { position: sticky; top: 1rem; }
 .steps { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
 .steps::before, .steps::after { content: ''; position: absolute; z-index: 0; top: 1.55rem; left: 16.666%; right: 16.666%; height: 2px; background: var(--_mossa-checkout-border, var(--ulvia-surface-border)); }

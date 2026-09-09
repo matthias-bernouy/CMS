@@ -75,7 +75,6 @@ export class CheckoutFlowEditor extends Editor {
                         attribute: "account-email",
                         help: "Bind the authenticated email when the account profile does not expose it.",
                     },
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
                     { type: "text", label: "Country code", attribute: "country-code" },
                 ],
             },

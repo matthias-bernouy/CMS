@@ -1,55 +1,58 @@
 <mossa-commerce-mondial-relay-sale-fulfillment-controller data-p9r-composition-controller>
-    <div data-loading>
-        <mossa-skeleton height="16rem" animation="wave" label="Loading shipment"></mossa-skeleton>
-    </div>
+    <section
+        cms-source-id="shipment"
+        cms-source="/.cms/sources/system-functions/getShipmentForMySale?orderId=#{orderId}"
+        cms-reload-on="commerce-fulfillment:updated"
+    >
+        <mossa-skeleton height="16rem" animation="wave" label="Loading shipment" cms-condition="$source.loading"></mossa-skeleton>
 
-    <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
-        <strong slot="title" data-error-title>Shipment unavailable</strong>
-        <span slot="description" data-error-message></span>
-    </mossa-surface-card>
+        <mossa-surface-card appearance="outlined" density="spacious" cms-condition="$source.error">
+            <strong slot="title">{{ presentation.errorTitle }}</strong>
+            <span slot="description">{{ presentation.errorMessage }}</span>
+        </mossa-surface-card>
 
-    <mossa-surface-card data-content hidden appearance="outlined" density="spacious">
-        <strong slot="title" data-title></strong>
-        <span slot="description" data-copy></span>
+        <mossa-surface-card appearance="outlined" density="{{ presentation.cardDensity }}" cms-condition="$source.loaded">
+            <strong slot="title">{{ presentation.title }}</strong>
+            <span slot="description">{{ presentation.copy }}</span>
 
-        <mossa-stack gap="md">
-            <mossa-info-row>
-                <span slot="icon" aria-hidden="true">#</span>
-                <span slot="label" data-fulfillment-copy="order-label">Order</span>
-                <strong data-order-number></strong>
-            </mossa-info-row>
-            <mossa-info-row>
-                <span slot="icon" aria-hidden="true">•</span>
-                <span slot="label" data-fulfillment-copy="status-label">Status</span>
-                <mossa-badge data-status></mossa-badge>
-            </mossa-info-row>
-            <mossa-info-row variant="mono">
-                <span slot="icon" aria-hidden="true">↗</span>
-                <span slot="label" data-fulfillment-copy="expedition-label">Shipment number</span>
-                <strong data-expedition></strong>
-            </mossa-info-row>
-            <p data-latest></p>
-        </mossa-stack>
+            <mossa-stack gap="md">
+                <mossa-info-row density="compact" cms-condition="presentation.showOrderReference">
+                    <span slot="label">{{ presentation.orderLabel }}</span>
+                    <strong>{{ presentation.orderReference }}</strong>
+                </mossa-info-row>
+                <mossa-info-row density="compact">
+                    <span slot="label">{{ presentation.statusTitle }}</span>
+                    <mossa-badge tone="{{ presentation.statusTone }}">{{ presentation.statusLabel }}</mossa-badge>
+                </mossa-info-row>
+                <mossa-info-row density="compact" variant="mono">
+                    <span slot="label">{{ presentation.expeditionLabel }}</span>
+                    <strong>{{ presentation.expeditionNumber }}</strong>
+                </mossa-info-row>
+                <p>{{ presentation.latestEventLabel }}</p>
+            </mossa-stack>
 
-        <mossa-stack slot="actions" gap="sm">
-            <form data-create-source cms-source="/.cms/sources/system-functions/createShipmentForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false">
-                <input data-order-id-input name="orderId" type="hidden">
-                <mossa-button><button data-create type="submit"></button></mossa-button>
-            </form>
-            <form data-handoff-source cms-source="/.cms/sources/system-functions/declareShipmentHandoffForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false">
-                <input data-order-id-input name="orderId" type="hidden">
-                <mossa-button><button data-handoff type="submit" hidden></button></mossa-button>
-            </form>
-            <form data-label-source cms-source="/.cms/sources/system-functions/requestShipmentLabelForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false">
-                <input data-order-id-input name="orderId" type="hidden">
-                <mossa-button appearance="outlined"><button data-label type="submit" hidden></button></mossa-button>
-            </form>
-            <slot name="tracking-action"></slot>
-        </mossa-stack>
-        <p slot="footer" data-message aria-live="polite"></p>
-    </mossa-surface-card>
-
-    <form data-shipment-source cms-source="/.cms/sources/system-functions/getShipmentForMySale" cms-source-trigger="submit" cms-source-method="GET" hidden>
-        <input data-order-id-input name="orderId" type="hidden">
-    </form>
+            <mossa-stack slot="actions" direction="row" wrap="true" gap="xs" align-items="center">
+                <form cms-source-id="create" cms-source="/.cms/sources/system-functions/createShipmentForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-publish="commerce-fulfillment:updated" cms-source-success-reset="false" cms-condition="presentation.canCreate">
+                    <input name="orderId" value="{{ orderId }}" type="hidden">
+                    <mossa-button size="sm"><button type="submit">{{ presentation.createLabel }}</button></mossa-button>
+                    <mossa-toast tone="danger" role="alert" cms-condition="$source.error">{{ presentation.actionErrorMessage }}</mossa-toast>
+                </form>
+                <form cms-source-id="handoff" cms-source="/.cms/sources/system-functions/declareShipmentHandoffForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-publish="commerce-fulfillment:updated" cms-source-success-reset="false" cms-condition="presentation.canDeclareHandoff">
+                    <input name="orderId" value="{{ orderId }}" type="hidden">
+                    <mossa-button size="sm"><button type="submit">{{ presentation.handoffLabel }}</button></mossa-button>
+                    <mossa-toast tone="danger" role="alert" cms-condition="$source.error">{{ presentation.actionErrorMessage }}</mossa-toast>
+                </form>
+                <form cms-source-id="label" cms-source="/.cms/sources/system-functions/requestShipmentLabelForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-condition="presentation.canDownloadLabel">
+                    <input name="orderId" value="{{ orderId }}" type="hidden">
+                    <mossa-button appearance="outlined" size="sm"><button type="submit">{{ presentation.labelLabel }}</button></mossa-button>
+                    <mossa-toast tone="danger" role="alert" cms-condition="$source.error">{{ presentation.actionErrorMessage }}</mossa-toast>
+                </form>
+                <slot name="tracking-action">
+                    <mossa-button appearance="ghost" size="sm" cms-condition="presentation.trackingUrl">
+                        <a href="{{ presentation.trackingUrl }}" rel="noopener noreferrer" target="_blank">{{ presentation.trackingLabel }}</a>
+                    </mossa-button>
+                </slot>
+            </mossa-stack>
+        </mossa-surface-card>
+    </section>
 </mossa-commerce-mondial-relay-sale-fulfillment-controller>

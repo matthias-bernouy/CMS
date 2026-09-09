@@ -1,4 +1,5 @@
 import { Component } from "@bernouy/components/base";
+import { sourceFormRequest } from "@bernouy/components/binding";
 
 import { formatMoney, majorToMinor, minorToMajor } from "../money.ts";
 import {
@@ -13,12 +14,12 @@ import {
 } from "../profile.ts";
 import { createAccountToken } from "../stripe-account-token.ts";
 
-const endpointPaths = {
-    getAccount: "/.cms/sources/user-account/getAccount",
-    getConnectClientConfig: "/.cms/sources/stripe-connect/getConnectClientConfig",
-    getSellerSaleEnrollment: "/.cms/sources/system-functions/getSellerSaleEnrollment",
-    submitSellerOfferPrice: "/.cms/sources/system-functions/submitSellerOfferPrice",
-    updateAccount: "/.cms/sources/user-account/updateAccount",
+const endpointSources = {
+    getAccount: "price-account",
+    getConnectClientConfig: "price-connect-config",
+    getSellerSaleEnrollment: "price-enrollment",
+    submitSellerOfferPrice: "price-submit",
+    updateAccount: "price-account-update",
 };
 let formInstance = 0;
 
@@ -43,7 +44,6 @@ export class CommerceOfferPriceForm extends Component {
         "input-label",
         "invalid-message",
         "last-name-label",
-        "locale",
         "offer-id",
         "offer-label",
         "offer-param",
@@ -107,6 +107,16 @@ export class CommerceOfferPriceForm extends Component {
         }
         this.connectValidationMessages();
         this.syncPresentation();
+        if (isFramed()) {
+            this.offer = {
+                title: "Offer preview",
+                wholeUnitPrices: false,
+                priceRule: { minimumAmount: 8_000, maximumAmount: 12_000, currency: "USD" },
+            };
+            this.renderOffer();
+            this.show("card");
+            return;
+        }
         this.load();
     }
 
@@ -127,12 +137,6 @@ export class CommerceOfferPriceForm extends Component {
             return;
         }
         this.syncPresentation();
-        if (this.offer && name === "locale") {
-            this.renderOffer();
-        }
-        if (["offer-id", "offer-param"].includes(name)) {
-            this.load();
-        }
     }
 
     async load() {
@@ -149,7 +153,7 @@ export class CommerceOfferPriceForm extends Component {
             return;
         }
         try {
-            this.offer = await this.request(`/.cms/sources/commerce/myOffer?id=${encodeURIComponent(id)}`);
+            this.offer = await sourceFormRequest(this, "price-offer", { id });
             if (this.offer?.workflowState !== "awaiting_seller_price") {
                 this.show("unavailable");
                 return;
@@ -664,32 +668,16 @@ export class CommerceOfferPriceForm extends Component {
         }
     }
 
-    async request(path, init = {}) {
-        const response = await fetch(path, {
-            credentials: "include",
-            ...init,
-            headers: {
-                accept: "application/json",
-                ...(init.body ? { "content-type": "application/json" } : {}),
-                ...headersObject(init.headers),
-            },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            throw new Error(body?.error || body?.message || this.text("error-message", "Something went wrong."));
+    async requestEndpoint(id, init = {}) {
+        const sourceId = endpointSources[id];
+        if (!sourceId) {
+            throw new Error(`Undeclared price endpoint: ${id}`);
         }
+        const body = await sourceFormRequest(this, sourceId, requestValues(init));
         if (!body || typeof body !== "object" || Array.isArray(body)) {
             throw new Error(this.text("error-message", "Invalid response."));
         }
         return body;
-    }
-
-    async requestEndpoint(id, init = {}) {
-        const path = endpointPaths[id];
-        if (!path) {
-            throw new Error(`Undeclared price endpoint: ${id}`);
-        }
-        return this.request(path, init);
     }
 
     async requestFunction(id, init = {}) {
@@ -703,14 +691,10 @@ export class CommerceOfferPriceForm extends Component {
         return this.querySelector(`[data-profile-control="${field}"]`);
     }
     get offerId() {
-        return (
-            this.getAttribute("offer-id")?.trim() ||
-            new URL(location.href).searchParams.get(this.getAttribute("offer-param") || "id") ||
-            ""
-        );
+        return this.querySelector('[cms-param-sync="id"]')?.value?.trim() || "";
     }
     get locale() {
-        return this.getAttribute("locale") || "en-US";
+        return this.ownerDocument.documentElement.lang || this.ownerDocument.defaultView?.navigator.language || "en-US";
     }
     get validRule() {
         const rule = this.offer?.priceRule;
@@ -854,8 +838,17 @@ export class CommerceOfferPriceForm extends Component {
     }
 }
 
-function headersObject(headers) {
-    return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
+function requestValues(options) {
+    const body = typeof options.body === "string" ? JSON.parse(options.body) : {};
+    return { ...(options.query || {}), ...(body && typeof body === "object" ? body : {}) };
+}
+
+function isFramed() {
+    try {
+        return window.self !== window.top;
+    } catch {
+        return true;
+    }
 }
 
 function renderLinkedConsent(container, consentText, documentLabel, documentUrl) {

@@ -40,31 +40,6 @@ export class ServiceWithdrawalFormEditor extends Editor {
                     { type: "text", label: "Retry action", attribute: "retry-label", defaultValue: "Try again" },
                 ],
             },
-            {
-                kind: "self",
-                label: "Contract",
-                settings: [
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
-                    {
-                        type: "text",
-                        label: "Service scope",
-                        attribute: "service-scope",
-                        defaultValue: "marketplace_service",
-                    },
-                ],
-            },
-            {
-                kind: "self",
-                label: "Data",
-                settings: [
-                    {
-                        type: "text",
-                        label: "Order URL parameter",
-                        attribute: "order-param",
-                        defaultValue: "orderId",
-                    },
-                ],
-            },
         ];
     }
 }

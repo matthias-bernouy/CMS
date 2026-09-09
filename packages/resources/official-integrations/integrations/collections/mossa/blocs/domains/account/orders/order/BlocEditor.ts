@@ -1,4 +1,4 @@
-import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
 import { orderCopy } from "./copy";
 
@@ -17,25 +17,6 @@ export class OrderDetailEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "State copy",
-                settings: [
-                    { type: "text", label: "Error title", attribute: "error-title", defaultValue: "Order not found" },
-                    {
-                        type: "text",
-                        label: "Error message",
-                        attribute: "error-message",
-                        defaultValue: "The order could not be loaded. Try again shortly.",
-                    },
-                    {
-                        type: "text",
-                        label: "Missing order",
-                        attribute: "missing-order-message",
-                        defaultValue: "The order identifier is missing.",
-                    },
-                ],
-            },
-            {
-                kind: "self",
                 label: "Navigation",
                 settings: [
                     {
@@ -49,7 +30,20 @@ export class OrderDetailEditor extends Editor {
                 kind: "self",
                 label: "Delivery",
                 settings: [
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
+                    {
+                        type: "select",
+                        label: "Progress tone",
+                        attribute: "progress-tone",
+                        defaultValue: "primary",
+                        options: [
+                            { label: "Primary", value: "primary" },
+                            { label: "Secondary", value: "secondary" },
+                            { label: "Success", value: "success" },
+                            { label: "Warning", value: "warning" },
+                            { label: "Danger", value: "danger" },
+                            { label: "Info", value: "info" },
+                        ],
+                    },
                     {
                         type: "text",
                         label: "Usual delivery time",
@@ -58,6 +52,13 @@ export class OrderDetailEditor extends Editor {
                     },
                 ],
             },
+        ];
+    }
+
+    protected override contentSlots(): ContentSlot[] {
+        return [
+            { label: "Navigation", slot: "navigation", max: 1, accepts: [{ kind: "any-component" }] },
+            { label: "Error action", slot: "error-action", max: 1, accepts: [{ kind: "any-component" }] },
         ];
     }
 }

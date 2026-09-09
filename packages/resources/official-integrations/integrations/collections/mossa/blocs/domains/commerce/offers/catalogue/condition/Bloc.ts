@@ -1,11 +1,11 @@
 import { Component } from "@bernouy/components/base";
 
 export class Bloc extends Component {
-    static observedAttributes = ["code", "label"];
+    static observedAttributes = ["code", "label", "size", "tone", "variant"];
     constructor() {
         super({
-            css: ":host{display:inline-flex;padding:.3rem .7rem;border-radius:999px;background:var(--ulvia-surface-background);color:var(--ulvia-surface-text);font-size:.8rem;font-weight:800;box-shadow:var(--ulvia-shadow-sm)}",
-            template: "<span></span>",
+            css: ":host { display: inline-flex; }",
+            template: '<mossa-badge shape="pill"></mossa-badge>',
         });
     }
     override connectedCallback(): void {
@@ -15,9 +15,18 @@ export class Bloc extends Component {
         this.render();
     }
     private render() {
-        const node = this.shadowRoot?.querySelector("span");
-        if (node) {
-            node.textContent = this.getAttribute("label")?.trim() || humanizeCode(this.getAttribute("code"));
+        const badge = this.shadowRoot?.querySelector<HTMLElement>("mossa-badge");
+        if (!badge) {
+            return;
+        }
+        badge.textContent = this.getAttribute("label")?.trim() || humanizeCode(this.getAttribute("code"));
+        for (const attribute of ["size", "tone", "variant"]) {
+            const value = this.getAttribute(attribute)?.trim();
+            if (value) {
+                badge.setAttribute(attribute, value);
+            } else {
+                badge.removeAttribute(attribute);
+            }
         }
     }
 }

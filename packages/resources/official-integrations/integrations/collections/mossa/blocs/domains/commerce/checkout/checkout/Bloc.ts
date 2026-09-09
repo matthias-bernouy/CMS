@@ -1,4 +1,5 @@
 import { Component } from "@bernouy/components/base";
+import { SourceFormError, sourceFormRequest } from "@bernouy/components/binding";
 import {
     clearResponsiveSourceImageElement,
     syncResponsiveSourceImageElement,
@@ -6,7 +7,6 @@ import {
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import {
-    checkoutReference,
     checkoutReturnPath,
     idempotencyStorageKey,
     protectedOrderPayload,
@@ -21,7 +21,6 @@ type MetadataControl = HTMLElement & { value: string | number | boolean };
 type MetadataEntry = {
     control: MetadataControl;
     type: string;
-    readValue?: () => string | number | boolean;
 };
 
 class PublicMessageError extends Error {}
@@ -48,13 +47,13 @@ export class CheckoutFlow extends Component {
         "delivery-label",
         "information-label",
         "login-url",
-        "locale",
         "order-url",
         "payment-label",
         "title",
     ];
     private offer: RecordValue | null = null;
     private account: RecordValue | null = null;
+    private identity: RecordValue | null = null;
     private order: RecordValue | null = null;
     private relay: RecordValue | null = null;
     private priceAgreement: RecordValue | null = null;
@@ -76,6 +75,11 @@ export class CheckoutFlow extends Component {
             this.onPaymentProcessing as EventListener,
         );
         this.syncPresentation();
+        if (isFramed()) {
+            this.show("content");
+            this.setStep("information");
+            return;
+        }
         this.load().catch((error) => this.fail(error));
     }
 
@@ -112,7 +116,10 @@ export class CheckoutFlow extends Component {
             );
         }
         try {
-            this.account = await this.request("/.cms/sources/user-account/getAccount");
+            [this.account, this.identity] = await Promise.all([
+                this.requestSource("checkout-account"),
+                this.requestSource("checkout-identity"),
+            ]);
         } catch (error) {
             if (!(error instanceof RemoteRequestError) || (error.status !== 401 && error.status !== 403)) {
                 throw error;
@@ -132,10 +139,8 @@ export class CheckoutFlow extends Component {
         }
         const [checkoutItem] = await Promise.all([
             reference.kind === "agreement"
-                ? this.request(
-                      `/.cms/sources/commerce/getMyPriceAgreementCheckout?agreementId=${encodeURIComponent(reference.id)}`,
-                  )
-                : this.request(`/.cms/sources/commerce/offer?id=${encodeURIComponent(reference.id)}`),
+                ? this.requestSource("checkout-agreement", { agreementId: reference.id })
+                : this.requestSource("checkout-offer", { id: reference.id }),
             this.loadOrderMetadataFields(),
         ]);
         if (reference.kind === "agreement") {
@@ -148,7 +153,7 @@ export class CheckoutFlow extends Component {
         } else {
             this.offer = checkoutItem;
         }
-        this.fillAccount(this.account, String(this.account.email || this.getAttribute("account-email") || ""));
+        this.fillAccount(this.account, this.accountEmail);
         if (this.priceAgreement) {
             this.renderPriceAgreement(this.priceAgreement);
         } else {
@@ -159,7 +164,7 @@ export class CheckoutFlow extends Component {
         const orderId = reference.kind === "agreement" ? String(this.priceAgreement?.orderId || "") : this.orderId;
         if (orderId) {
             this.writeOrderId(orderId);
-            this.order = await this.request(`/.cms/sources/commerce/myOrder?id=${encodeURIComponent(orderId)}`);
+            this.order = await this.requestSource("checkout-order", { id: orderId });
             this.renderOrder(this.order);
             const hasDeliveryQuote = hasLockedFinancialTerms(this.order);
             if (hasDeliveryQuote) {
@@ -228,7 +233,6 @@ export class CheckoutFlow extends Component {
 
     private async saveInformation(): Promise<void> {
         this.syncInformationValidation();
-        this.syncMetadataValidation();
         const payload = this.accountPayload();
         const missing = [
             ["givenName", this.copy("first-name-label")],
@@ -250,10 +254,7 @@ export class CheckoutFlow extends Component {
         this.setButtonBusy(this.saveInformationButton, true);
         this.setStatus(this.informationStatus, this.copy("saving-message"), false);
         try {
-            this.account = await this.request("/.cms/sources/user-account/updateAccount", {
-                method: "POST",
-                body: JSON.stringify(payload),
-            });
+            this.account = await this.requestSource("checkout-account-update", payload);
             this.relayPicker.setAttribute("postal-code", payload.postalCode);
             this.relayPicker.setAttribute("city", payload.city);
             this.setStatus(this.informationStatus, "", false);
@@ -273,29 +274,24 @@ export class CheckoutFlow extends Component {
             const address = this.addressSnapshot();
             const idempotencyKey = this.idempotencyKey();
             if (!this.order) {
-                this.order = await this.request("/.cms/sources/system-functions/createProtectedOrder", {
-                    method: "POST",
-                    body: JSON.stringify(
-                        protectedOrderPayload(
-                            this.checkoutReference,
-                            this.offer.id,
-                            idempotencyKey,
-                            address,
-                            this.orderMetadata(),
-                        ),
+                this.order = await this.requestSource(
+                    "checkout-order-create",
+                    protectedOrderPayload(
+                        this.checkoutReference,
+                        this.offer.id,
+                        idempotencyKey,
+                        address,
+                        this.orderMetadata(),
                     ),
-                });
+                );
                 this.writeOrderId(String(this.order.id));
             }
-            const result = await this.request("/.cms/sources/system-functions/setRelayPointForOrder", {
-                method: "POST",
-                body: JSON.stringify({
-                    orderId: String(this.order.id),
-                    relayLocation: this.relay.location,
-                    country: this.relay.country || this.countryCode,
-                    postalCode: this.relay.searchPostalCode || this.account.postalCode || this.relay.postalCode,
-                    city: this.relay.searchCity || this.account.city || this.relay.city,
-                }),
+            const result = await this.requestSource("checkout-relay-save", {
+                orderId: String(this.order.id),
+                relayLocation: this.relay.location,
+                country: this.relay.country || this.countryCode,
+                postalCode: this.relay.searchPostalCode || this.account.postalCode || this.relay.postalCode,
+                city: this.relay.searchCity || this.account.city || this.relay.city,
             });
             const financialTerms = recordValue(result.financialTerms);
             const lockedBreakdown = financialBreakdown({ ...this.order, financialTerms });
@@ -336,6 +332,13 @@ export class CheckoutFlow extends Component {
             this.input(name).value = String(account?.[name] || "");
         }
         this.input("email").value = email;
+        const metadata = recordValue(account?.metadata) || {};
+        for (const [key, { control }] of this.metadataControls) {
+            const value = metadata[key];
+            if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+                control.value = value;
+            }
+        }
         this.relayPicker.setAttribute("postal-code", String(account?.postalCode || ""));
         this.relayPicker.setAttribute("city", String(account?.city || ""));
         if (this.countryCode) {
@@ -360,34 +363,13 @@ export class CheckoutFlow extends Component {
     }
 
     private syncInformationValidation(): void {
-        for (const input of this.informationForm.querySelectorAll<MetadataControl>(
-            "mossa-input:not([data-metadata-lookup-input])",
-        )) {
+        for (const input of this.informationForm.querySelectorAll<MetadataControl>("mossa-input")) {
             const control = input.shadowRoot?.querySelector<HTMLInputElement>("input");
             if (!control) {
                 continue;
             }
             setValidationMessage(control, (key, parameters) => this.copy(key, parameters));
             input.value = input.value;
-        }
-    }
-
-    private syncMetadataValidation(): void {
-        for (const { control, readValue } of this.metadataControls.values()) {
-            if (!readValue) {
-                continue;
-            }
-            const input = control.shadowRoot?.querySelector<HTMLInputElement>("input");
-            if (!input) {
-                continue;
-            }
-            const hasUnselectedQuery = Boolean(String(control.value || "").trim()) && !readValue();
-            input.setCustomValidity(
-                (control.hasAttribute("required") && !readValue()) || hasUnselectedQuery
-                    ? this.copy("select-option-message")
-                    : "",
-            );
-            control.value = control.value;
         }
     }
 
@@ -401,8 +383,8 @@ export class CheckoutFlow extends Component {
 
     private orderMetadata(): RecordValue {
         const metadata: RecordValue = {};
-        for (const [key, { control, type, readValue }] of this.metadataControls) {
-            const raw = readValue ? readValue() : control.value;
+        for (const [key, { control, type }] of this.metadataControls) {
+            const raw = control.value;
             if (raw === "" || raw === null || raw === undefined) {
                 continue;
             }
@@ -422,7 +404,7 @@ export class CheckoutFlow extends Component {
 
     private async loadOrderMetadataFields(): Promise<void> {
         const [result] = await Promise.all([
-            this.request("/.cms/sources/commerce/entityCustomFields?entityType=order"),
+            this.requestSource("checkout-order-fields", { entityType: "order" }),
             customElements.whenDefined("mossa-input"),
             customElements.whenDefined("mossa-select"),
             customElements.whenDefined("mossa-option"),
@@ -439,184 +421,31 @@ export class CheckoutFlow extends Component {
                 continue;
             }
             const options = Array.isArray(field.options) ? field.options : [];
-            const lookup = options.length && field.type !== "boolean" ? this.metadataLookup(field, options, key) : null;
             const control =
-                lookup?.control ||
-                (options.length || field.type === "boolean"
-                    ? this.metadataSelect(field, options)
-                    : this.metadataInput(field));
+                options.length || field.type === "boolean"
+                    ? this.metadataSelect(field, options, options.length > 0 && field.type !== "boolean")
+                    : this.metadataInput(field);
             control.setAttribute("name", `metadata.${key}`);
             this.metadataControls.set(key, {
                 control,
                 type: String(field.type || "string"),
-                readValue: lookup?.readValue,
             });
-            this.orderMetadataFields.append(lookup?.element || control);
+            this.orderMetadataFields.append(control);
         }
         this.orderMetadataFields.toggleAttribute("hidden", this.metadataControls.size === 0);
     }
 
-    private metadataLookup(
-        field: RecordValue,
-        options: unknown[],
-        key: string,
-    ): { element: HTMLElement; control: MetadataControl; readValue: () => string } {
-        const normalizedOptions = options
-            .map((option) => {
-                const record = recordValue(option);
-                const value = String(record?.value ?? option ?? "");
-                return { value, label: String(record?.label ?? value) };
-            })
-            .filter((option) => option.value && option.label);
-        const wrapper = document.createElement("div");
-        wrapper.className = "metadata-lookup";
-        const input = document.createElement("mossa-input") as MetadataControl;
-        input.setAttribute("data-metadata-lookup-input", "");
-        input.setAttribute("type", "search");
-        input.setAttribute("autocomplete", "off");
-        input.setAttribute("label", String(field.label || field.id));
-        input.setAttribute("placeholder", this.copy("search-options-placeholder"));
-        if (field.required === true) {
-            input.setAttribute("required", "");
-        }
-
-        const results = document.createElement("div");
-        results.className = "metadata-lookup-results";
-        results.id = `metadata-${slugToken(key)}-results`;
-        results.setAttribute("role", "listbox");
-        results.setAttribute("aria-label", String(field.label || field.id));
-        results.hidden = true;
-        wrapper.append(input, results);
-
-        const nativeInput = input.shadowRoot?.querySelector<HTMLInputElement>("input");
-        nativeInput?.setAttribute("role", "combobox");
-        nativeInput?.setAttribute("aria-autocomplete", "list");
-        nativeInput?.setAttribute("aria-controls", results.id);
-        nativeInput?.setAttribute("aria-expanded", "false");
-
-        let selectedValue = "";
-        let selectedLabel = "";
-        let visibleOptions = normalizedOptions;
-        let activeIndex = -1;
-
-        const close = () => {
-            results.hidden = true;
-            activeIndex = -1;
-            nativeInput?.setAttribute("aria-expanded", "false");
-            nativeInput?.removeAttribute("aria-activedescendant");
-        };
-        const choose = (option: { value: string; label: string }) => {
-            selectedValue = option.value;
-            selectedLabel = option.label;
-            input.value = option.label;
-            nativeInput?.setCustomValidity("");
-            input.value = input.value;
-            close();
-            input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-        };
-        const markActive = (index: number) => {
-            const buttons = Array.from(results.querySelectorAll<HTMLButtonElement>('button[role="option"]'));
-            if (!buttons.length) {
-                return;
-            }
-            activeIndex = (index + buttons.length) % buttons.length;
-            buttons.forEach((button, buttonIndex) =>
-                button.setAttribute("aria-selected", String(buttonIndex === activeIndex)),
-            );
-            const active = buttons[activeIndex];
-            nativeInput?.setAttribute("aria-activedescendant", active.id);
-            active.scrollIntoView({ block: "nearest" });
-        };
-        const render = () => {
-            const query = normalizeLookupText(String(input.value || ""));
-            visibleOptions = normalizedOptions.filter((option) => normalizeLookupText(option.label).includes(query));
-            activeIndex = -1;
-            if (visibleOptions.length === 0) {
-                const empty = document.createElement("p");
-                empty.className = "metadata-lookup-empty";
-                empty.textContent = this.copy("empty-options-message");
-                results.replaceChildren(empty);
-            } else {
-                results.replaceChildren(
-                    ...visibleOptions.map((option, index) => {
-                        const button = document.createElement("button");
-                        button.id = `${results.id}-${index}`;
-                        button.type = "button";
-                        button.setAttribute("role", "option");
-                        button.setAttribute("aria-selected", "false");
-                        button.textContent = option.label;
-                        button.addEventListener("click", () => choose(option));
-                        return button;
-                    }),
-                );
-            }
-            results.hidden = false;
-            nativeInput?.setAttribute("aria-expanded", "true");
-            nativeInput?.removeAttribute("aria-activedescendant");
-        };
-        const onInput = () => {
-            if (String(input.value || "") !== selectedLabel) {
-                selectedValue = "";
-                selectedLabel = "";
-            }
-            nativeInput?.setCustomValidity("");
-            input.value = input.value;
-            render();
-        };
-        input.addEventListener("input", onInput);
-        input.addEventListener("focus", render);
-        input.addEventListener(
-            "keydown",
-            (event) => {
-                if (!(event instanceof KeyboardEvent)) {
-                    return;
-                }
-                if (event.key === "ArrowDown") {
-                    event.preventDefault();
-                    if (results.hidden) {
-                        render();
-                    }
-                    markActive(activeIndex + 1);
-                } else if (event.key === "ArrowUp") {
-                    event.preventDefault();
-                    if (results.hidden) {
-                        render();
-                    }
-                    markActive(activeIndex - 1);
-                } else if (event.key === "Enter" && !results.hidden && activeIndex >= 0) {
-                    event.preventDefault();
-                    choose(visibleOptions[activeIndex]);
-                } else if (event.key === "Escape" && !results.hidden) {
-                    event.preventDefault();
-                    close();
-                }
-            },
-            true,
-        );
-        wrapper.addEventListener("focusout", () =>
-            window.setTimeout(() => {
-                const active = this.detail.activeElement;
-                if (active instanceof Node && wrapper.contains(active)) {
-                    return;
-                }
-                const exact = normalizedOptions.find(
-                    (option) => normalizeLookupText(option.label) === normalizeLookupText(String(input.value || "")),
-                );
-                if (!selectedValue && exact) {
-                    choose(exact);
-                } else {
-                    close();
-                }
-            }),
-        );
-
-        return { element: wrapper, control: input, readValue: () => selectedValue };
-    }
-
-    private metadataSelect(field: RecordValue, options: unknown[]): MetadataControl {
+    private metadataSelect(field: RecordValue, options: unknown[], searchable = false): MetadataControl {
         const select = document.createElement("mossa-select") as MetadataControl;
         select.setAttribute("label", String(field.label || field.id));
-        select.setAttribute("placeholder", this.copy("select-option-placeholder"));
+        select.setAttribute(
+            "placeholder",
+            this.copy(searchable ? "search-options-placeholder" : "select-option-placeholder"),
+        );
+        if (searchable) {
+            select.setAttribute("searchable", "");
+            select.setAttribute("empty-label", this.copy("empty-options-message"));
+        }
         if (field.required === true) {
             select.setAttribute("required", "");
         }
@@ -773,10 +602,7 @@ export class CheckoutFlow extends Component {
 
     private syncPresentation(): void {
         syncCheckoutCopy(this);
-        this.input("email").setAttribute(
-            "value",
-            String(this.account?.email || this.getAttribute("account-email") || ""),
-        );
+        this.input("email").setAttribute("value", this.accountEmail);
         this.login.querySelector<HTMLElement>('[slot="title"]')!.textContent = this.text(
             "login-title",
             "Sign in to continue",
@@ -809,19 +635,15 @@ export class CheckoutFlow extends Component {
         );
         this.show("error");
     }
-    private async request(path: string, options: RequestInit = {}): Promise<RecordValue> {
-        const response = await fetch(path, {
-            credentials: "include",
-            ...options,
-            headers: {
-                accept: "application/json",
-                ...(options.body ? { "content-type": "application/json" } : {}),
-                ...headers(options.headers),
-            },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            throw new RemoteRequestError(responseMessage(body), response.status);
+    private async requestSource(sourceId: string, values: RecordValue = {}): Promise<RecordValue> {
+        let body: unknown;
+        try {
+            body = await sourceFormRequest(this, sourceId, values);
+        } catch (error) {
+            if (error instanceof SourceFormError) {
+                throw new RemoteRequestError(error.message, error.status);
+            }
+            throw error;
         }
         if (!body || typeof body !== "object" || Array.isArray(body)) {
             throw new Error();
@@ -838,12 +660,11 @@ export class CheckoutFlow extends Component {
         return value;
     }
     private writeOrderId(orderId: string): void {
-        const url = new URL(location.href);
-        const reference = this.checkoutReference;
-        url.search = "";
-        url.searchParams.set(reference.kind === "agreement" ? "agreementId" : "offerId", reference.id);
-        url.searchParams.set("orderId", orderId);
-        history.replaceState(history.state, "", `${url.pathname}${url.search}`);
+        const control = this.querySelector<HTMLInputElement>('[cms-param-sync="orderId"]');
+        if (control && control.value !== orderId) {
+            control.value = orderId;
+            control.dispatchEvent(new Event("change", { bubbles: true }));
+        }
     }
     private goToOrder(delay = 0): void {
         const link = this.orderLink;
@@ -883,21 +704,29 @@ export class CheckoutFlow extends Component {
         return this.getAttribute(name)?.trim() || fallback;
     }
     private get checkoutReference(): CheckoutReference {
-        return checkoutReference(new URL(location.href));
+        const agreementId = this.paramValue("agreementId");
+        return agreementId ? { kind: "agreement", id: agreementId } : { kind: "offer", id: this.paramValue("offerId") };
     }
     private get orderId(): string {
-        return new URL(location.href).searchParams.get("orderId") || "";
+        return this.paramValue("orderId");
+    }
+    private paramValue(name: string): string {
+        return this.querySelector<HTMLInputElement>(`[cms-param-sync="${name}"]`)?.value?.trim() || "";
     }
     private get detail() {
         return this.shadowRoot!;
     }
     private get locale(): string {
-        return this.getAttribute("locale")?.trim() || "en-US";
+        return this.ownerDocument.documentElement.lang || this.ownerDocument.defaultView?.navigator.language || "en-US";
     }
     private get countryCode(): string {
         return String(this.getAttribute("country-code") || this.account?.countryCode || "")
             .trim()
             .toUpperCase();
+    }
+    private get accountEmail(): string {
+        const subject = recordValue(this.identity?.subject);
+        return String(subject?.email || this.account?.email || this.getAttribute("account-email") || "");
     }
     private get loading() {
         return this.detail.querySelector<HTMLElement>("[data-loading]")!;
@@ -915,7 +744,7 @@ export class CheckoutFlow extends Component {
         return this.detail.querySelector<HTMLElement>("[data-error-message]")!;
     }
     private get loginLink() {
-        return this.querySelector<HTMLAnchorElement>(':scope > [slot="login-action"] > a[data-login-link]')!;
+        return this.querySelector<HTMLAnchorElement>(':scope > [slot="login-action"] > a')!;
     }
     private get titleElement() {
         return this.detail.querySelector<HTMLElement>("[data-title]")!;
@@ -960,10 +789,10 @@ export class CheckoutFlow extends Component {
         return this.detail.querySelector<HTMLElement>("[data-relay-picker]")!;
     }
     private get payment() {
-        return this.querySelector<HTMLElement>(":scope > [data-checkout-payment]")!;
+        return this.querySelector<HTMLElement>(':scope > [slot="checkout-payment"]')!;
     }
     private get offerImage() {
-        return this.detail.querySelector<HTMLImageElement>("[data-offer-image]")!;
+        return this.detail.querySelector<HTMLImageElement>(".offer-image")!;
     }
     private get offerTitle() {
         return this.detail.querySelector<HTMLElement>("[data-offer-title]")!;
@@ -984,7 +813,7 @@ export class CheckoutFlow extends Component {
         return this.detail.querySelector<HTMLElement>("[data-total]")!;
     }
     private get orderLink() {
-        return this.querySelector<HTMLAnchorElement>(':scope > a[slot="order-navigation"][data-order-link]')!;
+        return this.querySelector<HTMLAnchorElement>(':scope > a[slot="order-navigation"]')!;
     }
 }
 
@@ -1055,22 +884,6 @@ function hasLockedFinancialTerms(order: RecordValue): boolean {
 
 function recordValue(value: unknown): RecordValue | null {
     return value && typeof value === "object" && !Array.isArray(value) ? (value as RecordValue) : null;
-}
-
-function normalizeLookupText(value: string): string {
-    return value
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLocaleLowerCase()
-        .trim();
-}
-
-function slugToken(value: string): string {
-    return (
-        normalizeLookupText(value)
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "") || "field"
-    );
 }
 
 function minorAmount(value: unknown): number | null {
@@ -1149,17 +962,6 @@ function publicErrorMessage(error: unknown, fallback: string, host: HTMLElement)
     }
     return fallback;
 }
-function responseMessage(body: unknown): string {
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-        return "";
-    }
-    const value = (body as RecordValue).error ?? (body as RecordValue).message;
-    return typeof value === "string" ? value.trim() : "";
-}
-function headers(value: HeadersInit | undefined): Record<string, string> {
-    return value ? Object.fromEntries(new Headers(value).entries()) : {};
-}
-
 function priceAgreementUnavailableMessage(status: unknown, host: HTMLElement): string {
     if (status === "expired") {
         return checkoutText(host, "agreement-expired-message");
@@ -1171,4 +973,12 @@ function priceAgreementUnavailableMessage(status: unknown, host: HTMLElement): s
         return checkoutText(host, "agreement-consumed-message");
     }
     return checkoutText(host, "agreement-unavailable-message");
+}
+
+function isFramed(): boolean {
+    try {
+        return window.self !== window.top;
+    } catch {
+        return true;
+    }
 }

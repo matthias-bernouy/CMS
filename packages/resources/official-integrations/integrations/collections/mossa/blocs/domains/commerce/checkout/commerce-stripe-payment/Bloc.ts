@@ -1,4 +1,5 @@
 import { paymentCopy, paymentText } from "./copy";
+import { sourceFormRequest } from "@bernouy/components/binding";
 import {
     acceptedLegalDocumentVersionIds,
     errorCode,
@@ -10,11 +11,11 @@ import {
     renderLegalRequirements,
 } from "./legal-consent";
 
-const functionPaths = {
-    createPaymentForOrder: "/.cms/sources/system-functions/createPaymentForOrder",
-    getPaymentLegalRequirements: "/.cms/sources/system-functions/getPaymentLegalRequirements",
-    getStripePaymentClientConfig: "/.cms/sources/system-functions/getStripePaymentClientConfig",
-    refreshPaymentForOrder: "/.cms/sources/system-functions/refreshPaymentForOrder",
+const functionSources = {
+    createPaymentForOrder: "payment-create",
+    getPaymentLegalRequirements: "payment-legal",
+    getStripePaymentClientConfig: "payment-config",
+    refreshPaymentForOrder: "payment-refresh",
 };
 import legalStyle from "./legal-style.css" with { type: "text" };
 
@@ -253,7 +254,7 @@ class CommerceStripePayment extends HTMLElement {
             <section class="shell">
                 <div class="header">
                     <h2 data-title></h2>
-                    <p class="muted" data-copy></p>
+                    <p class="muted intro-copy"></p>
                 </div>
                 <div class="summary">
                     <span data-description></span>
@@ -501,7 +502,7 @@ class CommerceStripePayment extends HTMLElement {
     }
 
     async applyRedirectResult(clientSecret) {
-        const returnedSecret = new URL(window.location.href).searchParams.get("payment_intent_client_secret");
+        const returnedSecret = this.paramValue("payment_intent_client_secret");
         if (!returnedSecret || returnedSecret !== clientSecret) {
             return;
         }
@@ -607,36 +608,11 @@ class CommerceStripePayment extends HTMLElement {
     }
 
     async requestFunction(id, options = {}) {
-        const path = functionPaths[id];
-        if (!path) {
+        const sourceId = functionSources[id];
+        if (!sourceId) {
             throw new Error(`Undeclared payment function: ${id}`);
         }
-        return this.requestJson(path, options);
-    }
-
-    async requestJson(path, options = {}) {
-        const url = new URL(path, window.location.origin);
-        for (const [name, value] of Object.entries(options.query || {})) {
-            url.searchParams.set(name, String(value));
-        }
-        const { query: _query, ...requestOptions } = options;
-        const response = await fetch(url, {
-            credentials: "include",
-            ...requestOptions,
-            headers: {
-                accept: "application/json",
-                ...(options.body ? { "content-type": "application/json" } : {}),
-                ...headersObject(options.headers),
-            },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            const code =
-                body && typeof body === "object" && "error" in body
-                    ? String(body.error)
-                    : `${response.status} ${response.statusText}`;
-            throw new CmsFunctionRequestError(code, response.status);
-        }
+        const body = await sourceFormRequest(this, sourceId, requestValues(options));
         if (!body || typeof body !== "object" || Array.isArray(body)) {
             throw new Error("Invalid payment response.");
         }
@@ -707,11 +683,17 @@ class CommerceStripePayment extends HTMLElement {
     }
 
     cleanRedirectParameters() {
-        const url = new URL(window.location.href);
         for (const name of ["payment_intent", "payment_intent_client_secret", "redirect_status"]) {
-            url.searchParams.delete(name);
+            const control = this.querySelector(`[cms-param-sync="${name}"]`);
+            if (control) {
+                control.value = "";
+                control.dispatchEvent(new Event("change", { bubbles: true }));
+            }
         }
-        history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+
+    paramValue(name) {
+        return this.querySelector(`[cms-param-sync="${name}"]`)?.value?.trim() || "";
     }
 
     setStatus(message, state) {
@@ -751,7 +733,7 @@ class CommerceStripePayment extends HTMLElement {
         return this.root.querySelector("[data-title]");
     }
     get copy() {
-        return this.root.querySelector("[data-copy]");
+        return this.root.querySelector(".intro-copy");
     }
     get descriptionElement() {
         return this.root.querySelector("[data-description]");
@@ -954,17 +936,9 @@ function paymentElementReady(element) {
     });
 }
 
-function headersObject(headers) {
-    return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
-}
-
-class CmsFunctionRequestError extends Error {
-    constructor(code, status) {
-        super(code);
-        this.name = "CmsFunctionRequestError";
-        this.code = code;
-        this.status = status;
-    }
+function requestValues(options) {
+    const body = typeof options.body === "string" ? JSON.parse(options.body) : {};
+    return { ...(options.query || {}), ...(body && typeof body === "object" ? body : {}) };
 }
 
 function errorMessage(error, host) {

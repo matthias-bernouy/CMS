@@ -1,176 +1,102 @@
-import {
-    activeFilterParams,
-    activeMetadataFilters,
-    filterSignature,
-    fixedFilters,
-    positiveInteger,
-    schemaFiltersPending,
-    setAttributeIfChanged,
-    validIdentifier,
-} from "./helpers";
-import { connectOfferList, disconnectOfferList, refreshOfferListFilters } from "./lifecycle";
-import { syncOfferListPresentation } from "./presentation";
+import { refreshSourceContext, setSourceContext } from "@bernouy/components/binding";
+import { offerListPresentation, presentationAttributes } from "./presentation";
 
 export class CommerceOfferList extends HTMLElement {
-    static observedAttributes = [
-        "condition-code",
-        "category",
-        "brand",
-        "card-stretch",
-        "data-alias",
-        "grid-gap",
-        "grid-max",
-        "grid-min",
-        "grid-packing",
-        "locale",
-        "maximum-price",
-        "minimum-price",
-        "offer-url",
-        "page-param",
-        "page-size",
-        "product-id",
-        "seller-id",
-        "sort",
-        "sync-url",
-        "variant-id",
-    ];
+    static observedAttributes = presentationAttributes;
 
-    constructor() {
-        super();
-        this.page = 1;
-        this.filterParams = [];
-        this.metadataFilters = [];
-        this.filterSignature = "";
-        this.observer = null;
-    }
+    observer = null;
 
     connectedCallback() {
-        connectOfferList(this);
+        this.style.display = "contents";
+        setSourceContext(this.source, (value) => ({ presentation: offerListPresentation(this, value, this.offset) }));
+        this.addEventListener("change", this.onFilterChange);
+        this.addEventListener("mossa-pagination:change", this.onPageChange);
+        const Observer = this.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
+        this.observer = new Observer(() => queueMicrotask(() => this.syncMetadataState()));
+        this.observer.observe(this, { childList: true, subtree: true });
+        this.syncMetadataState();
     }
 
     disconnectedCallback() {
-        disconnectOfferList(this);
+        this.removeEventListener("change", this.onFilterChange);
+        this.removeEventListener("mossa-pagination:change", this.onPageChange);
+        this.observer?.disconnect();
+        this.observer = null;
     }
+
     attributeChangedCallback() {
         if (this.isConnected) {
-            this.syncSource();
+            refreshSourceContext(this.source);
         }
     }
 
-    readPage() {
-        if (!this.syncsUrl || typeof location === "undefined") {
-            return 1;
-        }
-        return positiveInteger(new URLSearchParams(location.search).get(this.pageParam), 1);
-    }
-    syncSource() {
-        const pageSize = positiveInteger(this.getAttribute("page-size"), 12);
-        const params = new URLSearchParams({
-            limit: String(pageSize),
-            offset: String((this.page - 1) * pageSize),
-        });
-        const urlParams = new URLSearchParams(typeof location === "undefined" ? "" : location.search);
-        const categoryUrlParam = this.filterParams.find(([endpointParam]) => endpointParam === "category")?.[1];
-        const activeCategory =
-            this.getAttribute("category")?.trim() || urlParams.get(categoryUrlParam || "category")?.trim() || "";
-        for (const [endpointParam, value] of activeFilterParams(this.filterParams, urlParams, activeCategory)) {
-            params.set(endpointParam, value);
-        }
-        for (const [attribute, endpointParam] of fixedFilters) {
-            const value = this.getAttribute(attribute)?.trim();
-            if (value) {
-                params.set(endpointParam, value);
-            }
-        }
-        if (schemaFiltersPending(this, params.get("category") || "", urlParams)) {
-            this.syncPagination();
-            syncOfferListPresentation(this);
+    onFilterChange = (event) => {
+        const control = event.target instanceof Element ? event.target.closest("[cms-param-sync]") : null;
+        if (!control || control === this.offsetControl) {
             return;
         }
-        const filters = activeMetadataFilters(this.metadataFilters, urlParams, params.get("category") || "");
-        if (params.get("category") && Object.keys(filters).length > 0) {
-            params.set("filters", JSON.stringify(filters));
-        }
-        const alias = validIdentifier(this.getAttribute("data-alias")) || "data";
-        const source = `/.cms/sources/commerce/offers?${params.toString()} as ${alias}`;
-        if (this.getAttribute("cms-source") !== source) {
-            this.setAttribute("cms-source", source);
-        }
-        this.syncPagination();
-        syncOfferListPresentation(this);
-    }
-    syncPagination() {
-        const pageSize = String(positiveInteger(this.getAttribute("page-size"), 12));
-        for (const pagination of this.querySelectorAll("mossa-pagination")) {
-            setAttributeIfChanged(pagination, "page", String(this.page));
-            setAttributeIfChanged(pagination, "page-size", pageSize);
-        }
-    }
-    writePage() {
-        if (!this.syncsUrl || typeof location === "undefined" || typeof history === "undefined") {
-            return;
-        }
-        const url = new URL(location.href);
-        if (this.page <= 1) {
-            url.searchParams.delete(this.pageParam);
-        } else {
-            url.searchParams.set(this.pageParam, String(this.page));
-        }
-        history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
-    }
-    currentFilterSignature() {
-        return filterSignature(this.filterParams, this.metadataFilters);
-    }
+        this.setOffset(0);
+        this.syncMetadataState();
+    };
 
     onPageChange = (event) => {
-        if (event.target?.closest?.("[data-commerce-offer-list]") !== this) {
-            return;
-        }
-        this.page = positiveInteger(event.detail?.page, 1);
-        this.writePage();
-        this.syncSource();
-        if (this.getAttribute("scroll-on-page-change") !== "false") {
-            this.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (event.target instanceof Element && event.target.localName === "mossa-pagination") {
+            this.setOffset(event.detail?.offset);
+            if (this.getAttribute("scroll-on-page-change") !== "false") {
+                this.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
         }
     };
 
-    onParamsChange = () => {
-        const signature = this.currentFilterSignature();
-        if (signature === this.filterSignature) {
-            return;
-        }
-        this.filterSignature = signature;
-        if (this.page !== 1) {
-            this.page = 1;
-            this.writePage();
-            this.syncSource();
-        } else {
-            this.syncSource();
-        }
-    };
-
-    onSchemaState = () => {
-        refreshOfferListFilters(this);
-        this.syncSource();
-    };
-
-    onPopState = () => {
-        const page = this.readPage();
-        const signature = this.currentFilterSignature();
-        if (page === this.page && signature === this.filterSignature) {
-            return;
-        }
-        this.page = page;
-        this.filterSignature = signature;
-        this.syncSource();
-    };
-
-    get pageParam() {
-        return this.getAttribute("page-param")?.trim() || "page";
+    setOffset(value) {
+        this.offsetControl.value = String(nonNegativeInteger(value));
+        this.offsetControl.dispatchEvent(new Event("change", { bubbles: true }));
     }
-    get syncsUrl() {
-        return this.getAttribute("sync-url") !== "false";
+
+    syncMetadataState() {
+        const filters = {};
+        for (const control of this.querySelectorAll('[cms-param-sync^="filter_"]')) {
+            const parameter = control.getAttribute("cms-param-sync")?.slice("filter_".length) || "";
+            const [field, operator = "eq"] = parameter.split(":");
+            const raw = String(control.value || "").trim();
+            if (!field || !raw) {
+                continue;
+            }
+            const type = control.getAttribute("cms-form-value-type") || control.getAttribute("type");
+            const value = type === "number" ? Number(raw) : type === "boolean" ? raw === "true" : raw;
+            if (type === "number" && !Number.isFinite(value)) {
+                continue;
+            }
+            filters[field] ||= {};
+            filters[field][operator] = value;
+        }
+        const value = Object.keys(filters).length ? JSON.stringify(filters) : "";
+        if (this.filtersControl.value !== value) {
+            this.filtersControl.value = value;
+            this.filtersControl.dispatchEvent(new Event("change", { bubbles: true }));
+        }
     }
+
+    get source() {
+        return this.querySelector('[cms-source-id="offers"]');
+    }
+
+    get offsetControl() {
+        return this.querySelector('[name="mossaOfferOffset"]');
+    }
+
+    get filtersControl() {
+        return this.querySelector('[name="mossaOfferFilters"]');
+    }
+
+    get offset() {
+        return nonNegativeInteger(this.offsetControl.value);
+    }
+}
+
+function nonNegativeInteger(value) {
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : 0;
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", CommerceOfferList);

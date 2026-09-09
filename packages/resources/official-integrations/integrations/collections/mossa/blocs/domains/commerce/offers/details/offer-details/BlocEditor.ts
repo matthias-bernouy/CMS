@@ -31,6 +31,16 @@ export class OfferDetailEditor extends Editor {
                             { label: "Wide", value: "wide" },
                         ],
                     },
+                    {
+                        type: "segmented",
+                        label: "Purchase panel",
+                        attribute: "purchase-appearance",
+                        defaultValue: "card",
+                        options: [
+                            { label: "Card", value: "card" },
+                            { label: "Flat", value: "flat" },
+                        ],
+                    },
                 ],
             },
         ];
@@ -57,9 +67,11 @@ export class OfferDetailEditor extends Editor {
             { label: "Description", slot: "description", max: 1, accepts: anyComponent },
             { label: "Valuation", slot: "valuation", max: 1, accepts: anyComponent },
             { label: "Price", slot: "price", max: 1, accepts: anyComponent },
+            { label: "Specifications heading", slot: "specifications-heading", max: 1, accepts: anyComponent },
             { label: "Specifications", slot: "specifications", max: 1, accepts: anyComponent },
             { label: "Shipping", slot: "shipping", max: 1, accepts: anyComponent },
             { label: "Actions", slot: "actions", accepts: anyComponent },
+            { label: "Trust messages", slot: "trust", accepts: anyComponent },
         ];
     }
 }

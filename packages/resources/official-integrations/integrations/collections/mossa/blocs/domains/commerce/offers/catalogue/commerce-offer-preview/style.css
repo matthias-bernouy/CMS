@@ -62,6 +62,10 @@
     object-fit: cover;
 }
 
+::slotted([hidden]) {
+    display: none !important;
+}
+
 [part="content"] {
     position: relative;
     display: flex;
@@ -80,6 +84,7 @@
 
 [part="eyebrow"],
 [part="title"],
+[part="metadata"],
 [part="description"],
 [part="price"] {
     margin: 0;
@@ -97,6 +102,13 @@
     font-family: var(--ulvia-font-heading);
     font-size: var(--_mossa-commerce-offer-title-size, 1.25rem);
     line-height: 1.2;
+}
+
+[part="metadata"] {
+    color: var(--_mossa-commerce-offer-muted-color, var(--ulvia-surface-muted-text));
+    font-size: .9rem;
+    font-weight: 600;
+    line-height: 1.3;
 }
 
 [part="description"] {
@@ -125,14 +137,7 @@
     pointer-events: auto;
 }
 
-:host(:not(:has([slot="media"]))) [part="media"],
-:host(:not(:has([slot="badge"]))) [part="badges"],
-:host(:not(:has([slot="eyebrow"]))) [part="eyebrow"],
-:host(:not(:has([slot="title"]))) [part="title"],
-:host(:not(:has([slot="description"]))) [part="description"],
-:host(:not(:has(:not([slot])))) [part="details"],
-:host(:not(:has([slot="action"]))) [part="actions"],
-:host(:not(:has([slot="price"]))[data-empty-price]) [part="price"] {
+[hidden] {
     display: none;
 }
 
@@ -152,6 +157,30 @@
 
 :host([density="spacious"]) [part="content"] {
     --_mossa-commerce-offer-padding: 1.75rem;
+}
+
+:host([layout="horizontal"]) [part="card"] {
+    grid-template-columns: minmax(6rem, var(--_mossa-commerce-offer-media-width, 8rem)) minmax(0, 1fr);
+    grid-template-rows: 1fr;
+}
+
+:host([layout="horizontal"]) [part="media"] {
+    aspect-ratio: 1;
+}
+
+:host([layout="horizontal"]) [part="content"] {
+    justify-content: flex-start;
+    gap: .45rem;
+}
+
+:host([layout="horizontal"]) [part="price"] {
+    margin-top: 0;
+}
+
+@media (max-width: 30rem) {
+    :host([layout="horizontal"]) [part="card"] {
+        --_mossa-commerce-offer-media-width: 6rem;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

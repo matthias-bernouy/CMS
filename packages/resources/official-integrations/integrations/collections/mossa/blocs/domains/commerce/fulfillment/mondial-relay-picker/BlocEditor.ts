@@ -29,13 +29,6 @@ export class MondialRelayPickerEditor extends Editor {
                             { label: "Embedded", value: "embedded" },
                         ],
                     },
-                    {
-                        type: "text",
-                        label: "Delivery source installation id",
-                        attribute: "source-id",
-                        defaultValue: "delivery",
-                        help: "Use the id chosen when the Mondial Relay Source was installed.",
-                    },
                     { type: "text", label: "Commerce order identifier", attribute: "order-id" },
                     { type: "text", label: "Postal code", attribute: "postal-code" },
                     { type: "text", label: "City", attribute: "city" },

@@ -1,16 +1,17 @@
 import { translateWalletMessage, walletCopy, walletMessages } from "./copy";
+import { sourceFormRequest } from "@bernouy/components/binding";
 
 const STRIPE_JS_URL = "https://js.stripe.com/v3/";
 const STRIPE_V2_API = "https://api.stripe.com/v2";
 const STRIPE_V2_VERSION = "2026-06-24.dahlia";
 
-const endpointPaths = {
-    enrollConnectSeller: "/.cms/sources/stripe-connect/enrollConnectSeller",
-    getAccount: "/.cms/sources/user-account/getAccount",
-    getConnectClientConfig: "/.cms/sources/stripe-connect/getConnectClientConfig",
-    getConnectStatus: "/.cms/sources/stripe-connect/getConnectStatus",
-    getConnectWallet: "/.cms/sources/stripe-connect/getConnectWallet",
-    submitConnectVerification: "/.cms/sources/stripe-connect/submitConnectVerification",
+const endpointSources = {
+    enrollConnectSeller: "connect-enroll",
+    getAccount: "connect-account",
+    getConnectClientConfig: "connect-config",
+    getConnectStatus: "connect-status",
+    getConnectWallet: "connect-wallet",
+    submitConnectVerification: "connect-verification",
 };
 
 let stripeJsLoader = null;
@@ -41,7 +42,6 @@ class StripeConnectOnboarding extends HTMLElement {
             "terms-update-button-label",
             "terms-unavailable-copy",
             "eyebrow",
-            "locale",
             "payout-currency",
         ];
     }
@@ -254,7 +254,7 @@ class StripeConnectOnboarding extends HTMLElement {
                 <div class="header" data-header>
                     <span class="eyebrow" data-eyebrow></span>
                     <h2 data-title></h2>
-                    <p class="muted" data-copy></p>
+                    <p class="muted intro-copy"></p>
                 </div>
                 <p class="status" data-status hidden aria-live="polite"></p>
                 <div class="loading" data-loading hidden role="status" aria-label="Loading seller account">
@@ -333,7 +333,7 @@ class StripeConnectOnboarding extends HTMLElement {
         }
         this.setText("[data-title]", "title", "Seller account");
         this.setText("[data-eyebrow]", "eyebrow", "Payouts");
-        this.setText("[data-copy]", "copy", "Activate and monitor your seller account to receive sale payouts.");
+        this.setText(".intro-copy", "copy", "Activate and monitor your seller account to receive sale payouts.");
         this.setText("[data-activation-title]", "activation-title", "Activate my seller account");
         this.setText(
             "[data-activation-copy]",
@@ -343,8 +343,8 @@ class StripeConnectOnboarding extends HTMLElement {
         this.setText("[data-activate]", "button-label", "Configure my seller account");
         this.setText("[data-submit]", "button-label", "Configure my seller account");
         this.setText("[data-missing-title]", "missing-title", "Your profile is incomplete");
-        this.setText("[data-profile-link]", "profile-link-label", "Complete my profile");
-        this.setText("[data-payment-terms]", "payment-terms-label", "payment service terms");
+        this.setText('[slot="profile-link"]', "profile-link-label", "Complete my profile");
+        this.setText('[slot="payment-terms"]', "payment-terms-label", "payment service terms");
         this.setText("[data-terms-update-title]", "terms-update-title", "Seller terms update");
         this.setText(
             "[data-terms-update-copy]",
@@ -766,27 +766,12 @@ class StripeConnectOnboarding extends HTMLElement {
     }
 
     async requestSource(endpoint, init = {}) {
-        const path = endpointPaths[endpoint];
-        if (!path) {
+        const sourceId = endpointSources[endpoint];
+        if (!sourceId) {
             throw new Error(`Undeclared seller endpoint: ${endpoint}`);
         }
-        const response = await fetch(path, {
-            credentials: "include",
-            ...init,
-            headers: {
-                accept: "application/json",
-                ...(init.body ? { "content-type": "application/json" } : {}),
-                ...headersObject(init.headers),
-            },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            const message =
-                body && typeof body === "object" && "error" in body
-                    ? String(body.error)
-                    : `${response.status} ${response.statusText}`;
-            throw new Error(message);
-        }
+        const payload = typeof init.body === "string" ? JSON.parse(init.body) : {};
+        const body = await sourceFormRequest(this, sourceId, payload);
         if (!body || typeof body !== "object" || Array.isArray(body)) {
             throw new Error("Invalid source response");
         }
@@ -855,7 +840,7 @@ class StripeConnectOnboarding extends HTMLElement {
     }
 
     get locale() {
-        return this.getAttribute("locale")?.trim() || "en-US";
+        return this.ownerDocument.documentElement.lang || this.ownerDocument.defaultView?.navigator.language || "en-US";
     }
 
     get payoutCurrency() {
@@ -952,10 +937,6 @@ function loadStripeJs() {
         }
     });
     return stripeJsLoader;
-}
-
-function headersObject(headers) {
-    return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
 }
 
 function text(value) {

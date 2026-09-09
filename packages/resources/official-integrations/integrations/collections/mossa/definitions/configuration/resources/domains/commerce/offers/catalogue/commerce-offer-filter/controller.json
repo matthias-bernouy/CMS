@@ -21,17 +21,5 @@
             "mossa/blocs/commerce-offer-filter"
         ]
     },
-    "defaultActive": false,
-    "theme": {
-        "contract": "ulvia-theme@3",
-        "required": [
-            "body-text",
-            "radius-control",
-            "secondary-base",
-            "shadow-sm",
-            "surface-background",
-            "surface-border",
-            "surface-muted-text"
-        ]
-    }
+    "defaultActive": false
 }

@@ -1,4 +1,4 @@
-import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
 const visible = (label: string, attribute: string) => ({
     type: "segmented" as const,
@@ -18,19 +18,6 @@ export class CommerceAccountOffersEditor extends Editor {
                 kind: "self",
                 label: "Content",
                 settings: [
-                    {
-                        type: "text",
-                        label: "Status accessible label",
-                        attribute: "status-label",
-                        defaultValue: "Filter by status",
-                    },
-                    {
-                        type: "text",
-                        label: "Create label",
-                        attribute: "create-label",
-                        defaultValue: "Create an offer",
-                    },
-                    { type: "page-link", label: "Create page", attribute: "create-url" },
                     { type: "text", label: "Edit label", attribute: "edit-label", defaultValue: "Change" },
                     { type: "page-link", label: "Edit page", attribute: "edit-url" },
                     {
@@ -71,33 +58,18 @@ export class CommerceAccountOffersEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Status labels",
-                settings: [
-                    { type: "text", label: "All", attribute: "label-all", defaultValue: "All" },
-                    { type: "text", label: "Draft", attribute: "label-draft", defaultValue: "Drafts" },
-                    {
-                        type: "text",
-                        label: "Action required",
-                        attribute: "label-action-required",
-                        defaultValue: "Action required",
-                    },
-                    {
-                        type: "text",
-                        label: "Under review",
-                        attribute: "label-under-review",
-                        defaultValue: "Under review",
-                    },
-                    { type: "text", label: "Online", attribute: "label-online", defaultValue: "Online" },
-                    { type: "text", label: "Paused", attribute: "label-paused", defaultValue: "Paused" },
-                    { type: "text", label: "Rejected", attribute: "label-rejected", defaultValue: "Rejected" },
-                    { type: "text", label: "Archived", attribute: "label-archived", defaultValue: "Archived" },
-                ],
-            },
-            {
-                kind: "self",
                 label: "Layout",
                 settings: [
-                    { type: "text", label: "Page size", attribute: "page-size", defaultValue: "12" },
+                    {
+                        type: "segmented",
+                        label: "Card layout",
+                        attribute: "card-layout",
+                        defaultValue: "vertical",
+                        options: [
+                            { label: "Vertical", value: "vertical" },
+                            { label: "Horizontal", value: "horizontal" },
+                        ],
+                    },
                     {
                         type: "select",
                         label: "Minimum card width",
@@ -129,53 +101,19 @@ export class CommerceAccountOffersEditor extends Editor {
                         defaultValue: "md",
                         options: ["none", "xs", "sm", "md", "lg", "xl"].map((value) => ({ label: value, value })),
                     },
-                    {
-                        type: "segmented",
-                        label: "Card height",
-                        attribute: "card-stretch",
-                        defaultValue: "true",
-                        options: [
-                            { label: "Content", value: "false" },
-                            { label: "Stretch", value: "true" },
-                        ],
-                    },
-                    { type: "text", label: "Image height", attribute: "image-height", defaultValue: "12rem" },
-                    {
-                        type: "segmented",
-                        label: "Image fit",
-                        attribute: "image-fit",
-                        defaultValue: "cover",
-                        options: [
-                            { label: "Cover", value: "cover" },
-                            { label: "Contain", value: "contain" },
-                            { label: "Fill", value: "fill" },
-                        ],
-                    },
                     visible("Images", "show-image"),
                     visible("Prices", "show-price"),
                     visible("Statuses", "show-status"),
                     visible("Update dates", "show-updated-at"),
                 ],
             },
-            {
-                kind: "self",
-                label: "Data",
-                settings: [
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
-                    {
-                        type: "segmented",
-                        label: "Synchronize URL",
-                        attribute: "sync-url",
-                        defaultValue: "true",
-                        options: [
-                            { label: "Yes", value: "true" },
-                            { label: "No", value: "false" },
-                        ],
-                    },
-                    { type: "text", label: "Status URL parameter", attribute: "status-param", defaultValue: "status" },
-                    { type: "text", label: "Page URL parameter", attribute: "page-param", defaultValue: "page" },
-                ],
-            },
+        ];
+    }
+
+    protected override contentSlots(): ContentSlot[] {
+        return [
+            { label: "Status filter", slot: "status-filter", accepts: [{ kind: "any-component" }], min: 1, max: 1 },
+            { label: "Create action", slot: "create-action", accepts: [{ kind: "any-component" }], min: 1, max: 1 },
         ];
     }
 }

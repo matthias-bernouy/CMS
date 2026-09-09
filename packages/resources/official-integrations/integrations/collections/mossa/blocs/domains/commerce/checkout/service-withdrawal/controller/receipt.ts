@@ -16,17 +16,6 @@ const statusLabels: Record<string, (copy: (name: string) => string) => string> =
     resolved: (copy) => copy("status-resolved-label"),
 };
 
-export function submissionError(message: unknown, copy: (name: string) => string): string {
-    const value = String(message || "");
-    if (value.includes("already exists")) {
-        return copy("duplicate-request-message");
-    }
-    if (value.includes("not_found")) {
-        return copy("order-unavailable-message");
-    }
-    return copy("submit-error-message");
-}
-
 export function safeFilePart(value: string): string {
     return (
         value
@@ -59,27 +48,6 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function syncReceipt(
-    host: HTMLElement,
-    receipt: Record<string, unknown> | null,
-    copy: (name: string) => string,
-    locale: string,
-): void {
-    if (!receipt) {
-        return;
-    }
-    setText(host.querySelector("[data-request-reference]"), receipt.publicId);
-    setText(
-        host.querySelector("[data-order-reference]"),
-        receipt.orderNumber || receipt.orderPublicId || receipt.orderId,
-    );
-    setText(
-        host.querySelector("[data-confirmed-at]"),
-        formatReceiptDate(receipt.confirmedAt || receipt.submittedAt, locale),
-    );
-    setText(host.querySelector("[data-status]"), receiptStatus(receipt.status, copy));
-}
-
 export function downloadReceipt(
     document: Document,
     receipt: Record<string, unknown>,
@@ -97,11 +65,4 @@ export function downloadReceipt(
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-}
-
-function setText(element: Element | null, value: unknown): void {
-    const text = String(value ?? "—");
-    if (element && element.textContent !== text) {
-        element.textContent = text;
-    }
 }

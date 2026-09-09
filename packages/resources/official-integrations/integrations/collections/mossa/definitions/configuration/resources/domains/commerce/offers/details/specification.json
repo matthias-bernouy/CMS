@@ -8,7 +8,7 @@
         "contract": "ulvia-theme@3",
         "required": [
             "font-heading",
-            "secondary-base",
+            "primary-base",
             "surface-muted-text",
             "surface-text"
         ]

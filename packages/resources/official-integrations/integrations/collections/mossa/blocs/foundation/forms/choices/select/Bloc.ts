@@ -5,6 +5,7 @@ class MossaSelect extends HTMLElement {
     static observedAttributes = [
         "accessible-label",
         "disabled",
+        "empty-label",
         "hint",
         "label",
         "multiple",
@@ -12,6 +13,7 @@ class MossaSelect extends HTMLElement {
         "placeholder",
         "presentation",
         "required",
+        "searchable",
         "value",
     ];
 
@@ -24,6 +26,8 @@ class MossaSelect extends HTMLElement {
         this.requestedValues = undefined;
         this.selectedValuesState = [];
         this.optionModels = [];
+        this.visibleOptionIndexes = [];
+        this.searchQuery = "";
         this.activeIndex = -1;
         this.open = false;
         this.showValidation = false;
@@ -40,8 +44,8 @@ class MossaSelect extends HTMLElement {
                     position: relative;
                     display: block;
                     box-sizing: border-box;
-                    min-width: min(12rem, 100%);
-                    max-width: 100%;
+                    min-width: min(var(--_mossa-select-min-width, 12rem), calc(100vw - 2rem));
+                    max-width: min(100%, var(--_mossa-select-max-width, 22rem));
                     color: inherit;
                     font: inherit;
                 }
@@ -82,12 +86,22 @@ class MossaSelect extends HTMLElement {
                     min-width: 0;
                 }
 
+                .custom-shell {
+                    display: grid;
+                }
+
                 .control,
+                .size-probe {
+                    grid-area: 1 / 1;
+                }
+
+                .control,
+                .search-control,
                 .native-control {
                     box-sizing: border-box;
                     width: 100%;
                     min-height: var(--_mossa-input-height, 2.75rem);
-                    padding: var(--_mossa-input-padding, var(--ulvia-space-sm) calc(var(--ulvia-space-sm) + var(--ulvia-space-xs)));
+                    padding: var(--_mossa-input-padding, .65rem .75rem);
                     border: var(--_mossa-input-border, 1px solid var(--_mossa-input-border-color, var(--_mossa-field-border)));
                     border-radius: var(--_mossa-input-radius, var(--ulvia-radius-card));
                     background: var(--_mossa-input-background, var(--_mossa-field-background));
@@ -97,11 +111,57 @@ class MossaSelect extends HTMLElement {
                     cursor: pointer;
                 }
 
+                .control,
+                .search-control {
+                    anchor-name: --_mossa-select-control;
+                }
+
                 .control {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
                     gap: .75rem;
+                }
+
+                .search-shell {
+                    position: relative;
+                    grid-area: 1 / 1;
+                }
+
+                .search-control {
+                    padding-inline-end: 2.25rem;
+                    cursor: text;
+                }
+
+                .search-shell .chevron {
+                    position: absolute;
+                    top: 50%;
+                    right: .9rem;
+                    pointer-events: none;
+                    transform: translateY(-65%) rotate(45deg);
+                }
+
+                :host([data-open]) .search-shell .chevron {
+                    transform: translateY(-35%) rotate(225deg);
+                }
+
+                .size-probe {
+                    box-sizing: border-box;
+                    display: grid;
+                    width: max-content;
+                    max-width: var(--_mossa-select-max-width, 22rem);
+                    min-height: var(--_mossa-input-height, 2.75rem);
+                    padding: var(--_mossa-input-padding, .65rem calc(.75rem + .75rem + .55rem + 1.5px + 1rem) .65rem .75rem);
+                    border: 1px solid transparent;
+                    visibility: hidden;
+                    pointer-events: none;
+                }
+
+                .size-probe > span {
+                    grid-area: 1 / 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
 
                 .native-control {
@@ -114,6 +174,7 @@ class MossaSelect extends HTMLElement {
                 :host([multiple]) .native-shell::after { display: none; }
 
                 .control:focus-visible,
+                .search-control:focus-visible,
                 .native-control:focus-visible {
                     outline: 2px solid var(--_mossa-focus-color, var(--_mossa-tone-focus));
                     outline-offset: 2px;
@@ -158,11 +219,18 @@ class MossaSelect extends HTMLElement {
                 }
 
                 .listbox {
-                    position: absolute;
+                    position: fixed;
+                    position-anchor: --_mossa-select-control;
                     z-index: var(--_mossa-select-z-index, 1000);
-                    inset: calc(100% + .3rem) 0 auto;
+                    top: anchor(bottom);
+                    right: auto;
+                    bottom: auto;
+                    left: anchor(left);
                     display: grid;
+                    box-sizing: border-box;
+                    width: anchor-size(width);
                     max-height: var(--_mossa-select-max-height, 17rem);
+                    margin: .3rem 0 0;
                     padding: .3rem;
                     overflow-y: auto;
                     border: 1px solid var(--_mossa-input-border-color, var(--_mossa-field-border));
@@ -170,6 +238,7 @@ class MossaSelect extends HTMLElement {
                     background: var(--_mossa-input-background, var(--_mossa-field-background));
                     color: var(--_mossa-input-color, var(--_mossa-field-color));
                     box-shadow: var(--_mossa-select-shadow, var(--ulvia-shadow-lg));
+                    position-try-fallbacks: flip-block;
                 }
 
                 .option {
@@ -190,7 +259,8 @@ class MossaSelect extends HTMLElement {
                 }
 
                 .option:hover:not(:disabled),
-                .option:focus-visible {
+                .option:focus-visible,
+                .option[data-active] {
                     outline: none;
                     background: color-mix(in srgb, var(--_mossa-focus-color, var(--_mossa-tone-focus)) 12%, transparent);
                 }
@@ -207,8 +277,10 @@ class MossaSelect extends HTMLElement {
                 }
 
                 .option:disabled { cursor: not-allowed; opacity: .5; }
+                .empty { margin: 0; padding: .65rem; color: var(--_mossa-muted-color, var(--ulvia-surface-muted-text)); }
                 :host([disabled]) { opacity: .6; }
                 :host([disabled]) .control,
+                :host([disabled]) .search-control,
                 :host([disabled]) .native-control { cursor: not-allowed; }
                 .hint { color: var(--_mossa-muted-color, var(--ulvia-surface-muted-text)); }
                 .error { color: var(--_mossa-error-color, var(--ulvia-danger-base)); }
@@ -220,16 +292,21 @@ class MossaSelect extends HTMLElement {
                 }
             </style>
             <div class="field" part="field">
-                <span id="field-label" class="label" part="label"></span>
+                <label id="field-label" class="label" part="label"></label>
                 <div class="custom-shell">
-                    <button class="control" part="control" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="listbox" aria-describedby="hint error">
+                    <button id="custom-control" class="control" part="control" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="listbox" aria-describedby="hint error">
                         <span id="control-value" class="value" part="value"></span>
                         <span class="chevron" part="chevron" aria-hidden="true"></span>
                     </button>
-                    <div id="listbox" class="listbox" part="listbox" role="listbox" hidden></div>
+                    <div class="search-shell" hidden>
+                        <input id="search-control" class="search-control" part="control search-control" type="text" role="combobox" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="listbox" aria-describedby="hint error">
+                        <span class="chevron" part="chevron" aria-hidden="true"></span>
+                    </div>
+                    <div class="size-probe" aria-hidden="true"></div>
+                    <div id="listbox" class="listbox" part="listbox" role="listbox" popover="manual" hidden></div>
                 </div>
                 <div class="native-shell" hidden>
-                    <select class="native-control" part="control native-control" aria-describedby="hint error"></select>
+                    <select id="native-control" class="native-control" part="control native-control" aria-describedby="hint error"></select>
                 </div>
                 <small id="hint" class="hint" part="hint"></small>
                 <small id="error" class="error" part="error" aria-live="polite"></small>
@@ -239,7 +316,10 @@ class MossaSelect extends HTMLElement {
         this.labelElement = this.root.querySelector(".label");
         this.customShell = this.root.querySelector(".custom-shell");
         this.control = this.root.querySelector(".control");
+        this.searchShell = this.root.querySelector(".search-shell");
+        this.searchControl = this.root.querySelector(".search-control");
         this.valueElement = this.root.querySelector(".value");
+        this.sizeProbe = this.root.querySelector(".size-probe");
         this.listbox = this.root.querySelector(".listbox");
         this.nativeShell = this.root.querySelector(".native-shell");
         this.nativeControl = this.root.querySelector(".native-control");
@@ -256,6 +336,9 @@ class MossaSelect extends HTMLElement {
         this.addPresentationQueryListener();
         this.control.addEventListener("click", this.onControlClick);
         this.control.addEventListener("keydown", this.onControlKeydown);
+        this.searchControl.addEventListener("click", this.onSearchClick);
+        this.searchControl.addEventListener("input", this.onSearchInput);
+        this.searchControl.addEventListener("keydown", this.onSearchKeydown);
         this.nativeControl.addEventListener("input", this.onNativeInput);
         this.nativeControl.addEventListener("change", this.onNativeChange);
         this.listbox.addEventListener("click", this.onOptionClick);
@@ -283,6 +366,9 @@ class MossaSelect extends HTMLElement {
         this.presentationQuery = null;
         this.control.removeEventListener("click", this.onControlClick);
         this.control.removeEventListener("keydown", this.onControlKeydown);
+        this.searchControl.removeEventListener("click", this.onSearchClick);
+        this.searchControl.removeEventListener("input", this.onSearchInput);
+        this.searchControl.removeEventListener("keydown", this.onSearchKeydown);
         this.nativeControl.removeEventListener("input", this.onNativeInput);
         this.nativeControl.removeEventListener("change", this.onNativeChange);
         this.listbox.removeEventListener("click", this.onOptionClick);
@@ -347,6 +433,10 @@ class MossaSelect extends HTMLElement {
         return this.hasAttribute("multiple");
     }
 
+    get searchable() {
+        return this.hasAttribute("searchable") && !this.multiple;
+    }
+
     focus(options) {
         this.activeControl.focus(options);
     }
@@ -360,29 +450,45 @@ class MossaSelect extends HTMLElement {
             this.closeListbox(false);
         }
         this.control.setAttribute("aria-expanded", String(this.open));
+        this.searchControl.setAttribute("aria-expanded", String(this.open));
+        if (this.multiple) {
+            this.control.removeAttribute("role");
+        } else {
+            this.control.setAttribute("role", "combobox");
+        }
         this.nativeControl.multiple = this.multiple;
         this.nativeControl.required = this.hasAttribute("required");
         const accessibleLabel = this.getAttribute("accessible-label") || "";
         if (this.labelElement.textContent) {
-            this.control.setAttribute("aria-labelledby", "field-label control-value");
+            this.control.setAttribute("aria-labelledby", "field-label");
             this.control.removeAttribute("aria-label");
+            this.searchControl.setAttribute("aria-labelledby", "field-label");
+            this.searchControl.removeAttribute("aria-label");
             this.nativeControl.setAttribute("aria-labelledby", "field-label");
             this.nativeControl.removeAttribute("aria-label");
-            this.listbox.setAttribute("aria-label", this.labelElement.textContent);
+            this.listbox.setAttribute("aria-labelledby", "field-label");
+            this.listbox.removeAttribute("aria-label");
         } else if (accessibleLabel) {
             this.control.removeAttribute("aria-labelledby");
             this.control.setAttribute("aria-label", accessibleLabel);
+            this.searchControl.removeAttribute("aria-labelledby");
+            this.searchControl.setAttribute("aria-label", accessibleLabel);
             this.nativeControl.removeAttribute("aria-labelledby");
             this.nativeControl.setAttribute("aria-label", accessibleLabel);
+            this.listbox.removeAttribute("aria-labelledby");
             this.listbox.setAttribute("aria-label", accessibleLabel);
         } else {
             this.control.removeAttribute("aria-labelledby");
             this.control.removeAttribute("aria-label");
+            this.searchControl.removeAttribute("aria-labelledby");
+            this.searchControl.removeAttribute("aria-label");
             this.nativeControl.removeAttribute("aria-labelledby");
             this.nativeControl.removeAttribute("aria-label");
+            this.listbox.removeAttribute("aria-labelledby");
             this.listbox.removeAttribute("aria-label");
         }
         this.listbox.setAttribute("aria-multiselectable", String(this.multiple));
+        this.searchControl.placeholder = this.getAttribute("placeholder") || "Select an option";
         this.renderValue();
         this.renderOptions();
         this.syncPresentation(restorePresentationFocus);
@@ -412,6 +518,9 @@ class MossaSelect extends HTMLElement {
     }
 
     resolvePresentation() {
+        if (this.searchable) {
+            return "custom";
+        }
         const requested = (this.getAttribute("presentation") || "auto").trim().toLowerCase();
         if (requested === "native" || requested === "custom") {
             return requested;
@@ -431,12 +540,22 @@ class MossaSelect extends HTMLElement {
             this.closeListbox(false);
         }
         this.activePresentation = next;
+        this.labelElement.htmlFor = this.labelElement.textContent
+            ? next === "native"
+                ? "native-control"
+                : this.searchable
+                  ? "search-control"
+                  : "custom-control"
+            : "";
         this.setAttribute("data-resolved-presentation", next);
         this.customShell.hidden = next !== "custom";
         this.customShell.inert = next !== "custom";
+        this.control.hidden = this.searchable;
+        this.searchShell.hidden = !this.searchable;
         this.nativeShell.hidden = next !== "native";
         this.nativeShell.inert = next !== "native";
-        this.control.disabled = this.disabled || next !== "custom";
+        this.control.disabled = this.disabled || next !== "custom" || this.searchable;
+        this.searchControl.disabled = this.disabled || next !== "custom" || !this.searchable;
         this.nativeControl.disabled = this.disabled || next !== "native";
 
         if (next !== previous && shouldRestoreFocus) {
@@ -519,23 +638,50 @@ class MossaSelect extends HTMLElement {
         const placeholder = this.getAttribute("placeholder") || "Select an option";
         this.valueElement.textContent = labels.length ? labels.join(", ") : placeholder;
         this.valueElement.dataset.placeholder = String(labels.length === 0);
+        if (!this.open || this.ownerDocument.activeElement !== this) {
+            this.searchControl.value = labels[0] || "";
+        }
     }
 
     renderOptions() {
         const selected = new Set(this.selectedValuesState);
+        const normalizedQuery = normalizeSearchText(this.searchQuery);
+        this.visibleOptionIndexes = this.optionModels
+            .map((option, index) => ({ option, index }))
+            .filter(
+                ({ option }) =>
+                    !this.searchable || !normalizedQuery || normalizeSearchText(option.label).includes(normalizedQuery),
+            )
+            .map(({ index }) => index);
+        this.sizeProbe.replaceChildren(
+            ...this.optionModels.map((option) => {
+                const label = document.createElement("span");
+                label.textContent = option.label;
+                return label;
+            }),
+        );
         this.listbox.replaceChildren(
-            ...this.optionModels.map((option, index) => {
+            ...this.visibleOptionIndexes.map((index) => {
+                const option = this.optionModels[index];
                 const button = document.createElement("button");
                 button.type = "button";
                 button.className = "option";
+                button.id = `option-${index}`;
                 button.dataset.index = String(index);
                 button.setAttribute("role", "option");
                 button.setAttribute("aria-selected", String(selected.has(option.value)));
+                button.tabIndex = this.searchable ? -1 : 0;
                 button.disabled = option.disabled || this.disabled;
                 button.textContent = option.label;
                 return button;
             }),
         );
+        if (this.searchable && this.visibleOptionIndexes.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "empty";
+            empty.textContent = this.getAttribute("empty-label") || "No options found.";
+            this.listbox.replaceChildren(empty);
+        }
 
         const nativeOptions = this.optionModels.map((option) => {
             const element = document.createElement("option");
@@ -586,6 +732,7 @@ class MossaSelect extends HTMLElement {
         const missing = this.hasAttribute("required") && (values.length === 0 || values.every((value) => value === ""));
         const exposeInvalidity = !this.disabled && this.showValidation && missing;
         this.control.setAttribute("aria-invalid", String(exposeInvalidity));
+        this.searchControl.setAttribute("aria-invalid", String(exposeInvalidity));
         this.nativeControl.setAttribute("aria-invalid", String(exposeInvalidity));
         if (this.disabled || !missing) {
             this.internals.setValidity({});
@@ -601,9 +748,13 @@ class MossaSelect extends HTMLElement {
             return;
         }
         this.open = true;
+        this.searchQuery = "";
         this.toggleAttribute("data-open", true);
-        this.listbox.hidden = false;
+        this.showListbox();
         this.control.setAttribute("aria-expanded", "true");
+        this.searchControl.setAttribute("aria-expanded", "true");
+        this.renderOptions();
+        this.positionListbox();
         const selectedIndex = this.optionModels.findIndex(
             (option) => this.selectedValuesState.includes(option.value) && !option.disabled,
         );
@@ -611,7 +762,14 @@ class MossaSelect extends HTMLElement {
             selectedIndex >= 0
                 ? selectedIndex
                 : this.nextEnabledIndex(direction > 0 ? -1 : this.optionModels.length, direction);
-        queueMicrotask(() => this.focusOption(this.activeIndex));
+        queueMicrotask(() => {
+            if (this.searchable) {
+                this.searchControl.focus();
+                this.searchControl.select();
+                return;
+            }
+            this.focusOption(this.activeIndex);
+        });
     }
 
     closeListbox(restoreFocus = true) {
@@ -620,14 +778,19 @@ class MossaSelect extends HTMLElement {
         }
         this.open = false;
         this.toggleAttribute("data-open", false);
-        this.listbox.hidden = true;
+        this.hideListbox();
         this.control.setAttribute("aria-expanded", "false");
+        this.searchControl.setAttribute("aria-expanded", "false");
+        this.searchControl.removeAttribute("aria-activedescendant");
+        this.searchQuery = "";
+        this.renderValue();
+        this.renderOptions();
         if (restoreFocus) {
-            this.control.focus();
+            this.activeControl.focus();
         }
     }
 
-    selectIndex(index) {
+    selectIndex(index, restoreFocus = true) {
         const option = this.optionModels[index];
         if (!option || option.disabled || this.disabled) {
             return;
@@ -644,21 +807,26 @@ class MossaSelect extends HTMLElement {
             this.requestedValues = [option.value];
         }
         this.applyValues(this.requestedValues);
-        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         if (!this.multiple) {
-            this.closeListbox(true);
+            this.closeListbox(restoreFocus);
         } else {
             this.focusOption(index);
         }
+        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     }
 
     nextEnabledIndex(start, direction) {
-        if (!this.optionModels.length) {
+        const indexes = this.searchable ? this.visibleOptionIndexes : this.optionModels.map((_option, index) => index);
+        if (!indexes.length) {
             return -1;
         }
-        let index = start;
-        for (let count = 0; count < this.optionModels.length; count++) {
-            index = (index + direction + this.optionModels.length) % this.optionModels.length;
+        let position = indexes.indexOf(start);
+        if (position < 0) {
+            position = direction > 0 ? -1 : indexes.length;
+        }
+        for (let count = 0; count < indexes.length; count++) {
+            position = (position + direction + indexes.length) % indexes.length;
+            const index = indexes[position];
             if (!this.optionModels[index].disabled) {
                 return index;
             }
@@ -671,7 +839,66 @@ class MossaSelect extends HTMLElement {
             return;
         }
         this.activeIndex = index;
-        this.listbox.querySelector(`[data-index="${index}"]`)?.focus();
+        const option = this.listbox.querySelector(`[data-index="${index}"]`);
+        if (this.searchable) {
+            for (const item of this.listbox.querySelectorAll(".option")) {
+                item.toggleAttribute("data-active", item === option);
+            }
+            this.searchControl.setAttribute("aria-activedescendant", option?.id || "");
+            option?.scrollIntoView({ block: "nearest" });
+            return;
+        }
+        option?.focus();
+    }
+
+    showListbox() {
+        this.listbox.hidden = false;
+        try {
+            this.listbox.showPopover?.();
+        } catch {
+            // The fixed-position fallback remains usable without the Popover API.
+        }
+        this.positionListbox();
+    }
+
+    hideListbox() {
+        try {
+            this.listbox.hidePopover?.();
+        } catch {
+            // The element may already have left the top layer.
+        }
+        this.listbox.hidden = true;
+    }
+
+    positionListbox() {
+        if (!this.open) {
+            return;
+        }
+        if (CSS.supports("top: anchor(bottom)")) {
+            this.listbox.style.removeProperty("width");
+            this.listbox.style.removeProperty("left");
+            this.listbox.style.removeProperty("max-height");
+            this.listbox.style.removeProperty("top");
+            this.listbox.style.removeProperty("bottom");
+            this.listbox.removeAttribute("data-above");
+            return;
+        }
+        const control = this.activeControl.getBoundingClientRect();
+        const viewport = this.ownerDocument.defaultView;
+        const width = Math.min(control.width, Math.max(0, (viewport?.innerWidth || control.right) - 16));
+        const left = Math.max(8, Math.min(control.left, (viewport?.innerWidth || control.right) - width - 8));
+        const gap = 5;
+        const availableBelow = Math.max(0, (viewport?.innerHeight || control.bottom) - control.bottom - gap - 8);
+        const availableAbove = Math.max(0, control.top - gap - 8);
+        const openAbove = availableBelow < 160 && availableAbove > availableBelow;
+        this.listbox.style.width = `${width}px`;
+        this.listbox.style.left = `${left}px`;
+        this.listbox.style.maxHeight = `${Math.min(272, openAbove ? availableAbove : availableBelow)}px`;
+        this.listbox.style.top = openAbove ? "auto" : `${control.bottom + gap}px`;
+        this.listbox.style.bottom = openAbove
+            ? `${Math.max(8, (viewport?.innerHeight || control.bottom) - control.top + gap)}px`
+            : "auto";
+        this.listbox.toggleAttribute("data-above", openAbove);
     }
 
     upgradeProperty(name) {
@@ -684,7 +911,11 @@ class MossaSelect extends HTMLElement {
     }
 
     get activeControl() {
-        return this.activePresentation === "native" ? this.nativeControl : this.control;
+        return this.activePresentation === "native"
+            ? this.nativeControl
+            : this.searchable
+              ? this.searchControl
+              : this.control;
     }
 
     get focusedControl() {
@@ -743,6 +974,60 @@ class MossaSelect extends HTMLElement {
         }
     };
 
+    onSearchClick = () => {
+        if (!this.open) {
+            this.openListbox(1);
+        }
+    };
+
+    onSearchInput = () => {
+        this.searchQuery = this.searchControl.value;
+        if (!this.open) {
+            this.open = true;
+            this.toggleAttribute("data-open", true);
+            this.showListbox();
+            this.searchControl.setAttribute("aria-expanded", "true");
+        }
+        this.activeIndex = -1;
+        this.searchControl.removeAttribute("aria-activedescendant");
+        this.renderOptions();
+        this.positionListbox();
+    };
+
+    onSearchKeydown = (event) => {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            this.closeListbox(true);
+            return;
+        }
+        if (event.key === "Tab") {
+            this.commitExactSearch();
+            this.closeListbox(false);
+            return;
+        }
+        if (event.key === "Enter" && this.open && this.activeIndex >= 0) {
+            event.preventDefault();
+            this.selectIndex(this.activeIndex);
+            return;
+        }
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+            return;
+        }
+        event.preventDefault();
+        if (!this.open) {
+            this.openListbox(event.key === "ArrowUp" || event.key === "End" ? -1 : 1);
+            return;
+        }
+        if (event.key === "Home") {
+            this.activeIndex = this.nextEnabledIndex(-1, 1);
+        } else if (event.key === "End") {
+            this.activeIndex = this.nextEnabledIndex(Number.POSITIVE_INFINITY, -1);
+        } else {
+            this.activeIndex = this.nextEnabledIndex(this.activeIndex, event.key === "ArrowDown" ? 1 : -1);
+        }
+        this.focusOption(this.activeIndex);
+    };
+
     onOptionClick = (event) => {
         const option = event.target.closest(".option");
         if (!option) {
@@ -782,9 +1067,21 @@ class MossaSelect extends HTMLElement {
 
     onDocumentPointerDown = (event) => {
         if (this.open && !event.composedPath().includes(this)) {
+            this.commitExactSearch();
             this.closeListbox(false);
         }
     };
+
+    commitExactSearch() {
+        if (!this.searchable || !this.searchControl.value.trim()) {
+            return;
+        }
+        const query = normalizeSearchText(this.searchControl.value);
+        const index = this.optionModels.findIndex((option) => normalizeSearchText(option.label) === query);
+        if (index >= 0 && !this.optionModels[index].disabled) {
+            this.selectIndex(index, false);
+        }
+    }
 
     onInvalid = () => {
         this.showValidation = true;
@@ -794,3 +1091,11 @@ class MossaSelect extends HTMLElement {
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", MossaSelect);
+
+function normalizeSearchText(value) {
+    return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase()
+        .trim();
+}

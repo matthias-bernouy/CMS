@@ -26,6 +26,12 @@ export class MossaSelectEditor extends Editor {
                         attribute: "placeholder",
                         defaultValue: "Select an option",
                     },
+                    {
+                        type: "text",
+                        label: "Empty search label",
+                        attribute: "empty-label",
+                        defaultValue: "No options found.",
+                    },
                     { type: "text", label: "Hint", attribute: "hint" },
                 ],
             },
@@ -48,6 +54,16 @@ export class MossaSelectEditor extends Editor {
                         type: "segmented",
                         label: "Multiple",
                         attribute: "multiple",
+                        defaultValue: "",
+                        options: [
+                            { label: "No", value: "" },
+                            { label: "Yes", value: "true" },
+                        ],
+                    },
+                    {
+                        type: "segmented",
+                        label: "Searchable",
+                        attribute: "searchable",
                         defaultValue: "",
                         options: [
                             { label: "No", value: "" },

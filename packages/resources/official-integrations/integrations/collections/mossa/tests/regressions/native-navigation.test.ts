@@ -109,6 +109,26 @@ describe("Mossa native navigation", () => {
         expect(findings).toEqual([]);
     });
 
+    test("composes user-menu rows through the shared menu-item bloc", () => {
+        const root = resolve(MOSSA_ROOT, "blocs/foundation/navigation/menus/user-menu");
+        const content = fragment(readFileSync(resolve(root, "default.html"), "utf8"));
+        expect(content.querySelectorAll('mossa-user-menu > mossa-menu-item[slot="items"]')).toHaveLength(1);
+        expect(
+            content.querySelector('mossa-user-menu > mossa-menu-item[slot="logout"][variant="danger"]'),
+        ).not.toBeNull();
+        expect(
+            content.querySelector('mossa-user-menu > a[slot="items"], mossa-user-menu > a[slot="logout"]'),
+        ).toBeNull();
+
+        const resource = JSON.parse(
+            readFileSync(
+                resolve(MOSSA_ROOT, "definitions/configuration/resources/foundation/navigation/menus/user-menu.json"),
+                "utf8",
+            ),
+        ) as { requires?: { resources?: string[] } };
+        expect(resource.requires?.resources).toContain("mossa/blocs/menu-item");
+    });
+
     test("keeps dynamic and technical anchor creation on an explicit allowlist", () => {
         const sources = integrationFiles("**/*.ts").filter((file) =>
             readFileSync(file, "utf8").includes('createElement("a")'),

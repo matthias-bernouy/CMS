@@ -20,6 +20,8 @@
             "radius-lg",
             "secondary-base",
             "subtle-background",
+            "surface-border",
+            "surface-muted-text",
             "surface-text"
         ]
     }

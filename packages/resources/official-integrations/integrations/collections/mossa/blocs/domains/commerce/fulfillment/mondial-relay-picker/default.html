@@ -1,1 +1,19 @@
-<mossa-mondial-relay-picker name="deliveryRelayLocation" source-id="delivery" limit="8"></mossa-mondial-relay-picker>
+<mossa-mondial-relay-picker name="deliveryRelayLocation" limit="8">
+    <form hidden cms-source-id="relay-search" cms-source="/.cms/sources/delivery/relayPoints" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false">
+        <input name="postalCode">
+        <input name="city">
+        <input name="country">
+        <input name="limit">
+        <input name="weightGrams">
+    </form>
+    <form hidden cms-source-id="relay-restore" cms-source="/.cms/sources/system-functions/getRelayPointForOrder" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false">
+        <input name="orderId">
+    </form>
+    <form hidden cms-source-id="relay-save" cms-source="/.cms/sources/system-functions/setRelayPointForOrder" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json">
+        <input name="orderId">
+        <input name="relayLocation">
+        <input name="country">
+        <input name="postalCode">
+        <input name="city">
+    </form>
+</mossa-mondial-relay-picker>

@@ -1,10 +1,6 @@
-import { errorMessageFromBody, headersObject, HttpResponseError, relayItem } from "./helpers";
+import { HttpResponseError, relayItem } from "./helpers";
 import { PresentedPicker } from "./presentation";
-
-const functionPaths = {
-    getRelayPointForOrder: "/.cms/sources/system-functions/getRelayPointForOrder",
-    setRelayPointForOrder: "/.cms/sources/system-functions/setRelayPointForOrder",
-};
+import { SourceFormError, sourceFormRequest } from "@bernouy/components/binding";
 
 export class OperationalPicker extends PresentedPicker {
     async search() {
@@ -20,19 +16,13 @@ export class OperationalPicker extends PresentedPicker {
         this.setBusy(true);
         this.setCopyStatus("searching-message", "idle");
         try {
-            const url = new URL(this.relayPointsPath(), window.location.origin);
-            url.searchParams.set("postalCode", this.postalCodeInput.value.trim());
-            if (this.cityInput.value.trim()) {
-                url.searchParams.set("city", this.cityInput.value.trim());
-            }
-            url.searchParams.set("country", country);
-            url.searchParams.set("limit", this.getAttribute("limit") || "8");
-            const weight = this.getAttribute("weight-grams")?.trim();
-            if (weight) {
-                url.searchParams.set("weightGrams", weight);
-            }
-
-            const data = await this.requestJson(url);
+            const data = await this.submitSource("relay-search", {
+                postalCode: this.postalCodeInput.value.trim(),
+                city: this.cityInput.value.trim(),
+                country,
+                limit: this.getAttribute("limit") || "8",
+                weightGrams: this.getAttribute("weight-grams")?.trim() || "",
+            });
             this.items = Array.isArray(data.items) ? data.items.map(relayItem).filter(Boolean) : [];
             this.renderList();
             this.setCopyStatus(
@@ -48,6 +38,7 @@ export class OperationalPicker extends PresentedPicker {
             this.setBusy(false);
         }
     }
+
     async selectRelay(item) {
         this.setBusy(true);
         if (this.orderId()) {
@@ -58,15 +49,12 @@ export class OperationalPicker extends PresentedPicker {
         try {
             let selected = item;
             if (this.orderId()) {
-                const result = await this.requestFunction("setRelayPointForOrder", {
-                    method: "POST",
-                    body: JSON.stringify({
-                        orderId: this.orderId(),
-                        relayLocation: item.location,
-                        country: item.country,
-                        postalCode: this.postalCodeInput.value.trim(),
-                        city: this.cityInput.value.trim(),
-                    }),
+                const result = await this.submitSource("relay-save", {
+                    orderId: this.orderId(),
+                    relayLocation: item.location,
+                    country: item.country,
+                    postalCode: this.postalCodeInput.value.trim(),
+                    city: this.cityInput.value.trim(),
                 });
                 selected = relayItem(result?.selection || result) || item;
             }
@@ -76,58 +64,31 @@ export class OperationalPicker extends PresentedPicker {
             this.setBusy(false);
         }
     }
+
     async restoreSelection() {
         if (!this.orderId()) {
             return;
         }
-        const selection = relayItem(
-            await this.requestFunction("getRelayPointForOrder", {
-                query: { orderId: this.orderId() },
-            }),
-        );
+        const selection = relayItem(await this.submitSource("relay-restore", { orderId: this.orderId() }));
         if (selection) {
             this.applySelection(selection, false);
             this.setCopyStatus("restored-message", "success");
         }
     }
-    async requestFunction(id, options = {}) {
-        const path = functionPaths[id];
-        if (!path) {
-            throw new Error(`Undeclared delivery function: ${id}`);
-        }
-        const url = new URL(path, window.location.origin);
-        for (const [name, value] of Object.entries(options.query || {})) {
-            url.searchParams.set(name, String(value));
-        }
-        return this.requestJson(url, options);
-    }
 
-    relayPointsPath() {
-        const sourceId = this.getAttribute("source-id")?.trim() || "delivery";
-        if (!/^[a-z][a-z0-9-]{0,62}$/.test(sourceId)) {
-            throw new Error("The delivery source installation id must be one URL path segment.");
+    async submitSource(id, values) {
+        let result;
+        try {
+            result = await sourceFormRequest(this, id, values);
+        } catch (error) {
+            if (error instanceof SourceFormError) {
+                throw new HttpResponseError(error.status, error.message);
+            }
+            throw error;
         }
-        return `/.cms/sources/${encodeURIComponent(sourceId)}/relayPoints`;
-    }
-
-    async requestJson(url, options = {}) {
-        const { query: _query, ...requestOptions } = options;
-        const response = await fetch(url, {
-            credentials: "include",
-            ...requestOptions,
-            headers: {
-                accept: "application/json",
-                ...(options.body ? { "content-type": "application/json" } : {}),
-                ...headersObject(options.headers),
-            },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            throw new HttpResponseError(response.status, errorMessageFromBody(body, response));
-        }
-        if (!body || typeof body !== "object" || Array.isArray(body)) {
+        if (!result || typeof result !== "object" || Array.isArray(result)) {
             throw new Error("Invalid delivery service response.");
         }
-        return body;
+        return result;
     }
 }

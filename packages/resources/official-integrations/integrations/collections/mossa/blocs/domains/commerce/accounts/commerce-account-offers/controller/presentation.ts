@@ -1,125 +1,189 @@
-import {
-    formatDate,
-    formatMoney,
-    offerUrl,
-    positiveIdentifier,
-    setAttributeIfChanged,
-    setTextIfChanged,
-} from "./helpers";
+type ObjectValue = Record<string, unknown>;
+type OfferAction = { label: string; url: string } | null;
 
-// Presentation helpers stay below the artifact root so installation can bundle them.
+const statusCodes = ["all", "draft", "action_required", "under_review", "online", "paused", "rejected", "archived"];
 
-export function syncPresentation(host, pageSize) {
-    const filter = host.querySelector("[data-status-filter]");
-    filter?.removeAttribute("label");
-    setAttributeIfChanged(filter, "accessible-label", host.getAttribute("status-label") || "Filter by status");
-    setAttributeIfChanged(filter, "value", host.status);
-    for (const option of filter?.querySelectorAll("mossa-option") ?? []) {
-        setTextIfChanged(option, host.statusLabel(option.getAttribute("value")));
-    }
+export const presentationAttributes = [
+    "edit-label",
+    "edit-url",
+    "empty-filtered-message",
+    "empty-filtered-title",
+    "empty-message",
+    "empty-title",
+    "error-message",
+    "card-layout",
+    "grid-gap",
+    "grid-max",
+    "grid-min",
+    "grid-packing",
+    "pending-price-label",
+    "price-label",
+    "price-url",
+    "show-image",
+    "show-price",
+    "show-status",
+    "show-updated-at",
+    "updated-on-template",
+    "view-label",
+    "view-url",
+    ...statusCodes.map((status) => `label-${status.replaceAll("_", "-")}`),
+];
 
-    const createButton = host.querySelector("[data-create-button]");
-    setTextIfChanged(createButton, host.getAttribute("create-label") || "Create an offer");
-    const createUrl = host.getAttribute("create-url")?.trim() || "";
-    createButton?.closest("mossa-button")?.toggleAttribute("hidden", !createUrl);
-    if (createUrl) {
-        setAttributeIfChanged(createButton, "href", createUrl);
-    } else {
-        createButton?.removeAttribute("href");
-    }
-    const grid = host.querySelector("[data-offers-grid]");
-    setAttributeIfChanged(grid, "min", host.getAttribute("grid-min") || "md");
-    setAttributeIfChanged(grid, "max", host.getAttribute("grid-max") || "xl");
-    setAttributeIfChanged(grid, "gap", host.getAttribute("grid-gap") || "md");
-    setAttributeIfChanged(grid, "packing", host.getAttribute("grid-packing") || "fit");
-
-    const pagination = host.querySelector("[data-pagination]");
-    setAttributeIfChanged(pagination, "page", String(host.page));
-    setAttributeIfChanged(pagination, "page-size", String(pageSize));
-    for (const name of ["previous-label", "next-label", "summary-template", "tone"]) {
-        setAttributeIfChanged(pagination, name, host.getAttribute(`pagination-${name}`) || "");
-    }
-    const errorToast = host.querySelector("[data-error-toast]");
-    setTextIfChanged(errorToast, host.getAttribute("error-message") || "Unable to load your offers.");
+export function offerListPresentation(
+    host: HTMLElement,
+    value: unknown,
+    offset: number,
+    status: string,
+): Record<string, unknown> {
+    const response = objectValue(value) || {};
+    const unfiltered = status === "all" || !status;
+    return {
+        emptyMessage: text(
+            host,
+            unfiltered ? "empty-message" : "empty-filtered-message",
+            unfiltered ? "Create your first offer to start selling." : "Try another status to find your offers.",
+        ),
+        emptyTitle: text(
+            host,
+            unfiltered ? "empty-title" : "empty-filtered-title",
+            unfiltered ? "No offers yet" : "No offers with this status",
+        ),
+        errorMessage: text(host, "error-message", "Your offers could not be loaded."),
+        cardLayout: text(host, "card-layout", "vertical"),
+        gridGap: text(host, "grid-gap", "md"),
+        gridMax: text(host, "grid-max", "xl"),
+        gridMin: text(host, "grid-min", "md"),
+        gridPacking: text(host, "grid-packing", "fit"),
+        items: objectValues(response.items).map((offer) => projectOffer(host, offer)),
+        page: Math.floor(offset / 12) + 1,
+        showImage: host.getAttribute("show-image") !== "false",
+        showPrice: host.getAttribute("show-price") !== "false",
+        showStatus: host.getAttribute("show-status") !== "false",
+        showUpdatedAt: host.getAttribute("show-updated-at") !== "false",
+        total: nonNegativeInteger(response.total),
+    };
 }
 
-export function syncRenderedOffers(host) {
-    const locale = host.getAttribute("locale") || "en-US";
-    for (const card of host.querySelectorAll("[data-offer-card]")) {
-        card.toggleAttribute("stretch", host.getAttribute("card-stretch") !== "false");
-        const image = card.querySelector("[data-offer-image]");
-        const mediaId = positiveIdentifier(image?.getAttribute("data-media-id"));
-        image?.toggleAttribute("hidden", host.getAttribute("show-image") === "false" || !mediaId);
-        if (image) {
-            image.style.width = "100%";
-            image.style.height = host.getAttribute("image-height") || "12rem";
-            image.style.objectFit = host.getAttribute("image-fit") || "cover";
-        }
-        if (image && mediaId) {
-            setAttributeIfChanged(
-                image,
-                "data-cms-src",
-                `/.cms/sources/commerce/myOfferImage?id=${encodeURIComponent(mediaId)}`,
-            );
-        } else {
-            image?.removeAttribute("data-cms-src");
-        }
+function projectOffer(host: HTMLElement, offer: ObjectValue): Record<string, unknown> {
+    const action = offerAction(host, offer);
+    const amount = minorAmount(offer.sellerDisplayPriceAmount);
+    return {
+        ...offer,
+        actionLabel: action?.label || "",
+        actionUrl: action?.url || "",
+        hasPrice: amount !== null,
+        imageUrl: positiveIdentifier(offer.mainImageMediaId)
+            ? `/.cms/sources/commerce/myOfferImage?id=${encodeURIComponent(String(offer.mainImageMediaId))}`
+            : "",
+        pendingPriceLabel: text(host, "pending-price-label", "Price pending"),
+        showPendingPrice: amount === null && offer.workflowState === "awaiting_seller_price",
+        sellerDisplayPriceAmount: amount,
+        statusLabel: statusLabel(host, String(offer.displayStatus || "draft")),
+        statusTone: statusTone(String(offer.displayStatus || "draft")),
+        updatedLabel: updatedLabel(host, offer.updatedAt),
+    };
+}
 
-        const price = card.querySelector("[data-offer-price]");
-        price?.toggleAttribute("hidden", host.getAttribute("show-price") === "false");
-        if (price) {
-            setTextIfChanged(
-                price,
-                formatMoney(
-                    price.dataset.displayAmount,
-                    price.dataset.currency,
-                    locale,
-                    host.getAttribute("pending-price-label") || "Price pending",
-                ),
-            );
-        }
-
-        const status = card.querySelector("[data-offer-status]");
-        status?.toggleAttribute("hidden", host.getAttribute("show-status") === "false");
-        if (status) {
-            setTextIfChanged(status, host.statusLabel(status.getAttribute("data-offer-status")));
-        }
-
-        const updated = card.querySelector("[data-offer-updated]");
-        updated?.toggleAttribute("hidden", host.getAttribute("show-updated-at") === "false");
-        if (updated) {
-            setTextIfChanged(
-                updated,
-                formatDate(
-                    updated.dataset.date,
-                    locale,
-                    host.getAttribute("updated-on-template") || "Updated on {date}",
-                ),
-            );
-        }
-
-        const edit = card.querySelector("[data-edit-button]");
-        const action = host.offerAction(edit.dataset.workflowState, edit.dataset.publiclyVisible === "true");
-        edit?.toggleAttribute("hidden", !action);
-        if (!action) {
-            edit?.removeAttribute("href");
-            continue;
-        }
-        setTextIfChanged(edit, action.label);
-        setAttributeIfChanged(edit, "href", offerUrl(action.url, edit.dataset.offerId, edit.dataset.offerSlug));
+function offerAction(host: HTMLElement, offer: ObjectValue): OfferAction {
+    const workflow = String(offer.workflowState || "");
+    if (workflow === "awaiting_seller_price") {
+        return action(host, offer, "price-url", "price-label", "Set my price");
     }
+    if (["draft", "changes_requested"].includes(workflow)) {
+        return action(host, offer, "edit-url", "edit-label", "Edit");
+    }
+    if (!offer.publiclyVisible) {
+        return null;
+    }
+    return action(host, offer, host.hasAttribute("view-url") ? "view-url" : "edit-url", "view-label", "View");
+}
 
-    const isUnfiltered = host.status === "all";
-    setTextIfChanged(
-        host.querySelector("[data-empty-title]"),
-        isUnfiltered
-            ? host.getAttribute("empty-title") || "No offers yet"
-            : host.getAttribute("empty-filtered-title") || "No offers with this status",
-    );
-    setTextIfChanged(
-        host.querySelector("[data-empty-message]"),
-        isUnfiltered
-            ? host.getAttribute("empty-message") || "Create your first offer to start selling."
-            : host.getAttribute("empty-filtered-message") || "Try another status to find your offers.",
-    );
+function action(host: HTMLElement, offer: ObjectValue, urlAttribute: string, labelAttribute: string, fallback: string) {
+    const template = host.getAttribute(urlAttribute)?.trim() || "";
+    return template
+        ? {
+              label: text(host, labelAttribute, fallback),
+              url: offerUrl(template, String(offer.id || ""), String(offer.slug || "")),
+          }
+        : null;
+}
+
+function statusLabel(host: HTMLElement, status: string): string {
+    const code = statusCodes.includes(status) ? status : "draft";
+    return text(host, `label-${code.replaceAll("_", "-")}`, statusDefaults[code]);
+}
+
+function statusTone(status: string): string {
+    if (status === "online") {
+        return "success";
+    }
+    if (status === "rejected") {
+        return "danger";
+    }
+    if (status === "action_required") {
+        return "warning";
+    }
+    return status === "under_review" ? "secondary" : "neutral";
+}
+
+function updatedLabel(host: HTMLElement, value: unknown): string {
+    const date = new Date(String(value || ""));
+    if (Number.isNaN(date.getTime())) {
+        return "";
+    }
+    const locale =
+        host.ownerDocument.documentElement.lang || host.ownerDocument.defaultView?.navigator.language || "en-US";
+    const formatted = new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
+    return text(host, "updated-on-template", "Updated on {date}").replaceAll("{date}", formatted);
+}
+
+function offerUrl(base: string, id: string, slug: string): string {
+    if (base.includes("{id}") || base.includes("{slug}")) {
+        return base.replaceAll("{id}", encodeURIComponent(id)).replaceAll("{slug}", encodeURIComponent(slug));
+    }
+    const url = new URL(base, "https://cms.invalid");
+    if (id) {
+        url.searchParams.set("id", id);
+    }
+    return `${url.pathname}${url.search}${url.hash}`;
+}
+
+const statusDefaults: Record<string, string> = {
+    all: "All",
+    draft: "Drafts",
+    action_required: "Action required",
+    under_review: "Under review",
+    online: "Online",
+    paused: "Paused",
+    rejected: "Rejected",
+    archived: "Archived",
+};
+
+function text(host: HTMLElement, attribute: string, fallback: string): string {
+    return host.getAttribute(attribute)?.trim() || fallback;
+}
+
+function objectValue(value: unknown): ObjectValue | null {
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as ObjectValue) : null;
+}
+
+function objectValues(value: unknown): ObjectValue[] {
+    return Array.isArray(value) ? value.map(objectValue).filter((item): item is ObjectValue => item !== null) : [];
+}
+
+function minorAmount(value: unknown): number | null {
+    if (value === null || value === undefined || value === "") {
+        return null;
+    }
+    const amount = Number(value);
+    return Number.isSafeInteger(amount) && amount >= 0 ? amount : null;
+}
+
+function nonNegativeInteger(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function positiveIdentifier(value: unknown): boolean {
+    return /^[1-9]\d*$/.test(String(value ?? "").trim());
 }

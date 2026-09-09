@@ -1,32 +1,22 @@
-export const purchaseCopy: Record<string, { selector: string; text: string; attribute?: string }> = {
-    "empty-title": { selector: "[data-empty] [slot=title]", text: "No purchases yet" },
-    "empty-description": {
-        selector: "[data-empty] [slot=description]",
-        text: "Your orders will appear here after your first purchase.",
-    },
-    "login-title": { selector: "[data-login] [slot=title]", text: "Sign in to view your purchases" },
-    "login-description": {
-        selector: "[data-login] [slot=description]",
-        text: "Order history is available only from your account.",
-    },
-    "error-title": { selector: "[data-error] [slot=title]", text: "Your purchases could not be loaded" },
-    "error-message": {
-        selector: "[data-error-message]",
-        text: "Your purchases could not be loaded. Try again shortly.",
-    },
-    "loading-label": { selector: "[data-loading]", attribute: "label", text: "Loading purchases" },
-    "pagination-label": { selector: "[data-pagination]", attribute: "aria-label", text: "Purchase pagination" },
-};
-
-export const purchaseLabels: Record<string, string> = {
+export const purchaseCopy: Record<string, string> = {
+    "empty-title": "No purchases yet",
+    "empty-description": "Your orders will appear here after your first purchase.",
+    "login-title": "Sign in to view your purchases",
+    "login-description": "Order history is available only from your account.",
+    "error-title": "Your purchases could not be loaded",
+    "error-message": "Your purchases could not be loaded. Try again shortly.",
+    "loading-label": "Loading purchases",
+    "pagination-label": "Purchase pagination",
+    "pagination-previous-label": "Previous",
+    "pagination-next-label": "Next",
+    "pagination-summary-template": "Page {page} of {pages}",
     "placed-on-template": "Placed on {date}",
     "order-reference-template": "Order {id}",
     "other-item-template": "{title} + {count} other",
     "other-items-template": "{title} + {count} others",
     "unknown-date-label": "unknown date",
     "total-label": "Total",
-    "pagination-summary-template": "Page {page} of {pages}",
-    "pagination-tone": "neutral",
+    "order-action-label": "View order",
     "label-review-required": "Review required",
     "label-dispute-in-progress": "Dispute in progress",
     "label-refund-in-progress": "Refund in progress",
@@ -48,24 +38,11 @@ export const purchaseLabels: Record<string, string> = {
 export function purchaseText(
     host: HTMLElement,
     attribute: string,
-    values: Record<string, string | number> = {},
+    values: Record<string, string | number | unknown> = {},
 ): string {
-    let text = host.getAttribute(attribute)?.trim() || purchaseLabels[attribute] || "";
+    let text = host.getAttribute(attribute)?.trim() || purchaseCopy[attribute] || "";
     for (const [key, value] of Object.entries(values)) {
-        text = text.replaceAll(`{${key}}`, String(value));
+        text = text.replaceAll(`{${key}}`, String(value ?? ""));
     }
     return text;
-}
-
-export function syncPurchaseCopy(host: HTMLElement): void {
-    for (const [attribute, field] of Object.entries(purchaseCopy)) {
-        const value = host.getAttribute(attribute)?.trim() || field.text;
-        for (const element of host.querySelectorAll(field.selector)) {
-            if (field.attribute) {
-                element.setAttribute(field.attribute, value);
-            } else if (element.textContent !== value) {
-                element.textContent = value;
-            }
-        }
-    }
 }

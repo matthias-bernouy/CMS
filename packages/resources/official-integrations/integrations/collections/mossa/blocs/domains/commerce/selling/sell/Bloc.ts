@@ -1,6 +1,7 @@
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
+import { SourceFormError, sourceFormRequest } from "@bernouy/components/binding";
 
 type Product = {
     id: number;
@@ -72,6 +73,10 @@ export class Bloc extends Component {
         this.nextButtons.forEach((button) => button.addEventListener("click", this.onNext));
         this.editButtons.forEach((button) => button.addEventListener("click", this.onEdit));
         this.authLink.addEventListener("click", this.saveDraft);
+        if (isFramed()) {
+            this.applyAuth(true);
+            return;
+        }
         this.start().catch((error) => this.fail(error));
     }
 
@@ -105,13 +110,13 @@ export class Bloc extends Component {
             }),
             this.loadConditions(),
         ]);
-        if (this.authenticated && new URL(location.href).searchParams.get("resume") === "sell") {
+        if (this.authenticated && this.resumeState === "sell") {
             await this.restoreDraft();
         }
     }
 
     private async loadConditions() {
-        const data = await this.request("/.cms/sources/commerce/offerConditions");
+        const data = await this.requestSource("sell-conditions");
         const conditions = (Array.isArray(data.items) ? data.items : []).filter(
             (item): item is OfferCondition =>
                 item &&
@@ -155,9 +160,7 @@ export class Bloc extends Component {
 
     private async loadProducts() {
         const query = this.search.value.trim();
-        const data = await this.request(
-            `/.cms/sources/commerce/products?limit=20${query ? `&q=${encodeURIComponent(query)}` : ""}`,
-        );
+        const data = await this.requestSource("sell-products", { limit: 20, q: query });
         const products = Array.isArray(data.items) ? (data.items as Product[]) : [];
         this.results.replaceChildren(
             ...products.map((product) => {
@@ -175,7 +178,7 @@ export class Bloc extends Component {
     }
 
     private async selectProduct(id: number) {
-        this.product = (await this.request(`/.cms/sources/commerce/product?id=${id}`)) as Product;
+        this.product = (await this.requestSource("sell-product", { id })) as Product;
         this.search.value = this.product.title;
         this.results.hidden = true;
         this.selected.textContent = this.product.title;
@@ -525,13 +528,15 @@ export class Bloc extends Component {
         this.updateSummary(2);
         this.goToStep(3);
         sessionStorage.removeItem(draftStorageKey);
-        const url = new URL(location.href);
-        url.searchParams.delete("resume");
-        history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        const resume = this.querySelector<HTMLInputElement>('[cms-param-sync="resume"]');
+        if (resume) {
+            resume.value = "";
+            resume.dispatchEvent(new Event("change", { bubbles: true }));
+        }
     }
 
     private async checkAuth() {
-        this.authSubject = await this.request("/.cms/sources/user-account/getAccount");
+        this.authSubject = await this.requestSource("sell-account");
         this.applyAuth(true);
     }
 
@@ -544,47 +549,36 @@ export class Bloc extends Component {
     private async publish() {
         this.setBusy(true, this.copy("preparing"));
         try {
-            let seller = await this.request("/.cms/sources/commerce/mySeller");
+            let seller = await this.requestSource("sell-seller");
             if (!seller.exists) {
                 const account = this.authSubject || {};
                 const fullName = [account.givenName, account.surname]
                     .filter((value) => typeof value === "string" && value.trim())
                     .join(" ");
-                seller = await this.request("/.cms/sources/commerce/registerMySeller", {
-                    method: "POST",
-                    body: JSON.stringify({ displayName: fullName || this.authSubject?.email || this.copy("seller") }),
+                seller = await this.requestSource("sell-seller-register", {
+                    displayName: fullName || this.authSubject?.email || this.copy("seller"),
                 });
             }
             const suffix = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
-            const offer = await this.request("/.cms/sources/commerce/createMyOffer", {
-                method: "POST",
-                body: JSON.stringify({
-                    productId: this.product!.id,
-                    ...(this.variantId ? { variantId: this.variantId } : {}),
-                    slug: `${slugify(this.product!.slug || this.product!.title)}-${suffix}`,
-                    title: this.product!.title,
-                    description: this.description.value.trim() || null,
-                    conditionCode: this.condition,
-                    availability: "available",
-                    quantityAvailable: 1,
-                }),
+            const offer = await this.requestSource("sell-offer-create", {
+                productId: this.product!.id,
+                ...(this.variantId ? { variantId: this.variantId } : {}),
+                slug: `${slugify(this.product!.slug || this.product!.title)}-${suffix}`,
+                title: this.product!.title,
+                description: this.description.value.trim() || undefined,
+                conditionCode: this.condition,
+                availability: "available",
+                quantityAvailable: 1,
             });
+            this.setOfferSourceState(String(offer.id));
             for (let index = 0; index < this.files.length; index++) {
                 this.setStatus(
                     this.copy("uploading", { position: String(index + 1), count: String(this.files.length) }),
                 );
-                const body = new FormData();
-                body.set("file", this.files[index]);
-                await this.request(`/.cms/sources/commerce/uploadMyOfferImage?offerId=${offer.id}`, {
-                    method: "POST",
-                    body,
-                });
+                await this.requestSource("sell-image-upload", { file: this.files[index] });
             }
             this.setStatus(this.copy("submitting"));
-            await this.request(`/.cms/sources/commerce/submitMyOffer?id=${offer.id}`, {
-                method: "POST",
-                body: JSON.stringify({ expectedVersion: offer.version }),
-            });
+            await this.requestSource("sell-offer-submit", { expectedVersion: offer.version });
             this.setStatus(this.copy("submitted"), "success");
             const successUrl = this.successNavigation.getAttribute("href")?.trim() || "";
             if (successUrl && successUrl !== "#") {
@@ -638,24 +632,28 @@ export class Bloc extends Component {
         return invalid ? this.copy("invalidImage", { name: invalid.name }) : null;
     }
 
-    private async request(path: string, init: RequestInit = {}): Promise<SourceRecord> {
-        const response = await fetch(path, {
-            credentials: "include",
-            ...init,
-            headers: {
-                accept: "application/json",
-                ...(init.body && !(init.body instanceof FormData) ? { "content-type": "application/json" } : {}),
-                ...(init.headers || {}),
-            },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            throw new RemoteRequestError(responseMessage(body), response.status);
+    private async requestSource(sourceId: string, values: SourceRecord = {}): Promise<SourceRecord> {
+        let body: unknown;
+        try {
+            body = await sourceFormRequest(this, sourceId, values);
+        } catch (error) {
+            if (error instanceof SourceFormError) {
+                throw new RemoteRequestError(error.message, error.status);
+            }
+            throw error;
         }
         if (!body || typeof body !== "object" || Array.isArray(body)) {
             throw new Error();
         }
         return body;
+    }
+
+    private setOfferSourceState(offerId: string): void {
+        const control = this.querySelector<HTMLInputElement>('[cms-page-state="mossaSellOfferId"]');
+        if (control && control.value !== offerId) {
+            control.value = offerId;
+            control.dispatchEvent(new Event("change", { bubbles: true }));
+        }
     }
 
     private fail(error: unknown, fallback?: string) {
@@ -728,7 +726,7 @@ export class Bloc extends Component {
         return this.shadowRoot!.querySelector<HTMLElement>(".photo-picker")!;
     }
     private get photoPickerLabel() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-photo-picker-label]")!;
+        return this.shadowRoot!.querySelector<HTMLElement>(".photo-picker-label")!;
     }
     private get authGate() {
         return this.shadowRoot!.querySelector<HTMLElement>(".auth-gate")!;
@@ -781,9 +779,11 @@ export class Bloc extends Component {
     }
     private applyCopy = () => {
         this.syncPhotoPolicy();
-        this.shadowRoot?.querySelectorAll<HTMLElement>("[data-copy]").forEach((element) => {
-            element.textContent = this.copy(element.dataset.copy || "");
-        });
+        for (const [selector, name] of copyTargets) {
+            this.shadowRoot?.querySelectorAll<HTMLElement>(selector).forEach((element) => {
+                element.textContent = this.copy(name);
+            });
+        }
         this.search.setAttribute("label", this.copy("model"));
         this.search.setAttribute("placeholder", this.copy("searchPlaceholder"));
         this.results.setAttribute("aria-label", this.copy("model"));
@@ -802,7 +802,26 @@ export class Bloc extends Component {
     private get maximumField(): string {
         return this.getAttribute("valuation-maximum-field")?.trim() || "valuationMaximum";
     }
+    private get resumeState(): string {
+        return this.querySelector<HTMLInputElement>('[cms-param-sync="resume"]')?.value?.trim() || "";
+    }
 }
+
+const copyTargets = [
+    [".step-product-title", "stepProduct"],
+    [".edit", "change"],
+    [".next", "continue"],
+    [".step-valuation-title", "stepValuation"],
+    [".estimate-kicker", "estimateKicker"],
+    [".estimate-value", "selectValuation"],
+    [".estimated-condition-label", "estimatedCondition"],
+    [".step-description-title", "stepDescription"],
+    [".field-label", "photos"],
+    [".photo-picker-label", "addPhotos"],
+    [".step-submit-title", "stepSubmit"],
+    [".review", "review"],
+    [".submit", "submit"],
+] as const;
 
 function resolveVariantAxes(declaredAxes: VariantAxis[] | undefined, variants: Variant[]): VariantAxis[] {
     const declared = (declaredAxes || [])
@@ -906,10 +925,11 @@ function slugify(value: string) {
             .slice(0, 120) || "product"
     );
 }
-function responseMessage(body: unknown): string {
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-        return "";
+
+function isFramed(): boolean {
+    try {
+        return window.self !== window.top;
+    } catch {
+        return true;
     }
-    const value = (body as SourceRecord).error ?? (body as SourceRecord).message;
-    return typeof value === "string" ? value.trim() : "";
 }

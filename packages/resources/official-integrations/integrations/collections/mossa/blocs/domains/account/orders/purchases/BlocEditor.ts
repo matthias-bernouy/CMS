@@ -1,5 +1,5 @@
 import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
-import { purchaseCopy, purchaseLabels } from "./copy";
+import { purchaseCopy } from "./copy";
 
 export class PurchaseListEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -7,45 +7,17 @@ export class PurchaseListEditor extends Editor {
             {
                 kind: "self",
                 label: "Status messages",
-                settings: Object.entries(purchaseCopy).map(([attribute, { text }]) => ({
+                settings: Object.entries(purchaseCopy).map(([attribute, text]) => ({
                     type: "text",
                     label: attribute.replaceAll("-", " "),
                     attribute,
                     defaultValue: text,
                 })),
-            },
-            {
-                kind: "self",
-                label: "Order presentation",
-                settings: Object.entries(purchaseLabels).map(([attribute, text]) => ({
-                    type: "text",
-                    label: attribute.replaceAll("-", " "),
-                    attribute,
-                    defaultValue: text,
-                })),
-            },
-            {
-                kind: "self",
-                label: "Pagination",
-                settings: [
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
-                    { type: "text", label: "Page size", attribute: "page-size", defaultValue: "8" },
-                    { type: "text", label: "Previous label", attribute: "previous-label", defaultValue: "Previous" },
-                    { type: "text", label: "Next label", attribute: "next-label", defaultValue: "Next" },
-                ],
             },
             {
                 kind: "self",
                 label: "Navigation",
-                settings: [
-                    { type: "text", label: "Order URL pattern", attribute: "order-url" },
-                    {
-                        type: "text",
-                        label: "Order action label",
-                        attribute: "order-action-label",
-                        defaultValue: "View order",
-                    },
-                ],
+                settings: [{ type: "text", label: "Order URL pattern", attribute: "order-url" }],
             },
         ];
     }

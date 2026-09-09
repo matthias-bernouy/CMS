@@ -65,7 +65,7 @@ export function displayValue(value: unknown, unit?: string): string {
         return value.map((item) => displayValue(item)).join(", ");
     }
     if (typeof value === "boolean") {
-        return value ? "Oui" : "Non";
+        return value ? "Yes" : "No";
     }
     if (typeof value === "object" && value) {
         return Object.values(value)

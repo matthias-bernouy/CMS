@@ -3,6 +3,9 @@
     --_mossa-card-border:  var(--ulvia-surface-border);
     --_mossa-card-radius:  var(--ulvia-radius-card);
     --_mossa-card-pad-x:   1.25rem;
+    --_mossa-card-accent:  var(--ulvia-primary-base);
+    --_mossa-card-muted:   var(--ulvia-primary-muted);
+    --_mossa-price-accent: var(--_mossa-card-accent);
 
     display: block;
     box-sizing: border-box;
@@ -21,10 +24,66 @@
     --_mossa-card-pad-x:  0;
 }
 
+:host([variant="grid-flat"]) {
+    --_mossa-card-bg:     transparent;
+    --_mossa-card-border: transparent;
+    --_mossa-card-pad-x:  0;
+}
+
+:host([variant="highlight"]) {
+    --_mossa-card-bg:     var(--_mossa-card-muted);
+    --_mossa-card-border: var(--ulvia-surface-border);
+}
+
+:host([tone="secondary"]) {
+    --_mossa-card-accent: var(--ulvia-secondary-base);
+    --_mossa-card-muted:  var(--ulvia-secondary-muted);
+}
+
+:host([tone="success"]) {
+    --_mossa-card-accent: var(--ulvia-success-base);
+    --_mossa-card-muted:  var(--ulvia-success-muted);
+}
+
+:host([tone="warning"]) {
+    --_mossa-card-accent: var(--ulvia-warning-base);
+    --_mossa-card-muted:  var(--ulvia-warning-muted);
+}
+
+:host([tone="danger"]) {
+    --_mossa-card-accent: var(--ulvia-danger-base);
+    --_mossa-card-muted:  var(--ulvia-danger-muted);
+}
+
+:host([tone="info"]) {
+    --_mossa-card-accent: var(--ulvia-info-base);
+    --_mossa-card-muted:  var(--ulvia-info-muted);
+}
+
+:host([tone="neutral"]) {
+    --_mossa-card-accent: var(--ulvia-surface-border);
+    --_mossa-card-muted:  var(--ulvia-subtle-background);
+}
+
+:host([variant="grid"]) .card,
+:host([variant="grid-flat"]) .card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2rem;
+    padding-inline: 1rem;
+}
+
 ::slotted(mossa-specification) {
     border-bottom: 1px solid var(--ulvia-surface-border);
 }
 
 ::slotted(mossa-specification:last-child) {
     border-bottom: 0;
+}
+
+@media (max-width: 680px) {
+    :host([variant="grid"]) .card,
+    :host([variant="grid-flat"]) .card {
+        grid-template-columns: 1fr;
+    }
 }

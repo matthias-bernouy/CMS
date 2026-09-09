@@ -35,6 +35,38 @@ export class BlocEditor extends Editor {
                         ],
                         "defaultValue": "",
                     },
+                    {
+                        "type": "segmented",
+                        "label": "Density",
+                        "attribute": "density",
+                        "options": [
+                            {
+                                "label": "Regular",
+                                "value": "regular",
+                            },
+                            {
+                                "label": "Compact",
+                                "value": "compact",
+                            },
+                        ],
+                        "defaultValue": "regular",
+                    },
+                    {
+                        "type": "segmented",
+                        "label": "Value alignment",
+                        "attribute": "value-align",
+                        "options": [
+                            {
+                                "label": "End",
+                                "value": "end",
+                            },
+                            {
+                                "label": "Start",
+                                "value": "start",
+                            },
+                        ],
+                        "defaultValue": "end",
+                    },
                 ],
             },
         ];
@@ -50,7 +82,7 @@ export class BlocEditor extends Editor {
                     },
                 ],
                 "slot": "icon",
-                "min": 1,
+                "min": 0,
                 "max": 1,
             },
             {

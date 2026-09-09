@@ -2,19 +2,6 @@ export type CheckoutReference = { kind: "agreement"; id: string } | { kind: "off
 
 type JsonRecord = Record<string, unknown>;
 
-export function checkoutReference(url: URL): CheckoutReference {
-    if (url.searchParams.has("agreementId")) {
-        return {
-            kind: "agreement",
-            id: url.searchParams.get("agreementId")?.trim() || "",
-        };
-    }
-    return {
-        kind: "offer",
-        id: url.searchParams.get("offerId")?.trim() || "",
-    };
-}
-
 export function protectedOrderPayload(
     reference: CheckoutReference,
     offerId: unknown,

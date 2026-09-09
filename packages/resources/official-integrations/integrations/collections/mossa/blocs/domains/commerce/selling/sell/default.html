@@ -16,4 +16,15 @@
     <span slot="copy-uploading">Uploading photo {position}/{count}…</span><span slot="copy-submitting">Submitting for review…</span><span slot="copy-submitted">Offer submitted.</span>
     <span slot="copy-choose-product">Choose the product model.</span><span slot="copy-provide">Provide “{label}”.</span><span slot="copy-choose-exact-variant">Choose the exact variant.</span><span slot="copy-choose-condition">Choose the estimated condition.</span>
     <span slot="copy-invalid-photo-count-exact">Add exactly {minimum} photos.</span><span slot="copy-invalid-photo-count-range">Add between {minimum} and {maximum} photos.</span><span slot="copy-invalid-image">{name} must be a JPEG, PNG, WebP, or AVIF image up to 5 MB.</span><span slot="copy-unable">Unable to continue. Try again shortly.</span>
+    <input cms-page-state="mossaSellOfferId" type="hidden">
+    <input cms-param-sync="resume" type="hidden">
+    <form hidden cms-source-id="sell-conditions" cms-source="/.cms/sources/commerce/offerConditions" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="sell-products" cms-source="/.cms/sources/commerce/products" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="sell-product" cms-source="/.cms/sources/commerce/product" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="sell-account" cms-source="/.cms/sources/user-account/getAccount" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="sell-seller" cms-source="/.cms/sources/commerce/mySeller" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="sell-seller-register" cms-source="/.cms/sources/commerce/registerMySeller" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
+    <form hidden cms-source-id="sell-offer-create" cms-source="/.cms/sources/commerce/createMyOffer" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
+    <form hidden cms-source-id="sell-image-upload" cms-source="/.cms/sources/commerce/uploadMyOfferImage?offerId=@{mossaSellOfferId}" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="sell-offer-submit" cms-source="/.cms/sources/commerce/submitMyOffer?id=@{mossaSellOfferId}" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
 </mossa-sell>

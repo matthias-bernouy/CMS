@@ -162,7 +162,7 @@ export class PresentedPicker extends RenderedPicker {
         return this.root.querySelector("[data-title]");
     }
     get copyElement() {
-        return this.root.querySelector("[data-copy]");
+        return this.root.querySelector(".intro-copy");
     }
     get postalCodeInput() {
         return this.root.querySelector("[name='postalCode']");

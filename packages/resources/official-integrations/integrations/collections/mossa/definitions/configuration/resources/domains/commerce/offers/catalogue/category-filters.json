@@ -15,11 +15,7 @@
         "contract": "ulvia-theme@3",
         "required": [
             "radius-sm",
-            "secondary-base",
-            "secondary-foreground",
-            "surface-background",
-            "surface-border",
-            "surface-text"
+            "surface-border"
         ]
     }
 }

@@ -8,7 +8,14 @@ export class CommerceSaleDetailEditor extends Editor {
                 label: "Content",
                 settings: [
                     { type: "text", label: "Eyebrow", attribute: "eyebrow", defaultValue: "SALE" },
+                    { type: "text", label: "Heading override", attribute: "title" },
                     { type: "text", label: "Date prefix", attribute: "date-prefix", defaultValue: "Sold on" },
+                    {
+                        type: "text",
+                        label: "Order reference",
+                        attribute: "order-reference-template",
+                        defaultValue: "Order {reference}",
+                    },
                     {
                         type: "text",
                         label: "Items title",
@@ -122,20 +129,16 @@ export class CommerceSaleDetailEditor extends Editor {
                         defaultValue: "outlined",
                         options: ["plain", "outlined", "elevated"].map((value) => ({ label: value, value })),
                     },
-                ],
-            },
-            {
-                kind: "self",
-                label: "Data",
-                settings: [
                     {
-                        type: "text",
-                        label: "Page identifier parameter",
-                        attribute: "order-param",
-                        defaultValue: "orderId",
+                        type: "segmented",
+                        label: "Order reference",
+                        attribute: "show-order-reference",
+                        defaultValue: "true",
+                        options: [
+                            { label: "Visible", value: "true" },
+                            { label: "Hidden", value: "false" },
+                        ],
                     },
-                    { type: "text", label: "Fixed sale identifier", attribute: "sale-id" },
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
                 ],
             },
         ];

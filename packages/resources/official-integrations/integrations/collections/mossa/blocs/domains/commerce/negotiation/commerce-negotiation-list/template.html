@@ -1,177 +1,94 @@
 <mossa-commerce-negotiation-list-controller data-p9r-composition-controller>
-<style>
-    mossa-commerce-negotiation-list-controller [data-offer-media] {
-        display: grid;
-        min-height: 8rem;
-        overflow: hidden;
-        border-radius: var(--ulvia-radius-card);
-        background: var(--ulvia-subtle-background);
-        color: inherit;
-        place-items: center;
-    }
+    <input cms-param-sync="mossaNegotiationOffset" type="hidden">
+    <mossa-toast class="negotiation-feedback" aria-live="polite" hidden></mossa-toast>
 
-    mossa-commerce-negotiation-list-controller [data-offer-image] {
-        width: 100%;
-        height: 9rem;
-        object-fit: cover;
-    }
-
-    mossa-commerce-negotiation-list-controller [data-offer-placeholder] {
-        width: min(6rem, 45%);
-        color: var(--ulvia-surface-muted-text);
-    }
-
-    mossa-commerce-negotiation-list-controller [data-offer-title-link] {
-        color: inherit;
-        text-decoration: none;
-    }
-
-    mossa-commerce-negotiation-list-controller [data-offer-title-link]:hover {
-        text-decoration: underline;
-        text-underline-offset: .2em;
-    }
-
-    mossa-commerce-negotiation-list-controller [data-status] {
-        width: fit-content;
-        padding: .2rem .55rem;
-        border-radius: 999px;
-        background: var(--ulvia-subtle-background);
-        font-size: .875rem;
-        font-weight: 700;
-    }
-
-    mossa-commerce-negotiation-list-controller [data-decision],
-    mossa-commerce-negotiation-list-controller [data-checkout-expiration] {
-        color: var(--ulvia-surface-muted-text);
-    }
-</style>
-<mossa-stack gap="lg" data-layout>
-    <mossa-stack gap="xs" data-header>
-        <h2 data-title>My proposals</h2>
-        <p data-copy>Review received and sent proposals.</p>
-    </mossa-stack>
-
-    <mossa-stack direction="row" justify-content="space-between" align-items="end" wrap="true" gap="sm" data-toolbar>
-        <mossa-select data-status-filter accessible-label="Filter by status" value="all">
-            <mossa-option value="all">All</mossa-option>
-            <mossa-option value="pending">Pending</mossa-option>
-            <mossa-option value="accepted">Accepted</mossa-option>
-            <mossa-option value="rejected">Rejected</mossa-option>
-            <mossa-option value="withdrawn">Withdrawn</mossa-option>
-            <mossa-option value="expired">Expired</mossa-option>
-            <mossa-option value="superseded">Superseded</mossa-option>
-            <mossa-option value="canceled">Cancelled</mossa-option>
-        </mossa-select>
-        <mossa-chip-group data-role-filter accessible-label="Proposal type" value="seller">
-            <mossa-chip value="all" data-all-chip>All</mossa-chip>
-            <mossa-chip value="seller" selected data-received-chip>Received proposals</mossa-chip>
-            <mossa-chip value="buyer" data-sent-chip>Sent proposals</mossa-chip>
-        </mossa-chip-group>
-    </mossa-stack>
-
-    <mossa-responsive-grid min="md" max="xl" gap="md" data-loading>
-        <mossa-skeleton height="20rem" animation="wave" label="Loading proposals"></mossa-skeleton>
-        <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-        <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-    </mossa-responsive-grid>
-
-    <mossa-surface-card appearance="outlined" density="regular" data-empty-state hidden>
-        <strong slot="title" data-empty-title>No received proposals yet</strong>
-        <span slot="description" data-empty-message>Buyer proposals will appear here.</span>
-    </mossa-surface-card>
-    <mossa-responsive-grid min="md" max="xl" gap="md" packing="fit" justify-items="stretch" data-items hidden></mossa-responsive-grid>
-    <mossa-pagination data-pagination page="1" page-size="12" total="0" hidden></mossa-pagination>
-    <div data-toast-region aria-live="polite"></div>
-    <template data-toast-template>
-        <mossa-toast duration="5000"></mossa-toast>
-    </template>
-
-    <template data-item-template>
-        <mossa-surface-card appearance="outlined" density="compact" stretch data-proposal-card>
-            <a slot="media" data-offer-media>
-                <img data-offer-image alt="" loading="lazy" decoding="async" hidden>
-                <svg data-offer-placeholder viewBox="0 0 120 90" role="img" aria-label="No photo available">
-                    <ellipse cx="60" cy="34" rx="22" ry="29" fill="none" stroke="currentColor" stroke-width="6"></ellipse>
-                    <path d="M60 62v20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="8"></path>
-                    <path d="M44 34h32M60 7v54M49 10v48M71 10v48" fill="none" stroke="currentColor" stroke-width="2"></path>
-                </svg>
-            </a>
-            <a slot="title" data-offer-title-link><span data-offer-title></span></a>
-            <span slot="description" data-status></span>
-            <mossa-stack gap="sm">
-                <mossa-responsive-grid min="xs" max="none" gap="sm">
-                    <mossa-stack gap="xs" data-proposed-group>
-                        <small data-proposed-label>Proposed price</small>
-                        <strong data-proposed-amount></strong>
-                    </mossa-stack>
-                    <mossa-stack gap="xs" data-reference-group>
-                        <small data-reference-label>Initial price</small>
-                        <span data-reference-amount></span>
-                    </mossa-stack>
-                </mossa-responsive-grid>
-                <small data-direction></small>
-                <p data-message hidden></p>
-                <small data-expiration hidden></small>
-                <small data-decision hidden></small>
-                <small data-checkout-expiration hidden></small>
+    <section
+        cms-source-id="proposals"
+        cms-source="/.cms/sources/commerce-negotiation/myProposals?role=#{mossaNegotiationRole}&amp;status=#{mossaNegotiationStatus}&amp;limit=12&amp;offset=#{mossaNegotiationOffset}"
+        cms-source-inherit-query="false"
+        cms-reload-on="mossa-negotiations:changed"
+    >
+        <mossa-stack gap="lg">
+            <mossa-stack gap="xs" cms-condition="presentation.showHeader">
+                <h2>{{ presentation.title }}</h2>
+                <p>{{ presentation.copy }}</p>
             </mossa-stack>
-            <mossa-button slot="actions" size="sm" appearance="filled">
-                <button type="button" data-action="accept">Accept</button>
-            </mossa-button>
-            <mossa-button slot="actions" size="sm" appearance="outlined" tone="neutral">
-                <button type="button" data-action="reject">Reject</button>
-            </mossa-button>
-            <mossa-button slot="actions" size="sm" appearance="ghost" tone="neutral">
-                <button type="button" data-action="withdraw">Withdraw</button>
-            </mossa-button>
-            <mossa-button slot="actions" size="sm" appearance="filled">
-                <a data-action-link="checkout">Complete purchase</a>
-            </mossa-button>
-            <mossa-button slot="actions" size="sm" appearance="outlined" tone="neutral">
-                <a data-action-link="order">View my order</a>
-            </mossa-button>
-        </mossa-surface-card>
-    </template>
 
-    <form
-        data-proposals-source
-        cms-source="/.cms/sources/commerce-negotiation/myProposals"
-        cms-source-trigger="submit"
-        cms-source-method="GET"
-        cms-source-inherit-query="false"
-        hidden
-    >
-        <input data-proposals-role name="role" type="hidden">
-        <input data-proposals-status name="status" type="hidden">
-        <input data-proposals-limit name="limit" type="hidden">
-        <input data-proposals-offset name="offset" type="hidden">
-    </form>
-    <form
-        data-respond-source
-        cms-source="/.cms/sources/commerce-negotiation/respondToProposal"
-        cms-source-trigger="submit"
-        cms-source-method="POST"
-        cms-source-inherit-query="false"
-        cms-source-serialization="typed-json"
-        cms-source-success-reset="false"
-        hidden
-    >
-        <input data-action-id name="id" type="hidden" cms-form-value-type="number">
-        <input data-action-version name="expectedVersion" type="hidden" cms-form-value-type="number">
-        <input data-action-name name="action" type="hidden">
-    </form>
-    <form
-        data-withdraw-source
-        cms-source="/.cms/sources/commerce-negotiation/withdrawMyProposal"
-        cms-source-trigger="submit"
-        cms-source-method="POST"
-        cms-source-inherit-query="false"
-        cms-source-serialization="typed-json"
-        cms-source-success-reset="false"
-        hidden
-    >
-        <input data-action-id name="id" type="hidden" cms-form-value-type="number">
-        <input data-action-version name="expectedVersion" type="hidden" cms-form-value-type="number">
-    </form>
-</mossa-stack>
+            <mossa-stack direction="row" justify-content="space-between" align-items="end" wrap="true" gap="sm">
+                <mossa-select cms-param-sync="mossaNegotiationStatus" accessible-label="{{ presentation.statusFilterLabel }}" value="">
+                    <mossa-option value="" selected>{{ presentation.allLabel }}</mossa-option>
+                    <mossa-option value="{{ option.value }}" cms-repeat="presentation.statusOptions as option">{{ option.label }}</mossa-option>
+                </mossa-select>
+                <mossa-chip-group cms-param-sync="mossaNegotiationRole" accessible-label="{{ presentation.roleLabel }}" cms-condition="presentation.showRoleTabs">
+                    <mossa-chip value="" selected>{{ presentation.combinedLabel }}</mossa-chip>
+                    <mossa-chip value="seller">{{ presentation.receivedLabel }}</mossa-chip>
+                    <mossa-chip value="buyer">{{ presentation.sentLabel }}</mossa-chip>
+                </mossa-chip-group>
+            </mossa-stack>
+
+            <mossa-responsive-grid min="md" max="xl" gap="md" cms-condition="$source.loading">
+                <mossa-skeleton height="20rem" animation="wave" label="{{ presentation.loadingLabel }}"></mossa-skeleton>
+                <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+                <mossa-skeleton height="20rem" animation="wave" aria-hidden="true"></mossa-skeleton>
+            </mossa-responsive-grid>
+
+            <mossa-surface-card appearance="outlined" density="regular" cms-condition="$source.error">
+                <strong slot="title">{{ presentation.errorTitle }}</strong>
+                <span slot="description">{{ presentation.errorMessage }}</span>
+            </mossa-surface-card>
+
+            <mossa-surface-card appearance="outlined" density="regular" cms-condition="$source.loaded &amp;&amp; presentation.total == 0">
+                <strong slot="title">{{ presentation.emptyTitle }}</strong>
+                <span slot="description">{{ presentation.emptyMessage }}</span>
+            </mossa-surface-card>
+
+            <mossa-responsive-grid min="{{ presentation.gridMin }}" max="{{ presentation.gridMax }}" gap="{{ presentation.gridGap }}" packing="{{ presentation.gridPacking }}" justify-items="stretch" cms-condition="$source.loaded &amp;&amp; presentation.total &gt; 0">
+                <mossa-commerce-offer-preview appearance="{{ presentation.cardAppearance }}" density="{{ presentation.cardDensity }}" layout="{{ presentation.cardLayout }}" stretch cms-repeat="presentation.items as item">
+                    <img slot="media" data-cms-src="/.cms/sources/commerce-negotiation/myProposalImage?id={{ item.offerMainImageMediaId }}" data-source-image-access="auth" data-source-width="{{ item.offerMainImageWidth }}" data-source-height="{{ item.offerMainImageHeight }}" alt="{{ item.offerTitle }}" loading="lazy" decoding="async" cms-condition="item.offerMainImageMediaId">
+                    <svg slot="media" viewBox="0 0 120 90" role="img" aria-label="{{ presentation.imageUnavailableLabel }}" cms-condition="!item.offerMainImageMediaId">
+                        <ellipse cx="60" cy="34" rx="22" ry="29" fill="none" stroke="currentColor" stroke-width="6"></ellipse>
+                        <path d="M60 62v20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="8"></path>
+                        <path d="M44 34h32M60 7v54M49 10v48M71 10v48" fill="none" stroke="currentColor" stroke-width="2"></path>
+                    </svg>
+                    <slot name="offer-navigation" slot="navigation"><a href="{{ item.offerUrl }}" aria-label="{{ item.offerLinkLabel }}" cms-condition="item.offerUrl"></a></slot>
+                    <span slot="title">{{ item.offerTitle }}</span>
+                    <strong slot="price">{{ item.proposedAmount | minorCurrency(item.currency) }}</strong>
+                    <mossa-badge slot="badge" tone="{{ item.statusTone }}">{{ item.statusLabel }}</mossa-badge>
+                    <small slot="metadata">{{ item.directionLabel }}<span cms-condition="presentation.showReferencePrice"> · {{ presentation.referenceLabel }} {{ item.referenceAmount | minorCurrency(item.currency) }}</span></small>
+                    <p cms-condition="presentation.showMessage &amp;&amp; item.buyerMessage">“{{ item.buyerMessage }}”</p>
+                    <small cms-condition="presentation.showExpiration &amp;&amp; item.status == 'pending' &amp;&amp; item.expiresAt">{{ item.expirationLabel }}</small>
+                    <small cms-condition="item.status == 'accepted' &amp;&amp; item.acceptedAt">{{ item.decisionLabel }}</small>
+                    <small cms-condition="item.status == 'rejected' &amp;&amp; item.rejectedAt">{{ item.decisionLabel }}</small>
+                    <small cms-condition="item.status == 'withdrawn' &amp;&amp; item.withdrawnAt">{{ item.decisionLabel }}</small>
+                    <small cms-condition="item.status == 'accepted' &amp;&amp; item.checkoutStatus == 'active' &amp;&amp; item.checkoutExpiresAt">{{ item.checkoutExpirationLabel }}</small>
+
+                    <form slot="action" cms-source="/.cms/sources/commerce-negotiation/respondToProposal" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-serialization="typed-json" cms-source-publish="mossa-negotiations:changed" cms-source-success-reset="false" cms-condition="item.status == 'pending' &amp;&amp; item.viewerRole == 'seller'">
+                        <input name="id" value="{{ item.id }}" type="hidden" cms-form-value-type="number">
+                        <input name="expectedVersion" value="{{ item.version }}" type="hidden" cms-form-value-type="number">
+                        <input name="action" value="accept" type="hidden">
+                        <mossa-button size="sm" appearance="filled"><button type="submit">{{ presentation.acceptLabel }}</button></mossa-button>
+                    </form>
+                    <form slot="action" cms-source="/.cms/sources/commerce-negotiation/respondToProposal" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-serialization="typed-json" cms-source-publish="mossa-negotiations:changed" cms-source-success-reset="false" cms-condition="item.status == 'pending' &amp;&amp; item.viewerRole == 'seller'">
+                        <input name="id" value="{{ item.id }}" type="hidden" cms-form-value-type="number">
+                        <input name="expectedVersion" value="{{ item.version }}" type="hidden" cms-form-value-type="number">
+                        <input name="action" value="reject" type="hidden">
+                        <mossa-button size="sm" appearance="outlined" tone="neutral"><button type="submit">{{ presentation.rejectLabel }}</button></mossa-button>
+                    </form>
+                    <form slot="action" cms-source="/.cms/sources/commerce-negotiation/withdrawMyProposal" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-serialization="typed-json" cms-source-publish="mossa-negotiations:changed" cms-source-success-reset="false" cms-condition="item.status == 'pending' &amp;&amp; item.viewerRole == 'buyer'">
+                        <input name="id" value="{{ item.id }}" type="hidden" cms-form-value-type="number">
+                        <input name="expectedVersion" value="{{ item.version }}" type="hidden" cms-form-value-type="number">
+                        <input name="action" value="withdraw" type="hidden">
+                        <mossa-button size="sm" appearance="ghost" tone="neutral"><button type="submit">{{ presentation.withdrawLabel }}</button></mossa-button>
+                    </form>
+                    <mossa-button slot="action" size="sm" appearance="filled" cms-condition="item.viewerRole == 'buyer' &amp;&amp; item.status == 'accepted' &amp;&amp; item.checkoutStatus == 'active' &amp;&amp; item.checkoutUrl">
+                        <slot name="checkout-action"><a href="{{ item.checkoutUrl }}">{{ item.checkoutLabel }}</a></slot>
+                    </mossa-button>
+                    <mossa-button slot="action" size="sm" appearance="outlined" tone="neutral" cms-condition="item.viewerRole == 'buyer' &amp;&amp; item.status == 'accepted' &amp;&amp; item.checkoutStatus == 'consumed' &amp;&amp; item.orderUrl">
+                        <slot name="order-action"><a href="{{ item.orderUrl }}">{{ item.orderLabel }}</a></slot>
+                    </mossa-button>
+                </mossa-commerce-offer-preview>
+            </mossa-responsive-grid>
+            <mossa-pagination page="{{ presentation.page }}" page-size="12" total="{{ presentation.total }}" previous-label="{{ presentation.paginationPreviousLabel }}" next-label="{{ presentation.paginationNextLabel }}" summary-template="{{ presentation.paginationSummaryTemplate }}" tone="{{ presentation.paginationTone }}" cms-condition="$source.loaded &amp;&amp; presentation.total &gt; 12"></mossa-pagination>
+        </mossa-stack>
+    </section>
 </mossa-commerce-negotiation-list-controller>

@@ -1,72 +1,24 @@
-import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
 export class PublicOfferEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [
             {
                 kind: "self",
-                label: "Content",
+                label: "Presentation and data",
                 settings: [
-                    { type: "text", label: "Model label", attribute: "model-label", defaultValue: "Model" },
+                    toneSetting("Condition tone", "condition-tone", "neutral"),
+                    toneSetting("Price tone", "price-tone", "primary"),
                     {
-                        type: "text",
-                        label: "Secure payment label",
-                        attribute: "secure-payment-label",
-                        defaultValue: "Secure payment",
+                        type: "segmented",
+                        label: "Purchase panel",
+                        attribute: "purchase-appearance",
+                        defaultValue: "card",
+                        options: [
+                            { label: "Card", value: "card" },
+                            { label: "Flat", value: "flat" },
+                        ],
                     },
-                    {
-                        type: "text",
-                        label: "Buyer protection label",
-                        attribute: "buyer-protection-label",
-                        defaultValue: "Buyer protection",
-                    },
-                    {
-                        type: "text",
-                        label: "Tracked delivery label",
-                        attribute: "tracked-delivery-label",
-                        defaultValue: "Tracked delivery",
-                    },
-                    { type: "text", label: "Price label", attribute: "price-label", defaultValue: "Seller price" },
-                    {
-                        type: "text",
-                        label: "Valuation label",
-                        attribute: "valuation-label",
-                        defaultValue: "Reference value",
-                    },
-                    {
-                        type: "text",
-                        label: "Shipping message",
-                        attribute: "shipping-message",
-                        defaultValue: "Delivery is available",
-                    },
-                    { type: "text", label: "Buy label", attribute: "buy-label", defaultValue: "Buy" },
-                    {
-                        type: "text",
-                        label: "Negotiation label",
-                        attribute: "negotiate-label",
-                        defaultValue: "Make an offer",
-                    },
-                    {
-                        type: "text",
-                        label: "Error title",
-                        attribute: "error-title",
-                        defaultValue: "Offer not found",
-                    },
-                    {
-                        type: "textarea",
-                        label: "Error message",
-                        attribute: "error-message",
-                        defaultValue: "This offer is no longer available or does not exist.",
-                    },
-                    { type: "text", label: "Back label", attribute: "back-label", defaultValue: "Back to offers" },
-                ],
-            },
-            {
-                kind: "self",
-                label: "Links and data",
-                settings: [
-                    { type: "text", label: "Slug URL parameter", attribute: "slug-param", defaultValue: "slug" },
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
                     {
                         type: "text",
                         label: "Valuation minimum field",
@@ -96,19 +48,52 @@ export class PublicOfferEditor extends Editor {
                             { label: "Fill", value: "fill" },
                         ],
                     },
-                    {
-                        type: "text",
-                        label: "Buy URL pattern",
-                        attribute: "buy-url",
-                    },
-                    {
-                        type: "text",
-                        label: "Negotiation URL pattern",
-                        attribute: "negotiate-url",
-                    },
                 ],
             },
         ];
     }
+
+    protected override contentSlots(): ContentSlot[] {
+        return [
+            copySlot("Offer error title", "error-title"),
+            copySlot("Offer error message", "error-message"),
+            copySlot("Product error title", "product-error-title"),
+            copySlot("Product error message", "product-error-message"),
+            copySlot("Back link", "back-link"),
+            copySlot("Model label", "model-label"),
+            copySlot("Technical details label", "technical-details-label"),
+            copySlot("Valuation label", "valuation-label"),
+            copySlot("Price label", "price-label"),
+            copySlot("Shipping message", "shipping-message"),
+            copySlot("Buy link", "buy-link"),
+            copySlot("Negotiation link", "negotiate-link"),
+            copySlot("Secure payment label", "secure-payment-label"),
+            copySlot("Buyer protection label", "buyer-protection-label"),
+            copySlot("Tracked delivery label", "tracked-delivery-label"),
+        ];
+    }
 }
+
+function copySlot(label: string, slot: string): ContentSlot {
+    return { label, slot, accepts: [{ kind: "any-component" }], min: 1, max: 1 };
+}
+
+function toneSetting(label: string, attribute: string, defaultValue: string) {
+    return {
+        type: "select" as const,
+        label,
+        attribute,
+        defaultValue,
+        options: [
+            { label: "Primary", value: "primary" },
+            { label: "Secondary", value: "secondary" },
+            { label: "Neutral", value: "neutral" },
+            { label: "Success", value: "success" },
+            { label: "Warning", value: "warning" },
+            { label: "Danger", value: "danger" },
+            { label: "Info", value: "info" },
+        ],
+    };
+}
+
 registerEditor({ editor: PublicOfferEditor });

@@ -1,68 +1,102 @@
 <mossa-user-account-form-controller data-p9r-composition-controller>
-<mossa-stack gap="lg" data-account-layout>
-    <section data-account-load>
+    <section cms-source-id="identity" cms-source="/.cms/sources/system-auth/me" hidden></section>
+    <section cms-source-id="account" cms-source="/.cms/sources/user-account/getAccount as account">
         <mossa-stack gap="lg">
-            <form data-account-field="avatar" data-avatar-form cms-source-id="avatar" cms-source-trigger="submit" cms-source-method="POST" cms-condition="$source.loaded">
+            <form
+                cms-source-id="avatar"
+                cms-source="/.cms/sources/user-account/uploadAccountAvatar as avatar"
+                cms-source-trigger="submit"
+                cms-source-method="POST"
+                cms-source-inherit-query="false"
+                cms-condition="$source.loaded &amp;&amp; presentation.showAvatar"
+            >
                 <mossa-stack gap="sm" align-items="start">
-                    <mossa-user-account-avatar data-avatar-input name="file" accept="image/jpeg,image/png,image/webp,image/gif"></mossa-user-account-avatar>
-                    <span data-avatar-file-id hidden>{{ avatarFileId }}</span>
-                    <p data-account-copy="avatar-uploading-label" cms-condition="$source.loading">Uploading image…</p>
-                    <mossa-toast data-account-copy="avatar-error-message" data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">The profile picture could not be updated.</mossa-toast>
+                    <mossa-user-account-avatar
+                        name="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        src="{{ presentation.avatarUrl }}"
+                        aria-label="{{ presentation.avatarLabel }}"
+                        hint="{{ presentation.avatarHint }}"
+                    ></mossa-user-account-avatar>
+                    <p cms-condition="$source.loading">{{ presentation.avatarUploadingLabel }}</p>
+                    <mossa-toast
+                        tone="danger"
+                        appearance="filled"
+                        role="alert"
+                        aria-live="assertive"
+                        aria-atomic="true"
+                        position="{{ presentation.toastPosition }}"
+                        width="{{ presentation.toastWidth }}"
+                        density="{{ presentation.toastDensity }}"
+                        radius="{{ presentation.toastRadius }}"
+                        shadow="{{ presentation.toastShadow }}"
+                        duration="{{ presentation.errorToastDuration }}"
+                        cms-condition="$source.error"
+                    >{{ presentation.avatarErrorMessage }}</mossa-toast>
                 </mossa-stack>
             </form>
 
             <mossa-stack gap="lg" cms-condition="$source.loading">
-                <mossa-skeleton data-account-loading shape="circle" width="7rem" height="7rem" animation="wave" label="Loading your information"></mossa-skeleton>
-                <mossa-responsive-grid min="lg" max="none" gap="sm">
-                    <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-                    <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-                    <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-                    <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-                </mossa-responsive-grid>
-                <mossa-stack gap="sm">
-                    <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-                    <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
-                </mossa-stack>
+                <mossa-skeleton shape="circle" width="7rem" height="7rem" animation="wave" label="{{ presentation.loadingLabel }}"></mossa-skeleton>
                 <mossa-responsive-grid min="lg" max="none" gap="sm">
                     <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
                     <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
                     <mossa-skeleton height="4.5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
                 </mossa-responsive-grid>
             </mossa-stack>
-            <mossa-toast data-account-copy="load-error-message" data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Your personal information could not be loaded.</mossa-toast>
 
-            <form data-account-form cms-source-id="save" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-condition="$source.loaded">
+            <mossa-toast
+                tone="danger"
+                appearance="filled"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                position="{{ presentation.toastPosition }}"
+                duration="{{ presentation.errorToastDuration }}"
+                cms-condition="$source.error"
+            >{{ presentation.loadErrorMessage }}</mossa-toast>
+
+            <form
+                cms-source-id="save"
+                cms-source="/.cms/sources/user-account/updateAccount as save"
+                cms-source-trigger="submit"
+                cms-source-method="POST"
+                cms-source-inherit-query="false"
+                cms-source-success-reset="false"
+                cms-condition="$source.loaded"
+            >
+                <input name="avatarFileId" value="{{ presentation.avatarFileId }}" type="hidden">
                 <mossa-stack gap="lg">
                     <mossa-stack gap="md">
                         <mossa-responsive-grid min="lg" max="none" gap="sm">
-                            <mossa-input data-account-field="given-name" name="givenName" label="First name" autocomplete="given-name" maxlength="100" value="{{ givenName }}"></mossa-input>
-                            <mossa-input data-account-field="surname" name="surname" label="Name" autocomplete="family-name" maxlength="100" value="{{ surname }}"></mossa-input>
-                            <mossa-input data-account-field="birth-date" name="birthDate" label="Birth date" type="date" autocomplete="bday" min="1900-01-01" value="{{ birthDate }}"></mossa-input>
-                            <mossa-input data-account-field="phone" name="phone" label="Phone" type="tel" autocomplete="tel" maxlength="64" value="{{ phone }}"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="givenName" label="{{ presentation.givenNameLabel }}" autocomplete="given-name" maxlength="100" value="{{ account.givenName }}" cms-condition="presentation.showGivenName"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="surname" label="{{ presentation.surnameLabel }}" autocomplete="family-name" maxlength="100" value="{{ account.surname }}" cms-condition="presentation.showSurname"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="birthDate" label="{{ presentation.birthDateLabel }}" type="date" autocomplete="bday" min="1900-01-01" max="{{ presentation.birthDateMaximum }}" value="{{ account.birthDate }}" cms-condition="presentation.showBirthDate"></mossa-input>
+                            <mossa-input tone="neutral" appearance="soft" label="{{ presentation.emailLabel }}" type="email" autocomplete="email" value="{{ identity.subject.email }}" readonly cms-condition="presentation.showEmail"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="phone" label="{{ presentation.phoneLabel }}" type="tel" autocomplete="tel" maxlength="64" value="{{ account.phone }}" cms-condition="presentation.showPhone"></mossa-input>
                         </mossa-responsive-grid>
 
                         <mossa-stack gap="sm">
-                            <mossa-input data-account-field="address-line-1" name="addressLine1" label="Address" autocomplete="address-line1" maxlength="200" value="{{ addressLine1 }}"></mossa-input>
-                            <mossa-input data-account-field="address-line-2" name="addressLine2" label="Address line 2" autocomplete="address-line2" maxlength="200" value="{{ addressLine2 }}"></mossa-input>
-                            <mossa-input data-account-field="address-line-3" name="addressLine3" label="Address line 3" autocomplete="address-line3" maxlength="200" value="{{ addressLine3 }}"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="addressLine1" label="{{ presentation.addressLine1Label }}" autocomplete="address-line1" maxlength="200" value="{{ account.addressLine1 }}" cms-condition="presentation.showAddressLine1"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="addressLine2" label="{{ presentation.addressLine2Label }}" autocomplete="address-line2" maxlength="200" value="{{ account.addressLine2 }}" cms-condition="presentation.showAddressLine2"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="addressLine3" label="{{ presentation.addressLine3Label }}" autocomplete="address-line3" maxlength="200" value="{{ account.addressLine3 }}" cms-condition="presentation.showAddressLine3"></mossa-input>
                         </mossa-stack>
 
                         <mossa-responsive-grid min="lg" max="none" gap="sm">
-                            <mossa-input data-account-field="postal-code" name="postalCode" label="Postal code" autocomplete="postal-code" maxlength="32" value="{{ postalCode }}"></mossa-input>
-                            <mossa-input data-account-field="city" name="city" label="City" autocomplete="address-level2" maxlength="120" value="{{ city }}"></mossa-input>
-                            <mossa-input data-account-field="region" name="region" label="Region / state" autocomplete="address-level1" maxlength="120" value="{{ region }}"></mossa-input>
-                            <mossa-input data-account-field="country-code" name="countryCode" label="Country code" autocomplete="country" maxlength="2" placeholder="US" value="{{ countryCode }}"></mossa-input>
-                            <mossa-input data-account-field="locale" name="locale" label="Language" autocomplete="language" maxlength="35" value="{{ locale }}"></mossa-input>
-                            <mossa-input data-account-field="timezone" name="timezone" label="Time zone" maxlength="64" value="{{ timezone }}"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="postalCode" label="{{ presentation.postalCodeLabel }}" autocomplete="postal-code" maxlength="32" value="{{ account.postalCode }}" cms-condition="presentation.showPostalCode"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="city" label="{{ presentation.cityLabel }}" autocomplete="address-level2" maxlength="120" value="{{ account.city }}" cms-condition="presentation.showCity"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="region" label="{{ presentation.regionLabel }}" autocomplete="address-level1" maxlength="120" value="{{ account.region }}" cms-condition="presentation.showRegion"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="countryCode" label="{{ presentation.countryCodeLabel }}" autocomplete="country" maxlength="2" placeholder="US" value="{{ account.countryCode }}" cms-condition="presentation.showCountryCode"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="locale" label="{{ presentation.localeLabel }}" autocomplete="language" maxlength="35" value="{{ account.locale }}" cms-condition="presentation.showLocale"></mossa-input>
+                            <mossa-input tone="{{ presentation.fieldTone }}" appearance="{{ presentation.fieldAppearance }}" name="timezone" label="{{ presentation.timezoneLabel }}" maxlength="64" value="{{ account.timezone }}" cms-condition="presentation.showTimezone"></mossa-input>
                         </mossa-responsive-grid>
                     </mossa-stack>
 
-                    <mossa-button><button type="submit" data-account-button>Save</button></mossa-button>
-                    <mossa-toast data-account-copy="success-message" data-toast-kind="success" tone="success" appearance="filled" role="status" aria-live="polite" aria-atomic="true" position="top-right" duration="4500" cms-condition="$source.loaded">Information saved.</mossa-toast>
-                    <mossa-toast data-account-copy="save-error-message" data-toast-kind="error" tone="danger" appearance="filled" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Your information could not be saved.</mossa-toast>
+                    <mossa-button><button type="submit">{{ presentation.buttonLabel }}</button></mossa-button>
+                    <mossa-toast tone="success" appearance="filled" role="status" position="{{ presentation.toastPosition }}" duration="{{ presentation.successToastDuration }}" cms-condition="$source.loaded">{{ presentation.successMessage }}</mossa-toast>
+                    <mossa-toast tone="danger" appearance="filled" role="alert" position="{{ presentation.toastPosition }}" duration="{{ presentation.errorToastDuration }}" cms-condition="$source.error">{{ presentation.saveErrorMessage }}</mossa-toast>
                 </mossa-stack>
             </form>
         </mossa-stack>
     </section>
-</mossa-stack>
 </mossa-user-account-form-controller>

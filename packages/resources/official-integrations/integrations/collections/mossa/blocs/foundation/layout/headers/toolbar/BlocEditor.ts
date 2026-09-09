@@ -1,7 +1,26 @@
-import { Editor, registerEditor, type ContentSlot } from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
 export class BlocEditor extends Editor {
-    // -- Generated editor metadata --
+    protected override settings(): SettingSection[] {
+        return [
+            {
+                kind: "self",
+                label: "Layout",
+                settings: [
+                    {
+                        type: "segmented",
+                        label: "Density",
+                        attribute: "density",
+                        defaultValue: "regular",
+                        options: [
+                            { label: "Compact", value: "compact" },
+                            { label: "Regular", value: "regular" },
+                        ],
+                    },
+                ],
+            },
+        ];
+    }
 
     protected override contentSlots(): ContentSlot[] {
         return [
@@ -37,8 +56,6 @@ export class BlocEditor extends Editor {
             },
         ];
     }
-    // -- End generated editor metadata --
-
     constructor(target: HTMLElement) {
         super(target);
     }

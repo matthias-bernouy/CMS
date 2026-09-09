@@ -31,7 +31,7 @@ describe("Mossa collection 1.0.0", () => {
         const nestedCustomTags = [...sources.matchAll(/<\/?([a-z][a-z0-9]*-[a-z0-9-]+)/gi)].map(([, tag]) => tag!);
         expect(nestedCustomTags.every((tag) => tag.startsWith("mossa-"))).toBe(true);
         expect(sources).not.toMatch(/href=["']\/(?!\.cms\/)/i);
-        expect(sources).toContain('attribute: "locale"');
+        expect(sources).not.toContain('attribute: "locale"');
         expect(sources).toContain('attribute: "currency"');
         expect(sources).toContain('attribute: "country"');
         expect(sources).toContain('attribute: "country-code"');
@@ -108,7 +108,8 @@ describe("Mossa collection 1.0.0", () => {
             }),
         );
         const sources = sourceText(blocArtifacts(mossa));
-        expect(sources).toContain("entityCustomFields?entityType=order");
+        expect(sources).toContain('cms-source="/.cms/sources/commerce/entityCustomFields"');
+        expect(sources).toContain('this.requestSource("checkout-order-fields", { entityType: "order" })');
     });
 
     test("depends on Ulvia only for its public token contract", async () => {

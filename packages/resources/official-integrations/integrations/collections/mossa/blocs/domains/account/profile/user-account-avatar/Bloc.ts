@@ -5,7 +5,7 @@ import css from "./style.css" with { type: "text" };
 
 export class UserAccountAvatar extends Component {
     static formAssociated = true;
-    static observedAttributes = ["accept", "disabled", "hint", "name", "src"];
+    static observedAttributes = ["accept", "accessible-label", "aria-label", "disabled", "hint", "name", "src"];
 
     constructor() {
         super({ css, template });
@@ -15,6 +15,7 @@ export class UserAccountAvatar extends Component {
         this.image = this.shadowRoot.querySelector("img");
         this.placeholder = this.shadowRoot.querySelector("[data-placeholder]");
         this.hintElement = this.shadowRoot.querySelector("[data-hint]");
+        this.accessibleLabel = this.shadowRoot.querySelector(".sr-only");
     }
 
     connectedCallback() {
@@ -81,6 +82,8 @@ export class UserAccountAvatar extends Component {
             this.input.setAttribute("accept", accept);
         }
         this.input.disabled = this.disabled;
+        this.accessibleLabel.textContent =
+            this.getAttribute("accessible-label") || this.getAttribute("aria-label") || "Choose a profile picture";
 
         const hint = this.getAttribute("hint") || "JPEG, PNG, WebP, or GIF, up to 5 MiB.";
         this.hintElement.textContent = hint;

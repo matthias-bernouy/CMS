@@ -38,6 +38,40 @@
     grid-template-columns: repeat(auto-fill, minmax(min(var(--_mossa-responsive-grid-min), 100%), 1fr));
 }
 
+:host([presentation="steps"]) {
+    --_mossa-progress-count: 4;
+    --_mossa-progress-width: 0%;
+
+    position: relative;
+    grid-template-columns: repeat(var(--_mossa-progress-count), minmax(5rem, 1fr));
+    gap: 0;
+    overflow-x: auto;
+}
+
+:host([presentation="steps"])::before,
+:host([presentation="steps"])::after {
+    position: absolute;
+    top: .875rem;
+    left: calc(50% / var(--_mossa-progress-count));
+    height: 2px;
+    content: "";
+}
+
+:host([presentation="steps"])::before {
+    right: calc(50% / var(--_mossa-progress-count));
+    background: var(--ulvia-surface-border);
+}
+
+:host([presentation="steps"])::after {
+    width: var(--_mossa-progress-width);
+    background: var(--_mossa-tone-base);
+}
+
+:host([presentation="steps"]) ::slotted(*) {
+    position: relative;
+    z-index: 1;
+}
+
 ::slotted(*) {
     box-sizing: border-box;
     width: 100%;
@@ -66,3 +100,13 @@
 :host([gap="md"]) { --_mossa-responsive-grid-gap: var(--ulvia-space-md); }
 :host([gap="lg"]) { --_mossa-responsive-grid-gap: var(--ulvia-space-lg); }
 :host([gap="xl"]) { --_mossa-responsive-grid-gap: var(--ulvia-space-xl); }
+
+@media (min-width: 48rem) {
+    :host([split="wide-start"]) {
+        grid-template-columns: minmax(0, 2fr) minmax(min(18.75rem, 100%), 1fr);
+    }
+
+    :host([split="wide-end"]) {
+        grid-template-columns: minmax(min(18.75rem, 100%), 1fr) minmax(0, 2fr);
+    }
+}

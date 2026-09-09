@@ -143,7 +143,7 @@ export class RenderedPicker extends HTMLElement {
             <section class="shell">
                 <div class="header">
                     <h2 data-title></h2>
-                    <p class="muted" data-copy></p>
+                    <p class="muted intro-copy"></p>
                 </div>
                 <form novalidate>
                     <label>

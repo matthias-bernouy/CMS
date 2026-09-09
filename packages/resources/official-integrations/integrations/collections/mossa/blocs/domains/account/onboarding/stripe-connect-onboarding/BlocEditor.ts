@@ -18,7 +18,6 @@ export class StripeConnectOnboardingEditor extends Editor {
                 kind: "self",
                 label: "Regional settings",
                 settings: [
-                    { type: "text", label: "Locale", attribute: "locale", defaultValue: "en-US" },
                     { type: "text", label: "Payout currency", attribute: "payout-currency", defaultValue: "USD" },
                 ],
             },

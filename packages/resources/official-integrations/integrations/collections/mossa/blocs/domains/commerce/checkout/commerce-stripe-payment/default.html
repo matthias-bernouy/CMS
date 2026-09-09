@@ -1,1 +1,9 @@
-<mossa-commerce-stripe-payment layout="tabs" link-wallet="never"></mossa-commerce-stripe-payment>
+<mossa-commerce-stripe-payment layout="tabs" link-wallet="never">
+    <input cms-param-sync="payment_intent" type="hidden">
+    <input cms-param-sync="payment_intent_client_secret" type="hidden">
+    <input cms-param-sync="redirect_status" type="hidden">
+    <form hidden cms-source-id="payment-legal" cms-source="/.cms/sources/system-functions/getPaymentLegalRequirements" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="payment-create" cms-source="/.cms/sources/system-functions/createPaymentForOrder" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
+    <form hidden cms-source-id="payment-config" cms-source="/.cms/sources/system-functions/getStripePaymentClientConfig" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+    <form hidden cms-source-id="payment-refresh" cms-source="/.cms/sources/system-functions/refreshPaymentForOrder" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
+</mossa-commerce-stripe-payment>

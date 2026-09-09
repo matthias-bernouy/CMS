@@ -185,12 +185,10 @@ export class Bloc extends Component {
 }
 
 export function resetListingFilters(host: ParentNode): void {
-    host.querySelectorAll<HTMLElement>(
-        '[data-filter-reset]:not([data-filter-reset="false"]), [cms-param-sync]:not([data-filter-reset="false"])',
-    ).forEach((control) => {
+    host.querySelectorAll<HTMLElement>('[cms-param-sync]:not([filter-reset="false"])').forEach((control) => {
         const input = control as HTMLElement & { value?: string };
         if ("value" in input) {
-            input.value = control.getAttribute("data-reset-value") ?? "";
+            input.value = control.getAttribute("filter-reset-value") ?? "";
         } else {
             control.removeAttribute("value");
         }

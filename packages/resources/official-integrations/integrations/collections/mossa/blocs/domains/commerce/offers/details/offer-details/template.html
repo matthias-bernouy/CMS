@@ -5,13 +5,21 @@
     </div>
     <div class="information" part="information">
         <slot name="title"></slot>
-        <slot name="meta"></slot>
-        <slot name="badge"></slot>
+        <div class="identity" part="identity">
+            <slot name="meta"></slot>
+            <slot name="badge"></slot>
+        </div>
         <slot name="description"></slot>
-        <slot name="valuation"></slot>
-        <slot name="price"></slot>
+        <div class="purchase" part="purchase">
+            <slot name="price"></slot>
+            <slot name="valuation"></slot>
+            <slot name="shipping"></slot>
+            <div class="actions" part="actions"><slot name="actions"></slot></div>
+            <div class="trust" part="trust"><slot name="trust"></slot></div>
+        </div>
+    </div>
+    <div class="technical" part="technical">
+        <slot name="specifications-heading"></slot>
         <slot name="specifications"></slot>
-        <slot name="shipping"></slot>
-        <div class="actions" part="actions"><slot name="actions"></slot></div>
     </div>
 </section>

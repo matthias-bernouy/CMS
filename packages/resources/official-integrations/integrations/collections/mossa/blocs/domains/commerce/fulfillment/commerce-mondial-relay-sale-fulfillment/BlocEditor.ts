@@ -17,14 +17,6 @@ export class CommerceMondialRelaySaleFulfillmentEditor extends Editor {
             },
             {
                 kind: "self",
-                label: "Sale",
-                settings: [
-                    { type: "text", label: "Order identifier", attribute: "order-id" },
-                    { type: "text", label: "Query parameter", attribute: "order-param", defaultValue: "orderId" },
-                ],
-            },
-            {
-                kind: "self",
                 label: "Content",
                 settings: [
                     { type: "text", label: "Title", attribute: "title" },
@@ -36,18 +28,29 @@ export class CommerceMondialRelaySaleFulfillmentEditor extends Editor {
                     { type: "text", label: "Declare carrier handoff", attribute: "handoff-label" },
                     { type: "text", label: "Track parcel", attribute: "tracking-label" },
                     {
+                        type: "select",
+                        label: "Card density",
+                        attribute: "card-density",
+                        defaultValue: "regular",
+                        options: ["compact", "regular", "spacious"].map((value) => ({ label: value, value })),
+                    },
+                    {
+                        type: "segmented",
+                        label: "Order reference",
+                        attribute: "show-order-reference",
+                        defaultValue: "true",
+                        options: [
+                            { label: "Visible", value: "true" },
+                            { label: "Hidden", value: "false" },
+                        ],
+                    },
+                    {
                         type: "text",
                         label: "Error title",
                         attribute: "error-title",
                         defaultValue: "Shipment unavailable",
                     },
                     { type: "text", label: "Error message override", attribute: "error-message" },
-                    {
-                        type: "text",
-                        label: "Missing sale message",
-                        attribute: "missing-order-message",
-                        defaultValue: "The sale identifier is missing.",
-                    },
                 ],
             },
         ];
@@ -59,7 +62,6 @@ export class CommerceMondialRelaySaleFulfillmentEditor extends Editor {
                 label: "Tracking action",
                 slot: "tracking-action",
                 accepts: [{ kind: "any-component" }],
-                min: 1,
                 max: 1,
             },
         ];

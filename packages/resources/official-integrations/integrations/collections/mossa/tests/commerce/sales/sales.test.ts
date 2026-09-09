@@ -3,6 +3,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { Component } from "@bernouy/components/base";
+import { refreshSourceContext, setSourceContext } from "@bernouy/components/binding";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { declaredBlocViewSources } from "../../../../../../tests/helpers/blocArtifactSource";
@@ -154,7 +155,11 @@ describe("Commerce seller blocs", () => {
 
         const tag = "test-commerce-account-sales-controller";
         const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
-        (window as typeof window & { p9r?: unknown }).p9r = { Component };
+        (window as typeof window & { p9r?: unknown }).p9r = {
+            Component,
+            refreshSourceContext,
+            setSourceContext,
+        };
         if (!customElements.get(tag)) {
             const compiled = await prepare_bloc(
                 new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),

@@ -1,4 +1,11 @@
 <mossa-commerce-offer-price-form-controller data-p9r-composition-controller>
+<input cms-param-sync="id" type="hidden">
+<form hidden cms-source-id="price-offer" cms-source="/.cms/sources/commerce/myOffer" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+<form hidden cms-source-id="price-enrollment" cms-source="/.cms/sources/system-functions/getSellerSaleEnrollment" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+<form hidden cms-source-id="price-account" cms-source="/.cms/sources/user-account/getAccount" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+<form hidden cms-source-id="price-connect-config" cms-source="/.cms/sources/stripe-connect/getConnectClientConfig" cms-source-trigger="submit" cms-source-method="GET" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
+<form hidden cms-source-id="price-account-update" cms-source="/.cms/sources/user-account/updateAccount" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
+<form hidden cms-source-id="price-submit" cms-source="/.cms/sources/system-functions/submitSellerOfferPrice" cms-source-trigger="submit" cms-source-method="POST" cms-source-inherit-query="false" cms-source-success-reset="false" cms-source-serialization="typed-json"></form>
 <mossa-stack gap="lg" data-layout>
     <div data-loading>
         <mossa-responsive-grid min="none" max="none" gap="md">

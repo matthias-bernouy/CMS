@@ -1,95 +1,122 @@
 <mossa-commerce-negotiation-form-controller data-p9r-composition-controller>
-    <mossa-surface-card appearance="ghost" density="regular" data-card>
-        <strong slot="title" data-title>Make a proposal</strong>
-        <span slot="description" data-copy>Propose a price to the seller within the allowed range.</span>
+    <section
+        cms-source-id="proposals"
+        cms-source="/.cms/sources/commerce-negotiation/myProposals?role=buyer&amp;status=pending&amp;offerId=#{offerId}&amp;limit=1"
+        cms-reload-on="commerce-negotiation:created"
+        hidden
+    ></section>
 
-        <section
-            data-policy-source
-            cms-source="/.cms/sources/system-functions/getProposalPolicy?offerId=#{offerId}"
-            hidden
+    <section
+        cms-source-id="policy"
+        cms-source="/.cms/sources/system-functions/getProposalPolicy?offerId=#{offerId} as policy"
+    >
+        <mossa-surface-card
+            appearance="{{ presentation.appearance }}"
+            density="{{ presentation.density }}"
+            cms-condition="$source.loading || $sources.proposals.loading"
         >
-            <i data-policy-loading cms-condition="$source.loading"></i>
-            <i data-policy-error cms-condition="$source.error"></i>
-            <i
-                data-policy-values
-                data-offer-id="{{ offerId }}"
-                data-reference-amount="{{ referenceAmount }}"
-                data-minimum-amount="{{ minimumAmount }}"
-                data-maximum-amount="{{ maximumAmount }}"
-                data-currency="{{ currency }}"
-                data-whole-unit-prices="{{ wholeUnitPrices }}"
-                data-enabled="{{ enabled }}"
-                data-can-propose="{{ canPropose }}"
-                data-ineligibility-reason="{{ ineligibilityReason }}"
-                cms-condition="$source.loaded"
-            ></i>
-        </section>
-
-        <section
-            data-proposals-source
-            cms-source="/.cms/sources/commerce-negotiation/myProposals?role=buyer&amp;status=pending&amp;offerId=#{offerId}&amp;limit=1"
-            hidden
-        >
-            <i data-proposals-loading cms-condition="$source.loading"></i>
-            <i data-proposals-error cms-condition="$source.error"></i>
-            <i data-proposals-loaded cms-condition="$source.loaded"></i>
-            <i
-                data-existing-proposal
-                data-offer-id="{{ proposal.offerId }}"
-                data-proposed-amount="{{ proposal.proposedAmount }}"
-                data-currency="{{ proposal.currency }}"
-                cms-repeat="items as proposal"
-            ></i>
-        </section>
-
-        <div data-loading>
+            <strong slot="title">{{ presentation.title }}</strong>
+            <span slot="description">{{ presentation.copy }}</span>
             <mossa-stack gap="md">
                 <mossa-skeleton height="1.5rem" width="45%" animation="wave" label="Loading proposal terms"></mossa-skeleton>
                 <mossa-skeleton height="3rem" animation="wave" aria-hidden="true"></mossa-skeleton>
                 <mossa-skeleton height="5rem" animation="wave" aria-hidden="true"></mossa-skeleton>
             </mossa-stack>
-        </div>
+        </mossa-surface-card>
 
-        <div data-content hidden>
+        <mossa-surface-card
+            appearance="{{ presentation.appearance }}"
+            density="{{ presentation.density }}"
+            cms-condition="$source.error &amp;&amp; $source.status == 401"
+        >
+            <strong slot="title">{{ presentation.signInTitle }}</strong>
+            <span slot="description">{{ presentation.signInMessage }}</span>
+            <slot name="login-action" slot="actions"></slot>
+        </mossa-surface-card>
+
+        <mossa-surface-card
+            appearance="{{ presentation.appearance }}"
+            density="{{ presentation.density }}"
+            cms-condition="$source.error &amp;&amp; $source.status != 401 || $source.loaded &amp;&amp; $sources.proposals.error"
+        >
+            <strong slot="title">{{ presentation.title }}</strong>
+            <span slot="description" role="alert">{{ presentation.errorMessage }}</span>
+        </mossa-surface-card>
+
+        <mossa-surface-card
+            appearance="{{ presentation.appearance }}"
+            density="{{ presentation.density }}"
+            cms-condition="$source.loaded &amp;&amp; presentation.unavailable"
+        >
+            <strong slot="title">{{ presentation.title }}</strong>
+            <span slot="description" role="status">{{ presentation.unavailableMessage }}</span>
+        </mossa-surface-card>
+
+        <mossa-surface-card
+            appearance="{{ presentation.appearance }}"
+            density="{{ presentation.density }}"
+            cms-condition="$source.loaded &amp;&amp; presentation.existing"
+        >
+            <strong slot="title">{{ presentation.title }}</strong>
+            <span slot="description" role="status">{{ presentation.existingMessage }}</span>
+        </mossa-surface-card>
+
+        <mossa-surface-card
+            appearance="{{ presentation.appearance }}"
+            density="{{ presentation.density }}"
+            cms-condition="$source.loaded &amp;&amp; presentation.canSubmit"
+        >
+            <strong slot="title">{{ presentation.title }}</strong>
+            <span slot="description">{{ presentation.copy }}</span>
             <mossa-stack gap="md">
                 <mossa-responsive-grid min="sm" max="none" gap="sm">
                     <mossa-stack gap="xs">
-                        <small data-current-label>Current price</small>
-                        <strong data-current-price>—</strong>
+                        <small>{{ presentation.currentLabel }}</small>
+                        <strong>{{ presentation.currentPrice }}</strong>
                     </mossa-stack>
                     <mossa-stack gap="xs">
-                        <small data-range-label>Allowed proposal</small>
-                        <strong data-range>—</strong>
+                        <small>{{ presentation.rangeLabel }}</small>
+                        <strong>{{ presentation.range }}</strong>
                     </mossa-stack>
                 </mossa-responsive-grid>
 
                 <form
-                    data-form
+                    cms-source-id="create-proposal"
                     cms-source="/.cms/sources/system-functions/createMyProposal as proposal"
                     cms-source-trigger="submit"
                     cms-source-method="POST"
                     cms-source-inherit-query="false"
+                    cms-source-serialization="typed-json"
                     cms-source-success-reset="true"
+                    cms-source-publish="commerce-negotiation:created"
                 >
                     <mossa-stack gap="md">
-                        <input data-offer-id name="offerId" type="hidden">
-                        <input data-minor-amount name="amount" type="hidden">
-                        <mossa-input data-amount type="number" step="0.01" required></mossa-input>
-                        <div data-message-field>
-                            <mossa-textarea data-message name="message" rows="3" maxlength="2000"></mossa-textarea>
-                        </div>
-                        <mossa-button>
-                            <button data-button-label type="submit">Submit my proposal</button>
-                        </mossa-button>
+                        <input name="offerId" value="{{ presentation.offerId }}" type="hidden" cms-form-value-type="number">
+                        <input name="amount" type="hidden" cms-form-value-type="number">
+                        <mossa-input
+                            type="number"
+                            min="{{ presentation.minimum }}"
+                            max="{{ presentation.maximum }}"
+                            step="{{ presentation.step }}"
+                            label="{{ presentation.amountLabel }}"
+                            hint="{{ presentation.amountHint }}"
+                            required
+                        ></mossa-input>
+                        <mossa-textarea
+                            name="message"
+                            rows="3"
+                            maxlength="2000"
+                            label="{{ presentation.messageLabel }}"
+                            hint="{{ presentation.messageHint }}"
+                            placeholder="{{ presentation.messagePlaceholder }}"
+                            cms-condition="presentation.showMessage"
+                        ></mossa-textarea>
+                        <mossa-button><button type="submit">{{ presentation.buttonLabel }}</button></mossa-button>
+                        <mossa-toast tone="success" appearance="filled" role="status" cms-condition="$source.loaded">{{ presentation.successMessage }}</mossa-toast>
+                        <mossa-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">{{ presentation.errorMessage }}</mossa-toast>
                     </mossa-stack>
                 </form>
             </mossa-stack>
-        </div>
-
-        <p data-existing role="status" hidden>You already submitted a proposal for this offer.</p>
-        <p data-unavailable role="status" hidden>This offer is not available for proposals.</p>
-        <div data-toast-region aria-live="polite" hidden>
-            <mossa-toast data-toast duration="5000" appearance="filled"></mossa-toast>
-        </div>
-    </mossa-surface-card>
+        </mossa-surface-card>
+    </section>
 </mossa-commerce-negotiation-form-controller>
