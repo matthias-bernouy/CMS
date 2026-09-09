@@ -1,0 +1,285 @@
+{
+    "endpoints": [
+        {
+            "route": "/delete-account",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/avatar",
+            "method": "GET",
+            "requiredInputs": [
+                "fileId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/avatar",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/extra-fields",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/extra-fields",
+            "method": "POST",
+            "requiredInputs": [
+                "label",
+                "type"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/extra-fields/field",
+            "method": "DELETE",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/extra-fields/field",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/extra-fields/reorder",
+            "method": "POST",
+            "requiredInputs": [
+                "ids"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/metadata",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/record",
+            "method": "DELETE",
+            "requiredInputs": [
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/record",
+            "method": "GET",
+            "requiredInputs": [
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/record",
+            "method": "POST",
+            "requiredInputs": [
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/record/avatar",
+            "method": "GET",
+            "requiredInputs": [
+                "fileId",
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/record/avatar",
+            "method": "POST",
+            "requiredInputs": [
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/personal-information/records",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        }
+    ],
+    "requiredSecrets": [
+        "CMS_USER_ACCOUNT_API_KEY"
+    ]
+}

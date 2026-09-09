@@ -1,0 +1,2936 @@
+{
+    "endpoints": [
+        {
+            "route": "/admin/brand",
+            "method": "DELETE",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/brand",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/brand",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/brands",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/brands/reorder",
+            "method": "POST",
+            "requiredInputs": [
+                "ids"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/c2c-policies",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/c2c-policies",
+            "method": "POST",
+            "requiredInputs": [
+                "buyerFeeBasis",
+                "buyerFeeFixedAmount",
+                "buyerFeeRateBps",
+                "buyerFeeRefundPolicy",
+                "chargebackRatioReviewBps",
+                "claimRatioReviewBps",
+                "claimWindowHours",
+                "configuredMinimumMarginAmount",
+                "costEstimatesConfigured",
+                "dualApprovalThresholdAmount",
+                "estimatedCarrierCostAmount",
+                "estimatedStripeCostAmount",
+                "expectedSettingsVersion",
+                "financeReviewThresholdAmount",
+                "highValueReviewAmount",
+                "name",
+                "orderTransferLimitAmount",
+                "paymentWindowMinutes",
+                "payoutDelayDays",
+                "platformRiskReserveContributionAmount",
+                "returnShipHours",
+                "scanGraceHours",
+                "sellerFeeBasis",
+                "sellerFeeFixedAmount",
+                "sellerFeeRateBps",
+                "sellerFeeRefundPolicy",
+                "sellerHandoffHours",
+                "sellerReserveLiabilityDays",
+                "sellerReserveRateBps",
+                "sellerResponseHours",
+                "shippingBeneficiary",
+                "subsidyOverride",
+                "velocityLimitAmount"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/admin/categories",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/categories/reorder",
+            "method": "POST",
+            "requiredInputs": [
+                "ids"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/category",
+            "method": "DELETE",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/category",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/category",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/category-field",
+            "method": "POST",
+            "requiredInputs": [
+                "categoryId",
+                "fieldKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/category-fields",
+            "method": "GET",
+            "requiredInputs": [
+                "categoryId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/category-product-fields",
+            "method": "GET",
+            "requiredInputs": [
+                "categoryId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/claim",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/claim/evidence",
+            "method": "GET",
+            "requiredInputs": [
+                "evidenceId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/admin/claim/evidence-item",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/claim/evidence-items",
+            "method": "GET",
+            "requiredInputs": [
+                "claimId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/claim/resolve",
+            "method": "POST",
+            "requiredInputs": [
+                "claimId",
+                "decisionReason",
+                "expectedVersion",
+                "outcome",
+                "protectionFeeRefundAmount",
+                "sellerTransferAmount"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/claims",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/commerce-exceptions",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/custom-field",
+            "method": "DELETE",
+            "requiredInputs": [
+                "entityType",
+                "key"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/custom-field",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/custom-field",
+            "method": "POST",
+            "requiredInputs": [
+                "entityType",
+                "fieldType",
+                "key",
+                "label"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/custom-fields",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer-condition",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer-condition",
+            "method": "POST",
+            "requiredInputs": [
+                "code",
+                "label"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer/image",
+            "method": "DELETE",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer/image",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer/image",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer/image/replace",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer/image/stage",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-functions-base-url",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer/images/discard",
+            "method": "POST",
+            "requiredInputs": [
+                "mediaIds",
+                "sessionId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer/images/reorder",
+            "method": "POST",
+            "requiredInputs": [
+                "mediaIds"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offer/review",
+            "method": "POST",
+            "requiredInputs": [
+                "action",
+                "expectedVersion",
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/offers",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/order",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/order/cancellation/review",
+            "method": "POST",
+            "requiredInputs": [
+                "cancellationRequestId",
+                "decision",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/order/legal-acceptances",
+            "method": "GET",
+            "requiredInputs": [
+                "orderId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/order/refund",
+            "method": "POST",
+            "requiredInputs": [
+                "orderId",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/admin/order/release",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedSettlementVersion",
+                "orderId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/order/shipment-creation/recover",
+            "method": "POST",
+            "requiredInputs": [
+                "orderPublicId",
+                "providerReference",
+                "providerShipmentId",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/orders",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/platform-payout-liability/authorize-decrease",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedLiabilityRevision",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/image",
+            "method": "DELETE",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/image",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/image",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/image/replace",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/image/stage",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-functions-base-url",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/images/discard",
+            "method": "POST",
+            "requiredInputs": [
+                "mediaIds",
+                "sessionId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/images/reorder",
+            "method": "POST",
+            "requiredInputs": [
+                "mediaIds"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/variant",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/product/variants",
+            "method": "GET",
+            "requiredInputs": [
+                "productId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/products",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/protected-payment",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/protected-payments",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/refund-request",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/refund-requests",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/refund/review",
+            "method": "POST",
+            "requiredInputs": [
+                "decision",
+                "expectedVersion",
+                "reason",
+                "refundRequestId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/seller",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/seller/review",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion",
+                "id",
+                "status"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/sellers",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/service-withdrawal-request/review",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion",
+                "nextStatus",
+                "note",
+                "requestPublicId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/service-withdrawal-requests",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/settings",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/settings",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/workflow-state",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/workflow-state",
+            "method": "POST",
+            "requiredInputs": [
+                "code",
+                "label",
+                "phase"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/workflow-states",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/workflow-transition",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/workflow-transition",
+            "method": "POST",
+            "requiredInputs": [
+                "action",
+                "actorKind",
+                "fromState",
+                "toState"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/workflow-transitions",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/brand",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/brands",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/categories",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/category",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/configuration/custom-fields",
+            "method": "GET",
+            "requiredInputs": [
+                "entityType"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/configuration/offer-custom-fields",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/management",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                },
+                {
+                    "status": "503"
+                }
+            ]
+        },
+        {
+            "route": "/me/cart",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/cart/checkout",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion",
+                "idempotencyKey"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/me/cart/clear",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/cart/item",
+            "method": "DELETE",
+            "requiredInputs": [
+                "expectedVersion",
+                "offerId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/cart/item",
+            "method": "POST",
+            "requiredInputs": [
+                "offerId",
+                "quantity"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion",
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer/image",
+            "method": "DELETE",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer/image",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer/image",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer/image/replace",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer/images/reorder",
+            "method": "POST",
+            "requiredInputs": [
+                "mediaIds"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer/price",
+            "method": "POST",
+            "requiredInputs": [
+                "amount",
+                "expectedVersion",
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offer/submit",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion",
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offers",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/offers",
+            "method": "POST",
+            "requiredInputs": [
+                "conditionCode",
+                "productId",
+                "slug"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/order",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/cancel",
+            "method": "POST",
+            "requiredInputs": [
+                "orderId",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/claim",
+            "method": "POST",
+            "requiredInputs": [
+                "description",
+                "orderId",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/claim/evidence",
+            "method": "GET",
+            "requiredInputs": [
+                "evidenceId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/claim/evidence",
+            "method": "POST",
+            "requiredInputs": [
+                "claimId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/image",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/legal-acceptances",
+            "method": "GET",
+            "requiredInputs": [
+                "orderId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/legal-requirements",
+            "method": "GET",
+            "requiredInputs": [
+                "orderId",
+                "paymentProvider"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/payment/prepare",
+            "method": "POST",
+            "requiredInputs": [
+                "orderId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/service-withdrawal-requests",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/order/service-withdrawal-requests",
+            "method": "POST",
+            "requiredInputs": [
+                "confirmed",
+                "idempotencyKey",
+                "orderId",
+                "serviceScope"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/me/orders",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/orders",
+            "method": "POST",
+            "requiredInputs": [
+                "idempotencyKey"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "201"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                }
+            ]
+        },
+        {
+            "route": "/me/price-agreement-checkout",
+            "method": "GET",
+            "requiredInputs": [
+                "agreementId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/me/sale",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/sale/cancel",
+            "method": "POST",
+            "requiredInputs": [
+                "orderId",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/me/sale/claim/evidence",
+            "method": "GET",
+            "requiredInputs": [
+                "evidenceId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/sale/claim/evidence",
+            "method": "POST",
+            "requiredInputs": [
+                "claimId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                }
+            ]
+        },
+        {
+            "route": "/me/sale/claim/respond",
+            "method": "POST",
+            "requiredInputs": [
+                "claimId",
+                "expectedVersion",
+                "message"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/sales",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/seller",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/seller",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/me/seller/update",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/admin/configuration",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/admin/configuration",
+            "method": "POST",
+            "requiredInputs": [
+                "mode"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/admin/deliveries",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/preferences",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/preferences",
+            "method": "POST",
+            "requiredInputs": [
+                "preferences"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/system/claim",
+            "method": "POST",
+            "requiredInputs": [
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/system/complete",
+            "method": "POST",
+            "requiredInputs": [
+                "deliveryId",
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/system/fail",
+            "method": "POST",
+            "requiredInputs": [
+                "deliveryId",
+                "error",
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/notifications/templates",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/offer",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/offer-conditions",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/offer-filter-schema",
+            "method": "GET",
+            "requiredInputs": [
+                "category"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/offer/image",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                }
+            ]
+        },
+        {
+            "route": "/offers",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                }
+            ]
+        },
+        {
+            "route": "/product",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/products",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/claim/return-authorization",
+            "method": "GET",
+            "requiredInputs": [
+                "claimId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/claim/return-delivery",
+            "method": "POST",
+            "requiredInputs": [
+                "claimId",
+                "normalizedStatus",
+                "occurredAt",
+                "providerEventId",
+                "providerReference"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/delivery/order-reconciliation-health",
+            "method": "POST",
+            "requiredInputs": [
+                "checkedAt",
+                "manualReviewCount",
+                "orderPublicId",
+                "pendingProjectionCount",
+                "runKey",
+                "shipmentId",
+                "shipmentStatus",
+                "trackingErrorCount"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/delivery/reconciliation-health",
+            "method": "POST",
+            "requiredInputs": [
+                "checkedAt",
+                "manualReviewCount",
+                "pendingProjectionCount",
+                "runKey",
+                "trackingErrorCount"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/offer/negotiation-context",
+            "method": "GET",
+            "requiredInputs": [
+                "offerId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/deadlines/due",
+            "method": "POST",
+            "requiredInputs": [
+                "limit",
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/delivery-quote/authorization",
+            "method": "GET",
+            "requiredInputs": [
+                "orderPublicId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/delivery-selection-context",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/delivery-setup-context",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/financial-terms/lock",
+            "method": "POST",
+            "requiredInputs": [
+                "currency",
+                "deliveryQuoteId",
+                "expectedVersion",
+                "orderPublicId",
+                "shippingAmount"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/fulfillment",
+            "method": "POST",
+            "requiredInputs": [
+                "normalizedStatus",
+                "occurredAt",
+                "orderPublicId",
+                "providerEventId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/fulfillment/authorization",
+            "method": "GET",
+            "requiredInputs": [
+                "orderPublicId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/fulfillment/seller-context",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/label/authorization",
+            "method": "GET",
+            "requiredInputs": [
+                "orderPublicId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/label/seller-context",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/payment",
+            "method": "POST",
+            "requiredInputs": [
+                "occurredAt",
+                "orderPublicId",
+                "providerEventId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/payment-cancellations/pending",
+            "method": "POST",
+            "requiredInputs": [
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/payment-context",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/refunds/pending",
+            "method": "POST",
+            "requiredInputs": [
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/releases/due",
+            "method": "POST",
+            "requiredInputs": [
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/settlement",
+            "method": "POST",
+            "requiredInputs": [
+                "amount",
+                "currency",
+                "occurredAt",
+                "operationType",
+                "orderPublicId",
+                "providerEventId",
+                "providerOperationId",
+                "status"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipment-cancellation/complete",
+            "method": "POST",
+            "requiredInputs": [
+                "claimToken",
+                "operationId",
+                "providerStatus"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipment-cancellation/fail",
+            "method": "POST",
+            "requiredInputs": [
+                "claimToken",
+                "error",
+                "operationId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipment-cancellations/claim",
+            "method": "POST",
+            "requiredInputs": [
+                "limit",
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipment-creation/complete",
+            "method": "POST",
+            "requiredInputs": [
+                "claimToken",
+                "operationId",
+                "providerReference"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipment-creation/fail",
+            "method": "POST",
+            "requiredInputs": [
+                "claimToken",
+                "error",
+                "operationId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipment-creation/reserve",
+            "method": "POST",
+            "requiredInputs": [
+                "orderPublicId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipment-creation/seller-context",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipment-creations/claim",
+            "method": "POST",
+            "requiredInputs": [
+                "limit",
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/stripe-dispute",
+            "method": "POST",
+            "requiredInputs": [
+                "amount",
+                "currency",
+                "occurredAt",
+                "openedAt",
+                "orderPublicId",
+                "providerDisputeId",
+                "providerEventId",
+                "status"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/platform-payout-liability/applied",
+            "method": "POST",
+            "requiredInputs": [
+                "appliedMinimumAmount",
+                "liabilityRevision"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/platform-payout-liability/pending",
+            "method": "POST",
+            "requiredInputs": [
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/platform-payout-liability/refresh",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/protected-checkout/seller-context",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                }
+            ]
+        },
+        {
+            "route": "/system/protected-payment/seller-context",
+            "method": "POST",
+            "requiredInputs": [
+                "orderId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                }
+            ]
+        },
+        {
+            "route": "/system/seller/identity",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/seller/payout-eligibility",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion",
+                "provider",
+                "providerAccountId",
+                "sellerId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/seller/sale-capability",
+            "method": "POST",
+            "requiredInputs": [
+                "capabilityKey",
+                "ready",
+                "sellerCmsUserId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/seller/sale-capability/activate",
+            "method": "POST",
+            "requiredInputs": [
+                "actorId",
+                "capabilityKey",
+                "readySellerCmsUserIds",
+                "sellerKind",
+                "snapshotAt"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        }
+    ],
+    "requiredSecrets": [
+        "CMS_COMMERCE_API_KEY"
+    ]
+}

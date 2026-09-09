@@ -1,0 +1,308 @@
+{
+    "endpoints": [
+        {
+            "route": "/admin/proposal",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/admin/proposal/cancel",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion",
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/admin/proposals",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                }
+            ]
+        },
+        {
+            "route": "/admin/settings",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/settings",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/policy",
+            "method": "GET",
+            "requiredInputs": [
+                "availability",
+                "currency",
+                "offerId",
+                "offerSlug",
+                "offerTitle",
+                "publicationStatus",
+                "referenceAmount",
+                "sellerCmsUserId",
+                "wholeUnitPrices"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/proposal",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/proposal/image",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                }
+            ]
+        },
+        {
+            "route": "/proposal/respond",
+            "method": "POST",
+            "requiredInputs": [
+                "action",
+                "expectedVersion",
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/proposal/withdraw",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedVersion",
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/proposals",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                }
+            ]
+        },
+        {
+            "route": "/proposals",
+            "method": "POST",
+            "requiredInputs": [
+                "amount",
+                "availability",
+                "currency",
+                "offerId",
+                "offerMainImageMediaId",
+                "offerSlug",
+                "offerTitle",
+                "publicationStatus",
+                "referenceAmount",
+                "sellerCmsUserId",
+                "wholeUnitPrices"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        }
+    ],
+    "requiredSecrets": [
+        "CMS_NEGOTIATION_API_KEY"
+    ]
+}

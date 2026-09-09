@@ -1,0 +1,109 @@
+{
+    "endpoints": [
+        {
+            "route": "/campaign",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/campaign/cancel",
+            "method": "POST",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/campaign/pause",
+            "method": "POST",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/campaign/retry-failed",
+            "method": "POST",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/campaigns",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/tick",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        }
+    ],
+    "requiredSecrets": [
+        "BROADCAST_MAX_ATTEMPTS",
+        "BROADCAST_TICK_BATCH",
+        "CMS_BROADCAST_API_KEY",
+        "CMS_EMAILER_API_KEY"
+    ]
+}

@@ -1,0 +1,638 @@
+{
+    "endpoints": [
+        {
+            "route": "/admin/projection-exceptions",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/projection-exceptions/review",
+            "method": "POST",
+            "requiredInputs": [
+                "action",
+                "eventId",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                }
+            ]
+        },
+        {
+            "route": "/admin/shipments/recover",
+            "method": "POST",
+            "requiredInputs": [
+                "expeditionNumber",
+                "externalOrderId",
+                "reason",
+                "shipmentId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/connection",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "401"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                },
+                {
+                    "status": "502"
+                },
+                {
+                    "status": "503"
+                }
+            ]
+        },
+        {
+            "route": "/connection",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "401"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                },
+                {
+                    "status": "502"
+                },
+                {
+                    "status": "503"
+                }
+            ]
+        },
+        {
+            "route": "/connection/retry",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "401"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                },
+                {
+                    "status": "502"
+                },
+                {
+                    "status": "503"
+                }
+            ]
+        },
+        {
+            "route": "/health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/label",
+            "method": "GET",
+            "requiredInputs": [
+                "token"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "206"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "410"
+                }
+            ]
+        },
+        {
+            "route": "/migration-health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/parse-tracking-link",
+            "method": "GET",
+            "requiredInputs": [
+                "url"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/relay-points",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/relay-selection",
+            "method": "GET",
+            "requiredInputs": [
+                "externalOrderId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/relay-selections",
+            "method": "POST",
+            "requiredInputs": [
+                "country",
+                "currency",
+                "externalOrderId",
+                "merchandiseSubtotalMinorAmount",
+                "orderVersion",
+                "postalCode",
+                "recipientSnapshot",
+                "relayLocation",
+                "requestKey",
+                "selectedForCmsUserId",
+                "sellerFulfillmentSnapshot"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/settings",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/settings",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                }
+            ]
+        },
+        {
+            "route": "/shipment",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/shipments",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/shipments",
+            "method": "POST",
+            "requiredInputs": [
+                "declaredCurrency",
+                "declaredValueMinorAmount",
+                "deliveryRelayLocation",
+                "externalOrderId",
+                "recipientAddressLine1",
+                "recipientCity",
+                "recipientName",
+                "recipientPostalCode",
+                "sellerCmsUserId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "201"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/source-management",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "401"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "422"
+                },
+                {
+                    "status": "502"
+                },
+                {
+                    "status": "503"
+                }
+            ]
+        },
+        {
+            "route": "/system/claim-return-relay-selections",
+            "method": "POST",
+            "requiredInputs": [
+                "country",
+                "externalOrderId",
+                "postalCode",
+                "relayLocation"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/delivery-quotes/public",
+            "method": "GET",
+            "requiredInputs": [
+                "externalOrderId",
+                "quoteId",
+                "selectedForCmsUserId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/delivery-quotes/resolve",
+            "method": "POST",
+            "requiredInputs": [
+                "externalOrderId",
+                "purpose",
+                "quoteId",
+                "selectedForCmsUserId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/system/events/ack",
+            "method": "POST",
+            "requiredInputs": [
+                "claimToken",
+                "eventId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/system/events/fail",
+            "method": "POST",
+            "requiredInputs": [
+                "claimToken",
+                "error",
+                "eventId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/label-access",
+            "method": "POST",
+            "requiredInputs": [
+                "externalOrderId",
+                "sellerCmsUserId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/system/projection-health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/reconcile",
+            "method": "POST",
+            "requiredInputs": [
+                "limit",
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/shipment-for-external-order",
+            "method": "GET",
+            "requiredInputs": [
+                "externalOrderId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/shipment-tracking-context",
+            "method": "GET",
+            "requiredInputs": [
+                "expectedExternalOrderId",
+                "expeditionNumber"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/shipments/cancel",
+            "method": "POST",
+            "requiredInputs": [
+                "externalOrderId",
+                "trackingUntil"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/system/shipments/handoff",
+            "method": "POST",
+            "requiredInputs": [
+                "externalOrderId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/tracking",
+            "method": "GET",
+            "requiredInputs": [
+                "expeditionNumber"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        }
+    ],
+    "requiredSecrets": [
+        "CMS_DELIVERY_API_KEY"
+    ]
+}

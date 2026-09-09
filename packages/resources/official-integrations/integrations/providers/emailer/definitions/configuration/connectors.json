@@ -26,6 +26,11 @@
                 "configPath": "supabase.config.toml",
                 "secrets": {
                     "CMS_EMAILER_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/emailer-http.json"
+                    }
                 }
             },
             {
@@ -37,6 +42,11 @@
                     "CMS_EMAILER_API_KEY": "{{generated.cmsApiKey}}",
                     "BROADCAST_TICK_BATCH": "25",
                     "BROADCAST_MAX_ATTEMPTS": "5"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/broadcast-http.json"
+                    }
                 }
             }
         ]

@@ -22,6 +22,11 @@
                 "configPath": "supabase.config.toml",
                 "secrets": {
                     "CMS_STRIPE_CONNECT_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/runtime-http.json"
+                    }
                 }
             },
             {

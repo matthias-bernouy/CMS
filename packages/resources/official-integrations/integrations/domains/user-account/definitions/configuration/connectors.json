@@ -22,6 +22,11 @@
                 "configPath": "supabase.config.toml",
                 "secrets": {
                     "CMS_USER_ACCOUNT_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/http.json"
+                    }
                 }
             }
         ]

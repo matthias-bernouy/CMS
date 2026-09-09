@@ -1,0 +1,898 @@
+{
+    "endpoints": [
+        {
+            "route": "/admin/accounts/account/onboarding",
+            "method": "POST",
+            "requiredInputs": [
+                "refreshUrl",
+                "returnUrl",
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/accounts/account/onboarding/session",
+            "method": "POST",
+            "requiredInputs": [
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/admin/accounts/account/payout-schedule",
+            "method": "POST",
+            "requiredInputs": [
+                "payoutScheduleChangeId",
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/admin/accounts/account/risk",
+            "method": "GET",
+            "requiredInputs": [
+                "userId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "502"
+                }
+            ]
+        },
+        {
+            "route": "/admin/commerce-projections/requeue",
+            "method": "POST",
+            "requiredInputs": [
+                "expectedInterventionRevision",
+                "projectionId",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/admin/disputes",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                }
+            ]
+        },
+        {
+            "route": "/admin/disputes/accept",
+            "method": "POST",
+            "requiredInputs": [
+                "acceptanceOperationId",
+                "confirmation",
+                "disputeId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "202"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/admin/disputes/dispute",
+            "method": "GET",
+            "requiredInputs": [
+                "disputeId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/admin/disputes/evidence/stage",
+            "method": "POST",
+            "requiredInputs": [
+                "disputeId",
+                "evidenceOperationId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/admin/disputes/evidence/submit",
+            "method": "POST",
+            "requiredInputs": [
+                "confirmation",
+                "disputeId",
+                "evidenceOperationId",
+                "submissionOperationId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "202"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/admin/disputes/files",
+            "method": "POST",
+            "requiredInputs": [
+                "base64",
+                "disputeId",
+                "fileName",
+                "mimeType"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "201"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "413"
+                }
+            ]
+        },
+        {
+            "route": "/admin/exceptions",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                }
+            ]
+        },
+        {
+            "route": "/admin/exceptions/exception",
+            "method": "GET",
+            "requiredInputs": [
+                "id"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/admin/operations",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                }
+            ]
+        },
+        {
+            "route": "/admin/payments",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                }
+            ]
+        },
+        {
+            "route": "/admin/payments/payment",
+            "method": "GET",
+            "requiredInputs": [
+                "paymentId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/admin/platform/payout-protection",
+            "method": "POST",
+            "requiredInputs": [
+                "liabilityRevision",
+                "minimumBalanceEur",
+                "platformPayoutControlChangeId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "502"
+                },
+                {
+                    "status": "503"
+                }
+            ]
+        },
+        {
+            "route": "/admin/refunds",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                }
+            ]
+        },
+        {
+            "route": "/admin/refunds/refund",
+            "method": "GET",
+            "requiredInputs": [
+                "refundId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/configuration/marketplace-terms",
+            "method": "POST",
+            "requiredInputs": [
+                "documents",
+                "legacyHash",
+                "legacyVersion"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/connect/config",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/connect/enrollment",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/connect/onboarding",
+            "method": "POST",
+            "requiredInputs": [
+                "refreshUrl",
+                "returnUrl"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/connect/onboarding/session",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/connect/status",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/connect/verification",
+            "method": "POST",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/connect/wallet",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/health",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/operations/payment-cancellation",
+            "method": "POST",
+            "requiredInputs": [
+                "cancellationRequestId",
+                "clientReferenceId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/operations/protected-refund",
+            "method": "POST",
+            "requiredInputs": [
+                "amount",
+                "authorizedSellerAmount",
+                "paymentId",
+                "refundRequestId",
+                "sellerEntitlementReductionAmount"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/operations/release",
+            "method": "POST",
+            "requiredInputs": [
+                "amount",
+                "currency",
+                "paymentId",
+                "releaseAuthorizationId",
+                "releaseKind"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/operations/reversal",
+            "method": "POST",
+            "requiredInputs": [
+                "amount",
+                "paymentId",
+                "reversalRequestId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "404"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/payments/payment",
+            "method": "GET",
+            "requiredInputs": [
+                "paymentId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "404"
+                }
+            ]
+        },
+        {
+            "route": "/payments/protected",
+            "method": "POST",
+            "requiredInputs": [
+                "amountTotal",
+                "clientReferenceId",
+                "currency",
+                "dualApprovalThresholdAmount",
+                "financialTermsHash",
+                "sellerTransferAmount",
+                "sellerUserId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "400"
+                },
+                {
+                    "status": "403"
+                },
+                {
+                    "status": "409"
+                },
+                {
+                    "status": "502"
+                },
+                {
+                    "status": "503"
+                }
+            ]
+        },
+        {
+            "route": "/payments/reference",
+            "method": "GET",
+            "requiredInputs": [
+                "clientReferenceId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/payments/seller-eligibility",
+            "method": "POST",
+            "requiredInputs": [
+                "sellerUserId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-user-id"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/reconciliation/payment",
+            "method": "POST",
+            "requiredInputs": [
+                "paymentId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/reconciliation/projections/ack",
+            "method": "POST",
+            "requiredInputs": [
+                "claimToken",
+                "projectionId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/reconciliation/projections/fail",
+            "method": "POST",
+            "requiredInputs": [
+                "claimToken",
+                "error",
+                "projectionId"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                },
+                {
+                    "status": "409"
+                }
+            ]
+        },
+        {
+            "route": "/reconciliation/run",
+            "method": "POST",
+            "requiredInputs": [
+                "runKey"
+            ],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/configuration",
+            "method": "GET",
+            "requiredInputs": [],
+            "requiredHeaders": [
+                "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        }
+    ],
+    "requiredSecrets": [
+        "CMS_STRIPE_CONNECT_API_KEY"
+    ]
+}
