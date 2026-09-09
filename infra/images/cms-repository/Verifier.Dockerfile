@@ -4,6 +4,7 @@ FROM oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b4
 
 WORKDIR /app
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
+COPY patches/ ./patches/
 COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile
@@ -33,6 +34,7 @@ RUN groupadd -g 1001 verifier \
 WORKDIR /app
 COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 COPY --chown=verifier:verifier --from=runtime-source /app/package.json /app/bun.lock /app/tsconfig.base.json /app/tsconfig.json ./
+COPY --chown=verifier:verifier --from=runtime-source /app/patches/ ./patches/
 COPY --chown=verifier:verifier --from=runtime-source /app/packages/ ./packages/
 
 RUN install -d -o verifier -g verifier -m 0750 /var/lib/cms-integration-verifier \
