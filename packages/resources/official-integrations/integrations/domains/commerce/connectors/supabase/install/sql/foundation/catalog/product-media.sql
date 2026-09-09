@@ -111,21 +111,3 @@ create table if not exists commerce.product_media (
 
 create unique index if not exists product_media_main_unique
     on commerce.product_media(product_id) where is_main;
-
-do $commerce_storage_bucket$
-begin
-    if to_regclass('storage.buckets') is not null then
-        execute $sql$
-            insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-            values (
-                'commerce-media', 'commerce-media', false, 10485760,
-                array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']::text[]
-            )
-            on conflict (id) do update set
-                public = false,
-                file_size_limit = excluded.file_size_limit,
-                allowed_mime_types = excluded.allowed_mime_types
-        $sql$;
-    end if;
-end;
-$commerce_storage_bucket$;

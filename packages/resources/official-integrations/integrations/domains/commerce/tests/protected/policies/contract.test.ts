@@ -51,7 +51,7 @@ describe("protected C2C financial policy contract", () => {
         );
         const serialized = JSON.stringify(definition);
 
-        expect(schema).toContain("'commerce-claim-evidence', 'commerce-claim-evidence', false");
+        expect(schema).not.toContain("storage.buckets");
         expect(schema).toContain("attach_marketplace_claim_evidence");
         expect(schema).toContain("required return needs trusted recipient handoff before monetary resolution");
         expect(schema).toContain("record_claim_return_delivery");

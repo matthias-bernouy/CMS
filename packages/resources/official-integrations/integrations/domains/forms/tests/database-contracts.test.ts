@@ -29,7 +29,7 @@ test("Forms SQL stays private, versioned, indexed, and batch-safe", async () => 
     expect(submissions).toContain("submissions_retention_idx");
     expect(retention).toContain("for update skip locked");
     expect(media).toContain("forms_media_immutable");
-    expect(media).toContain("'forms-media', 'forms-media', false");
+    expect(media).not.toContain("storage.buckets");
     expect(mediaOperations).toContain("form_version_media");
     expect(mediaOperations).toContain("definition_media_ids");
 });
