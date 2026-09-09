@@ -233,7 +233,7 @@ export { assertIntegrationBlocTagPublishable } from "../core/parsing/artifacts/b
 export {
     integrationRuntimeDependencies,
     type IntegrationRuntimeDependency,
-} from "../core/definitions/runtimeDependencies";
+} from "../core/resources/runtimeDependencies";
 export { assertCollectionConformance } from "../core/resources/conformance";
 export { resolveCollectionDependencies } from "../core/resources/dependencySelection";
 export {

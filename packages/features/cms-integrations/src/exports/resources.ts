@@ -2,7 +2,7 @@ export type { CollectionIntegrationDefinition } from "../interfaces/Integration"
 export {
     integrationRuntimeDependencies,
     type IntegrationRuntimeDependency,
-} from "../core/definitions/runtimeDependencies";
+} from "../core/resources/runtimeDependencies";
 export type {
     CollectionBlocResource,
     CollectionEndpointRequirement,
