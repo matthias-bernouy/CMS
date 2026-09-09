@@ -26,7 +26,10 @@ export async function executeExactDependencyMatrices(
     if (input.packages.length === 0) {
         return Object.freeze([]);
     }
-    const loader = createDependencyPackageLoader(input);
+    const loader = createDependencyPackageLoader({
+        ...input,
+        maxCachedPackages: input.maxCachedPackages ?? input.packages.length + 1,
+    });
     try {
         const candidate = await loader.loadCandidate(input.candidate);
         const packages = await Promise.all(input.packages.map(async (entry) => await loader.loadDependency(entry)));
