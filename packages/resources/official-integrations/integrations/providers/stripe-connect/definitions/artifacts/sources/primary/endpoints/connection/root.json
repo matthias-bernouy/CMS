@@ -18,7 +18,7 @@
             }
         ],
         "output": {
-            "$include": "output.json"
+            "$include": "provider-configuration-output.json"
         }
     },
     {
