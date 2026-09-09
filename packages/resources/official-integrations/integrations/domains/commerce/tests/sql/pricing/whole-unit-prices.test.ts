@@ -8,6 +8,12 @@ describe("Commerce whole-unit price SQL contracts", () => {
     test("installs an opt-in setting and one authoritative assertion", async () => {
         const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
+        expect(schema.indexOf("commerce.fee_policies no force row level security")).toBeLessThan(
+            schema.indexOf("insert into commerce.fee_policies"),
+        );
+        expect(schema.lastIndexOf("commerce.fee_policies force row level security")).toBeGreaterThan(
+            schema.indexOf("insert into commerce.fee_policies"),
+        );
         expect(schema).toContain("whole_unit_prices boolean not null default false");
         expect(schema).toContain("create or replace function commerce.assert_offer_price_increment");
         expect(schema).toContain("where id = 'default'\n    for share");

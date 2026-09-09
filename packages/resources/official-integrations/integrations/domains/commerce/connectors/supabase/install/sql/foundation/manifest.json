@@ -6,6 +6,9 @@
             "file": "setup/postgres-extensions-and-commerce-schema.sql"
         },
         {
+            "file": "setup/reinstallation-row-security.sql"
+        },
+        {
             "file": "setup/fee-and-protection-policies.sql"
         },
         {
