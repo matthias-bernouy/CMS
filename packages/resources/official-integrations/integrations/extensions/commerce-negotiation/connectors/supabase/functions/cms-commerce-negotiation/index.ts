@@ -27,6 +27,7 @@ type ProposalRow = {
     agreement_version: number | null;
     checkout_expires_at: string | null;
     checkout_status: "active" | "consumed" | "expired" | "canceled" | null;
+    commerce_order_id: number | null;
     commerce_order_public_id: string | null;
     agreement_consumed_at: string | null;
     rejected_at: string | null;
@@ -101,6 +102,9 @@ Deno.serve(async (request) => {
         }
         if (route === "/proposal") {
             return await withMethod(request, "GET", () => getMyProposal(request));
+        }
+        if (route === "/proposal/image") {
+            return await withMethod(request, "GET", () => getMyProposalImage(request));
         }
         if (route === "/proposal/respond") {
             return await withMethod(request, "POST", () => respondToProposal(request));
@@ -215,6 +219,30 @@ async function getMyProposal(request: Request): Promise<Response> {
         throw new HttpError(404, "proposal not found");
     }
     return json({ ...publicProposal(detail.proposal, userId), events: detail.events.map(publicEvent) });
+}
+
+async function getMyProposalImage(request: Request): Promise<Response> {
+    const context = await rpcRow<JsonRecord>("get_proposal_media_download_context", {
+        p_media_id: requiredQueryInteger(request, "id"),
+        p_user_id: requireUserId(request),
+    });
+    if (context.state === "not_found") {
+        throw new HttpError(404, "proposal image not found");
+    }
+    if (context.state !== "ok" || !isRecord(context.media)) {
+        throw new HttpError(502, "get_proposal_media_download_context returned an invalid response");
+    }
+    const media = context.media;
+    if (media.storage_bucket !== "commerce-media" || typeof media.storage_path !== "string" || !media.storage_path) {
+        throw new HttpError(404, "proposal image not found");
+    }
+    const stored = await downloadStorageObject(media.storage_bucket, media.storage_path);
+    const headers = new Headers(corsHeaders);
+    copyHeader(stored, headers, "content-type", String(media.mime_type || "application/octet-stream"));
+    copyHeader(stored, headers, "etag");
+    copyHeader(stored, headers, "last-modified");
+    headers.set("cache-control", "private, no-store");
+    return new Response(stored.body, { status: 200, headers });
 }
 
 async function respondToProposal(request: Request): Promise<Response> {
@@ -440,7 +468,8 @@ function publicProposal(row: ProposalRow, viewerId?: string): JsonRecord {
         agreementVersion: row.agreement_version ?? null,
         checkoutExpiresAt: row.checkout_expires_at ?? null,
         checkoutStatus: row.checkout_status ?? null,
-        orderId: row.commerce_order_public_id ?? null,
+        orderId: row.commerce_order_id ?? null,
+        orderPublicId: row.commerce_order_public_id ?? null,
         consumedAt: row.agreement_consumed_at ?? null,
         rejectedAt: row.rejected_at,
         withdrawnAt: row.withdrawn_at,
@@ -529,6 +558,32 @@ async function rest(path: string, init: RequestInit): Promise<Response> {
         headers.set("content-profile", schema);
     }
     return fetch(`${requiredEnv("SUPABASE_URL").replace(/\/$/, "")}/rest/v1/${path}`, { ...init, headers });
+}
+
+async function downloadStorageObject(bucket: string, path: string): Promise<Response> {
+    const key = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+    const headers = new Headers({ apikey: key });
+    if (!key.startsWith("sb_")) {
+        headers.set("authorization", `Bearer ${key}`);
+    }
+    const bucketPath = encodeURIComponent(bucket);
+    const objectPath = path.split("/").map(encodeURIComponent).join("/");
+    const base = requiredEnv("SUPABASE_URL").replace(/\/$/, "");
+    const response = await fetch(`${base}/storage/v1/object/${bucketPath}/${objectPath}`, { headers });
+    if (response.status === 404) {
+        throw new HttpError(404, "proposal image not found");
+    }
+    if (!response.ok) {
+        throw new HttpError(502, `Supabase Storage request failed (${response.status})`);
+    }
+    return response;
+}
+
+function copyHeader(source: Response, target: Headers, name: string, fallback?: string): void {
+    const value = source.headers.get(name) ?? fallback;
+    if (value) {
+        target.set(name, value);
+    }
 }
 
 async function restError(response: Response): Promise<HttpError> {

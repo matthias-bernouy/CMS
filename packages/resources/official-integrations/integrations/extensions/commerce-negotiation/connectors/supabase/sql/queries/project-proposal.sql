@@ -15,6 +15,7 @@ as $$
             else agreement.status
         end,
         'agreement_version', agreement.authority_version,
+        'commerce_order_id', order_row.id,
         'commerce_order_public_id', order_row.public_id,
         'agreement_consumed_at', agreement.consumed_at
     )

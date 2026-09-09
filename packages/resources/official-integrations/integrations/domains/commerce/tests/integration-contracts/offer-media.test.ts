@@ -21,6 +21,7 @@ describe("commerce offer media contract", () => {
                 "removeOfferImage",
                 "reorderOfferImages",
                 "myOfferImage",
+                "myOrderImage",
                 "uploadMyOfferImage",
                 "replaceMyOfferImage",
                 "removeMyOfferImage",
@@ -29,6 +30,7 @@ describe("commerce offer media contract", () => {
         );
         expect(byId.offerImage).toMatchObject({ method: "GET", responseKind: "file", mediaType: "image/*" });
         expect(byId.myOfferImage).toMatchObject({ access: "auth", method: "GET", responseKind: "file" });
+        expect(byId.myOrderImage).toMatchObject({ access: "auth", method: "GET", responseKind: "file" });
         expect(byId.uploadMyOfferImage).toMatchObject({ access: "auth", method: "POST" });
         expect(byId.reorderOfferImages.body.required).toEqual(["mediaIds"]);
 

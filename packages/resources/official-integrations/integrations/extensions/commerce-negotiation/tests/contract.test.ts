@@ -136,6 +136,7 @@ describe("commerce negotiation 1.0.0", () => {
             expect.arrayContaining([
                 "urn:commerce-negotiation:getProposalPolicy",
                 "urn:commerce-negotiation:createMyProposal",
+                "urn:commerce-negotiation:myProposalImage",
                 "urn:commerce-negotiation:respondToProposal",
                 "urn:commerce-negotiation:updateSettings",
             ]),

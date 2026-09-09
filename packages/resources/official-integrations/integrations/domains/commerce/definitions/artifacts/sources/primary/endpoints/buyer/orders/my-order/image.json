@@ -1,0 +1,41 @@
+{
+    "endpointId": "myOrderImage",
+    "access": "auth",
+    "method": "GET",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/image",
+    "params": [
+        {
+            "name": "id",
+            "in": "query",
+            "type": "number",
+            "required": true
+        }
+    ],
+    "headers": [
+        {
+            "name": "authorization",
+            "source": {
+                "from": "secret",
+                "ref": "{{secrets.cmsApiKey}}",
+                "prefix": "Bearer "
+            }
+        },
+        {
+            "name": "x-cms-user-id",
+            "source": {
+                "from": "computed",
+                "ref": "userID"
+            }
+        }
+    ],
+    "responseKind": "file",
+    "mediaType": "image/*",
+    "output": [
+        {
+            "status": "200"
+        },
+        {
+            "status": "206"
+        }
+    ]
+}

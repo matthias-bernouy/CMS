@@ -52,6 +52,15 @@ begin
           and proposal.status = 'accepted'
         order by proposal.decided_at desc nulls last, proposal.id desc
         limit 1
+    ), offer_image as (
+        select stored.id, stored.width, stored.height
+        from commerce.offer_media link
+        join commerce.media stored
+          on stored.id = link.media_id
+         and stored.detached_at is null
+        where link.offer_id = v_agreement.offer_id
+        order by link.is_main desc, link.sort_order, link.id
+        limit 1
     )
     select
         p_order_id,
@@ -87,6 +96,11 @@ begin
             'conditionLabel', condition.label,
             'acceptedPriceAmount', offer.accepted_price_amount,
             'currency', offer.currency,
+            'media', case when offer_image.id is null then null else jsonb_build_object(
+                'id', offer_image.id,
+                'width', offer_image.width,
+                'height', offer_image.height
+            ) end,
             'priceAgreement', jsonb_build_object(
                 'id', v_agreement.public_id,
                 'authority', v_agreement.authority_key,
@@ -108,6 +122,7 @@ begin
       on options.product_id = offer.product_id
      and options.variant_id = offer.variant_id
     left join seller_price on true
+    left join offer_image on true
     where offer.id = v_agreement.offer_id;
 
     update commerce.offers offer

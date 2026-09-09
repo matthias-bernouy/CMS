@@ -12,17 +12,23 @@ import { pngBytes } from "./fixtures";
 installCommerceTestEnvironment();
 
 describe("Commerce detached image access", () => {
-    test("fails closed before Storage for detached offer media in public, seller, and admin scopes", async () => {
+    test("fails closed before Storage for detached offer media in public, seller, buyer, and admin scopes", async () => {
         setRestResponder(() => jsonResponse({ state: "not_found" }));
 
         const publicResponse = await requestCommerce("/offer/image?id=17");
         const sellerResponse = await requestCommerce("/me/offer/image?id=17", {
             userId: "seller-7",
         });
+        const buyerResponse = await requestCommerce("/me/order/image?id=17", {
+            userId: "buyer-7",
+        });
         const adminResponse = await requestCommerce("/admin/offer/image?id=17");
 
-        expect([publicResponse.status, sellerResponse.status, adminResponse.status]).toEqual([404, 404, 404]);
+        expect([publicResponse.status, sellerResponse.status, buyerResponse.status, adminResponse.status]).toEqual([
+            404, 404, 404, 404,
+        ]);
         expect(capturedFetches().map(callKind)).toEqual([
+            "get_offer_media_download_context",
             "get_offer_media_download_context",
             "get_offer_media_download_context",
             "get_offer_media_download_context",
@@ -32,6 +38,12 @@ describe("Commerce detached image access", () => {
             p_scope: "self",
             p_media_id: 17,
             p_cms_user_id: "seller-7",
+        });
+        const buyerContext = capturedFetches()[2]!;
+        expect(buyerContext.body).toMatchObject({
+            p_scope: "buyer",
+            p_media_id: 17,
+            p_cms_user_id: "buyer-7",
         });
     });
 
@@ -77,7 +89,7 @@ describe("Commerce detached image access", () => {
         expect(capturedFetches().map(callKind)).toEqual(["get_offer_media_download_context", "storage:GET"]);
     });
 
-    test("requires seller and admin offer images to be reauthorized instead of browser-cached", async () => {
+    test("requires private offer images to be reauthorized instead of browser-cached", async () => {
         setRestResponder((request) => {
             if (request.url.includes("/storage/v1/object/")) {
                 return new Response(pngBytes(), { headers: { "content-type": "image/png" } });
@@ -96,9 +108,13 @@ describe("Commerce detached image access", () => {
         const seller = await requestCommerce("/me/offer/image?id=17", {
             userId: "seller-7",
         });
+        const buyer = await requestCommerce("/me/order/image?id=17", {
+            userId: "buyer-7",
+        });
         const admin = await requestCommerce("/admin/offer/image?id=17");
 
         expect(seller.headers.get("cache-control")).toBe("private, no-store");
+        expect(buyer.headers.get("cache-control")).toBe("private, no-store");
         expect(admin.headers.get("cache-control")).toBe("private, no-store");
     });
 

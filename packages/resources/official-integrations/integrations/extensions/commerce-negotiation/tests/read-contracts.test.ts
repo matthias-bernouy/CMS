@@ -32,6 +32,8 @@ const proposal = {
     version: 3,
     expires_at: "2026-07-20T12:00:00Z",
     accepted_at: null,
+    commerce_order_id: null,
+    commerce_order_public_id: null,
     rejected_at: null,
     withdrawn_at: null,
     created_at: "2026-07-17T12:00:00Z",
@@ -67,6 +69,7 @@ const expectedProposal = {
     checkoutExpiresAt: null,
     checkoutStatus: null,
     orderId: null,
+    orderPublicId: null,
     consumedAt: null,
     rejectedAt: null,
     withdrawnAt: null,
@@ -193,6 +196,32 @@ describe("commerce negotiation read contracts", () => {
         expect(await invalidCreate.json()).toEqual({ error: "amount must be an integer" });
         expect(requests).toEqual([]);
     });
+
+    test("serves an offer image only to a proposal participant", async () => {
+        requests.length = 0;
+        const headers = { authorization: `Bearer ${apiKey}`, "x-cms-user-id": "buyer-user" };
+        const image = await handler(new Request(`${functionUrl}/proposal/image?id=17`, { headers }));
+
+        expect(image.status).toBe(200);
+        expect(image.headers.get("cache-control")).toBe("private, no-store");
+        expect(image.headers.get("content-type")).toBe("image/webp");
+        expect(await image.text()).toBe("proposal image");
+        expect(databasePaths()).toEqual([
+            "/rest/v1/rpc/get_proposal_media_download_context",
+            "/storage/v1/object/commerce-media/offers/42/main.webp",
+        ]);
+        expect(await requests[0]!.json()).toEqual({ p_media_id: 17, p_user_id: "buyer-user" });
+
+        requests.length = 0;
+        const denied = await handler(
+            new Request(`${functionUrl}/proposal/image?id=17`, {
+                headers: { ...headers, "x-cms-user-id": "other-user" },
+            }),
+        );
+        expect(denied.status).toBe(404);
+        expect(await denied.json()).toEqual({ error: "proposal image not found" });
+        expect(databasePaths()).toEqual(["/rest/v1/rpc/get_proposal_media_download_context"]);
+    });
 });
 
 const captureDatabaseRequest = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -205,6 +234,23 @@ const captureDatabaseRequest = (async (input: RequestInfo | URL, init?: RequestI
     }
     if (path.endsWith("/rpc/get_participant_proposal_detail")) {
         return Response.json(body.p_user_id === "buyer-user" ? { proposal, events: [proposalEvent] } : null);
+    }
+    if (path.endsWith("/rpc/get_proposal_media_download_context")) {
+        return Response.json(
+            body.p_user_id === "buyer-user"
+                ? {
+                      state: "ok",
+                      media: {
+                          storage_bucket: "commerce-media",
+                          storage_path: "offers/42/main.webp",
+                          mime_type: "image/webp",
+                      },
+                  }
+                : { state: "not_found" },
+        );
+    }
+    if (path.endsWith("/storage/v1/object/commerce-media/offers/42/main.webp")) {
+        return new Response("proposal image", { headers: { "content-type": "image/webp" } });
     }
     return Response.json({ message: "not found" }, { status: 404 });
 }) as typeof fetch;

@@ -111,7 +111,7 @@ describe("commerce 1.0.0 contract", () => {
         expect(result.artifacts).not.toContainEqual(
             expect.objectContaining({ type: "dashboard-view", id: "commerce-dashboard" }),
         );
-        expect(endpointUrns).toHaveLength(179);
+        expect(endpointUrns).toHaveLength(180);
         expect(endpointUrns).toEqual(
             expect.arrayContaining(["urn:commerce:stageProductImage", "urn:commerce:discardStagedProductImages"]),
         );
@@ -127,6 +127,7 @@ describe("commerce 1.0.0 contract", () => {
             "urn:commerce:offerImage": `${supabaseUrl}/functions/v1/cms-commerce/admin/offer/image`,
             "urn:commerce:createMyOffer": `${supabaseUrl}/functions/v1/cms-commerce/me/offers`,
             "urn:commerce:publicOfferImage": `${supabaseUrl}/functions/v1/cms-commerce/offer/image`,
+            "urn:commerce:myOrderImage": `${supabaseUrl}/functions/v1/cms-commerce/me/order/image`,
             "urn:commerce:submitMyOfferPrice": `${supabaseUrl}/functions/v1/cms-commerce/me/offer/price`,
             "urn:commerce:verifyPendingSellerPayoutEligibility": `${supabaseUrl}/functions/v1/cms-commerce/system/seller/payout-eligibility`,
             "urn:commerce:getProtectedCheckoutSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/protected-checkout/seller-context`,

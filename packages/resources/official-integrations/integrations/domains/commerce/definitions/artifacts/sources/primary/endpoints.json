@@ -25,6 +25,7 @@
         "endpoints/buyer/cart/checkout-my-cart/root.json",
         "endpoints/buyer/orders/my-orders/root.json",
         "endpoints/buyer/orders/my-order.json",
+        "endpoints/buyer/orders/my-order/image.json",
         "endpoints/buyer/orders/create-order/get-my-price-agreement-checkout.json",
         "endpoints/buyer/orders/protected-payment/get-buyer-legal-requirements.json",
         "endpoints/buyer/orders/protected-payment/get-my-buyer-legal-acceptance-audit.json",

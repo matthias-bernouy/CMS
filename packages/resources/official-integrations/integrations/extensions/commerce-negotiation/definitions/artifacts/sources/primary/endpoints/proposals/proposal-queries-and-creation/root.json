@@ -46,6 +46,9 @@
         "$include": "my-proposals.json"
     },
     {
+        "$include": "proposal-image.json"
+    },
+    {
         "endpointId": "myProposal",
         "method": "GET",
         "access": "auth",

@@ -18,7 +18,7 @@ import {
     uploadStorageImageWithFailureCleanup,
 } from "../catalog/media/storage.ts";
 
-type OfferMediaScope = "public" | "admin" | "self";
+type OfferMediaScope = "public" | "admin" | "buyer" | "self";
 
 const downloadContextFunction = "get_offer_media_download_context";
 
@@ -53,7 +53,7 @@ export async function getOfferImageFile(request: Request, scope: OfferMediaScope
     const context = await rpcRecord(downloadContextFunction, {
         p_scope: scope,
         p_media_id: mediaId,
-        p_cms_user_id: scope === "self" ? cmsUserIdOrNull(request) : null,
+        p_cms_user_id: scope === "self" || scope === "buyer" ? cmsUserIdOrNull(request) : null,
     });
     const media = downloadMedia(context);
     if (media.storage_bucket !== productMediaBucket || typeof media.storage_path !== "string") {

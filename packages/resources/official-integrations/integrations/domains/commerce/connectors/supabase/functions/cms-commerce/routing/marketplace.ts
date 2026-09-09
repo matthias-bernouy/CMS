@@ -127,6 +127,9 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
     if (route === "/me/order") {
         return request.method === "GET" ? await getMyOrder(request) : methodNotAllowed("GET");
     }
+    if (route === "/me/order/image") {
+        return request.method === "GET" ? await getOfferImageFile(request, "buyer") : methodNotAllowed("GET");
+    }
     if (route === "/me/sales") {
         return request.method === "GET" ? await listMySales(request) : methodNotAllowed("GET");
     }

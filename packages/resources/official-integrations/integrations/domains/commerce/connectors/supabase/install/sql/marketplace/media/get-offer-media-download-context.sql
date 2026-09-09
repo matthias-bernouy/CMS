@@ -18,7 +18,7 @@ declare
     v_require_verified_seller boolean;
     v_media jsonb;
 begin
-    if p_scope is null or p_scope not in ('public', 'self', 'admin') then
+    if p_scope is null or p_scope not in ('public', 'self', 'buyer', 'admin') then
         return jsonb_build_object('state', 'invalid_scope');
     end if;
 
@@ -85,6 +85,23 @@ begin
             join commerce.sellers seller on seller.id = offer.seller_id
             where link.media_id = p_media_id
               and seller.cms_user_id = p_cms_user_id
+        )
+        into v_is_authorized;
+        if not v_is_authorized then
+            return jsonb_build_object('state', 'not_found');
+        end if;
+    elsif p_scope = 'buyer' then
+        if p_cms_user_id is null then
+            return jsonb_build_object('state', 'identity_required');
+        end if;
+
+        select exists (
+            select 1
+            from commerce.offer_media link
+            join commerce.order_lines line on line.offer_id = link.offer_id
+            join commerce.orders order_row on order_row.id = line.order_id
+            where link.media_id = p_media_id
+              and order_row.buyer_cms_user_id = p_cms_user_id
         )
         into v_is_authorized;
         if not v_is_authorized then

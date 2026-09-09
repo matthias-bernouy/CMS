@@ -60,6 +60,19 @@ begin
         join input on input.offer_id = proposal.offer_id
         where proposal.status = 'accepted'
         order by proposal.offer_id, proposal.decided_at desc nulls last, proposal.id desc
+    ),
+    offer_images as (
+        select distinct on (link.offer_id)
+            link.offer_id,
+            stored.id,
+            stored.width,
+            stored.height
+        from commerce.offer_media link
+        join commerce.media stored
+          on stored.id = link.media_id
+         and stored.detached_at is null
+        join input on input.offer_id = link.offer_id
+        order by link.offer_id, link.is_main desc, link.sort_order, link.id
     )
     select
         order_input.order_id,
@@ -93,7 +106,12 @@ begin
             'conditionCode', offer.condition_code,
             'conditionLabel', condition.label,
             'acceptedPriceAmount', offer.accepted_price_amount,
-            'currency', offer.currency
+            'currency', offer.currency,
+            'media', case when offer_image.id is null then null else jsonb_build_object(
+                'id', offer_image.id,
+                'width', offer_image.width,
+                'height', offer_image.height
+            ) end
         ),
         jsonb_build_object(
             'id', seller.id,
@@ -111,6 +129,7 @@ begin
     left join variant_options options
       on options.product_id = offer.product_id and options.variant_id = offer.variant_id
     left join accepted_proposals proposal on proposal.offer_id = offer.id
+    left join offer_images offer_image on offer_image.offer_id = offer.id
     order by order_input.position, input.position;
 
     update commerce.offers offer

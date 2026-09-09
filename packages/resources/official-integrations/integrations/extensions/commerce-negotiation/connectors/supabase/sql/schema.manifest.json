@@ -6,6 +6,7 @@
         { "file": "model/version-and-updated-at-triggers.sql" },
         { "file": "queries/expire-pending-proposals.sql" },
         { "file": "queries/project-proposal.sql" },
+        { "file": "queries/get-proposal-media-download-context.sql" },
         { "file": "queries/list-participant-proposals.sql" },
         { "file": "queries/list-admin-proposals.sql" },
         { "file": "queries/get-participant-proposal-detail.sql" },
