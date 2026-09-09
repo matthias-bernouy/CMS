@@ -47,6 +47,8 @@ describe("integration verifier trust zones", () => {
         expect(supervisor).toContain("cms_verifier_database: {}");
         expect(supervisor).toContain("CMS_INTEGRATION_VERIFIER_WORKER_TOKEN_FILE: /run/secrets/");
         expect(supervisor).toContain("CMS_INTEGRATION_VERIFIER_SANDBOX_SIGNING_KEY_FILE: /run/secrets/");
+        expect(supervisor).toContain("CMS_INTEGRATION_VERIFIER_REQUEST_TIMEOUT_MS:");
+        expect(envExample).toContain("CMS_INTEGRATION_VERIFIER_REQUEST_TIMEOUT_MS=120000");
         expect(sandbox).not.toContain("cms_repository");
         expect(sandbox).not.toContain("WORKER_TOKEN");
         expect(sandbox).not.toContain("SIGNING_KEY");
