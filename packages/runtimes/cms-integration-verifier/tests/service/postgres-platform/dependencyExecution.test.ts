@@ -4,7 +4,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createDisposableVerificationDatabaseProviderFromEnv } from "../../../src/runtime/providers/postgres";
-import { executeExactDependencyMatrices } from "../../../src/sandbox/service/postgres/suites/dependencies";
+import {
+    executeExactDependencyMatrices,
+    requiredPackageCacheLimit,
+} from "../../../src/sandbox/service/postgres/suites/dependencies";
 import { DIGEST_A, DIGEST_B } from "../../fixtures/contracts";
 import {
     dependencyCandidatePackage,
@@ -18,6 +21,13 @@ import {
 } from "../postgresFixture";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
+
+test("sizes the materialization cache from exact package identities", async () => {
+    const minimum = await exactDependencyPackage(dependencySqlPackage("1.0.0", "shared"), "minimum");
+    const stable = { ...minimum, selection: "stable" as const };
+
+    expect(requiredPackageCacheLimit([minimum, stable])).toBe(2);
+});
 
 postgresTest(
     "executes dependency-first minimum and stable graphs on independently reset databases",

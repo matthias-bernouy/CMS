@@ -28,7 +28,7 @@ export async function executeExactDependencyMatrices(
     }
     const loader = createDependencyPackageLoader({
         ...input,
-        maxCachedPackages: input.maxCachedPackages ?? input.packages.length + 1,
+        maxCachedPackages: input.maxCachedPackages ?? requiredPackageCacheLimit(input.packages),
     });
     try {
         const candidate = await loader.loadCandidate(input.candidate);
@@ -53,6 +53,13 @@ export async function executeExactDependencyMatrices(
     } finally {
         await loader.dispose();
     }
+}
+
+export function requiredPackageCacheLimit(packages: readonly ExactDependencyPackage[]): number {
+    const identities = new Set(
+        packages.map(({ kind, version, packageDigest }) => `${kind}\0${version}\0${packageDigest}`),
+    );
+    return identities.size + 1;
 }
 
 async function executeMatrix(
