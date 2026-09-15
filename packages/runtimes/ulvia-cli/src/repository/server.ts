@@ -3,6 +3,7 @@ import type { LocalRepositoryCatalog } from "./catalog";
 import type { LocalIntegrationRepository } from "./local";
 
 const BASE_PATH = "/.cms/repository";
+const SHA256_HEX = /^[a-f0-9]{64}$/u;
 
 export type LocalRepositoryServer = Readonly<{
     url: string;
@@ -69,6 +70,17 @@ async function integrationResponse(
         return index ? json(index.versions) : json({ error: "not found" }, 404);
     }
     const version = url.searchParams.get("version")?.trim() || undefined;
+    if (route === "/api/integrations/schema-baselines") {
+        const packageDigest = url.searchParams.get("packageDigest")?.trim();
+        if (!version || !packageDigest || !SHA256_HEX.test(packageDigest)) {
+            return json({ error: "version and packageDigest are required" }, 400);
+        }
+        const record = await catalog.record(kind, version);
+        if (!record || record.digest !== packageDigest) {
+            return json([]);
+        }
+        return json(await repository.getReviewedSchemaBaselines(record));
+    }
     const record = await catalog.record(kind, version);
     if (!record) {
         return json({ error: "not found" }, 404);

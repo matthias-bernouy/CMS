@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 describe("local integration repository", () => {
-    test("retains reviewed schema baselines in an isolated release scenario", async () => {
+    test("retains and serves reviewed schema baselines in an isolated release scenario", async () => {
         const fixture = await repositoryFixture();
         const resolved = await integrationPackage();
         const reviewedSchemaBaseline = {
@@ -43,6 +43,15 @@ describe("local integration repository", () => {
 
         const record = (await fixture.repository.list())[0]!;
         expect(await fixture.repository.getReviewedSchemaBaselines(record)).toEqual([reviewedSchemaBaseline]);
+        const response = await handleRepositoryRequest(
+            new Request(
+                `http://127.0.0.1/.cms/repository/api/integrations/schema-baselines?kind=demo&version=1.0.0&packageDigest=${resolved.digest}`,
+            ),
+            fixture.repository,
+            new LocalRepositoryCatalog(fixture.repository),
+        );
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual([reviewedSchemaBaseline]);
     });
 
     test("persists immutable package coordinates and definitions", async () => {
