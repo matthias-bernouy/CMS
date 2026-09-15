@@ -737,6 +737,24 @@
             ]
         },
         {
+            "route": "/admin/order/shipping-window/reopen",
+            "method": "POST",
+            "requiredInputs": [
+                "orderPublicId",
+                "reason"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id",
+                "x-cms-user-role"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
             "route": "/admin/orders",
             "method": "GET",
             "requiredInputs": [],
@@ -2727,6 +2745,22 @@
             ],
             "requiredHeaders": [
                 "authorization"
+            ],
+            "responses": [
+                {
+                    "status": "200"
+                }
+            ]
+        },
+        {
+            "route": "/system/order/shipping/actions/seller-context",
+            "method": "GET",
+            "requiredInputs": [
+                "orderId"
+            ],
+            "requiredHeaders": [
+                "authorization",
+                "x-cms-user-id"
             ],
             "responses": [
                 {
