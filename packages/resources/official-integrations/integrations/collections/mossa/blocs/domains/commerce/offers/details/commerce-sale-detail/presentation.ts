@@ -9,6 +9,9 @@ const copy = {
     eyebrow: "SALE",
     "fallback-article-label": "Item",
     "platform-shipping-label": "Covered by the platform",
+    "handoff-deadline-description": "Hand the parcel to the carrier by {date}.",
+    "handoff-deadline-expired-description": "The shipping deadline passed on {date}.",
+    "handoff-deadline-title": "Shipping deadline",
     "order-reference-template": "Order {reference}",
     "quantity-label": "Quantity",
     "shipping-label": "Delivery",
@@ -22,6 +25,9 @@ const statusDefaults: Record<string, string> = {
     awaiting_quote: "Delivery to complete",
     awaiting_payment: "Payment pending",
     active: "To ship",
+    awaiting_shipment: "To ship",
+    shipment_creating: "Creating shipping label",
+    label_created: "Shipping label ready",
     seller_handoff_declared: "Handoff declared",
     carrier_accepted: "Accepted by carrier",
     in_transit: "In transit",
@@ -34,6 +40,10 @@ const statusDefaults: Record<string, string> = {
     returning_to_sender: "Return in progress",
     returned_to_sender: "Returned to seller",
     manual_review: "Review required",
+    review_required: "Review required",
+    dispute_in_progress: "Dispute in progress",
+    refund_in_progress: "Refund in progress",
+    refunded: "Refunded",
     cancellation_pending: "Cancellation in progress",
     expired: "Expired",
     completed: "Completed",
@@ -52,9 +62,12 @@ export const salePresentationAttributes = [
 export function projectSale(host: HTMLElement, value: unknown): Record<string, unknown> {
     const sale = objectValue(value) || {};
     const fulfillment = objectValue(sale.fulfillment) || {};
+    const operation = objectValue(sale.operation);
+    const settlement = objectValue(sale.settlement);
     const financial = objectValue(sale.financialTerms) || {};
     const currency = String(financial.currency || sale.currency || "USD");
-    const status = presentationStatus(sale.status, fulfillment.status);
+    const status = presentationStatus(sale.status, operation, fulfillment, settlement);
+    const handoffDeadline = deadlinePresentation(host, sale.status, fulfillment);
     const shipping = shippingPresentation(host, sale, financial);
     const lines = objectValues(sale.lines).map((line) => projectLine(host, line));
     const orderNumber = String(sale.orderNumber || sale.publicId || `Sale ${sale.id || ""}`);
@@ -71,6 +84,8 @@ export function projectSale(host: HTMLElement, value: unknown): Record<string, u
         errorTitle: text(host, "error-title"),
         eyebrow: text(host, "eyebrow"),
         heading: authoredTitle || (showOrderReference ? orderReference : lines[0]?.title) || "Sale details",
+        handoffDeadlineDescription: handoffDeadline.description,
+        handoffDeadlineTitle: text(host, "handoff-deadline-title"),
         lines,
         orderDate: `${text(host, "date-prefix")} ${formatDate(sale.createdAt, locale(host))}`,
         orderReference,
@@ -81,6 +96,7 @@ export function projectSale(host: HTMLElement, value: unknown): Record<string, u
         shippingLabel: text(host, "shipping-label"),
         shippingValueLabel: text(host, "platform-shipping-label"),
         showOrderReference,
+        showHandoffDeadline: handoffDeadline.show,
         statusLabel: host.getAttribute(`label-${status}`)?.trim() || statusDefaults[status] || "To review",
         statusTone: statusTone(status),
         subtotalAmount: minorAmount(financial.merchandiseSubtotalAmount) ?? minorAmount(sale.subtotalAmount),
@@ -119,9 +135,34 @@ function shippingPresentation(host: HTMLElement, sale: ObjectValue, financial: O
     return { amount: null, covered: platform === total && Boolean(text(host, "platform-shipping-label")) };
 }
 
-function presentationStatus(orderStatus: unknown, fulfillmentStatus: unknown): string {
+function presentationStatus(
+    orderStatus: unknown,
+    operation: ObjectValue | null,
+    fulfillmentValue: ObjectValue,
+    settlementValue: ObjectValue | null,
+): string {
     const order = String(orderStatus || "unknown");
-    const fulfillment = String(fulfillmentStatus || "");
+    if (["awaiting_quote", "awaiting_payment", "cancellation_pending", "cancelled", "expired"].includes(order)) {
+        return order;
+    }
+    const settlement = String(settlementValue?.status || operation?.settlementStatus || "");
+    const claim = String(operation?.claimStatus || "");
+    if (["manual_review", "blocked"].includes(settlement)) {
+        return "review_required";
+    }
+    if (claim && !["resolved_buyer", "resolved_seller", "resolved_split"].includes(claim)) {
+        return "dispute_in_progress";
+    }
+    if (["refund_pending", "reversal_pending"].includes(settlement)) {
+        return "refund_in_progress";
+    }
+    if (["refunded", "reversed"].includes(settlement)) {
+        return "refunded";
+    }
+    if (order === "completed") {
+        return order;
+    }
+    const fulfillment = String(fulfillmentValue.status || operation?.fulfillmentStatus || "");
     return order === "active" && statusDefaults[fulfillment] && fulfillment !== "active" ? fulfillment : order;
 }
 
@@ -129,12 +170,37 @@ function statusTone(status: string): string {
     if (["completed", "collected_by_recipient"].includes(status)) {
         return "success";
     }
-    if (["cancelled", "expired", "incident", "lost"].includes(status)) {
+    if (["cancelled", "expired", "incident", "lost", "review_required"].includes(status)) {
         return "danger";
     }
-    return ["awaiting_quote", "awaiting_payment", "manual_review", "cancellation_pending"].includes(status)
+    return [
+        "awaiting_quote",
+        "awaiting_payment",
+        "manual_review",
+        "cancellation_pending",
+        "dispute_in_progress",
+        "refund_in_progress",
+    ].includes(status)
         ? "warning"
-        : "primary";
+        : status === "refunded"
+          ? "info"
+          : "primary";
+}
+
+function deadlinePresentation(host: HTMLElement, orderStatus: unknown, fulfillment: ObjectValue) {
+    const status = String(fulfillment.status || "");
+    const deadline = new Date(String(fulfillment.sellerHandoffDeadline || ""));
+    const show =
+        orderStatus === "active" &&
+        ["awaiting_shipment", "shipment_creating", "label_created"].includes(status) &&
+        !Number.isNaN(deadline.getTime());
+    if (!show) {
+        return { description: "", show: false };
+    }
+    const date = new Intl.DateTimeFormat(locale(host), { dateStyle: "long", timeStyle: "short" }).format(deadline);
+    const key =
+        deadline.getTime() <= Date.now() ? "handoff-deadline-expired-description" : "handoff-deadline-description";
+    return { description: text(host, key).replaceAll("{date}", date), show: true };
 }
 
 function variantLabel(snapshot: ObjectValue | null): string {

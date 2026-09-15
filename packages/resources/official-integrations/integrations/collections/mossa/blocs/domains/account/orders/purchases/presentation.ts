@@ -52,7 +52,11 @@ function purchaseItem(host: HTMLElement, order: ObjectValue): Record<string, unk
     };
 }
 
-function orderStatus(status: unknown, operation: ObjectValue): { key: string; tone: string } {
+export function orderStatus(status: unknown, operation: ObjectValue): { key: string; tone: string } {
+    const order = String(status || "");
+    if (["awaiting_quote", "cancellation_pending", "cancelled", "expired"].includes(order)) {
+        return statusPresentation[order];
+    }
     const settlement = String(operation.settlementStatus || "").toLowerCase();
     const payment = String(operation.paymentStatus || "").toLowerCase();
     const claim = String(operation.claimStatus || "").toLowerCase();
@@ -77,7 +81,14 @@ function orderStatus(status: unknown, operation: ObjectValue): { key: string; to
     if (["created", "requires_action", "requires_payment_method", "processing"].includes(payment)) {
         return { key: "payment-pending", tone: "warning" };
     }
-    return statusPresentation[String(status)] || { key: "unavailable", tone: "info" };
+    if (order === "active") {
+        const fulfillment = String(operation.fulfillmentStatus || "").toLowerCase();
+        const fulfillmentState = fulfillmentPresentation[fulfillment];
+        if (fulfillmentState) {
+            return fulfillmentState;
+        }
+    }
+    return statusPresentation[order] || { key: "unavailable", tone: "info" };
 }
 
 const statusPresentation: Record<string, { key: string; tone: string }> = {
@@ -88,6 +99,24 @@ const statusPresentation: Record<string, { key: string; tone: string }> = {
     expired: { key: "expired", tone: "info" },
     cancellation_pending: { key: "cancellation_pending", tone: "warning" },
     cancelled: { key: "cancelled", tone: "danger" },
+};
+
+const fulfillmentPresentation: Record<string, { key: string; tone: string }> = {
+    awaiting_shipment: { key: "preparing", tone: "primary" },
+    shipment_creating: { key: "preparing", tone: "primary" },
+    label_created: { key: "preparing", tone: "primary" },
+    seller_handoff_declared: { key: "handoff-declared", tone: "primary" },
+    carrier_accepted: { key: "in-transit", tone: "primary" },
+    in_transit: { key: "in-transit", tone: "primary" },
+    arrived_at_pickup_point: { key: "pickup-ready", tone: "success" },
+    available_for_pickup: { key: "pickup-ready", tone: "success" },
+    collected_by_recipient: { key: "delivered", tone: "success" },
+    incident: { key: "delivery-incident", tone: "danger" },
+    lost: { key: "parcel-lost", tone: "danger" },
+    pickup_expired: { key: "pickup-expired", tone: "warning" },
+    returning_to_sender: { key: "returning-to-sender", tone: "warning" },
+    returned_to_sender: { key: "returned-to-sender", tone: "info" },
+    manual_review: { key: "review-required", tone: "danger" },
 };
 
 function formatDate(value: unknown, language: string, fallback: string): string {

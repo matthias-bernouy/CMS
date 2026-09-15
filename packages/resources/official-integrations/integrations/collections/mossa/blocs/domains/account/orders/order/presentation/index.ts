@@ -11,12 +11,15 @@ export function projectOrder(host: HTMLElement, orderValue: unknown, sources: Or
     const payment = objectValue(objectValue(sources.payment)?.payment);
     const relay = objectValue(sources.relay);
     const shipment = objectValue(objectValues(objectValue(sources.shipment)?.shipments)[0]);
+    const fulfillment = objectValue(order.fulfillment);
+    const operation = objectValue(order.operation);
+    const shipmentStatus = shipment?.status ?? fulfillment?.status ?? operation?.fulfillmentStatus;
     const offer = objectValue(sources.offer);
     const copy = (name: string, values: Record<string, string> = {}) => readOrderCopy(host, name, values);
     const paymentState = normalizedPaymentState(payment, order);
-    const orderState = orderPresentation(order.status, paymentState, shipment?.status, copy);
+    const orderState = orderPresentation(order.status, paymentState, shipmentStatus, copy);
     const paymentStateCopy = paymentPresentation(paymentState, copy);
-    const shipmentCopy = shipmentPresentation(paymentState, shipment?.status, copy);
+    const shipmentCopy = shipmentPresentation(order.status, paymentState, shipmentStatus, copy);
     const financial = financialBreakdown(order);
     const liveImage = offerImage(offer);
     const image = liveImage || objectValue(objectValue(line.offerSnapshot)?.media);
@@ -24,11 +27,10 @@ export function projectOrder(host: HTMLElement, orderValue: unknown, sources: Or
     const progressTone = colorTone(host.getAttribute("progress-tone"), "primary");
     return {
         currency: financial.currency,
-        deliveryEstimate:
-            shipment?.status === "delivered"
-                ? copy("delivery-completed-label")
-                : host.getAttribute("delivery-estimate-label") ||
-                  "Typical delivery time: 3 to 5 business days after shipment.",
+        deliveryEstimate: ["delivered", "collected_by_recipient"].includes(String(shipmentStatus || ""))
+            ? copy("delivery-completed-label")
+            : host.getAttribute("delivery-estimate-label") ||
+              "Typical delivery time: 3 to 5 business days after shipment.",
         deliveryLabel: copy("delivery-label"),
         errorMessage: copy("error-message"),
         errorTitle: copy("error-title"),

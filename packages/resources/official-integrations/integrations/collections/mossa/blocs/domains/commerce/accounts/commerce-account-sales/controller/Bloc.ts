@@ -1,5 +1,6 @@
 import { Component } from "@bernouy/components/base";
 import { refreshSourceContext, setSourceContext } from "@bernouy/components/binding";
+import { saleStatus } from "./status";
 
 type ObjectValue = Record<string, unknown>;
 
@@ -15,13 +16,33 @@ const statuses = [
 
 const defaults: Record<string, string> = {
     active: "To ship",
+    arrived_at_pickup_point: "Arrived at pickup point",
     awaiting_payment: "Payment pending",
     awaiting_quote: "Delivery to complete",
+    awaiting_shipment: "To ship",
+    available_for_pickup: "Available for pickup",
+    carrier_accepted: "Accepted by carrier",
     cancellation_pending: "Cancellation in progress",
     cancelled: "Cancelled",
+    collected_by_recipient: "Delivered",
     completed: "Completed",
+    dispute_in_progress: "Dispute in progress",
     expired: "Expired",
+    incident: "Delivery incident",
+    in_transit: "In transit",
+    label_created: "Shipping label ready",
+    lost: "Parcel lost",
+    pickup_expired: "Pickup expired",
+    refund_in_progress: "Refund in progress",
+    refunded: "Refunded",
+    returning_to_sender: "Return in progress",
+    returned_to_sender: "Returned to seller",
+    review_required: "Review required",
+    seller_handoff_declared: "Handoff declared",
+    shipment_creating: "Creating shipping label",
 };
+
+const projectedStatuses = Object.keys(defaults);
 
 const copyAttributes = [
     "empty-message",
@@ -38,7 +59,7 @@ const copyAttributes = [
     "sale-action-label",
     "sold-on-label",
     "status-label",
-    ...statuses.map((status) => `label-${status}`),
+    ...projectedStatuses.map((status) => `label-${status}`),
 ];
 
 const presentationAttributes = [
@@ -106,7 +127,7 @@ export class CommerceAccountSalesController extends Component {
     }
 
     private sale(sale: ObjectValue): ObjectValue {
-        const status = String(sale.status || "");
+        const status = saleStatus(sale.status, objectValue(sale.operation));
         return {
             ...sale,
             actionLabel: this.text("sale-action-label", "View sale"),
@@ -184,13 +205,26 @@ function routeUrl(template: string | null, values: Record<string, unknown>): str
 }
 
 function statusTone(status: string): string {
-    if (status === "completed") {
+    if (["completed", "collected_by_recipient"].includes(status)) {
         return "success";
     }
-    if (["cancelled", "expired"].includes(status)) {
+    if (["cancelled", "expired", "incident", "lost", "review_required"].includes(status)) {
         return "danger";
     }
-    return status === "active" ? "primary" : "warning";
+    if (
+        [
+            "awaiting_payment",
+            "awaiting_quote",
+            "cancellation_pending",
+            "refund_in_progress",
+            "dispute_in_progress",
+        ].includes(status)
+    ) {
+        return "warning";
+    }
+    return ["refunded", "pickup_expired", "returning_to_sender", "returned_to_sender"].includes(status)
+        ? "info"
+        : "primary";
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", CommerceAccountSalesController);

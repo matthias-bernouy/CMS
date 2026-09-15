@@ -32,9 +32,11 @@ export function statusLabel(value, text = (_name, fallback) => fallback) {
             pickup_expired: text("status-pickup-expired-label", "Pickup window expired"),
             returning_to_sender: text("status-returning-to-sender-label", "Returning to sender"),
             returned_to_sender: text("status-returned-to-sender-label", "Returned to sender"),
+            cancelled_unscanned: text("status-cancelled-unscanned-label", "Cancelled before carrier scan"),
             cancelled: text("status-cancelled-label", "Cancelled"),
             failed: text("status-failed-label", "Creation failed"),
             unknown: text("status-unknown-label", "Review required"),
+            manual_review: text("status-manual-review-label", "Review required"),
         }[value] || text("status-ready-label", "Ready to prepare")
     );
 }
@@ -60,6 +62,12 @@ export function statusCopy(value, text = (_name, fallback) => fallback) {
     }
     if (value === "unknown") {
         return text("status-unknown-message", "The shipment must be reviewed before another attempt.");
+    }
+    if (value === "manual_review") {
+        return text("status-manual-review-message", "The shipment is paused while its status is reviewed.");
+    }
+    if (value === "cancelled_unscanned" || value === "cancelled") {
+        return text("status-cancelled-message", "The shipment was cancelled before delivery.");
     }
     return value
         ? text("status-ready-message", "The shipping label is available.")
@@ -104,9 +112,11 @@ export const fulfillmentCopy: Record<string, string> = {
     "status-pickup-expired-label": "Pickup window expired",
     "status-returning-to-sender-label": "Returning to sender",
     "status-returned-to-sender-label": "Returned to sender",
+    "status-cancelled-unscanned-label": "Cancelled before carrier scan",
     "status-cancelled-label": "Cancelled",
     "status-failed-label": "Creation failed",
     "status-unknown-label": "Review required",
+    "status-manual-review-label": "Review required",
     "status-ready-label": "Ready to prepare",
     "status-in-transit-message": "The parcel is in transit.",
     "status-arrived-at-pickup-point-message": "The parcel arrived at the pickup point but has not been collected.",
@@ -114,6 +124,8 @@ export const fulfillmentCopy: Record<string, string> = {
     "status-collected-by-recipient-message": "The carrier confirmed collection by the recipient.",
     "status-failed-message": "Shipment creation failed and can be retried.",
     "status-unknown-message": "The shipment must be reviewed before another attempt.",
+    "status-manual-review-message": "The shipment is paused while its status is reviewed.",
+    "status-cancelled-message": "The shipment was cancelled before delivery.",
     "status-ready-message": "The shipping label is available.",
     "status-missing-message": "Create the shipping label when the parcel is ready.",
 };

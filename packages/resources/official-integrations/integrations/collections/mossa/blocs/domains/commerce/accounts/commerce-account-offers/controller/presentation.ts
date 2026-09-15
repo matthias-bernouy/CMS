@@ -1,7 +1,17 @@
 type ObjectValue = Record<string, unknown>;
 type OfferAction = { label: string; url: string } | null;
 
-const statusCodes = ["all", "draft", "action_required", "under_review", "online", "paused", "rejected", "archived"];
+const statusCodes = [
+    "all",
+    "draft",
+    "action_required",
+    "under_review",
+    "online",
+    "unavailable",
+    "paused",
+    "rejected",
+    "archived",
+];
 
 export const presentationAttributes = [
     "edit-label",
@@ -92,6 +102,9 @@ function offerAction(host: HTMLElement, offer: ObjectValue): OfferAction {
     if (["draft", "changes_requested"].includes(workflow)) {
         return action(host, offer, "edit-url", "edit-label", "Edit");
     }
+    if (offer.availability && offer.availability !== "available") {
+        return action(host, offer, "edit-url", "view-label", "View");
+    }
     if (!offer.publiclyVisible) {
         return null;
     }
@@ -109,7 +122,7 @@ function action(host: HTMLElement, offer: ObjectValue, urlAttribute: string, lab
 }
 
 function statusLabel(host: HTMLElement, status: string): string {
-    const code = statusCodes.includes(status) ? status : "draft";
+    const code = statusCodes.includes(status) ? status : "unavailable";
     return text(host, `label-${code.replaceAll("_", "-")}`, statusDefaults[code]);
 }
 
@@ -119,6 +132,9 @@ function statusTone(status: string): string {
     }
     if (status === "rejected") {
         return "danger";
+    }
+    if (status === "unavailable") {
+        return "secondary";
     }
     if (status === "action_required") {
         return "warning";
@@ -154,6 +170,7 @@ const statusDefaults: Record<string, string> = {
     action_required: "Action required",
     under_review: "Under review",
     online: "Online",
+    unavailable: "Unavailable",
     paused: "Paused",
     rejected: "Rejected",
     archived: "Archived",

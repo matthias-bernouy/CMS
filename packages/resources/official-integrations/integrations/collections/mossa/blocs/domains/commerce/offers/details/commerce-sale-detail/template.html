@@ -38,6 +38,10 @@
                             </mossa-responsive-grid>
                         </mossa-stack>
                     </mossa-surface-card>
+                    <mossa-surface-card appearance="{{ presentation.cardAppearance }}" density="compact" cms-condition="presentation.showHandoffDeadline">
+                        <strong slot="title">{{ presentation.handoffDeadlineTitle }}</strong>
+                        <span slot="description">{{ presentation.handoffDeadlineDescription }}</span>
+                    </mossa-surface-card>
                     <slot name="fulfillment"></slot>
                 </mossa-stack>
 

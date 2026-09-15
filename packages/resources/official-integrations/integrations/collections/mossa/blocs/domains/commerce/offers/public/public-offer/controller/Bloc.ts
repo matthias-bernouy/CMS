@@ -14,6 +14,10 @@ type RecordValue = Record<string, any>;
 export class PublicOffer extends Component {
     static observedAttributes = [
         "condition-tone",
+        "availability-unavailable-label",
+        "availability-unavailable-message",
+        "availability-preorder-label",
+        "availability-preorder-message",
         "image-fit",
         "price-tone",
         "purchase-appearance",
@@ -133,6 +137,17 @@ export class PublicOffer extends Component {
         ]);
         return {
             availability: offer.availability || "",
+            availabilityLabel:
+                offer.availability === "preorder"
+                    ? this.getAttribute("availability-preorder-label") || "Preorder"
+                    : this.getAttribute("availability-unavailable-label") || "Unavailable",
+            availabilityMessage:
+                offer.availability === "preorder"
+                    ? this.getAttribute("availability-preorder-message") ||
+                      "This item is not available for immediate purchase."
+                    : this.getAttribute("availability-unavailable-message") ||
+                      "This item is no longer available for purchase.",
+            showAvailabilityNotice: offer.availability !== "available",
             conditionCode: offer.conditionCode || "",
             conditionLabel: offer.conditionLabel || "",
             conditionTone: this.getAttribute("condition-tone") || "neutral",

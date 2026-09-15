@@ -57,6 +57,7 @@
                         <h1 slot="title">{{ presentation.title }}</h1>
                         <p slot="meta" cms-condition="presentation.meta">{{ presentation.meta }}</p>
                         <mossa-condition slot="badge" code="{{ presentation.conditionCode }}" label="{{ presentation.conditionLabel }}" tone="{{ presentation.conditionTone }}"></mossa-condition>
+                        <mossa-badge slot="badge" tone="secondary" cms-condition="presentation.showAvailabilityNotice">{{ presentation.availabilityLabel }}</mossa-badge>
                         <p slot="description" cms-condition="presentation.description">{{ presentation.description }}</p>
 
                         <mossa-specifications slot="price" variant="flat" tone="{{ presentation.priceTone }}">
@@ -78,6 +79,9 @@
 
                         <mossa-meta slot="shipping">
                             <slot name="shipping-message"></slot>
+                        </mossa-meta>
+                        <mossa-meta slot="shipping" cms-condition="presentation.showAvailabilityNotice">
+                            {{ presentation.availabilityMessage }}
                         </mossa-meta>
 
                         <mossa-button slot="actions" appearance="filled" size="lg" width="full" cms-condition="presentation.availability == 'available'">

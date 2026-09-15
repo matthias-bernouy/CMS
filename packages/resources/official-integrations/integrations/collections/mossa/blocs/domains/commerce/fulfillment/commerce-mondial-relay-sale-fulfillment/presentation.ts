@@ -72,7 +72,7 @@ export function fulfillmentPresentation(host: HTMLElement, value: unknown): Reco
 }
 
 function fulfillmentTone(status: string, awaitingCarrierScan: boolean): string {
-    if (["incident", "lost", "failed"].includes(status)) {
+    if (["incident", "lost", "failed", "manual_review"].includes(status)) {
         return "danger";
     }
     if (["available_for_pickup", "collected_by_recipient"].includes(status)) {
@@ -81,7 +81,11 @@ function fulfillmentTone(status: string, awaitingCarrierScan: boolean): string {
     if (awaitingCarrierScan || ["creating", "created", "label_ready"].includes(status)) {
         return "warning";
     }
-    return status ? "info" : "secondary";
+    return ["cancelled", "cancelled_unscanned", "pickup_expired", "returned_to_sender"].includes(status)
+        ? "secondary"
+        : status
+          ? "info"
+          : "secondary";
 }
 
 function record(value: unknown): Value | null {
