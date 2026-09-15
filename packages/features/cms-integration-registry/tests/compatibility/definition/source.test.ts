@@ -53,6 +53,55 @@ describe("source definition compatibility", () => {
         expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "endpoint-contract-unproven" }));
     });
 
+    test("allows optional request fields and response fields in a minor release", () => {
+        const baseline = packageState("1.0.0", {
+            artifacts: [sourceArtifact([sourceEndpoint({ body: objectShape({ mode: stringShape() }) })])],
+        });
+        const candidate = packageState("1.1.0", {
+            artifacts: [
+                sourceArtifact([
+                    sourceEndpoint({
+                        body: objectShape({ mode: stringShape(), recipients: { type: "array", items: stringShape() } }),
+                        output: [
+                            {
+                                status: "200",
+                                body: objectShape({ mode: stringShape(), recipients: { type: "array" } }, [
+                                    "mode",
+                                    "recipients",
+                                ]),
+                            },
+                        ],
+                    }),
+                ]),
+            ],
+        });
+
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: true, outcome: "compatible" });
+        expect(decision.evidence.map((entry) => entry.code)).toEqual(
+            expect.arrayContaining(["endpoint-request-property-added", "endpoint-response-added"]),
+        );
+    });
+
+    test("rejects a newly required request field", () => {
+        const baseline = packageState("1.0.0", {
+            artifacts: [sourceArtifact([sourceEndpoint({ body: objectShape({ mode: stringShape() }) })])],
+        });
+        const candidate = packageState("1.1.0", {
+            artifacts: [
+                sourceArtifact([
+                    sourceEndpoint({
+                        body: objectShape({ mode: stringShape(), accountId: stringShape() }, ["accountId"]),
+                    }),
+                ]),
+            ],
+        });
+
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "endpoint-request-property-added" }));
+    });
+
     test("tracks indexing capability changes", () => {
         const baseline = packageState("1.0.0", { artifacts: [sourceArtifact([sourceEndpoint()])] });
         const indexing = sourceIndexing({ title: { path: "title", type: "text" } });
@@ -133,4 +182,12 @@ function sourceEndpoint(overrides: Record<string, unknown> = {}) {
         params: [],
         ...overrides,
     };
+}
+
+function objectShape(properties: Record<string, unknown>, required?: string[]) {
+    return { type: "object", properties, ...(required ? { required } : {}) };
+}
+
+function stringShape() {
+    return { type: "string" };
 }

@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from "node:util";
 import type { DeclarativeArtifactTemplate, IntegrationDefinition } from "@bernouy/cms-integrations";
 import type { CompatibilityChangeSink } from "../changes";
-import { compareSource } from "./source";
+import { compareAccess, compareContractVersion, compareSource } from "./source";
 
 export function compareDefinitionArtifacts(
     baseline: IntegrationDefinition,
@@ -44,6 +44,14 @@ function compareArtifact(
         compareBlocVisibility(baseline.bloc.internal === true, candidate.bloc.internal === true, path, add);
         return;
     }
+    if (baseline.type === "dashboard-view" && candidate.type === "dashboard-view") {
+        compareDashboardView(baseline, candidate, path, add);
+        return;
+    }
+    if (baseline.type === "function" && candidate.type === "function") {
+        compareFunction(baseline, candidate, path, add);
+        return;
+    }
     const previousContract = publicArtifactContract(baseline);
     const nextContract = publicArtifactContract(candidate);
     if (!isDeepStrictEqual(previousContract, nextContract)) {
@@ -55,6 +63,112 @@ function compareArtifact(
             "Declared artifact contract changed without a specialized comparator",
         );
     }
+}
+
+function compareFunction(
+    baseline: Extract<DeclarativeArtifactTemplate, { type: "function" }>,
+    candidate: Extract<DeclarativeArtifactTemplate, { type: "function" }>,
+    path: string,
+    add: CompatibilityChangeSink,
+): void {
+    compareContractVersion(baseline.contractVersion, candidate.contractVersion, `${path}.contractVersion`, add);
+    if (baseline.function.method !== candidate.function.method) {
+        add("breaking", "artifact", "function-method-changed", `${path}.method`, "Function method changed");
+    }
+    compareAccess(
+        baseline.function.access?.mode ?? "public",
+        candidate.function.access?.mode ?? "public",
+        `${path}.access`,
+        add,
+    );
+    const previousDataContract = { input: baseline.function.input, output: baseline.function.output };
+    const nextDataContract = { input: candidate.function.input, output: candidate.function.output };
+    if (!isDeepStrictEqual(previousDataContract, nextDataContract)) {
+        add(
+            "unknown",
+            "artifact",
+            "function-data-contract-unproven",
+            path,
+            "Function input or output changed without a specialized data-shape comparison",
+        );
+    }
+}
+
+function compareDashboardView(
+    baseline: Extract<DeclarativeArtifactTemplate, { type: "dashboard-view" }>,
+    candidate: Extract<DeclarativeArtifactTemplate, { type: "dashboard-view" }>,
+    path: string,
+    add: CompatibilityChangeSink,
+): void {
+    const previousContract = publicArtifactContract(baseline);
+    const nextContract = publicArtifactContract(candidate);
+    if (isDeepStrictEqual(previousContract, nextContract)) {
+        return;
+    }
+    if (isStructuralExtension(previousContract, nextContract)) {
+        add("additive", "artifact", "dashboard-view-extended", path, "Dashboard view was extended");
+        return;
+    }
+    add(
+        "unknown",
+        "artifact",
+        "artifact-contract-changed",
+        path,
+        "Dashboard view changed incompatibly or without comparable stable identities",
+    );
+}
+
+function isStructuralExtension(baseline: unknown, candidate: unknown): boolean {
+    if (isDeepStrictEqual(baseline, candidate)) {
+        return true;
+    }
+    if (Array.isArray(baseline) && Array.isArray(candidate)) {
+        return isArrayExtension(baseline, candidate);
+    }
+    if (!isRecord(baseline) || !isRecord(candidate)) {
+        return false;
+    }
+    return Object.entries(baseline).every(
+        ([key, value]) => Object.hasOwn(candidate, key) && isStructuralExtension(value, candidate[key]),
+    );
+}
+
+function isArrayExtension(baseline: readonly unknown[], candidate: readonly unknown[]): boolean {
+    const previousById = indexByStableId(baseline);
+    const nextById = indexByStableId(candidate);
+    if (previousById && nextById) {
+        return [...previousById].every(([id, value]) => {
+            const next = nextById.get(id);
+            return next !== undefined && isStructuralExtension(value, next);
+        });
+    }
+    let candidateIndex = 0;
+    for (const value of baseline) {
+        while (candidateIndex < candidate.length && !isDeepStrictEqual(value, candidate[candidateIndex])) {
+            candidateIndex += 1;
+        }
+        if (candidateIndex >= candidate.length) {
+            return false;
+        }
+        candidateIndex += 1;
+    }
+    return true;
+}
+
+function indexByStableId(values: readonly unknown[]): Map<string, Record<string, unknown>> | null {
+    const entries: [string, Record<string, unknown>][] = [];
+    for (const value of values) {
+        if (!isRecord(value) || typeof value.id !== "string" || !value.id) {
+            return null;
+        }
+        entries.push([value.id, value]);
+    }
+    const result = new Map(entries);
+    return result.size === entries.length ? result : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function compareBlocVisibility(

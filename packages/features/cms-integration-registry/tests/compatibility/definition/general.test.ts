@@ -36,6 +36,34 @@ describe("integration definition compatibility", () => {
         expect(widened.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-widened" }));
     });
 
+    test("allows only an extension host floor to advance within its maintained major", () => {
+        const baseline = extensionDependencyPackage("1.0.0", "^1.0.0");
+        const allowed = evaluator().evaluate({
+            baseline,
+            candidate: extensionDependencyPackage("1.1.0", "^1.1.0"),
+        });
+        const ordinaryDependency = evaluator().evaluate({
+            baseline: dependencyPackage("1.0.0", "^1.0.0"),
+            candidate: dependencyPackage("1.1.0", "^1.1.0"),
+        });
+        const nextMajor = evaluator().evaluate({
+            baseline,
+            candidate: extensionDependencyPackage("1.1.0", "^2.0.0"),
+        });
+
+        expect(allowed).toMatchObject({ contractAdmissible: true, outcome: "compatible" });
+        expect(allowed.evidence).toContainEqual(
+            expect.objectContaining({
+                classification: "additive",
+                code: "extension-host-dependency-floor-raised",
+            }),
+        );
+        for (const decision of [ordinaryDependency, nextMajor]) {
+            expect(decision).toMatchObject({ contractAdmissible: false, outcome: "breaking" });
+            expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "dependency-range-narrowed" }));
+        }
+    });
+
     test("bounds a legacy dependency range only from every exact reviewed baseline pin", () => {
         const covered = evaluator().evaluate({
             baseline: reviewedLegacyDependencyPackage([["1.0.0"]]),
@@ -87,6 +115,21 @@ describe("integration definition compatibility", () => {
         const decision = evaluator().evaluate({ baseline, candidate });
         expect(decision.contractAdmissible).toBeTrue();
         expect(decision.evidence).toEqual([]);
+    });
+
+    test("allows a Function contract version to advance in a minor release", () => {
+        const baseline = packageState("1.0.0", {
+            artifacts: [functionArtifact([], "1.0.0")],
+        });
+        const candidate = packageState("1.1.0", {
+            artifacts: [functionArtifact([{ assert: { condition: { exists: true } } }], "1.1.0")],
+        });
+
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: true, outcome: "compatible" });
+        expect(decision.evidence).toContainEqual(
+            expect.objectContaining({ classification: "additive", code: "endpoint-contract-version-advanced" }),
+        );
     });
 
     test("allows bloc implementation and catalogue metadata changes in a patch release", () => {
@@ -143,11 +186,52 @@ describe("integration definition compatibility", () => {
             expect.objectContaining({ classification: "additive", code: "bloc-made-public" }),
         );
     });
+
+    test("allows dashboard view fields and actions to be added in a minor release", () => {
+        const baseline = packageState("1.0.0", {
+            artifacts: [dashboardView([detailSection("summary", "status")])],
+        });
+        const candidate = packageState("1.1.0", {
+            artifacts: [
+                dashboardView(
+                    [detailSection("summary", "status"), detailSection("fulfillment", "fulfillment.blockingReason")],
+                    [
+                        {
+                            id: "reopenShippingWindow",
+                            label: "Reopen shipping window",
+                            form: { endpoint: "reopenShippingWindow" },
+                        },
+                    ],
+                ),
+            ],
+        });
+
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: true, outcome: "compatible" });
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "dashboard-view-extended" }));
+    });
+
+    test("keeps incompatible dashboard view edits conservative", () => {
+        const baseline = packageState("1.0.0", { artifacts: [dashboardView([detailSection("summary", "status")])] });
+        const candidate = packageState("1.1.0", { artifacts: [dashboardView([detailSection("details", "status")])] });
+
+        const decision = evaluator().evaluate({ baseline, candidate });
+        expect(decision).toMatchObject({ contractAdmissible: false, outcome: "unknown" });
+        expect(decision.evidence).toContainEqual(expect.objectContaining({ code: "artifact-contract-changed" }));
+    });
 });
 
 function dependencyPackage(version: string, versionRange?: string) {
     return packageState(version, {
         dependencies: [{ name: "commerce", kind: "commerce", ...(versionRange ? { versionRange } : {}) }],
+        connectors: [connector({ compatibility: { schema: schemaContract() } })],
+    });
+}
+
+function extensionDependencyPackage(version: string, versionRange: string) {
+    return packageState(version, {
+        extensionOf: { kind: "commerce" },
+        dependencies: [{ name: "commerce", kind: "commerce", versionRange }],
         connectors: [connector({ compatibility: { schema: schemaContract() } })],
     });
 }
@@ -174,9 +258,10 @@ function reviewedLegacyDependencyPackage(versions: readonly (readonly string[])[
     };
 }
 
-function functionArtifact(steps: unknown[]) {
+function functionArtifact(steps: unknown[], contractVersion?: string) {
     return {
         type: "function",
+        ...(contractVersion ? { contractVersion } : {}),
         function: {
             id: "sync",
             method: "POST",
@@ -197,5 +282,32 @@ function blocArtifact(overrides: Record<string, unknown> = {}) {
             compositionHTML: "<span>Logo</span>",
             ...overrides,
         },
+    };
+}
+
+function dashboardView(main: unknown[], actions?: unknown[]) {
+    return {
+        type: "dashboard-view",
+        view: {
+            id: "order-detail",
+            source: "commerce",
+            views: [
+                {
+                    widget: "w-detail",
+                    id: "orderDetail",
+                    source: { endpoint: "getOrder" },
+                    main,
+                    actions: actions ?? [],
+                },
+            ],
+        },
+    };
+}
+
+function detailSection(id: string, path: string) {
+    return {
+        id,
+        title: id,
+        fields: [{ id: path, label: path, path, type: "readonly" }],
     };
 }

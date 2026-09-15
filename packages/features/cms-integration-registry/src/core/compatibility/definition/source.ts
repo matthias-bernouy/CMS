@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from "node:util";
 import { integrationVersionReleaseLevel, type DeclarativeArtifactTemplate } from "@bernouy/cms-integrations";
 import type { CompatibilityChangeSink } from "../changes";
+import { compareSourceEndpointDataContracts } from "./sourceDataShapes";
 import { compareSourceIndexing } from "./sourceIndexing";
 
 type Source = Extract<DeclarativeArtifactTemplate, { type: "source" }>["source"];
@@ -86,20 +87,13 @@ function compareSourceEndpoint(
             );
         }
     }
-    const previousRest = { body: baseline.body, output: baseline.output, headers: baseline.headers };
-    const nextRest = { body: candidate.body, output: candidate.output, headers: candidate.headers };
-    if (!isDeepStrictEqual(previousRest, nextRest)) {
-        add(
-            "unknown",
-            "artifact",
-            "endpoint-contract-unproven",
-            path,
-            "Endpoint body, response, or injected-header contract changed",
-        );
+    compareSourceEndpointDataContracts(baseline, candidate, path, add);
+    if (!isDeepStrictEqual(baseline.headers, candidate.headers)) {
+        add("unknown", "artifact", "endpoint-contract-unproven", `${path}.headers`, "Injected-header contract changed");
     }
 }
 
-function compareContractVersion(
+export function compareContractVersion(
     baseline: string | undefined,
     candidate: string | undefined,
     path: string,
@@ -138,7 +132,7 @@ function compareContractVersion(
     );
 }
 
-function compareAccess(baseline: string, candidate: string, path: string, add: CompatibilityChangeSink): void {
+export function compareAccess(baseline: string, candidate: string, path: string, add: CompatibilityChangeSink): void {
     if (baseline === candidate) {
         return;
     }

@@ -1,5 +1,6 @@
 import {
     integrationVersionRangeContainsRange,
+    integrationVersionReleaseLevel,
     integrationVersionSatisfies,
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
@@ -82,6 +83,9 @@ function compareDependencies(
             add,
             candidateDependency.kind,
             baselinePackage,
+            baseline.extensionOf?.kind === dependency.kind &&
+                candidate.extensionOf?.kind === candidateDependency.kind &&
+                dependency.kind === candidateDependency.kind,
         );
     }
     for (const [name, dependency] of next) {
@@ -104,6 +108,7 @@ function compareDependencyRange(
     add: CompatibilityChangeSink,
     dependencyKind: string,
     baselinePackage: IntegrationCompatibilityPackage,
+    isExtensionHost: boolean,
 ): void {
     if (baseline === candidate) {
         return;
@@ -124,6 +129,14 @@ function compareDependencyRange(
             `${path}.versionRange`,
             "Dependency range was widened",
         );
+    } else if (baseline && isExtensionHost && isSameMajorCaretFloorRaise(baseline, candidate)) {
+        add(
+            "additive",
+            "dependency",
+            "extension-host-dependency-floor-raised",
+            `${path}.versionRange`,
+            "Extension host minimum version was raised within the same maintained major",
+        );
     } else {
         add(
             "breaking",
@@ -133,6 +146,23 @@ function compareDependencyRange(
             "Dependency range excludes previously supported versions",
         );
     }
+}
+
+function isSameMajorCaretFloorRaise(baselineRange: string, candidateRange: string): boolean {
+    const baseline = parseStableCaretFloor(baselineRange);
+    const candidate = parseStableCaretFloor(candidateRange);
+    if (!baseline || !candidate || baseline.major !== candidate.major) {
+        return false;
+    }
+    return (
+        integrationVersionRangeContainsRange(baselineRange, candidateRange) &&
+        integrationVersionReleaseLevel(baseline.version, candidate.version) !== null
+    );
+}
+
+function parseStableCaretFloor(range: string): { major: number; version: string } | null {
+    const match = /^\^([1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(range);
+    return match ? { major: Number(match[1]), version: `${match[1]}.${match[2]}.${match[3]}` } : null;
 }
 
 function reviewedLegacyDependencyRangeCovers(
