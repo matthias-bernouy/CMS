@@ -64,8 +64,8 @@ export async function validateMigrationVerificationInput(value: unknown): Promis
         input.targetMigrationRevision,
         "migrationVerificationInput.targetMigrationRevision",
     );
-    if (targetMigrationRevision <= sourceMigrationRevision) {
-        invalid("migrationVerificationInput.targetMigrationRevision", "must advance sourceMigrationRevision");
+    if (targetMigrationRevision < sourceMigrationRevision) {
+        invalid("migrationVerificationInput.targetMigrationRevision", "must not precede sourceMigrationRevision");
     }
     const dependencyMatrices = parseDependencyMatrices(input.dependencyMatrices, target.kind);
     const connectorKey = stableIdentifier(input.connectorKey, "migrationVerificationInput.connectorKey");
@@ -81,6 +81,12 @@ export async function validateMigrationVerificationInput(value: unknown): Promis
     const runner = await parseRunner(input.runner, policy.snapshot.approvedRunners);
     const environment = await parseEnvironment(input.environment, policy.snapshot, runner);
     const migrationPlan = await parsePlan(input.migrationPlan, target.version, targetMigrationRevision);
+    if (targetMigrationRevision === sourceMigrationRevision && !migrationPlan.plan.repeatables?.length) {
+        invalid(
+            "migrationVerificationInput.targetMigrationRevision",
+            "must advance sourceMigrationRevision when the migration plan has no repeatables",
+        );
+    }
     assertSelectedSource(migrationPlan.plan, source, sourceMigrationRevision);
     return {
         schema: MIGRATION_VERIFICATION_INPUT_SCHEMA,

@@ -79,6 +79,44 @@ describe("migration verification input", () => {
         ).rejects.toThrow(/duplicate/);
     });
 
+    test("admits an unchanged migration revision only for repeatable migrations", async () => {
+        const fixture = await migrationControlFixture();
+        const basePlan = fixture.input.migrationPlan.plan;
+        const repeatableOnlyPlan = {
+            ...basePlan,
+            install: {
+                ...basePlan.install,
+                revision: fixture.input.sourceMigrationRevision,
+                coveredMigrations: basePlan.install.coveredMigrations.slice(0, 1),
+            },
+            migrations: basePlan.migrations.slice(0, 1),
+        };
+        const identified = await identifyMigrationVerificationPlan(
+            repeatableOnlyPlan,
+            fixture.input.target.version,
+            fixture.input.sourceMigrationRevision,
+        );
+        const input = {
+            ...fixture.input,
+            targetMigrationRevision: fixture.input.sourceMigrationRevision,
+            migrationPlan: { digest: identified.digest, plan: identified.plan },
+        };
+
+        await expect(validateMigrationVerificationInput(input)).resolves.toBeDefined();
+
+        const withoutRepeatables = await identifyMigrationVerificationPlan(
+            { ...repeatableOnlyPlan, repeatables: [] },
+            fixture.input.target.version,
+            fixture.input.sourceMigrationRevision,
+        );
+        await expect(
+            validateMigrationVerificationInput({
+                ...input,
+                migrationPlan: { digest: withoutRepeatables.digest, plan: withoutRepeatables.plan },
+            }),
+        ).rejects.toThrow(/must advance sourceMigrationRevision when the migration plan has no repeatables/);
+    });
+
     test("fails closed on substituted selection, plan, runner, policy, or environment", async () => {
         const fixture = await migrationControlFixture();
         const attempts = [
