@@ -3,6 +3,7 @@ import { compare, rcompare } from "semver";
 import type { LocalReleasePackage } from "../types";
 import type { ReleaseSandboxClient } from "./client";
 import { sandboxAnswers } from "./answers";
+import { ReleaseScenarioInfrastructureError } from "./scenario/errors";
 
 export async function installRequiredDependencies(
     owner: LocalReleasePackage,
@@ -46,7 +47,13 @@ async function ensureInstalled(
     const { kind, version } = selected.package.envelope;
     const current = installed.get(kind);
     if (!current) {
-        await client.install(kind, version, sandboxAnswers(selected.definition));
+        try {
+            await client.install(kind, version, sandboxAnswers(selected.definition));
+        } catch (error) {
+            throw new ReleaseScenarioInfrastructureError(
+                new Error(`Could not prepare required dependency ${kind}@${version}`, { cause: error }),
+            );
+        }
         installed.set(kind, version);
         return;
     }

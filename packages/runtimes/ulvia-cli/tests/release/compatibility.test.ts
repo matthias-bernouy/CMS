@@ -3,6 +3,7 @@ import { Buffer } from "node:buffer";
 import { assertLocalCompatibility, evaluateLocalCompatibility } from "../../src/release/compatibility";
 import { installRequiredDependencies } from "../../src/release/sandbox/dependencies";
 import type { ReleaseSandboxClient } from "../../src/release/sandbox/client";
+import { ReleaseScenarioInfrastructureError } from "../../src/release/sandbox/scenario/errors";
 import { verifyCollectionRelease } from "../../src/release/verification/collection";
 import { releasePackage } from "./support";
 
@@ -40,6 +41,22 @@ describe("local release compatibility", () => {
         await installRequiredDependencies(owner, [latestDependency], new Map([["dependency", "2.1.0"]]), client);
 
         expect(calls).toEqual([]);
+    });
+
+    test("classifies a published dependency installation failure as infrastructure", async () => {
+        const owner = await releasePackage("1.0.0", {
+            dependencies: [{ name: "dependency", kind: "dependency", versionRange: "1.0.0" }],
+        });
+        const dependency = await releasePackage("1.0.0", {}, "dependency");
+        const client = {
+            install: async () => {
+                throw new Error("provider request failed");
+            },
+        } as unknown as ReleaseSandboxClient;
+
+        await expect(installRequiredDependencies(owner, [dependency], new Map(), client)).rejects.toBeInstanceOf(
+            ReleaseScenarioInfrastructureError,
+        );
     });
 
     test("does not model internal collection controllers as selectable upgrade state", async () => {
