@@ -11,9 +11,11 @@ create table if not exists commerce.notification_configuration (
 alter table commerce.notification_configuration
     add column if not exists admin_recipient_cms_user_ids text[] not null default '{}';
 
+alter table commerce.notification_configuration no force row level security;
 insert into commerce.notification_configuration (id, mode)
 values ('default', 'builtin')
 on conflict (id) do nothing;
+alter table commerce.notification_configuration force row level security;
 
 create table if not exists commerce.notification_rules (
     key text primary key,
@@ -115,6 +117,7 @@ create index if not exists notification_events_aggregate_idx
     on commerce.notification_events(aggregate_type, aggregate_id, aggregate_version desc);
 
 -- Source: install/sql/foundation/notifications/rules.sql
+alter table commerce.notification_rules no force row level security;
 insert into commerce.notification_rules (
     key, event_type, audience, label, description, policy, template_key, stale_policy
 ) values
@@ -271,6 +274,7 @@ on conflict (key) do update set
     template_key = excluded.template_key,
     stale_policy = excluded.stale_policy,
     updated_at = now();
+alter table commerce.notification_rules force row level security;
 
 -- Source: install/sql/foundation/notifications/capture.sql
 create or replace function commerce.capture_notification_audit_event()

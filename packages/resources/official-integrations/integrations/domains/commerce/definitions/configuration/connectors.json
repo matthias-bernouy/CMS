@@ -56,7 +56,7 @@
             "repeatables": [
                 {
                     "id": "commerce-1-1-runtime",
-                    "checksum": "sha256:265de965a301c7d086f4234f94747307da0e5724204f0a7c1f3c45d96d75a231",
+                    "checksum": "sha256:f8eabe6853c318f6bb87cb2f953c5aec8205206b38f8f3a7853b9debbe2f014b",
                     "path": "repeatables/commerce-1.1.0.sql"
                 }
             ],
