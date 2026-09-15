@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { INTEGRATION_PACKAGE_DIGEST_HEADER } from "@bernouy/cms-integration-packages";
 import type { LocalRepositoryCatalog } from "./catalog";
 import type { LocalIntegrationRepository } from "./local";
@@ -120,7 +121,18 @@ function nullableJson(value: unknown): Response {
 }
 
 function json(value: unknown, status = 200): Response {
-    return Response.json(value, { status, headers: commonHeaders() });
+    const body = JSON.stringify(value);
+    const bytes = new TextEncoder().encode(body);
+    const digest = createHash("sha256").update(bytes).digest("hex");
+    return new Response(body, {
+        status,
+        headers: {
+            ...commonHeaders(),
+            "content-length": String(bytes.byteLength),
+            "content-type": "application/json; charset=utf-8",
+            etag: `"${digest}"`,
+        },
+    });
 }
 
 function commonHeaders(): Record<string, string> {

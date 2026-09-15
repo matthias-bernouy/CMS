@@ -51,6 +51,7 @@ describe("local integration repository", () => {
             new LocalRepositoryCatalog(fixture.repository),
         );
         expect(response.status).toBe(200);
+        expect(response.headers.get("etag")).toMatch(/^"[a-f0-9]{64}"$/u);
         expect(await response.json()).toEqual([reviewedSchemaBaseline]);
     });
 
