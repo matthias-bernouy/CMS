@@ -11,6 +11,7 @@ import type {
     BoundIntegrationVerificationAuthorSuiteV1,
     IntegrationVerificationEnvelopeV1,
     MigrationVerificationInputV1,
+    ReviewedSchemaBaselineV1,
     ReleaseAdmissionPolicySnapshotV1,
     ValidatedIntegrationCandidateEnvelopeV1,
 } from "@bernouy/cms-integration-verification";
@@ -92,6 +93,7 @@ export interface RepositoryCandidatePublicationFinalizer {
 export type RepositoryCandidateWorkerRoutesConfig = Readonly<{
     store: IntegrationRegistryCandidateStore;
     packageSource?: Pick<IntegrationPackageSource, "getPackage">;
+    reviewedSchemaBaselines?: RepositoryCandidateReviewedSchemaBaselineResolver;
     authorSuites?: RepositoryCandidateAuthorSuiteResolver;
     capabilityAuthority: RepositoryCandidateCapabilityAuthority;
     maxBodyBytes: number;
@@ -113,6 +115,12 @@ export interface RepositoryCandidateAuthorSuiteResolver {
     ): Promise<readonly BoundIntegrationVerificationAuthorSuiteV1[]>;
 }
 
+export interface RepositoryCandidateReviewedSchemaBaselineResolver {
+    resolve(
+        target: Readonly<{ kind: string; version: string; packageDigest: string }>,
+    ): Promise<readonly ReviewedSchemaBaselineV1[]>;
+}
+
 export type RepositoryCandidateExactMigrationPackage = Readonly<{
     digest: string;
     envelope: IntegrationPackageEnvelopeV1;
@@ -123,6 +131,7 @@ export type RepositoryCandidateExactUpgradePackage = Readonly<{
     version: string;
     packageDigest: string;
     envelope: IntegrationPackageEnvelopeV1;
+    reviewedSchemaBaselines: readonly ReviewedSchemaBaselineV1[];
 }>;
 
 export type RepositoryCandidateExactDependencyPackage = Readonly<

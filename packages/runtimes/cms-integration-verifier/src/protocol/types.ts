@@ -7,6 +7,7 @@ import type {
     IntegrationVerificationEnvelopeV1,
     ReleaseAdmissionPolicySnapshotV1,
     MigrationVerificationInputV1,
+    ReviewedSchemaBaselineV1,
 } from "@bernouy/cms-integration-verification";
 
 export type CandidateLeaseProjection = Readonly<{
@@ -80,6 +81,7 @@ export type ExactUpgradePackage = Readonly<{
     version: string;
     packageDigest: string;
     envelope: IntegrationPackageEnvelopeV1;
+    reviewedSchemaBaselines: readonly ReviewedSchemaBaselineV1[];
 }>;
 
 export type ClaimedVerificationJob = Readonly<{

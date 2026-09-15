@@ -4,7 +4,10 @@ import {
     type IntegrationPackageEnvelopeV1,
     type ResolvedIntegrationPackage,
 } from "@bernouy/cms-integration-packages";
+import type { ReviewedConnectorSchemaBaseline } from "@bernouy/cms-integration-registry";
+import { identifyReviewedSchemaBaseline, type ReviewedSchemaBaselineV1 } from "@bernouy/cms-integration-verification";
 import { loadIntegrationDefinitionFromVersionRoot } from "@bernouy/cms-integrations/fs";
+import { projectObservedSchemaContract } from "@bernouy/cms-integrations";
 import type { LocalReleasePackage } from "@bernouy/ulvia-cli/release-runtime";
 import type { VerificationSandboxInput } from "../../supervisor";
 import { createBoundedPackageMaterializer } from "../service/materialization";
@@ -22,7 +25,10 @@ export async function loadExactReleaseRuntimePackages(input: VerificationSandbox
         verificationBundle(input),
     );
     const baselines = await Promise.all(
-        input.workload.upgradePackages.map(async (entry) => await releasePackage(entry.envelope, entry.packageDigest)),
+        input.workload.upgradePackages.map(
+            async (entry) =>
+                await releasePackage(entry.envelope, entry.packageDigest, undefined, entry.reviewedSchemaBaselines),
+        ),
     );
     const availablePackages = await Promise.all(
         input.workload.dependencyPackages.map(
@@ -44,6 +50,7 @@ async function releasePackage(
     envelope: IntegrationPackageEnvelopeV1,
     expectedDigest: string,
     verification?: NonNullable<LocalReleasePackage["verification"]>,
+    reviewedSchemaBaselines: readonly ReviewedSchemaBaselineV1[] = [],
 ): Promise<LocalReleasePackage> {
     const resolved = await exactPackage(envelope, expectedDigest);
     const materializer = createBoundedPackageMaterializer({ maxCachedPackages: 1 });
@@ -55,10 +62,34 @@ async function releasePackage(
             expectedVersion: envelope.version,
             versionRoot: root,
         });
-        return { package: resolved, definition, ...(verification ? { verification } : {}) };
+        const reviewed = await Promise.all(reviewedSchemaBaselines.map(projectReviewedSchemaBaseline));
+        return {
+            package: resolved,
+            definition,
+            ...(verification ? { verification } : {}),
+            ...(reviewed.length > 0 ? { reviewedSchemaBaselines: reviewed } : {}),
+        };
     } finally {
         await materializer.dispose();
     }
+}
+
+async function projectReviewedSchemaBaseline(
+    value: ReviewedSchemaBaselineV1,
+): Promise<ReviewedConnectorSchemaBaseline> {
+    const identified = await identifyReviewedSchemaBaseline(value);
+    const baseline = identified.baseline;
+    return Object.freeze({
+        connector: Object.freeze({ ...baseline.legacySelector }),
+        packageDigest: baseline.packageDigest,
+        dependencies: Object.freeze(baseline.dependencies.map((dependency) => Object.freeze({ ...dependency }))),
+        schema: projectObservedSchemaContract(baseline.observedSchema),
+        provenance: Object.freeze({
+            evidenceId: `reviewed-schema-baseline-${identified.digest}`,
+            source: `${baseline.origin}:${baseline.policy.name}@${baseline.policy.version}`,
+            reviewedAt: baseline.createdAt,
+        }),
+    });
 }
 
 async function exactPackage(

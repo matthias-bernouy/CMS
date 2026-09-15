@@ -2,14 +2,17 @@ import { computeIntegrationPackageDigest } from "@bernouy/cms-integration-packag
 import type {
     AdmissionDependencyReferenceV1,
     AdmissionInputSnapshotV1,
+    AdmissionReviewedBaselineReferenceV1,
     MigrationVerificationInputV1,
 } from "@bernouy/cms-integration-verification";
 import type {
     RepositoryCandidateExactDependencyPackage,
     RepositoryCandidateExactMigrationPackage,
     RepositoryCandidateExactUpgradePackage,
+    RepositoryCandidateReviewedSchemaBaselineResolver,
     RepositoryCandidateWorkerRoutesConfig,
 } from "../contracts";
+import { resolveReviewedSchemaBaselines } from "./reviewedBaselines";
 
 type PackageReference = MigrationVerificationInputV1["source"];
 
@@ -17,6 +20,8 @@ export async function resolveExactUpgradePackages(
     source: RepositoryCandidateWorkerRoutesConfig["packageSource"],
     kind: string,
     references: NonNullable<AdmissionInputSnapshotV1["releaseVerificationPlan"]>["plan"]["baselines"],
+    reviewedReferences: readonly AdmissionReviewedBaselineReferenceV1[] = [],
+    reviewedSchemaBaselines?: RepositoryCandidateReviewedSchemaBaselineResolver,
 ): Promise<readonly RepositoryCandidateExactUpgradePackage[]> {
     if (references.length === 0) {
         return Object.freeze([]);
@@ -29,7 +34,12 @@ export async function resolveExactUpgradePackages(
             references.map(async (reference) => {
                 const exact = { kind, version: reference.version, packageDigest: reference.packageDigest };
                 const resolved = await resolveExactPackage(source, exact, "upgrade");
-                return Object.freeze({ ...exact, envelope: resolved.envelope });
+                const reviewed = await resolveReviewedSchemaBaselines(
+                    exact,
+                    reviewedReferences,
+                    reviewedSchemaBaselines,
+                );
+                return Object.freeze({ ...exact, envelope: resolved.envelope, reviewedSchemaBaselines: reviewed });
             }),
         ),
     );

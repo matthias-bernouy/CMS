@@ -78,6 +78,7 @@ export async function parseExactWorkload(
             input.upgradePackages ?? [],
             candidate.kind,
             admission.snapshot.releaseVerificationPlan?.plan.baselines ?? [],
+            admission.snapshot.reviewedBaselines,
         );
         const packageDigest = await computeIntegrationPackageDigest(packageEnvelope);
         const verificationDigest = await computeIntegrationVerificationDigest(verification);

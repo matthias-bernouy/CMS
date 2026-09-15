@@ -73,6 +73,7 @@ export {
     type RepositoryCandidateAdmissionPlanner,
     type RepositoryCandidateAuthorSuiteResolver,
     type RepositoryCandidatePublicationFinalizer,
+    type RepositoryCandidateReviewedSchemaBaselineResolver,
     type RepositoryCandidateManagementRoutesConfig,
     type RepositoryCandidateWorkerRoutesConfig,
     type RepositoryCandidateWorkerSurfaceMount,

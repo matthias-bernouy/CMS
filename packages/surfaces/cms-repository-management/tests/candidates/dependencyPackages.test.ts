@@ -70,9 +70,12 @@ describe("candidate exact upgrade package resolution", () => {
 
         const resolved = await resolveExactUpgradePackages(packageSource([first, second]), "demo", references);
 
-        expect(resolved.map(({ envelope: _envelope, ...identity }) => identity)).toEqual(
+        expect(
+            resolved.map(({ envelope: _envelope, reviewedSchemaBaselines: _baselines, ...identity }) => identity),
+        ).toEqual(
             references.map(({ resilienceKey: _resilienceKey, ...reference }) => ({ kind: "demo", ...reference })),
         );
+        expect(resolved.every(({ reviewedSchemaBaselines }) => reviewedSchemaBaselines.length === 0)).toBe(true);
     });
 
     test("fails closed when an upgrade baseline is absent or substituted", async () => {

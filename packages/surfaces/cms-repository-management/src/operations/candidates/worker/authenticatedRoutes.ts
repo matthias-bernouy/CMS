@@ -70,6 +70,8 @@ async function claimJob(request: Request, config: RepositoryCandidateWorkerRoute
             config.packageSource,
             current.kind,
             objects.admission.releaseVerificationPlan?.plan.baselines ?? [],
+            objects.admission.reviewedBaselines,
+            config.reviewedSchemaBaselines,
         );
         const authorSuites = await validateBoundIntegrationVerificationAuthorSuites(
             config.authorSuites

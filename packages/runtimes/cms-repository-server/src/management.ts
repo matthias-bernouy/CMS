@@ -251,6 +251,13 @@ export async function createProductionRepositoryManagement(input: {
         store: candidateStore,
         packageSource: new SnapshotIntegrationPackageSource({ snapshots }),
         authorSuites: createRepositoryCandidateAuthorSuiteResolver(verificationContracts),
+        reviewedSchemaBaselines: {
+            async resolve({ kind, version, packageDigest }) {
+                return (await reviewedSchemaBaselines.listForPackage(kind, version, packageDigest)).map(
+                    (history) => history.current,
+                );
+            },
+        },
         ...(candidatePlan ? { plan: candidatePlan } : {}),
         ...(candidateFinalizer
             ? {

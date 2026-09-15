@@ -101,6 +101,7 @@ export async function parseCanonicalVerificationSandboxInput(
         workload.upgradePackages ?? [],
         admission.snapshot.candidate.kind,
         admission.snapshot.releaseVerificationPlan?.plan.baselines ?? [],
+        admission.snapshot.reviewedBaselines,
     );
     const rawMigrationInputs = workload.migrationInputs ?? [];
     if (!Array.isArray(rawMigrationInputs)) {

@@ -81,7 +81,7 @@ async function releasePlanFixture() {
             ...base.admission,
             releaseVerificationPlan: { digest: identified.digest, plan: identified.plan },
         },
-        upgradePackages: [{ kind: "example", version: "1.0.0", packageDigest, envelope }],
+        upgradePackages: [{ kind: "example", version: "1.0.0", packageDigest, envelope, reviewedSchemaBaselines: [] }],
     };
     return {
         workload,
