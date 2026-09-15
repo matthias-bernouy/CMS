@@ -135,6 +135,9 @@ export class ControlCms {
     get integrationConnectorBaselineAdopters() {
         return controlCmsAccessors.integrationConnectorBaselineAdopters(this.state);
     }
+    get integrationConnectorSchemaBaselines() {
+        return controlCmsAccessors.integrationConnectorSchemaBaselines(this.state);
+    }
     get integrationProvisioners() {
         return controlCmsAccessors.integrationProvisioners(this.state);
     }

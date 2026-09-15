@@ -79,6 +79,67 @@ describe("migration target Source reconciliation", () => {
         );
     });
 
+    test("allows an unchanged deferred hook to call a required dependency by its literal source id", async () => {
+        const fixture = await migrationFixture();
+        const sources = new TrackingSourceRepository();
+        await seedSourceInstallation(fixture, sources);
+        const dependencies = optionalDependencies();
+        const hook: DeclarativeAfterInstallationTemplate = {
+            id: "literal-dependency-hook",
+            requires: ["optionalDep"],
+            steps: [{ id: "call-dependency", call: { source: "optionalDep", endpoint: "refresh" } }],
+        };
+        const target: IntegrationDefinition = {
+            ...fakeMigrationTargetWithSource({ providerDirectOnly: true }),
+            dependencies,
+            afterInstallation: [hook],
+        };
+        await seedDeferredHookDefinition(fixture, dependencies, hook);
+
+        await upgrade(fixture, target, sources);
+
+        expect(fixture.runtime.executions.size).toBeGreaterThan(0);
+    });
+
+    test("allows an unchanged deferred hook when its owned endpoint adds response fields", async () => {
+        const fixture = await migrationFixture();
+        const sources = new TrackingSourceRepository();
+        await seedSourceInstallation(fixture, sources);
+        const dependencies = optionalDependencies();
+        const hook: DeclarativeAfterInstallationTemplate = {
+            id: "additive-response-hook",
+            requires: ["optionalDep"],
+            steps: [{ id: "call-owned", call: { source: "{{answers.id}}", endpoint: "setup" } }],
+        };
+        const target = fakeMigrationTargetWithSource({ providerDirectOnly: true });
+        const sourceArtifact = requiredSourceArtifact(target);
+        const endpoint = sourceArtifact.source.endpoints[0]!;
+        target.dependencies = dependencies;
+        target.afterInstallation = [hook];
+        sourceArtifact.source.endpoints = [
+            {
+                ...endpoint,
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: { mode: { type: "string" } },
+                            required: ["mode"],
+                        },
+                    },
+                ],
+            },
+        ];
+        await seedDeferredHookDefinition(fixture, dependencies, hook);
+
+        await upgrade(fixture, target, sources);
+
+        expect((await sources.getSource("urn:commerce-api"))?.endpoints[0]?.output?.[0]?.body).toMatchObject({
+            properties: { mode: { type: "string" } },
+        });
+    });
+
     test("rejects a deferred hook when its optional requirement contract changes", async () => {
         const fixture = await migrationFixture();
         const sources = new TrackingSourceRepository();

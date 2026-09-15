@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { identifyObservedSchemaContract } from "../../../parsing/templates/connector-compatibility";
 import { integrationVersionSatisfies } from "../../../definitions/versioning";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../../errors";
 import type {
     IntegrationConnectorBaselineAdopter,
+    IntegrationConnectorSchemaBaselineReader,
     ResolvedIntegrationPackageRoot,
 } from "../../../../interfaces/IntegrationConnectorDeployer";
 import type { IntegrationInstallation } from "../../../../interfaces/IntegrationInstallation";
@@ -18,6 +18,7 @@ import {
     requiredTargetVersion,
 } from "./contract";
 import { reattestLegacyConnectorBaseline } from "./reattestation";
+import { resolveReviewedLegacyBaseline } from "./baseline";
 
 export { legacyBaselineAdoptionConfirmation } from "./contract";
 
@@ -29,6 +30,7 @@ export type AdoptLegacyConnectorBaselineRequest = {
     actor: string;
     confirmation: string;
     adopters: IntegrationConnectorBaselineAdopter[];
+    baselines: IntegrationConnectorSchemaBaselineReader;
     clock?: { now(): Date };
 };
 
@@ -82,8 +84,7 @@ export async function adoptLegacyConnectorBaseline(request: AdoptLegacyConnector
         connector.lineageId!,
         sourceDigest,
     );
-    const expectedBaselineDigest = (await identifyObservedSchemaContract(baseline.legacyAdoption.observedSchema))
-        .digest;
+    const expectedBaselineDigest = baseline.legacyAdoption.observedSchemaDigest;
     const reattested = await reattestLegacyConnectorBaseline({
         installations: request.installations,
         installation: request.installation,
@@ -99,6 +100,12 @@ export async function adoptLegacyConnectorBaseline(request: AdoptLegacyConnector
     if (reattested) {
         return reattested;
     }
+    const resolvedBaseline = await resolveReviewedLegacyBaseline({
+        reader: request.baselines,
+        integrationKind: request.installation.id,
+        connector,
+        reference: baseline.legacyAdoption,
+    });
     const attemptId = randomUUID();
     const adopted = await adopter.adopt({
         integrationKind: request.installation.id,
@@ -111,7 +118,7 @@ export async function adoptLegacyConnectorBaseline(request: AdoptLegacyConnector
         lineageId: connector.lineageId!,
         connectorInstanceId,
         migrationRevision: baseline.migrationRevision,
-        baseline: baseline.legacyAdoption,
+        baseline: resolvedBaseline,
         coveredMigrations: baseline.legacyAdoption.coveredMigrations,
         attemptId,
     });

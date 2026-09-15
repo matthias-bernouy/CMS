@@ -58,7 +58,7 @@ export class ConfiguredSupabaseFunctionMigrationHandler implements IntegrationMi
     private async withHandler<T>(operation: (handler: SupabaseFunctionMigrationHandler) => Promise<T>): Promise<T> {
         const resolved = await resolveSupabaseMigrationConfig(this.config);
         try {
-            return await operation(new SupabaseFunctionMigrationHandler(resolved));
+            return await operation(new SupabaseFunctionMigrationHandler(resolved, this.config.secrets));
         } catch (error) {
             throw redactSupabaseAccessToken(error, resolved.accessToken);
         }

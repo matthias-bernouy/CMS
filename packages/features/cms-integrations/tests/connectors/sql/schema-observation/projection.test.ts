@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { projectObservedSchemaContract } from "@bernouy/cms-integrations";
+import {
+    materializeObservedSchemaContract,
+    projectObservedSchemaContract,
+    sameObservedSchemaContract,
+} from "@bernouy/cms-integrations";
 import { observedSchemaFixture } from "./fixtures";
 
 describe("observed connector schema compatibility projection", () => {
@@ -31,5 +35,12 @@ describe("observed connector schema compatibility projection", () => {
                 initiallyDeferred: true,
             }),
         );
+    });
+
+    test("round-trips a repository projection with an explicit connector owner", () => {
+        const observed = observedSchemaFixture();
+        const materialized = materializeObservedSchemaContract(projectObservedSchemaContract(observed), observed.owner);
+
+        expect(sameObservedSchemaContract(materialized, observed)).toBeTrue();
     });
 });

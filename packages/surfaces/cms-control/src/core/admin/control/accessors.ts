@@ -30,6 +30,8 @@ export const controlCmsAccessors = {
     integrationMigrationRuntime: (state: ControlCmsState) => state.configuration.integrationMigrationRuntime,
     integrationConnectorBaselineAdopters: (state: ControlCmsState) =>
         state.configuration.integrationConnectorBaselineAdopters ?? [],
+    integrationConnectorSchemaBaselines: (state: ControlCmsState) =>
+        state.configuration.integrationConnectorSchemaBaselines,
     integrationProvisioners: (state: ControlCmsState) => state.configuration.integrationProvisioners,
     integrationConnectorProviders: (state: ControlCmsState) => state.integrationConnectorProviders,
     integrationBlocRepository: (state: ControlCmsState) => state.integrationBlocRepository,

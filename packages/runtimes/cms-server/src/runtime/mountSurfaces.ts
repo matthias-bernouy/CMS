@@ -165,6 +165,7 @@ export async function mountProductionSurfaces(
             integrationConnectorDeployers: integrations.integrationConnectorDeployers,
             integrationMigrationRuntime,
             integrationConnectorBaselineAdopters: integrations.integrationConnectorBaselineAdopters,
+            integrationConnectorSchemaBaselines: integrations.publicRepositorySchemaBaselines,
             integrationProvisioners: integrations.integrationProvisioners,
             ...(repositoryCatalog ? { editorDataSources: [REPOSITORY_CATALOG_EDITOR_DATA_SOURCE] } : {}),
             dashboards: features.dashboards,

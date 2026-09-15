@@ -11,6 +11,7 @@ import { integrationDefinitionRepository, makeCms } from "../support/helpers";
 
 const SOURCE_DIGEST = "a".repeat(64);
 const TARGET_DIGEST = "b".repeat(64);
+const BASELINE_DIGEST = "389de1ccd2ce44877e589a97c11cadc4db4e0ff0011580ecacef6c6e79deb88c";
 const BASELINE: ObservedSchemaContractV1 = {
     schema: "cms.integration.observed-schema.v1",
     owner: { connectorKey: "primary", lineageId: "commerce-supabase-v1" },
@@ -119,6 +120,17 @@ async function controlFixture(role: "admin" | "user", targetStatus?: "blocked") 
             },
         },
         integrationConnectorBaselineAdopters: [adopter],
+        integrationConnectorSchemaBaselines: {
+            async listForPackage() {
+                return [
+                    {
+                        connector: { provider: "supabase", root: "connectors/supabase" },
+                        packageDigest: SOURCE_DIGEST,
+                        schema: { namespaces: BASELINE.namespaces },
+                    },
+                ];
+            },
+        },
     });
     return {
         cms: fixture.cms,
@@ -158,7 +170,8 @@ function targetDefinition(): IntegrationDefinition {
                                 definitionVersion: "1.0.0",
                                 packageDigest: SOURCE_DIGEST,
                                 installDigest: `sha256:${"a".repeat(64)}`,
-                                observedSchema: BASELINE,
+                                baselineSelector: { provider: "supabase", root: "connectors/supabase" },
+                                observedSchemaDigest: BASELINE_DIGEST,
                                 coveredMigrations: [],
                             },
                         },

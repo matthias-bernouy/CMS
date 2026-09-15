@@ -3,8 +3,8 @@ import {
     sha256Hex,
     type IntegrationPackageEnvelopeV1,
 } from "@bernouy/cms-integration-packages";
-import type { DeclarativeConnectorMigrationPlan } from "@bernouy/cms-integrations";
-import { legacySourceDefinition, sourceDefinition, targetDefinition } from "./definitions";
+import { identifyObservedSchemaContract, type DeclarativeConnectorMigrationPlan } from "@bernouy/cms-integrations";
+import { legacyObservedSchema, legacySourceDefinition, sourceDefinition, targetDefinition } from "./definitions";
 import { fixtureInstallDigest } from "./installDigest";
 
 const KIND = "migration-probe";
@@ -81,11 +81,9 @@ export async function migrationPackageFixture(
                               definitionVersion: "1.0.0",
                               packageDigest: source.digest,
                               installDigest: options.legacySourceInstallDigest,
-                              observedSchema: {
-                                  schema: "cms.integration.observed-schema.v1",
-                                  owner: { connectorKey: "primary", lineageId: "migration-probe-v1" },
-                                  namespaces: [],
-                              },
+                              baselineSelector: { provider: "supabase", root: CONNECTOR_ROOT },
+                              observedSchemaDigest: (await identifyObservedSchemaContract(legacyObservedSchema()))
+                                  .digest,
                               coveredMigrations: [],
                           },
                       }

@@ -37,6 +37,44 @@ export function legacySourceDefinition() {
     };
 }
 
+export function legacyObservedSchema() {
+    return {
+        schema: "cms.integration.observed-schema.v1" as const,
+        owner: { connectorKey: "primary", lineageId: "migration-probe-v1" },
+        namespaces: [
+            {
+                name: "migration_probe",
+                relations: [
+                    {
+                        name: "items",
+                        kind: "table" as const,
+                        columns: [
+                            {
+                                name: "id",
+                                type: "bigint",
+                                nullable: false,
+                                identity: "none" as const,
+                                generated: "none" as const,
+                                sequenceDependency: "none" as const,
+                            },
+                        ],
+                        constraints: [
+                            {
+                                kind: "primary-key" as const,
+                                name: "items_pkey",
+                                columns: ["id"],
+                                deferrable: false,
+                                initiallyDeferred: false,
+                                validated: true,
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    };
+}
+
 export function targetDefinition(plan: DeclarativeConnectorMigrationPlan, schema: unknown = targetSchema()) {
     return {
         kind: KIND,

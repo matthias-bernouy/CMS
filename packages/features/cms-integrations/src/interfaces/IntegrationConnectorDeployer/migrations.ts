@@ -63,8 +63,13 @@ export type DeclarativeConnectorLegacyAdoptionBaseline = {
     definitionVersion: string;
     packageDigest: string;
     installDigest: IntegrationMigrationChecksum;
-    observedSchema: ObservedSchemaContractV1;
+    baselineSelector: Readonly<{ provider: string; root?: string }>;
+    observedSchemaDigest: string;
     coveredMigrations: DeclarativeConnectorMigrationReference[];
+};
+
+export type ResolvedConnectorLegacyAdoptionBaseline = DeclarativeConnectorLegacyAdoptionBaseline & {
+    observedSchema: ObservedSchemaContractV1;
 };
 
 export type DeclarativeConnectorMigrationSource = {

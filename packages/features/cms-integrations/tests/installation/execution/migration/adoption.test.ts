@@ -11,6 +11,7 @@ import {
 const SOURCE_DIGEST = "a".repeat(64);
 const TARGET_DIGEST = "b".repeat(64);
 const SECOND_TARGET_DIGEST = "c".repeat(64);
+const BASELINE_DIGEST = "389de1ccd2ce44877e589a97c11cadc4db4e0ff0011580ecacef6c6e79deb88c";
 const BASELINE: ObservedSchemaContractV1 = {
     schema: "cms.integration.observed-schema.v1",
     owner: { connectorKey: "primary", lineageId: "commerce-supabase-v1" },
@@ -127,6 +128,20 @@ describe("explicit legacy connector baseline adoption", () => {
         expect(fixture.contexts).toHaveLength(0);
     });
 
+    test("fails closed when the reviewed repository baseline is unavailable", async () => {
+        const fixture = await adoptionFixture();
+
+        await expect(
+            adoptLegacyConnectorBaseline({
+                ...fixture.request,
+                baselines: { listForPackage: async () => [] },
+                actor: "admin-42",
+                confirmation: confirmation(),
+            }),
+        ).rejects.toMatchObject({ status: 503 });
+        expect(fixture.contexts).toHaveLength(0);
+    });
+
     test("requires compare-and-swap persistence before calling an adopter", async () => {
         const fixture = await adoptionFixture();
         const repository = { ...fixture.installations, compareAndSwapMigration: undefined } as never;
@@ -198,6 +213,17 @@ async function adoptionFixture(declaredSourceDigest = SOURCE_DIGEST) {
             },
             connectorKey: "primary",
             adopters: [adopter],
+            baselines: {
+                async listForPackage() {
+                    return [
+                        {
+                            connector: { provider: "supabase", root: "connectors/supabase" },
+                            packageDigest: SOURCE_DIGEST,
+                            schema: { namespaces: BASELINE.namespaces },
+                        },
+                    ];
+                },
+            },
         },
     };
 }
@@ -225,7 +251,8 @@ function targetDefinition(declaredSourceDigest: string, version = "1.1.0"): Inte
                                 definitionVersion: "1.0.0",
                                 packageDigest: declaredSourceDigest,
                                 installDigest: `sha256:${"a".repeat(64)}`,
-                                observedSchema: BASELINE,
+                                baselineSelector: { provider: "supabase", root: "connectors/supabase" },
+                                observedSchemaDigest: BASELINE_DIGEST,
                                 coveredMigrations: [],
                             },
                         },

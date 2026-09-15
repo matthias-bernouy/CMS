@@ -128,7 +128,7 @@ describe("connector migration definitions", () => {
         expect(parsed.connectors?.[0]?.migration?.supportedSources[0]?.legacyAdoption).toEqual(legacyAdoption());
     });
 
-    test("rejects malformed package provenance and mismatched legacy schema ownership", () => {
+    test("rejects malformed package provenance and legacy schema digests", () => {
         const malformedDigest = migrationDefinition();
         malformedDigest.connectors[0].migration.supportedSources[0].legacyAdoption = {
             ...legacyAdoption(),
@@ -150,15 +150,22 @@ describe("connector migration definitions", () => {
         };
         expect(() => parseIntegrationDefinition(wrongVersion)).toThrow(/must satisfy its source range/);
 
-        const wrongOwner = migrationDefinition();
-        wrongOwner.connectors[0].migration.supportedSources[0].legacyAdoption = {
+        const malformedObservedSchemaDigest = migrationDefinition();
+        malformedObservedSchemaDigest.connectors[0].migration.supportedSources[0].legacyAdoption = {
             ...legacyAdoption(),
-            observedSchema: {
-                ...legacyAdoption().observedSchema,
-                owner: { connectorKey: "other", lineageId: "commerce-supabase-v1" },
-            },
+            observedSchemaDigest: "SHA256:not-canonical",
         };
-        expect(() => parseIntegrationDefinition(wrongOwner)).toThrow(/owner connectorKey must match/);
+        expect(() => parseIntegrationDefinition(malformedObservedSchemaDigest)).toThrow(
+            /lowercase SHA-256 package digest/,
+        );
+
+        const missingCompatibilitySchema = migrationDefinition();
+        delete (missingCompatibilitySchema.connectors[0] as { compatibility?: unknown }).compatibility;
+        delete (missingCompatibilitySchema.connectors[0].migration as { equivalence?: unknown }).equivalence;
+        missingCompatibilitySchema.connectors[0].migration.supportedSources[0].legacyAdoption = legacyAdoption();
+        expect(() => parseIntegrationDefinition(missingCompatibilitySchema)).toThrow(
+            /requires a declared compatibility schema/,
+        );
     });
 
     test("requires a canonical exact legacy ledger prefix", () => {
@@ -262,11 +269,8 @@ function legacyAdoption() {
         definitionVersion: "1.0.0",
         packageDigest: "c".repeat(64),
         installDigest: DIGEST_A,
-        observedSchema: {
-            schema: "cms.integration.observed-schema.v1",
-            owner: { connectorKey: "primary", lineageId: "commerce-supabase-v1" },
-            namespaces: [{ name: "commerce", relations: [] }],
-        },
+        baselineSelector: { provider: "supabase", root: "connectors/supabase" },
+        observedSchemaDigest: "d".repeat(64),
         coveredMigrations: [],
     };
 }

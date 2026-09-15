@@ -180,11 +180,8 @@ describe("migration verification input", () => {
                         definitionVersion: fixture.input.source.version,
                         packageDigest: fixture.input.source.packageDigest,
                         installDigest: `sha256:${"a".repeat(64)}`,
-                        observedSchema: {
-                            schema: "cms.integration.observed-schema.v1" as const,
-                            owner: { connectorKey: "primary", lineageId: "example-supabase-v1" },
-                            namespaces: [],
-                        },
+                        baselineSelector: { provider: "supabase", root: "connectors/supabase" },
+                        observedSchemaDigest: "b".repeat(64),
                         coveredMigrations: [reference],
                     },
                 },

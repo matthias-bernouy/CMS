@@ -174,11 +174,12 @@ describe("filesystem candidate admission planning", () => {
         await fixture.publisher.publish({ package: dependencyZ });
         await fixture.publisher.publish({ package: dependencyA });
         const baselinePackage = await seedLegacySqlBaseline(fixture);
+        const reviewed = await reviewedBaseline("baseline-root", {
+            kind: "demo",
+            packageDigest: baselinePackage.digest,
+        });
         await fixture.reviewedSchemaBaselines.append({
-            baseline: await reviewedBaseline("baseline-root", {
-                kind: "demo",
-                packageDigest: baselinePackage.digest,
-            }),
+            baseline: reviewed,
             expectedCurrentRevisionId: null,
         });
         const candidate = await verificationCandidate(
@@ -200,6 +201,15 @@ describe("filesystem candidate admission planning", () => {
                     ],
                 },
                 [{ name: "A", kind: "a-dependency", versionRange: "^1.0.0" }],
+                {
+                    legacyAdoption: {
+                        definitionVersion: "1.0.0",
+                        packageDigest: baselinePackage.digest,
+                        installDigest: `sha256:${"3".repeat(64)}`,
+                        baselineSelector: { provider: "supabase", root: "connectors/supabase" },
+                        observedSchemaDigest: reviewed.observedSchemaDigest,
+                    },
+                },
             ),
         );
         const store = await validatingCandidate(fixture.root, "candidate-stateful", candidate);

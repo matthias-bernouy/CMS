@@ -84,7 +84,7 @@ export async function installMigrationSource(
     for (const schema of schemas) {
         await database.unsafe(schema.sql);
     }
-    await adoptLegacySource(database, baseline, input, attemptId);
+    await adoptLegacySource(database, baseline, selected, input, attemptId);
 }
 
 async function assertInstallDigest(

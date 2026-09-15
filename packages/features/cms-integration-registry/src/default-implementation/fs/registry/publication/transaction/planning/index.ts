@@ -88,6 +88,7 @@ export class FsIntegrationRegistryCandidateAdmissionPlanner {
             policy: policy.snapshot,
             policyDigest: policy.digest,
             environment: this.config.migrationEnvironment,
+            baselines: reviewed,
         });
         const candidateIdentity = {
             kind: record.kind,

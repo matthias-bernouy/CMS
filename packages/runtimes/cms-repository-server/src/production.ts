@@ -8,6 +8,7 @@ import {
 import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { RepositoryCatalogRuntime } from "./core/catalogRuntime";
+import { productionReviewedSchemaBaselineImports } from "./core/baselineImports";
 import { startRepositoryWithCandidateGarbageCollection } from "./core/candidates/garbageCollectionServer";
 import {
     createProductionRepositoryOperationalTelemetry,
@@ -56,6 +57,7 @@ export async function startProductionRepositoryServer(source: RepositoryRuntimeE
         },
         candidateAdmissionPolicy: await productionReleaseAdmissionPolicy(env.verifierRunner, migrationEnvironment),
         candidateMigrationEnvironment: migrationEnvironment,
+        baselineImports: productionReviewedSchemaBaselineImports,
     });
 
     const managementGuard = createRepositoryManagementGuard({

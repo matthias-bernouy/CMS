@@ -1,4 +1,5 @@
 import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
+import { secretRefToKey, type SecretReader } from "@bernouy/cms-secrets";
 import { IntegrationRuntimeError } from "../../../core/errors";
 import type {
     IntegrationMigrationExternalPhaseHandler,
@@ -15,7 +16,10 @@ const RECEIPT_PREFIX = "cms-supabase-functions-v1:";
 export class SupabaseFunctionMigrationHandler implements IntegrationMigrationExternalPhaseHandler {
     private readonly client: SupabaseManagementClient;
 
-    constructor(config: SupabaseConnectorDeployerConfig) {
+    constructor(
+        config: SupabaseConnectorDeployerConfig,
+        private readonly integrationSecrets?: SecretReader,
+    ) {
         this.client = new SupabaseManagementClient({
             projectRef: required(config.projectRef, "projectRef"),
             accessToken: required(config.accessToken, "accessToken"),
@@ -34,6 +38,10 @@ export class SupabaseFunctionMigrationHandler implements IntegrationMigrationExt
                 context.targetPackageRoot,
                 connector.root ?? "",
             );
+            const secrets = await targetFunctionSecrets(context, connector.functions ?? [], this.integrationSecrets);
+            if (secrets.length) {
+                await this.client.setFunctionSecrets(secrets);
+            }
             for (const fn of [...(connector.functions ?? [])].sort((left, right) =>
                 left.name.localeCompare(right.name),
             )) {
@@ -61,6 +69,48 @@ export class SupabaseFunctionMigrationHandler implements IntegrationMigrationExt
         }
         return { confirmed: true, externalOperationId: previous.externalOperationId };
     }
+}
+
+async function targetFunctionSecrets(
+    context: IntegrationMigrationStepContext,
+    functions: NonNullable<ReturnType<typeof targetConnector>["functions"]>,
+    reader: SecretReader | undefined,
+): Promise<Array<{ name: string; value: string }>> {
+    const resolved = new Map<string, string>();
+    for (const fn of functions) {
+        for (const [name, configured] of Object.entries(fn.secrets ?? {})) {
+            const value = await targetFunctionSecret(context, configured, reader);
+            const previous = resolved.get(name);
+            if (previous !== undefined && previous !== value) {
+                throw new IntegrationRuntimeError(`Supabase Function secret "${name}" has conflicting target values`);
+            }
+            resolved.set(name, value);
+        }
+    }
+    return [...resolved].sort(([left], [right]) => left.localeCompare(right)).map(([name, value]) => ({ name, value }));
+}
+
+async function targetFunctionSecret(
+    context: IntegrationMigrationStepContext,
+    configured: string,
+    reader: SecretReader | undefined,
+): Promise<string> {
+    const generated = configured.match(/^\s*\{\{\s*generated\.([A-Za-z0-9_-]+)\s*\}\}\s*$/)?.[1];
+    const key = generated ? context.installation.secretRefs[generated] : secretRefToKey(configured);
+    if (!key) {
+        if (configured.includes("{{")) {
+            throw new IntegrationRuntimeError("Supabase Function migration contains an unsupported secret template");
+        }
+        return configured;
+    }
+    if (!reader) {
+        throw new IntegrationRuntimeError("Supabase Function migration requires the integration secret store");
+    }
+    const value = await reader.get(key);
+    if (!value) {
+        throw new IntegrationRuntimeError(`Supabase Function migration secret "${key}" is unavailable`);
+    }
+    return value;
 }
 
 function assertPhase(context: IntegrationMigrationStepContext): void {

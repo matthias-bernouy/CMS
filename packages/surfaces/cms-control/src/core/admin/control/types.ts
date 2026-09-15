@@ -23,6 +23,7 @@ import type {
     IntegrationConnectorBaselineAdopter,
     IntegrationConnectorDeployer,
     IntegrationConnectorProviderRepository,
+    IntegrationConnectorSchemaBaselineReader,
     IntegrationDefinitionRepository,
     IntegrationInstallationRepository,
     IntegrationPackageResolver,
@@ -60,6 +61,7 @@ export type ControlCmsOptions = Configuration & {
     integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
     integrationMigrationRuntime?: IntegrationMigrationRuntime;
     integrationConnectorBaselineAdopters?: IntegrationConnectorBaselineAdopter[];
+    integrationConnectorSchemaBaselines?: IntegrationConnectorSchemaBaselineReader;
     integrationProvisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
     integrationConnectorProviders?: IntegrationConnectorProviderRepository;
     dashboards?: DashboardRepository;

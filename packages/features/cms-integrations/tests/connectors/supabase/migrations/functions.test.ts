@@ -37,6 +37,44 @@ describe("Supabase migration Function deployment", () => {
         expect(await handler.confirm(context, executed)).toEqual({ confirmed: false });
     });
 
+    test("reapplies generated Function secrets before deploying the migration target", async () => {
+        const root = await functionPackage();
+        const context = migrationContext(root);
+        context.targetDefinition.connectors![0]!.functions![0]!.secrets = {
+            CMS_COMMERCE_API_KEY: "{{generated.cmsApiKey}}",
+        };
+        (context.installation.secretRefs as Record<string, string>).cmsApiKey = "COMMERCE_COMMERCE_API_KEY";
+        const requests: string[] = [];
+        let receivedSecrets: unknown;
+        const handler = new SupabaseFunctionMigrationHandler(
+            {
+                projectRef: "project",
+                accessToken: "token",
+                fetch: async (input, init) => {
+                    const url = new URL(String(input));
+                    requests.push(url.pathname);
+                    if (url.pathname.endsWith("/secrets")) {
+                        receivedSecrets = JSON.parse(String(init?.body));
+                        return Response.json({});
+                    }
+                    const slug = url.searchParams.get("slug")!;
+                    return Response.json({ slug, status: "ACTIVE", ezbr_sha256: "bundle-v2" });
+                },
+            },
+            {
+                async get(key) {
+                    return key === "COMMERCE_COMMERCE_API_KEY" ? "cms-secret" : null;
+                },
+            },
+        );
+
+        await handler.execute(context);
+
+        expect(receivedSecrets).toEqual([{ name: "CMS_COMMERCE_API_KEY", value: "cms-secret" }]);
+        expect(requests[0]).toEndWith("/secrets");
+        expect(requests[1]).toEndWith("/functions/deploy");
+    });
+
     test("refuses to describe an in-place Function overwrite as a CMS binding switch", async () => {
         const root = await functionPackage();
         const context = migrationContext(root);

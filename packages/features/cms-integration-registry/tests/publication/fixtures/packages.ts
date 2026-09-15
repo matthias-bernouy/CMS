@@ -132,9 +132,17 @@ export async function statefulSqlPublicationPackage(
             callbackIds: readonly string[];
             drainSeconds?: number;
         }>;
+        legacyAdoption?: Readonly<{
+            definitionVersion: string;
+            packageDigest: string;
+            installDigest: `sha256:${string}`;
+            baselineSelector: Readonly<{ provider: string; root?: string }>;
+            observedSchemaDigest: string;
+        }>;
     }> = {},
 ) {
     const checksum = `sha256:${"1".repeat(64)}`;
+    const { legacyAdoption, ...migrationCutovers } = cutovers;
     return await publicationPackage(
         kind,
         version,
@@ -167,8 +175,16 @@ export async function statefulSqlPublicationPackage(
                                 path: "migrations/001-add-items.sql",
                             },
                         ],
-                        supportedSources: [{ range: "^1.0.0", migrationRevision: 0 }],
-                        ...cutovers,
+                        supportedSources: [
+                            {
+                                range: "^1.0.0",
+                                migrationRevision: 0,
+                                ...(legacyAdoption
+                                    ? { legacyAdoption: { ...legacyAdoption, coveredMigrations: [] } }
+                                    : {}),
+                            },
+                        ],
+                        ...migrationCutovers,
                         pointOfNoReturn: "before-contract",
                     },
                 },

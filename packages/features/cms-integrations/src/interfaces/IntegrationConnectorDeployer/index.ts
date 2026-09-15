@@ -20,6 +20,7 @@ export type {
     DeclarativeConnectorMigrationReference,
     DeclarativeConnectorMigrationSource,
     DeclarativeConnectorRepeatableDescriptor,
+    ResolvedConnectorLegacyAdoptionBaseline,
     IntegrationCmsMediatedCutover,
     IntegrationConnectorMigrationDeployment,
     IntegrationConnectorMigrationIdentity,
@@ -31,6 +32,8 @@ export { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES } from "./migrations";
 export type {
     IntegrationConnectorBaselineAdopter,
     IntegrationConnectorBaselineAdoptionContext,
+    IntegrationConnectorSchemaBaseline,
+    IntegrationConnectorSchemaBaselineReader,
     IntegrationConnectorMigrationAdapter,
     IntegrationMigrationConnectorTransition,
     IntegrationMigrationExternalPhaseHandler,

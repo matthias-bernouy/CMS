@@ -129,6 +129,9 @@ function adoptionContext(): IntegrationConnectorBaselineAdoptionContext {
         baseline: {
             definitionVersion: "1.0.0",
             packageDigest: SOURCE_PACKAGE_DIGEST,
+            installDigest: `sha256:${"d".repeat(64)}`,
+            baselineSelector: { provider: "supabase", root: "connectors/supabase" },
+            observedSchemaDigest: "1b253ee487e159734c1ae452619ce5f4cd56203ffb854adf5dcd004d6d0992cf",
             coveredMigrations: [],
             observedSchema: {
                 schema: "cms.integration.observed-schema.v1",

@@ -1,7 +1,6 @@
 import type { SQL } from "bun";
 import {
     identifyObservedSchemaContract,
-    sameObservedSchemaContract,
     type DeclarativeConnectorLegacyAdoptionBaseline,
     type IntegrationConnectorBaselineAdoptionContext,
 } from "@bernouy/cms-integrations";
@@ -32,15 +31,21 @@ export function requireLegacyAdoption(
 export async function adoptLegacySource(
     database: SQL,
     baseline: DeclarativeConnectorLegacyAdoptionBaseline,
+    selected: TargetMigrationConnector,
     input: MigrationVerificationInputV1,
     attemptId: string,
 ): Promise<void> {
-    const observed = await readSupabaseObservedSchemaContract({
+    const namespaces = selected.connector.compatibility?.schema?.namespaces.map((entry) => entry.name);
+    if (!namespaces?.length) {
+        throw new TypeError("Legacy adoption requires target compatibility namespaces");
+    }
+    const observedSchema = await readSupabaseObservedSchemaContract({
         client: catalogClient(database),
-        owner: baseline.observedSchema.owner,
-        ownedNamespaces: baseline.observedSchema.namespaces.map((entry) => entry.name),
+        owner: { connectorKey: input.connectorKey, lineageId: input.lineageId },
+        ownedNamespaces: namespaces,
     });
-    if (!sameObservedSchemaContract(observed, baseline.observedSchema)) {
+    const baselineDigest = (await identifyObservedSchemaContract(observedSchema)).digest;
+    if (baselineDigest !== baseline.observedSchemaDigest) {
         throw new Error("Legacy source SQL does not match its reviewed adoption baseline");
     }
     const context: IntegrationConnectorBaselineAdoptionContext = {
@@ -54,11 +59,10 @@ export async function adoptLegacySource(
         lineageId: input.lineageId,
         connectorInstanceId: connectorInstanceId(input),
         migrationRevision: input.sourceMigrationRevision,
-        baseline,
+        baseline: { ...baseline, observedSchema },
         coveredMigrations: baseline.coveredMigrations,
         attemptId: `source-${attemptId}`,
     };
-    const baselineDigest = (await identifyObservedSchemaContract(baseline.observedSchema)).digest;
     await database.unsafe(buildSupabaseBaselineAdoptionSql(context, baselineDigest));
 }
 

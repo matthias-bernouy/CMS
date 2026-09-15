@@ -1,5 +1,10 @@
 import { secretKeyToRef } from "@bernouy/cms-secrets";
-import { readPersistedSource } from "@bernouy/cms-sources";
+import {
+    readPersistedSource,
+    type DataShape,
+    type EndpointResponse,
+    type SourceEndpointDto,
+} from "@bernouy/cms-sources";
 import type { FunctionCall, FunctionStep } from "@bernouy/cms-functions";
 import type { DependencyTemplateContext, TemplateContext } from "../../../definitions/templating/templates";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../../errors";
@@ -144,7 +149,7 @@ function callsRetainTargetContracts(
 ): boolean {
     const requiredDependencies = new Set(action.requires ?? []);
     return collectCalls(action.steps).every((call) => {
-        if (requiredDependencyCall(call, requiredDependencies)) {
+        if (requiredDependencyCall(sourceDefinition, targetDefinition, call, requiredDependencies)) {
             return true;
         }
         const sourceEndpoint = uniqueEndpoint(sourceDefinition, call.source, call.endpoint);
@@ -154,7 +159,59 @@ function callsRetainTargetContracts(
         }
         const { targetUrl: _sourceTargetUrl, ...sourceContract } = sourceEndpoint;
         const { targetUrl: _targetTargetUrl, ...targetContract } = targetEndpoint;
-        return declarativeValuesEqual(sourceContract, targetContract);
+        return (
+            declarativeValuesEqual(sourceContract, targetContract) ||
+            endpointResponseContractExtends(sourceContract, targetContract)
+        );
+    });
+}
+
+function endpointResponseContractExtends(
+    source: Omit<SourceEndpointDto, "targetUrl">,
+    target: Omit<SourceEndpointDto, "targetUrl">,
+): boolean {
+    const { output: sourceOutput, ...sourceRest } = source;
+    const { output: targetOutput, ...targetRest } = target;
+    if (!declarativeValuesEqual(sourceRest, targetRest)) {
+        return false;
+    }
+    const targetByStatus = new Map((targetOutput ?? []).map((response) => [response.status, response]));
+    return (sourceOutput ?? []).every((response) => {
+        const targetResponse = targetByStatus.get(response.status);
+        return targetResponse !== undefined && responseContractExtends(response, targetResponse);
+    });
+}
+
+function responseContractExtends(source: EndpointResponse, target: EndpointResponse): boolean {
+    return shapeExtends(source.body, target.body) && shapeExtends(source.triggerBody, target.triggerBody);
+}
+
+function shapeExtends(source: DataShape | undefined, target: DataShape | undefined): boolean {
+    if (!source) {
+        return true;
+    }
+    if (!target || source.type !== target.type || (!source.nullable && target.nullable)) {
+        return false;
+    }
+    if (!declarativeValuesEqual(source.semantic, target.semantic)) {
+        return false;
+    }
+    if (source.type === "array") {
+        return !source.items || (target.items !== undefined && shapeExtends(source.items, target.items));
+    }
+    if (source.type !== "object") {
+        return true;
+    }
+    const targetProperties = target.properties ?? {};
+    const targetRequired = new Set(target.required ?? []);
+    const sourceRequired = new Set(source.required ?? []);
+    return Object.entries(source.properties ?? {}).every(([name, shape]) => {
+        const targetShape = targetProperties[name];
+        return (
+            targetShape !== undefined &&
+            (!sourceRequired.has(name) || targetRequired.has(name)) &&
+            shapeExtends(shape, targetShape)
+        );
     });
 }
 
@@ -170,11 +227,29 @@ function collectCalls(steps: FunctionStep[]): FunctionCall[] {
     });
 }
 
-function requiredDependencyCall(call: FunctionCall, dependencies: ReadonlySet<string>): boolean {
+function requiredDependencyCall(
+    sourceDefinition: IntegrationDefinition,
+    targetDefinition: IntegrationDefinition,
+    call: FunctionCall,
+    dependencies: ReadonlySet<string>,
+): boolean {
     const match = call.source.match(
         /^\s*\{\{\s*dependencies\.([A-Za-z0-9_-]+)\.(?:id|sourceId|answers\.[A-Za-z0-9_-]+)\s*\}\}\s*$/,
     );
-    return match?.[1] !== undefined && dependencies.has(match[1]);
+    if (match?.[1] !== undefined) {
+        return dependencies.has(match[1]);
+    }
+    return (
+        dependencies.has(call.source) &&
+        !definitionOwnsSource(sourceDefinition, call.source) &&
+        !definitionOwnsSource(targetDefinition, call.source)
+    );
+}
+
+function definitionOwnsSource(definition: IntegrationDefinition, sourceId: string): boolean {
+    return (definition.artifacts ?? []).some(
+        (artifact) => artifact.type === "source" && artifact.source.id === sourceId,
+    );
 }
 
 function uniqueEndpoint(definition: IntegrationDefinition, sourceId: string, endpointId: string) {

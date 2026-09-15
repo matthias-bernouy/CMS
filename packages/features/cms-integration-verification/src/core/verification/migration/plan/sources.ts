@@ -1,18 +1,20 @@
-import { canonicalJsonBytes } from "@bernouy/cms-integration-packages";
+import { assertIntegrationPackagePath, canonicalJsonBytes } from "@bernouy/cms-integration-packages";
 import {
     MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES,
-    parseObservedSchemaContractV1,
     type DeclarativeConnectorMigrationSource,
     type IntegrationAnswerValue,
     type IntegrationCmsMediatedCutover,
     type IntegrationProviderDirectCutover,
 } from "@bernouy/cms-integrations";
+import { wrapPackageValidation } from "../../../validation/errors";
 import { assertContractIJson, assertUnique, boundedArray, invalid, strictRecord } from "../../../validation/structure";
 import {
     exactVersion,
     nonNegativeInteger,
     oneOf,
+    requiredText,
     sha256Digest,
+    stableIdentifier,
     supportedVersionRange,
 } from "../../../validation/values";
 import {
@@ -104,7 +106,8 @@ function parseLegacyAdoption(value: unknown, field: string) {
         "definitionVersion",
         "packageDigest",
         "installDigest",
-        "observedSchema",
+        "baselineSelector",
+        "observedSchemaDigest",
         "coveredMigrations",
     ]);
     const coveredMigrations = boundedArray(
@@ -126,7 +129,22 @@ function parseLegacyAdoption(value: unknown, field: string) {
         definitionVersion: exactVersion(input.definitionVersion, `${field}.definitionVersion`),
         packageDigest: sha256Digest(input.packageDigest, `${field}.packageDigest`),
         installDigest: migrationChecksum(input.installDigest, `${field}.installDigest`),
-        observedSchema: parseObservedSchemaContractV1(input.observedSchema, `${field}.observedSchema`),
+        baselineSelector: parseLegacyBaselineSelector(input.baselineSelector, `${field}.baselineSelector`),
+        observedSchemaDigest: sha256Digest(input.observedSchemaDigest, `${field}.observedSchemaDigest`),
         coveredMigrations,
+    };
+}
+
+function parseLegacyBaselineSelector(value: unknown, field: string) {
+    const input = strictRecord(value, field, ["provider", "root"]);
+    return {
+        provider: stableIdentifier(input.provider, `${field}.provider`),
+        ...(input.root === undefined
+            ? {}
+            : {
+                  root: wrapPackageValidation(() =>
+                      assertIntegrationPackagePath(requiredText(input.root, `${field}.root`, 4_096)),
+                  ),
+              }),
     };
 }

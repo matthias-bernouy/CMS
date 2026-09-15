@@ -7,6 +7,7 @@ export { parseConnectorFunctionHttpDataShape } from "./http-shape";
 export {
     canonicalObservedSchemaContractBytes,
     identifyObservedSchemaContract,
+    materializeObservedSchemaContract,
     parseObservedSchemaContractV1,
     projectObservedSchemaContract,
     sameObservedSchemaContract,

@@ -8,6 +8,7 @@ import { assertMigrationLayoutPath, assertStableMigrationId, invalidMigrationVal
 
 export function validateMigrationAwareConnectorLayout(
     connector: {
+        provider: string;
         connectorKey?: string;
         lineageId?: string;
         migrationRevision?: number;
@@ -58,16 +59,16 @@ export function validateMigrationAwareConnectorLayout(
                 "legacy adoption version must satisfy its source range",
             );
         }
-        if (adoption.observedSchema.owner.connectorKey !== connector.connectorKey) {
+        if (adoption.baselineSelector.provider !== connector.provider) {
             invalidMigrationValue(
                 `${name}.migration.supportedSources`,
-                "legacy adoption schema owner connectorKey must match the connector",
+                "legacy adoption baseline provider must match the connector",
             );
         }
-        if (adoption.observedSchema.owner.lineageId !== connector.lineageId) {
+        if (!connector.compatibility?.schema?.namespaces.length) {
             invalidMigrationValue(
                 `${name}.migration.supportedSources`,
-                "legacy adoption schema owner lineageId must match the connector",
+                "legacy adoption requires a declared compatibility schema",
             );
         }
         const expectedCoveredMigrations = connector.migration.install.coveredMigrations

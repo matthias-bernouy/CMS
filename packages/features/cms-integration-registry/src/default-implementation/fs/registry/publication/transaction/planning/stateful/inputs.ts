@@ -10,6 +10,7 @@ import {
 } from "@bernouy/cms-integration-verification";
 import { integrationVersionSatisfies, type IntegrationDefinition } from "@bernouy/cms-integrations";
 import type { IntegrationRegistryCatalogSnapshot } from "cms-integration-registry/interfaces/catalog";
+import type { ReviewedSchemaBaselineStore } from "cms-integration-registry/interfaces/reportStore";
 import { FsIntegrationRegistryCandidateAdmissionPlanningError } from "../types";
 
 export async function buildMigrationVerificationInputs(input: {
@@ -21,6 +22,7 @@ export async function buildMigrationVerificationInputs(input: {
     policy: ReleaseAdmissionPolicySnapshotV1;
     policyDigest: string;
     environment?: MigrationVerificationEnvironmentV1;
+    baselines: ReviewedSchemaBaselineStore;
 }): Promise<readonly MigrationVerificationInputV1[]> {
     if (input.selection.requiredMigrations.length === 0) {
         return Object.freeze([]);
@@ -75,6 +77,12 @@ export async function buildMigrationVerificationInputs(input: {
             const sourceRevision =
                 sourceConnector?.migrationRevision ??
                 exactlyOneSourceRevision(plan, requirement.source.version, requirement.connectorKey);
+            await assertReviewedLegacyAdoption({
+                store: input.baselines,
+                source: requirement.source,
+                connector: targetConnector,
+                migrationRevision: sourceRevision,
+            });
             return await identifyMigrationVerificationInput({
                 schema: "cms.integration.migration-verification-input.v1",
                 source: requirement.source,
@@ -95,6 +103,47 @@ export async function buildMigrationVerificationInputs(input: {
     return Object.freeze(
         identified.toSorted((left, right) => left.digest.localeCompare(right.digest)).map((entry) => entry.input),
     );
+}
+
+async function assertReviewedLegacyAdoption(input: {
+    store: ReviewedSchemaBaselineStore;
+    source: Readonly<{ kind: string; version: string; packageDigest: string }>;
+    connector: NonNullable<ReturnType<typeof findConnector>>;
+    migrationRevision: number;
+}): Promise<void> {
+    const selected = input.connector.migration?.supportedSources.find(
+        (candidate) =>
+            candidate.migrationRevision === input.migrationRevision &&
+            integrationVersionSatisfies(input.source.version, candidate.range),
+    );
+    const adoption = selected?.legacyAdoption;
+    if (!adoption) {
+        return;
+    }
+    if (adoption.definitionVersion !== input.source.version || adoption.packageDigest !== input.source.packageDigest) {
+        migrationInputUnavailable(`Legacy adoption for ${input.connector.connectorKey} does not bind its source`);
+    }
+    const history = await input.store.get({
+        kind: input.source.kind,
+        version: input.source.version,
+        packageDigest: input.source.packageDigest,
+        connectorKey: input.connector.connectorKey!,
+        lineageId: input.connector.lineageId!,
+    });
+    if (!history) {
+        migrationInputUnavailable(
+            `Reviewed legacy schema baseline is unavailable for ${input.source.kind}@${input.source.version}/${input.connector.connectorKey}`,
+        );
+    }
+    if (
+        history.current.observedSchemaDigest !== adoption.observedSchemaDigest ||
+        history.current.legacySelector.provider !== adoption.baselineSelector.provider ||
+        history.current.legacySelector.root !== adoption.baselineSelector.root
+    ) {
+        migrationInputUnavailable(
+            `Legacy adoption for ${input.connector.connectorKey} does not match the reviewed repository baseline`,
+        );
+    }
 }
 
 function findConnector(definition: IntegrationDefinition, connectorKey: string, lineageId: string) {

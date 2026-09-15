@@ -1,11 +1,11 @@
-import type { IntegrationDefinition } from "../Integration";
+import type { DeclarativeConnectorSchemaContract, IntegrationDefinition } from "../Integration";
 import type { IntegrationImportResult } from "../IntegrationImport";
 import type { IntegrationInstallation, IntegrationMigrationOperation } from "../IntegrationInstallation";
 import type {
-    DeclarativeConnectorLegacyAdoptionBaseline,
     DeclarativeConnectorMigrationReference,
     DeclarativeConnectorMigrationPlan,
     IntegrationProviderDirectCutover,
+    ResolvedConnectorLegacyAdoptionBaseline,
 } from "./migrations";
 
 export const INTEGRATION_MIGRATION_PHASES = [
@@ -119,10 +119,24 @@ export type IntegrationConnectorBaselineAdoptionContext = {
     lineageId: string;
     connectorInstanceId: string;
     migrationRevision: number;
-    baseline: DeclarativeConnectorLegacyAdoptionBaseline;
+    baseline: ResolvedConnectorLegacyAdoptionBaseline;
     coveredMigrations: readonly DeclarativeConnectorMigrationReference[];
     attemptId: string;
 };
+
+export type IntegrationConnectorSchemaBaseline = Readonly<{
+    connector: Readonly<{ provider: string; root?: string }>;
+    packageDigest: string;
+    schema: DeclarativeConnectorSchemaContract;
+}>;
+
+export interface IntegrationConnectorSchemaBaselineReader {
+    listForPackage(
+        kind: string,
+        version: string,
+        packageDigest: string,
+    ): Promise<readonly IntegrationConnectorSchemaBaseline[]>;
+}
 
 export interface IntegrationConnectorBaselineAdopter {
     provider: string;

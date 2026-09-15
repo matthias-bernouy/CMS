@@ -40,6 +40,9 @@ export async function adoptLegacyBaselineFromControl(
     if (!targetPackage) {
         throw new IntegrationRuntimeError("integration package resolver is required for baseline adoption", 503);
     }
+    if (!cms.integrationConnectorSchemaBaselines) {
+        throw new IntegrationRuntimeError("integration schema baseline repository is required for adoption", 503);
+    }
     return await adoptLegacyConnectorBaseline({
         installations: cms.integrationInstallations,
         installation,
@@ -48,6 +51,7 @@ export async function adoptLegacyBaselineFromControl(
         actor: subject.identifier,
         confirmation,
         adopters: cms.integrationConnectorBaselineAdopters,
+        baselines: cms.integrationConnectorSchemaBaselines,
     });
 }
 

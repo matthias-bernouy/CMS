@@ -138,6 +138,9 @@ function adoptionContext(): IntegrationConnectorBaselineAdoptionContext {
         baseline: {
             definitionVersion: "1.0.0",
             packageDigest: "a".repeat(64),
+            installDigest: `sha256:${"d".repeat(64)}`,
+            baselineSelector: { provider: "supabase", root: "connectors/supabase" },
+            observedSchemaDigest: "389de1ccd2ce44877e589a97c11cadc4db4e0ff0011580ecacef6c6e79deb88c",
             observedSchema: BASELINE,
             coveredMigrations: [COVERED_MIGRATION],
         },
