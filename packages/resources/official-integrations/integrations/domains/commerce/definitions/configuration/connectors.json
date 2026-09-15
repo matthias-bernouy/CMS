@@ -49,14 +49,14 @@
         "migration": {
             "install": {
                 "revision": 0,
-                "digest": "sha256:b0c6dec2ef2e5988692b59624867b4df3b02b5f00b013c71b2e73c43844e25d9",
+                "digest": "sha256:e7d870c22fed1e5064658472c80e1b7a7f1231901323552714a9395b5bc28ff9",
                 "coveredMigrations": []
             },
             "migrations": [],
             "repeatables": [
                 {
                     "id": "commerce-1-1-runtime",
-                    "checksum": "sha256:20c36921a131047e79f08d0364559a72c9bb9022eaca1955944ce2060733ce19",
+                    "checksum": "sha256:265de965a301c7d086f4234f94747307da0e5724204f0a7c1f3c45d96d75a231",
                     "path": "repeatables/commerce-1.1.0.sql"
                 }
             ],

@@ -193,7 +193,7 @@ begin
         ) recipient
         where rule.event_type = v_event_type and rule.enabled
         on conflict (
-            event_id, rule_key, recipient_cms_user_id, recipient_role, channel
+            event_id, rule_key, recipient_cms_user_id, channel
         ) do nothing;
     end loop;
     return new;
@@ -271,7 +271,7 @@ begin
       and rule.enabled
       and length(btrim(administrator.cms_user_id)) > 0
     on conflict (
-        event_id, rule_key, recipient_cms_user_id, recipient_role, channel
+        event_id, rule_key, recipient_cms_user_id, channel
     ) do nothing;
     return new;
 end;

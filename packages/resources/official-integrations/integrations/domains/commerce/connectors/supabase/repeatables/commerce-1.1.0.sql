@@ -29,7 +29,6 @@ create table if not exists commerce.notification_rules (
     updated_at timestamptz not null default now(),
     constraint notification_rules_key_format check (key ~ '^[a-z0-9][a-z0-9_.-]{1,120}$'),
     constraint notification_rules_policy check (policy in ('required', 'default_on', 'opt_in')),
-    constraint notification_rules_audience check (audience in ('buyer', 'seller', 'admin')),
     constraint notification_rules_stale_policy check (
         stale_policy in ('always_send', 'drop_if_superseded')
     )
@@ -39,8 +38,6 @@ alter table commerce.notification_rules
     add column if not exists audience text not null default 'buyer';
 alter table commerce.notification_rules
     drop constraint if exists notification_rules_audience;
-alter table commerce.notification_rules
-    add constraint notification_rules_audience check (audience in ('buyer', 'seller', 'admin'));
 
 create table if not exists commerce.notification_user_preferences (
     cms_user_id text not null,
@@ -88,12 +85,11 @@ create table if not exists commerce.notification_deliveries (
     updated_at timestamptz not null default now(),
     delivered_at timestamptz,
     constraint notification_deliveries_unique unique (
-        event_id, rule_key, recipient_cms_user_id, recipient_role, channel
+        event_id, rule_key, recipient_cms_user_id, channel
     ),
     constraint notification_deliveries_recipient_not_blank check (length(btrim(recipient_cms_user_id)) > 0),
     constraint notification_deliveries_recipient_length check (length(recipient_cms_user_id) <= 512),
     constraint notification_deliveries_channel check (channel = 'email'),
-    constraint notification_deliveries_recipient_role check (recipient_role in ('buyer', 'seller', 'admin')),
     constraint notification_deliveries_status check (
         status in ('pending', 'processing', 'retry', 'delivered', 'dead_letter', 'suppressed')
     ),
@@ -107,10 +103,7 @@ alter table commerce.notification_deliveries
     drop constraint if exists notification_deliveries_recipient_role;
 alter table commerce.notification_deliveries
     add constraint notification_deliveries_unique unique (
-        event_id, rule_key, recipient_cms_user_id, recipient_role, channel
-    ),
-    add constraint notification_deliveries_recipient_role check (
-        recipient_role in ('buyer', 'seller', 'admin')
+        event_id, rule_key, recipient_cms_user_id, channel
     );
 
 create index if not exists notification_deliveries_claim_idx
@@ -475,7 +468,7 @@ begin
         ) recipient
         where rule.event_type = v_event_type and rule.enabled
         on conflict (
-            event_id, rule_key, recipient_cms_user_id, recipient_role, channel
+            event_id, rule_key, recipient_cms_user_id, channel
         ) do nothing;
     end loop;
     return new;
@@ -552,7 +545,7 @@ begin
       and rule.enabled
       and length(btrim(administrator.cms_user_id)) > 0
     on conflict (
-        event_id, rule_key, recipient_cms_user_id, recipient_role, channel
+        event_id, rule_key, recipient_cms_user_id, channel
     ) do nothing;
     return new;
 end;
