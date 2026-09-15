@@ -36,7 +36,6 @@
     ],
     "requires": {
         "resources": [
-            "mossa/blocs/badge",
             "mossa/blocs/button",
             "mossa/blocs/condition",
             "mossa/blocs/meta",
