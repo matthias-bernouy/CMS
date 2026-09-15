@@ -7,6 +7,7 @@ import type { JsonRecord } from "../../core/types.ts";
 import { boundedText } from "./values.ts";
 
 type RuleRow = {
+    audience: "buyer" | "seller";
     key: string;
     label: string;
     description: string;
@@ -25,15 +26,19 @@ export async function notificationPreferences(request: Request): Promise<Respons
 
 async function getPreferences(request: Request): Promise<Response> {
     const userId = boundedText(cmsUserId(request), "CMS user id", 512);
-    const [rules, preferences] = await Promise.all([
-        restJson<RuleRow[]>("notification_rules?select=key,label,description,policy&enabled=eq.true&order=created_at"),
+    const [rules, preferences, sellers] = await Promise.all([
+        restJson<RuleRow[]>(
+            "notification_rules?select=key,audience,label,description,policy&audience=in.(buyer,seller)&enabled=eq.true&order=created_at",
+        ),
         restJson<JsonRecord[]>(
             `notification_user_preferences?select=rule_key,enabled&cms_user_id=eq.${encodeURIComponent(userId)}`,
         ),
+        restJson<JsonRecord[]>(`sellers?select=id&cms_user_id=eq.${encodeURIComponent(userId)}&limit=1`),
     ]);
+    const visibleRules = rules.filter((rule) => rule.audience === "buyer" || sellers.length > 0);
     const selected = new Map(preferences.map((item) => [String(item.rule_key), item.enabled === true]));
     return json({
-        items: rules.map((rule) => ({
+        items: visibleRules.map((rule) => ({
             key: rule.key,
             label: rule.label,
             description: rule.description,
@@ -50,12 +55,16 @@ async function updatePreferences(request: Request): Promise<Response> {
     if (!Array.isArray(body.preferences) || body.preferences.length > 100) {
         throw new HttpError(400, "preferences must be an array of at most 100 items");
     }
+    const [ruleRows, sellers] = await Promise.all([
+        restJson<Array<{ key: string; audience: string; policy: string }>>(
+            "notification_rules?select=key,audience,policy&audience=in.(buyer,seller)&enabled=eq.true",
+        ),
+        restJson<JsonRecord[]>(`sellers?select=id&cms_user_id=eq.${encodeURIComponent(userId)}&limit=1`),
+    ]);
     const rules = new Map(
-        (
-            await restJson<Array<{ key: string; policy: string }>>(
-                "notification_rules?select=key,policy&enabled=eq.true",
-            )
-        ).map((item) => [item.key, item.policy]),
+        ruleRows
+            .filter((item) => item.audience === "buyer" || sellers.length > 0)
+            .map((item) => [item.key, item.policy]),
     );
     const payload: JsonRecord[] = [];
     for (const raw of body.preferences) {

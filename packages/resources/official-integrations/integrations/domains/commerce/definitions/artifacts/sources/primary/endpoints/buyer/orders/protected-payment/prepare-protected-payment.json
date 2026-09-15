@@ -3,7 +3,7 @@
         "endpointId": "prepareProtectedPayment",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/payment/prepare",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/payment/prepare",
         "params": [],
         "headers": [
             {

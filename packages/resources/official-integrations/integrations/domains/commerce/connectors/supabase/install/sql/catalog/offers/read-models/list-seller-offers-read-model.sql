@@ -84,7 +84,7 @@ begin
 
     if v_status not in (
         'all', 'online', 'paused', 'archived', 'rejected',
-        'action_required', 'under_review', 'draft'
+        'action_required', 'under_review', 'draft', 'unavailable'
     ) then
         return jsonb_build_object(
             'seller_exists', true,
@@ -118,6 +118,9 @@ begin
         where offer.seller_id = v_seller_id
           and case v_status
               when 'online' then offer.publication_status = 'active'
+                and offer.availability = 'available'
+              when 'unavailable' then offer.publication_status = 'active'
+                and offer.availability <> 'available'
               when 'paused' then offer.publication_status = 'paused'
               else p_publication_status is null
                 or offer.publication_status = p_publication_status

@@ -140,7 +140,7 @@ function listResponse(body: Record<string, unknown>): Response {
         return jsonResponse({
             state: "ok",
             orders: saleRows,
-            operations: [],
+            operations: operationListRows,
             definitions: publicDefinitions,
             total: 7,
         });

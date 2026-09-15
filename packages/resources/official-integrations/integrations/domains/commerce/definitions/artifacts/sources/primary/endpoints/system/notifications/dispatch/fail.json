@@ -2,7 +2,7 @@
     "endpointId": "failNotification",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/notifications/system/fail",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/notifications/system/fail",
     "params": [],
     "headers": [
         {

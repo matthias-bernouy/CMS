@@ -8,7 +8,7 @@
     {
         "endpointId": "removeOfferImage",
         "method": "DELETE",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/image",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/offer/image",
         "params": [
             {
                 "name": "offerId",
@@ -62,7 +62,7 @@
     {
         "endpointId": "reorderOfferImages",
         "method": "POST",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/images/reorder",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/offer/images/reorder",
         "params": [
             {
                 "name": "offerId",

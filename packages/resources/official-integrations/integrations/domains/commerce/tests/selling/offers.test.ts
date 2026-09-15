@@ -10,6 +10,15 @@ import { publicOfferDetailReadModel } from "./offer/publicReadModelFixtures";
 installCommerceTestEnvironment();
 
 describe("commerce offer requests", () => {
+    test("routes the migration health probe through both Commerce function slugs", async () => {
+        const stable = await requestCommerce("/health");
+        const candidate = await requestCommerce("/health", { functionSlug: "cms-commerce-v1-1" });
+
+        expect([stable.status, candidate.status]).toEqual([200, 200]);
+        expect(await stable.json()).toEqual({ ok: true });
+        expect(await candidate.json()).toEqual({ ok: true });
+    });
+
     test("includes only public product custom fields in public offer details", async () => {
         setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/rpc/get_public_offer_read_model")) {

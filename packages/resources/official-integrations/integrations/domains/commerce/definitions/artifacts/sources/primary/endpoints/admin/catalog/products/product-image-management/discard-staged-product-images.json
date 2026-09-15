@@ -25,7 +25,7 @@
         }
     ],
     "endpointId": "discardStagedProductImages",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/product/images/discard",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/product/images/discard",
     "body": {
         "type": "object",
         "properties": {

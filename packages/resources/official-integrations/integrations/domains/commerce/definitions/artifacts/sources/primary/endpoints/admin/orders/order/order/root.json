@@ -1,7 +1,7 @@
 {
     "endpointId": "order",
     "method": "GET",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/order",
     "params": [
         {
             "name": "id",

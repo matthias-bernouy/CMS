@@ -2,7 +2,7 @@
     {
         "endpointId": "customFields",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/custom-fields",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/custom-fields",
         "params": [
             {
                 "name": "entityType",

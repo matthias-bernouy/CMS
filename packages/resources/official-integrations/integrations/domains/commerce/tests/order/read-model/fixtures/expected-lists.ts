@@ -108,6 +108,14 @@ export const expectedSellerList = {
             createdAt: "2026-07-12T12:00:00.000Z",
             updatedAt: "2026-07-12T12:05:00.000Z",
             metadataEntries: expectedFirstEntries,
+            operation: {
+                orderId: 42,
+                paymentStatus: "succeeded",
+                fulfillmentStatus: "in_transit",
+                settlementStatus: "held",
+                claimStatus: "open",
+                updatedAt: "2026-07-12T13:00:00.000Z",
+            },
         },
         {
             id: 41,
@@ -126,6 +134,7 @@ export const expectedSellerList = {
             createdAt: "2026-07-11T11:00:00.000Z",
             updatedAt: "2026-07-13T08:00:00.000Z",
             metadataEntries: secondEntries,
+            operation: null,
         },
     ],
     total: 7,

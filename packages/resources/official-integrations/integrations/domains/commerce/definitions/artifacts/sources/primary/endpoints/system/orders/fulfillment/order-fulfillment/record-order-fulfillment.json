@@ -2,7 +2,7 @@
     "endpointId": "recordOrderFulfillment",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/fulfillment",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/fulfillment",
     "params": [],
     "headers": [
         {

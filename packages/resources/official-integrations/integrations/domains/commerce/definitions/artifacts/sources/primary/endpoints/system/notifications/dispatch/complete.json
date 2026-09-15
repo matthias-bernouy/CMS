@@ -2,7 +2,7 @@
     "endpointId": "completeNotification",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/notifications/system/complete",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/notifications/system/complete",
     "params": [],
     "headers": [
         {

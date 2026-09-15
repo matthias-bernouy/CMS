@@ -1,7 +1,7 @@
 {
     "endpointId": "reviewSeller",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/seller/review",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/seller/review",
     "params": [],
     "headers": [
         {

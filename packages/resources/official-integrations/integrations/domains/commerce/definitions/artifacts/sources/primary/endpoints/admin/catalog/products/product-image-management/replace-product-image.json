@@ -1,7 +1,7 @@
 {
     "endpointId": "replaceProductImage",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/product/image/replace",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/product/image/replace",
     "params": [
         {
             "name": "productId",

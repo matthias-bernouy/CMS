@@ -3,7 +3,7 @@
         "endpointId": "verifyPendingSellerPayoutEligibility",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/seller/payout-eligibility",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/seller/payout-eligibility",
         "params": [],
         "headers": [
             {

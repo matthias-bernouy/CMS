@@ -4,6 +4,16 @@
         "mode": {
             "type": "string"
         },
+        "adminRecipientCmsUserIds": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "semantic": {
+                    "kind": "user-id",
+                    "authority": "cms"
+                }
+            }
+        },
         "updated_at": {
             "type": "string",
             "nullable": true
@@ -11,6 +21,7 @@
     },
     "required": [
         "mode",
+        "adminRecipientCmsUserIds",
         "updated_at"
     ]
 }

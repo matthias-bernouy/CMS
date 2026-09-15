@@ -5,7 +5,7 @@
         "access": {
             "mode": "admin"
         },
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim/evidence",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/claim/evidence",
         "params": [
             {
                 "name": "evidenceId",

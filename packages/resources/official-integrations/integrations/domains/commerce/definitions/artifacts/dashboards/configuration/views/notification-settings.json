@@ -39,6 +39,14 @@
                     "name": "mode"
                 },
                 {
+                    "id": "adminRecipientCmsUserIds",
+                    "label": "Administrator CMS user IDs",
+                    "type": "tokens",
+                    "allowCustom": true,
+                    "path": "adminRecipientCmsUserIds",
+                    "name": "adminRecipientCmsUserIds"
+                },
+                {
                     "id": "updatedAt",
                     "label": "Updated",
                     "type": "readonly",

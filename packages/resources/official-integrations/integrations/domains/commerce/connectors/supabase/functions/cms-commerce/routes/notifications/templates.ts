@@ -67,6 +67,96 @@ const seeds = [
         "Order {{ order.number }} was returned to the sender",
         "Your parcel has been returned to the sender.",
     ],
+    [
+        "commerce.buyer.order.cancellation_started",
+        "Cancellation started",
+        "Cancellation started for order {{ order.number }}",
+        "Your cancellation request is being processed.",
+    ],
+    [
+        "commerce.buyer.order.refund_started",
+        "Refund started",
+        "Refund started for order {{ order.number }}",
+        "Your refund is being processed.",
+    ],
+    [
+        "commerce.buyer.order.refund_failed",
+        "Refund needs attention",
+        "Refund update for order {{ order.number }}",
+        "Your refund needs manual attention. The support team has been notified.",
+    ],
+    [
+        "commerce.buyer.claim.updated",
+        "Claim updated",
+        "Claim update for order {{ order.number }}",
+        "There is an update on your claim.",
+    ],
+    [
+        "commerce.buyer.order.fulfillment.pickup_expired",
+        "Pickup period expired",
+        "Pickup period expired for order {{ order.number }}",
+        "The parcel pickup period has expired.",
+    ],
+    [
+        "commerce.seller.sale.paid",
+        "Sale paid",
+        "Sale {{ order.number }} is ready to ship",
+        "The buyer has paid. You can now prepare the parcel.",
+    ],
+    [
+        "commerce.seller.sale.shipment_deadline_elapsed",
+        "Shipment deadline elapsed",
+        "Shipping deadline elapsed for sale {{ order.number }}",
+        "The shipping deadline has elapsed. Open the sale to review the next step.",
+    ],
+    [
+        "commerce.seller.sale.cancellation_started",
+        "Sale cancellation started",
+        "Cancellation started for sale {{ order.number }}",
+        "The buyer started cancelling this sale.",
+    ],
+    [
+        "commerce.seller.sale.refund_started",
+        "Sale refund started",
+        "Refund started for sale {{ order.number }}",
+        "A refund request is being processed for this sale.",
+    ],
+    [
+        "commerce.seller.sale.refunded",
+        "Sale refunded",
+        "Refund completed for sale {{ order.number }}",
+        "The refund for this sale has been completed.",
+    ],
+    [
+        "commerce.seller.claim.action_required",
+        "Claim response required",
+        "Respond to the claim for sale {{ order.number }}",
+        "The buyer opened a claim and your response is required.",
+    ],
+    [
+        "commerce.seller.claim.updated",
+        "Claim updated",
+        "Claim update for sale {{ order.number }}",
+        "There is an update on the claim affecting this sale.",
+    ],
+    [
+        "commerce.seller.sale.fulfillment.updated",
+        "Shipment updated",
+        "Shipment update for sale {{ order.number }}",
+        "The parcel has an exceptional or terminal shipment update.",
+    ],
+    [
+        "commerce.admin.action_required",
+        "Commerce action required",
+        "Action required for order {{ order.number }}",
+        "A Commerce operation requires administrator review.",
+    ],
+    [
+        "commerce.admin.financial_exception",
+        "Financial exception",
+        "Financial exception for order {{ order.number }}",
+        "A high-priority financial exception requires administrator review.",
+    ],
 ] as const;
 
 const sampleData = {
@@ -136,13 +226,47 @@ export function notificationTemplates(): Response {
                 },
                 metadata: { owner: "commerce", contractVersion: 1 },
             },
+            {
+                key: "commerce.seller.sale.shipment_reminder",
+                name: "Commerce - Shipment reminder",
+                status: "active",
+                subject: "Ship sale {{ order.number }} before the deadline",
+                htmlBody:
+                    '<p>The parcel still needs to be handed to the carrier.</p><p>Deadline: <strong>{{ fulfillment.sellerHandoffDeadline }}</strong></p><p><a href="{{ action.path }}">Open the sale</a></p>',
+                textBody:
+                    "The parcel still needs to be handed to the carrier.\n\nDeadline: {{ fulfillment.sellerHandoffDeadline }}\nOpen the sale: {{ action.path }}",
+                requiredTokens: [
+                    {
+                        name: "order.number",
+                        description: "Commerce order number",
+                        sample: "ORD-1001",
+                    },
+                    {
+                        name: "fulfillment.sellerHandoffDeadline",
+                        description: "Seller parcel handoff deadline",
+                        sample: "2026-07-24T10:00:00.000Z",
+                    },
+                    {
+                        name: "action.path",
+                        description: "Seller sale detail path",
+                        sample: "/account/sales?saleId=example",
+                    },
+                ],
+                sampleData: {
+                    ...sampleData,
+                    recipient: { email: "seller@example.com", role: "seller" },
+                    fulfillment: { sellerHandoffDeadline: "2026-07-24T10:00:00.000Z" },
+                    action: { path: "/account/sales?saleId=example" },
+                },
+                metadata: { owner: "commerce", contractVersion: 1 },
+            },
             ...seeds.map(([key, label, subject, introduction]) => ({
                 key,
                 name: `Commerce - ${label}`,
                 status: "active",
                 subject,
-                htmlBody: `<p>${introduction}</p><p>Order <strong>{{ order.number }}</strong></p><p>Current status: <strong>{{ order.status }}</strong></p>`,
-                textBody: `${introduction}\n\nOrder {{ order.number }}\nCurrent status: {{ order.status }}`,
+                htmlBody: `<p>${introduction}</p><p>Order <strong>{{ order.number }}</strong></p><p>Current status: <strong>{{ order.status }}</strong></p><p><a href="{{ action.path }}">View details</a></p>`,
+                textBody: `${introduction}\n\nOrder {{ order.number }}\nCurrent status: {{ order.status }}\nView details: {{ action.path }}`,
                 requiredTokens: [
                     {
                         name: "order.number",
@@ -153,6 +277,11 @@ export function notificationTemplates(): Response {
                         name: "order.status",
                         description: "Current Commerce order status",
                         sample: "active",
+                    },
+                    {
+                        name: "action.path",
+                        description: "Role-appropriate order detail path",
+                        sample: "/account/purchases?order=example",
                     },
                 ],
                 sampleData,

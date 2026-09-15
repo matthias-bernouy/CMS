@@ -1,7 +1,7 @@
 {
     "endpointId": "stageProductImage",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/product/image/stage",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/product/image/stage",
     "params": [
         {
             "name": "sessionId",

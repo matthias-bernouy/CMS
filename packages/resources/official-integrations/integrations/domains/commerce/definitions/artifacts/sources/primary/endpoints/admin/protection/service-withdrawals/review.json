@@ -4,7 +4,7 @@
     "access": {
         "mode": "admin"
     },
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/service-withdrawal-request/review",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/service-withdrawal-request/review",
     "params": [],
     "headers": [
         {

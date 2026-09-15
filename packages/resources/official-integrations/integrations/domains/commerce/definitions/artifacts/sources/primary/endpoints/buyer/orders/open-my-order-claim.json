@@ -3,7 +3,7 @@
         "endpointId": "openMyOrderClaim",
         "method": "POST",
         "access": "auth",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/claim",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/claim",
         "params": [],
         "headers": [
             {

@@ -2,7 +2,7 @@
     "endpointId": "completeOrderShipmentCreation",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/shipment-creation/complete",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/shipment-creation/complete",
     "params": [],
     "headers": [
         {

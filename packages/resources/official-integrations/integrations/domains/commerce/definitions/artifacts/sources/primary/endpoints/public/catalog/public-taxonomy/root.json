@@ -6,7 +6,7 @@
         "endpointId": "brand",
         "method": "GET",
         "access": "public",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/brand",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/brand",
         "params": [
             {
                 "name": "id",

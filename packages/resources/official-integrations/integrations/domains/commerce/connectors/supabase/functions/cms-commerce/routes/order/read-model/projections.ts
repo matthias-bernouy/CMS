@@ -89,6 +89,14 @@ const operationListFields = [
     "totalRefundRequestedAmount",
     "updatedAt",
 ] as const;
+const sellerOperationListFields = [
+    "orderId",
+    "paymentStatus",
+    "fulfillmentStatus",
+    "settlementStatus",
+    "claimStatus",
+    "updatedAt",
+] as const;
 
 export function projectOrderListItem(
     row: JsonRecord,
@@ -109,9 +117,16 @@ export function projectSale(row: JsonRecord, definitions: readonly PublicOrderMe
 
 export function projectSaleListItem(
     row: JsonRecord,
+    operation: JsonRecord | null,
     definitions: readonly PublicOrderMetadataDefinition[],
 ): JsonRecord {
-    return withPublicOrderMetadata(safeRecord(row, saleListFields), definitions);
+    return withPublicOrderMetadata(
+        {
+            ...safeRecord(row, saleListFields),
+            operation: safeOptional(operation, sellerOperationListFields),
+        },
+        definitions,
+    );
 }
 
 export function safeRecord(row: JsonRecord, fields: readonly string[]): JsonRecord {

@@ -78,7 +78,7 @@ describe("native Commerce notifications", () => {
             items: Array<Record<string, unknown>>;
         };
         expect(templatePayload.contractVersion).toBe(1);
-        expect(templatePayload.items).toHaveLength(12);
+        expect(templatePayload.items).toHaveLength(28);
         expect(templatePayload.items[0]).toMatchObject({
             key: "commerce.price_agreement.accepted",
             metadata: { owner: "commerce", contractVersion: 1 },
@@ -96,11 +96,16 @@ describe("native Commerce notifications", () => {
 
         const updated = await requestCommerce("/notifications/admin/configuration", {
             userRole: "admin",
-            body: { mode: "external" },
+            body: { mode: "external", adminRecipientCmsUserIds: ["admin-1", "admin-1"] },
         });
         expect(updated.status).toBe(200);
-        expect(await updated.json()).toMatchObject({ mode: "external" });
-        expect(writes).toContainEqual(expect.objectContaining({ mode: "external" }));
+        expect(await updated.json()).toMatchObject({ mode: "external", adminRecipientCmsUserIds: [] });
+        expect(writes).toContainEqual(
+            expect.objectContaining({
+                mode: "external",
+                admin_recipient_cms_user_ids: ["admin-1"],
+            }),
+        );
     });
 });
 
@@ -110,12 +115,14 @@ async function notificationRest(request: Request): Promise<Response> {
         return jsonResponse([
             {
                 key: "commerce.order.paid",
+                audience: "buyer",
                 label: "Purchase confirmation",
                 description: "Required",
                 policy: "required",
             },
             {
                 key: "commerce.order.fulfillment.in_transit",
+                audience: "buyer",
                 label: "Parcel in transit",
                 description: "Optional",
                 policy: "default_on",
@@ -124,6 +131,9 @@ async function notificationRest(request: Request): Promise<Response> {
     }
     if (url.pathname.endsWith("/notification_user_preferences") && request.method === "GET") {
         return jsonResponse([{ rule_key: "commerce.order.fulfillment.in_transit", enabled: transitEnabled }]);
+    }
+    if (url.pathname.endsWith("/sellers")) {
+        return jsonResponse([]);
     }
     if (url.pathname.endsWith("/notification_user_preferences") && request.method === "POST") {
         writes.push(await request.json());

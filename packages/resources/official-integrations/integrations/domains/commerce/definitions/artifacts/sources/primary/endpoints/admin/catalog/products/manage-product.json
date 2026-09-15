@@ -1,7 +1,7 @@
 {
     "endpointId": "manageProduct",
     "method": "GET",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/product",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/product",
     "params": [
         {
             "name": "id",

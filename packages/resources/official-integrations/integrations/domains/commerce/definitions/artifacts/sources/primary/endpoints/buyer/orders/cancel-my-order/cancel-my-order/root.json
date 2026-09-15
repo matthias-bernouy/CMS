@@ -2,7 +2,7 @@
     "endpointId": "cancelMyOrder",
     "method": "POST",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/cancel",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/cancel",
     "params": [],
     "headers": [
         {

@@ -2,7 +2,7 @@
     "endpointId": "checkoutMyCart",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/cart/checkout",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/cart/checkout",
     "params": [],
     "headers": [
         {

@@ -2,7 +2,7 @@
     "endpointId": "reserveOrderShipmentCreation",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/shipment-creation/reserve",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/shipment-creation/reserve",
     "params": [],
     "headers": [
         {

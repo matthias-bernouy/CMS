@@ -3,7 +3,7 @@
         "endpointId": "offerFilterSchema",
         "method": "GET",
         "access": "public",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/offer-filter-schema",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/offer-filter-schema",
         "params": [
             {
                 "name": "category",

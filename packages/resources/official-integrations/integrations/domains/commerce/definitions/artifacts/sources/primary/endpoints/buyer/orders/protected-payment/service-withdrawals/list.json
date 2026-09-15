@@ -2,7 +2,7 @@
     "endpointId": "myMarketplaceServiceWithdrawalRequests",
     "method": "GET",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/service-withdrawal-requests",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/service-withdrawal-requests",
     "params": [
         { "name": "requestPublicId", "in": "query", "type": "string" },
         { "name": "orderId", "in": "query", "type": "number" },

@@ -1,7 +1,7 @@
 {
     "endpointId": "categoryProductFields",
     "method": "GET",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/category-product-fields",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/category-product-fields",
     "params": [
         {
             "name": "categoryId",

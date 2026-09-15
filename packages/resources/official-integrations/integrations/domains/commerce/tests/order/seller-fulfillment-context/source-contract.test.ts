@@ -28,19 +28,19 @@ describe("commerce seller fulfillment Source contexts", () => {
         const contracts = [
             {
                 id: "getOrderFulfillmentSellerContext",
-                path: "/cms-commerce/system/order/fulfillment/seller-context",
+                path: "/cms-commerce-v1-1/system/order/fulfillment/seller-context",
                 fields: ["id", "publicId", "orderNumber"],
                 required: undefined,
             },
             {
                 id: "getOrderLabelSellerContext",
-                path: "/cms-commerce/system/order/label/seller-context",
+                path: "/cms-commerce-v1-1/system/order/label/seller-context",
                 fields: ["publicId", "allowed", "sellerCmsUserId"],
                 required: ["publicId", "allowed", "sellerCmsUserId"],
             },
             {
                 id: "getOrderShippingActionsSellerContext",
-                path: "/cms-commerce/system/order/shipping/actions/seller-context",
+                path: "/cms-commerce-v1-1/system/order/shipping/actions/seller-context",
                 fields: [
                     "id",
                     "publicId",
@@ -72,7 +72,7 @@ describe("commerce seller fulfillment Source contexts", () => {
             },
             {
                 id: "getOrderShipmentCreationSellerContext",
-                path: "/cms-commerce/system/order/shipment-creation/seller-context",
+                path: "/cms-commerce-v1-1/system/order/shipment-creation/seller-context",
                 fields: ["id", "publicId", "allowed", "sellerId"],
                 required: ["id", "publicId", "allowed", "sellerId"],
             },

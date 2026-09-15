@@ -2,7 +2,7 @@
   "endpointId": "getMyPriceAgreementCheckout",
   "method": "GET",
   "access": "auth",
-  "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/price-agreement-checkout",
+  "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/price-agreement-checkout",
   "params": [
     {
       "name": "agreementId",

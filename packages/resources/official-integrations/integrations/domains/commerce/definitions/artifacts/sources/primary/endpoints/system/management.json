@@ -3,7 +3,7 @@
         "endpointId": "manageIntegration",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/management",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/management",
         "params": [],
         "headers": [
             {

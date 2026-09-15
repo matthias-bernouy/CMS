@@ -3,7 +3,7 @@
         "endpointId": "reopenOrderShippingWindow",
         "method": "POST",
         "access": { "mode": "admin" },
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/shipping-window/reopen",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/order/shipping-window/reopen",
         "params": [],
         "headers": [
             {

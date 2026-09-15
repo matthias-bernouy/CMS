@@ -5,7 +5,7 @@
     {
         "endpointId": "workflowState",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-state",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/workflow-state",
         "params": [
             {
                 "name": "code",
@@ -64,7 +64,7 @@
     {
         "endpointId": "workflowTransitions",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-transitions",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/workflow-transitions",
         "params": [],
         "headers": [
             {

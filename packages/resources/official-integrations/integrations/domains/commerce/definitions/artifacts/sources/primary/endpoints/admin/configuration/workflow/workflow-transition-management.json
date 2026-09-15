@@ -2,7 +2,7 @@
     {
         "endpointId": "workflowTransition",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-transition",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/workflow-transition",
         "params": [
             {
                 "name": "id",
@@ -67,7 +67,7 @@
     {
         "endpointId": "upsertWorkflowTransition",
         "method": "POST",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-transition",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/workflow-transition",
         "params": [],
         "headers": [
             {

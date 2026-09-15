@@ -55,7 +55,7 @@ test("Commerce installs and reruns notification setup with both official Emailer
                 const path = new URL(request.url).pathname;
                 const body = request.method === "POST" ? await request.json() : undefined;
                 requests.push({ path, ...(body === undefined ? {} : { body }) });
-                if (path.endsWith("/cms-commerce/notifications/templates")) {
+                if (path.endsWith("/cms-commerce-v1-1/notifications/templates")) {
                     return Response.json({ items: [] });
                 }
                 if (path.endsWith("/cms-emailer/templates/install")) {
@@ -90,9 +90,9 @@ test("Commerce installs and reruns notification setup with both official Emailer
     });
     expect(result.installation.status).toBe("success");
     expect(requests).toEqual([
-        { path: "/functions/v1/cms-commerce/notifications/templates" },
+        { path: "/functions/v1/cms-commerce-v1-1/notifications/templates" },
         { path: "/functions/v1/cms-emailer/templates/install", body: { templates: [] } },
-        { path: "/functions/v1/cms-commerce/notifications/templates" },
+        { path: "/functions/v1/cms-commerce-v1-1/notifications/templates" },
         { path: "/functions/v1/cms-emailer/templates/install", body: { templates: [] } },
     ]);
 });

@@ -2,7 +2,7 @@
     "endpointId": "recordOrderPayment",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/payment",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/payment",
     "params": [],
     "headers": [
         {

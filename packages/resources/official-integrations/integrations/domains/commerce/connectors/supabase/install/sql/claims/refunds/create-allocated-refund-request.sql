@@ -201,7 +201,10 @@ begin
             'merchandiseRefundAmount', p_merchandise_refund_amount,
             'shippingRefundAmount', p_shipping_refund_amount,
             'protectionFeeRefundAmount', p_protection_fee_refund_amount,
-            'requiresFinanceApproval', v_requires_finance
+            'sellerRecoveryAmount', v_seller_recovery,
+            'requiresFinanceApproval', v_requires_finance,
+            'dualApprovalRequired', v_requires_dual,
+            'status', v_request.status
         ),
         'commerce.refund.requested', 'refund:' || v_request.id || ':requested'
     );

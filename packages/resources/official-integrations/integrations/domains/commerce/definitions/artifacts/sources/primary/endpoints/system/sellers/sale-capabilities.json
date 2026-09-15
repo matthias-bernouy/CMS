@@ -3,7 +3,7 @@
         "endpointId": "recordSellerSaleCapability",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/seller/sale-capability",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/seller/sale-capability",
         "params": [],
         "headers": [
             {
@@ -80,7 +80,7 @@
         "endpointId": "activateSellerSaleCapability",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/seller/sale-capability/activate",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/seller/sale-capability/activate",
         "params": [],
         "headers": [
             {

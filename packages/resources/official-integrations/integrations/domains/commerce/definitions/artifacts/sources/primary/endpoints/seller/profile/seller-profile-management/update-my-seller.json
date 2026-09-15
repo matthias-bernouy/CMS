@@ -2,7 +2,7 @@
     "endpointId": "updateMySeller",
     "method": "POST",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/seller/update",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/seller/update",
     "params": [],
     "effects": {
         "identityBindings": [

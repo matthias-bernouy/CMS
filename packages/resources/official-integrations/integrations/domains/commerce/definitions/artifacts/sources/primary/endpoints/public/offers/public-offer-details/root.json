@@ -6,7 +6,7 @@
         "endpointId": "publicOfferImage",
         "method": "GET",
         "access": "public",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/offer/image",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/offer/image",
         "params": [
             {
                 "name": "id",

@@ -3,7 +3,7 @@
         "endpointId": "products",
         "method": "GET",
         "access": "public",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/products",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/products",
         "params": [
             {
                 "name": "q",

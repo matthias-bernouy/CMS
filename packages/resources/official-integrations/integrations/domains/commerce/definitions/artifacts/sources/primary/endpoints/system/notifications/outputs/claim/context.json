@@ -28,10 +28,14 @@
                         "kind": "user-id",
                         "authority": "cms"
                     }
+                },
+                "role": {
+                    "type": "string"
                 }
             },
             "required": [
-                "userId"
+                "userId",
+                "role"
             ]
         },
         "order": {
@@ -99,6 +103,65 @@
                 "title"
             ]
         },
+        "fulfillment": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "sellerHandoffDeadline": {
+                    "type": "string"
+                },
+                "sellerHandoffDeclaredAt": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "carrierAcceptedAt": {
+                    "type": "string",
+                    "nullable": true
+                }
+            },
+            "required": [
+                "status",
+                "sellerHandoffDeadline",
+                "sellerHandoffDeclaredAt",
+                "carrierAcceptedAt"
+            ]
+        },
+        "claim": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "sellerResponseByAt": {
+                    "type": "string"
+                },
+                "returnShipByAt": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "returnDeliveryStatus": {
+                    "type": "string",
+                    "nullable": true
+                }
+            },
+            "required": [
+                "id",
+                "status",
+                "reason",
+                "sellerResponseByAt",
+                "returnShipByAt",
+                "returnDeliveryStatus"
+            ]
+        },
         "delivery": {
             "type": "object",
             "properties": {
@@ -131,10 +194,19 @@
                 "sourceEventId": {
                     "type": "number"
                 },
+                "sourceAggregateType": {
+                    "type": "string"
+                },
+                "sourceAggregateId": {
+                    "type": "string"
+                },
                 "sourceEventType": {
                     "type": "string"
                 },
                 "data": {
+                    "type": "object"
+                },
+                "financialException": {
                     "type": "object"
                 }
             }

@@ -2,7 +2,7 @@
     "endpointId": "categories",
     "method": "GET",
     "access": "public",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/categories",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/categories",
     "params": [
         {
             "name": "q",

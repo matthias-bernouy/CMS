@@ -5,7 +5,7 @@
     {
         "endpointId": "manageBrand",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/brand",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/brand",
         "params": [
             {
                 "name": "id",
@@ -75,7 +75,7 @@
         "effects": {
             "invalidatesSchema": true
         },
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/brand",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/brand",
         "params": [
             {
                 "name": "id",

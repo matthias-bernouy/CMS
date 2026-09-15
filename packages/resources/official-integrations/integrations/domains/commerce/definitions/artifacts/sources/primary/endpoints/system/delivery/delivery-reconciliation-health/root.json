@@ -3,7 +3,7 @@
         "endpointId": "recordDeliveryReconciliationHealth",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/delivery/reconciliation-health",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/delivery/reconciliation-health",
         "params": [],
         "headers": [
             {

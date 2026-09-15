@@ -83,7 +83,9 @@ begin
         'claim_status', 'fulfillment_status', 'order_id', 'payment_status',
         'settlement_status', 'total_refund_requested_amount', 'updated_at'
     ] or jsonb_array_length(v_buyer->'operations') <> 1
-        or jsonb_array_length(v_seller->'operations') <> 0 then
+        or jsonb_array_length(v_seller->'operations') <> 1
+        or v_seller->'operations'->0 ? 'total_refund_requested_amount'
+        or v_seller->'operations'->0 ? 'buyer_cms_user_id' then
         raise exception 'order list smoke: operation projection changed: %', v_buyer->'operations';
     end if;
     select array_agg(item->>'key') into v_keys

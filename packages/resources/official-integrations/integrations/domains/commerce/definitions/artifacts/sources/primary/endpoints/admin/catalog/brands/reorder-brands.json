@@ -2,7 +2,7 @@
     {
         "endpointId": "reorderBrands",
         "method": "POST",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/brands/reorder",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/brands/reorder",
         "params": [],
         "headers": [
             {

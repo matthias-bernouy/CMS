@@ -2,7 +2,7 @@
     "endpointId": "myOrder",
     "method": "GET",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order",
     "params": [
         {
             "name": "id",

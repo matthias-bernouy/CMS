@@ -2,7 +2,7 @@
     "endpointId": "myOffer",
     "method": "GET",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offer",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/offer",
     "params": [
         {
             "name": "id",

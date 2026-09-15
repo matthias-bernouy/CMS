@@ -3,7 +3,7 @@
         "endpointId": "submitMyOffer",
         "method": "POST",
         "access": "auth",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offer/submit",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/offer/submit",
         "params": [
             {
                 "name": "id",

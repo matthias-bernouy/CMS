@@ -6,7 +6,7 @@
         "endpointId": "pendingPaymentCancellationAuthorizations",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/payment-cancellations/pending",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/payment-cancellations/pending",
         "params": [],
         "headers": [
             {

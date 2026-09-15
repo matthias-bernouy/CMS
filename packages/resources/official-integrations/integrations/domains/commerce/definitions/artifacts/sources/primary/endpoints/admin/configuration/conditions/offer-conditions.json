@@ -2,7 +2,7 @@
     {
         "endpointId": "offerCondition",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer-condition",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/offer-condition",
         "params": [
             {
                 "name": "code",
@@ -56,7 +56,7 @@
     {
         "endpointId": "upsertOfferCondition",
         "method": "POST",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer-condition",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/offer-condition",
         "params": [],
         "headers": [
             {

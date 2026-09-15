@@ -95,6 +95,31 @@
                             },
                             "updatedAt": {
                                 "type": "string"
+                            },
+                            "operation": {
+                                "type": "object",
+                                "nullable": true,
+                                "properties": {
+                                    "orderId": {
+                                        "type": "number"
+                                    },
+                                    "paymentStatus": {
+                                        "type": "string"
+                                    },
+                                    "fulfillmentStatus": {
+                                        "type": "string"
+                                    },
+                                    "settlementStatus": {
+                                        "type": "string"
+                                    },
+                                    "claimStatus": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "updatedAt": {
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     }

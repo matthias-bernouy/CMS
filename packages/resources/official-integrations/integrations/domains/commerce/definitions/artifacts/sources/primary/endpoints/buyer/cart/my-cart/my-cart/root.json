@@ -2,7 +2,7 @@
     "endpointId": "myCart",
     "method": "GET",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/cart",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/cart",
     "params": [],
     "headers": [
         {

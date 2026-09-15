@@ -5,7 +5,7 @@
         "access": {
             "mode": "admin"
         },
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/refund",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/order/refund",
         "params": [],
         "headers": [
             {

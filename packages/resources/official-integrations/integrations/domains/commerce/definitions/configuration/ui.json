@@ -2,7 +2,7 @@
     "instructions": [
         [
             "Deploy connector resources",
-            "Apply the bundled private Commerce schema and deploy the cms-commerce Edge Function."
+            "Apply the bundled private Commerce schema and deploy the compatible cms-commerce and cms-commerce-v1-1 Edge Functions."
         ],
         [
             "Generate CMS API key",

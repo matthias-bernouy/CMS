@@ -5,7 +5,7 @@
         "access": {
             "mode": "admin"
         },
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/shipment-creation/recover",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/order/shipment-creation/recover",
         "params": [],
         "headers": [
             {

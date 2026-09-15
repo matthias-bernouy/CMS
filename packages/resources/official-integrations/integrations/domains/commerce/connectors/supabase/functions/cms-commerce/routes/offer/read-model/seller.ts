@@ -106,6 +106,9 @@ function sellerDisplayStatus(offer: JsonRecord, state: JsonRecord | null): strin
     if (state?.terminal === true) {
         return "rejected";
     }
+    if (offer.publication_status === "active" && offer.availability !== "available") {
+        return "unavailable";
+    }
     if (offer.publication_status === "active") {
         return "online";
     }

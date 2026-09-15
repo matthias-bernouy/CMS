@@ -35,7 +35,7 @@ describe("commerce claim return authorization Source contract", () => {
         }).toEqual({
             method: "GET",
             access: "system",
-            targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/claim/return-authorization",
+            targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/claim/return-authorization",
             params: [
                 {
                     name: "claimId",

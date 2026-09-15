@@ -2,7 +2,7 @@
     "endpointId": "mySales",
     "method": "GET",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/sales",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/sales",
     "params": [
         {
             "name": "status",

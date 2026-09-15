@@ -2,7 +2,7 @@
     "endpointId": "listNotificationDeliveries",
     "method": "GET",
     "access": "admin",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/notifications/admin/deliveries",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/notifications/admin/deliveries",
     "params": [
         {
             "name": "status",

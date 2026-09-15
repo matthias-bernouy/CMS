@@ -3,7 +3,7 @@
         "endpointId": "category",
         "method": "GET",
         "access": "public",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/category",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/category",
         "params": [
             {
                 "name": "id",

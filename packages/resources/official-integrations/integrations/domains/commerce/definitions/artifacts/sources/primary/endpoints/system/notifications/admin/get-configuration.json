@@ -2,7 +2,7 @@
     "endpointId": "getNotificationConfiguration",
     "method": "GET",
     "access": "admin",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/notifications/admin/configuration",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/notifications/admin/configuration",
     "params": [],
     "headers": [
         {

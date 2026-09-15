@@ -9,10 +9,10 @@
             "file": "setup/reinstallation-row-security.sql"
         },
         {
-            "file": "setup/fee-and-protection-policies.sql"
+            "file": "setup/policies/fee-and-protection-policies.sql"
         },
         {
-            "file": "setup/default-c2c-policies.sql"
+            "file": "setup/policies/default-c2c-policies.sql"
         },
         {
             "file": "setup/commerce-settings.sql"
@@ -135,7 +135,7 @@
             "manifest": "notifications/manifest.json"
         },
         {
-            "file": "setup/active-policy-settings.sql"
+            "file": "setup/policies/active-policy-settings.sql"
         },
         {
             "file": "setup/legacy-subsidy-override-cleanup.sql"
@@ -148,6 +148,9 @@
         },
         {
             "file": "financial/indexes/cross-domain-foreign-key-indexes.sql"
+        },
+        {
+            "file": "setup/application-health.sql"
         }
     ]
 }

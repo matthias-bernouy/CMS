@@ -42,10 +42,12 @@ export async function handleCommerceRequest(request: Request): Promise<Response>
 
 function routePath(request: Request): string {
     const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
-    const marker = "/cms-commerce";
-    const index = pathname.indexOf(marker);
-    if (index === -1) {
+    const marker = ["/cms-commerce-v1-1", "/cms-commerce"].find(
+        (candidate) => pathname === candidate || pathname.includes(`${candidate}/`),
+    );
+    if (!marker) {
         return pathname || "/";
     }
+    const index = pathname.indexOf(marker);
     return pathname.slice(index + marker.length) || "/";
 }

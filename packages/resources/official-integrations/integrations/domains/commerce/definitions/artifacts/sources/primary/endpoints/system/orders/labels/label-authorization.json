@@ -3,7 +3,7 @@
         "endpointId": "getOrderLabelSellerContext",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/label/seller-context",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/label/seller-context",
         "params": [
             {
                 "name": "orderId",
@@ -61,7 +61,7 @@
         "endpointId": "getOrderLabelAuthorization",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/label/authorization",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/label/authorization",
         "params": [
             {
                 "name": "orderPublicId",

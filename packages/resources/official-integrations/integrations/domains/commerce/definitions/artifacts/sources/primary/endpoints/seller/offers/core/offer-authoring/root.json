@@ -3,7 +3,7 @@
         "endpointId": "createMyOffer",
         "method": "POST",
         "access": "auth",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offers",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/offers",
         "params": [],
         "headers": [
             {

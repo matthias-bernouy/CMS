@@ -75,6 +75,26 @@ begin
             and newer.event_type like 'commerce.order.fulfillment.%'
       );
 
+    update commerce.notification_deliveries delivery
+    set status = 'suppressed',
+        last_error = 'shipment no longer requires seller handoff',
+        updated_at = now()
+    from commerce.notification_events event
+    where delivery.event_id = event.id
+      and delivery.rule_key = 'commerce.seller.sale.shipment_reminder'
+      and delivery.status in ('pending', 'retry')
+      and not exists (
+          select 1
+          from commerce.orders orders
+          join commerce.order_fulfillments fulfillment on fulfillment.order_id = orders.id
+          where orders.id = event.aggregate_id::bigint
+            and orders.status = 'active'
+            and fulfillment.status in ('awaiting_shipment', 'shipment_creating', 'label_created')
+            and fulfillment.seller_handoff_declared_at is null
+            and fulfillment.carrier_accepted_at is null
+            and fulfillment.seller_handoff_deadline > now()
+      );
+
     return query
     with candidates as (
         select delivery.id
@@ -107,12 +127,18 @@ begin
                 'type', event.event_type,
                 'occurredAt', event.occurred_at
             ),
-            'recipient', jsonb_build_object('userId', claimed.recipient_cms_user_id),
+            'recipient', jsonb_build_object(
+                'userId', claimed.recipient_cms_user_id,
+                'role', claimed.recipient_role
+            ),
             'delivery', jsonb_build_object(
-                'status', case
+                'status', coalesce(
+                    event.payload->>'sourceEventType',
+                    case
                     when event.aggregate_type = 'price_agreement' then 'accepted'
                     else split_part(event.event_type, '.', 4)
-                end,
+                    end
+                ),
                 'label', rule.label
             ),
             'source', event.payload
@@ -154,10 +180,30 @@ begin
                     'shippingAmountMinor', orders.shipping_amount,
                     'totalAmountMinor', orders.total_amount
                 ),
+                'fulfillment', case when fulfillment.order_id is null then null
+                    else jsonb_build_object(
+                        'status', fulfillment.status,
+                        'sellerHandoffDeadline', fulfillment.seller_handoff_deadline,
+                        'sellerHandoffDeclaredAt', fulfillment.seller_handoff_declared_at,
+                        'carrierAcceptedAt', fulfillment.carrier_accepted_at
+                    ) end,
                 'action', jsonb_build_object(
-                    'path', '/account/purchases?order=' || orders.public_id
+                    'path', case claimed.recipient_role
+                        when 'seller' then '/account/sales?saleId=' || orders.public_id
+                        when 'admin' then '/.cms/admin'
+                        else '/account/purchases?order=' || orders.public_id
+                    end
                 )
-            )
+            ) || case when claim.id is null then '{}'::jsonb else jsonb_build_object(
+                'claim', jsonb_build_object(
+                    'id', claim.public_id,
+                    'status', claim.status,
+                    'reason', claim.reason,
+                    'sellerResponseByAt', claim.seller_response_by_at,
+                    'returnShipByAt', claim.return_ship_by_at,
+                    'returnDeliveryStatus', claim.return_delivery_status
+                )
+            ) end
         end
     from claimed
     join commerce.notification_events event on event.id = claimed.event_id
@@ -165,6 +211,13 @@ begin
     left join commerce.orders orders
         on event.aggregate_type = 'order'
        and orders.id = event.aggregate_id::bigint
+    left join commerce.order_fulfillments fulfillment on fulfillment.order_id = orders.id
+    left join commerce.marketplace_claims claim on claim.id = case
+        when event.payload->>'sourceAggregateType' = 'marketplace_claim'
+         and event.payload->>'sourceAggregateId' ~ '^[0-9]+$'
+            then (event.payload->>'sourceAggregateId')::bigint
+        else null
+    end
     left join commerce.price_agreements agreement
         on event.aggregate_type = 'price_agreement'
        and agreement.id = event.aggregate_id::bigint

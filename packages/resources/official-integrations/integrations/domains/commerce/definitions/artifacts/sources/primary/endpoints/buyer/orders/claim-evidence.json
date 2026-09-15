@@ -3,7 +3,7 @@
         "endpointId": "uploadMyOrderClaimEvidence",
         "method": "POST",
         "access": "auth",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/claim/evidence",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/claim/evidence",
         "params": [
             {
                 "name": "claimId",
@@ -81,7 +81,7 @@
         "endpointId": "myOrderClaimEvidenceFile",
         "method": "GET",
         "access": "auth",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/claim/evidence",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/claim/evidence",
         "params": [
             {
                 "name": "evidenceId",

@@ -28,7 +28,67 @@
                         "$include": "compatibility/http.json"
                     }
                 }
+            },
+            {
+                "name": "cms-commerce-v1-1",
+                "directory": "functions/cms-commerce",
+                "configPath": "supabase.config.toml",
+                "secrets": {
+                    "CMS_COMMERCE_API_KEY": "{{generated.cmsApiKey}}"
+                },
+                "compatibility": {
+                    "http": {
+                        "$include": "compatibility/http.json"
+                    }
+                }
             }
-        ]
+        ],
+        "connectorKey": "commerce",
+        "lineageId": "commerce-supabase-v1",
+        "migrationRevision": 0,
+        "migration": {
+            "install": {
+                "revision": 0,
+                "digest": "sha256:b0c6dec2ef2e5988692b59624867b4df3b02b5f00b013c71b2e73c43844e25d9",
+                "coveredMigrations": []
+            },
+            "migrations": [],
+            "repeatables": [
+                {
+                    "id": "commerce-1-1-runtime",
+                    "checksum": "sha256:492670ceb12be066ec52f493fb7333d1db5109f7ccf591bd61146f50d036dd33",
+                    "path": "repeatables/commerce-1.1.0.sql"
+                }
+            ],
+            "supportedSources": [
+                {
+                    "range": "1.0.0",
+                    "migrationRevision": 0,
+                    "legacyAdoption": {
+                        "definitionVersion": "1.0.0",
+                        "packageDigest": "e9617220d9f0bf9cf9a8e7be0e8b7d85f45b0a0c76b591d23d2eca1a51b27f89",
+                        "installDigest": "sha256:9ec0054049153896715dda0bb68a7e715276e72833684534899990cbd947ff84",
+                        "baselineSelector": {
+                            "provider": "supabase",
+                            "root": "connectors/supabase"
+                        },
+                        "observedSchemaDigest": "3b164124d1ba28ed1637cb3b9c146d8b1614ebefc2b40314aac5562d38445c37",
+                        "coveredMigrations": []
+                    }
+                }
+            ],
+            "cmsMediated": {
+                "strategy": "binding-switch",
+                "drainSeconds": 1,
+                "smoke": {
+                    "endpointId": "health",
+                    "expectedStatus": 200,
+                    "expectedBody": {
+                        "ok": true
+                    }
+                }
+            },
+            "pointOfNoReturn": "before-contract"
+        }
     }
 ]

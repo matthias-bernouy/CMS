@@ -2,7 +2,7 @@
     "endpointId": "uploadMyOfferImage",
     "access": "auth",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offer/image",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/offer/image",
     "params": [
         {
             "name": "offerId",

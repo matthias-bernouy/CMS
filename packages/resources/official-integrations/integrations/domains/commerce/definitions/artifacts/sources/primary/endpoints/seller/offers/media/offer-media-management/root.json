@@ -3,7 +3,7 @@
         "endpointId": "myOfferImage",
         "access": "auth",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offer/image",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/offer/image",
         "params": [
             {
                 "name": "id",
@@ -50,7 +50,7 @@
         "endpointId": "removeMyOfferImage",
         "access": "auth",
         "method": "DELETE",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offer/image",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/offer/image",
         "params": [
             {
                 "name": "offerId",

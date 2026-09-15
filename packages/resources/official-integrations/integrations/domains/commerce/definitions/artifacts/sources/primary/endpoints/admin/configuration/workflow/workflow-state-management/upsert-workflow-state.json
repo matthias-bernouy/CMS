@@ -1,7 +1,7 @@
 {
     "endpointId": "upsertWorkflowState",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-state",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/workflow-state",
     "params": [],
     "headers": [
         {

@@ -2,7 +2,7 @@
     {
         "endpointId": "offerCustomFields",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/configuration/offer-custom-fields",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/configuration/offer-custom-fields",
         "params": [],
         "headers": [
             {

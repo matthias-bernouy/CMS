@@ -49,6 +49,7 @@ describe("commerce seller sales", () => {
             totalAmount: 10450,
             metadata: {},
             metadataEntries: [],
+            operation: null,
             version: 1,
             createdAt: "2026-07-12T12:00:00.000Z",
             updatedAt: "2026-07-12T12:05:00.000Z",

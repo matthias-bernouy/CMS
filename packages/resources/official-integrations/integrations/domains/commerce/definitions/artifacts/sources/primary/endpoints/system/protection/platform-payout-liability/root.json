@@ -3,7 +3,7 @@
         "endpointId": "refreshPlatformPayoutLiability",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/platform-payout-liability/refresh",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/platform-payout-liability/refresh",
         "params": [],
         "headers": [
             {
@@ -64,7 +64,7 @@
         "endpointId": "recordPlatformPayoutLiabilityApplied",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/platform-payout-liability/applied",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/platform-payout-liability/applied",
         "params": [],
         "headers": [
             {

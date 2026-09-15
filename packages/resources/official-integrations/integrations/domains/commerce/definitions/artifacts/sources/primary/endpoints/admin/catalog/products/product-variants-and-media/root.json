@@ -5,7 +5,7 @@
     {
         "endpointId": "productVariant",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/product/variant",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/product/variant",
         "params": [
             {
                 "name": "id",
@@ -72,7 +72,7 @@
     {
         "endpointId": "productImage",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/product/image",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/product/image",
         "params": [
             {
                 "name": "id",

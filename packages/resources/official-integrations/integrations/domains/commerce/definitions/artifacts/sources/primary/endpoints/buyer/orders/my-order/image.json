@@ -2,7 +2,7 @@
     "endpointId": "myOrderImage",
     "access": "auth",
     "method": "GET",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/image",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/image",
     "params": [
         {
             "name": "id",

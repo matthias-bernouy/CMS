@@ -1,7 +1,7 @@
 {
     "endpointId": "manageBrands",
     "method": "GET",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/brands",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/brands",
     "params": [
         {
             "name": "q",

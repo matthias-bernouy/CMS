@@ -37,7 +37,7 @@ describe("commerce 1.1.0 indexing contract", () => {
                 installations: await installedConsent(),
                 triggers: new InMemoryTriggerRepository(),
                 connectorDeployers: [connectorDeployer(() => {})],
-                connectorInstanceIds: { primary: "commerce-test-primary" },
+                connectorInstanceIds: { commerce: "commerce-test-primary" },
             },
             { kind: "commerce", version: "1.1.0", answers: {}, options: {} },
             [definition],

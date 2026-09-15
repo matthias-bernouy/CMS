@@ -102,4 +102,34 @@ describe("commerce seller offer listing", () => {
             p_offset: 0,
         });
     });
+
+    test("reports an active unavailable offer as unavailable instead of online", async () => {
+        setRestResponder(() =>
+            jsonResponse({
+                seller_exists: true,
+                status_valid: true,
+                workflow_states: [{ code: "approved", label: "Approved", phase: "ready", terminal: false }],
+                rows: [
+                    {
+                        id: 93,
+                        publication_status: "active",
+                        workflow_state: "approved",
+                        availability: "reserved",
+                    },
+                ],
+                media: [],
+                active_price_proposals: [],
+                total: 1,
+            }),
+        );
+
+        const response = await requestCommerce("/me/offers?status=unavailable", {
+            userId: "seller-user-123",
+        });
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({
+            items: [{ id: 93, displayStatus: "unavailable", availability: "reserved" }],
+        });
+    });
 });

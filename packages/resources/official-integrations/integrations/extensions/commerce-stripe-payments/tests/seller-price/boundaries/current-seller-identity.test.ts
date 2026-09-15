@@ -17,7 +17,7 @@ describe("Commerce current seller identity contract", () => {
         }).toEqual({
             method: "GET",
             access: "system",
-            targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/seller/identity",
+            targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/seller/identity",
             params: [],
             headers: [
                 {

@@ -1,7 +1,7 @@
 {
     "endpointId": "upsertCategory",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/category",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/category",
     "params": [
         {
             "name": "id",

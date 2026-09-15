@@ -2,7 +2,7 @@
     "endpointId": "createOrder",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/orders",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/orders",
     "params": [],
     "headers": [
         {

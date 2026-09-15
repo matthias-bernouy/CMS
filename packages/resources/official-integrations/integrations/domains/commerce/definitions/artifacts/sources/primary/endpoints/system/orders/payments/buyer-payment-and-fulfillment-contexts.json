@@ -3,7 +3,7 @@
         "endpointId": "getPaymentOrderContext",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/payment-context",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/payment-context",
         "params": [
             {
                 "name": "orderId",
@@ -62,7 +62,7 @@
         "endpointId": "getOrderFulfillmentBuyerContext",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/payment-context",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/payment-context",
         "params": [
             {
                 "name": "orderId",

@@ -1,7 +1,7 @@
 {
     "endpointId": "workflowStates",
     "method": "GET",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/workflow-states",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/workflow-states",
     "params": [],
     "headers": [
         {

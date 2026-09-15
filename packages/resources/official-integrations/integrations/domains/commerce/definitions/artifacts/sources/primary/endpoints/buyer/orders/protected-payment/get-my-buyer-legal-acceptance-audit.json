@@ -3,7 +3,7 @@
         "endpointId": "getMyBuyerLegalAcceptanceAudit",
         "method": "GET",
         "access": "auth",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/legal-acceptances",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/legal-acceptances",
         "params": [
             {
                 "name": "orderId",

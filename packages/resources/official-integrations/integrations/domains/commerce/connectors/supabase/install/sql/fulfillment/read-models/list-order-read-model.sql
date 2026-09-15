@@ -178,7 +178,19 @@ begin
                 join commerce.orders order_row on order_row.id = page.id
                 left join line_summaries line_summary on line_summary.order_id = page.id
             ), '[]'::jsonb),
-            'operations', '[]'::jsonb,
+            'operations', coalesce((
+                select jsonb_agg(jsonb_build_object(
+                    'order_id', operation.order_id,
+                    'payment_status', operation.payment_status,
+                    'fulfillment_status', operation.fulfillment_status,
+                    'settlement_status', operation.settlement_status,
+                    'claim_status', operation.claim_status,
+                    'updated_at', operation.updated_at
+                ) order by page.created_at desc, page.id desc)
+                from page
+                join commerce.protected_order_operations operation
+                  on operation.order_id = page.id
+            ), '[]'::jsonb),
             'definitions', coalesce((
                 select jsonb_agg(jsonb_build_object(
                     'key', definition.key,

@@ -2,7 +2,7 @@
     "endpointId": "reorderMyOfferImages",
     "access": "auth",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/offer/images/reorder",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/offer/images/reorder",
     "params": [
         {
             "name": "offerId",

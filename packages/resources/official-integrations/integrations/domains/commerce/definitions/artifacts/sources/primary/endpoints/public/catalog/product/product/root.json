@@ -2,7 +2,7 @@
     "endpointId": "product",
     "method": "GET",
     "access": "public",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/product",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/product",
     "params": [
         {
             "name": "id",

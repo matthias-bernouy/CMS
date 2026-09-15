@@ -2,7 +2,7 @@
     {
         "endpointId": "health",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/health",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/health",
         "params": [],
         "headers": [
             {

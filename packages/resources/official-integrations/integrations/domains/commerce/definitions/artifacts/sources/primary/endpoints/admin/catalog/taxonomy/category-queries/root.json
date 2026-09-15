@@ -2,7 +2,7 @@
     {
         "endpointId": "manageCategories",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/categories",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/categories",
         "params": [
             {
                 "name": "q",

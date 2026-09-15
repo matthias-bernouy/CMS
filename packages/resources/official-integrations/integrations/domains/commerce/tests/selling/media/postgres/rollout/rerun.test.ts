@@ -66,7 +66,7 @@ describe("Commerce media connector rerun", () => {
             secrets,
             installations,
             connectorDeployers: [deployer],
-            connectorInstanceIds: { primary: "commerce-test-primary" },
+            connectorInstanceIds: { commerce: "commerce-test-primary" },
         };
 
         await runIntegrationInstallation({
@@ -93,10 +93,11 @@ describe("Commerce media connector rerun", () => {
         });
         const schemaIndex = requests.findIndex((request) => schemaQuery(request)?.includes("attach_offer_media_v2"));
         const functionIndex = requests.findIndex((request) =>
-            request.url.includes("/functions/deploy?slug=cms-commerce"),
+            request.url.includes("/functions/deploy?slug=cms-commerce-v1-1"),
         );
         const schema = schemaQuery(requests[schemaIndex]);
         const functionFiles = await deployedFiles(requests[functionIndex]);
+        const functionMetadata = await deployedMetadata(requests[functionIndex]);
         const offerMedia = functionFiles.get("routes/offer/media.ts");
         const productMedia = functionFiles.get("routes/catalog/media/product.ts");
 
@@ -105,6 +106,7 @@ describe("Commerce media connector rerun", () => {
         expect(schema).toContain("create or replace function commerce.attach_offer_media_v2");
         expect(schema).toContain("create or replace function commerce.remove_product_media");
         expect(schema).not.toContain("'replaced_storage_path'");
+        expect(functionMetadata).toMatchObject({ entrypoint_path: "index.ts", verify_jwt: false });
         expect(offerMedia).toContain('rpcRecord("attach_offer_media_v2"');
         expect(productMedia).toContain('rpcRecord("attach_product_media_v2"');
         expect(offerMedia).not.toContain("removeReturnedObject");
@@ -113,9 +115,13 @@ describe("Commerce media connector rerun", () => {
         expect(rerun.installation.runs.map((run) => run.status)).toEqual(["success", "success"]);
         expect(rerun.connectors?.[0]?.resources?.map((resource) => resource.type)).toEqual([
             "schema",
+            "schema",
             "config",
             "config",
             "config",
+            "secret",
+            "config",
+            "function",
             "secret",
             "config",
             "function",
@@ -151,4 +157,15 @@ async function deployedFiles(request: ManagementRequest | undefined): Promise<Ma
     }
     const entries = request.body.getAll("file") as Array<Blob & { name?: string }>;
     return new Map(await Promise.all(entries.map(async (file) => [file.name ?? "", await file.text()] as const)));
+}
+
+async function deployedMetadata(request: ManagementRequest | undefined): Promise<Record<string, unknown>> {
+    if (!(request?.body instanceof FormData)) {
+        throw new Error("Commerce Edge deployment did not use multipart FormData.");
+    }
+    const metadata = request.body.get("metadata");
+    if (!(metadata instanceof Blob)) {
+        throw new Error("Commerce Edge deployment did not include metadata.");
+    }
+    return JSON.parse(await metadata.text()) as Record<string, unknown>;
 }

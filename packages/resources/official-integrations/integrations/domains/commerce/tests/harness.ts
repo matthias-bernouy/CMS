@@ -62,6 +62,7 @@ export async function requestCommerce(
         userId?: string;
         userRole?: string | null;
         correlationId?: string;
+        functionSlug?: "cms-commerce" | "cms-commerce-v1-1";
         body?: JsonRecord;
         formData?: FormData;
     } = {},
@@ -119,6 +120,7 @@ function commerceRequest(
         userId?: string;
         userRole?: string | null;
         correlationId?: string;
+        functionSlug?: "cms-commerce" | "cms-commerce-v1-1";
         body?: JsonRecord;
         formData?: FormData;
     },
@@ -140,7 +142,7 @@ function commerceRequest(
     if (options.body) {
         headers.set("content-type", "application/json");
     }
-    return new Request(`https://cms.example.test/functions/v1/cms-commerce${path}`, {
+    return new Request(`https://cms.example.test/functions/v1/${options.functionSlug ?? "cms-commerce"}${path}`, {
         method: options.method ?? (options.body || options.formData ? "POST" : "GET"),
         headers,
         body: options.body ? JSON.stringify(options.body) : options.formData,

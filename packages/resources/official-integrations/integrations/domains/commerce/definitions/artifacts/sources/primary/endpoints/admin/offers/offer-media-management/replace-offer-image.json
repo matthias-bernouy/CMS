@@ -1,7 +1,7 @@
 {
     "endpointId": "replaceOfferImage",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/image/replace",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/offer/image/replace",
     "params": [
         {
             "name": "offerId",

@@ -3,7 +3,7 @@
         "endpointId": "getOrderShipmentCreationSellerContext",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/shipment-creation/seller-context",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/shipment-creation/seller-context",
         "params": [
             {
                 "name": "orderId",

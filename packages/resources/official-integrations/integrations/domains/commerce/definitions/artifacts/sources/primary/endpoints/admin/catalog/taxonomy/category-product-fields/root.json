@@ -8,7 +8,7 @@
     {
         "endpointId": "upsertCategoryField",
         "method": "POST",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/category-field",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/category-field",
         "params": [],
         "headers": [
             {

@@ -6,7 +6,7 @@
         "endpointId": "recordClaimReturnDelivery",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/claim/return-delivery",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/claim/return-delivery",
         "params": [],
         "headers": [
             {

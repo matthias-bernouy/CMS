@@ -5,7 +5,7 @@
         "access": {
             "mode": "admin"
         },
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/platform-payout-liability/authorize-decrease",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/platform-payout-liability/authorize-decrease",
         "params": [],
         "headers": [
             {

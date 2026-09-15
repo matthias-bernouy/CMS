@@ -4,7 +4,7 @@
     "access": {
         "mode": "admin"
     },
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/claim",
     "params": [
         {
             "name": "id",

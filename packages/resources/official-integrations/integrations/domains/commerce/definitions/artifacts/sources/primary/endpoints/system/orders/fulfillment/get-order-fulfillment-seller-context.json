@@ -3,7 +3,7 @@
         "endpointId": "getOrderFulfillmentSellerContext",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/fulfillment/seller-context",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/fulfillment/seller-context",
         "params": [
             {
                 "name": "orderId",

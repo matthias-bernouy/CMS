@@ -22,6 +22,9 @@
                             "authority": "cms"
                         }
                     },
+                    "recipient_role": {
+                        "type": "string"
+                    },
                     "status": {
                         "type": "string"
                     },
@@ -48,6 +51,7 @@
                     "event_id",
                     "rule_key",
                     "recipient_cms_user_id",
+                    "recipient_role",
                     "status",
                     "attempts",
                     "available_at",

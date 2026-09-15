@@ -2,7 +2,7 @@
     "endpointId": "pendingOrderRefundAuthorizations",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/refunds/pending",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/refunds/pending",
     "params": [],
     "headers": [
         {

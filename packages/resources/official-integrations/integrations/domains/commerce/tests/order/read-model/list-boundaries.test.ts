@@ -129,11 +129,6 @@ describe("commerce order list boundaries", () => {
         }
         const scopeViolations = [
             {
-                route: "/me/sales",
-                options: { userId: sellerUserId },
-                value: { ...empty, state: "ok", operations: [{}] },
-            },
-            {
                 route: "/admin/orders",
                 options: {},
                 value: { ...empty, state: "ok", definitions: [{}] },

@@ -2,7 +2,7 @@
     "endpointId": "listDefaultNotificationTemplates",
     "method": "GET",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/notifications/templates",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/notifications/templates",
     "params": [],
     "headers": [
         {

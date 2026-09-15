@@ -5,7 +5,7 @@
     {
         "endpointId": "removeProductImage",
         "method": "DELETE",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/product/image",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/product/image",
         "params": [
             {
                 "name": "productId",
@@ -59,7 +59,7 @@
     {
         "endpointId": "reorderProductImages",
         "method": "POST",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/product/images/reorder",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/product/images/reorder",
         "params": [
             {
                 "name": "productId",

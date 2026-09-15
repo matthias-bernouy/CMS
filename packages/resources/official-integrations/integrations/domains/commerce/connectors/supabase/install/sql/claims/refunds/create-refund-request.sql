@@ -120,7 +120,13 @@ begin
     perform commerce.append_financial_event(
         v_order.id, 'refund_request', v_request.id::text, 'refund_requested',
         p_requested_by_kind, p_requested_by, p_reason,
-        jsonb_build_object('amount', p_requested_amount, 'requiresFinanceApproval', v_requires_finance),
+        jsonb_build_object(
+            'amount', p_requested_amount,
+            'sellerRecoveryAmount', p_seller_recovery_amount,
+            'requiresFinanceApproval', v_requires_finance,
+            'dualApprovalRequired', v_requires_dual,
+            'status', v_request.status
+        ),
         'commerce.refund.requested', 'refund:' || v_request.id || ':requested'
     );
     return to_jsonb(v_request);

@@ -3,7 +3,7 @@
         "endpointId": "getBuyerLegalRequirements",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/order/legal-requirements",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/order/legal-requirements",
         "params": [
             {
                 "name": "orderId",

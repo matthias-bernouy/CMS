@@ -9,12 +9,22 @@ set statement_timeout = '15s';
 
 begin;
 
+insert into commerce.sellers (cms_user_id)
+values ('seller-1')
+returning id as seller_id \gset seller_
+
 insert into commerce.orders (
-    order_number, buyer_cms_user_id, status, currency,
+    order_number, seller_id, buyer_cms_user_id, status, currency,
     subtotal_amount, shipping_amount, total_amount
 ) values (
-    'NTF-1001', 'buyer-1', 'active', 'eur', 10000, 500, 10500
+    'NTF-1001', :seller_seller_id, 'buyer-1', 'active', 'eur', 10000, 500, 10500
 ) returning id \gset
+
+insert into commerce.order_fulfillments (
+    order_id, status, seller_handoff_deadline
+) values (
+    :id, 'awaiting_shipment', now() + interval '3 days'
+);
 
 insert into commerce.audit_events (
     order_id, aggregate_type, aggregate_id, event_type, actor_kind, actor_id
@@ -33,7 +43,9 @@ do $required_delivery$
 declare
     claimed record;
 begin
-    select * into claimed from claimed_required;
+    select * into claimed
+    from claimed_required
+    where context #>> '{recipient,role}' = 'buyer';
     if not found then
         raise exception 'required payment notification was suppressed';
     end if;
@@ -55,9 +67,52 @@ begin
 end;
 $required_delivery$;
 
+do $seller_paid_delivery$
+begin
+    if not exists (
+        select 1
+        from claimed_required
+        where context #>> '{recipient,userId}' = 'seller-1'
+          and context #>> '{recipient,role}' = 'seller'
+          and context #>> '{action,path}' like '/account/sales?saleId=%'
+    ) then
+        raise exception 'seller did not receive the paid sale notification';
+    end if;
+end;
+$seller_paid_delivery$;
+
 select commerce.complete_notification(
-    (select delivery_id from claimed_required), 'worker-1', 'message-1'
+    (select delivery_id from claimed_required
+     where context #>> '{recipient,role}' = 'buyer'),
+    'worker-1', 'message-1'
 );
+select commerce.complete_notification(
+    (select delivery_id from claimed_required
+     where context #>> '{recipient,role}' = 'seller'),
+    'worker-1', 'message-seller-1'
+);
+
+update commerce.order_fulfillments
+set status = 'carrier_accepted', carrier_accepted_at = now()
+where order_id = :id;
+update commerce.notification_deliveries
+set available_at = now()
+where rule_key = 'commerce.seller.sale.shipment_reminder';
+do $obsolete_reminder$
+declare
+    claimed_count integer;
+    reminder_status text;
+begin
+    select count(*) into claimed_count
+    from commerce.claim_notifications('reminder-worker', 10);
+    select status into reminder_status
+    from commerce.notification_deliveries
+    where rule_key = 'commerce.seller.sale.shipment_reminder';
+    if claimed_count <> 0 or reminder_status <> 'suppressed' then
+        raise exception 'obsolete seller shipment reminder was not suppressed';
+    end if;
+end;
+$obsolete_reminder$;
 
 insert into commerce.offers (slug, title)
 values ('notification-agreement-offer', 'Notification agreement offer')
@@ -129,10 +184,10 @@ select commerce.complete_notification(
 insert into commerce.audit_events (
     order_id, aggregate_type, aggregate_id, event_type, actor_kind, actor_id
 ) values (
-    :id, 'fulfillment', 'fulfillment-1', 'fulfillment_in_transit', 'provider', 'carrier'
+    :id, 'fulfillment', 'fulfillment-1', 'fulfillment_collected_by_recipient', 'provider', 'carrier'
 );
 insert into commerce.notification_user_preferences (cms_user_id, rule_key, enabled)
-values ('buyer-1', 'commerce.order.fulfillment.in_transit', false);
+values ('buyer-1', 'commerce.order.fulfillment.collected_by_recipient', false);
 
 create temporary table claimed_optional on commit drop as
 select *
@@ -140,13 +195,17 @@ from commerce.claim_notifications('worker-2', 10);
 
 do $behavior$
 begin
-    if (select count(*) from claimed_optional) <> 0 then
-        raise exception 'disabled optional notification was claimed';
+    if (select count(*) from claimed_optional) <> 1
+       or not exists (
+           select 1 from claimed_optional
+           where context #>> '{recipient,role}' = 'seller'
+       ) then
+        raise exception 'seller fulfillment update was not claimed independently';
     end if;
     if (
-        select status
-        from commerce.notification_deliveries
-        where rule_key = 'commerce.order.fulfillment.in_transit'
+           select status
+           from commerce.notification_deliveries
+           where rule_key = 'commerce.order.fulfillment.collected_by_recipient'
     ) <> 'suppressed' then
         raise exception 'disabled optional notification was not suppressed';
     end if;
@@ -175,6 +234,10 @@ begin
 end;
 $behavior$;
 
+select commerce.complete_notification(
+    (select delivery_id from claimed_optional), 'worker-2', 'message-seller-2'
+);
+
 update commerce.orders set status = 'cancelled' where id = :id;
 insert into commerce.audit_events (
     order_id, aggregate_type, aggregate_id, event_type, actor_kind, actor_id
@@ -188,17 +251,57 @@ from commerce.claim_notifications('worker-3', 10);
 
 do $cancellation_refund$
 begin
-    if (select count(*) from claimed_cancellation) <> 2
+    if (select count(*) from claimed_cancellation) <> 3
        or not exists (
            select 1 from claimed_cancellation where template_key = 'commerce.order.cancelled'
        )
        or not exists (
            select 1 from claimed_cancellation where template_key = 'commerce.order.refunded'
+       )
+       or not exists (
+           select 1 from claimed_cancellation where template_key = 'commerce.seller.sale.refunded'
        ) then
         raise exception 'a refunded cancellation did not produce both required facts';
     end if;
 end;
 $cancellation_refund$;
+
+update commerce.notification_configuration
+set admin_recipient_cms_user_ids = array['admin-1']
+where id = 'default';
+insert into commerce.audit_events (
+    order_id, aggregate_type, aggregate_id, event_type, actor_kind, actor_id, data
+) values (
+    :id, 'refund_request', 'refund-2', 'refund_requested', 'admin', 'admin-1',
+    '{"requiresFinanceApproval": true}'::jsonb
+);
+insert into commerce.financial_exceptions (
+    order_id, kind, severity, status, reason
+) values (
+    :id, 'refund_failure', 'critical', 'open', 'Provider refund needs reconciliation'
+);
+
+create temporary table claimed_admin on commit drop as
+select * from commerce.claim_notifications('admin-worker', 10);
+
+do $admin_notifications$
+begin
+    if (select count(*) from claimed_admin) <> 4
+       or not exists (
+           select 1 from claimed_admin
+           where template_key = 'commerce.admin.action_required'
+             and context #>> '{recipient,userId}' = 'admin-1'
+             and context #>> '{recipient,role}' = 'admin'
+       )
+       or not exists (
+           select 1 from claimed_admin
+           where template_key = 'commerce.admin.financial_exception'
+             and context #>> '{source,financialException,severity}' = 'critical'
+       ) then
+        raise exception 'administrator action notifications were not captured correctly';
+    end if;
+end;
+$admin_notifications$;
 
 update commerce.notification_configuration set mode = 'external' where id = 'default';
 do $external_mode$

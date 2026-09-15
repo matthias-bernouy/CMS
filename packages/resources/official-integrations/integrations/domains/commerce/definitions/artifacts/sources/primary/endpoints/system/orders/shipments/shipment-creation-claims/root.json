@@ -6,7 +6,7 @@
         "endpointId": "claimPendingShipmentCreations",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/shipment-creations/claim",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/shipment-creations/claim",
         "params": [],
         "headers": [
             {

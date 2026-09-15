@@ -1,7 +1,7 @@
 {
     "endpointId": "sellers",
     "method": "GET",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/sellers",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/sellers",
     "params": [
         {
             "name": "q",

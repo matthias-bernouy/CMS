@@ -3,7 +3,7 @@
         "endpointId": "getCurrentSellerIdentity",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/seller/identity",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/seller/identity",
         "params": [],
         "effects": {
             "identityBindings": [

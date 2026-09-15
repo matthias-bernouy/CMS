@@ -1,7 +1,7 @@
 {
     "endpointId": "upsertBrand",
     "method": "POST",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/brand",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/brand",
     "params": [
         {
             "name": "id",

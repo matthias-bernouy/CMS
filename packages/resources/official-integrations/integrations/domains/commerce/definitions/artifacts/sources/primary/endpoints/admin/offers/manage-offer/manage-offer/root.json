@@ -1,7 +1,7 @@
 {
     "endpointId": "manageOffer",
     "method": "GET",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/offer",
     "params": [
         {
             "name": "id",

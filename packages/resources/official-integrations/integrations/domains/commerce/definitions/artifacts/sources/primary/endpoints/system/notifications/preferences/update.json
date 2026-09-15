@@ -2,7 +2,7 @@
     "endpointId": "updateMyNotificationPreferences",
     "method": "POST",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/notifications/preferences",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/notifications/preferences",
     "params": [],
     "headers": [
         {

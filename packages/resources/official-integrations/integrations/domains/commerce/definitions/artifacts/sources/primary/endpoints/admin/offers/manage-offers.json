@@ -2,7 +2,7 @@
     {
         "endpointId": "manageOffers",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offers",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/offers",
         "params": [
             {
                 "name": "q",

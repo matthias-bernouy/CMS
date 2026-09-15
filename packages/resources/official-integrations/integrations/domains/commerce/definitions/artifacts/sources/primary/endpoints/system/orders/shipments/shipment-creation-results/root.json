@@ -6,7 +6,7 @@
         "endpointId": "failOrderShipmentCreation",
         "method": "POST",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/shipment-creation/fail",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/shipment-creation/fail",
         "params": [],
         "headers": [
             {

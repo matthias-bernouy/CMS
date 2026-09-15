@@ -105,7 +105,7 @@ describe("Commerce protected Stripe combined installation", () => {
                 integrationKind: "commerce",
                 dataApiSchemas: ["commerce"],
                 schemas: ["install/sql/schema.manifest.json"],
-                functions: ["cms-commerce"],
+                functions: ["cms-commerce", "cms-commerce-v1-1"],
             },
             {
                 integrationKind: "stripe-connect",
@@ -364,7 +364,7 @@ async function afterInstallationResponse(request: Request): Promise<Response> {
             snapshotAt: "2026-07-23T12:00:00.000Z",
         });
     }
-    if (request.url.includes("/cms-commerce/system/seller/sale-capability/activate")) {
+    if (request.url.includes("/cms-commerce-v1-1/system/seller/sale-capability/activate")) {
         return Response.json({
             capabilityKey: "protected_payment",
             sellerKind: "user",

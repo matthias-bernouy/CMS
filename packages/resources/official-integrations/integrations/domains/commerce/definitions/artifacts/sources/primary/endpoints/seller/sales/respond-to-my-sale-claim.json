@@ -3,7 +3,7 @@
         "endpointId": "respondToMySaleClaim",
         "method": "POST",
         "access": "auth",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/sale/claim/respond",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/sale/claim/respond",
         "params": [],
         "headers": [
             {

@@ -2,7 +2,7 @@
     "endpointId": "getProtectedCheckoutSellerContext",
     "method": "POST",
     "access": "system",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/protected-checkout/seller-context",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/protected-checkout/seller-context",
     "params": [],
     "headers": [
         {

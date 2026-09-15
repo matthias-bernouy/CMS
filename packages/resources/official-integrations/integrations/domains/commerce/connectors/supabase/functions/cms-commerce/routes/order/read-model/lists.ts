@@ -47,7 +47,9 @@ async function listOrderReadModel(request: Request, scope: ListScope): Promise<R
     const operationByOrder = new Map(envelope.operations.map((operation) => [String(operation.order_id), operation]));
     const items =
         scope === "seller"
-            ? envelope.orders.map((row) => projectSaleListItem(row, envelope.definitions))
+            ? envelope.orders.map((row) =>
+                  projectSaleListItem(row, operationByOrder.get(String(row.id)) ?? null, envelope.definitions),
+              )
             : envelope.orders.map((row) =>
                   projectOrderListItem(
                       row,
@@ -76,11 +78,7 @@ function readEnvelope(value: unknown, scope: ListScope): ListEnvelope {
         }
         return { state: "seller_missing", orders, operations, definitions: [], total: 0 };
     }
-    if (
-        value.state !== "ok" ||
-        (scope === "seller" && operations.length) ||
-        (scope === "admin" && definitions.length)
-    ) {
+    if (value.state !== "ok" || (scope === "admin" && definitions.length)) {
         invalidEnvelope();
     }
     return {

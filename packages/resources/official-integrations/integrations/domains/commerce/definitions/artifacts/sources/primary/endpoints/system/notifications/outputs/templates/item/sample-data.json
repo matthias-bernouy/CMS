@@ -6,6 +6,9 @@
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "role": {
+                    "type": "string"
                 }
             },
             "required": [
@@ -102,6 +105,17 @@
             "required": [
                 "status",
                 "label"
+            ]
+        },
+        "fulfillment": {
+            "type": "object",
+            "properties": {
+                "sellerHandoffDeadline": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "sellerHandoffDeadline"
             ]
         },
         "action": {

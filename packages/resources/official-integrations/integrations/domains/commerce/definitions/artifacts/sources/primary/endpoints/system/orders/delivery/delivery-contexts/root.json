@@ -9,7 +9,7 @@
         "endpointId": "getOrderDeliverySelectionContext",
         "method": "GET",
         "access": "system",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/order/delivery-selection-context",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/system/order/delivery-selection-context",
         "params": [
             {
                 "name": "orderId",

@@ -2,7 +2,7 @@
     {
         "endpointId": "orders",
         "method": "GET",
-        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/orders",
+        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/orders",
         "params": [
             {
                 "name": "status",

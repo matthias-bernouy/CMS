@@ -26,7 +26,7 @@ describe("commerce claim evidence strict Source contracts", () => {
                 endpointId: endpoint.endpointId,
                 method: endpoint.method,
                 access: endpoint.access,
-                target: endpoint.targetUrl.split("/cms-commerce").at(-1),
+                target: endpoint.targetUrl.split("/cms-commerce-v1-1").at(-1),
                 params: endpoint.params?.map((param) => [param.name, param.required === true]),
                 response: [endpoint.responseKind ?? "json", endpoint.mediaType ?? null],
                 statuses: endpoint.output?.map((output) => output.status),

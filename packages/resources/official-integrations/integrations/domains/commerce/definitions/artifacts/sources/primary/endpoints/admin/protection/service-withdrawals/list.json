@@ -4,7 +4,7 @@
     "access": {
         "mode": "admin"
     },
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/service-withdrawal-requests",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/admin/service-withdrawal-requests",
     "params": [
         { "name": "requestPublicId", "in": "query", "type": "string" },
         { "name": "orderId", "in": "query", "type": "number" },

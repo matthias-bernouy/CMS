@@ -2,7 +2,7 @@
     "endpointId": "removeMyCartItem",
     "method": "DELETE",
     "access": "auth",
-    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/me/cart/item",
+    "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce-v1-1/me/cart/item",
     "params": [
         {
             "name": "offerId",
