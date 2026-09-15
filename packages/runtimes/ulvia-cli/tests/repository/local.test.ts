@@ -8,6 +8,7 @@ import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/h
 import { LocalRepositoryCatalog } from "../../src/repository/catalog";
 import { LocalIntegrationRepository } from "../../src/repository/local";
 import { handleRepositoryRequest } from "../../src/repository/server";
+import { storeReleaseScenarioPackages } from "../../src/release/sandbox/scenario/repository";
 import { buildLocalVerificationBundle } from "../../src/release/source/verification";
 import { integrationDefinition, integrationPackage, removeReadonlyTree } from "../fixtures";
 
@@ -17,6 +18,33 @@ afterEach(async () => {
 });
 
 describe("local integration repository", () => {
+    test("retains reviewed schema baselines in an isolated release scenario", async () => {
+        const fixture = await repositoryFixture();
+        const resolved = await integrationPackage();
+        const reviewedSchemaBaseline = {
+            connector: { provider: "supabase", root: "connectors/supabase" },
+            packageDigest: resolved.digest,
+            dependencies: [],
+            schema: { namespaces: [] },
+            provenance: {
+                evidenceId: `reviewed-schema-baseline-${"a".repeat(64)}`,
+                source: "legacy-backfill:reviewed@1.0.0",
+                reviewedAt: "2026-09-04T10:00:00.000Z",
+            },
+        } as const;
+
+        await storeReleaseScenarioPackages(fixture.repository, [
+            {
+                package: resolved,
+                definition: integrationDefinition(),
+                reviewedSchemaBaselines: [reviewedSchemaBaseline],
+            },
+        ]);
+
+        const record = (await fixture.repository.list())[0]!;
+        expect(await fixture.repository.getReviewedSchemaBaselines(record)).toEqual([reviewedSchemaBaseline]);
+    });
+
     test("persists immutable package coordinates and definitions", async () => {
         const fixture = await repositoryFixture();
         const resolved = await integrationPackage();

@@ -24,6 +24,7 @@ import { prepareSandboxSupabase } from "../supabase-config";
 import { executeInstalledReleaseScenario } from "./fixture/execution";
 import { captureReleaseSandboxDockerVolumes, removeReleaseSandboxDockerVolumes } from "./dockerVolumes";
 import { ReleaseScenarioInfrastructureError } from "./errors";
+import { storeReleaseScenarioPackages } from "./repository";
 
 export { ReleaseScenarioInfrastructureError } from "./errors";
 
@@ -53,7 +54,7 @@ export async function runReleaseScenario(scenario: ReleaseScenario): Promise<voi
         supabasePrepared = true;
         const repository = new LocalIntegrationRepository(paths.repository, paths.packages);
         await repository.init();
-        await storePackages(repository, scenario.packages);
+        await storeReleaseScenarioPackages(repository, scenario.packages);
         const supabase = await startLocalSupabase(paths.supabase);
         mongoRequested = true;
         const mongo = await startLocalMongo(paths.mongo, ports.cms.mongo, { ephemeral: true });
@@ -147,21 +148,6 @@ function infrastructureFailure(error: unknown): ReleaseScenarioInfrastructureErr
     return error instanceof ReleaseScenarioInfrastructureError ? error : new ReleaseScenarioInfrastructureError(error);
 }
 
-async function storePackages(
-    repository: LocalIntegrationRepository,
-    packages: readonly LocalReleasePackage[],
-): Promise<void> {
-    const unique = new Map(packages.map((entry) => [coordinate(entry), entry]));
-    for (const entry of unique.values()) {
-        await repository.store({
-            package: entry.package,
-            definition: entry.definition,
-            ...(entry.verification ? { verification: entry.verification } : {}),
-            source: "release-sandbox",
-        });
-    }
-}
-
 async function assertDatabaseReady(databaseUrl: string): Promise<void> {
     const { SQL } = await import("bun");
     const connection = new SQL(databaseUrl, { max: 1 });
@@ -170,8 +156,4 @@ async function assertDatabaseReady(databaseUrl: string): Promise<void> {
     } finally {
         await connection.close();
     }
-}
-
-function coordinate(entry: LocalReleasePackage): string {
-    return `${entry.package.envelope.kind}@${entry.package.envelope.version}`;
 }
