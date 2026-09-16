@@ -554,6 +554,8 @@ begin
     return new;
 end;
 $$;
+revoke execute on function commerce.capture_financial_exception_notification()
+from public, anon, authenticated;
 
 drop trigger if exists commerce_capture_financial_exception_notification
     on commerce.financial_exceptions;
@@ -2719,3 +2721,5 @@ as $$
     )
     from state;
 $$;
+revoke execute on function commerce.application_health()
+from public, anon, authenticated;
