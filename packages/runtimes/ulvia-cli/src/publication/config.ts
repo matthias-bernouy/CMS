@@ -3,7 +3,7 @@ import { assertIntegrationPackageKind, assertIntegrationPackageVersion } from "@
 
 const MANAGEMENT_PATH = "/.cms/repository-management";
 const DEFAULT_TIMEOUT_MS = 900_000;
-const MAX_TIMEOUT_MS = 1_800_000;
+const MAX_TIMEOUT_MS = 3_600_000;
 
 export type PushFlags = Readonly<{
     kind?: string;
