@@ -56,7 +56,7 @@ describe("admin settings binding", () => {
         document.head.innerHTML = `<meta name="basePath" content="">`;
         document.body.innerHTML = `
             <cms-binding-core>
-                ${settingsHtml("settings/general.html")}
+                ${settingsHtml("settings/_site/general.html")}
             </cms-binding-core>
         `;
 

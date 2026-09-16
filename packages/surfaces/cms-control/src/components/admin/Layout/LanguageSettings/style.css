@@ -1,0 +1,116 @@
+cms-language-settings {
+    display: grid;
+    gap: 28px;
+    color: var(--text-main);
+    container-type: inline-size;
+}
+
+cms-language-settings * {
+    box-sizing: border-box;
+}
+
+cms-language-settings .language-section {
+    display: grid;
+    gap: 12px;
+}
+
+cms-language-settings .language-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+cms-language-settings h2,
+cms-language-settings p {
+    margin: 0;
+}
+
+cms-language-settings h2 {
+    font-size: 14px;
+    font-weight: 760;
+}
+
+cms-language-settings .language-list {
+    display: grid;
+    gap: 8px;
+}
+
+cms-language-settings .language-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+    padding: 10px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-surface);
+}
+
+cms-language-settings .language-identity,
+cms-language-settings .language-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+cms-language-settings .language-identity {
+    min-width: 0;
+}
+
+cms-language-settings .language-flag {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--bg-base);
+    font-size: 20px;
+}
+
+cms-language-settings .language-name {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+cms-language-settings .language-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+cms-language-settings .language-name strong {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+cms-language-settings .language-name small,
+cms-language-settings .language-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+cms-language-settings .language-actions {
+    flex: none;
+    gap: 6px;
+}
+
+cms-language-settings .language-actions p9r-button {
+    --_btn-padding-y: 0.45rem;
+    --_btn-padding-x: 0.65rem;
+    --_btn-font-size: 12px;
+    --_btn-radius: 6px;
+}
+
+@container (max-width: 560px) {
+    cms-language-settings .language-row {
+        flex-wrap: wrap;
+    }
+
+    cms-language-settings .language-actions {
+        margin-left: auto;
+    }
+}

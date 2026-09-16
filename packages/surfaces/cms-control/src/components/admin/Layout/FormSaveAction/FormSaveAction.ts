@@ -9,6 +9,7 @@ export class CmsFormSaveAction extends HTMLElement {
     private readonly status: HTMLElement | null;
     private ownerForm: HTMLFormElement | null = null;
     private state: SaveState = "pristine";
+    private feedbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
     constructor() {
         super();
@@ -38,6 +39,7 @@ export class CmsFormSaveAction extends HTMLElement {
     disconnectedCallback(): void {
         this.button?.removeEventListener("click", this.onClick);
         this.unbindForm();
+        this.clearFeedbackTimeout();
     }
 
     attributeChangedCallback(): void {
@@ -88,6 +90,7 @@ export class CmsFormSaveAction extends HTMLElement {
     private readonly onFailure = (): void => this.sync("dirty");
 
     private sync(state: SaveState): void {
+        this.clearFeedbackTimeout();
         this.state = state;
         this.setAttribute("state", state);
         if (this.button) {
@@ -96,6 +99,17 @@ export class CmsFormSaveAction extends HTMLElement {
         if (this.status) {
             const label = this.getAttribute("label")?.trim() || "Save";
             this.status.textContent = state === "saving" ? "Saving…" : state === "saved" ? "Saved" : label;
+        }
+        const duration = Number(this.getAttribute("saved-feedback-duration"));
+        if (state === "saved" && Number.isFinite(duration) && duration > 0) {
+            this.feedbackTimeout = setTimeout(() => this.sync("pristine"), duration);
+        }
+    }
+
+    private clearFeedbackTimeout(): void {
+        if (this.feedbackTimeout !== null) {
+            clearTimeout(this.feedbackTimeout);
+            this.feedbackTimeout = null;
         }
     }
 }

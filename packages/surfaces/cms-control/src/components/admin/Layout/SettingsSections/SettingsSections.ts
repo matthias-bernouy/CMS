@@ -5,6 +5,7 @@ import template from "./template.html" with { type: "text" };
 
 const SETTINGS_SECTIONS = [
     "general",
+    "languages",
     "organization",
     "email",
     "privacy-analytics",

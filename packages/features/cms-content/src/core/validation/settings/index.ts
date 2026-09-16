@@ -45,6 +45,9 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
         if (site.organization !== undefined) {
             site.organization = validateSiteOrganizationPatch(site.organization);
         }
+        if (site.additionalLanguages !== undefined) {
+            site.additionalLanguages = validateAdditionalLanguages(site.additionalLanguages);
+        }
         normalized.site = site as TSystem["site"];
     }
 
@@ -68,6 +71,28 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
     }
 
     return normalized;
+}
+
+function validateAdditionalLanguages(value: unknown): string[] {
+    if (!Array.isArray(value) || value.length > 32) {
+        throw new ContentValidationError("site.additionalLanguages", "expected up to 32 language tags");
+    }
+    const languages = new Set<string>();
+    for (const tag of value) {
+        if (typeof tag !== "string" || !tag.trim()) {
+            throw new ContentValidationError("site.additionalLanguages", "invalid language tag");
+        }
+        try {
+            const canonical = Intl.getCanonicalLocales(tag.trim())[0];
+            if (!canonical) {
+                throw new Error("missing language tag");
+            }
+            languages.add(canonical);
+        } catch {
+            throw new ContentValidationError("site.additionalLanguages", "invalid language tag");
+        }
+    }
+    return [...languages].sort();
 }
 
 /** Return the normalized public SEO base URL, or null when it cannot safely be published. */

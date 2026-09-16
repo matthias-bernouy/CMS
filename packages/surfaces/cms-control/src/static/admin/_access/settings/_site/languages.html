@@ -1,0 +1,35 @@
+<cms-event-toast event="settings:languages-saved" message="Languages saved" type="success"></cms-event-toast>
+
+<w13c-fixed-admin-layout>
+    <span slot="title">Settings</span>
+    <cms-settings-nav slot="secondary-lateral-nav"></cms-settings-nav>
+
+    <p9r-container size="lg">
+        <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:languages-saved">
+            <template>
+                <form id="language-settings-form" cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:languages-saved" cms-source-success-reset="false">
+                    <input type="hidden" name="site.language" value="{{ site.language }}">
+                    <input type="hidden" name="site.additionalLanguages" value="{{ site.additionalLanguages | lines }}">
+                    <cms-shell-detail>
+                        <a slot="back" href="{{BASE_PATH}}/admin/settings" aria-label="Back to settings">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m15 18-6-6 6-6"></path>
+                            </svg>
+                        </a>
+                        <span slot="title">Languages</span>
+                        <span slot="description">Choose the languages this site will support. Existing pages use the default language.</span>
+                        <cms-form-save-action slot="actions" form="language-settings-form" label="Save languages" saved-feedback-duration="2500"></cms-form-save-action>
+
+                        <p9r-stack slot="body" gap="md">
+                            <p9r-alert cms-condition="$source.error" type="error">
+                                <span slot="title">Could not save languages</span>
+                                {{ $source.message }}
+                            </p9r-alert>
+                            <cms-language-settings default-language="{{ site.language }}" additional-languages="{{ site.additionalLanguages | json }}"></cms-language-settings>
+                        </p9r-stack>
+                    </cms-shell-detail>
+                </form>
+            </template>
+        </div>
+    </p9r-container>
+</w13c-fixed-admin-layout>
