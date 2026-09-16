@@ -7,7 +7,7 @@ import type { ReportRevisionDigestReference } from "../../../interfaces/reports/
 import type { VerificationPolicyIdentity } from "../../../interfaces/runner";
 import { IntegrationVerificationContractError } from "../../validation/errors";
 import { strictRecord } from "../../validation/structure";
-import { positiveInteger, sha256Digest, stableIdentifier } from "../../validation/values";
+import { nonNegativeInteger, sha256Digest, stableIdentifier } from "../../validation/values";
 import { parseVersionDigestReference } from "../shared";
 
 export function parseReportReference(value: unknown, field: string): ReportRevisionDigestReference {
@@ -32,7 +32,7 @@ export function parseMigrationReportReference(value: unknown, field: string): Mi
         source: parseVersionDigestReference(input.source, `${field}.source`),
         connectorKey: stableIdentifier(input.connectorKey, `${field}.connectorKey`),
         lineageId: stableIdentifier(input.lineageId, `${field}.lineageId`),
-        migrationRevision: positiveInteger(input.migrationRevision, `${field}.migrationRevision`),
+        migrationRevision: nonNegativeInteger(input.migrationRevision, `${field}.migrationRevision`),
     };
 }
 

@@ -5,8 +5,8 @@ import { IntegrationVerificationContractError } from "../../validation/errors";
 import { assertContractIJson, strictRecord } from "../../validation/structure";
 import {
     assertVersionInRange,
+    nonNegativeInteger,
     oneOf,
-    positiveInteger,
     sha256Digest,
     stableIdentifier,
     supportedVersionRange,
@@ -85,7 +85,7 @@ function parseMigrationReportFields(input: Record<string, unknown>): Omit<Migrat
         target,
         connectorKey: stableIdentifier(input.connectorKey, "migrationReport.connectorKey"),
         lineageId: stableIdentifier(input.lineageId, "migrationReport.lineageId"),
-        migrationRevision: positiveInteger(input.migrationRevision, "migrationReport.migrationRevision"),
+        migrationRevision: nonNegativeInteger(input.migrationRevision, "migrationReport.migrationRevision"),
         supportedSourceRange,
         runner: pinnedRunner(input.runner, "migrationReport.runner"),
         policy: parseVerificationPolicyIdentity(input.policy, "migrationReport.policy"),

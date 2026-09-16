@@ -21,6 +21,13 @@ describe("migration report contract", () => {
         expect(parsed.migrationJobResultDigest).toHaveLength(64);
     });
 
+    test("accepts revision zero for repeatable-only migrations", () => {
+        expect(parseMigrationReport({ ...migrationReport(), migrationRevision: 0 }).migrationRevision).toBe(0);
+        expect(() => parseMigrationReport({ ...migrationReport(), migrationRevision: -1 })).toThrow(
+            /migrationRevision must be a non-negative safe integer/,
+        );
+    });
+
     test("fails closed on an unsupported source or inconsistent overall result", () => {
         const value = migrationReport();
         expect(() => parseMigrationReport({ ...value, supportedSourceRange: "^2.0.0" })).toThrow(
@@ -235,6 +242,21 @@ describe("migration report contract", () => {
 });
 
 describe("composite release admission decisions", () => {
+    test("references repeatable-only migration reports at revision zero", () => {
+        const decision = admissionDecision();
+        const migrationReports = decision.migrationReports.map((report) => ({ ...report, migrationRevision: 0 }));
+
+        expect(
+            parseReleaseAdmissionDecision({ ...decision, migrationReports }).migrationReports[0]?.migrationRevision,
+        ).toBe(0);
+        expect(() =>
+            parseReleaseAdmissionDecision({
+                ...decision,
+                migrationReports: migrationReports.map((report) => ({ ...report, migrationRevision: -1 })),
+            }),
+        ).toThrow(/migrationRevision must be a non-negative safe integer/);
+    });
+
     test("is the append-only global truth referencing exact report revisions", () => {
         const root = parseReleaseAdmissionDecision(admissionDecision());
         const revision = parseReleaseAdmissionDecision({
