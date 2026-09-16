@@ -169,9 +169,15 @@ class MossaTextarea extends HTMLElement {
         if (this.disabled || this.control.validity.valid) {
             this.internals.setValidity({});
         } else {
-            this.internals.setValidity(this.control.validity, this.control.validationMessage, this.control);
+            this.internals.setValidity(
+                this.control.validity,
+                this.control.validationMessage || "Enter a valid value.",
+                this.control,
+            );
         }
-        this.errorElement.textContent = this.showValidation ? this.control.validationMessage || "" : "";
+        this.errorElement.textContent = this.showValidation
+            ? this.control.validationMessage || "Enter a valid value."
+            : "";
         this.errorElement.hidden = !this.errorElement.textContent;
     }
     onInput = () => {

@@ -1,0 +1,38 @@
+<span slot="secondary-mobile-label">Collections</span>
+<span slot="title" cms-condition="workspace.isLanding">Collections</span>
+<span slot="title" cms-condition="workspace.isCollection">{{ workspace.collection.name }}</span>
+
+<p9r-nav-tabs slot="tabs" aria-label="Collection sections" data-collection-tabs fit hidden>
+    <p9r-nav-tab aria-label="Overview" data-collection-section="overview">Overview</p9r-nav-tab>
+    <p9r-nav-tab aria-label="Theme" data-collection-section="theme" count="{{ workspace.theme.tokenCount }}">Theme</p9r-nav-tab>
+    <p9r-nav-tab aria-label="Blocs" data-collection-section="blocs" count="{{ workspace.collection.blocCount }}">Blocs</p9r-nav-tab>
+    <p9r-nav-tab aria-label="Texts" data-collection-section="texts">Texts</p9r-nav-tab>
+</p9r-nav-tabs>
+
+<w13c-lateral-menu slot="secondary-lateral-nav" aria-label="Collections navigation">
+    <span slot="header">Collections</span>
+    <w13c-lateral-menu-item href="" aria-label="Explore collections" manual-active data-collections-home>
+        <cms-library-icon slot="icon" name="compass"></cms-library-icon>Explore collections
+    </w13c-lateral-menu-item>
+
+    <div class="menu-section" cms-condition="workspace.hasSiteCollections">Site collections</div>
+    <div cms-repeat="workspace.collections as collection" cms-condition="collection.isSite">
+        <w13c-lateral-menu-item href="{{ collection.href }}" aria-label="{{ collection.name }}" badge="{{ collection.blocCount }}" manual-active cms-bind-boolean-active="collection.active">
+            <cms-library-icon slot="icon" name="{{ collection.icon }}"></cms-library-icon>{{ collection.name }}
+        </w13c-lateral-menu-item>
+    </div>
+
+    <div class="menu-section" cms-condition="workspace.hasManagedCollections">Imported collections</div>
+    <div cms-repeat="workspace.collections as collection" cms-condition="collection.isManaged">
+        <w13c-lateral-menu-item href="{{ collection.href }}" aria-label="{{ collection.name }}" badge="{{ collection.blocCount }}" manual-active cms-bind-boolean-active="collection.active">{{ collection.name }}</w13c-lateral-menu-item>
+    </div>
+
+    <div class="menu-section" cms-condition="workspace.hasCodeCollections">Code collections</div>
+    <div cms-repeat="workspace.collections as collection" cms-condition="collection.isCode">
+        <w13c-lateral-menu-item href="{{ collection.href }}" aria-label="{{ collection.name }}" badge="{{ collection.blocCount }}" manual-active cms-bind-boolean-active="collection.active">{{ collection.name }}</w13c-lateral-menu-item>
+    </div>
+</w13c-lateral-menu>
+
+<p role="status" cms-condition="!workspace && !$source.error">Loading collections…</p>
+<p9r-alert type="error" cms-condition="$source.error">Collections could not be loaded. {{ $source.message }}</p9r-alert>
+<p9r-alert type="error" hidden data-invalid-route>Unknown collection route.</p9r-alert>

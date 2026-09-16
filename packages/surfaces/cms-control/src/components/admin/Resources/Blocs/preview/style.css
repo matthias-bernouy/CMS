@@ -1,4 +1,6 @@
 :host {
+    --_bloc-preview-inset: 0px;
+
     display: block;
     min-width: 0;
 }
@@ -6,8 +8,39 @@
 iframe {
     display: block;
     width: 100%;
-    height: min(60vh, 480px);
+    height: var(--bloc-preview-frame-height, var(--bloc-preview-content-height, 320px));
     border: 1px solid var(--border-default);
     border-radius: 8px;
     background: var(--bg-surface);
+}
+
+:host([fit="available"]) {
+    display: flex;
+    flex: 0 1 calc(var(--bloc-preview-content-height, 320px) + var(--_bloc-preview-inset));
+    min-height: calc(180px + var(--_bloc-preview-inset));
+}
+
+:host([surface="canvas"]) iframe {
+    border: 0;
+    border-radius: 4px;
+    background: var(--bg-surface);
+    box-shadow: 0 1px 4px rgb(15 31 26 / 10%);
+}
+
+:host([surface="canvas"]) {
+    --_bloc-preview-padding: 24px;
+    --_bloc-preview-inset: calc(var(--_bloc-preview-padding) + var(--_bloc-preview-padding));
+
+    box-sizing: border-box;
+    padding: var(--_bloc-preview-padding);
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--bg-hover);
+    box-shadow: inset 0 0 0 1px var(--border-light);
+}
+
+@media (max-width: 720px) {
+    :host([surface="canvas"]) {
+        --_bloc-preview-padding: 16px;
+    }
 }

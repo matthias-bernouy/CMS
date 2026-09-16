@@ -55,8 +55,7 @@ export function integrationRouteUrl(next: IntegrationRoute): string {
         params.set("tab", next.tab);
     }
     const suffix = params.toString() ? `?${params.toString()}` : "";
-    const destination = window.location.pathname.endsWith("/admin/blocs") ? "blocs" : "sources";
-    return route(`/admin/${destination}${suffix}`);
+    return route(`/admin/sources${suffix}`);
 }
 
 export function pushIntegrationRoute(next: IntegrationRoute): void {

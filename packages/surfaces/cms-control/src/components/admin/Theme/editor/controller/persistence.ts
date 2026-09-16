@@ -1,3 +1,4 @@
+import type { ThemeSettings } from "@bernouy/cms-content";
 import { saveThemeSettings } from "../api";
 import { themeReferenceCycles } from "../tokens/values";
 import { setThemeMessage } from "../view";
@@ -13,23 +14,13 @@ export async function persistTheme(
     if (!settings) {
         return;
     }
-    const cycles = new Set(
-        settings.themes.flatMap((theme) => [
-            ...themeReferenceCycles(settings, theme, "light"),
-            ...themeReferenceCycles(settings, theme, "dark"),
-        ]),
-    );
-    if (cycles.size > 0) {
-        setThemeMessage(root, `Circular variable references: ${[...cycles].join(", ")}.`, true);
-        return;
-    }
     const submitted = activate ? { ...settings, activeThemeId: state.selectedThemeId } : settings;
     setThemeMessage(root, "Saving…");
     root?.host.toggleAttribute("inert", true);
     root?.host.setAttribute("aria-busy", "true");
     try {
         try {
-            await saveThemeSettings(submitted);
+            await saveThemeDraft(submitted);
         } catch (error) {
             setThemeMessage(root, error instanceof Error ? error.message : "Unable to save theme", true);
             return;
@@ -44,4 +35,17 @@ export async function persistTheme(
         root?.host.removeAttribute("inert");
         root?.host.removeAttribute("aria-busy");
     }
+}
+
+export async function saveThemeDraft(settings: ThemeSettings): Promise<void> {
+    const cycles = new Set(
+        settings.themes.flatMap((theme) => [
+            ...themeReferenceCycles(settings, theme, "light"),
+            ...themeReferenceCycles(settings, theme, "dark"),
+        ]),
+    );
+    if (cycles.size > 0) {
+        throw new Error(`Circular variable references: ${[...cycles].join(", ")}.`);
+    }
+    await saveThemeSettings(settings);
 }

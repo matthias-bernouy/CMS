@@ -1,6 +1,8 @@
+import type { IntegrationInstallation } from "@bernouy/cms-integrations";
 import type { ControlCms } from "cms-control/ControlCms";
 import { siteBlocCatalogue } from "cms-control/core/content/siteBloc/catalogue";
 import { availableLibraryCollections, exploreLibraryCollections } from "./available";
+import { resolvedCollectionInstallations } from "./availability";
 import { filterLibraryBlocs, libraryBlocs, selectableBlocs, selectedCollectionResources } from "./blocs";
 import { belongsToCollection, libraryCollectionRows, matchingCollections } from "./collections";
 import type { BlocLibraryQuery, BlocLibraryResponse } from "./types";
@@ -9,12 +11,14 @@ export async function blocLibrary(
     cms: ControlCms,
     query: BlocLibraryQuery,
     basePath: string,
+    dependencies: { installations?: IntegrationInstallation[] | Promise<IntegrationInstallation[]> } = {},
 ): Promise<BlocLibraryResponse> {
-    const [sites, items, installations] = await Promise.all([
+    const [sites, items, storedInstallations] = await Promise.all([
         cms.repository.getSiteBlocCollections(),
         siteBlocCatalogue(cms),
-        cms.integrationInstallations.list(),
+        dependencies.installations ?? cms.integrationInstallations.list(),
     ]);
+    const installations = await resolvedCollectionInstallations(cms, storedInstallations);
     const allBlocs = libraryBlocs(items, basePath);
     const collections = libraryCollectionRows(sites, allBlocs, installations, query.collection, basePath);
     const collection = collections.find(({ key }) => key === query.collection);
@@ -86,7 +90,7 @@ export async function blocLibrary(
             ? "Try another search, category or visibility filter."
             : collection?.isSite
               ? "Create your first reusable composition."
-              : "This collection has no available bloc metadata.",
+              : "This collection does not provide any blocs.",
         selectedResources: selectedCollectionResources(installation),
         available: isAdd ? await availableLibraryCollections(cms, installations, basePath, query.search) : [],
     };

@@ -1,0 +1,26 @@
+{
+    "kind": "interface",
+    "bindings": {
+        "page": "page-background",
+        "surface": "surface-background",
+        "subtle": "subtle-background",
+        "heading": "surface-text",
+        "body": "body-text",
+        "muted": "surface-muted-text",
+        "border": "surface-border",
+        "accent": "primary-base",
+        "accent-foreground": "primary-foreground",
+        "accent-muted": "primary-muted",
+        "accent-contrasted": "primary-contrasted",
+        "secondary": "secondary-base",
+        "secondary-foreground": "secondary-foreground",
+        "info": "info-muted",
+        "success": "success-muted",
+        "warning": "warning-muted",
+        "danger": "danger-muted",
+        "font-body": "font-body",
+        "font-heading": "font-heading",
+        "radius": "radius-card",
+        "shadow": "shadow-soft"
+    }
+}

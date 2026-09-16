@@ -94,7 +94,7 @@ function row(
         isSite: fields.kind === "site",
         isManaged: fields.kind === "managed",
         isCode: fields.kind === "code",
-        href: `${basePath}/admin/blocs?collection=${encodeURIComponent(fields.key)}`,
+        href: `${basePath}/admin/collections/${encodeURIComponent(fields.key)}/overview`,
         active: fields.key === selected,
         canCheckUpdates: false,
         canManageAvailability: false,

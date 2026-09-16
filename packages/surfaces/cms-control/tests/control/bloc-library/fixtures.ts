@@ -7,6 +7,12 @@ import {
 import { makeCms, createInstallation } from "../integrations/support/helpers";
 import { seedBloc, seedSiteBloc, seedPublishedSiteBloc, siteSnapshot } from "../site-blocs/fixtures";
 
+function encodedSource(files: Record<string, string>): Record<string, string> {
+    return Object.fromEntries(
+        Object.entries(files).map(([path, content]) => [path, Buffer.from(content).toString("base64")]),
+    );
+}
+
 export function collectionDefinition(kind = "gallery"): CollectionIntegrationDefinition {
     return parseIntegrationDefinition({
         schema: "cms.integration.definition.v2",
@@ -59,6 +65,14 @@ export async function libraryHarness() {
             group,
             thumbnail: { path: `assets/${tag}.webp`, alt: tag },
             catalogue: active ? "active" : "inactive",
+            ...(tag === "gallery-card"
+                ? {
+                      source: encodedSource({
+                          "manifest.json": JSON.stringify({ defaultContent: "default.html" }),
+                          "default.html": '<gallery-card tone="accent" compact></gallery-card>',
+                      }),
+                  }
+                : {}),
             ownership: {
                 kind: "integration",
                 installationId: "gallery",
@@ -91,5 +105,23 @@ export async function addLegacyInstallation(harness: Awaited<ReturnType<typeof l
             integrationKind: "legacy",
             definitionVersion: "1.0.0",
         },
+    });
+}
+
+export async function installCollectionDefinition(
+    harness: Awaited<ReturnType<typeof libraryHarness>>,
+    id: string,
+    definition: CollectionIntegrationDefinition,
+): Promise<void> {
+    if (!(await harness.integrationInstallations.get(id))) {
+        await createInstallation(harness.integrationInstallations, id);
+    }
+    const installation = (await harness.integrationInstallations.get(id))!;
+    await harness.integrationInstallations.replace({
+        ...installation,
+        label: definition.label,
+        status: "success",
+        definitionVersion: "1.0.0",
+        definitionSnapshot: definition,
     });
 }

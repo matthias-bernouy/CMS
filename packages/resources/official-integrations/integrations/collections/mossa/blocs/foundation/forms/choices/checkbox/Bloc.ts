@@ -230,9 +230,15 @@ class MossaCheckbox extends HTMLElement {
         if (this.control.validity.valid) {
             this.internals.setValidity({});
         } else {
-            this.internals.setValidity(this.control.validity, this.control.validationMessage, this.control);
+            this.internals.setValidity(
+                this.control.validity,
+                this.control.validationMessage || "Select this option to continue.",
+                this.control,
+            );
         }
-        this.errorElement.textContent = this.showValidation ? this.control.validationMessage || "" : "";
+        this.errorElement.textContent = this.showValidation
+            ? this.control.validationMessage || "Select this option to continue."
+            : "";
         this.errorElement.hidden = !this.errorElement.textContent;
     }
     upgradeProperty(name) {

@@ -12,6 +12,7 @@ import {
     resolveInstallableIntegrationDefinitionVersion,
     type IntegrationDefinition,
     type IntegrationDefinitionRepository,
+    type IntegrationInstallation,
     type IntegrationInstallationRepository,
     type IntegrationPackageResolver,
 } from "@bernouy/cms-integrations";
@@ -233,30 +234,37 @@ export async function installedIntegrationDefinitions(
         if (installation.status !== "success" || excluded.has(installation.id)) {
             continue;
         }
-        if (installation.definitionSnapshot) {
-            definitions.push(installation.definitionSnapshot);
-            continue;
-        }
-        if (!isExactIntegrationVersion(installation.definitionVersion)) {
-            continue;
-        }
-        if (packageResolver) {
-            const resolved = await packageResolver.resolve({
-                kind: installation.id,
-                version: installation.definitionVersion,
-                reason: "rerun",
-                expectedDigest: installation.packageDigest,
-                allowEmbeddedFallback: !installation.packageDigest,
-            });
-            definitions.push(resolved.definition);
-            continue;
-        }
-        const definition = await repository.get(installation.id, installation.definitionVersion);
+        const definition = await installedIntegrationDefinition(repository, installation, packageResolver);
         if (definition) {
             definitions.push(definition);
         }
     }
     return definitions;
+}
+
+/** Resolves the immutable contract for an installed version without mutating its persisted installation. */
+export async function installedIntegrationDefinition(
+    repository: IntegrationDefinitionRepository,
+    installation: IntegrationInstallation,
+    packageResolver?: IntegrationPackageResolver,
+): Promise<IntegrationDefinition | null> {
+    if (installation.definitionSnapshot) {
+        return installation.definitionSnapshot;
+    }
+    if (!isExactIntegrationVersion(installation.definitionVersion)) {
+        return null;
+    }
+    if (packageResolver) {
+        const resolved = await packageResolver.resolve({
+            kind: installation.id,
+            version: installation.definitionVersion,
+            reason: "rerun",
+            expectedDigest: installation.packageDigest,
+            allowEmbeddedFallback: !installation.packageDigest,
+        });
+        return resolved.definition;
+    }
+    return repository.get(installation.id, installation.definitionVersion);
 }
 
 function compact<T>(values: Array<T | null | undefined>): T[] {

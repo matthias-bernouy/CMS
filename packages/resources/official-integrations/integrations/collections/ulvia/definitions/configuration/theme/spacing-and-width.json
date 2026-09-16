@@ -40,18 +40,18 @@
             }
         },
         {
-            "id": "space-2xl",
-            "label": "Spacing 2XL",
-            "description": "Extra-large layout spacing.",
+            "id": "space-xl",
+            "label": "Extra-large spacing",
+            "description": "Generous section and page spacing.",
             "type": "length",
             "defaults": {
                 "light": "2rem"
             }
         },
         {
-            "id": "space-xl",
-            "label": "Extra-large spacing",
-            "description": "Generous section and page spacing.",
+            "id": "space-2xl",
+            "label": "2XL spacing",
+            "description": "Largest spacing for major layout separation.",
             "type": "length",
             "defaults": {
                 "light": "3rem"

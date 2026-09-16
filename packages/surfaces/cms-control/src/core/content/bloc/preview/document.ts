@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
+import { previewLayoutScript } from "./layout";
 
 export function previewDocument(input: {
     basePath: string;
@@ -9,7 +10,7 @@ export function previewDocument(input: {
     style: string;
 }): Response {
     const nonce = randomBytes(18).toString("base64");
-    const script = input.scripts.join("\n").replace(/<\/script/gi, "<\\/script");
+    const script = [...input.scripts, previewLayoutScript()].join("\n").replace(/<\/script/gi, "<\\/script");
     const policy = [
         "default-src 'none'",
         `script-src 'nonce-${nonce}'`,
@@ -34,8 +35,23 @@ export function previewDocument(input: {
     <style>${input.style.replace(/<\/style/gi, "<\\/style")}</style>
     <style>
         html { color-scheme: light; }
-        body { margin: 0; min-height: 100vh; }
+        body { box-sizing: border-box; margin: 0; min-height: 100vh; }
         [data-cms-bloc-preview] { display: block; }
+        html[data-cms-preview-layout="compact"] body {
+            display: grid;
+            place-items: center;
+            padding: 32px;
+        }
+        html[data-cms-preview-layout="compact"] [data-cms-bloc-preview] {
+            width: max-content;
+            max-width: 100%;
+            transform: scale(var(--cms-preview-scale, 1));
+            transform-origin: center;
+        }
+        html[data-cms-preview-layout="section"] body {
+            display: grid;
+            align-items: center;
+        }
         [data-p9r-composition], [data-p9r-composition-output] { display: contents; }
         [data-p9r-composition] > :not([data-p9r-composition-output]):not(template[data-p9r-composition-input]) { display: none !important; }
     </style>

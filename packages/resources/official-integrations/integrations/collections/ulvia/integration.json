@@ -5,6 +5,7 @@
     "label": "Ulvia",
     "category": "Design systems",
     "description": "The official shared design-token contract for Ulvia-compatible collections.",
+    "cover": { "path": "assets/cover.svg", "alt": "Ulvia colors, typography and interface tokens" },
     "stable": "1.0.0",
     "latest": "1.0.0",
     "versions": [

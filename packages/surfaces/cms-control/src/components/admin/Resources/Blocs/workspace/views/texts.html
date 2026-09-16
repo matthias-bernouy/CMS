@@ -1,0 +1,87 @@
+<cms-shell-detail size="xl" cms-condition="workspace.isTexts">
+    <span slot="title">Checkout</span>
+    <span slot="description">Texts displayed while a customer completes an order.</span>
+    <p9r-button slot="actions" type="button" color="primary" disabled title="Translation persistence is not connected yet">Save translation</p9r-button>
+
+    <cms-shell-detail-body slot="body" class="collection-navigated-body collection-texts-body">
+        <w13c-lateral-menu slot="left-aside" variant="embedded" compact-label="Checkout" class="collection-section-nav collection-texts-nav" aria-label="Text themes">
+            <w13c-lateral-menu-section label="Storefront" count="3" open sticky>
+                <w13c-lateral-menu-item href="?text=general" aria-label="General" manual-active>General</w13c-lateral-menu-item>
+                <w13c-lateral-menu-item href="?text=navigation" aria-label="Navigation" manual-active>Navigation</w13c-lateral-menu-item>
+                <w13c-lateral-menu-item href="?text=checkout" aria-label="Checkout" manual-active active>Checkout</w13c-lateral-menu-item>
+            </w13c-lateral-menu-section>
+            <w13c-lateral-menu-section label="Customer account" count="3" sticky>
+                <w13c-lateral-menu-item href="?text=authentication" aria-label="Authentication" manual-active>Authentication</w13c-lateral-menu-item>
+                <w13c-lateral-menu-item href="?text=orders" aria-label="Orders" manual-active>Orders</w13c-lateral-menu-item>
+                <w13c-lateral-menu-item href="?text=profile" aria-label="Profile" manual-active>Profile</w13c-lateral-menu-item>
+            </w13c-lateral-menu-section>
+            <w13c-lateral-menu-section label="System" count="2" sticky>
+                <w13c-lateral-menu-item href="?text=validation" aria-label="Validation" manual-active>Validation</w13c-lateral-menu-item>
+                <w13c-lateral-menu-item href="?text=errors" aria-label="Errors" manual-active>Errors</w13c-lateral-menu-item>
+            </w13c-lateral-menu-section>
+        </w13c-lateral-menu>
+
+        <div slot="main" class="collection-texts-editor">
+            <div class="collection-texts-language">
+                <div>
+                    <span>Default language</span>
+                    <strong>English</strong>
+                </div>
+                <p9r-select label="Translation language" value="fr">
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="es">Español</option>
+                </p9r-select>
+            </div>
+
+            <cms-detail-section>
+                <table class="collection-text-table">
+                    <colgroup>
+                        <col class="collection-text-label-column">
+                        <col class="collection-text-default-column">
+                        <col class="collection-text-translation-column">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th scope="col">Label</th>
+                            <th scope="col">Default · English</th>
+                            <th scope="col">Français</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">
+                                <strong>Checkout title</strong>
+                                <span>Main heading displayed above the order summary.</span>
+                            </th>
+                            <td data-label="Default · English">Complete your order</td>
+                            <td data-label="Français">
+                                <p9r-input aria-label="French translation for Checkout title" value="Finalisez votre commande"></p9r-input>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <strong>Checkout description</strong>
+                                <span>Short guidance displayed before the customer confirms the order.</span>
+                            </th>
+                            <td data-label="Default · English">Review your details before placing the order.</td>
+                            <td data-label="Français">
+                                <p9r-textarea aria-label="French translation for Checkout description" value="Vérifiez vos informations avant de valider la commande." rows="3" resize="none"></p9r-textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <strong>Submit button</strong>
+                                <span>Label of the primary action that places the order.</span>
+                            </th>
+                            <td data-label="Default · English">Place order</td>
+                            <td data-label="Français">
+                                <p9r-input aria-label="French translation for Submit button" value="Valider la commande"></p9r-input>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </cms-detail-section>
+        </div>
+    </cms-shell-detail-body>
+</cms-shell-detail>

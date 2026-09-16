@@ -9,6 +9,7 @@ editor contracts, validation, and read models.
   repository, validation, constants, and style generation.
 - `@bernouy/cms-content/editor` exposes browser/editor-safe authoring
   contracts.
+- `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
   roots.
 - Do not import surfaces, runtimes, Control internals, or persistence adapters

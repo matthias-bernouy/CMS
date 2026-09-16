@@ -67,6 +67,7 @@ export type {
     IntegrationThemeCategory,
     IntegrationThemeDependency,
     IntegrationThemeDefinition,
+    IntegrationThemePreviewDefinition,
     IntegrationThemeToken,
     IntegrationThemeTokenDefaults,
     IntegrationThemeTokenType,

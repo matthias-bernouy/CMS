@@ -45,11 +45,12 @@ export async function exploreLibraryCollections(
     visibility = "",
 ) {
     const definitions = await listIntegrationDefinitions(cms.integrationCatalog);
-    const catalogue = new Map(
+    const repositoryDefinitions = new Map(
         definitions
             .filter((definition) => definition.type === "collection")
             .map((definition) => [definition.kind, definition]),
     );
+    const catalogue = new Map(repositoryDefinitions);
     for (const installation of installations) {
         const definition = installation.definitionSnapshot;
         if (definition?.type === "collection") {
@@ -62,6 +63,8 @@ export async function exploreLibraryCollections(
         .flatMap((definition) => {
             const installation = installations.find((item) => item.definitionSnapshot?.kind === definition.kind);
             const imported = Boolean(installation);
+            const version = installation?.definitionVersion ?? definition.version;
+            const repositoryDefinition = repositoryDefinitions.get(definition.kind);
             if ((visibility === "imported" && !imported) || (visibility === "available" && imported)) {
                 return [];
             }
@@ -79,15 +82,18 @@ export async function exploreLibraryCollections(
                     label: definition.label,
                     description: definition.description ?? "",
                     category: definition.category ?? "Other",
-                    version: installation?.definitionVersion ?? definition.version,
+                    version,
                     resourceCount:
                         definition.type === "collection" ? collectionSelectableResources(definition).length : 0,
-                    ...collectionAssets(basePath, definition, installation?.definitionVersion ?? definition.version),
+                    ...(repositoryDefinition?.version === version
+                        ? collectionAssets(basePath, repositoryDefinition, version)
+                        : {}),
+                    ...collectionAssets(basePath, definition, version),
                     imported,
                     canImport: !imported,
                     ...(installation
                         ? {
-                              href: `${basePath}/admin/blocs?collection=${encodeURIComponent(`managed:${installation.id}`)}`,
+                              href: `${basePath}/admin/collections/${encodeURIComponent(`managed:${installation.id}`)}/overview`,
                           }
                         : {}),
                 },

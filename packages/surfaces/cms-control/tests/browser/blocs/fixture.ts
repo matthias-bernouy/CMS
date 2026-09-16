@@ -1,11 +1,13 @@
 import { resolve } from "node:path";
 import { chromium } from "playwright";
-import library from "cms-control/api/_content/bloc/_catalogue/library.get";
+import collectionWorkspace from "cms-control/api/_content/collections/workspace.get";
 import updateCollection from "cms-control/api/_content/bloc/collections/collections.put";
 import createCollection from "cms-control/api/_content/bloc/collections/collections.post";
 import createComposition from "cms-control/api/_content/site-bloc/site-bloc.post";
 import saveAvailability from "cms-control/api/_content/bloc/collections/availability.post";
 import importCollection from "cms-control/api/_platform/integrations/import.post";
+import getSettings from "cms-control/api/system/settings.get";
+import postSettings from "cms-control/api/system/settings.post";
 import { libraryHarness } from "../../control/bloc-library/fixtures";
 
 export const base = "/tenant/cms";
@@ -16,7 +18,7 @@ const styles = await Bun.file(resolve(import.meta.dir, "../../../../../foundatio
 
 export async function fixture() {
     const harness = await libraryHarness();
-    const html = (await Bun.file(`${sourceRoot}/static/admin/_content/blocs.html`).text()).replaceAll(
+    const html = (await Bun.file(`${sourceRoot}/static/admin/_content/collections.html`).text()).replaceAll(
         "{{BASE_PATH}}",
         base,
     );
@@ -55,8 +57,37 @@ export async function fixture() {
         if (path === "/api/bloc/preview") {
             await route.fulfill({
                 contentType: "text/html; charset=utf-8",
-                body: "<!doctype html><p>Read-only preview</p>",
+                body: `<!doctype html><p>Read-only preview</p><script>
+                    parent.postMessage({ type: "cms:bloc-preview-layout", layout: "compact", height: 220 }, "*");
+                </script>`,
             });
+            return;
+        }
+        if (path === "/api/editor/script.js") {
+            await route.fulfill({
+                contentType: "text/javascript",
+                body: `window.p9rEditor.registerEditor({
+                    tag: "gallery-card",
+                    label: "gallery-card",
+                    editor: class extends window.p9rEditor.Editor {
+                        getSettings() {
+                            return [{
+                                kind: "self",
+                                label: "Style",
+                                settings: [
+                                    { type: "segmented", label: "Tone", attribute: "tone", defaultValue: "neutral" },
+                                    { type: "segmented", label: "Alignment", attribute: "align", defaultValue: "center" },
+                                    { type: "segmented", label: "Visible", attribute: "visible", defaultValue: "true" }
+                                ]
+                            }];
+                        }
+                    }
+                });`,
+            });
+            return;
+        }
+        if (path === "/api/bloc/catalogue") {
+            await route.fulfill({ json: [] });
             return;
         }
         if (request.resourceType() === "document") {
@@ -101,8 +132,8 @@ export async function fixture() {
         });
         try {
             const handler =
-                path === "/api/bloc/library"
-                    ? library
+                path === "/api/collections/workspace"
+                    ? collectionWorkspace
                     : path === "/api/bloc/collections"
                       ? request.method() === "PUT"
                           ? updateCollection
@@ -113,7 +144,11 @@ export async function fixture() {
                           ? saveAvailability
                           : path === "/api/integrations/import"
                             ? importCollection
-                            : undefined;
+                            : path === "/api/system/settings"
+                              ? request.method() === "POST"
+                                  ? postSettings
+                                  : getSettings
+                              : undefined;
             if (handler) {
                 const response = await handler(req, harness.cms);
                 await route.fulfill({
@@ -153,6 +188,7 @@ export async function fixture() {
         reads,
         failures,
         state,
-        goto: (query = "") => page.goto(`${origin}${base}/admin/blocs${query}`, { waitUntil: "domcontentloaded" }),
+        gotoCollection: (path = "/admin/collections") =>
+            page.goto(`${origin}${base}${path}`, { waitUntil: "domcontentloaded" }),
     };
 }

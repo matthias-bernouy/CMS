@@ -1,4 +1,5 @@
 import type { CmsRepository } from "@bernouy/cms-content";
+import type { CollectionIntegrationDefinition, IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationInstallationRepository } from "../../interfaces/IntegrationInstallationRepository";
 import { IntegrationInputError, IntegrationRuntimeError, MissingIntegrationInstallationError } from "../errors";
 import { claimPendingIntegrationOperation, replaceCurrentInstallation } from "../installation/execution/ordinary/claim";
@@ -12,14 +13,21 @@ export async function updateCollectionAvailability(
     repository: Pick<CmsRepository, "getBlocRecord" | "setBlocCatalogue">,
     id: string,
     body: Record<string, unknown>,
+    context: {
+        definition?: IntegrationDefinition;
+        installedDefinitions?: readonly IntegrationDefinition[];
+    } = {},
 ) {
     const installation = await installations.get(id);
     if (!installation) {
         throw new MissingIntegrationInstallationError(id);
     }
-    const definition = installation.definitionSnapshot;
+    const definition = installation.definitionSnapshot ?? context.definition;
     if (definition?.schema !== "cms.integration.definition.v2" || definition.type !== "collection") {
         throw new IntegrationInputError("id", "availability requires a managed collection");
+    }
+    if (!installation.definitionSnapshot) {
+        assertInstalledDefinition(definition, installation.id, installation.definitionVersion);
     }
     const migration = installation.migrationOperation;
     if (
@@ -33,8 +41,10 @@ export async function updateCollectionAvailability(
         throw new IntegrationRuntimeError("Atomic installation updates are unavailable", 503);
     }
     const { previous, requested } = requestedAvailability(definition, installation, body);
-    const definitions = (await installations.list()).flatMap((item) =>
-        item.status === "success" && item.definitionSnapshot ? [item.definitionSnapshot] : [],
+    const definitions = installedDefinitions(
+        await installations.list(),
+        context.installedDefinitions ?? [],
+        definition,
     );
     const { activeResources } = resolveCollectionSelection(definition, requested, previous, definitions);
     assertCollectionConformance(definition, definitions, activeResources);
@@ -60,4 +70,28 @@ export async function updateCollectionAvailability(
         await replaceCurrentInstallation(installations, pending, installation);
         throw error;
     }
+}
+
+function assertInstalledDefinition(definition: CollectionIntegrationDefinition, id: string, version: string): void {
+    if (definition.kind !== id || definition.version !== version) {
+        throw new IntegrationInputError("id", "availability definition does not match the installed collection");
+    }
+}
+
+function installedDefinitions(
+    installations: Awaited<ReturnType<IntegrationInstallationRepository["list"]>>,
+    resolved: readonly IntegrationDefinition[],
+    current: CollectionIntegrationDefinition,
+): IntegrationDefinition[] {
+    const definitions = new Map<string, IntegrationDefinition>();
+    for (const installation of installations) {
+        if (installation.status === "success" && installation.definitionSnapshot) {
+            definitions.set(installation.id, installation.definitionSnapshot);
+        }
+    }
+    for (const definition of resolved) {
+        definitions.set(definition.kind, definition);
+    }
+    definitions.set(current.kind, current);
+    return [...definitions.values()];
 }

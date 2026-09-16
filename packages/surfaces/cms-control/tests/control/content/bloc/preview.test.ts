@@ -1,9 +1,51 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import { blocPreview } from "cms-control/core/content/bloc/preview/render";
+import {
+    classifyPreviewLayout,
+    previewCompactScale,
+    previewLayoutHeight,
+} from "cms-control/core/content/bloc/preview/layout";
 import { seedBloc, seedSiteBloc, siteBlocHarness, siteSnapshot } from "../../site-blocs/fixtures";
 
 describe("read-only bloc previews", () => {
+    test("classifies preview geometry and gives automatic stages a content-driven minimum height", () => {
+        expect(
+            classifyPreviewLayout({
+                viewportWidth: 900,
+                viewportHeight: 320,
+                paintedWidth: 180,
+                contentHeight: 54,
+                scrollHeight: 320,
+            }),
+        ).toBe("compact");
+        expect(
+            classifyPreviewLayout({
+                viewportWidth: 900,
+                viewportHeight: 320,
+                paintedWidth: 900,
+                contentHeight: 180,
+                scrollHeight: 320,
+            }),
+        ).toBe("section");
+        expect(
+            classifyPreviewLayout({
+                viewportWidth: 900,
+                viewportHeight: 320,
+                paintedWidth: 900,
+                contentHeight: 700,
+                scrollHeight: 700,
+            }),
+        ).toBe("page");
+        expect(previewLayoutHeight("compact", 54)).toBe(220);
+        expect(previewLayoutHeight("section", 388)).toBe(452);
+        expect(previewLayoutHeight("page", 900)).toBe(900);
+        expect(previewLayoutHeight("section", 500)).toBe(564);
+        expect(previewCompactScale(24, 24)).toBe(2.5);
+        expect(previewCompactScale(120, 40)).toBe(1.5);
+        expect(previewCompactScale(360, 40)).toBe(1);
+    });
+
     test("renders installed default content, compositions and only their view dependencies", async () => {
         const { repository, cache } = siteBlocHarness();
         await seedBloc(repository, "example-card", { viewJS: "CARD_VIEW();" });
@@ -13,7 +55,7 @@ describe("read-only bloc previews", () => {
             source: {
                 "manifest.json": btoa(JSON.stringify({ defaultContent: "default.html" })),
                 "default.html": btoa(
-                    '<example-composition><example-card>Installed default</example-card><img src="/media/{{ item.image }}"><script>UNTRUSTED();</script></example-composition>',
+                    '<example-composition><example-card>Installed default</example-card><example-avatar required type="email" src="{{ item.image }}" value="{{ account.email }}"></example-avatar><img src="/media/{{ item.image }}"><script>UNTRUSTED();</script></example-composition>',
                 ),
             },
         });
@@ -29,6 +71,9 @@ describe("read-only bloc previews", () => {
         expect(document.querySelector(".installed example-card")?.textContent).toBe("Installed default");
         expect(document.querySelector("img")?.getAttribute("src")).toBeNull();
         expect(document.querySelector("img")?.getAttribute("data-cms-src")).toBe("/media/{{ item.image }}");
+        expect(document.querySelector("example-avatar")?.hasAttribute("required")).toBeFalse();
+        expect(document.querySelector("example-avatar")?.hasAttribute("src")).toBeFalse();
+        expect(document.querySelector("example-avatar")?.hasAttribute("value")).toBeFalse();
         expect(document.querySelector("[cms-binding-disabled][inert]")).not.toBeNull();
         expect(html).toContain("CARD_VIEW();");
         expect(html).not.toContain("UNRELATED_VIEW();");

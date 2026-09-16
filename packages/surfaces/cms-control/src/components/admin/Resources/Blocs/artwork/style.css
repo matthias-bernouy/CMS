@@ -3,28 +3,48 @@
     position: relative;
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    background: color-mix(in srgb, var(--primary-muted) 45%, var(--bg-base));
+    background: color-mix(in srgb, var(--primary-muted) 60%, var(--bg-base));
 }
 .illustration { position: absolute; inset: 0; overflow: hidden; }
-.window {
+.shape {
     position: absolute;
-    width: 64%;
-    height: 67%;
-    border: 1px solid color-mix(in srgb, var(--primary-base) 16%, transparent);
-    border-radius: 7px;
-    background: var(--bg-surface);
-    box-shadow: 0 8px 22px color-mix(in srgb, var(--primary-base) 9%, transparent);
+    border-radius: 18px;
 }
-.window-back { top: 12%; left: 24%; transform: rotate(8deg); background: var(--primary-muted); }
-.window-front { top: 17%; left: 15%; transform: rotate(-4deg); }
-.window-bar { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid var(--border-default); }
-.window-bar i { width: 4px; height: 4px; border-radius: 50%; background: var(--border-default); }
-.window-content { display: flex; align-items: center; gap: 12px; height: 65%; padding: 0 16px; }
-.monogram { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 9px; background: var(--primary-base); color: var(--primary-foreground); font-size: 20px; font-weight: 700; }
-.lines { display: grid; gap: 7px; flex: 1; }
-.lines i { height: 5px; border-radius: 3px; background: var(--primary-muted); }
-.lines i:nth-child(2) { width: 85%; }
-.lines i:nth-child(3) { width: 55%; }
-.name { position: absolute; left: 14px; bottom: 10px; color: var(--primary-contrasted); font-size: 10px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
+.shape-back {
+    width: 55%;
+    aspect-ratio: 1;
+    top: -38%;
+    right: -8%;
+    transform: rotate(28deg);
+    background: color-mix(in srgb, var(--primary-base) 18%, transparent);
+}
+.shape-front {
+    display: grid;
+    place-items: center;
+    width: 25%;
+    aspect-ratio: 1;
+    top: 28%;
+    left: 37.5%;
+    transform: rotate(-9deg);
+    background: var(--primary-base);
+    box-shadow: 0 20px 50px color-mix(in srgb, var(--primary-base) 20%, transparent);
+}
+.monogram {
+    transform: rotate(9deg);
+    color: var(--primary-foreground);
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-weight: 700;
+    line-height: 1;
+}
+.name {
+    position: absolute;
+    left: 5%;
+    bottom: 7%;
+    color: var(--primary-contrasted);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
 ::slotted(img) { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 ::slotted(img[data-artwork-failed]) { display: none; }

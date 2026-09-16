@@ -102,8 +102,9 @@ export class UserAccountAvatar extends Component {
     }
 
     showImage(src) {
-        if (src) {
-            this.image.src = src;
+        const resolvedSource = typeof src === "string" && !src.includes("{{") ? src.trim() : "";
+        if (resolvedSource) {
+            this.image.src = resolvedSource;
             this.image.hidden = false;
             this.placeholder.hidden = true;
             return;

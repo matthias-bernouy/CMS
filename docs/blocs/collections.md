@@ -109,7 +109,9 @@ remain in effect.
 Site compositions are editable. Integration-owned and code-managed blocs remain
 read-only in the site composition editor. Legacy owners and missing managed
 installations remain visible without collection availability/update controls.
-Pending and failed installations disable availability. Version checks are enabled for successful v2 collections.
+Pending and failed installations disable availability. Resource availability requires
+the v2 collection contract; update checks remain available for every successful
+imported collection in its workspace.
 
 Optional managed cover/icon and bloc thumbnail URLs target
 `<basePath>/api/integrations/asset?kind=<kind>&version=<exactVersion>&path=<path>`.
@@ -120,9 +122,55 @@ absent so presentation can use an icon or plain fallback.
 
 ## Admin Presentation
 
-The static Blocs page composes the official admin layout, secondary menu, cards,
-fields and dialogs. Its single page binding core owns data reads, mutations and
-query filters. The light-DOM controller queues switch intents and
+The primary admin navigation exposes one **Collections** entry. Its canonical
+landing route is `<basePath>/admin/collections`; collection sections use the
+stable collection key in these paths:
+
+- `<basePath>/admin/collections/<collection>/overview`;
+- `<basePath>/admin/collections/<collection>/theme`;
+- `<basePath>/admin/collections/<collection>/blocs`;
+- `<basePath>/admin/collections/<collection>/texts`.
+
+The collection key is URL-encoded as one path segment. The read-only
+`GET <basePath>/api/collections/workspace` projection supplies the landing,
+secondary collection navigation, Overview, effective theme contract and grouped
+bloc detail. The Blocs route groups its navigation by category and accepts a
+stable `?bloc=<tag>` selection. Its detail combines the existing read-only preview
+with explicit attributes extracted from the bloc's declared default content.
+Theme resolution reads collection definition snapshots: a
+collection with no local categories inherits its declared provider, while a
+provider such as Ulvia exposes its own categories and stable token variables.
+The Theme route accepts a stable `?token=<variable>` selection. Its read-only
+workbench compares Light and Dark values in one generic interface specimen, while
+the inspector distinguishes configured values, inherited Light fallbacks and
+direct token references from their resolved values. This projection does not
+persist theme values.
+Texts remains an explicit route shell until its persistence contract is defined;
+it does not save placeholder data. Bloc defaults live with the selected bloc rather
+than in a separate collection route.
+
+Overview keeps operational actions in its shell header. Successful imported
+collections can check the repository for compatible versions and use the shared
+exact-version confirmation flow before an upgrade. The action does not depend on
+the optional resource-selection capability.
+
+Collection sections use the shared fitted navigation-tabs component. Their four
+links remain visible without horizontal scrolling down to 320px; token and bloc
+counts are omitted below 350px. Mobile drawer controls are labelled **Admin** and
+**Collections** rather than using generic menu-level wording.
+
+Theme tokens use the same grouped lateral-navigation pattern as Blocs. Categories
+remain collapsible navigation sections and the selected token is carried by the
+query string rather than by an additional route. On compact layouts, the selected
+token appears in the bounded navigation trigger and the shared detail body switches
+between Preview and Token tabs. A theme may optionally select a preview renderer
+and map its generic slots to local token IDs. The collection definition owns that
+mapping; Control does not infer provider token names.
+
+The standalone Blocs page remains available while its mutation flows are moved
+into the Collection workspace. It composes the official admin layout, secondary
+menu, cards, fields and dialogs. Its single page binding core owns data reads,
+mutations and query filters. The light-DOM controller queues switch intents and
 preview dialog interactions; it neither fetches data nor injects styles. A persistent
 declarative form submits scalar changes sequentially, including across query-filter
 renders. Rapid changes retain the latest intent per resource. Failures restore the
@@ -131,10 +179,12 @@ network outcomes. Successful unfiltered switches do not reload the library. A
 separate binding source refreshes only the bloc list when a visibility filter
 requires a row to disappear; the navigation and collection header stay mounted. The form renders official toasts for saving/error/success feedback.
 
-`Explore collections` is the entry screen. `Create private collection` creates a
-site-owned collection; “private” means not published to the collection catalogue,
-not an additional authorisation policy. Sidebar sections separate site, imported,
-and code collections. A collection displays its blocs grouped by category.
+`Explore collections` is the entry screen. Its visual catalogue includes available
+packages to import and imported packages to open; private collections remain in
+the sidebar instead of appearing as a second card list. `Create private collection`
+creates a site-owned collection; “private” means not published to the collection
+catalogue, not an additional authorisation policy. Sidebar sections separate site,
+imported, and code collections. A collection displays its blocs grouped by category.
 Site collections expose `Collection settings` to edit their label, description
 and icon. Explore uses a compass icon.
 
@@ -151,6 +201,15 @@ slot content keeps its original light-DOM binding scope. Compact field widths us
 Container's `2xs` (320px) and `3xs` (200px) sizes. Stack's optional `trim` attribute
 removes child margins so its declared gap controls spacing.
 
-The fixed admin layout stays within the viewport. Content and navigation panes
-scroll independently, with vertical overscroll contained to prevent scrolling
-the outer document after a long collection reaches its end.
+The collection workspace uses the admin page's natural document scroll. A Bloc
+preview expands to the content height reported by its sandbox instead of adding
+an iframe scrollbar. Its quiet canvas uses surface contrast, breathing room and
+a soft frame shadow to delimit the rendered Bloc without adding another card.
+The selected Bloc's identity,
+description, actions and editor availability use the shared detail-shell header
+above the navigation, preview and defaults columns; the unchanged-page note is
+only shown while that Bloc is unavailable for new editor insertions. The Blocs
+navigation and defaults inspector remain sticky
+and independently scroll only when their own content exceeds the visible desktop
+height. Theme and Blocs left-asides return to normal flow with a compact
+navigation trigger when the layout stacks.

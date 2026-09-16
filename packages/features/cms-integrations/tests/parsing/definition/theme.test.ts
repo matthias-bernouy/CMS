@@ -127,6 +127,28 @@ describe("integration theme definitions", () => {
         });
     });
 
+    test("parses provider-owned preview bindings without prescribing token names", () => {
+        const definition = parseIntegrationDefinition(
+            themedDefinition({
+                ...oneToken(validToken()),
+                preview: { kind: "interface", bindings: { accent: "accent" } },
+            }),
+        );
+
+        expect(definition.theme?.preview).toEqual({ kind: "interface", bindings: { accent: "accent" } });
+    });
+
+    test("rejects preview bindings to unknown local tokens", () => {
+        expect(() =>
+            parseIntegrationDefinition(
+                themedDefinition({
+                    ...oneToken(validToken()),
+                    preview: { kind: "interface", bindings: { accent: "missing" } },
+                }),
+            ),
+        ).toThrow("references unknown local theme token");
+    });
+
     test("rejects an empty standalone theme", () => {
         expect(() => parseIntegrationDefinition(themedDefinition({ categories: [] }))).toThrow(
             "must contain a category unless the theme declares a dependency",

@@ -1,0 +1,152 @@
+cms-collection-workspace .collection-texts-body { --shell-detail-left-aside-width: 220px; }
+
+cms-collection-workspace .collection-texts-nav { --item-min-height: 38px; }
+
+cms-collection-workspace .collection-texts-nav::part(header) { display: none; }
+
+cms-collection-workspace .collection-texts-editor {
+    display: grid;
+    gap: 16px;
+}
+
+cms-collection-workspace .collection-texts-language {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 4px 0 16px;
+    border-bottom: 1px solid var(--border-default);
+}
+
+cms-collection-workspace .collection-texts-language > div {
+    display: grid;
+    gap: 3px;
+}
+
+cms-collection-workspace .collection-texts-language span {
+    color: var(--text-muted);
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+cms-collection-workspace .collection-texts-language strong { font-size: .875rem; }
+
+cms-collection-workspace .collection-texts-language p9r-select {
+    width: min(100%, 18rem);
+}
+
+cms-collection-workspace .collection-text-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+cms-collection-workspace .collection-text-label-column { width: 32%; }
+cms-collection-workspace .collection-text-default-column { width: 27%; }
+cms-collection-workspace .collection-text-translation-column { width: 41%; }
+
+cms-collection-workspace .collection-text-table th,
+cms-collection-workspace .collection-text-table td {
+    padding: 18px 16px;
+    border-bottom: 1px solid var(--border-default);
+    text-align: start;
+    vertical-align: top;
+}
+
+cms-collection-workspace .collection-text-table thead th {
+    padding-top: 0;
+    color: var(--text-muted);
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+cms-collection-workspace .collection-text-table th:first-child,
+cms-collection-workspace .collection-text-table td:first-child { padding-inline-start: 0; }
+
+cms-collection-workspace .collection-text-table th:last-child,
+cms-collection-workspace .collection-text-table td:last-child { padding-inline-end: 0; }
+
+cms-collection-workspace .collection-text-table tbody tr:last-child th,
+cms-collection-workspace .collection-text-table tbody tr:last-child td {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+cms-collection-workspace .collection-text-table tbody th {
+    font-size: .875rem;
+    font-weight: 650;
+}
+
+cms-collection-workspace .collection-text-table tbody th strong,
+cms-collection-workspace .collection-text-table tbody th span {
+    display: block;
+}
+
+cms-collection-workspace .collection-text-table tbody th span {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: .75rem;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+cms-collection-workspace .collection-text-table tbody td {
+    color: var(--text-main);
+    font-size: .8125rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+    cms-collection-workspace .collection-texts-language {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    cms-collection-workspace .collection-texts-language p9r-select { width: 100%; }
+
+    cms-collection-workspace .collection-text-table,
+    cms-collection-workspace .collection-text-table tbody,
+    cms-collection-workspace .collection-text-table tr,
+    cms-collection-workspace .collection-text-table th,
+    cms-collection-workspace .collection-text-table td {
+        display: block;
+        width: 100%;
+    }
+
+    cms-collection-workspace .collection-text-table colgroup,
+    cms-collection-workspace .collection-text-table thead { display: none; }
+
+    cms-collection-workspace .collection-text-table tbody tr {
+        padding: 22px 0;
+        border-bottom: 1px solid var(--border-default);
+    }
+
+    cms-collection-workspace .collection-text-table tbody tr:first-child { padding-top: 0; }
+    cms-collection-workspace .collection-text-table tbody tr:last-child { padding-bottom: 0; border-bottom: 0; }
+
+    cms-collection-workspace .collection-text-table th,
+    cms-collection-workspace .collection-text-table td,
+    cms-collection-workspace .collection-text-table tbody tr:last-child th,
+    cms-collection-workspace .collection-text-table tbody tr:last-child td {
+        padding: 0;
+        border: 0;
+    }
+
+    cms-collection-workspace .collection-text-table td { margin-top: 16px; }
+
+    cms-collection-workspace .collection-text-table td::before {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--text-muted);
+        content: attr(data-label);
+        font-size: .6875rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+}

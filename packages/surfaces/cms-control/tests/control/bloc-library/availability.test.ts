@@ -1,5 +1,6 @@
 import { expect, test, spyOn } from "bun:test";
 import { saveCollectionAvailability } from "cms-control/core/content/blocLibrary/availability";
+import { recordingPackageResolver } from "../integrations/support/helpers";
 import { libraryHarness } from "./fixtures";
 
 test("availability changes one flag without rebuilding artifacts, scanning pages or losing existing editors", async () => {
@@ -43,6 +44,36 @@ test("availability changes one flag without rebuilding artifacts, scanning pages
         noScan.mockRestore();
         noImport.mockRestore();
     }
+});
+
+test("availability resolves an exact installed package without persisting a missing definition snapshot", async () => {
+    const { cms, definition, repository, integrationInstallations } = await libraryHarness();
+    const installed = (await integrationInstallations.get("gallery"))!;
+    const { definitionSnapshot: _snapshot, ...withoutSnapshot } = installed;
+    await integrationInstallations.replace({
+        ...withoutSnapshot,
+        definitionVersion: definition.version!,
+        packageDigest: "a".repeat(64),
+    });
+    const { resolver, requests } = recordingPackageResolver(() => definition);
+    cms.integrationPackageResolver = resolver;
+
+    await saveCollectionAvailability(cms, "gallery", {
+        resource: "gallery/blocs/card",
+        active: false,
+    });
+
+    expect(requests).toEqual([
+        {
+            kind: "gallery",
+            version: definition.version!,
+            reason: "rerun",
+            expectedDigest: "a".repeat(64),
+            allowEmbeddedFallback: false,
+        },
+    ]);
+    expect((await integrationInstallations.get("gallery"))?.definitionSnapshot).toBeUndefined();
+    expect((await repository.getBlocRecord("gallery-card"))?.artifact?.catalogue).toBe("inactive");
 });
 
 test("failed writes compensate prior flags and preserve the installation", async () => {

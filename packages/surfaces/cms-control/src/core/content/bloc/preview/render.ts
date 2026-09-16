@@ -40,6 +40,7 @@ export async function blocPreview(
     const { document } = parseHTML("<html><body></body></html>");
     document.body.innerHTML = hardenStoredHtml(content);
     expandCompositions(document.body, compositions, "editor");
+    neutralizePreviewOnlyCustomElementState(document.body);
     const graph = siteBlocDependencyGraph(records);
     const needed = new Set([tag, ...findUsedBlocTags(document.body.innerHTML, blocs), ...(draft?.dependencies ?? [])]);
     for (const dependency of [...needed]) {
@@ -60,4 +61,33 @@ export async function blocPreview(
         scripts: [...assets.scripts, ...scripts],
         style: assets.style,
     });
+}
+
+const CUSTOM_ELEMENT_RUNTIME_ATTRIBUTES = [
+    "checked",
+    "max",
+    "maxlength",
+    "min",
+    "minlength",
+    "pattern",
+    "required",
+    "selected",
+    "src",
+    "srcset",
+    "value",
+] as const;
+
+function neutralizePreviewOnlyCustomElementState(root: ParentNode): void {
+    for (const element of Array.from(root.querySelectorAll("*"))) {
+        if (!element.localName.includes("-")) {
+            continue;
+        }
+        element.removeAttribute("required");
+        for (const attribute of CUSTOM_ELEMENT_RUNTIME_ATTRIBUTES) {
+            const value = element.getAttribute(attribute);
+            if (value && /\{\{|\}\}|#\{/u.test(value)) {
+                element.removeAttribute(attribute);
+            }
+        }
+    }
 }

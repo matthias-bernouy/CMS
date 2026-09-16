@@ -5,6 +5,7 @@
     "label": "Mossa",
     "category": "Official blocks",
     "description": "The official reusable Mossa block collection, styled through the Ulvia token system.",
+    "cover": { "path": "assets/cover.svg", "alt": "Mossa editorial and commerce blocks" },
     "stable": "1.1.0",
     "latest": "1.1.0",
     "versions": [

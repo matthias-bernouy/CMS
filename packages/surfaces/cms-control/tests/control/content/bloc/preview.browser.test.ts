@@ -95,6 +95,8 @@ test("a real compiled bloc renders in a sandbox while fetches, forms and parent 
             () => document.querySelector("preview-fixture")?.getAttribute("data-fetch-blocked") === "true",
         );
         const host = frame.locator("preview-fixture");
+        await frame.waitForFunction(() => document.documentElement.dataset.cmsPreviewLayout);
+        expect(await frame.locator("html").getAttribute("data-cms-preview-layout")).toBe("section");
         expect(await host.locator("h2").textContent()).toBe("Installed sample");
         expect(await host.locator("article").evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(
             "rgb(12, 34, 56)",

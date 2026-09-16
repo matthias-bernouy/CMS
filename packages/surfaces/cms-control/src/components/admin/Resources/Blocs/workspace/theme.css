@@ -1,0 +1,81 @@
+cms-collection-workspace .collection-theme-body { --shell-detail-aside-width: 380px; }
+cms-collection-workspace .collection-theme-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .5rem;
+    min-width: 0;
+}
+cms-collection-workspace .collection-theme-actions p9r-select { min-width: 11rem; }
+cms-collection-workspace .theme-profile-status {
+    color: var(--text-muted);
+    font-size: .75rem;
+}
+cms-collection-workspace .theme-profile-status[data-error] { color: var(--state-danger, #b42318); }
+cms-collection-workspace .theme-profile-modal-actions { display: flex; gap: .5rem; }
+cms-collection-workspace .theme-context-intro { margin-top: 0; color: var(--text-muted); }
+cms-collection-workspace .theme-context-status { color: var(--text-muted); }
+cms-collection-workspace .theme-context-status[data-error] { color: var(--state-danger, #b42318); }
+cms-collection-workspace [data-site-variable-catalog-modal] { --p9r-modal-width: 720px; }
+cms-collection-workspace .site-variable-catalog { display: grid; gap: 1rem; }
+cms-collection-workspace .site-variable-group {
+    display: grid;
+    gap: .75rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-default);
+}
+cms-collection-workspace .site-variable-group > header { display: grid; gap: .75rem; }
+cms-collection-workspace .site-variable-list > div {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+cms-collection-workspace .site-variable-group header > div:last-child,
+cms-collection-workspace .site-variable-list > div > div { display: flex; flex-wrap: wrap; gap: .5rem; }
+cms-collection-workspace .site-variable-group header > div:first-child,
+cms-collection-workspace .site-variable-list > div > div:first-child { display: grid; gap: .125rem; }
+cms-collection-workspace .site-variable-group h3,
+cms-collection-workspace .site-variable-group p { margin: 0; }
+cms-collection-workspace .site-variable-group p,
+cms-collection-workspace .site-variable-list span,
+cms-collection-workspace .site-variable-empty { color: var(--text-muted); }
+cms-collection-workspace .site-variable-list { display: grid; }
+cms-collection-workspace .site-variable-list > div { padding-block: .625rem; border-top: 1px solid var(--border-default); }
+cms-collection-workspace .collection-theme-preview {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+}
+cms-collection-workspace .theme-token-inspector { display: grid; gap: 18px; }
+cms-collection-workspace cms-theme-token-editor { min-width: 0; }
+cms-collection-workspace .theme-related-tokens {
+    display: grid;
+    gap: 4px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-default);
+}
+cms-collection-workspace .theme-related-tokens > strong {
+    margin-bottom: 4px;
+    font-size: .8125rem;
+}
+cms-collection-workspace .theme-related-tokens a {
+    display: flex;
+    min-height: 34px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-inline: -8px;
+    padding-inline: 8px;
+    border-radius: 6px;
+    color: var(--text-main);
+    font-size: .75rem;
+    text-decoration: none;
+}
+cms-collection-workspace .theme-related-tokens a:hover { background: var(--bg-hover); }
+cms-collection-workspace .theme-related-tokens small { color: var(--text-muted); }
+@media (max-width: 720px) {
+    cms-collection-workspace .collection-theme-preview { border-inline: 0; border-radius: 0; }
+}

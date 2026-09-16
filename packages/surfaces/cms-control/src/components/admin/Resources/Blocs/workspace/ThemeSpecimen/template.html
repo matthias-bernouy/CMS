@@ -1,0 +1,101 @@
+<section class="workbench" aria-label="Theme preview">
+    <header class="toolbar">
+        <div>
+            <strong data-preview-heading>Light and dark</strong>
+        </div>
+        <div class="mode-switch" role="group" aria-label="Preview color mode">
+            <button type="button" data-preview-mode="compare" aria-pressed="true">Compare</button>
+            <button type="button" data-preview-mode="light" aria-pressed="false">Light</button>
+            <button type="button" data-preview-mode="dark" aria-pressed="false">Dark</button>
+        </div>
+    </header>
+
+    <div class="canvas"></div>
+
+    <template data-sample>
+        <article class="sample" aria-hidden="true" inert data-uses="page body font-body">
+            <span class="mode-label" data-uses="surface muted border"></span>
+
+            <div class="overview-page" data-uses="page">
+                <nav class="sample-nav" data-uses="surface muted border">
+                    <strong data-uses="heading font-heading">Atelier</strong>
+                    <span>Collections</span>
+                    <span>Journal</span>
+                    <span class="avatar" data-uses="accent accent-foreground">M</span>
+                </nav>
+                <main class="overview-content">
+                    <section class="intro">
+                        <span class="eyebrow" data-uses="accent">New collection</span>
+                        <h3 data-uses="heading font-heading">Objects made to last.</h3>
+                        <p data-uses="muted">Check hierarchy, contrast and surfaces together.</p>
+                        <div class="actions">
+                            <button type="button" class="primary" tabindex="-1" data-uses="accent accent-foreground">Explore</button>
+                            <button type="button" class="secondary" tabindex="-1" data-uses="secondary secondary-foreground border">Learn more</button>
+                        </div>
+                    </section>
+                    <section class="content-card" data-uses="surface radius shadow">
+                        <span class="card-mark" data-uses="accent-muted accent"></span>
+                        <div>
+                            <span class="badge" data-uses="accent-muted accent-contrasted">Featured</span>
+                            <h4 data-uses="heading font-heading">Considered materials</h4>
+                            <p data-uses="muted">A surface sample with supporting content.</p>
+                        </div>
+                    </section>
+                    <div class="feedback" aria-label="Semantic colors">
+                        <span class="info" data-uses="info">Information</span>
+                        <span class="success" data-uses="success">Success</span>
+                        <span class="warning" data-uses="warning">Warning</span>
+                        <span class="danger" data-uses="danger">Danger</span>
+                    </div>
+                </main>
+            </div>
+
+            <div class="focus-page">
+                <section class="active-value">
+                    <div class="active-visual" data-active-visual><span>Aa</span></div>
+                    <div>
+                        <small>Resolved value</small>
+                        <code data-active-value></code>
+                    </div>
+                </section>
+                <div class="focus-examples">
+                    <section class="focus-example surface-example" data-focus-uses="page surface subtle heading body muted border radius shadow">
+                        <small>Surface and content</small>
+                        <div class="surface-demo" data-uses="surface border radius shadow">
+                            <span data-uses="accent-muted"></span>
+                            <div>
+                                <h4 data-uses="heading font-heading">Collection title</h4>
+                                <p data-uses="muted font-body">Supporting copy on a themed surface.</p>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="focus-example action-example" data-focus-uses="accent accent-foreground accent-muted accent-contrasted secondary secondary-foreground border radius">
+                        <small>Actions and emphasis</small>
+                        <div class="actions">
+                            <button type="button" class="primary" tabindex="-1" data-uses="accent accent-foreground">Primary action</button>
+                            <button type="button" class="secondary" tabindex="-1" data-uses="secondary secondary-foreground border">Secondary</button>
+                            <span class="badge" data-uses="accent-muted accent-contrasted">Featured</span>
+                        </div>
+                    </section>
+                    <section class="focus-example feedback-example" data-focus-uses="info success warning danger">
+                        <small>Feedback</small>
+                        <div class="feedback">
+                            <span class="info" data-uses="info">Information</span>
+                            <span class="success" data-uses="success">Success</span>
+                            <span class="warning" data-uses="warning">Warning</span>
+                            <span class="danger" data-uses="danger">Danger</span>
+                        </div>
+                    </section>
+                    <section class="focus-example type-example" data-focus-uses="font-heading heading">
+                        <small>Heading typography</small>
+                        <h4 data-uses="heading font-heading">A clear heading</h4>
+                    </section>
+                    <section class="focus-example type-example" data-focus-uses="font-body body">
+                        <small>Body typography</small>
+                        <p data-uses="body font-body">Body text keeps longer content comfortable to read.</p>
+                    </section>
+                </div>
+            </div>
+        </article>
+    </template>
+</section>

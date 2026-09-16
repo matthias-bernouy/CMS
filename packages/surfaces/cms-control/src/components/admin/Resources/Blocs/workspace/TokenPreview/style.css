@@ -1,0 +1,78 @@
+:host {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+}
+
+.preview {
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    background:
+        linear-gradient(45deg, var(--bg-hover) 25%, transparent 25% 75%, var(--bg-hover) 75%),
+        linear-gradient(45deg, var(--bg-hover) 25%, var(--bg-surface) 25% 75%, var(--bg-hover) 75%);
+    background-position: 0 0, 4px 4px;
+    background-size: 8px 8px;
+    box-sizing: border-box;
+}
+
+.color {
+    position: absolute;
+    inset-block: 0;
+    width: 50%;
+}
+.color-light { inset-inline-start: 0; }
+.color-dark { inset-inline-end: 0; }
+:host(:not([data-type="color"])) .color { display: none; }
+
+.glyph {
+    display: none;
+    max-width: 34px;
+    overflow: hidden;
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+:host([data-type="font-family"]) .glyph,
+:host([data-type="number"]) .glyph,
+:host([data-type="value"]) .glyph { display: block; }
+
+.measure {
+    display: none;
+    align-items: center;
+    width: 28px;
+    height: 12px;
+    border-inline: 1px solid var(--text-muted);
+}
+.measure::before {
+    content: "";
+    width: 100%;
+    border-top: 1px solid var(--text-muted);
+}
+.measure-value {
+    position: absolute;
+    left: 5px;
+    min-width: 4px;
+    max-width: 28px;
+    height: 5px;
+    border-radius: 2px;
+    background: var(--primary-base);
+}
+:host([data-type="length"]) .measure { display: flex; }
+
+.surface {
+    display: none;
+    width: 19px;
+    height: 15px;
+    border: 1px solid var(--border-default);
+    border-radius: 3px;
+    background: var(--bg-surface);
+}
+:host([data-type="shadow"]) .surface { display: block; }

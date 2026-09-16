@@ -1,0 +1,28 @@
+<p class="editor-status" data-status role="status" aria-live="polite">Loading values…</p>
+<div class="editor" data-editor hidden>
+    <p9r-segmented-switch data-value-mode value="light" aria-label="Select the value mode">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </p9r-segmented-switch>
+
+    <section class="mode" data-theme-mode="light">
+        <header>
+            <span data-mode-status="light"></span>
+        </header>
+        <div class="mode-controls" data-mode-controls="light"></div>
+        <p class="resolved-value" data-resolved-value="light" hidden></p>
+    </section>
+
+    <section class="mode" data-theme-mode="dark" hidden>
+        <header>
+            <span data-mode-status="dark"></span>
+        </header>
+        <div class="mode-controls" data-mode-controls="dark"></div>
+        <div class="mode-fallback" data-dark-fallback hidden>
+            <strong>Same as Light</strong>
+            <p>Uses the Light value by default.</p>
+            <p9r-button type="button" variant="outlined" data-define-dark-value>Define a separate value</p9r-button>
+        </div>
+        <p class="resolved-value" data-resolved-value="dark" hidden></p>
+    </section>
+</div>

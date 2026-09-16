@@ -42,6 +42,7 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
         functions,
         integrationCatalog,
         integrationInstallations,
+        configuredIntegrationInstallations: integrationInstallations,
         cache,
     };
     return {

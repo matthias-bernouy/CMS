@@ -215,10 +215,14 @@ class MossaInput extends HTMLElement {
         } else if (dateValidationMessage) {
             this.internals.setValidity({ customError: true }, dateValidationMessage, this.input);
         } else {
-            this.internals.setValidity(this.input.validity, this.input.validationMessage, this.input);
+            this.internals.setValidity(
+                this.input.validity,
+                this.input.validationMessage || "Enter a valid value.",
+                this.input,
+            );
         }
         this.errorElement.textContent = this.showValidation
-            ? dateValidationMessage || this.input.validationMessage || ""
+            ? dateValidationMessage || this.input.validationMessage || "Enter a valid value."
             : "";
         this.errorElement.hidden = !this.errorElement.textContent;
     }

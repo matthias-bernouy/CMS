@@ -1,0 +1,114 @@
+<cms-shell-detail size="full" cms-condition="workspace.isTheme">
+    <span slot="title" cms-condition="workspace.themeDetail.overview">Theme overview</span>
+    <span slot="description" cms-condition="workspace.themeDetail.overview">Review the collection theme across light and dark modes.</span>
+    <span slot="title" cms-condition="workspace.themeDetail.token">{{ workspace.themeDetail.token.label }}</span>
+    <span slot="description" cms-condition="workspace.themeDetail.token.description">{{ workspace.themeDetail.token.description }}</span>
+    <div slot="actions" class="collection-theme-actions">
+        <p9r-select aria-label="Theme profile" value="{{ workspace.themeDetail.profile.selectedThemeId }}" data-theme-profile-select data-theme-profile-control>
+            <option cms-repeat="workspace.themeDetail.profile.themes as theme" value="{{ theme.id }}">{{ theme.name }}</option>
+        </p9r-select>
+        <p9r-tag color="success" cms-condition="workspace.themeDetail.profile.active">Active</p9r-tag>
+        <p9r-tag cms-condition="!workspace.themeDetail.profile.active">Draft</p9r-tag>
+        <p9r-button type="button" color="primary" data-theme-save disabled cms-condition="workspace.themeDetail.token">Save</p9r-button>
+        <p9r-action-menu label="Theme actions" data-theme-profile-control>
+            <p9r-action-menu-section label="Theme profile">
+                <p9r-action-menu-item data-theme-profile-action="create">New theme</p9r-action-menu-item>
+                <p9r-action-menu-item data-theme-profile-action="rename">Rename theme</p9r-action-menu-item>
+                <p9r-action-menu-item data-theme-profile-action="activate" cms-condition="!workspace.themeDetail.profile.active">Activate theme</p9r-action-menu-item>
+            </p9r-action-menu-section>
+            <p9r-action-menu-section label="Site theme">
+                <p9r-action-menu-item data-site-variable-action="open">Manage site variables</p9r-action-menu-item>
+            </p9r-action-menu-section>
+        </p9r-action-menu>
+        <span class="theme-profile-status" role="status" aria-live="polite" data-theme-profile-status hidden></span>
+    </div>
+
+    <cms-shell-detail-body slot="body" class="collection-navigated-body collection-theme-body" tabbed main-label="Preview" aside-label="Values">
+        <w13c-lateral-menu slot="left-aside" variant="embedded" compact-label="{{ workspace.themeDetail.navigationLabel }}" class="collection-section-nav" aria-label="Theme tokens">
+            <p9r-input slot="header" class="collection-nav-search" type="search" aria-label="Search tokens" placeholder="Search tokens" autocomplete="off" data-collection-nav-search></p9r-input>
+            <w13c-lateral-menu-item href="{{ workspace.themeDetail.overviewHref }}" aria-label="Overview" data-collection-nav-name="Overview" manual-active cms-bind-boolean-active="workspace.themeDetail.overview">
+                Overview
+            </w13c-lateral-menu-item>
+            <w13c-lateral-menu-section cms-repeat="workspace.themeDetail.categories as category" label="{{ category.navigationLabel }}" count="{{ category.tokenCount }}" cms-bind-boolean-open="category.current" sticky>
+                <w13c-lateral-menu-item cms-repeat="category.tokens as token" href="{{ token.href }}" aria-label="{{ token.navigationLabel }}" data-collection-nav-name="{{ token.navigationLabel }}" manual-active cms-bind-boolean-active="token.current">
+                    {{ token.navigationLabel }}
+                </w13c-lateral-menu-item>
+            </w13c-lateral-menu-section>
+            <p class="collection-nav-search-empty" role="status" data-collection-nav-search-empty hidden>No matching tokens</p>
+        </w13c-lateral-menu>
+
+        <div slot="main" class="collection-theme-preview">
+            <cms-empty-state cms-condition="workspace.themeDetail.categories.length == 0">
+                <span slot="title">No resolved theme tokens</span>
+                <span slot="hint">The declared provider is not installed or does not expose theme tokens.</span>
+            </cms-empty-state>
+            <cms-theme-specimen cms-condition="workspace.themeDetail.categories.length" kind="{{ workspace.themeDetail.specimen.kind }}" view="{{ workspace.themeDetail.specimen.view }}" tokens="{{ workspace.themeDetail.specimen.tokens | json }}" bindings="{{ workspace.themeDetail.specimen.bindings | json }}" active="{{ workspace.themeDetail.specimen.active }}" token-type="{{ workspace.themeDetail.specimen.activeType }}" focus="{{ workspace.themeDetail.specimen.focus | json }}"></cms-theme-specimen>
+        </div>
+
+        <cms-detail-section slot="aside" cms-condition="workspace.themeDetail.token" heading="Values" appearance="plain">
+            <div class="theme-token-inspector">
+                <cms-theme-token-editor token-variable="{{ workspace.themeDetail.token.variable }}" theme-id="{{ workspace.themeDetail.profile.selectedThemeId }}" default-source="{{ workspace.themeDetail.token.sourceLabel }}"></cms-theme-token-editor>
+
+                <section class="theme-related-tokens" cms-condition="workspace.themeDetail.relatedTokens.length">
+                    <strong>Related tokens</strong>
+                    <a cms-repeat="workspace.themeDetail.relatedTokens as related" href="{{ related.href }}">
+                        <span>{{ related.label }}</span>
+                        <small>{{ related.relationship }}</small>
+                    </a>
+                </section>
+            </div>
+        </cms-detail-section>
+    </cms-shell-detail-body>
+</cms-shell-detail>
+
+<p9r-modal data-theme-profile-modal aria-label="Edit theme profile" cms-condition="workspace.isTheme">
+    <span slot="title" data-theme-profile-modal-title>Edit theme</span>
+    <form id="collection-theme-profile-form" data-theme-profile-form>
+        <p9r-input label="Name" maxlength="80" required data-theme-profile-name></p9r-input>
+    </form>
+    <div slot="footer" class="theme-profile-modal-actions">
+        <p9r-button type="button" variant="outlined" data-theme-profile-cancel>Cancel</p9r-button>
+        <p9r-button type="submit" form="collection-theme-profile-form" color="primary" data-theme-profile-submit>Save</p9r-button>
+    </div>
+</p9r-modal>
+
+<p9r-modal data-site-variable-catalog-modal aria-label="Site variables" cms-condition="workspace.isTheme">
+    <span slot="title">Site variables</span>
+    <p class="theme-context-intro">Variables defined by this site can be referenced from every collection.</p>
+    <div class="site-variable-catalog" data-site-variable-catalog></div>
+    <p class="theme-context-status" role="status" aria-live="polite" data-site-variable-status hidden></p>
+    <p9r-button slot="footer" type="button" variant="outlined" data-site-variable-catalog-close>Close</p9r-button>
+</p9r-modal>
+
+<p9r-modal data-site-variable-editor-modal aria-label="Edit site variable" cms-condition="workspace.isTheme">
+    <span slot="title" data-site-variable-editor-title>Edit variable</span>
+    <form id="site-variable-editor-form" data-site-variable-editor-form>
+        <p9r-stack gap="md">
+            <p9r-input label="Name" maxlength="80" required data-site-variable-name></p9r-input>
+            <p9r-textarea label="Description" maxlength="240" data-site-variable-description></p9r-textarea>
+            <p9r-select label="Type" value="color" data-site-variable-type>
+                <option value="color">Color</option>
+                <option value="font-family">Font family</option>
+                <option value="length">Length</option>
+                <option value="number">Number</option>
+                <option value="shadow">Shadow</option>
+                <option value="value">CSS value</option>
+            </p9r-select>
+            <p class="theme-context-status" role="status" aria-live="polite" data-site-variable-editor-status hidden></p>
+        </p9r-stack>
+    </form>
+    <div slot="footer" class="theme-profile-modal-actions">
+        <p9r-button type="button" variant="outlined" data-site-variable-editor-cancel>Cancel</p9r-button>
+        <p9r-button type="submit" form="site-variable-editor-form" color="primary" data-site-variable-submit data-site-variable-editor-submit>Save</p9r-button>
+    </div>
+</p9r-modal>
+
+<p9r-modal data-site-variable-remove-modal aria-label="Delete site variable" cms-condition="workspace.isTheme">
+    <span slot="title" data-site-variable-remove-title>Delete variable</span>
+    <p data-site-variable-remove-copy></p>
+    <p class="theme-context-status" role="status" aria-live="polite" data-site-variable-remove-status hidden></p>
+    <div slot="footer" class="theme-profile-modal-actions">
+        <p9r-button type="button" variant="outlined" data-site-variable-remove-cancel>Cancel</p9r-button>
+        <p9r-button type="button" color="danger" data-site-variable-submit data-site-variable-remove-confirm>Delete</p9r-button>
+    </div>
+</p9r-modal>

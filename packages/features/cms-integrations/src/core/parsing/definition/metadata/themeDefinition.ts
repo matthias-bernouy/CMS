@@ -4,6 +4,7 @@ import type {
     IntegrationThemeCategory,
     IntegrationThemeDependency,
     IntegrationThemeDefinition,
+    IntegrationThemePreviewDefinition,
     IntegrationThemeToken,
     IntegrationThemeTokenDefaults,
     IntegrationThemeTokenType,
@@ -37,7 +38,8 @@ export function parseThemeDefinition(value: unknown, integrationKind: string): I
     const categories = value.categories.map((category, index) =>
         parseCategory(category, `definition.theme.categories.${index}`, categoryIds, tokenIds),
     );
-    return { ...(dependencies.length ? { dependencies } : {}), categories };
+    const preview = parsePreview(value.preview, tokenIds);
+    return { ...(dependencies.length ? { dependencies } : {}), ...(preview ? { preview } : {}), categories };
 }
 
 export function validateThemeDefinition(theme: IntegrationThemeDefinition, integrationKind: string): void {
@@ -75,6 +77,34 @@ function parseDependencies(value: unknown, integrationKind: string): Integration
         }
         return { kind, versionRange };
     });
+}
+
+function parsePreview(value: unknown, tokenIds: Set<string>): IntegrationThemePreviewDefinition | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (!isRecord(value)) {
+        throw new IntegrationInputError("definition.theme.preview", "must be an object");
+    }
+    const kind = requiredText(value.kind, "definition.theme.preview.kind");
+    assertLocalId(kind, "definition.theme.preview.kind");
+    if (!isRecord(value.bindings) || Object.keys(value.bindings).length === 0) {
+        throw new IntegrationInputError("definition.theme.preview.bindings", "must be a non-empty object");
+    }
+    const bindings: Record<string, string> = {};
+    for (const [slot, tokenValue] of Object.entries(value.bindings)) {
+        assertLocalId(slot, `definition.theme.preview.bindings.${slot}`);
+        const tokenId = requiredText(tokenValue, `definition.theme.preview.bindings.${slot}`);
+        assertLocalId(tokenId, `definition.theme.preview.bindings.${slot}`);
+        if (!tokenIds.has(tokenId)) {
+            throw new IntegrationInputError(
+                `definition.theme.preview.bindings.${slot}`,
+                `references unknown local theme token: ${tokenId}`,
+            );
+        }
+        bindings[slot] = tokenId;
+    }
+    return { kind, bindings };
 }
 
 function parseCategory(

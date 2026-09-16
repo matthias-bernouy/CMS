@@ -18,6 +18,10 @@
     min-width: 0;
 }
 
+.admin-page-chrome {
+    display: flow-root;
+}
+
 .admin-page-header {
     display: flex;
     align-items: center;

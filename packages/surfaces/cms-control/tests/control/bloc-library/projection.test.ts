@@ -33,7 +33,7 @@ test("library projects full navigation independently of overview search, without
     });
     expect(result.collections.find(({ key }) => key === "site:site")).toMatchObject({
         blocCount: 2,
-        href: "/tenant/control/admin/blocs?collection=site%3Asite",
+        href: "/tenant/control/admin/collections/site%3Asite/overview",
     });
     expect(result.collections.find(({ key }) => key === "managed:missing")).toMatchObject({
         blocCount: 1,
@@ -125,7 +125,7 @@ test("explore includes repository and imported collections while private collect
     expect(result.explore.find(({ kind }) => kind === "gallery")).toMatchObject({
         imported: true,
         canImport: false,
-        href: "/tenant/control/admin/blocs?collection=managed%3Agallery",
+        href: "/tenant/control/admin/collections/managed%3Agallery/overview",
     });
     expect((await read(harness, "?visibility=available")).explore.map(({ kind }) => kind)).toEqual(["additional"]);
     expect((await read(harness, "?visibility=imported")).explore.map(({ kind }) => kind)).toEqual(["gallery"]);
@@ -137,4 +137,16 @@ test("explore includes repository and imported collections while private collect
     expect(
         (await read(harness, "?collection=managed%3Agallery&search=banner")).groups.map(({ label }) => label),
     ).toEqual(["Layout"]);
+});
+
+test("explore uses matching repository artwork when an installed snapshot predates its cover", async () => {
+    const harness = await libraryHarness();
+    const installation = (await harness.integrationInstallations.get("gallery"))!;
+    const { cover: _cover, ...snapshotWithoutCover } = harness.definition;
+    await harness.integrationInstallations.replace({ ...installation, definitionSnapshot: snapshotWithoutCover });
+
+    const imported = (await read(harness)).explore.find(({ kind }) => kind === "gallery");
+    const cover = new URL(imported!.coverUrl!, "https://cms.test");
+    expect(cover.searchParams.get("path")).toBe("assets/cover.webp");
+    expect(cover.searchParams.get("version")).toBe("1.2.3");
 });

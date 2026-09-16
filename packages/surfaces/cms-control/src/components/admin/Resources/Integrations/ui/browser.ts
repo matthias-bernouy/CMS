@@ -65,5 +65,5 @@ function installationRow(host: IntegrationBrowserHost, installation: Integration
 }
 
 function inScope(type: "source" | "collection" | undefined): boolean {
-    return window.location.pathname.endsWith("/admin/blocs") ? type === "collection" : type !== "collection";
+    return type !== "collection";
 }

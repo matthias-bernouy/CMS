@@ -99,7 +99,7 @@ describe("admin media accessibility", () => {
 
     test("keeps static admin form controls explicit and excludes free-form site CSS", async () => {
         const general = await Bun.file(
-            new URL("../../../src/static/admin/_access/settings/general.html", import.meta.url),
+            new URL("../../../src/static/admin/_access/settings/_site/general.html", import.meta.url),
         ).text();
         const users = await Bun.file(new URL("../../../src/static/admin/_access/users.html", import.meta.url)).text();
 

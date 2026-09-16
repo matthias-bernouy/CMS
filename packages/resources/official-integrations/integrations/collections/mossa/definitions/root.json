@@ -6,6 +6,7 @@
     "version": "1.1.0",
     "category": "Block collections",
     "description": "A coherent, reusable block collection for sites powered by official Source contracts and the Ulvia token system.",
+    "cover": { "path": "assets/cover.svg", "alt": "Mossa editorial and commerce blocks" },
     "inputs": [],
     "theme": {
         "$include": "configuration/theme.json"

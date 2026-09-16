@@ -36,6 +36,10 @@ export class AvailabilityQueue {
             const toggle = choice.querySelector<Toggle>("w13c-switch");
             if (toggle) {
                 toggle.checked = intent?.active ?? choice.getAttribute("selected") === "true";
+                choice
+                    .closest(".collection-availability")
+                    ?.querySelector<HTMLElement>("[data-availability-note]")
+                    ?.toggleAttribute("hidden", toggle.checked);
             }
         }
     }

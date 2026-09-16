@@ -1,4 +1,7 @@
 {
+    "preview": {
+        "$include": "theme/preview.json"
+    },
     "categories": {
         "$files": [
             "theme/brand.json",

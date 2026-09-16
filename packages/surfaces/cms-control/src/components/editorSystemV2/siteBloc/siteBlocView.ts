@@ -15,10 +15,13 @@ export class SiteBlocView {
 
     constructor(private readonly root: ShadowRoot) {
         this.shell = this.require<BuilderShell>("cms-editor-shell");
-        this.shell.setAttribute("back-href", `${getMetaBasePath()}/admin/blocs`);
+        this.shell.setAttribute("back-href", `${getMetaBasePath()}/admin/collections`);
     }
 
     setDefinition(definition: SiteBlocDefinition): void {
+        const collection = encodeURIComponent(`site:${definition.collectionId ?? "site"}`);
+        const query = new URLSearchParams({ bloc: definition.tag });
+        this.shell.setAttribute("back-href", `${getMetaBasePath()}/admin/collections/${collection}/blocs?${query}`);
         const archive = this.chromeButton('[data-action="delete"]');
         if (archive) {
             archive.textContent = definition.lifecycle === "archived" ? "Restore" : "Archive";

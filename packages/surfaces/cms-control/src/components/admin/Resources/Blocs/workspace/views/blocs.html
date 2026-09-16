@@ -1,0 +1,74 @@
+<div class="collection-blocs" cms-condition="workspace.isBlocs">
+    <cms-shell-detail size="full" data-installation="{{ workspace.collection.installationId }}">
+        <span slot="title" cms-condition="workspace.bloc">{{ workspace.bloc.name }}</span>
+        <span slot="description" cms-condition="workspace.bloc.description">{{ workspace.bloc.description }}</span>
+        <p9r-open-modal slot="actions" role="presentation" tabindex="-1" cms-condition="workspace.collection.isSite && !workspace.bloc" modal-target="new-composition-modal">
+            <p9r-button type="button" color="primary">New composition</p9r-button>
+        </p9r-open-modal>
+        <div slot="actions" class="collection-bloc-actions" cms-condition="workspace.bloc">
+            <a cms-condition="workspace.bloc.editable" href="{{ workspace.bloc.editPath }}">Edit composition</a>
+            <p9r-open-modal role="presentation" tabindex="-1" cms-condition="workspace.collection.isSite" modal-target="new-composition-modal">
+                <p9r-button type="button" color="primary">New composition</p9r-button>
+            </p9r-open-modal>
+            <div class="collection-availability" cms-condition="workspace.bloc.selectable">
+                <div class="collection-availability-copy">
+                    <strong>Available in editor</strong>
+                    <p data-availability-note hidden>Existing pages remain unchanged.</p>
+                </div>
+                <cms-bloc-choice resource="{{ workspace.bloc.resourceId }}" selected="{{ workspace.bloc.selected }}">
+                    <w13c-switch aria-label="Available in editor: {{ workspace.bloc.name }}"></w13c-switch>
+                </cms-bloc-choice>
+            </div>
+        </div>
+
+        <cms-shell-detail-body slot="body" class="collection-navigated-body" tabbed main-label="Preview" aside-label="Defaults">
+            <w13c-lateral-menu slot="left-aside" variant="embedded" compact-label="{{ workspace.bloc.name }}" class="collection-section-nav" aria-label="Collection blocs" cms-condition="workspace.groups.length">
+                <p9r-input slot="header" class="collection-nav-search" type="search" aria-label="Search blocs" placeholder="Search blocs" autocomplete="off" data-collection-nav-search></p9r-input>
+                <w13c-lateral-menu-section cms-repeat="workspace.groups as group" label="{{ group.label }}" count="{{ group.count }}" cms-bind-boolean-open="group.current" sticky>
+                    <w13c-lateral-menu-item cms-repeat="group.blocs as bloc" href="{{ bloc.href }}" aria-label="{{ bloc.name }}" data-collection-nav-name="{{ bloc.name }}" manual-active cms-bind-boolean-active="bloc.current">{{ bloc.name }}</w13c-lateral-menu-item>
+                </w13c-lateral-menu-section>
+                <p class="collection-nav-search-empty" role="status" data-collection-nav-search-empty hidden>No matching blocs</p>
+            </w13c-lateral-menu>
+
+            <p9r-stack slot="main" class="collection-bloc-preview-stack" gap="none" trim>
+                <cms-empty-state cms-condition="workspace.groups.length == 0">
+                    <span slot="title">{{ workspace.emptyTitle }}</span>
+                    <span slot="hint">{{ workspace.emptyDescription }}</span>
+                </cms-empty-state>
+                <cms-bloc-preview cms-condition="workspace.bloc" src="{{ workspace.bloc.previewUrl }}" layout="auto" surface="canvas"></cms-bloc-preview>
+            </p9r-stack>
+
+            <cms-detail-section slot="aside" cms-condition="workspace.bloc" heading="Defaults" appearance="plain" data-bloc-defaults-section>
+                <cms-bloc-defaults tag="{{ workspace.bloc.tag }}" values="{{ workspace.bloc.defaultAttributes | json }}"></cms-bloc-defaults>
+            </cms-detail-section>
+        </cms-shell-detail-body>
+    </cms-shell-detail>
+
+    <p9r-modal id="new-composition-modal" cms-condition="workspace.collection.isSite" aria-label="New composition">
+        <span slot="title">New composition</span>
+        <form data-new-composition-form cms-source="" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-redirect="">
+            <input type="hidden" name="collectionId" value="{{ workspace.collection.siteId }}">
+            <p9r-stack gap="md">
+                <p9r-input name="name" label="Name" maxlength="120" required></p9r-input>
+                <p9r-textarea name="description" label="Description" maxlength="1000"></p9r-textarea>
+                <p9r-button type="submit" color="primary">Create and open editor</p9r-button>
+                <p role="status" cms-condition="$source.loading">Creating composition…</p>
+                <p9r-alert type="error" cms-condition="$source.error">{{ $source.message }}</p9r-alert>
+            </p9r-stack>
+        </form>
+    </p9r-modal>
+
+    <form data-availability-form cms-source="" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-reset="false">
+        <input type="hidden" name="id">
+        <input type="hidden" name="resource">
+        <input type="hidden" name="active">
+        <p9r-toast-stack position="bottom-right">
+            <p9r-toast type="info" duration="0" role="status" cms-condition="$source.loading">Saving availability…</p9r-toast>
+            <p9r-toast type="error" duration="0" role="alert" cms-condition="$source.error">
+                <p>{{ $source.message }} Your latest change was not confirmed.</p>
+                <p9r-button type="button" variant="outlined" data-retry-availability>Retry saving</p9r-button>
+            </p9r-toast>
+            <p9r-toast type="success" duration="2500" role="status" cms-condition="$source.loaded">Availability saved.</p9r-toast>
+        </p9r-toast-stack>
+    </form>
+</div>

@@ -1,5 +1,6 @@
 import type { PresentationImage } from "@bernouy/cms-content";
 import type { IntegrationManagement } from "./management";
+import type { IntegrationThemePreviewDefinition } from "./themePreview";
 import type { DeclarativeArtifactTemplate } from "../IntegrationArtifacts";
 import type { FunctionStep } from "@bernouy/cms-functions";
 import type { DeclarativeConnectorTemplate } from "../IntegrationConnectorDeployer";
@@ -41,6 +42,7 @@ export type {
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
 } from "../IntegrationConnectorDeployer";
+export type { IntegrationThemePreviewDefinition } from "./themePreview";
 export { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES } from "../IntegrationConnectorDeployer";
 export type {
     DeclarativeConnectorDatabaseClockDefaultProjection,
@@ -171,6 +173,7 @@ export type IntegrationThemeDependency = {
 
 export type IntegrationThemeDefinition = {
     dependencies?: IntegrationThemeDependency[];
+    preview?: IntegrationThemePreviewDefinition;
     categories: IntegrationThemeCategory[];
 };
 

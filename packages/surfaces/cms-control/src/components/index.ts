@@ -18,11 +18,14 @@ import {
     LateralDialog,
     LateralMenu,
     LateralMenuItem,
+    LateralMenuSection,
     LeftMenuLayout,
     Modal,
     OpenModal,
     P9rInput,
     MoneyInput,
+    NavTab,
+    NavTabs,
     P9rSelect,
     PhotoAlbum,
     SegmentedSwitch,
@@ -86,11 +89,14 @@ define("p9r-icon-button", IconButton);
 define("w13c-lateral-dialog", LateralDialog);
 define("w13c-lateral-menu", LateralMenu);
 define("w13c-lateral-menu-item", LateralMenuItem);
+define("w13c-lateral-menu-section", LateralMenuSection);
 define("w13c-left-menu-layout", LeftMenuLayout);
 define("p9r-modal", Modal);
 define("p9r-open-modal", OpenModal);
 define("p9r-input", P9rInput);
 define("p9r-money-input", MoneyInput);
+define("p9r-nav-tab", NavTab);
+define("p9r-nav-tabs", NavTabs);
 define("p9r-select", P9rSelect);
 define("p9r-photo-album", PhotoAlbum);
 define("p9r-segmented-switch", SegmentedSwitch);
@@ -140,8 +146,6 @@ import "./admin/Layout/ShellDetail/ShellDetail";
 import "./admin/Layout/Analytics/AnalyticsNav";
 import "./admin/Layout/Analytics/AnalyticsDashboard";
 import "./admin/Layout/EndpointPerformance/EndpointPerformance";
-import "./admin/Theme/ThemeEditor";
-import "./admin/Theme/ThemeNav";
 import "./admin/Resources/Dashboards/navigation/DashboardNav";
 import "./admin/Resources/Dashboards/view/DashboardView";
 import "./admin/DashboardWorkspace/DashboardNav";
@@ -165,7 +169,7 @@ import "./admin/Resources/Functions/create/FunctionCreate";
 import "./admin/Resources/Integrations/IntegrationBrowser";
 import "./admin/Resources/Integrations/health/HealthPage";
 import "./admin/Resources/Sources/ResourceWorkspace";
-import "./admin/Resources/Blocs/BlocLibrary";
+import "./admin/Resources/Blocs/workspace/controller/CollectionWorkspace";
 import "./admin/Resources/Triggers/TriggersAdmin";
 import "./admin/Resources/Triggers/TriggerCreate";
 
