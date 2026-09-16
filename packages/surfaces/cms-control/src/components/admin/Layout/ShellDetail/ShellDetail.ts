@@ -8,6 +8,7 @@ export class CmsShellDetail extends Component {
     private header: HTMLElement | null = null;
     private identity: HTMLElement | null = null;
     private titleContainer: HTMLElement | null = null;
+    private descriptionContainer: HTMLElement | null = null;
     private actions: HTMLElement | null = null;
     private chromeSlots: HTMLSlotElement[] = [];
 
@@ -24,9 +25,12 @@ export class CmsShellDetail extends Component {
         this.header = root.querySelector(".shell-detail-header");
         this.identity = root.querySelector(".shell-detail-identity");
         this.titleContainer = root.querySelector(".shell-detail-title");
+        this.descriptionContainer = root.querySelector(".shell-detail-description");
         this.actions = root.querySelector(".shell-detail-actions");
         this.chromeSlots = Array.from(
-            root.querySelectorAll<HTMLSlotElement>('slot[name="back"], slot[name="title"], slot[name="actions"]'),
+            root.querySelectorAll<HTMLSlotElement>(
+                'slot[name="back"], slot[name="title"], slot[name="description"], slot[name="actions"]',
+            ),
         );
         for (const slot of this.chromeSlots) {
             slot.addEventListener("slotchange", this.syncHeader);
@@ -48,8 +52,9 @@ export class CmsShellDetail extends Component {
         }
         const hasBack = this.hasAssignedContent(root.querySelector('slot[name="back"]'));
         const hasTitle = this.hasAssignedContent(root.querySelector('slot[name="title"]'));
+        const hasDescription = this.hasAssignedContent(root.querySelector('slot[name="description"]'));
         const hasActions = this.hasAssignedContent(root.querySelector('slot[name="actions"]'));
-        const hasIdentity = hasBack || hasTitle;
+        const hasIdentity = hasBack || hasTitle || hasDescription;
         if (this.header) {
             this.header.hidden = !hasIdentity && !hasActions;
         }
@@ -57,7 +62,10 @@ export class CmsShellDetail extends Component {
             this.identity.hidden = !hasIdentity;
         }
         if (this.titleContainer) {
-            this.titleContainer.hidden = !hasTitle;
+            this.titleContainer.hidden = !hasTitle && !hasDescription;
+        }
+        if (this.descriptionContainer) {
+            this.descriptionContainer.hidden = !hasDescription;
         }
         if (this.actions) {
             this.actions.hidden = !hasActions;

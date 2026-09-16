@@ -52,6 +52,32 @@ content supplies an accessible close action through `hide()`/`beforeclose`.
 without moving or recreating panel content. Removing `expanded` restores the
 selected tab. Consumers can use this mode for responsive columns.
 
+`w13c-lateral-menu[variant="embedded"]` reuses the lateral navigation contract
+inside a page region without imposing viewport height, fixed sidebar width,
+background, or border. A containing layout can expose its compact trigger with
+the `--menu-embedded-toggle-display` and `--menu-embedded-sidebar-display`
+properties. Items using `match="hash"` track in-page anchors and expose
+`aria-current="location"`. Add `scrollspy` to let the menu derive same-document
+targets from item `href` fragments and follow their viewport position. The
+observer owns the controlled active state, updates the URL fragment with
+`replaceState`, and reflects the active item in the embedded mobile trigger.
+Compact layouts can configure the open sidebar as an anchored, bounded popover
+through the `--menu-embedded-open-*` properties.
+`scrollspy-offset` optionally sets a fixed viewport-top offset in pixels;
+`--menu-scrollspy-offset` supports a responsive CSS offset when the attribute is
+absent.
+`w13c-lateral-menu-section` adds a compact, collapsible group of menu items.
+Use `label`, optional `count`, and `open`; keep navigable entries as direct
+`w13c-lateral-menu-item` children so keyboard navigation follows visible groups.
+Use `sticky` when section headings need to remain visible inside a bounded,
+scrolling menu region.
+
+`w13c-left-menu-layout` accepts `primary-mobile-label` and
+`secondary-mobile-label` slots for contextual drawer controls. `p9r-nav-tabs`
+and `p9r-nav-tab` present route navigation without mounting tab panels; use the
+`fit` variant when a short, fixed set should compress without horizontal
+scrolling. Counts are optional and disappear below 350px in that variant.
+
 Form-associated visual components use `static formAssociated = true` and
 `ElementInternals`. Update values with `setFormValue()` and validity with
 `setCustomValidity()`; do not forward form values through ad-hoc shadow DOM

@@ -1,0 +1,88 @@
+:host([variant="embedded"]) {
+    position: var(--menu-embedded-host-position, static);
+    z-index: var(--menu-embedded-host-z-index, auto);
+    width: 100%;
+    height: auto;
+    background: transparent;
+    border-right: 0;
+}
+
+:host([variant="embedded"]) .sidebar {
+    display: var(--menu-embedded-sidebar-display, flex);
+    height: auto;
+    overflow: visible;
+}
+
+:host([variant="embedded"]) .sidebar-header {
+    padding: 0 0 10px;
+}
+
+:host([variant="embedded"]) .sidebar-nav {
+    padding: 0;
+}
+
+:host([variant="embedded"]) .sidebar-footer {
+    padding: 12px 0 0;
+}
+
+.embedded-toggle {
+    display: none;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 11px;
+    color: var(--text-main);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font: inherit;
+    font-size: var(--menu-item-font-size, .8125rem);
+    font-weight: 650;
+    cursor: pointer;
+    gap: 10px;
+}
+
+.embedded-toggle span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.embedded-toggle::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translate(-2px, 2px);
+}
+
+:host([variant="embedded"]) .embedded-toggle {
+    display: var(--menu-embedded-toggle-display, none);
+}
+
+:host([variant="embedded"][open]) .sidebar {
+    display: flex;
+    position: var(--menu-embedded-open-position, static);
+    z-index: var(--menu-embedded-open-z-index, auto);
+    inset-inline: var(--menu-embedded-open-inline, auto);
+    top: var(--menu-embedded-open-top, auto);
+    max-height: var(--menu-embedded-open-max-height, none);
+    padding: var(--menu-embedded-open-padding, 0);
+    overflow-y: var(--menu-embedded-open-overflow, visible);
+    background: var(--menu-embedded-open-background, transparent);
+    border: var(--menu-embedded-open-border, 0);
+    border-radius: var(--menu-embedded-open-radius, 0);
+    box-shadow: var(--menu-embedded-open-shadow, none);
+    box-sizing: border-box;
+}
+
+:host([variant="embedded"][open]) .embedded-toggle::after {
+    transform: rotate(225deg) translate(-2px, 2px);
+}
+
+:host([variant="embedded"]) .embedded-toggle:focus-visible {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 2px;
+}

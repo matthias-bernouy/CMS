@@ -172,6 +172,8 @@ acknowledges a Save or shows a mutation-success notification.
 `cms-shell-detail` owns header actions and the body slot. A shared form occupies
 that body and contains `cms-shell-detail-body`, which owns main and aside.
 Visual components keep styles in shadow DOM; bound content stays in light DOM.
+Choose `size="sm|md|lg|xl|full"` on the detail shell to use the shared container
+width scale instead of declaring page-specific maximum widths.
 
 Full detail dialogs use `p9r-modal[placement="end"][content-layout="contained"]`
 and `cms-shell-detail[contained]`: fixed header/footer, scrolling body, and the

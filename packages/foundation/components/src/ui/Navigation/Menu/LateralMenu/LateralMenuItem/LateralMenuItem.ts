@@ -7,6 +7,8 @@ const css = baseCss + variantCss;
 import { upgradeProperty, updateHref, updateBadge, checkActiveState, setActiveState } from "./compute";
 import { handleKeydown } from "./listener";
 
+export const LATERAL_MENU_ITEM_CHANGE_EVENT = "w13c-lateral-menu-item-change";
+
 export class LateralMenuItem extends Component {
     private _anchor: HTMLAnchorElement | null;
     private _badgeEl: HTMLElement | null;
@@ -22,7 +24,7 @@ export class LateralMenuItem extends Component {
     }
 
     static get observedAttributes(): string[] {
-        return ["href", "badge", "disabled", "active", "exact", "manual-active"];
+        return ["href", "badge", "disabled", "active", "exact", "manual-active", "match", "aria-label"];
     }
 
     override connectedCallback(): void {
@@ -39,19 +41,23 @@ export class LateralMenuItem extends Component {
 
         updateHref(this._anchor, this.getAttribute("href"));
         updateBadge(this._badgeEl, this.getAttribute("badge"));
+        this._syncAccessibleLabel();
         checkActiveState(this, this._anchor);
 
         window.addEventListener("popstate", this._onPopstate);
+        window.addEventListener("hashchange", this._onLocationChange);
         this.addEventListener("keydown", this._onKey);
         this.addEventListener("click", this._onActionClick);
         for (const slot of this.actionSlots()) {
             slot.addEventListener("slotchange", this._syncActionSlots);
         }
         this._syncActionSlots();
+        this._notifyMenuChange();
     }
 
     disconnectedCallback(): void {
         window.removeEventListener("popstate", this._onPopstate);
+        window.removeEventListener("hashchange", this._onLocationChange);
         this.removeEventListener("keydown", this._onKey);
         this.removeEventListener("click", this._onActionClick);
         for (const slot of this.actionSlots()) {
@@ -67,10 +73,14 @@ export class LateralMenuItem extends Component {
             updateHref(this._anchor, newVal);
             if (this.isConnected) {
                 checkActiveState(this, this._anchor);
+                this._notifyMenuChange();
             }
         }
         if (name === "badge") {
             updateBadge(this._badgeEl, newVal);
+        }
+        if (name === "aria-label") {
+            this._syncAccessibleLabel();
         }
         if (name === "active") {
             if (newVal !== null) {
@@ -79,7 +89,7 @@ export class LateralMenuItem extends Component {
                 checkActiveState(this, this._anchor);
             }
         }
-        if ((name === "exact" || name === "manual-active") && this.isConnected) {
+        if ((name === "exact" || name === "manual-active" || name === "match") && this.isConnected) {
             checkActiveState(this, this._anchor);
         }
         if (name === "disabled") {
@@ -125,6 +135,7 @@ export class LateralMenuItem extends Component {
     }
 
     private _onPopstate = () => checkActiveState(this, this._anchor);
+    private _onLocationChange = () => checkActiveState(this, this._anchor);
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, this._anchor, e);
     private _onActionClick = (event: Event): void => {
         const target = event.target as Element | null;
@@ -136,6 +147,18 @@ export class LateralMenuItem extends Component {
         this.toggleAttribute("has-quick-actions", Boolean(this._quickActionsSlot?.assignedElements().length));
         this.toggleAttribute("has-more-actions", Boolean(this._moreActionsSlot?.assignedElements().length));
     };
+    private _notifyMenuChange(): void {
+        this.dispatchEvent(new CustomEvent(LATERAL_MENU_ITEM_CHANGE_EVENT, { bubbles: true, composed: true }));
+    }
+
+    private _syncAccessibleLabel(): void {
+        const label = this.getAttribute("aria-label")?.trim();
+        if (label) {
+            this._anchor?.setAttribute("aria-label", label);
+        } else {
+            this._anchor?.removeAttribute("aria-label");
+        }
+    }
 
     private actionSlots(): HTMLSlotElement[] {
         return [this._quickActionsSlot, this._moreActionsSlot].filter((slot): slot is HTMLSlotElement => slot !== null);

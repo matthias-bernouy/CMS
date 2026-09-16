@@ -2,13 +2,26 @@ import { describe, expect, test } from "bun:test";
 
 import { LateralMenuItem } from "../../src/ui/Navigation/Menu/LateralMenu/LateralMenuItem/LateralMenuItem";
 
-if (!customElements.get("w13c-lateral-menu-item-actions-test")) {
-    customElements.define("w13c-lateral-menu-item-actions-test", LateralMenuItem);
+if (!customElements.get("w13c-lateral-menu-item")) {
+    customElements.define("w13c-lateral-menu-item", LateralMenuItem);
 }
 
 describe("LateralMenuItem actions", () => {
+    test("forwards an explicit accessible label to its link", () => {
+        const item = document.createElement("w13c-lateral-menu-item");
+        item.setAttribute("aria-label", "Mossa");
+        item.setAttribute("badge", "89");
+        document.body.append(item);
+
+        expect(item.shadowRoot!.querySelector("a")!.getAttribute("aria-label")).toBe("Mossa");
+
+        item.setAttribute("aria-label", "Mossa collection");
+        expect(item.shadowRoot!.querySelector("a")!.getAttribute("aria-label")).toBe("Mossa collection");
+        item.remove();
+    });
+
     test("exposes reusable quick and more action slots", async () => {
-        const item = document.createElement("w13c-lateral-menu-item-actions-test");
+        const item = document.createElement("w13c-lateral-menu-item");
         const quick = document.createElement("button");
         quick.slot = "quick-actions";
         const more = document.createElement("button");
@@ -31,7 +44,7 @@ describe("LateralMenuItem actions", () => {
 
     test("keeps action clicks separate from item navigation", () => {
         const parent = document.createElement("div");
-        const item = document.createElement("w13c-lateral-menu-item-actions-test");
+        const item = document.createElement("w13c-lateral-menu-item");
         const action = document.createElement("button");
         action.slot = "quick-actions";
         item.append("Variables", action);
@@ -51,7 +64,7 @@ describe("LateralMenuItem actions", () => {
 
 describe("LateralMenuItem controlled active state", () => {
     test("preserves automatic path matching by default", () => {
-        const item = document.createElement("w13c-lateral-menu-item-actions-test");
+        const item = document.createElement("w13c-lateral-menu-item");
         item.setAttribute("href", `${location.pathname}?different=query`);
         document.body.append(item);
         expect(item.hasAttribute("active")).toBe(true);
@@ -59,7 +72,7 @@ describe("LateralMenuItem controlled active state", () => {
         item.remove();
     });
     test("manual-active lets a caller select and clear query-specific links without URL reactivation", () => {
-        const item = document.createElement("w13c-lateral-menu-item-actions-test");
+        const item = document.createElement("w13c-lateral-menu-item");
         item.setAttribute("manual-active", "");
         item.setAttribute("href", location.pathname);
         document.body.append(item);
@@ -77,5 +90,29 @@ describe("LateralMenuItem controlled active state", () => {
         item.removeAttribute("manual-active");
         expect(item.hasAttribute("active")).toBe(true);
         item.remove();
+    });
+
+    test("hash matching keeps only the current in-page destination active", () => {
+        const original = `${location.pathname}${location.search}${location.hash}`;
+        history.replaceState(null, "", location.pathname);
+        const brand = document.createElement("w13c-lateral-menu-item");
+        brand.setAttribute("href", `${location.pathname}#theme-brand`);
+        brand.setAttribute("match", "hash");
+        const feedback = document.createElement("w13c-lateral-menu-item");
+        feedback.setAttribute("href", `${location.pathname}#theme-feedback`);
+        feedback.setAttribute("match", "hash");
+        document.body.append(brand, feedback);
+
+        expect(brand.hasAttribute("active")).toBe(true);
+        expect(brand.getAttribute("aria-current")).toBe("location");
+        expect(feedback.hasAttribute("active")).toBe(false);
+        history.replaceState(null, "", `${location.pathname}#theme-feedback`);
+        window.dispatchEvent(new Event("hashchange"));
+        expect(brand.hasAttribute("active")).toBe(false);
+        expect(feedback.hasAttribute("active")).toBe(true);
+
+        brand.remove();
+        feedback.remove();
+        history.replaceState(null, "", original);
     });
 });

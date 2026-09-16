@@ -31,8 +31,6 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    height: var(--item-height, 34px);
-    padding: 0 10px;
     box-sizing: border-box;
     color: var(--item-color);
     font-family: system-ui, -apple-system, sans-serif;
@@ -48,12 +46,19 @@
 .menu-item-link {
     display: flex;
     min-width: 0;
-    height: 100%;
+    height: var(--item-height, 34px);
+    min-height: var(--item-min-height, 0);
     flex: 1;
     align-items: center;
     gap: 10px;
+    padding: var(--item-padding-block, 0) 10px;
+    box-sizing: border-box;
     color: inherit;
     text-decoration: none;
+}
+
+:host(:is([has-quick-actions], [has-more-actions])) .menu-item-link {
+    padding-inline-end: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -81,7 +86,7 @@
 .label {
     min-width: 0;
     flex: 1;
-    white-space: nowrap;
+    white-space: var(--item-label-white-space, nowrap);
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -103,6 +108,7 @@
 .actions {
     gap: 2px;
     flex: 0 0 auto;
+    margin-inline-end: 10px;
     opacity: 0;
     pointer-events: none;
 }

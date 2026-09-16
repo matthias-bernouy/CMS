@@ -1,6 +1,6 @@
 import { getMenuItems } from "./compute";
 
-export const handleKeydown = (host: HTMLElement, e: KeyboardEvent) => {
+export const handleKeydown = (host: HTMLElement, event: KeyboardEvent) => {
     const slot = host.shadowRoot?.querySelector("slot:not([name])") as HTMLSlotElement | null;
     const items = getMenuItems(slot);
     if (items.length === 0) {
@@ -11,7 +11,7 @@ export const handleKeydown = (host: HTMLElement, e: KeyboardEvent) => {
     const currentIndex = items.findIndex((item) => item === active || item.contains(active));
 
     let nextIndex = -1;
-    switch (e.key) {
+    switch (event.key) {
         case "ArrowDown":
             nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % items.length;
             break;
@@ -28,9 +28,6 @@ export const handleKeydown = (host: HTMLElement, e: KeyboardEvent) => {
             return;
     }
 
-    e.preventDefault();
-    const target = items[nextIndex];
-    if (target) {
-        target.focus();
-    }
+    event.preventDefault();
+    items[nextIndex]?.focus();
 };

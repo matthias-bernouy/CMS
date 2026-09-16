@@ -98,3 +98,40 @@ test("a detail without aside content does not display an empty Settings tab", as
         await browser.close();
     }
 });
+
+test("a tabbed detail syncs an aside populated by its declarative source", async () => {
+    const browser = await chromium.launch();
+    try {
+        const page = await browser.newPage({ viewport: { width: 390, height: 700 } });
+        let loadAside = () => {};
+        const responseGate = new Promise<void>((resolve) => {
+            loadAside = resolve;
+        });
+        await mountShell(
+            page,
+            `<div cms-source="/detail as detail">
+                <cms-shell-detail-body tabbed>
+                    <p9r-stack slot="main">Details</p9r-stack>
+                    <p9r-stack slot="aside"><span cms-condition="detail.showAside">Dynamic settings</span></p9r-stack>
+                </cms-shell-detail-body>
+            </div>`,
+            async (route, url) => {
+                if (url.pathname === "/detail") {
+                    await responseGate;
+                    await route.fulfill({ json: { showAside: true } });
+                    return;
+                }
+                await route.fulfill({ json: [] });
+            },
+        );
+        const body = page.locator("cms-shell-detail-body");
+        expect(await body.getByRole("tab").count()).toBe(0);
+
+        loadAside();
+
+        await body.getByRole("tab", { name: "Settings", exact: true }).waitFor();
+        expect(await body.getAttribute("has-aside")).toBe("");
+    } finally {
+        await browser.close();
+    }
+});

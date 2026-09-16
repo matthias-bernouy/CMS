@@ -29,7 +29,7 @@ export const setActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | nu
         if (!host.hasAttribute("active")) {
             host.setAttribute("active", "");
         }
-        host.setAttribute("aria-current", "page");
+        host.setAttribute("aria-current", host.getAttribute("match") === "hash" ? "location" : "page");
         anchor?.classList.add("active");
     } else {
         if (host.hasAttribute("active")) {
@@ -45,7 +45,7 @@ export const checkActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | 
         setActiveState(host, anchor, host.hasAttribute("active"));
         return;
     }
-    if (host.hasAttribute("active")) {
+    if (host.hasAttribute("active") && host.getAttribute("match") !== "hash") {
         setActiveState(host, anchor, true);
         return;
     }
@@ -62,11 +62,17 @@ export const checkActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | 
         const currentURL = new URL(window.location.href);
         const currentPath = currentURL.pathname;
         const targetPath = resolvedURL.pathname;
-        const isActive = host.hasAttribute("exact")
-            ? currentPath === targetPath
-            : targetPath === "/"
-              ? currentPath === "/"
-              : currentPath === targetPath || currentPath.startsWith(targetPath + "/");
+        const firstHashItem = host.parentElement?.querySelector<HTMLElement>('[match="hash"][href]');
+        const isActive =
+            host.getAttribute("match") === "hash"
+                ? currentPath === targetPath &&
+                  currentURL.search === resolvedURL.search &&
+                  (currentURL.hash === resolvedURL.hash || (!currentURL.hash && firstHashItem === host))
+                : host.hasAttribute("exact")
+                  ? currentPath === targetPath
+                  : targetPath === "/"
+                    ? currentPath === "/"
+                    : currentPath === targetPath || currentPath.startsWith(targetPath + "/");
 
         setActiveState(host, anchor, isActive);
     } catch {

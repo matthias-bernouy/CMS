@@ -46,38 +46,20 @@ describe("authentication settings layout", () => {
         const tabs = document.createElement("cms-authentication-tabs");
         document.body.append(tabs);
 
-        const links = Array.from(tabs.shadowRoot!.querySelectorAll<HTMLAnchorElement>("[data-authentication-tab]"));
+        const links = Array.from(tabs.shadowRoot!.querySelectorAll<HTMLElement>("[data-authentication-tab]"));
         const sessions = links.find((link) => link.dataset.authenticationTab === "sessions")!;
         expect(sessions.getAttribute("href")).toBe("/cms/admin/settings/authentication/sessions");
-        expect(sessions.getAttribute("aria-current")).toBe("page");
-        expect(links.filter((link) => link.hasAttribute("aria-current"))).toEqual([sessions]);
+        expect(sessions.hasAttribute("active")).toBeTrue();
+        expect(links.filter((link) => link.hasAttribute("active"))).toEqual([sessions]);
         expect(authenticationTabPath("sso")).toBe("/cms/admin/settings/authentication/sso");
         expect(authenticationTabFromPath("/cms/admin/settings/authentication/policies")).toBe("policies");
     });
 
-    test("reveals the active tab when the tab row overflows", async () => {
-        window.history.replaceState(null, "", "/admin/settings/authentication/recovery");
+    test("uses the shared navigation tabs", () => {
         const tabs = document.createElement("cms-authentication-tabs");
-        const tabRow = tabs.shadowRoot!.querySelector<HTMLElement>(".tabs")!;
-        const recovery = tabs.shadowRoot!.querySelector<HTMLAnchorElement>('[data-authentication-tab="recovery"]')!;
-        Object.defineProperties(tabRow, {
-            clientWidth: { value: 300 },
-            scrollLeft: { value: 0, writable: true },
-        });
-        Object.defineProperties(recovery, {
-            offsetLeft: { value: 400 },
-            offsetWidth: { value: 80 },
-        });
+        const navigation = tabs.shadowRoot!.querySelector("p9r-nav-tabs")!;
 
-        document.body.append(tabs);
-        await nextFrame();
-
-        expect(tabRow.scrollLeft).toBe(180);
-
-        tabRow.scrollLeft = 0;
-        window.dispatchEvent(new Event("resize"));
-        await nextFrame();
-        expect(tabRow.scrollLeft).toBe(180);
+        expect(navigation.getAttribute("aria-label")).toBe("Authentication settings");
     });
 
     test("keeps Authentication active in the Settings sidebar for nested tabs", () => {
@@ -121,8 +103,4 @@ describe("authentication settings layout", () => {
 
 async function settleSlots(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-async function nextFrame(): Promise<void> {
-    await new Promise((resolve) => window.requestAnimationFrame(() => resolve(undefined)));
 }

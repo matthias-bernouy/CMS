@@ -76,6 +76,11 @@ export { ActionMenuItem } from "./ui/Navigation/Menu/ActionMenu/ActionMenuItem/A
 export { ActionMenuSection } from "./ui/Navigation/Menu/ActionMenu/ActionMenuSection/ActionMenuSection";
 export { LateralMenu } from "./ui/Navigation/Menu/LateralMenu/LateralMenu";
 export { LateralMenuItem } from "./ui/Navigation/Menu/LateralMenu/LateralMenuItem/LateralMenuItem";
+export { LateralMenuSection } from "./ui/Navigation/Menu/LateralMenu/Section/LateralMenuSection";
+
+// Navigation tabs
+export { NavTab } from "./ui/Navigation/NavTabs/NavTab/NavTab";
+export { NavTabs } from "./ui/Navigation/NavTabs/NavTabs";
 
 // Pagination
 export { Pagination } from "./ui/Navigation/Pagination/Pagination";

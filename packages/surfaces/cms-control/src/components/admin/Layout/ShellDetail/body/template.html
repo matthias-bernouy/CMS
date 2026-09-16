@@ -1,8 +1,13 @@
-<p9r-tabs expanded>
-    <p9r-tab-panel id="detail-main" label="Details" class="shell-detail-main">
-        <slot name="main"></slot>
-    </p9r-tab-panel>
-    <p9r-tab-panel id="detail-aside" label="Settings" class="shell-detail-aside">
-        <slot name="aside"></slot>
-    </p9r-tab-panel>
-</p9r-tabs>
+<div class="shell-detail-layout" part="layout">
+    <div class="shell-detail-left-aside" part="left-aside">
+        <slot name="left-aside"></slot>
+    </div>
+    <p9r-tabs expanded>
+        <p9r-tab-panel id="detail-main" label="Details" class="shell-detail-main" part="main">
+            <slot name="main"></slot>
+        </p9r-tab-panel>
+        <p9r-tab-panel id="detail-aside" label="Settings" class="shell-detail-aside" part="aside">
+            <slot name="aside"></slot>
+        </p9r-tab-panel>
+    </p9r-tabs>
+</div>

@@ -61,6 +61,21 @@ describe("LeftMenuLayout mobile navigation", () => {
         expect(layout.shadowRoot!.activeElement).toBe(layout.shadowRoot!.querySelector(".app-content"));
     });
 
+    test("accepts contextual labels for both mobile navigation drawers", async () => {
+        const layout = document.createElement("w13c-left-menu-layout-test");
+        layout.innerHTML = `
+            <span slot="primary-mobile-label">Admin</span>
+            <span slot="secondary-mobile-label">Collections</span>
+        `;
+        document.body.append(layout);
+        await flush();
+
+        const primary = layout.shadowRoot!.querySelector<HTMLSlotElement>('slot[name="primary-mobile-label"]')!;
+        const secondary = layout.shadowRoot!.querySelector<HTMLSlotElement>('slot[name="secondary-mobile-label"]')!;
+        expect(primary.assignedElements()[0]?.textContent).toBe("Admin");
+        expect(secondary.assignedElements()[0]?.textContent).toBe("Collections");
+    });
+
     test("exposes one drawer at a time and keeps closed navigation inert", async () => {
         const layout = document.createElement("w13c-left-menu-layout-test");
         const primaryNavigation = document.createElement("div");
